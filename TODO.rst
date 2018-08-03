@@ -150,7 +150,7 @@ Some versions might be out-of-date::
     backtrace v0.3.8
     failure v0.1.1
     - serde_ignored v0.0.4
-    + miow v0.3.1
+    - miow v0.3.1
     lazycell v0.6.0
     regex-syntax v0.5.6
     regex v0.2.11 -- largely compatible with regex 1, try patching Cargo.toml to use latter
@@ -160,11 +160,11 @@ Some versions might be out-of-date::
     curl v0.4.12
     git2-curl v0.8.1
     filetime v0.1.15
-    + openssl v0.10.9
+    - openssl v0.10.9
     - commoncrypto v0.2.0
     crypto-hash v0.3.1
     crates-io v0.16.0
-    + core-foundation v0.5.1
+    - core-foundation v0.5.1
     cargo v0.27.0
 
 dependencies of ripgrep
