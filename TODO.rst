@@ -130,20 +130,17 @@ dependencies of debcargo
 Roughly in dependency order, i.e. earlier packages have less dependencies.
 Some versions might be out-of-date::
 
-    - quote v0.6.3
-    syn v0.14.2
+    - syn v0.14.2
     serde_derive v1.0.66
-    semver v0.9.0
-    - itertools v0.7.8
-    - cmake v0.1.31
-    libz-sys v1.0.18
-    libssh2-sys v0.2.7
+    - semver v0.9.0
+    - libz-sys v1.0.18
+    - libssh2-sys v0.2.7
     curl-sys v0.4.5
     libgit2-sys v0.7.3
     git2 v0.7.1
     miniz-sys v0.1.10
     flate2 v1.0.1
-    synom v0.11.3
+    - synom v0.11.3
     quote v0.3.15
     syn v0.11.11
     synstructure v0.6.1
@@ -151,26 +148,23 @@ Some versions might be out-of-date::
     backtrace-sys v0.1.23
     backtrace v0.3.8
     failure v0.1.1
-    serde_ignored v0.0.4
+    - serde_ignored v0.0.4
     - socket2 v0.3.6
     miow v0.3.1
     lazycell v0.6.0
     - jobserver v0.1.11
     regex-syntax v0.5.6
     regex v0.2.11 -- largely compatible with regex 1, try patching Cargo.toml to use latter
-    - ignore v0.4.2
-    home v0.3.3
+    - home v0.3.3
     winapi v0.2.8
     kernel32-sys v0.2.2
     curl v0.4.12
     git2-curl v0.8.1
-    - fs2 v0.4.3
     filetime v0.1.15
     - env_logger v0.5.10
     - foreign-types v0.3.2
     openssl v0.10.9
-    - commoncrypto-sys v0.2.0
-    commoncrypto v0.2.0
+    - commoncrypto v0.2.0
     crypto-hash v0.3.1
     crates-io v0.16.0
     - core-foundation-sys v0.5.1
