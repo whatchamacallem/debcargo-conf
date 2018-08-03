@@ -130,34 +130,25 @@ dependencies of debcargo
 Roughly in dependency order, i.e. earlier packages have less dependencies.
 Some versions might be out-of-date::
 
-    - syn v0.14.6
-    serde_derive v1.0.70
+    + serde_derive v1.0.70
     semver v0.9.0 -- soft-blocked on https://github.com/steveklabnik/semver/pull/174
       if it takes too long then we'll have to just upload semver-parser 0.7
-    - libz-sys v1.0.18
     + libssh2-sys v0.2.7
-    curl-sys v0.4.5
-    libgit2-sys v0.7.7
+    + curl-sys v0.4.5
+    + libgit2-sys v0.7.7
     git2 v0.7.5
-    miniz-sys v0.1.10
+    miniz-sys v0.1.10 -- perhaps first package libminiz as a separate deb package
     flate2 v1.0.2
     + synstructure v0.9.0
     failure_derive v0.1.2
-    backtrace-sys v0.1.23
+    backtrace-sys v0.1.23 -- perhaps first package libbacktrace as a separate deb package
     backtrace v0.3.9
     failure v0.1.2
-    - serde_ignored v0.0.4
-    - miow v0.3.1
-    lazycell v0.6.0
-    - home v0.3.3
-    winapi v0.2.8, kernel32-sys v0.2.2 -- old, try to update Cargo
-    curl v0.4.14
+    lazycell v0.6.0, winapi v0.2.8 -- old, try to update Cargo
+    curl v0.4.14 -- depends on old kernel32-sys v0.2.2, try to update it
     git2-curl v0.8.1
-    - openssl v0.10.10
-    - commoncrypto v0.2.0
-    crypto-hash v0.3.1
+    + crypto-hash v0.3.1
     crates-io v0.17.0
-    - core-foundation v0.6.1
     cargo v0.29.0
 
 dependencies of ripgrep
