@@ -112,26 +112,115 @@ https://github.com/BurntSushi/ripgrep/issues/1000
 dependencies of mdbook/exa
 --------------------------
 
-This list is out-of-date, use debcargo.git/tests/sh/cargo-tree-deb-rec to regenerate::
+To regenerate the below list; run something like::
 
-    ansi_term-0.8.0 -- needed by exa
-    bitflags-0.9.1 -- exa, mdbook
-    byteorder-0.4.2 -- exa
-    language-tags-0.2.2 -- mdbook
-    lazy_static-0.2.11 -- exa
-    mac-0.1.1 -- mdbook
-    maplit-1.0.1 -- mdbook
-    modifier-0.1.0 -- exa
-    nom-1.2.4 -- exa
-    open-1.2.1 -- mdbook
-    pest-1.0.6 -- mdbook
-    precomputed-hash-0.1.1 -- mdbook
-    regex-syntax-0.3.9 -- exa
-    - scoped_threadpool-0.1.9 -- exa
-    sequence_trie-0.3.5 -- mdbook
-    serde-0.9.15 -- xi-core-lib
-    strum-0.9.0 -- mdbook
-    - term-grid-0.1.7 - exa
-    traitobject-0.1.0 -- mdbook
-    typeable-0.1.2 -- mdbook
-    utf8-ranges-0.1.3 -- exa
+    for c in <CRATES>; do \
+      debcargo.git/tests/sh/cargo-tree-deb-rec $c; done \
+    | sed -e 's/ v/ /g' \
+    | dev/filter-semver.sh \
+    | awk '!x[$0]++' \
+    | dev/filter-in-debian.sh \
+    | sed -nre 's/(.*) 0$/\1/gp'
+
+Results as of 2018-08-03::
+
+    winapi 0.2
+    pad 0.1
+    num-traits 0.1
+    nom 1
+    locale 0.2
+    kernel32-sys 0.2
+    iso8601 0.1
+    datetime 0.4
+    byteorder 0.4
+    zoneinfo_compiled 0.4
+    utf8-ranges 0.1
+    users 0.5
+    thread-id 2
+    thread_local 0.2
+    regex-syntax 0.3
+    memchr 0.1
+    aho-corasick 0.5
+    regex 0.1
+    log 0.3
+    libgit2-sys 0.6
+    lazy_static 0.2
+    libssh2-sys 0.2
+    curl-sys 0.4
+    bitflags 0.9
+    git2 0.6
+    env_logger 0.3
+    ansi_term 0.8
+    exa 0.8
+    ws2_32-sys 0.2
+    slab 0.3
+    miow 0.2
+    lazycell 0.6
+    iovec 0.1
+    mio 0.6
+    bytes 0.4
+    ws 0.7
+    traitobject 0.1
+    unsafe-any 0.4
+    unicode-xid 0.0
+    unicase 1
+    typemap 0.3
+    typeable 0.1
+    backtrace-sys 0.1
+    backtrace 0.3
+    error-chain 0.12
+    toml-query 0.7
+    new_debug_unreachable 1
+    mac 0.1
+    futf 0.1
+    tendril 0.4
+    synom 0.11
+    proc-macro2 0.3
+    quote 0.5
+    syn 0.13
+    quote 0.3
+    syn 0.11
+    strum_macros 0.9
+    strum 0.9
+    phf_shared 0.7
+    phf_generator 0.7
+    string_cache_codegen 0.4
+    precomputed-hash 0.1
+    string_cache 0.7
+    sequence_trie 0.3
+    safemem 0.2
+    plugin 0.2
+    phf_codegen 0.7
+    phf 0.7
+    modifier 0.1
+    mime 0.2
+    mime_guess 1
+    base64 0.6
+    hyper 0.10
+    iron 0.6
+    mount 0.4
+    staticfile 0.5
+    slab 0.1
+    pulldown-cmark 0.1
+    pest 1
+    pest_derive 1
+    open 1
+    bitflags 0.4
+    nix 0.5
+    miow 0.1
+    bytes 0.3
+    mio 0.5
+    inotify 0.3
+    fsevent-sys 0.1
+    bitflags 0.7
+    fsevent 0.2
+    filetime 0.1
+    notify 4
+    markup5ever 0.7
+    maplit 1
+    html5ever 0.22
+    handlebars 0.32
+    rust-stemmers 1
+    elasticlunr-rs 2
+    ammonia 1
+    mdbook 0.2
