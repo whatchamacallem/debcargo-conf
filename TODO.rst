@@ -152,10 +152,10 @@ Some versions might be out-of-date::
     backtrace v0.3.8
     failure v0.1.1
     serde_ignored v0.0.4
-    socket2 v0.3.6
+    - socket2 v0.3.6
     miow v0.3.1
     lazycell v0.6.0
-    jobserver v0.1.11
+    - jobserver v0.1.11
     regex-syntax v0.5.6
     regex v0.2.11 -- largely compatible with regex 1, try patching Cargo.toml to use latter
     - ignore v0.4.2
@@ -164,16 +164,16 @@ Some versions might be out-of-date::
     kernel32-sys v0.2.2
     curl v0.4.12
     git2-curl v0.8.1
-    fs2 v0.4.3
+    - fs2 v0.4.3
     filetime v0.1.15
     - env_logger v0.5.10
     - foreign-types v0.3.2
     openssl v0.10.9
-    commoncrypto-sys v0.2.0
+    - commoncrypto-sys v0.2.0
     commoncrypto v0.2.0
     crypto-hash v0.3.1
     crates-io v0.16.0
-    core-foundation-sys v0.5.1
+    - core-foundation-sys v0.5.1
     core-foundation v0.5.1
     cargo v0.27.0
 
