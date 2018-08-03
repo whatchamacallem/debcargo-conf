@@ -134,8 +134,8 @@ Some versions might be out-of-date::
     syn v0.14.2
     serde_derive v1.0.66
     semver v0.9.0
-    itertools v0.7.8
-    cmake v0.1.31
+    - itertools v0.7.8
+    - cmake v0.1.31
     libz-sys v1.0.18
     libssh2-sys v0.2.7
     curl-sys v0.4.5
@@ -166,8 +166,8 @@ Some versions might be out-of-date::
     git2-curl v0.8.1
     fs2 v0.4.3
     filetime v0.1.15
-    env_logger v0.5.10
-    foreign-types v0.3.2
+    - env_logger v0.5.10
+    - foreign-types v0.3.2
     openssl v0.10.9
     commoncrypto-sys v0.2.0
     commoncrypto v0.2.0
