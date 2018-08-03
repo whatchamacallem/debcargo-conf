@@ -130,42 +130,35 @@ dependencies of debcargo
 Roughly in dependency order, i.e. earlier packages have less dependencies.
 Some versions might be out-of-date::
 
-    - syn v0.14.2
-    serde_derive v1.0.66
+    - syn v0.14.6
+    serde_derive v1.0.70
     semver v0.9.0 -- soft-blocked on https://github.com/steveklabnik/semver/pull/174
       if it takes too long then we'll have to just upload semver-parser 0.7
     - libz-sys v1.0.18
     + libssh2-sys v0.2.7
     curl-sys v0.4.5
-    libgit2-sys v0.7.3
-    git2 v0.7.1
+    libgit2-sys v0.7.7
+    git2 v0.7.5
     miniz-sys v0.1.10
-    flate2 v1.0.1
-    synom v0.11.3 -- obsolete, see src/synom/debian/debcargo.toml
-    quote v0.3.15
-    syn v0.11.11
-    synstructure v0.6.1
-    failure_derive v0.1.1 - depends on old syn, ask them to upgrade
+    flate2 v1.0.2
+    + synstructure v0.9.0
+    failure_derive v0.1.2
     backtrace-sys v0.1.23
-    backtrace v0.3.8
-    failure v0.1.1
+    backtrace v0.3.9
+    failure v0.1.2
     - serde_ignored v0.0.4
     - miow v0.3.1
     lazycell v0.6.0
-    regex-syntax v0.5.6
-    regex v0.2.11 -- largely compatible with regex 1, try patching Cargo.toml to use latter
     - home v0.3.3
-    winapi v0.2.8
-    kernel32-sys v0.2.2
-    curl v0.4.12
+    winapi v0.2.8, kernel32-sys v0.2.2 -- old, try to update Cargo
+    curl v0.4.14
     git2-curl v0.8.1
-    filetime v0.1.15
-    - openssl v0.10.9
+    - openssl v0.10.10
     - commoncrypto v0.2.0
     crypto-hash v0.3.1
-    crates-io v0.16.0
-    - core-foundation v0.5.1
-    cargo v0.27.0
+    crates-io v0.17.0
+    - core-foundation v0.6.1
+    cargo v0.29.0
 
 dependencies of ripgrep
 -----------------------
