@@ -145,7 +145,7 @@ Some versions might be out-of-date::
     quote v0.3.15
     syn v0.11.11
     synstructure v0.6.1
-    failure_derive v0.1.1
+    failure_derive v0.1.1 - depends on old syn, ask them to upgrade
     backtrace-sys v0.1.23
     backtrace v0.3.8
     failure v0.1.1
