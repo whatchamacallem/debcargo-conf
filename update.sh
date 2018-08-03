@@ -99,9 +99,9 @@ eof
 if [ -n "$VER" ]; then
 cat >&2 <<eof
 
-You are packaging an older version of a crate. Please document why this is
-necessary, by adding comments to src/$PKGNAME/debian/debcargo.toml. For example
-because it is a dependency of another crate (please mention the names of these
-crate(s)), and it is not possible to update those crate(s) to use the latest
-version of $CRATE.
+You are packaging an older version of a crate. Please document why it's needed,
+by adding comments to src/$PKGNAME/debian/debcargo.toml. For example because it
+is a dependency of other crate(s), and it is not possible to update them to use
+the latest version of $CRATE. Please also mention the names of these crate(s).
 eof
+fi
