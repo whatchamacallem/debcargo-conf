@@ -96,3 +96,12 @@ changes in the changelog, and allows them to build and upload the package. If
 you're not a Debian Developer and are unable to upload, please don't run that
 script or else you will need to revert the changes that it makes to your git.
 eof
+if [ -n "$VER" ]; then
+cat >&2 <<eof
+
+You are packaging an older version of a crate. Please document why this is
+necessary, by adding comments to src/$PKGNAME/debian/debcargo.toml. For example
+because it is a dependency of another crate (please mention the names of these
+crate(s)), and it is not possible to update those crate(s) to use the latest
+version of $CRATE.
+eof

@@ -66,7 +66,7 @@ if [ -z "$CRATE" ]; then
 fi
 
 run_debcargo() {
-	rm -rf "$BUILDDIR" "$(dirname "$BUILDDIR")/rust-${PKGNAME}_$VER"*.orig.tar.*
+	rm -rf "$BUILDDIR" "$(dirname "$BUILDDIR")/rust-${PKGNAME}_${REALVER:-$VER}"*.orig.tar.*
 	$DEBCARGO package --config "$PKGCFG" --directory "$BUILDDIR" "$@" "$CRATE" "${REALVER:-$VER}"
 }
 
