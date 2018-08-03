@@ -144,8 +144,8 @@ Some versions might be out-of-date::
     backtrace-sys v0.1.23 -- perhaps first package libbacktrace as a separate deb package
     backtrace v0.3.9
     failure v0.1.2
-    lazycell v0.6.0, winapi v0.2.8 -- old, try to update Cargo
-    curl v0.4.14 -- depends on old kernel32-sys v0.2.2, try to update it
+    lazycell v0.6.0 -- need to patch cargo 0.29 to use lazycell 1, I've tested it and it "just works"
+    curl v0.4.14 -- depends on old winapi 0.2, try to update it, see https://github.com/alexcrichton/curl-rust/pull/204
     git2-curl v0.8.1
     + crypto-hash v0.3.1
     crates-io v0.17.0
