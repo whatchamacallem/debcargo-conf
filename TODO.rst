@@ -130,13 +130,11 @@ dependencies of debcargo
 Roughly in dependency order, i.e. earlier packages have less dependencies.
 Some versions might be out-of-date::
 
-    - tar v0.4.15
     - quote v0.6.3
     syn v0.14.2
     serde_derive v1.0.66
     semver v0.9.0
     itertools v0.7.8
-    - url v1.7.0
     cmake v0.1.31
     libz-sys v1.0.18
     libssh2-sys v0.2.7
@@ -153,10 +151,6 @@ Some versions might be out-of-date::
     backtrace-sys v0.1.23
     backtrace v0.3.8
     failure v0.1.1
-    - atty v0.2.10
-    clap v2.31.2
-    - chrono v0.4.2
-    - tempfile v3.0.2
     serde_ignored v0.0.4
     socket2 v0.3.6
     miow v0.3.1
@@ -164,8 +158,7 @@ Some versions might be out-of-date::
     jobserver v0.1.11
     regex-syntax v0.5.6
     regex v0.2.11 -- largely compatible with regex 1, try patching Cargo.toml to use latter
-    - globset v0.4.0
-    ignore v0.4.2
+    - ignore v0.4.2
     home v0.3.3
     winapi v0.2.8
     kernel32-sys v0.2.2
