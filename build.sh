@@ -56,7 +56,9 @@ check_build_deps() {
 }
 
 if ! check_build_deps; then
-	abort 1 "Missing build-dependencies, but maybe try '{apt,cargo} update'"
+	if [ "$IGNORE_MISSING_BUILD_DEPS" != 1 ]; then
+		abort 1 "Missing build-dependencies, but maybe try '{apt,cargo} update'"
+	fi
 fi
 
 if [ "$SOURCEONLY" = 1 ]; then
