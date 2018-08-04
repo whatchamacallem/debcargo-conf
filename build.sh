@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 abort() { local x=$1; shift; for i in "$@"; do echo >&2 "$0: abort: $i"; done; exit "$x"; }
@@ -19,6 +19,12 @@ fi
 
 CRATE="$1"
 VER="$2"
+if test -z "$VER" -o -f "$VER"; then
+	VER=""
+	shift
+else
+	shift 2
+fi
 DISTRIBUTION="${DISTRIBUTION:-unstable}"
 
 PKGNAME=$($DEBCARGO deb-src-name "$CRATE" $VER || abort 1 "couldn't find crate $CRATE")
@@ -65,7 +71,11 @@ if [ "$SOURCEONLY" = 1 ]; then
 	exit
 fi
 
-sbuild --no-source --arch-any --arch-all ${CHROOT:+-c $CHROOT }${DISTRIBUTION:+-d $DISTRIBUTION }${DEBSRC}_${DEBVER}.dsc
+sbuild --no-source --arch-any --arch-all \
+  ${CHROOT:+-c $CHROOT} \
+  ${DISTRIBUTION:+-d $DISTRIBUTION} \
+  ${@/#/--extra-package=} \
+  ${DEBSRC}_${DEBVER}.dsc
 changestool ${DEBSRC}_${DEBVER}_${DEB_HOST_ARCH}.changes adddsc ${DEBSRC}_${DEBVER}.dsc
 
 # sign if not UNRELEASED
