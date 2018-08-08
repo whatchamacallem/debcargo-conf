@@ -55,6 +55,10 @@ all required dependencies are available in main::
 
     url-serde
     os-pipe-0.7.0
+    phf-shared
+    siphasher
+    syscallz
+    dhcp4r
 
 Delayed/problematic::
 
