@@ -60,6 +60,7 @@ all required dependencies are available in main::
     syscallz
     dhcp4r
     nom-3.2.1
+    pktparse
 
 Delayed/problematic::
 
