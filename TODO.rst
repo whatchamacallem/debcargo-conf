@@ -59,6 +59,7 @@ all required dependencies are available in main::
     siphasher
     syscallz
     dhcp4r
+    nom-3.2.1
 
 Delayed/problematic::
 
