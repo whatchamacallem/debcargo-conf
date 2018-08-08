@@ -61,6 +61,7 @@ all required dependencies are available in main::
     dhcp4r
     nom-3.2.1
     pktparse
+    structopt-derive
 
 Delayed/problematic::
 
