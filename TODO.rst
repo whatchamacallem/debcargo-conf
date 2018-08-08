@@ -226,3 +226,31 @@ Results as of 2018-08-03::
     elasticlunr-rs 2
     ammonia 1
     mdbook 0.2
+
+dependencies of sniffglue
+-------------------------
+
+Status as of 2018-08-09::
+
+    enum_primitive 0.1 -- available in debcargo-conf but not yet in NEW
+    memchr 1 -- not needed if nom-3 is patched to memchr-2
+    num-traits 0.1 -- old version required by enum_primitive, https://github.com/andersk/enum_primitive-rs/pull/16/files
+    byte-tools 0.2 -- pending
+    cookie-factory 0.2 -- pending
+    generic-array 0.9 -- pending
+    pcap 0.7 -- pending
+    threadpool 1 -- pending
+    dhcp4r 0.1 -- RFS
+    dns-parser 0.8 -- RFS
+    nom 3 -- RFS
+    phf_shared 0.7 -- RFS
+    pktparse 0.3 -- RFS
+    syscallz 0.7 -- RFS
+    block-buffer 0.3 -- blocked by byte-tools
+    digest 0.7 -- blocked by generic-array
+    phf 0.7 -- blocked by phf-shared
+    phf_codegen 0.7 -- blocked by phf_generator, phf_shared
+    phf_generator 0.7 -- blocked by phf_shared
+    rusticata-macros 0.3 -- blocked by nom-3
+    sha2 0.7 -- blocked by block-buffer, byte-tools, digest
+    tls-parser 0.5 -- blocked by cookie-factory, enum_primitive, nom-3, phf, phf_codegen, rusticata-macros
