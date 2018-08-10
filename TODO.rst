@@ -53,11 +53,8 @@ Ready for upload (Request For Sponsor)
 These packages are prepared in the master branch and can be uploaded because
 all required dependencies are available in main::
 
-    url-serde
     os-pipe-0.7.0
-    phf-shared
     siphasher
-    syscallz
     dhcp4r
     nom-3.2.1
     pktparse
@@ -92,10 +89,8 @@ Some versions might be out-of-date::
 
     semver v0.9.0 -- soft-blocked on https://github.com/steveklabnik/semver/pull/174
       if it takes too long then we'll have to just upload semver-parser 0.7
-    - git2 v0.7.5
     + miniz-sys v0.1.10 -- perhaps first package libminiz as a separate deb package
     flate2 v1.0.2
-    - failure_derive v0.1.2
     + backtrace-sys v0.1.23 -- perhaps first package libbacktrace as a separate deb package
     backtrace v0.3.9
     failure v0.1.2
