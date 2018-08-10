@@ -56,6 +56,7 @@ all required dependencies are available in main::
     os-pipe-0.7.0
     siphasher
     nom-3.2.1
+    dns-parser (update to 0.8.0)
 
 Delayed/problematic::
 
