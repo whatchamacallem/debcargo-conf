@@ -55,10 +55,7 @@ all required dependencies are available in main::
 
     os-pipe-0.7.0
     siphasher
-    dhcp4r
     nom-3.2.1
-    pktparse
-    structopt-derive
 
 Delayed/problematic::
 
