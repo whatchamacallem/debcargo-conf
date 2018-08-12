@@ -56,6 +56,7 @@ all required dependencies are available in main::
     siphasher
     dns-parser (update to 0.8.0)
     phf
+    block-buffer
 
 Delayed/problematic::
 
@@ -240,7 +241,7 @@ Status as of 2018-08-10::
     dns-parser 0.8 -- RFS
     nom 3 -- RFS
     phf 0.7 -- RFS
-    block-buffer 0.3 -- TODO
+    block-buffer 0.3 -- RFS
     digest 0.7 -- TODO
     phf_codegen 0.7 -- blocked by phf_generator
     rusticata-macros 0.3 -- blocked by nom-3
