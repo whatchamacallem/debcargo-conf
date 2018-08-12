@@ -15,7 +15,6 @@ Current output (on 2018-07-08) is:
 - aho-corasick
 - docopt
 - pulldown-cmark
-- ripgrep
 - fd-find
 - exa
 - cpp_demangle
@@ -106,13 +105,6 @@ Some versions might be out-of-date::
     git2-curl v0.8.1
     crates-io v0.17.0
     cargo v0.29.0 -- need to patch cargo 0.29 to use lazycell 1 instead of 0.6, I've tested it and it "just works"
-
-dependencies of ripgrep
------------------------
-
-All done, waiting for upstream new release (to bump dependency versions)
-
-https://github.com/BurntSushi/ripgrep/issues/1000
 
 dependencies of mdbook/exa
 --------------------------
