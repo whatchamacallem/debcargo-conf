@@ -59,6 +59,7 @@ all required dependencies are available in main::
     block-buffer
     structopt
     phf_generator
+    enum_primitive
 
 Delayed/problematic::
 
@@ -72,8 +73,6 @@ Delayed/problematic::
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
     digest -- dependency of sha2
         generic-array-0.9   https://github.com/RustCrypto/traits/issues/23
-    enum_primitive -- dependency of tls-parser
-        num-traits 0.1 https://github.com/andersk/enum_primitive-rs/pull/16
     safemem-0.2.1 -- dependency of base64 <- hyper
     crossbeam-utils-0.3.2 -- ???
     lazycell-0.6.0 -- dependency of mio, cargo-0.27
@@ -235,14 +234,14 @@ dependencies of sniffglue
 
 Status as of 2018-08-10::
 
-    enum_primitive 0.1 -- available in debcargo-conf but not yet in NEW
     memchr 1 -- not needed if nom-3 is patched to memchr-2
-    num-traits 0.1 -- old version required by enum_primitive, https://github.com/andersk/enum_primitive-rs/pull/16/files
+    num-traits 0.1 -- not needed if enum_primitive is patch to num-traits-0.2
     digest 0.7 -- blocked by generic-array 0.9, https://github.com/RustCrypto/traits/issues/23
     cookie-factory 0.2 -- pending
     pcap 0.7 -- pending
     threadpool 1 -- pending
     phf_generator 0.7 -- RFS (with this patch, https://github.com/sfackler/rust-phf/issues/126)
+    enum_primitive -- RFS (with this patch, https://github.com/andersk/enum_primitive-rs/pull/16)
     dns-parser 0.8 -- RFS
     nom 3 -- RFS
     phf 0.7 -- RFS
