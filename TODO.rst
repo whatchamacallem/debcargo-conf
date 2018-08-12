@@ -73,6 +73,8 @@ Delayed/problematic::
         rand-0.4        https://github.com/sfackler/rust-phf/issues/126
     digest -- dependency of sha2
         generic-array-0.9   https://github.com/RustCrypto/traits/issues/23
+    enum_primitive -- dependency of tls-parser
+        num-traits 0.1 https://github.com/andersk/enum_primitive-rs/pull/16
     safemem-0.2.1 -- dependency of base64 <- hyper
     crossbeam-utils-0.3.2 -- ???
     lazycell-0.6.0 -- dependency of mio, cargo-0.27
