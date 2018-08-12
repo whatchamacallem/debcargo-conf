@@ -55,21 +55,29 @@ all required dependencies are available in main::
 
     os-pipe-0.7.0
     siphasher
-    nom-3.2.1
     dns-parser (update to 0.8.0)
 
 Delayed/problematic::
 
-    bitflags-0.9.1 -- dependency of pulldown-cmark
+    bitflags-0.9.1 -- dependency of
+        pulldown-cmark  https://github.com/google/pulldown-cmark/pull/139
+    nom-3.2.1
+        tls-parser      https://github.com/rusticata/tls-parser/issues/4
+        cexpr           https://github.com/jethrogb/rust-cexpr/pull/7
     winapi-0.2.8 -- dependency of mio, iovec, etc
+        iovec           https://github.com/carllerche/iovec/issues/16
+        see also https://salsa.debian.org/rust-team/debcargo/issues/14
     safemem-0.2.1 -- dependency of base64 <- hyper
-    miniz-sys-0.1.10 -- dependency of flate2 <- cargo <- debcargo
     crossbeam-utils-0.3.2 -- ???
     lazycell-0.6.0 -- dependency of mio, cargo-0.27
     gcc-0.3.54 -- ???
 
 infinity0: I've omitted the above for now since they are older versions, let's
-try to get the reverse-dependent crates using the latest versions of them.)
+try to get the reverse-dependent crates using the latest versions of them.
+
+::
+
+    miniz-sys-0.1.10 -- dependency of flate2 <- cargo <- debcargo
 
 infinity0: I've also omitted miniz-sys for now because it bundles an old
 version of miniz, and this should be discussed a bit further because it's not
@@ -93,6 +101,8 @@ Some versions might be out-of-date::
     backtrace v0.3.9
     failure v0.1.2
     + curl v0.4.14 -- depends on old winapi 0.2, try to update it, see https://github.com/alexcrichton/curl-rust/pull/204
+      or just backport the patch since it wouldn't affect anything anyways
+      see also https://salsa.debian.org/rust-team/debcargo/issues/14
     git2-curl v0.8.1
     crates-io v0.17.0
     cargo v0.29.0 -- need to patch cargo 0.29 to use lazycell 1 instead of 0.6, I've tested it and it "just works"
