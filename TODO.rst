@@ -57,6 +57,7 @@ all required dependencies are available in main::
     dns-parser (update to 0.8.0)
     phf
     block-buffer
+    digest
 
 Delayed/problematic::
 
@@ -242,7 +243,7 @@ Status as of 2018-08-10::
     nom 3 -- RFS
     phf 0.7 -- RFS
     block-buffer 0.3 -- RFS
-    digest 0.7 -- TODO
+    digest 0.7 -- RFS
     phf_codegen 0.7 -- blocked by phf_generator
     rusticata-macros 0.3 -- blocked by nom-3
     sha2 0.7 -- blocked by block-buffer, digest
