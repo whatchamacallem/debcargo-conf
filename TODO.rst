@@ -57,6 +57,7 @@ all required dependencies are available in main::
     dns-parser (update to 0.8.0)
     phf
     block-buffer
+    structopt
 
 Delayed/problematic::
 
