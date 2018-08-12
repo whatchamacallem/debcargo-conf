@@ -67,6 +67,8 @@ Delayed/problematic::
     winapi-0.2.8 -- dependency of mio, iovec, etc
         iovec           https://github.com/carllerche/iovec/issues/16
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
+    phf_generator -- dependency of tls-parser
+        rand-0.4        https://github.com/sfackler/rust-phf/issues/126
     safemem-0.2.1 -- dependency of base64 <- hyper
     crossbeam-utils-0.3.2 -- ???
     lazycell-0.6.0 -- dependency of mio, cargo-0.27
@@ -231,6 +233,7 @@ Status as of 2018-08-10::
     enum_primitive 0.1 -- available in debcargo-conf but not yet in NEW
     memchr 1 -- not needed if nom-3 is patched to memchr-2
     num-traits 0.1 -- old version required by enum_primitive, https://github.com/andersk/enum_primitive-rs/pull/16/files
+    phf_generator 0.7 -- blocked by rand 0.4 dependency, https://github.com/sfackler/rust-phf/issues/126
     cookie-factory 0.2 -- pending
     pcap 0.7 -- pending
     threadpool 1 -- pending
@@ -239,7 +242,6 @@ Status as of 2018-08-10::
     phf 0.7 -- RFS
     block-buffer 0.3 -- TODO
     digest 0.7 -- TODO
-    phf_generator 0.7 -- TODO
     phf_codegen 0.7 -- blocked by phf_generator
     rusticata-macros 0.3 -- blocked by nom-3
     sha2 0.7 -- blocked by block-buffer, digest
