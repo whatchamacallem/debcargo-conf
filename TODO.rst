@@ -58,6 +58,7 @@ all required dependencies are available in main::
     phf
     block-buffer
     structopt
+    phf_generator
 
 Delayed/problematic::
 
@@ -69,8 +70,6 @@ Delayed/problematic::
     winapi-0.2.8 -- dependency of mio, iovec, etc
         iovec           https://github.com/carllerche/iovec/issues/16
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
-    phf_generator -- dependency of tls-parser
-        rand-0.4        https://github.com/sfackler/rust-phf/issues/126
     digest -- dependency of sha2
         generic-array-0.9   https://github.com/RustCrypto/traits/issues/23
     enum_primitive -- dependency of tls-parser
@@ -239,11 +238,11 @@ Status as of 2018-08-10::
     enum_primitive 0.1 -- available in debcargo-conf but not yet in NEW
     memchr 1 -- not needed if nom-3 is patched to memchr-2
     num-traits 0.1 -- old version required by enum_primitive, https://github.com/andersk/enum_primitive-rs/pull/16/files
-    phf_generator 0.7 -- blocked by rand 0.4 dependency, https://github.com/sfackler/rust-phf/issues/126
     digest 0.7 -- blocked by generic-array 0.9, https://github.com/RustCrypto/traits/issues/23
     cookie-factory 0.2 -- pending
     pcap 0.7 -- pending
     threadpool 1 -- pending
+    phf_generator 0.7 -- RFS (with this patch, https://github.com/sfackler/rust-phf/issues/126)
     dns-parser 0.8 -- RFS
     nom 3 -- RFS
     phf 0.7 -- RFS
