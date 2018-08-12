@@ -55,6 +55,7 @@ all required dependencies are available in main::
     os-pipe-0.7.0
     siphasher
     dns-parser (update to 0.8.0)
+    phf
 
 Delayed/problematic::
 
@@ -230,22 +231,16 @@ Status as of 2018-08-10::
     enum_primitive 0.1 -- available in debcargo-conf but not yet in NEW
     memchr 1 -- not needed if nom-3 is patched to memchr-2
     num-traits 0.1 -- old version required by enum_primitive, https://github.com/andersk/enum_primitive-rs/pull/16/files
-    byte-tools 0.2 -- pending
     cookie-factory 0.2 -- pending
-    generic-array 0.9 -- pending
     pcap 0.7 -- pending
     threadpool 1 -- pending
-    dhcp4r 0.1 -- pending
-    phf_shared 0.7 -- pending
-    pktparse 0.3 -- pending
-    syscallz 0.7 -- pending
     dns-parser 0.8 -- RFS
     nom 3 -- RFS
-    block-buffer 0.3 -- blocked by byte-tools
-    digest 0.7 -- blocked by generic-array
-    phf 0.7 -- blocked by phf-shared
-    phf_codegen 0.7 -- blocked by phf_generator, phf_shared
-    phf_generator 0.7 -- blocked by phf_shared
+    phf 0.7 -- RFS
+    block-buffer 0.3 -- TODO
+    digest 0.7 -- TODO
+    phf_generator 0.7 -- TODO
+    phf_codegen 0.7 -- blocked by phf_generator
     rusticata-macros 0.3 -- blocked by nom-3
-    sha2 0.7 -- blocked by block-buffer, byte-tools, digest
+    sha2 0.7 -- blocked by block-buffer, digest
     tls-parser 0.5 -- blocked by cookie-factory, enum_primitive, nom-3, phf, phf_codegen, rusticata-macros
