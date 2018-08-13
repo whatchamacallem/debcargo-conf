@@ -63,6 +63,7 @@ all required dependencies are available in main::
     termios
     rusticata-macros
     colored
+    tokio-executor
 
 Delayed/problematic::
 
