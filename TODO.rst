@@ -62,6 +62,7 @@ all required dependencies are available in main::
     enum_primitive
     mac
     new_debug_unreachable
+    constant_time_eq
 
 Delayed/problematic::
 
