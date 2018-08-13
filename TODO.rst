@@ -76,6 +76,9 @@ Delayed/problematic::
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
     digest -- dependency of sha2
         generic-array-0.9   https://github.com/RustCrypto/traits/issues/23
+    tokio-io
+        depends on bytes
+            iovec           https://github.com/carllerche/iovec/issues/16
     safemem-0.2.1 -- dependency of base64 <- hyper
     crossbeam-utils-0.3.2 -- ???
     lazycell-0.6.0 -- dependency of mio, cargo-0.27
