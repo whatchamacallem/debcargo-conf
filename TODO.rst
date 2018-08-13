@@ -61,6 +61,7 @@ all required dependencies are available in main::
     phf_generator
     enum_primitive
     mac
+    new_debug_unreachable
 
 Delayed/problematic::
 
