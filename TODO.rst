@@ -59,7 +59,6 @@ all required dependencies are available in main::
     new_debug_unreachable
     constant_time_eq
     rusticata-macros
-    colored
 
 Delayed/problematic::
 
