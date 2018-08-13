@@ -234,15 +234,14 @@ dependencies of sniffglue
 
 Status as of 2018-08-10::
 
-    num-traits 0.1 -- not needed if enum_primitive is patch to num-traits-0.2
     digest 0.7 -- blocked by generic-array 0.9, https://github.com/RustCrypto/traits/issues/23
     cookie-factory 0.2 -- pending
     pcap 0.7 -- pending
     threadpool 1 -- pending
+    enum_primitive -- pending
+    dns-parser 0.8 -- pending
+    phf 0.7 -- pending
     phf_generator 0.7 -- RFS (with this patch, https://github.com/sfackler/rust-phf/issues/126)
-    enum_primitive -- RFS (with this patch, https://github.com/andersk/enum_primitive-rs/pull/16)
-    dns-parser 0.8 -- RFS
-    phf 0.7 -- RFS
     block-buffer 0.3 -- RFS
     rusticata-macros 1 -- RFS
     phf_codegen 0.7 -- blocked by phf_generator
