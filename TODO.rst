@@ -59,7 +59,6 @@ all required dependencies are available in main::
     mac
     new_debug_unreachable
     constant_time_eq
-    termios
     rusticata-macros
     colored
 
