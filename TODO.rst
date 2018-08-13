@@ -52,9 +52,6 @@ Ready for upload (Request For Sponsor)
 These packages are prepared in the master branch and can be uploaded because
 all required dependencies are available in main::
 
-    os-pipe-0.7.0
-    siphasher
-    dns-parser (update to 0.8.0)
     phf
     block-buffer
     structopt
@@ -65,6 +62,7 @@ all required dependencies are available in main::
     constant_time_eq
     termios
     rusticata-macros
+    colored
 
 Delayed/problematic::
 
