@@ -64,13 +64,13 @@ all required dependencies are available in main::
     new_debug_unreachable
     constant_time_eq
     termios
+    rusticata-macros
 
 Delayed/problematic::
 
     bitflags-0.9.1 -- dependency of
         pulldown-cmark  https://github.com/google/pulldown-cmark/pull/139
     nom-3.2.1
-        tls-parser      https://github.com/rusticata/tls-parser/issues/4
         cexpr           https://github.com/jethrogb/rust-cexpr/pull/7
     winapi-0.2.8 -- dependency of mio, iovec, etc
         iovec           https://github.com/carllerche/iovec/issues/16
@@ -241,7 +241,6 @@ dependencies of sniffglue
 
 Status as of 2018-08-10::
 
-    memchr 1 -- not needed if nom-3 is patched to memchr-2
     num-traits 0.1 -- not needed if enum_primitive is patch to num-traits-0.2
     digest 0.7 -- blocked by generic-array 0.9, https://github.com/RustCrypto/traits/issues/23
     cookie-factory 0.2 -- pending
@@ -250,10 +249,9 @@ Status as of 2018-08-10::
     phf_generator 0.7 -- RFS (with this patch, https://github.com/sfackler/rust-phf/issues/126)
     enum_primitive -- RFS (with this patch, https://github.com/andersk/enum_primitive-rs/pull/16)
     dns-parser 0.8 -- RFS
-    nom 3 -- RFS
     phf 0.7 -- RFS
     block-buffer 0.3 -- RFS
+    rusticata-macros 1 -- RFS
     phf_codegen 0.7 -- blocked by phf_generator
-    rusticata-macros 0.3 -- blocked by nom-3
     sha2 0.7 -- blocked by block-buffer, digest
-    tls-parser 0.5 -- blocked by cookie-factory, enum_primitive, nom-3, phf, phf_codegen, rusticata-macros
+    tls-parser 0.6 -- blocked by cookie-factory, enum_primitive, phf, phf_codegen, rusticata-macros
