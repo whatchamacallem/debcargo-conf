@@ -54,7 +54,6 @@ all required dependencies are available in main::
 
     block-buffer
     phf_generator
-    enum_primitive
     mac
     new_debug_unreachable
     constant_time_eq
