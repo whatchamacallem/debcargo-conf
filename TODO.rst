@@ -60,6 +60,7 @@ all required dependencies are available in main::
     structopt
     phf_generator
     enum_primitive
+    mac
 
 Delayed/problematic::
 
