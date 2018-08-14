@@ -77,23 +77,15 @@ Delayed/problematic::
     crossbeam-utils-0.3.2 -- ???
     lazycell-0.6.0 -- dependency of mio, cargo-0.27
     gcc-0.3.54 -- ???
-    miniz-sys v0.1.10
-        flate2 was patched to not use miniz, hopefully this works.
-        if not we can package miniz as a static C lib then miniz-sys
 
 infinity0: I've omitted the above for now since they are older versions, let's
 try to get the reverse-dependent crates using the latest versions of them.
 
-::
+Avoided, for now::
 
-    miniz-sys-0.1.10 -- dependency of flate2 <- cargo <- debcargo
-
-infinity0: I've also omitted miniz-sys for now because it bundles an old
-version of miniz, and this should be discussed a bit further because it's not
-within normal Debian practise. See upstream issues:
-
-- https://github.com/alexcrichton/flate2-rs/issues/160
-- https://github.com/alexcrichton/flate2-rs/issues/143
+    miniz-sys-0.1.10
+        flate2 was patched to not use miniz, hopefully this works.
+        if not we can package miniz as a static C lib then miniz-sys
 
 
 dependencies of debcargo
@@ -104,8 +96,8 @@ Some versions might be out-of-date::
 
     semver v0.9.0 -- soft-blocked on https://github.com/steveklabnik/semver/pull/174
       if it takes too long then we'll have to just upload semver-parser 0.7
-    flate2 v1.0.2
-    + backtrace-sys v0.1.23 -- perhaps first package libbacktrace as a separate deb package
+    - flate2 v1.0.2
+    - backtrace-sys v0.1.23 -- perhaps first package libbacktrace as a separate deb package
     backtrace v0.3.9
     failure v0.1.2
     + curl v0.4.14 -- depends on old winapi 0.2, try to update it, see https://github.com/alexcrichton/curl-rust/pull/204
