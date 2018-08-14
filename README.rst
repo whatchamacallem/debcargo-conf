@@ -48,7 +48,7 @@ DD instructions
 
 To set up a suitable build environment for ``./release.sh``::
 
-  $ apt-get install devscripts reprepro
+  $ sudo apt-get install devscripts reprepro debootstrap sbuild
   $ sudo sbuild-createchroot --include=eatmydata,ccache,gnupg,dh-cargo,cargo,lintian \
       --chroot-prefix debcargo-unstable unstable \
       /srv/chroot/debcargo-unstable-amd64-sbuild http://deb.debian.org/debian
