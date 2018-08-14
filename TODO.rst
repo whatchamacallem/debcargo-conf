@@ -132,12 +132,12 @@ Results as of 2018-08-03::
     pad 0.1
     num-traits 0.1
     nom 1
-    locale 0.2
+    locale 0.2 - pending
     kernel32-sys 0.2
-    iso8601 0.1
-    datetime 0.4
+    iso8601 0.1 - blocked by https://github.com/badboy/iso8601/pull/19
+    datetime 0.4 - blocked by iso8601
     byteorder 0.4
-    zoneinfo_compiled 0.4
+    zoneinfo_compiled 0.4 - blocked by datetime
     utf8-ranges 0.1
     users 0.5
     thread-id 2
