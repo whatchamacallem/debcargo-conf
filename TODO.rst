@@ -53,6 +53,7 @@ These packages are prepared in the master branch and can be uploaded because
 all required dependencies are available in main::
 
     block-buffer
+    mime
 
 Delayed/problematic::
 
