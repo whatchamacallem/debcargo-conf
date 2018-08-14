@@ -53,10 +53,6 @@ These packages are prepared in the master branch and can be uploaded because
 all required dependencies are available in main::
 
     block-buffer
-    mac
-    new_debug_unreachable
-    constant_time_eq
-    rusticata-macros
 
 Delayed/problematic::
 
