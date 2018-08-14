@@ -77,6 +77,9 @@ Delayed/problematic::
     crossbeam-utils-0.3.2 -- ???
     lazycell-0.6.0 -- dependency of mio, cargo-0.27
     gcc-0.3.54 -- ???
+    miniz-sys v0.1.10
+        flate2 was patched to not use miniz, hopefully this works.
+        if not we can package miniz as a static C lib then miniz-sys
 
 infinity0: I've omitted the above for now since they are older versions, let's
 try to get the reverse-dependent crates using the latest versions of them.
@@ -101,7 +104,6 @@ Some versions might be out-of-date::
 
     semver v0.9.0 -- soft-blocked on https://github.com/steveklabnik/semver/pull/174
       if it takes too long then we'll have to just upload semver-parser 0.7
-    + miniz-sys v0.1.10 -- perhaps first package libminiz as a separate deb package
     flate2 v1.0.2
     + backtrace-sys v0.1.23 -- perhaps first package libbacktrace as a separate deb package
     backtrace v0.3.9
