@@ -54,6 +54,7 @@ all required dependencies are available in main::
 
     block-buffer
     mime
+    serde_urlencoded
 
 Delayed/problematic::
 
