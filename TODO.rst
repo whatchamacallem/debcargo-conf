@@ -129,7 +129,7 @@ Results as of 2018-08-03::
     zoneinfo_compiled 0.4 - blocked by datetime
     utf8-ranges 0.1
     users 0.5
-    thread-id 2
+    thread-id 2 - pending
     thread_local 0.2
     regex-syntax 0.3
     memchr 0.1
