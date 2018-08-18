@@ -62,6 +62,7 @@ all required dependencies are available in main::
     stable_deref_trait
     procedural-masquerade
     precomputed-hash
+    want
 
 Delayed/problematic::
 
