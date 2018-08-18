@@ -66,6 +66,7 @@ all required dependencies are available in main::
     erased-serde
     md5
     thread-local 0.3.6
+    futf
 
 Delayed/problematic::
 
