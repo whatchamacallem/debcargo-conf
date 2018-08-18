@@ -64,6 +64,7 @@ all required dependencies are available in main::
     precomputed-hash
     want
     erased-serde
+    md5
 
 Delayed/problematic::
 
