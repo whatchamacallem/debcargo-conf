@@ -238,18 +238,13 @@ dependencies of sniffglue
 Status as of 2018-08-10::
 
     digest 0.7 -- blocked by generic-array 0.9, https://github.com/RustCrypto/traits/issues/23
-    cookie-factory 0.2 -- pending
-    pcap 0.7 -- pending
-    threadpool 1 -- pending
-    enum_primitive -- pending
     dns-parser 0.8 -- pending
     phf 0.7 -- pending
     phf_generator 0.7 -- pending (with this patch, https://github.com/sfackler/rust-phf/issues/126)
-    rusticata-macros 1 -- pending
     block-buffer 0.3 -- RFS
     phf_codegen 0.7 -- blocked by phf_generator
     sha2 0.7 -- blocked by block-buffer, digest
-    tls-parser 0.6 -- blocked by cookie-factory, enum_primitive, phf, phf_codegen, rusticata-macros
+    tls-parser 0.6 -- blocked by phf, phf_codegen
 
 
 dependencies of badtouch
@@ -268,7 +263,6 @@ Status as of 2018-08-14::
     │   │   └── opaque-debug v0.1.1
     │   └── rand v0.4.2
     ├── bufstream v0.1.3
-    ├── colored v1.6.1
     ├── digest v0.7.5
     │   └── generic-array v0.9.0 (*)
     ├── error-chain v0.12.0
@@ -283,7 +277,6 @@ Status as of 2018-08-14::
     │       └── pkg-config v0.3.13
     ├── hmac v0.6.2
     │   ├── crypto-mac v0.6.2
-    │   │   ├── constant_time_eq v0.1.3
     │   │   └── generic-array v0.9.0 (*)
     │   └── digest v0.7.5 (*)
     ├── kuchiki v0.7.0
@@ -307,11 +300,9 @@ Status as of 2018-08-14::
     │   │       ├── quote v0.5.2 (*)
     │   │       └── unicode-xid v0.1.0 (*)
     │   ├── html5ever v0.22.3
-    │   │   ├── mac v0.1.1
     │   │   └── markup5ever v0.7.2
     │   │       ├── phf v0.7.22 (*)
     │   │       ├── string_cache v0.7.3
-    │   │       │   ├── new_debug_unreachable v1.0.1
     │   │       │   ├── precomputed-hash v0.1.1
     │   │       │   └── string_cache_shared v0.3.0
     │   │       │   [build-dependencies]
@@ -322,9 +313,6 @@ Status as of 2018-08-14::
     │   │       │       └── string_cache_shared v0.3.0 (*)
     │   │       └── tendril v0.4.0
     │   │           ├── futf v0.1.4
-    │   │           │   ├── mac v0.1.1 (*)
-    │   │           │   └── new_debug_unreachable v1.0.1 (*)
-    │   │           ├── mac v0.1.1 (*)
     │   │           └── utf-8 v0.7.4
     │   │       [build-dependencies]
     │   │       ├── phf_codegen v0.7.22 (*)
@@ -389,7 +377,6 @@ Status as of 2018-08-14::
     │   │   │   └── winapi v0.2.8 (*)
     │   │   ├── tokio v0.1.7
     │   │   │   ├── mio v0.6.15 (*)
-    │   │   │   ├── tokio-executor v0.1.3
     │   │   │   ├── tokio-fs v0.1.3
     │   │   │   │   ├── tokio-io v0.1.7
     │   │   │   │   │   ├── bytes v0.4.9 (*)
@@ -401,11 +388,9 @@ Status as of 2018-08-14::
     │   │   │   │       │   │   └── scopeguard v0.3.3
     │   │   │   │       │   └── crossbeam-utils v0.3.2 (*)
     │   │   │   │       ├── rand v0.4.2 (*)
-    │   │   │   │       └── tokio-executor v0.1.3 (*)
     │   │   │   ├── tokio-io v0.1.7 (*)
     │   │   │   ├── tokio-reactor v0.1.3
     │   │   │   │   ├── mio v0.6.15 (*)
-    │   │   │   │   ├── tokio-executor v0.1.3 (*)
     │   │   │   │   └── tokio-io v0.1.7 (*)
     │   │   │   ├── tokio-tcp v0.1.1
     │   │   │   │   ├── bytes v0.4.9 (*)
@@ -415,7 +400,6 @@ Status as of 2018-08-14::
     │   │   │   │   └── tokio-reactor v0.1.3 (*)
     │   │   │   ├── tokio-threadpool v0.1.5 (*)
     │   │   │   ├── tokio-timer v0.2.5
-    │   │   │   │   └── tokio-executor v0.1.3 (*)
     │   │   │   └── tokio-udp v0.1.1
     │   │   │       ├── bytes v0.4.9 (*)
     │   │   │       ├── mio v0.6.15 (*)
@@ -424,7 +408,6 @@ Status as of 2018-08-14::
     │   │   │       │   └── tokio-io v0.1.7 (*)
     │   │   │       ├── tokio-io v0.1.7 (*)
     │   │   │       └── tokio-reactor v0.1.3 (*)
-    │   │   ├── tokio-executor v0.1.3 (*)
     │   │   ├── tokio-io v0.1.7 (*)
     │   │   ├── tokio-reactor v0.1.3 (*)
     │   │   └── tokio-timer v0.2.5 (*)
@@ -538,7 +521,4 @@ Status as of 2018-08-14::
     │   ├── block-buffer v0.3.3 (*)
     │   ├── digest v0.7.5 (*)
     │   └── keccak v0.1.0
-    ├── structopt v0.2.10
-    ├── termios v0.3.0
-    ├── threadpool v1.7.1
     └── twox-hash v1.1.1 (*)
