@@ -61,6 +61,7 @@ all required dependencies are available in main::
     smallvec
     stable_deref_trait
     procedural-masquerade
+    precomputed-hash
 
 Delayed/problematic::
 
