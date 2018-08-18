@@ -72,6 +72,8 @@ Delayed/problematic::
     tokio-io
         depends on bytes
             iovec           https://github.com/carllerche/iovec/issues/16
+    no-panic -- optional dependency of ryu
+        fails to compile on stable (attribute proc macros are currently unstable (see issue #38356))
     safemem-0.2.1 -- dependency of base64 <- hyper
     crossbeam-utils-0.3.2 -- ???
     lazycell-0.6.0 -- dependency of mio, cargo-0.27
