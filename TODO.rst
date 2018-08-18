@@ -63,6 +63,7 @@ all required dependencies are available in main::
     procedural-masquerade
     precomputed-hash
     want
+    erased-serde
 
 Delayed/problematic::
 
