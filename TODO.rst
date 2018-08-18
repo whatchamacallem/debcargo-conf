@@ -59,6 +59,7 @@ all required dependencies are available in main::
     atoi
     dtoa-short
     smallvec
+    stable_deref_trait
 
 Delayed/problematic::
 
