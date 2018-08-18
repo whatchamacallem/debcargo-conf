@@ -54,6 +54,7 @@ all required dependencies are available in main::
 
     build_const
     block-buffer
+    adler32
 
 Delayed/problematic::
 
