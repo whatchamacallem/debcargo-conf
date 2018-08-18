@@ -58,6 +58,7 @@ all required dependencies are available in main::
     keccak
     atoi
     dtoa-short
+    smallvec
 
 Delayed/problematic::
 
