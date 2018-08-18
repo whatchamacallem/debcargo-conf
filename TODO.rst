@@ -60,6 +60,7 @@ all required dependencies are available in main::
     dtoa-short
     smallvec
     stable_deref_trait
+    procedural-masquerade
 
 Delayed/problematic::
 
