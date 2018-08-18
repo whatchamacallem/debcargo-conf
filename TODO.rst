@@ -56,6 +56,7 @@ all required dependencies are available in main::
     block-buffer
     adler32
     keccak
+    atoi
 
 Delayed/problematic::
 
