@@ -242,9 +242,9 @@ Status as of 2018-08-10::
     enum_primitive -- pending
     dns-parser 0.8 -- pending
     phf 0.7 -- pending
-    phf_generator 0.7 -- RFS (with this patch, https://github.com/sfackler/rust-phf/issues/126)
+    phf_generator 0.7 -- pending (with this patch, https://github.com/sfackler/rust-phf/issues/126)
+    rusticata-macros 1 -- pending
     block-buffer 0.3 -- RFS
-    rusticata-macros 1 -- RFS
     phf_codegen 0.7 -- blocked by phf_generator
     sha2 0.7 -- blocked by block-buffer, digest
     tls-parser 0.6 -- blocked by cookie-factory, enum_primitive, phf, phf_codegen, rusticata-macros
@@ -310,13 +310,11 @@ Status as of 2018-08-14::
     │   │       ├── phf v0.7.22 (*)
     │   │       ├── string_cache v0.7.3
     │   │       │   ├── new_debug_unreachable v1.0.1
-    │   │       │   ├── phf_shared v0.7.22 (*)
     │   │       │   ├── precomputed-hash v0.1.1
     │   │       │   └── string_cache_shared v0.3.0
     │   │       │   [build-dependencies]
     │   │       │   └── string_cache_codegen v0.4.1
     │   │       │       ├── phf_generator v0.7.22 (*)
-    │   │       │       ├── phf_shared v0.7.22 (*)
     │   │       │       ├── proc-macro2 v0.3.8 (*)
     │   │       │       ├── quote v0.5.2 (*)
     │   │       │       └── string_cache_shared v0.3.0 (*)
