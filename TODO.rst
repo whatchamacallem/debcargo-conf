@@ -57,6 +57,7 @@ all required dependencies are available in main::
     adler32
     keccak
     atoi
+    dtoa-short
 
 Delayed/problematic::
 
