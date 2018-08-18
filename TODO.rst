@@ -327,12 +327,10 @@ Status as of 2018-08-14::
     │   └── selectors v0.19.0
     │       ├── bitflags v1.0.3 (*)
     │       ├── cssparser v0.23.10 (*)
-    │       ├── fnv v1.0.6
     │       ├── log v0.3.9
     │       ├── phf v0.7.22 (*)
     │       ├── precomputed-hash v0.1.1 (*)
     │       ├── servo_arc v0.1.1
-    │       │   ├── nodrop v0.1.12
     │       │   └── stable_deref_trait v1.1.1
     │       └── smallvec v0.6.4 (*)
     │       [build-dependencies]
@@ -389,8 +387,6 @@ Status as of 2018-08-14::
     │   │   │   │   └── tokio-threadpool v0.1.5
     │   │   │   │       ├── crossbeam-deque v0.3.1
     │   │   │   │       │   ├── crossbeam-epoch v0.4.3
-    │   │   │   │       │   │   ├── arrayvec v0.4.7
-    │   │   │   │       │   │   │   └── nodrop v0.1.12 (*)
     │   │   │   │       │   │   ├── crossbeam-utils v0.3.2
     │   │   │   │       │   │   ├── memoffset v0.2.1
     │   │   │   │       │   │   └── scopeguard v0.3.3
@@ -462,7 +458,6 @@ Status as of 2018-08-14::
     │   ├── bufstream v0.1.3 (*)
     │   ├── flate2 v1.0.2
     │   │   └── miniz-sys v0.1.10
-    │   ├── fnv v1.0.6 (*)
     │   ├── mysql_common v0.8.0
     │   │   ├── atoi v0.2.3
     │   │   ├── base64 v0.9.2 (*)
@@ -470,7 +465,6 @@ Status as of 2018-08-14::
     │   │   ├── bitflags v1.0.3 (*)
     │   │   ├── num-bigint v0.2.0
     │   │   │   ├── num-integer v0.1.39 (*)
-    │   │   ├── sha1 v0.6.0
     │   │   ├── sha2 v0.7.1
     │   │   │   ├── block-buffer v0.3.3 (*)
     │   │   │   ├── digest v0.7.5 (*)
