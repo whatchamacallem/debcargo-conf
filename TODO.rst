@@ -65,7 +65,7 @@ all required dependencies are available in main::
     want
     erased-serde
     md5
-    thread-local 0.3.6
+    thread-local 0.3.6 (update)
     futf
     lazy-static (update)
 
