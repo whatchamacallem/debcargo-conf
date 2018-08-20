@@ -84,9 +84,13 @@ Delayed/problematic::
             iovec           https://github.com/carllerche/iovec/issues/16
     no-panic -- optional dependency of ryu
         fails to compile on stable (attribute proc macros are currently unstable (see issue #38356))
+    mio -- dependency of tokio
+        outdated windows deps   https://github.com/carllerche/mio/issues/870
     safemem-0.2.1 -- dependency of base64 <- hyper
+        ^ fixed in base64 master
     crossbeam-utils-0.3.2 -- ???
     lazycell-0.6.0 -- dependency of mio, cargo-0.27
+        ^ fixed in mio master
     gcc-0.3.54 -- ???
 
 infinity0: I've omitted the above for now since they are older versions, let's
