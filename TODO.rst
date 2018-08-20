@@ -67,6 +67,7 @@ all required dependencies are available in main::
     md5
     thread-local 0.3.6
     futf
+    lazy-static (update)
 
 Delayed/problematic::
 
