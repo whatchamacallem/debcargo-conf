@@ -68,6 +68,7 @@ all required dependencies are available in main::
     thread-local 0.3.6 (update)
     futf
     lazy-static (update)
+    spin
 
 Delayed/problematic::
 
