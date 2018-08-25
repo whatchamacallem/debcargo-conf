@@ -69,6 +69,7 @@ all required dependencies are available in main::
     futf
     lazy-static (update)
     spin
+    simd
 
 Delayed/problematic::
 
