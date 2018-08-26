@@ -56,7 +56,6 @@ all required dependencies are available in main::
     block-buffer
     stable_deref_trait
     erased-serde
-    thread-local 0.3.6 (update)
     lazy-static (update)
     spin
 
