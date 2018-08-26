@@ -55,7 +55,6 @@ all required dependencies are available in main::
     build_const
     block-buffer
     adler32
-    dtoa-short
     stable_deref_trait
     erased-serde
     thread-local 0.3.6 (update)
