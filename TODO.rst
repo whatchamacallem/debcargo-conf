@@ -56,6 +56,7 @@ all required dependencies are available in main::
     stable_deref_trait
     lazy-static (update)
     spin
+    csv-1.0.1 (update)
 
 Delayed/problematic::
 
