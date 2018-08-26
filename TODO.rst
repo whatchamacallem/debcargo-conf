@@ -52,10 +52,8 @@ Ready for upload (Request For Sponsor)
 These packages are prepared in the master branch and can be uploaded because
 all required dependencies are available in main::
 
-    build_const
     block-buffer
     stable_deref_trait
-    erased-serde
     lazy-static (update)
     spin
 
