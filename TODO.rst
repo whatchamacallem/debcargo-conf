@@ -61,8 +61,6 @@ all required dependencies are available in main::
     smallvec
     stable_deref_trait
     procedural-masquerade
-    precomputed-hash
-    want
     erased-serde
     thread-local 0.3.6 (update)
     futf
