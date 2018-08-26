@@ -57,7 +57,6 @@ all required dependencies are available in main::
     adler32
     keccak
     dtoa-short
-    smallvec
     stable_deref_trait
     procedural-masquerade
     erased-serde
