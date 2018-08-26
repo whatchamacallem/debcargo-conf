@@ -62,7 +62,6 @@ all required dependencies are available in main::
     procedural-masquerade
     erased-serde
     thread-local 0.3.6 (update)
-    futf
     lazy-static (update)
     spin
 
