@@ -58,7 +58,6 @@ all required dependencies are available in main::
     keccak
     dtoa-short
     stable_deref_trait
-    procedural-masquerade
     erased-serde
     thread-local 0.3.6 (update)
     lazy-static (update)
