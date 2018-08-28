@@ -55,6 +55,7 @@ all required dependencies are available in main::
     block-buffer
     stable_deref_trait
     csv-1.0.1 (update)
+    term-size
 
 Delayed/problematic::
 
