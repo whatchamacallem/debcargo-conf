@@ -80,9 +80,6 @@ Delayed/problematic::
         outdated windows deps   https://github.com/carllerche/mio/issues/870
     safemem-0.2.1 -- dependency of base64 <- hyper
         ^ fixed in base64 master
-    yaml -- optional dependency of clap
-        uses nightly features, see  https://github.com/kimhyunkang/libyaml-rust/pull/9
-        also depends on regex 0.2, this can be patched with a single line though
     crossbeam-utils-0.3.2 -- ???
     lazycell-0.6.0 -- dependency of mio, cargo-0.27
         ^ fixed in mio master
