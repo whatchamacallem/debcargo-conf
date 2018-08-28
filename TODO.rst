@@ -57,6 +57,7 @@ all required dependencies are available in main::
     csv-1.0.1 (update)
     term-size
     yaml
+    tokio-current-thread
 
 Delayed/problematic::
 
