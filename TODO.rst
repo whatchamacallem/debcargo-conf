@@ -60,6 +60,7 @@ all required dependencies are available in main::
     tokio-current-thread
     fxhash
     bit-vec
+    thin-slice
 
 Delayed/problematic::
 
