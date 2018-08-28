@@ -59,6 +59,7 @@ all required dependencies are available in main::
     yaml
     tokio-current-thread
     fxhash
+    bit-vec
 
 Delayed/problematic::
 
