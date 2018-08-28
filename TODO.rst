@@ -61,6 +61,7 @@ all required dependencies are available in main::
     fxhash
     bit-vec
     thin-slice
+    num-bigint
 
 Delayed/problematic::
 
