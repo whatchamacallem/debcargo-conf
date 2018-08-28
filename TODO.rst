@@ -63,6 +63,7 @@ all required dependencies are available in main::
     thin-slice
     num-bigint
     take
+    crossbeam-utils (update)
 
 Delayed/problematic::
 
