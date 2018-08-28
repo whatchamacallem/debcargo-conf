@@ -62,6 +62,7 @@ all required dependencies are available in main::
     bit-vec
     thin-slice
     num-bigint
+    take
 
 Delayed/problematic::
 
