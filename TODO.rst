@@ -58,6 +58,7 @@ all required dependencies are available in main::
     term-size
     yaml
     tokio-current-thread
+    fxhash
 
 Delayed/problematic::
 
