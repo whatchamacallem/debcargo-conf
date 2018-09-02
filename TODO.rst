@@ -65,6 +65,7 @@ all required dependencies are available in main::
     take
     crossbeam-utils (update)
     nodrop-union
+    stdweb-derive
 
 Delayed/problematic::
 
