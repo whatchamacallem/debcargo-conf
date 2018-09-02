@@ -67,6 +67,7 @@ all required dependencies are available in main::
     nodrop-union
     stdweb-derive
     futures-core
+    base-x
 
 Delayed/problematic::
 
