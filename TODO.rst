@@ -69,6 +69,7 @@ all required dependencies are available in main::
     futures-core
     base-x
     discard
+    heapsize
 
 Delayed/problematic::
 
