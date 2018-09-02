@@ -66,6 +66,7 @@ all required dependencies are available in main::
     crossbeam-utils (update)
     nodrop-union
     stdweb-derive
+    futures-core
 
 Delayed/problematic::
 
