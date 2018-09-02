@@ -68,6 +68,7 @@ all required dependencies are available in main::
     stdweb-derive
     futures-core
     base-x
+    discard
 
 Delayed/problematic::
 
