@@ -70,6 +70,7 @@ all required dependencies are available in main::
     base-x
     discard
     heapsize
+    phf-shared (update)
 
 Delayed/problematic::
 
