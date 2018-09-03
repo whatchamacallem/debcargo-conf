@@ -65,6 +65,13 @@ all required dependencies are available in main::
     num-bigint
     take
     crossbeam-utils (update)
+    nodrop-union
+    stdweb-derive
+    futures-core
+    base-x
+    discard
+    heapsize
+    phf-shared (update)
 
 Delayed/problematic::
 
