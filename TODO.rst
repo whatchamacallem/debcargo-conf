@@ -35,6 +35,7 @@ There are also more binaries here:
 
 https://github.com/rust-unofficial/awesome-rust
 
++ rustfmt https://github.com/rust-lang-nursery/rustfmt
 
 Immediate goals
 ===============
