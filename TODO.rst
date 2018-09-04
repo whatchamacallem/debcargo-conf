@@ -74,6 +74,7 @@ all required dependencies are available in main::
     discard
     heapsize
     phf-shared (update)
+    bytes
 
 Delayed/problematic::
 
@@ -86,9 +87,6 @@ Delayed/problematic::
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
     digest -- dependency of sha2
         generic-array-0.9   https://github.com/RustCrypto/traits/issues/23
-    tokio-io
-        depends on bytes
-            iovec           https://github.com/carllerche/iovec/issues/16
     no-panic -- optional dependency of ryu
         fails to compile on stable (attribute proc macros are currently unstable (see issue #38356))
     mio -- dependency of tokio
