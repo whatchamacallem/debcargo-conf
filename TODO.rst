@@ -107,6 +107,29 @@ Avoided, for now::
         flate2 was patched to not use miniz, hopefully this works.
         if not we can package miniz as a static C lib then miniz-sys
 
+All-features transitive dependencies of ripgrep
+-----------------------------------------------
+
+These are NOT needed to build ripgrep (we only test that `cargo build` works
+with default features) but *are* needed for ripgrep to enter testing. They are
+all of the transitive build-dependencies of *all the features* of ripgrep.
+
+Top-level page: https://qa.debian.org/excuses.php?package=rust-ripgrep
+
+- hyphenation, needed by
+    https://qa.debian.org/excuses.php?package=rust-textwrap
+- term-size, needed by
+    https://qa.debian.org/excuses.php?package=rust-textwrap
+    https://qa.debian.org/excuses.php?package=rust-clap
+- yaml-rust, needed by
+    https://qa.debian.org/excuses.php?package=rust-clap
+- clippy, needed by
+    https://qa.debian.org/excuses.php?package=rust-clap
+    this apparently requires nightly features though they're in the process
+    of stabilising, but perhaps we should just patch away any dependencies on
+    it for the time being
+
+Others (e.g. rust-simd) are already on the way
 
 dependencies of debcargo
 ------------------------
