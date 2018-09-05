@@ -61,18 +61,14 @@ all required dependencies are available in main::
     term-size
     yaml
     tokio-current-thread
-    fxhash
     bit-vec
     thin-slice
-    num-bigint
     take
     crossbeam-utils (update)
     nodrop-union
     stdweb-derive
     futures-core
     base-x
-    discard
-    heapsize
     phf-shared (update)
     bytes
 
