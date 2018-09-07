@@ -71,6 +71,7 @@ all required dependencies are available in main::
     base-x
     phf-shared (update)
     bytes
+    dirs
 
 Delayed/problematic::
 
