@@ -119,6 +119,7 @@ Top-level page: https://qa.debian.org/excuses.php?package=rust-ripgrep
     https://qa.debian.org/excuses.php?package=rust-clap
 - yaml-rust, needed by
     https://qa.debian.org/excuses.php?package=rust-clap
+    RFS package available
 - clippy, needed by
     https://qa.debian.org/excuses.php?package=rust-clap
     this apparently requires nightly features though they're in the process
