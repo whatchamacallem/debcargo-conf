@@ -72,6 +72,7 @@ all required dependencies are available in main::
     phf-shared (update)
     bytes
     dirs
+    grep-matcher
 
 Delayed/problematic::
 
