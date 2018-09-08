@@ -66,7 +66,6 @@ all required dependencies are available in main::
     futures-core
     base-x
     bytes
-    dirs
 
 Delayed/problematic::
 
