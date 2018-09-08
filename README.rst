@@ -84,6 +84,12 @@ ITPs for these is unnecessary since we're the only ones uploading and there is
 no chance of conflict. It would only be spam for the bug tracker. Please
 instead co-ordinate uploads on the #debian-rust IRC channel.
 
+Testing
+-------
+
+For now, testsuites aren't executed for library.
+However, for binary, it is strongly recommended to run the testsuites.
+See ripgrep as example.
 
 TODO
 ====
