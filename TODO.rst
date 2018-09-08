@@ -89,12 +89,15 @@ Delayed/problematic::
         fails to compile on stable (attribute proc macros are currently unstable (see issue #38356))
     mio -- dependency of tokio
         outdated windows deps   https://github.com/carllerche/mio/issues/870
-    safemem-0.2.1 -- dependency of base64 <- hyper
+    safemem-0.2.1 -- dependency of base64 <- {hyper,ripgrep}
         ^ fixed in base64 master
+        https://github.com/alicemaz/rust-base64/issues/71
     crossbeam-utils-0.3.2 -- ???
     lazycell-0.6.0 -- dependency of mio, cargo-0.27
         ^ fixed in mio master
     gcc-0.3.54 -- ???
+    owning_ref -- dependency of lock_api <- parkinglot <- crossbeam-channel <- ignore <- ripgrep
+        https://github.com/Amanieu/parking_lot/issues/93
 
 infinity0: I've omitted the above for now since they are older versions, let's
 try to get the reverse-dependent crates using the latest versions of them.
