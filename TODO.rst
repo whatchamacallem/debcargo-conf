@@ -114,19 +114,14 @@ Top-level page: https://qa.debian.org/excuses.php?package=rust-ripgrep
 
 - hyphenation, needed by
     https://qa.debian.org/excuses.php?package=rust-textwrap
-- term-size, needed by
-    https://qa.debian.org/excuses.php?package=rust-textwrap
-    https://qa.debian.org/excuses.php?package=rust-clap
+    pocket-resources
+    hyphenation-commons
+      - still using a ton of old libraries like serde 0.8 with a bigger tree underneath
+      - https://github.com/tapeinosyne/hyphenation/issues/12
+    unicode-segmentation
 - yaml-rust, needed by
     https://qa.debian.org/excuses.php?package=rust-clap
-    RFS package available
-- clippy, needed by
-    https://qa.debian.org/excuses.php?package=rust-clap
-    this apparently requires nightly features though they're in the process
-    of stabilising, but perhaps we should just patch away any dependencies on
-    it for the time being
-
-Others (e.g. rust-simd) are already on the way
+    also linked-hash-map as a dependency of this
 
 dependencies of debcargo
 ------------------------
