@@ -54,23 +54,35 @@ To set up a suitable build environment for ``./release.sh``::
       /srv/chroot/debcargo-unstable-amd64-sbuild http://deb.debian.org/debian
 
 
-NEWS
-====
+General packaging tips
+======================
 
-2018-07-06
-----------
+Dependencies on clippy
+----------------------
 
-Great news, we started to upload packages in the archives. 22 have been accepted
-and about 20 are pending in NEW.
+Patch away dependencies on "clippy" unless it is a "real" dependency. Usually
+crates only use clippy to lint themselves and it is not a "real" dependency
+in the sense that they actually import clippy's code for what they do.
 
+If you want to be sure, `rg clippy` and check that all the usages of it are
+inside `cfg_attr` declarations. If so, then just get rid of it.
 
-2018-06-20
-----------
+Architecture-specific crates
+----------------------------
 
-We are about to upload a few hundred rust packages to Debian. Do not submit
-ITPs for these, it is unnecessary since we're the only ones uploading, there is
-no chance of conflict, and it is only spam for the bug tracker. Please instead
-co-ordinate uploads on the #debian-rust IRC channel.
+See simd and redox-syscall for examples on how to deal with these.
+
+If this is unclear, ask on IRC.
+
+ITPs
+----
+
+Don't file ITPs for library crates, but do file them for binary crates.
+
+For now (updated 2018-09) we have several hundred crates to upload. Submitting
+ITPs for these is unnecessary since we're the only ones uploading and there is
+no chance of conflict. It would only be spam for the bug tracker. Please
+instead co-ordinate uploads on the #debian-rust IRC channel.
 
 
 TODO
