@@ -67,7 +67,6 @@ all required dependencies are available in main::
     base-x
     bytes
     dirs
-    grep-matcher
 
 Delayed/problematic::
 
