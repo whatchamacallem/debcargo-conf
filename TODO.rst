@@ -53,13 +53,9 @@ Ready for upload (Request For Sponsor)
 These packages are prepared in the master branch and can be uploaded because
 all required dependencies are available in main::
 
-    lazycell (needs ./update)
-    phf (needs ./update)
     block-buffer
     stable_deref_trait
     csv-1.0.1 (update)
-    term-size
-    yaml
     tokio-current-thread
     bit-vec
     thin-slice
@@ -69,7 +65,6 @@ all required dependencies are available in main::
     stdweb-derive
     futures-core
     base-x
-    phf-shared (update)
     bytes
     dirs
     grep-matcher
