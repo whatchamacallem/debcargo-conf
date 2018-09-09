@@ -54,7 +54,6 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     block-buffer
-    crossbeam-utils (update 0.4 to 0.5)
 
 Delayed/problematic::
 
