@@ -56,7 +56,6 @@ all required dependencies are available in main::
     block-buffer
     csv-1.0.1 (update)
     crossbeam-utils (update)
-    bytes
 
 Delayed/problematic::
 
