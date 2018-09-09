@@ -57,6 +57,7 @@ all required dependencies are available in main::
     csv-1.0.1 (update)
     crossbeam-utils (update)
     bytes
+    crossbeam-utils-0.2 (required for rayon 1)
 
 Delayed/problematic::
 
