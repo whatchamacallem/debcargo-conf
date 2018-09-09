@@ -54,7 +54,6 @@ These packages are prepared in the master branch and can be uploaded because
 all required dependencies are available in main::
 
     block-buffer
-    crossbeam-utils (update)
     crossbeam-utils-0.2 (required for rayon 1)
 
 Delayed/problematic::
