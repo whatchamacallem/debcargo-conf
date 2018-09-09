@@ -54,11 +54,8 @@ These packages are prepared in the master branch and can be uploaded because
 all required dependencies are available in main::
 
     block-buffer
-    stable_deref_trait
     csv-1.0.1 (update)
-    tokio-current-thread
     crossbeam-utils (update)
-    nodrop-union
     stdweb-derive
     futures-core
     bytes
