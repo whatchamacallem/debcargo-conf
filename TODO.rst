@@ -57,9 +57,6 @@ all required dependencies are available in main::
     stable_deref_trait
     csv-1.0.1 (update)
     tokio-current-thread
-    bit-vec
-    thin-slice
-    take
     crossbeam-utils (update)
     nodrop-union
     stdweb-derive
