@@ -67,12 +67,39 @@ in the sense that they actually import clippy's code for what they do.
 If you want to be sure, `rg clippy` and check that all the usages of it are
 inside `cfg_attr` declarations. If so, then just get rid of it.
 
+OS-specific crates
+------------------
+
+See redox-syscall for examples on how to deal with these.
+
+If this is unclear, ask on IRC.
+
 Architecture-specific crates
 ----------------------------
 
-See simd and redox-syscall for examples on how to deal with these.
+This is a bit harder. Usually there are two options:
 
-If this is unclear, ask on IRC.
+1. The crate should build a dummy/no-op version of itself "out-of-the-box"
+   on the architectures it doesn't work on.
+2. Dependent crates should depend on it with a platform-specific dependency,
+   see https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#platform-specific-dependencies
+
+(1) involves less burden for others, both for dependent crates and for us
+packagers, since we don't have to override d/rules to ignore test failures on
+non-working architectures. You should communicate to upstream that this is
+the preferred approach.
+
+In the case of (2), the crate should document exactly what conditional should
+be used, and keep this documentation up-to-date. This allows us to easily
+determine if dependent crates are using the correct conditional. You will then
+have to override d/rules for this crate, see src/simd for an example.
+
+You should file a bug upstream if the crate does neither (1) nor document the
+conditions for (2), e.g. https://github.com/hsivonen/simd/issues/25
+
+(Actually the above applies even for "OS-specific crates" but then (2) is
+obvious so documentation is less necessary, and dependent crates all do it
+correctly already.)
 
 ITPs
 ----
