@@ -56,6 +56,7 @@ all required dependencies are available in main::
     block-buffer
     csv-1.0.1 (update)
     crossbeam-utils (update)
+    crossbeam-utils-0.2 (required for rayon 1)
 
 Delayed/problematic::
 
