@@ -56,6 +56,7 @@ because all required dependencies are available in main::
     block-buffer (blocked by block-padding)
     phf_codegen
     block-padding
+    slab (update)
 
 Delayed/problematic::
 
