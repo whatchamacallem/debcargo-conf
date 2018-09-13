@@ -35,7 +35,7 @@ fi
 
 if ! grep -q uploaders "$PKGCFG"; then
 	# try to auto-fill in uploaders if debcargo.toml doesn't have it
-	uploader="$(grep -A1 "[0-9][0-9]* Debian Rust Maintainers" "$PKGDIR/debian/copyright" | tail -n1 | sed -re 's/^\s*[0-9]+\s*//g')"
+	uploader="$(egrep -A1 "[0-9][0-9]*( Debian)? Rust Maintainers" "$PKGDIR/debian/copyright" | tail -n1 | sed -re 's/^\s*[0-9]+\s*//g')"
 	sed -i -e 's/^\(overlay.*\)$/\1\nuploaders = ["'"$uploader"'"]/' "$PKGCFG"
 	if [ "$uploader" != "$DEBFULLNAME <$DEBEMAIL>" ]; then
 		echo >&2 "$0: Auto-added $uploader to uploaders in debcargo.toml, based on d/copyright"
