@@ -60,7 +60,7 @@ on having to package all the dependencies of the newest version, you can::
 DD instructions
 ===============
 
-To set up a suitable build environment for ``./release.sh``::
+To set up a suitable build environment for ``./build.sh``::
 
   $ sudo apt-get install devscripts reprepro debootstrap sbuild
   $ sudo sbuild-createchroot --include=eatmydata,ccache,gnupg,dh-cargo,cargo,lintian \
