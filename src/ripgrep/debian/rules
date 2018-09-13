@@ -1,10 +1,6 @@
 #!/usr/bin/make -f
-include /usr/share/rustc/architecture.mk
 %:
 	dh $@ --buildsystem cargo --with bash-completion
 
 override_dh_auto_test:
-ifeq ($(filter nocheck,$(DEB_BUILD_OPTIONS)),)
-	CARGO_HOME=debian/cargo_home cargo test --verbose --verbose --target $(DEB_HOST_RUST_TYPE) -Zavoid-dev-deps
-	dh_auto_test
-endif
+	dh_auto_test -- test --all

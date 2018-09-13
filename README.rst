@@ -8,45 +8,59 @@ To get set up, run::
 
 Then for each new package:
 
-**To package a new crate, or to update an existing crate:**
+To package a new crate, or to update an existing crate
+------------------------------------------------------
 
-| $ ``./new-package.sh <rust-crate-name>``, or
-| $ ``./update.sh <rust-crate-name>``
-|
+::
+
+  ./new-package.sh <rust-crate-name>  # or
+  ./update.sh      <rust-crate-name>
 
 and follow its instructions.
 
-Note that new-package.sh is just a symlink to update.sh, to help newcomers.
+Note that ``new-package.sh`` is just a symlink to ``update.sh``, to help newcomers.
 
-**To package an older version of a crate:**
+To package an older version of a crate
+--------------------------------------
 
 To maintain an old version of a crate alongside the latest one, first make sure
-the latest version is packaged by doing all of the above, then run:
+the latest version is packaged by doing all of the above, then run::
 
-| $ ``./new-package.sh <rust-crate-name> <old-version>``, or
-| $ ``./update.sh <rust-crate-name> <old-version>``
-|
+  ./new-package.sh <rust-crate-name> <old-version>  # or
+  ./update.sh      <rust-crate-name> <old-version>
 
 and follow its instructions. To save time, you can first copy anything relevant
 from ``src/<rust-crate-name>`` to ``src/<rust-crate-name>-<old-version>``, then
 adapt it as needed.
 
-**To prepare a release:**
+To prepare a release
+--------------------
 
-| $ ``./release.sh <rust-crate-name>``, or
-| $ ``./release.sh <rust-crate-name> <old-version>`` as appropriate
-|
+::
+
+  ./release.sh <rust-crate-name>                # or
+  ./release.sh <rust-crate-name> <old-version>  # as appropriate
 
 This prepares the necessary Debian files in ``build/``, and creates a git
 branch to manage the packaging until it is accepted in Debian itself. You need
 to run additional commands after this - more specific instructions are given to
 you about this, by the script after you run it.
 
+Holding packages at old versions
+--------------------------------
+
+If you need to keep the latest version in Debian at an older version than is
+released on crates.io, e.g. to upload an important bugfix without being blocked
+on having to package all the dependencies of the newest version, you can::
+
+  REALVER=<old-version> ./update.sh  <rust-crate-name>  # then
+  REALVER=<old-version> ./release.sh <rust-crate-name>
+
 
 DD instructions
 ===============
 
-To set up a suitable build environment for ``./release.sh``::
+To set up a suitable build environment for ``./build.sh``::
 
   $ sudo apt-get install devscripts reprepro debootstrap sbuild
   $ sudo sbuild-createchroot --include=eatmydata,ccache,gnupg,dh-cargo,cargo,lintian \
