@@ -14,22 +14,15 @@ if [ -n "$VER" ]; then
 fi
 if [ ! -d "$PKGDIR/debian" ]; then
 	mkdir -p "$PKGDIR/debian"
-	echo 'overlay = "."' > "$PKGCFG"
+	cat <<-eof > "$PKGCFG"
+	overlay = "."
+	uploaders = ["$DEBFULLNAME <$DEBEMAIL>"]
+	eof
 	git add "$PKGDIR"
 fi
 if [ ! -f "$PKGDIR/debian/copyright" ]; then
 	cat <<-eof > "$PKGDIR/debian/copyright"
 	FIXME fill me in using ./copyright.debcargo.hint as a guide
-
-	You may find the following useful too:
-
-	Files: debian/*
-	Copyright:
-	 2018 Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
-	 2018 $DEBFULLNAME <$DEBEMAIL>
-
-	The reason we don't put this in debian/copyright.debcargo.hint itself is
-	documented here: https://salsa.debian.org/rust-team/debcargo-conf/issues/5
 	eof
 fi
 if [ -n "$VER" -a "$(sed -ne 's/^semver_suffix\s*=\s*//p' "$PKGCFG")" != "true" ]; then
@@ -37,6 +30,16 @@ if [ -n "$VER" -a "$(sed -ne 's/^semver_suffix\s*=\s*//p' "$PKGCFG")" != "true" 
 		sed -i -e 's/^\(semver_suffix\s*=\s*\).*/\1true/' "$PKGCFG"
 	else
 		sed -i -e '1isemver_suffix = true' "$PKGCFG"
+	fi
+fi
+
+if ! grep -q uploaders "$PKGCFG"; then
+	# try to auto-fill in uploaders if debcargo.toml doesn't have it
+	uploader="$(grep -A1 "[0-9][0-9]* Debian Rust Maintainers" "$PKGDIR/debian/copyright" | tail -n1 | sed -re 's/^\s*[0-9]+\s*//g')"
+	sed -i -e 's/^\(overlay.*\)$/\1\nuploaders = ["'"$uploader"'"]/' "$PKGCFG"
+	if [ "$uploader" != "$DEBFULLNAME <$DEBEMAIL>" ]; then
+		echo >&2 "$0: Auto-added $uploader to uploaders in debcargo.toml, based on d/copyright"
+		read >&2 -p "$0: You may also want to add yourself; ctrl-c if you want to do that, or press enter to continue... " x
 	fi
 fi
 
