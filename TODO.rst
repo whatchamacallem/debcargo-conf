@@ -54,6 +54,7 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     block-buffer (blocked by block-padding)
+    base64
 
 Delayed/problematic::
 
@@ -70,9 +71,6 @@ Delayed/problematic::
         fails to compile on stable (attribute proc macros are currently unstable (see issue #38356))
     mio -- dependency of tokio
         outdated windows deps   https://github.com/carllerche/mio/issues/870
-    safemem-0.2.1 -- dependency of base64 <- {hyper,ripgrep}
-        ^ fixed in base64 master
-        https://github.com/alicemaz/rust-base64/issues/71
     crossbeam-utils-0.3.2 -- ???
     lazycell-0.6.0 -- dependency of mio, cargo-0.27
         ^ fixed in mio master
