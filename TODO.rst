@@ -80,6 +80,11 @@ Delayed/problematic::
     owning_ref -- dependency of lock_api <- parkinglot <- crossbeam-channel <- ignore <- ripgrep
         https://github.com/Amanieu/parking_lot/issues/93
 
+    parking_lot (blocked by lock_api)
+    indicatif (blocked by parking_lot)
+    statistical (blocked by num & co)
+    hyperfine (blocked by indicatif & statistical)
+
 infinity0: I've omitted the above for now since they are older versions, let's
 try to get the reverse-dependent crates using the latest versions of them.
 
