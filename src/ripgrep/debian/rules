@@ -2,5 +2,12 @@
 %:
 	dh $@ --buildsystem cargo --with bash-completion
 
+override_dh_install:
+	mkdir -p debian/ripgrep/usr/share/zsh/vendor-completions debian/ripgrep/usr/share/fish/completions
+	cp -f complete/_rg debian/ripgrep/usr/share/zsh/vendor-completions/
+	cp -f target/*/release/build/*/out/rg.fish debian/ripgrep/usr/share/fish/completions/
+	dh_install
+	dh_missing
+
 override_dh_auto_test:
 	dh_auto_test -- test --all
