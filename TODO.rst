@@ -58,6 +58,7 @@ because all required dependencies are available in main::
     commoncrypto (update to drop clippy)
     linked-hash-map
     unicode-bidi (update to drop flame/flamer)
+    tokio-timer
 
 Delayed/problematic::
 
