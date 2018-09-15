@@ -77,6 +77,8 @@ Delayed/problematic::
     gcc-0.3.54 -- ???
     owning_ref -- dependency of lock_api <- parkinglot <- crossbeam-channel <- ignore <- ripgrep
         https://github.com/Amanieu/parking_lot/issues/93
+    winutil -- dependency of hostname <- resolv-conf <- trust-dns-resolver
+        doesn't build on linux
 
     parking_lot (blocked by lock_api)
     indicatif (blocked by parking_lot)
