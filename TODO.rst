@@ -56,6 +56,7 @@ because all required dependencies are available in main::
     block-buffer (blocked by block-padding)
     commoncrypto-sys (update to drop clippy)
     commoncrypto (update to drop clippy)
+    linked-hash-map
 
 Delayed/problematic::
 
