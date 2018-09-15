@@ -59,6 +59,7 @@ because all required dependencies are available in main::
     linked-hash-map
     unicode-bidi (update to drop flame/flamer)
     tokio-timer
+    stdweb-internal-runtime
 
 Delayed/problematic::
 
@@ -115,7 +116,7 @@ Packages that are unblocked by uploads in NEW::
             stdweb-derive (NEW)
             stdweb-internal-macros
                 base-x (NEW)
-            stdweb-internal-runtime (TODO)
+            stdweb-internal-runtime (RFS)
     language-tags
         heapsize (NEW)
 
