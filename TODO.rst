@@ -98,6 +98,27 @@ Avoided, for now::
         flate2 was patched to not use miniz, hopefully this works.
         if not we can package miniz as a static C lib then miniz-sys
 
+Unblocking testing migrations
+-----------------------------
+
+Packages that are unblocked by uploads in NEW::
+
+    cc (cmake, nix, ctrlc, os-pipe, sha2-asm, most *-sys crates)
+        rayon
+            rayon-core
+                crossbeam-deque (NEW)
+    nodrop (arrayvec, crossbeam-epoch)
+        nodrop-union (NEW)
+    rand (jobserver, tempfile)
+        stdweb
+            discard (NEW)
+            stdweb-derive (NEW)
+            stdweb-internal-macros
+                base-x (NEW)
+            stdweb-internal-runtime (TODO)
+    language-tags
+        heapsize (NEW)
+
 All-features transitive dependencies of ripgrep
 -----------------------------------------------
 
