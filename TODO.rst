@@ -56,7 +56,6 @@ because all required dependencies are available in main::
     block-buffer (blocked by block-padding)
     commoncrypto-sys (update to drop clippy)
     commoncrypto (update to drop clippy)
-    linked-hash-map
     unicode-bidi (update to drop flame/flamer)
     tokio-timer
     stdweb-internal-runtime
