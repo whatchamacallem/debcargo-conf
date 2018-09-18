@@ -59,13 +59,12 @@ because all required dependencies are available in main::
     unicode-bidi (update to drop flame/flamer)
     tokio-timer
     stdweb-internal-runtime
+    cexpr
 
 Delayed/problematic::
 
     bitflags-0.9.1 -- dependency of
         pulldown-cmark  https://github.com/google/pulldown-cmark/pull/139
-    nom-3.2.1
-        cexpr           https://github.com/jethrogb/rust-cexpr/pull/7
     winapi-0.2.8 -- dependency of mio, iovec, etc
         iovec           https://github.com/carllerche/iovec/issues/16
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
