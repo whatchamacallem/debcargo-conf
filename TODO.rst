@@ -58,8 +58,6 @@ because all required dependencies are available in main::
     commoncrypto (update to drop clippy)
     unicode-bidi (update to drop flame/flamer)
     tokio-timer
-    stdweb-internal-runtime
-    cexpr
 
 Delayed/problematic::
 
