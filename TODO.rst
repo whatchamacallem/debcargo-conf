@@ -104,13 +104,10 @@ Packages that are unblocked by uploads in NEW::
         nodrop-union (NEW)
     rand (jobserver, tempfile)
         stdweb
-            discard (NEW)
             stdweb-derive (NEW)
             stdweb-internal-macros
                 base-x (NEW)
             stdweb-internal-runtime (RFS)
-    language-tags
-        heapsize (NEW)
 
 All-features transitive dependencies of ripgrep
 -----------------------------------------------
