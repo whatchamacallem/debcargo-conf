@@ -55,7 +55,6 @@ because all required dependencies are available in main::
 
     block-buffer (blocked by block-padding)
     backtrace
-    tendril
 
 Delayed/problematic::
 
