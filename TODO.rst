@@ -55,6 +55,7 @@ because all required dependencies are available in main::
 
     block-buffer (blocked by block-padding)
     fwdansi
+    crc
 
 Delayed/problematic::
 
