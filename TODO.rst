@@ -58,6 +58,7 @@ because all required dependencies are available in main::
     crc
     subtle
     quickcheck
+    curl-sys
 
 Delayed/problematic::
 
