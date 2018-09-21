@@ -57,6 +57,7 @@ because all required dependencies are available in main::
     fwdansi
     crc
     subtle
+    quickcheck
 
 Delayed/problematic::
 
