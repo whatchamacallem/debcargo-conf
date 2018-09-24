@@ -54,6 +54,8 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     block-buffer (blocked by block-padding)
+    mio (blocked by lazycell)
+    curl
 
 Delayed/problematic::
 
@@ -66,11 +68,7 @@ Delayed/problematic::
         generic-array-0.9   https://github.com/RustCrypto/traits/issues/23
     no-panic -- optional dependency of ryu
         fails to compile on stable (attribute proc macros are currently unstable (see issue #38356))
-    mio -- dependency of tokio
-        outdated windows deps   https://github.com/carllerche/mio/issues/870
     crossbeam-utils-0.3.2 -- ???
-    lazycell-0.6.0 -- dependency of mio, cargo-0.27
-        ^ fixed in mio master
     gcc-0.3.54 -- ???
     owning_ref -- dependency of lock_api <- parkinglot <- crossbeam-channel <- ignore <- ripgrep
         https://github.com/Amanieu/parking_lot/issues/93
@@ -98,8 +96,7 @@ Packages that are unblocked by uploads in NEW::
 
     cc (cmake, nix, ctrlc, os-pipe, sha2-asm, most *-sys crates)
         rayon
-            rayon-core
-                crossbeam-deque (NEW)
+            rayon-core (NEW)
     nodrop (arrayvec, crossbeam-epoch)
         nodrop-union (NEW)
     rand (jobserver, tempfile)
@@ -107,7 +104,7 @@ Packages that are unblocked by uploads in NEW::
             stdweb-derive (NEW)
             stdweb-internal-macros
                 base-x (NEW)
-            stdweb-internal-runtime (RFS)
+            stdweb-internal-runtime (NEW)
 
 All-features transitive dependencies of ripgrep
 -----------------------------------------------
