@@ -56,6 +56,7 @@ because all required dependencies are available in main::
     block-buffer (blocked by block-padding)
     mio (blocked by lazycell)
     generic-array (update)
+    blobby
 
 Delayed/problematic::
 
