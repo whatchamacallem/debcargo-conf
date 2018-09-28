@@ -60,6 +60,7 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded 
 because all required dependencies are available in main::
 
+    ryu
     serde (update)
     rustc-demangle (update)
     tar (update)
@@ -171,6 +172,10 @@ Updates that require updates of other packages::
         utf8-ranges (update to 1.0.1 RFS)
     serde_derive (update to 1.0.79)
         syn (update to 0.15 - would work, but 0.14 still has deps)
+    serde-json (update to 1.0.30)
+        ryu (RFS)
+            no-panic (feature dep, not yet packaged)
+                syn (update to 0.15)
 
 
 All-features transitive dependencies of ripgrep
