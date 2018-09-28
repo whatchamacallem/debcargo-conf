@@ -131,6 +131,17 @@ Packages that are unblocked by uploads in NEW::
             stdweb-internal-macros
                 base-x (NEW)
             stdweb-internal-runtime (NEW)
+    clap (ripgrep, structopt)
+        term-size (NEW)
+        yaml-rust
+            linked-hash-map (NEW)
+        text-wrap
+            term-size (NEW)
+            hyphenation
+                atlatl (NEW)
+                hyphenation_commons
+                    atlatl (NEW)
+                pocket-resources
 
 All-features transitive dependencies of ripgrep
 -----------------------------------------------
