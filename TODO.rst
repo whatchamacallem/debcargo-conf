@@ -150,6 +150,25 @@ Packages that are unblocked by uploads in NEW::
                     atlatl (NEW)
                 pocket-resources
 
+Unblocking crate updates
+------------------------
+
+Updates that require updates of other packages::
+
+    env_logger (update)
+        regex (see below)
+    ignore (update)
+        globset (update)
+            regex (see below)
+        same-file (update)
+            winapi-util (NEW)
+        walkdir (update)
+            winapi-util (NEW)
+    regex (update)
+        regex-syntax (update RFS)
+        utf8-ranges (update RFS)
+
+
 All-features transitive dependencies of ripgrep
 -----------------------------------------------
 
