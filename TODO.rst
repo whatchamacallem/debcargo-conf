@@ -53,6 +53,7 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded 
 because all required dependencies are available in main::
 
+    globset (update)
     regex-syntax (update)
     utf8-ranges (update)
     encoding-rs-io (update)
