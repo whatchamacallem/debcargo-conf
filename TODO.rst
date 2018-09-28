@@ -157,18 +157,20 @@ Unblocking crate updates
 
 Updates that require updates of other packages::
 
-    env_logger (update)
+    env_logger (update to 0.5.13)
         regex (see below)
-    ignore (update)
-        globset (update)
+    ignore (update to 0.4.4)
+        globset (update to 0.4.2)
             regex (see below)
-        same-file (update)
-            winapi-util (NEW)
-        walkdir (update)
-            winapi-util (NEW)
-    regex (update)
-        regex-syntax (update RFS)
-        utf8-ranges (update RFS)
+        same-file (update to 1.0.3)
+            winapi-util (NEW 0.1.1)
+        walkdir (update to 2.2.5)
+            winapi-util (NEW 0.1.1)
+    regex (update to 1.0.5)
+        regex-syntax (update to 0.6.2 RFS)
+        utf8-ranges (update to 1.0.1 RFS)
+    serde_derive (update to 1.0.79)
+        syn (update to 0.15 - would work, but 0.14 still has deps)
 
 
 All-features transitive dependencies of ripgrep
