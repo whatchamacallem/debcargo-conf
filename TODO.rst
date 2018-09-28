@@ -5,6 +5,13 @@ Crates to package
 Eventual goals
 ==============
 
+Binary crates worth packaging (please add if you know more):
+- xsv - Command line program for manipulating CSV files
+- process_viewer - Process viewer GUI in rust (GTK)
+- pulldown-cmark - Pull parser for CommonMark
+- cargo-edit - Cargo editing subcommands (add, rm, upgrade)
+- exa - Modern replacement for ls
+
 To see lists of interesting binary crates, you can run something like::
 
   $ apt-get install koji-client
