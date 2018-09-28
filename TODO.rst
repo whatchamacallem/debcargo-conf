@@ -177,6 +177,10 @@ Updates that require updates of other packages::
         ryu (RFS)
             no-panic (feature dep, not yet packaged)
                 syn (update to 0.15)
+    libgit2-sys (update to 0.7.10)
+        cc (update to 1.0.25 RFS)
+        libz-sys (update to 1.0.22)
+            cc (update to 1.0.25 RFS)
 
 
 All-features transitive dependencies of ripgrep
