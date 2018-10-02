@@ -91,6 +91,7 @@ because all required dependencies are available in main::
     futures-cpupool
     tokio-threadpool
     block-buffer (blocked by block-padding)
+    digest (blocked by generic-array update)
     mio (blocked by lazycell)
     generic-array (update)
     blobby
