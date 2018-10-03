@@ -73,7 +73,6 @@ because all required dependencies are available in main::
     tokio-executor (update)
     utf-8 (update)
     httparse (update)
-    globset (update)
     regex-syntax (update)
     utf8-ranges (update)
     encoding-rs-io (update)
