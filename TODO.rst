@@ -66,7 +66,6 @@ because all required dependencies are available in main::
     cmake (update)
     proc-macro2 (update)
     itoa (update)
-    serde (update)
     rustc-demangle (update)
     tar (update)
     tempfile (update)
