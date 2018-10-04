@@ -66,7 +66,6 @@ because all required dependencies are available in main::
     cmake (update)
     proc-macro2 (update)
     itoa (update)
-    ryu
     serde (update)
     rustc-demangle (update)
     tar (update)
@@ -89,15 +88,10 @@ because all required dependencies are available in main::
     bitflags (update)
     arrayref (update)
     futures (update)
-    cairo-sys-rs
-    glib-sys
-    futures-cpupool
-    tokio-threadpool
     block-buffer (blocked by block-padding)
     digest (blocked by generic-array update)
     mio (blocked by lazycell)
     generic-array (update)
-    blobby
 
 Delayed/problematic::
 
