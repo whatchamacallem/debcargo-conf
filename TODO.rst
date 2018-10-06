@@ -78,7 +78,6 @@ because all required dependencies are available in main::
     byteorder (update)
     bytecode (update)
     backtrace-sys (update)
-    bitflags (update)
     arrayref (update)
     futures (update)
     block-buffer (blocked by block-padding)
