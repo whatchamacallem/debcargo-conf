@@ -65,7 +65,6 @@ because all required dependencies are available in main::
     cmake (update)
     tar (update)
     tokio-executor (update)
-    utf-8 (update)
     httparse (update)
     regex-syntax (update)
     utf8-ranges (update)
