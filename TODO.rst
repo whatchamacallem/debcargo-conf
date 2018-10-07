@@ -78,6 +78,7 @@ because all required dependencies are available in main::
     digest (blocked by generic-array update)
     mio (blocked by lazycell)
     generic-array (update)
+    pocket-resources
 
 Delayed/problematic::
 
