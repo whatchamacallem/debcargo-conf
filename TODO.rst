@@ -63,7 +63,6 @@ because all required dependencies are available in main::
 
     encoding-rs (update)
     cmake (update)
-    tar (update)
     tokio-executor (update)
     httparse (update)
     regex-syntax (update)
