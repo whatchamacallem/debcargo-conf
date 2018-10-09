@@ -63,36 +63,24 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded 
 because all required dependencies are available in main::
 
-    openssl-sys (update)
     encoding-rs (update)
     cmake (update)
-    proc-macro2 (update)
-    itoa (update)
-    rustc-demangle (update)
-    tar (update)
-    tempfile (update)
+    byte-tools (update)
     tokio-executor (update)
-    utf-8 (update)
     httparse (update)
     regex-syntax (update)
     utf8-ranges (update)
     encoding-rs-io (update)
-    dtoa (update)
     discard (update)
-    csv (update)
     chrono (update)
-    cc (update)
     cfg-if (update)
-    byteorder (update)
     bytecode (update)
     backtrace-sys (update)
-    bitflags (update)
-    arrayref (update)
-    futures (update)
     block-buffer (blocked by block-padding)
     digest (blocked by generic-array update)
     mio (blocked by lazycell)
     generic-array (update)
+    pocket-resources
 
 Delayed/problematic::
 
