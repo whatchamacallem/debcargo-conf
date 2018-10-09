@@ -77,7 +77,6 @@ because all required dependencies are available in main::
     bytecode (update)
     backtrace-sys (update)
     block-buffer (blocked by block-padding)
-    digest (blocked by generic-array update)
     mio (blocked by lazycell)
 
 Delayed/problematic::
@@ -87,8 +86,6 @@ Delayed/problematic::
     winapi-0.2.8 -- dependency of mio, iovec, etc
         iovec           https://github.com/carllerche/iovec/issues/16
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
-    digest -- dependency of sha2
-        generic-array-0.9   https://github.com/RustCrypto/traits/issues/23
     no-panic -- optional dependency of ryu
         fails to compile on stable (attribute proc macros are currently unstable (see issue #38356))
     crossbeam-utils-0.3.2 -- ???
@@ -138,7 +135,7 @@ Packages that are unblocked by uploads in NEW::
                 atlatl (NEW)
                 hyphenation_commons
                     atlatl (NEW)
-                pocket-resources
+                pocket-resources (NEW)
 
 Unblocking crate updates
 ------------------------
@@ -327,13 +324,12 @@ Results as of 2018-08-03::
 dependencies of sniffglue
 -------------------------
 
-Status as of 2018-08-10::
+Status as of 2018-10-09::
 
-    digest 0.7 -- blocked by generic-array 0.9, https://github.com/RustCrypto/traits/issues/23
+    digest 0.8 -- RFS
     dns-parser 0.8 -- pending
     phf 0.7 -- pending
-    phf_generator 0.7 -- pending (with this patch, https://github.com/sfackler/rust-phf/issues/126)
-    block-buffer 0.3 -- RFS
-    phf_codegen 0.7 -- blocked by phf_generator
-    sha2 0.7 -- blocked by block-buffer, digest
+    phf_codegen 0.7 -- pending
+    block-buffer 0.7 -- blocked by block-padding (NEW)
+    sha2 0.7 -- blocked by block-buffer, digest, opaque-debug
     tls-parser 0.6 -- blocked by phf, phf_codegen
