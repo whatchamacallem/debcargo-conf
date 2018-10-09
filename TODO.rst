@@ -65,7 +65,6 @@ because all required dependencies are available in main::
 
     encoding-rs (update)
     cmake (update)
-    byte-tools (update)
     tokio-executor (update)
     httparse (update)
     regex-syntax (update)
@@ -79,7 +78,6 @@ because all required dependencies are available in main::
     block-buffer (blocked by block-padding)
     digest (blocked by generic-array update)
     mio (blocked by lazycell)
-    generic-array (update)
     pocket-resources
 
 Delayed/problematic::
