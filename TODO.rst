@@ -63,6 +63,7 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded 
 because all required dependencies are available in main::
 
+    block-buffer
     digest
     encoding-rs (update)
     cmake (update)
@@ -76,7 +77,6 @@ because all required dependencies are available in main::
     cfg-if (update)
     bytecode (update)
     backtrace-sys (update)
-    block-buffer (blocked by block-padding)
     mio (blocked by lazycell)
 
 Delayed/problematic::
@@ -321,9 +321,6 @@ dependencies of sniffglue
 Status as of 2018-10-09::
 
     digest 0.8 -- RFS
-    dns-parser 0.8 -- pending
-    phf 0.7 -- pending
-    phf_codegen 0.7 -- pending
-    block-buffer 0.7 -- blocked by block-padding (NEW)
-    sha2 0.7 -- blocked by block-buffer, digest, opaque-debug
+    block-buffer 0.7 -- RFS
+    sha2 0.7 -- blocked by block-buffer, digest
     tls-parser 0.6 -- blocked by phf, phf_codegen
