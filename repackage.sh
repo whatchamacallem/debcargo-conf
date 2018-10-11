@@ -2,7 +2,8 @@
 
 . ./vars.sh.frag
 
-if ! shouldbuild "$BUILDDIR/debian/changelog" "$PKGDIR/debian/changelog"; then
+if ! shouldbuild "$BUILDDIR/debian/changelog" "$PKGDIR/debian/changelog" && \
+   ! shouldbuild "$BUILDDIR/debian/changelog" "$DEBCARGO"; then
 	exit 0
 fi
 
