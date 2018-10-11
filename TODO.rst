@@ -194,14 +194,8 @@ Some versions might be out-of-date::
 
     semver v0.9.0 -- soft-blocked on https://github.com/steveklabnik/semver/pull/174
       if it takes too long then we'll have to just upload semver-parser 0.7
-    - flate2 v1.0.2
-    - backtrace-sys v0.1.23 -- perhaps first package libbacktrace as a separate deb package
-    backtrace v0.3.9
-    failure v0.1.2
-    + curl v0.4.14 -- depends on old winapi 0.2, try to update it, see https://github.com/alexcrichton/curl-rust/pull/204
-      or just backport the patch since it wouldn't affect anything anyways
-      see also https://salsa.debian.org/rust-team/debcargo/issues/14
-    git2-curl v0.8.1
+    - failure v0.1.2
+    - git2-curl v0.8.1
     crates-io v0.17.0
     cargo v0.29.0 -- need to patch cargo 0.29 to use lazycell 1 instead of 0.6, I've tested it and it "just works"
 
