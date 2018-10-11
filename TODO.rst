@@ -13,6 +13,7 @@ Binary crates worth packaging (please add if you know more):
 - exa - Modern replacement for ls
 - tmux-hints - Find matches (e.g. urls) and navigate them by keyboard
 - grcov - collects and aggregates code coverage information for multiple source files.
+- rural - User-friendly command-line HTTP tool
 
 
 To see lists of interesting binary crates, you can run something like::
