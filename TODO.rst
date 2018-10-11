@@ -63,6 +63,7 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded 
 because all required dependencies are available in main::
 
+    tls-parser
     block-buffer
     digest
     encoding-rs (update)
@@ -322,5 +323,5 @@ Status as of 2018-10-09::
 
     digest 0.8 -- RFS
     block-buffer 0.7 -- RFS
+    tls-parser 0.6 -- RFS
     sha2 0.7 -- blocked by block-buffer, digest
-    tls-parser 0.6 -- blocked by phf, phf_codegen
