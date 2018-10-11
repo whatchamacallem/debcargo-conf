@@ -64,6 +64,7 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded 
 because all required dependencies are available in main::
 
+    mio
     tls-parser
     block-buffer
     digest
@@ -79,7 +80,6 @@ because all required dependencies are available in main::
     cfg-if (update)
     bytecode (update)
     backtrace-sys (update)
-    mio (blocked by lazycell)
 
 Delayed/problematic::
 
