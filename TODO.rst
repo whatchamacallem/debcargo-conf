@@ -64,6 +64,7 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded 
 because all required dependencies are available in main::
 
+    cairo-sys-rs (update)
     glib-sys (update)
     http
     fallible-iterator
