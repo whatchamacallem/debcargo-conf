@@ -71,13 +71,6 @@ because all required dependencies are available in main::
     http
     fallible-iterator
     yaml-rust
-    semver-parser-0.7
-    rayon
-    tokio-io
-    hyphenation_commons
-    mio
-    tls-parser
-    block-buffer
     digest
     encoding-rs (update)
     cmake (update)
