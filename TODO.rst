@@ -15,6 +15,8 @@ Binary crates worth packaging (please add if you know more):
 - grcov - collects and aggregates code coverage information for multiple source files.
 - rural - User-friendly command-line HTTP tool
 - brewstillery - Brewer's, vinter's and distiller's calculator (GTK).
+- jql - JSON Query Language CLI tool.
+
 
 
 To see lists of interesting binary crates, you can run something like::
