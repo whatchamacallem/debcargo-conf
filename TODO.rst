@@ -67,6 +67,7 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
+    pulldown-cmark
     cairo-sys-rs (update)
     glib-sys (update)
     encoding-rs (update)
@@ -81,8 +82,6 @@ because all required dependencies are available in main::
 
 Delayed/problematic::
 
-    bitflags-0.9.1 -- dependency of
-        pulldown-cmark  https://github.com/google/pulldown-cmark/pull/139
     winapi-0.2.8 -- dependency of mio, iovec, etc
         iovec           https://github.com/carllerche/iovec/issues/16
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
