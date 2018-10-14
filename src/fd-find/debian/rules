@@ -2,6 +2,16 @@
 %:
 	dh $@ --buildsystem cargo
 
-# Disable because diff isn't in debian yet
-#override_dh_auto_test:
-#	dh_auto_test -- test --all
+override_dh_install:
+# fd is already used by another packages. Install fd into /usr/fd-find/bin/
+# to be added to the path
+# and create as symlink ot have fd-find in the path
+	mkdir -p debian/fd-find/usr/fd-find/bin/
+	mv debian/fd-find/usr/bin/fd debian/fd-find/usr/fd-find/bin/
+	cd debian/fd-find/usr/bin/ && ln -s ../fd-find/bin/fd fd-find
+	dh_install
+	dh_missing
+
+# Disable because the test still using tempdir (instead of tempfile)
+# override_dh_auto_test:
+# 	dh_auto_test -- test --all
