@@ -15,6 +15,8 @@ Binary crates worth packaging (please add if you know more):
 - grcov - collects and aggregates code coverage information for multiple source files.
 - rural - User-friendly command-line HTTP tool
 - brewstillery - Brewer's, vinter's and distiller's calculator (GTK).
+- jql - JSON Query Language CLI tool.
+
 
 
 To see lists of interesting binary crates, you can run something like::
@@ -65,6 +67,7 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded 
 because all required dependencies are available in main::
 
+    encoding-index-tests
     cairo-sys-rs (update)
     glib-sys (update)
     encoding-rs (update)
