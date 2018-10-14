@@ -73,7 +73,6 @@ because all required dependencies are available in main::
     cmake (update)
     tokio-executor (update)
     httparse (update)
-    regex-syntax (update)
     discard (update)
     chrono (update)
     cfg-if (update)
