@@ -17,6 +17,7 @@ Binary crates worth packaging (please add if you know more):
 - brewstillery - Brewer's, vinter's and distiller's calculator (GTK).
 - jql - JSON Query Language CLI tool.
 - recode_rs -  CLI tool converting between the character encodings.
+- rusty-tags - Create ctags files for cargo project.
 
 
 
