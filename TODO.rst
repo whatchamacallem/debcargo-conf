@@ -115,27 +115,15 @@ Unblocking testing migrations
 Packages that are unblocked by uploads in NEW::
 
     cc (cmake, nix, ctrlc, os-pipe, sha2-asm, most *-sys crates)
-        rayon
-            rayon-core (NEW)
-    nodrop (arrayvec, crossbeam-epoch)
-        nodrop-union (NEW)
+        rayon (NEW)
     rand (jobserver, tempfile)
         stdweb
-            stdweb-derive (NEW)
-            stdweb-internal-macros
-                base-x (NEW)
-            stdweb-internal-runtime (NEW)
+            stdweb-internal-macros (TODO)
     clap (ripgrep, structopt)
-        term-size (NEW)
-        yaml-rust
-            linked-hash-map (NEW)
+        yaml-rust (NEW)
         text-wrap
-            term-size (NEW)
             hyphenation
-                atlatl (NEW)
-                hyphenation_commons
-                    atlatl (NEW)
-                pocket-resources (NEW)
+                hyphenation_commons (NEW)
 
 Unblocking crate updates
 ------------------------
@@ -318,9 +306,9 @@ Results as of 2018-08-03::
 dependencies of sniffglue
 -------------------------
 
-Status as of 2018-10-09::
+Status as of 2018-10-16::
 
-    digest 0.8 -- RFS
-    block-buffer 0.7 -- RFS
-    tls-parser 0.6 -- RFS
+    digest 0.8 -- NEW
+    block-buffer 0.7 -- NEW
+    tls-parser 0.6 -- NEW
     sha2 0.7 -- blocked by block-buffer, digest
