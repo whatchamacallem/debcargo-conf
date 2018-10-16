@@ -50,7 +50,7 @@ fi
 CRATE="$1"
 VER="$2"
 
-PKGNAME=$($DEBCARGO deb-src-name "$CRATE" $VER || abort 1 "couldn't find crate $CRATE")
+PKGNAME=${PKGNAME:-$($DEBCARGO deb-src-name "$CRATE" $VER || abort 1 "couldn't find crate $CRATE")}
 PKGBASE=$($DEBCARGO deb-src-name "$CRATE" || abort 1 "couldn't find crate $CRATE")
 PKGDIR_REL="src/$PKGNAME"
 PKGDIR="$PWD/$PKGDIR_REL"
