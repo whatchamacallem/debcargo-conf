@@ -8,7 +8,6 @@ Eventual goals
 Binary crates worth packaging (please add if you know more):
 - xsv - Command line program for manipulating CSV files
 - process_viewer - Process viewer GUI in rust (GTK)
-- pulldown-cmark - Pull parser for CommonMark
 - cargo-edit - Cargo editing subcommands (add, rm, upgrade)
 - exa - Modern replacement for ls
 - tmux-hints - Find matches (e.g. urls) and navigate them by keyboard
@@ -30,7 +29,6 @@ Current output (on 2018-07-08) is:
 
 - aho-corasick
 - docopt
-- pulldown-cmark
 - fd-find
 - exa
 - cpp_demangle
@@ -69,8 +67,6 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    stdweb-internal-macros
-    pulldown-cmark
     cairo-sys-rs (update)
     glib-sys (update)
     encoding-rs (update)
