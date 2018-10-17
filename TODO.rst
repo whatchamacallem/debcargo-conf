@@ -79,6 +79,7 @@ because all required dependencies are available in main::
     encoding-rs (update)
     cmake (update)
     tokio-executor (update)
+    tokio-timer (update)
     httparse (update)
     discard (update)
     chrono (update)
