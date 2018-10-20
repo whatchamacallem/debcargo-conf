@@ -67,6 +67,7 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
+    libsqlite3-sys
     cssparser-macros
     lua52-sys
     cairo-sys-rs (update)
