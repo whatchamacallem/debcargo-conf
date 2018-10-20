@@ -67,10 +67,6 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    serde-test
-    tokio-fs
-    tokio-codec
-    h2
     encoding-index-korean
     encoding-index-japanese
     encoding-index-tradchinese
