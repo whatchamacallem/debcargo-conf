@@ -67,11 +67,25 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
+    semver-parser-0.7
+    sha2
+    owning-ref
+    slog
+    serde-test
+    tokio-fs
+    tokio-codec
+    h2
+    encoding-index-korean
+    encoding-index-japanese
+    encoding-index-tradchinese
+    encoding-index-simpchinese
+    encoding-index-singlebyte
     cairo-sys-rs (update)
     glib-sys (update)
     encoding-rs (update)
     cmake (update)
     tokio-executor (update)
+    tokio-timer (update)
     httparse (update)
     discard (update)
     chrono (update)
