@@ -68,7 +68,6 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     sha2
-    owning-ref
     serde-test
     tokio-fs
     tokio-codec
