@@ -69,7 +69,6 @@ because all required dependencies are available in main::
 
     error-chain
     rustc-workspace-hack
-    rustfix
     libsqlite3-sys
     cssparser-macros
     lua52-sys
