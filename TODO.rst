@@ -69,7 +69,6 @@ because all required dependencies are available in main::
 
     sha2
     owning-ref
-    slog
     serde-test
     tokio-fs
     tokio-codec
