@@ -69,6 +69,7 @@ because all required dependencies are available in main::
 
     stringprep
     mio-uds
+    md5 (update)
     cairo-sys-rs (update)
     glib-sys (update)
     encoding-rs (update)
