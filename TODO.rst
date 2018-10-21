@@ -69,6 +69,7 @@ because all required dependencies are available in main::
 
     stringprep
     mio-uds
+    lazycell (update, fixes testing migration)
     subtle (update)
     md5 (update)
     cairo-sys-rs (update)
