@@ -90,6 +90,11 @@ Delayed/problematic::
         All depending packaged crates upgraded to 0.15 already, except
         stdweb-derive & stdweb-internal-macros. Updated in git, but not
         yet released, see https://github.com/koute/stdweb/issues/291
+        Updatable dependencies:
+            serde-derive
+            structopt-derive
+            synstructure (0.9 to 0.10)
+            failure-derive (has updated synstructure 0.9 to 0.10)
     winapi-0.2.8 -- dependency of mio, iovec, etc
         iovec           https://github.com/carllerche/iovec/issues/16
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
