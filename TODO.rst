@@ -17,6 +17,7 @@ Binary crates worth packaging (please add if you know more):
 - jql - JSON Query Language CLI tool.
 - recode_rs -  CLI tool converting between the character encodings.
 - rusty-tags - Create ctags files for cargo project.
+- rustfmt - rust coding style
 
 
 
@@ -48,8 +49,6 @@ Sccache is also helpful for reducing the build-time of things like firefox and t
 There are also more binaries here:
 
 https://github.com/rust-unofficial/awesome-rust
-
-+ rustfmt https://github.com/rust-lang-nursery/rustfmt
 
 Immediate goals
 ===============
