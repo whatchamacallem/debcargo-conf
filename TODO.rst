@@ -86,6 +86,10 @@ because all required dependencies are available in main::
 
 Delayed/problematic::
 
+    syn-0.15 (update from 0.14)
+        All depending packaged crates upgraded to 0.15 already, except
+        stdweb-derive & stdweb-internal-macros. Updated in git, but not
+        yet released, see https://github.com/koute/stdweb/issues/291
     winapi-0.2.8 -- dependency of mio, iovec, etc
         iovec           https://github.com/carllerche/iovec/issues/16
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
