@@ -68,6 +68,7 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
+    encode-unicode
     semver
     gobject-sys
     stringprep
