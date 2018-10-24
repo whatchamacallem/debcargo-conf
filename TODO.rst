@@ -6,6 +6,7 @@ Eventual goals
 ==============
 
 Binary crates worth packaging (please add if you know more):
+
 - xsv - Command line program for manipulating CSV files
 - process_viewer - Process viewer GUI in rust (GTK)
 - cargo-edit - Cargo editing subcommands (add, rm, upgrade)
@@ -18,6 +19,7 @@ Binary crates worth packaging (please add if you know more):
 - recode_rs -  CLI tool converting between the character encodings.
 - rusty-tags - Create ctags files for cargo project.
 - rustfmt - rust coding style
+- bingrep - Grep through binaries from various OSs and architectures.
 
 
 
