@@ -74,6 +74,7 @@ because all required dependencies are available in main::
     gobject-sys
     stringprep
     mio-uds
+    syn (update, unlocks several updates as listed below)
     lazycell (update, fixes testing migration)
     subtle (update)
     md5 (update)
@@ -91,10 +92,9 @@ because all required dependencies are available in main::
 Delayed/problematic::
 
     syn-0.15 (update from 0.14)
-        All depending packaged crates upgraded to 0.15 already, except
-        stdweb-derive & stdweb-internal-macros. Updated in git, but not
-        yet released, see https://github.com/koute/stdweb/issues/291
         Updatable dependencies:
+            stdweb-derive
+            stdweb-internal-macros
             serde-derive
             structopt-derive
             synstructure (0.9 to 0.10)
