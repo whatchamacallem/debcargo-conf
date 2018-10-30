@@ -75,7 +75,6 @@ because all required dependencies are available in main::
     gobject-sys
     stringprep
     mio-uds
-    syn (update, unlocks several updates as listed below)
     lazycell (update, fixes testing migration)
     subtle (update)
     md5 (update)
@@ -96,6 +95,8 @@ Delayed/problematic::
         Updatable dependencies:
             stdweb-derive
             stdweb-internal-macros
+                (version 0.2.2 depends on rustc_version 0.2 which
+                requires semver 0.9 to be available first)
             serde-derive
             structopt-derive
             synstructure (0.9 to 0.10)
