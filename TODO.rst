@@ -198,11 +198,7 @@ dependencies of debcargo
 Roughly in dependency order, i.e. earlier packages have less dependencies.
 Some versions might be out-of-date::
 
-    semver v0.9.0 -- soft-blocked on https://github.com/steveklabnik/semver/pull/174
-      if it takes too long then we'll have to just upload semver-parser 0.7
-    - failure v0.1.2
-    - git2-curl v0.8.1
-    crates-io v0.17.0
+    semver v0.9.0 -- uploaded, but should be updated when https://github.com/steveklabnik/semver/pull/174 is fixed
     cargo v0.29.0 -- need to patch cargo 0.29 to use lazycell 1 instead of 0.6, I've tested it and it "just works"
 
 dependencies of mdbook/exa
