@@ -68,6 +68,7 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
+    rustc_version
     encoding
     string_cache_codegen
     crossbeam-epoch-0.5 (required by rust-cc)
@@ -98,8 +99,7 @@ Delayed/problematic::
         Updatable dependencies:
             stdweb-derive
             stdweb-internal-macros
-                (version 0.2.2 depends on rustc_version 0.2 which
-                requires semver 0.9 to be available first)
+                (version 0.2.2 depends on rustc_version 0.2 which is RFS)
             serde-derive
             structopt-derive
             synstructure (0.9 to 0.10)
