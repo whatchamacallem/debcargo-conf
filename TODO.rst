@@ -189,8 +189,20 @@ Some versions might be out-of-date::
     semver v0.9.0 -- uploaded, but should be updated when https://github.com/steveklabnik/semver/pull/174 is fixed
     cargo v0.29.0 -- need to patch cargo 0.29 to use lazycell 1 instead of 0.6, I've tested it and it "just works"
 
+dependencies of ripgrep 0.10
+----------------------------
+
+ripgrep needs grep
+grep-cli needs globset 0.4.2 (uploaded)
+
+ignore => crossbeam-channel => parking_lot => parking_lot_core => rustc-version (in NEW)
+
 dependencies of mdbook/exa
 --------------------------
+
+tldr: zoneinfo_compiler needs datetime
+datetime needs iso8601 (in NEW)
+We will need to update some versions of the dep. Besides that, we should be good.
 
 To regenerate the below list; run something like::
 
