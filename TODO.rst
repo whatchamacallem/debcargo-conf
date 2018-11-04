@@ -72,7 +72,6 @@ because all required dependencies are available in main::
     cmake (update)
     tokio-executor (update)
     tokio-timer (update)
-    httparse (update)
     discard (update)
     chrono (update)
     cfg-if (update)
