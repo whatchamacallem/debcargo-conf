@@ -192,6 +192,10 @@ Some versions might be out-of-date::
 dependencies of mdbook/exa
 --------------------------
 
+tldr: zoneinfo_compiler needs datetime
+datetime needs iso8601 (in NEW)
+We will need to update some versions of the dep. Besides that, we should be good.
+
 To regenerate the below list; run something like::
 
     for c in <CRATES>; do \
