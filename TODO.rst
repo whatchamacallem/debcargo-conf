@@ -194,6 +194,9 @@ dependencies of ripgrep 0.10
 
 ripgrep needs grep
 grep-cli needs globset 0.4.2 (uploaded)
+grep-printer
+grep-regex
+grep-searcher
 
 ignore => crossbeam-channel => parking_lot => parking_lot_core => rustc-version (in NEW)
 
