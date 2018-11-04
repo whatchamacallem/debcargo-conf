@@ -32,7 +32,6 @@ Current output (on 2018-07-08) is:
 
 - aho-corasick
 - docopt
-- fd-find
 - exa
 - cpp_demangle
 - permutate
@@ -68,8 +67,6 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    crossbeam-epoch-0.5 (required by rust-cc)
-    term
     encode-unicode
     semver
     lazycell (update, fixes testing migration)
