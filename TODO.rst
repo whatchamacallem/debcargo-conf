@@ -87,8 +87,8 @@ Delayed/problematic::
         Updatable dependencies:
             stdweb-derive (RFS)
             stdweb-internal-macros
-                (version 0.2.2 depends on rustc_version 0.2 which is RFS)
-            serde-derive
+                (version 0.2.2 depends on rustc_version 0.2 which is
+                in NEW queue)
             structopt-derive
             synstructure (0.9 to 0.10, RFS)
             failure-derive (has updated synstructure 0.9 to 0.10)
