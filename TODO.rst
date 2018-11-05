@@ -68,6 +68,7 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     owning-ref 0.3.3
+    synstructure (update)
     stdweb-derive (update)
     md5 (update)
     encoding-rs (update)
@@ -89,7 +90,7 @@ Delayed/problematic::
                 (version 0.2.2 depends on rustc_version 0.2 which is RFS)
             serde-derive
             structopt-derive
-            synstructure (0.9 to 0.10)
+            synstructure (0.9 to 0.10, RFS)
             failure-derive (has updated synstructure 0.9 to 0.10)
     winapi-0.2.8 -- dependency of mio, iovec, etc
         iovec           https://github.com/carllerche/iovec/issues/16
