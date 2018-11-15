@@ -67,9 +67,12 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
+    glib
+    structopt-derive (update)
+    hexyl
+    crossbeam-utils (update)
     cssparser-macros (update, syn)
     owning-ref 0.3.3
-    synstructure (update)
     stdweb-derive (update)
     md5 (update)
     encoding-rs (update)
@@ -91,8 +94,6 @@ Delayed/problematic::
                 (version 0.2.2 depends on rustc_version 0.2 which is
                 in NEW queue)
             structopt-derive
-            synstructure (0.9 to 0.10, RFS)
-            failure-derive (has updated synstructure 0.9 to 0.10)
     winapi-0.2.8 -- dependency of mio, iovec, etc
         iovec           https://github.com/carllerche/iovec/issues/16
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
@@ -191,7 +192,6 @@ Roughly in dependency order, i.e. earlier packages have less dependencies.
 Some versions might be out-of-date::
 
     semver v0.9.0 -- uploaded, but should be updated when https://github.com/steveklabnik/semver/pull/174 is fixed
-    cargo v0.29.0 -- need to patch cargo 0.29 to use lazycell 1 instead of 0.6, I've tested it and it "just works"
 
 dependencies of ripgrep 0.10
 ----------------------------

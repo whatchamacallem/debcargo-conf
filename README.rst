@@ -3,8 +3,7 @@ Instructions
 
 To get set up, run::
 
-  apt update && apt build-dep cargo && apt install cargo dh-cargo
-  cargo install debcargo # eventually will be replaced by "apt install debcargo"
+  apt update && apt install debcargo
 
 Then for each new package:
 
