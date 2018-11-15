@@ -67,6 +67,7 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
+    pulldown-cmark (update 0.1.2 to 0.2.0)
     glib
     structopt-derive (update)
     hexyl
