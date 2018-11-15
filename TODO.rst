@@ -68,7 +68,7 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     hexyl
-    crossbeam-deque (update)
+    crossbeam-utils (update)
     cssparser-macros (update, syn)
     owning-ref 0.3.3
     stdweb-derive (update)
