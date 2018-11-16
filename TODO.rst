@@ -68,7 +68,7 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     ryu (update)
-    pulldown-cmark (update 0.1.2 to 0.2.0) - please run the testsuite
+    pulldown-cmark (update 0.1.2 to 0.2.0)
     hexyl (Uploaded to NEW but please run the testsuite)
     crossbeam-utils (update)
     owning-ref 0.3.3
