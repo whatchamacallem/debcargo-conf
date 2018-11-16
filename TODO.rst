@@ -70,7 +70,6 @@ because all required dependencies are available in main::
     ryu (update)
     pulldown-cmark (update 0.1.2 to 0.2.0)
     glib
-    structopt-derive (update, uses syn-0.15)
     hexyl
     crossbeam-utils (update)
     cssparser-macros (update, syn)
