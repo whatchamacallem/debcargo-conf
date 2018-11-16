@@ -72,10 +72,7 @@ because all required dependencies are available in main::
     glib
     hexyl
     crossbeam-utils (update)
-    cssparser-macros (update, syn)
     owning-ref 0.3.3
-    stdweb-internal-macros (update, uses syn-0.15)
-    stdweb-derive (update, uses syn-0.15)
     md5 (update)
     encoding-rs (update)
     cmake (update)
