@@ -69,7 +69,7 @@ because all required dependencies are available in main::
 
     ryu (update)
     pulldown-cmark (update 0.1.2 to 0.2.0)
-    hexyl (Uploaded to NEW but please run the testsuite)
+    hexyl (updated to run tests)
     crossbeam-utils (update)
     owning-ref 0.3.3
     md5 (update)
