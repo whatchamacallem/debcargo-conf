@@ -69,13 +69,13 @@ because all required dependencies are available in main::
 
     pulldown-cmark (update 0.1.2 to 0.2.0)
     glib
-    structopt-derive (update)
+    structopt-derive (update, uses syn-0.15)
     hexyl
     crossbeam-utils (update)
     cssparser-macros (update, syn)
     owning-ref 0.3.3
-    stdweb-internal-macros (update)
-    stdweb-derive (update)
+    stdweb-internal-macros (update, uses syn-0.15)
+    stdweb-derive (update, uses syn-0.15)
     md5 (update)
     encoding-rs (update)
     cmake (update)
@@ -89,13 +89,6 @@ because all required dependencies are available in main::
 
 Delayed/problematic::
 
-    syn-0.15 (update from 0.14)
-        Updatable dependencies:
-            stdweb-derive (RFS)
-            stdweb-internal-macros
-                (version 0.2.2 depends on rustc_version 0.2 which is
-                in NEW queue)
-            structopt-derive
     winapi-0.2.8 -- dependency of mio, iovec, etc
         iovec           https://github.com/carllerche/iovec/issues/16
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
