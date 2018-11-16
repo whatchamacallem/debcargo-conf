@@ -74,6 +74,7 @@ because all required dependencies are available in main::
     crossbeam-utils (update)
     cssparser-macros (update, syn)
     owning-ref 0.3.3
+    stdweb-internal-macros (update)
     stdweb-derive (update)
     md5 (update)
     encoding-rs (update)
