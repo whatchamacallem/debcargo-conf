@@ -67,13 +67,13 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    glib
-    structopt-derive (update)
-    hexyl
+    pango-sys
+    fragile
+    ryu (update)
+    pulldown-cmark (update 0.1.2 to 0.2.0)
+    hexyl (updated to run tests)
     crossbeam-utils (update)
-    cssparser-macros (update, syn)
     owning-ref 0.3.3
-    stdweb-derive (update)
     md5 (update)
     encoding-rs (update)
     cmake (update)
@@ -87,13 +87,6 @@ because all required dependencies are available in main::
 
 Delayed/problematic::
 
-    syn-0.15 (update from 0.14)
-        Updatable dependencies:
-            stdweb-derive (RFS)
-            stdweb-internal-macros
-                (version 0.2.2 depends on rustc_version 0.2 which is
-                in NEW queue)
-            structopt-derive
     winapi-0.2.8 -- dependency of mio, iovec, etc
         iovec           https://github.com/carllerche/iovec/issues/16
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
@@ -200,6 +193,7 @@ ripgrep needs grep
 grep needs grep-cli, grep-printer, grep-searcher
 grep-cli needs globset 0.4.2 (uploaded)
 grep-printer needs grep-searcher (in NEW), serde-derive (in NEW), serde-json (uploaded)
+
 
 ignore => crossbeam-channel => parking_lot => parking_lot_core => rustc-version (in NEW)
 

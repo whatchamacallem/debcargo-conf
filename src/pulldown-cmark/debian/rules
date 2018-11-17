@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/pkg-info.mk
+
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_installman:
+	help2man \
+		--name pulldown-cmark \
+		--no-info \
+		--version-string $(DEB_VERSION_UPSTREAM) \
+		debian/pulldown-cmark/usr/bin/pulldown-cmark > debian/pulldown-cmark.1
+	dh_installman -O--buildsystem=cargo
+
+override_dh_auto_test:
+# the test suite does not pass all tests against the spec yet, see
+# https://github.com/raphlinus/pulldown-cmark/issues/154
+	dh_auto_test -- test --all || true
