@@ -67,6 +67,7 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
+    maxminddb
     servo_arc
     string_cache
     utf8parse
