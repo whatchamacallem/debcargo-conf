@@ -82,7 +82,6 @@ because all required dependencies are available in main::
     fragile
     ryu (update)
     crossbeam-utils (update)
-    owning-ref 0.3.3
     md5 (update)
     encoding-rs (update)
     cmake (update)
