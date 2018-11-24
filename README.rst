@@ -131,6 +131,22 @@ For now, testsuites aren't executed for library.
 However, for binary, it is strongly recommended to run the testsuites.
 See ripgrep as example.
 
+Updating the dependencies
+-------------------------
+
+In some cases, libraries/programs are forcing an old version of a library
+as dependencies.
+In order to limit the number of duplicated libraries in the archive,
+please try to evaluate if a newer version of the dependencies could be used.
+
+To achieve that, after ./release.sh, try:
+$ cd build/<package>/
+$ quilt new relax-dep.diff
+$ quilt edit Cargo.toml
+$ quilt refresh
+$ cp -R patches ../../src/<package>/debian
+
+
 TODO
 ====
 
