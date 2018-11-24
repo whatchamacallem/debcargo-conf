@@ -203,6 +203,12 @@ grep-printer needs grep-searcher (in NEW), serde-derive (in NEW), serde-json (up
 
 ignore => crossbeam-channel => parking_lot => parking_lot_core => rustc-version (in NEW)
 
+dependencies of rustfmt
+-----------------------
+
+rustfmt needs syntex_errors => syntex_pos (NEW)
+              syntex_syntax => extprim (NEW)
+
 dependencies of mdbook/exa
 --------------------------
 
