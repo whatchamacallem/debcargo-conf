@@ -78,8 +78,6 @@ because all required dependencies are available in main::
     arc-swap (update)
     gio-sys
     cairo-rs
-    pango-sys
-    fragile
     ryu (update)
     crossbeam-utils (update)
     md5 (update)
