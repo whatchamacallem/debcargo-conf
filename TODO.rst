@@ -67,7 +67,13 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    sniffglue (update, bugfix)
+    ascii
+    url (update + fix for testing migration)
+    stdweb
+    gdk-pixbuf-sys
+    gio
+    pango
+    sniffglue (update, bugfix - need better changelog)
     ryu (update)
     crossbeam-utils (update)
     md5 (update)
@@ -186,18 +192,13 @@ dependencies of ripgrep 0.10
 ----------------------------
 
 ripgrep needs grep
-grep needs grep-cli, grep-printer, grep-searcher
-grep-cli needs globset 0.4.2 (uploaded)
-grep-printer needs grep-searcher (in NEW), serde-derive (in NEW), serde-json (uploaded)
 
-
-ignore => crossbeam-channel => parking_lot => parking_lot_core => rustc-version (in NEW)
+ignore => crossbeam-channel => parking_lot (NEW)
 
 dependencies of rustfmt
 -----------------------
 
-rustfmt needs syntex_errors => syntex_pos (NEW)
-              syntex_syntax => extprim (NEW)
+rustfmt needs syntex_syntax => syntex-errors (NEW)
 
 dependencies of mdbook/exa
 --------------------------
