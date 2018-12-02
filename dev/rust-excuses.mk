@@ -4,6 +4,11 @@
 # - Red nodes means it's not in Debian
 # - Yellow nodes means it's in Debian, but something else needs a different
 #   version of it.
+# - For nodes with no children, it probably means that there is an older
+#   version already in Debian Testing, and something else needs this specific
+#   older version and can't work with the newer version. Unfortunately the
+#   excuses page gives no more details about this, and you will have to ask
+#   #debian-release to help you interpret https://release.debian.org/britney/update_output.txt
 #
 # Usage:
 # $ dev/rust-excuses.mk refresh all
