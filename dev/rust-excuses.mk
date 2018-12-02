@@ -1,6 +1,10 @@
 #!/usr/bin/make -f
 # Output a nice graph of why stuff isn't yet in Debian Testing.
 #
+# - Red nodes means it's not in Debian
+# - Yellow nodes means it's in Debian, but something else needs a different
+#   version of it.
+#
 # Usage:
 # $ dev/rust-excuses.mk refresh all
 
