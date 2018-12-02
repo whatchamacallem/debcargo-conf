@@ -74,7 +74,6 @@ because all required dependencies are available in main::
     gio
     pango
     sniffglue (update, bugfix - need better changelog)
-    ryu (update)
     crossbeam-utils (update)
     md5 (update)
     encoding-rs (update)
