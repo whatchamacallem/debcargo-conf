@@ -92,7 +92,8 @@ Delayed/problematic::
         iovec           https://github.com/carllerche/iovec/issues/16
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
     no-panic -- optional dependency of ryu
-        fails to compile on stable (attribute proc macros are currently unstable (see issue #38356))
+        can be built as soon as dependencies are updated:
+            quote 0.6.10, proc-macro 0.4.24
     crossbeam-utils-0.3.2 -- ???
     gcc-0.3.54 -- ???
     owning_ref -- dependency of lock_api <- parkinglot <- crossbeam-channel <- ignore <- ripgrep
