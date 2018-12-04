@@ -73,6 +73,7 @@ because all required dependencies are available in main::
     gdk-pixbuf-sys
     gio
     pango
+    proc-macro2 (update, required for no-panic as shown below)
     sniffglue (update, bugfix - need better changelog)
     crossbeam-utils (update)
     md5 (update)
