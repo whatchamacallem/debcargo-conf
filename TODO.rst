@@ -73,7 +73,6 @@ because all required dependencies are available in main::
     pango
     proc-macro2 (update, required for no-panic as shown below)
     sniffglue (update, bugfix - need better changelog)
-    crossbeam-utils (update)
     md5 (update)
     encoding-rs (update)
     cmake (update)
@@ -87,6 +86,9 @@ because all required dependencies are available in main::
 
 Delayed/problematic::
 
+    crossbeam-utils (update 0.5 → 0.6)
+        cargo 0.31 requires 0.5. crossbeam-utils can probably update after next
+        cargo release got packaged, as it's updated in cargo's git repo already
     winapi-0.2.8 -- dependency of mio, iovec, etc
         iovec           https://github.com/carllerche/iovec/issues/16
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
