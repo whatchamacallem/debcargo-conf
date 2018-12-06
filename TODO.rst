@@ -72,7 +72,6 @@ because all required dependencies are available in main::
     gdk-pixbuf-sys
     gio
     pango
-    proc-macro2 (update, required for no-panic as shown below)
     sniffglue (update, bugfix - need better changelog)
     md5 (update)
     encoding-rs (update)
@@ -95,7 +94,7 @@ Delayed/problematic::
         see also https://salsa.debian.org/rust-team/debcargo/issues/14
     no-panic -- optional dependency of ryu
         can be built as soon as dependencies are updated:
-            quote 0.6.10, proc-macro 0.4.24
+            quote 0.6.10
     crossbeam-utils-0.3.2 -- ???
     gcc-0.3.54 -- ???
     owning_ref -- dependency of lock_api <- parkinglot <- crossbeam-channel <- ignore <- ripgrep
