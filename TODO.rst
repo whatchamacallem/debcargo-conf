@@ -72,6 +72,7 @@ because all required dependencies are available in main::
     gdk-pixbuf-sys
     gio
     pango
+    pcre2-sys
     sniffglue (update, bugfix - need better changelog)
     md5 (update)
     encoding-rs (update)
@@ -95,6 +96,8 @@ Delayed/problematic::
     no-panic -- optional dependency of ryu
         can be built as soon as dependencies are updated:
             quote 0.6.10
+    grep
+        pcre2 feature depends on grep-pcre2 -> pcre2 -> pcre2-sys
     crossbeam-utils-0.3.2 -- ???
     gcc-0.3.54 -- ???
     owning_ref -- dependency of lock_api <- parkinglot <- crossbeam-channel <- ignore <- ripgrep
