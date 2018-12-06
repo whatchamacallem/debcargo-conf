@@ -67,8 +67,6 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    lock_api (update)
-    url (update + fix for testing migration)
     gdk-pixbuf-sys
     gio
     pango
