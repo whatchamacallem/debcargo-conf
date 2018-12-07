@@ -82,6 +82,7 @@ because all required dependencies are available in main::
     cfg-if (update)
     bytecode (update)
     backtrace-sys (update)
+    core-foundation (update + bugfix to build on more archs)
 
 Delayed/problematic::
 
