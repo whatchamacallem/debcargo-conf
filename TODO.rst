@@ -83,6 +83,7 @@ because all required dependencies are available in main::
     bytecode (update)
     backtrace-sys (update)
     core-foundation (update + bugfix to build on more archs)
+    core-foundation-sys (update)
 
 Delayed/problematic::
 
