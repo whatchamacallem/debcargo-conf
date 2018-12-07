@@ -84,6 +84,7 @@ because all required dependencies are available in main::
     backtrace-sys (update)
     core-foundation (update + bugfix to build on more archs)
     core-foundation-sys (update)
+    serde (update)
 
 Delayed/problematic::
 
