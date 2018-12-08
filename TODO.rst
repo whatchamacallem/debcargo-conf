@@ -67,10 +67,6 @@ Ready for upload (Request For Sponsor)
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    gdk-pixbuf-sys
-    gio
-    pango
-    pcre2-sys
     sniffglue (update, bugfix - need better changelog)
     md5 (update)
     encoding-rs (update)
@@ -80,10 +76,7 @@ because all required dependencies are available in main::
     discard (update)
     chrono (update)
     cfg-if (update)
-    bytecode (update)
     backtrace-sys (update)
-    core-foundation (update + bugfix to build on more archs)
-    core-foundation-sys (update)
     serde (update)
 
 Delayed/problematic::
@@ -91,18 +84,11 @@ Delayed/problematic::
     crossbeam-utils (update 0.5 → 0.6)
         cargo 0.31 requires 0.5. crossbeam-utils can probably update after next
         cargo release got packaged, as it's updated in cargo's git repo already
-    winapi-0.2.8 -- dependency of mio, iovec, etc
-        iovec           https://github.com/carllerche/iovec/issues/16
-        see also https://salsa.debian.org/rust-team/debcargo/issues/14
-    no-panic -- optional dependency of ryu
-        can be built as soon as dependencies are updated:
-            quote 0.6.10
     grep
         pcre2 feature depends on grep-pcre2 -> pcre2 -> pcre2-sys
     crossbeam-utils-0.3.2 -- ???
-    gcc-0.3.54 -- ???
-    owning_ref -- dependency of lock_api <- parkinglot <- crossbeam-channel <- ignore <- ripgrep
-        https://github.com/Amanieu/parking_lot/issues/93
+    gcc-0.3.54 -- don't need this, completely obsoleted by cc.
+        patch dependents to use cc instead.
     winutil -- dependency of hostname <- resolv-conf <- trust-dns-resolver
         doesn't build on linux
 
