@@ -96,6 +96,7 @@ because all required dependencies are available in main::
 
 Delayed/problematic::
 
+    flate2 (update) -- waiting on crc32fast in NEW
     md5 (update) -- affects uuid
     tokio-executor (update), tokio-timer (update)
         latest versions needs crossbeam-utils 0.6, see below
