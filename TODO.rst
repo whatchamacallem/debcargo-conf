@@ -114,11 +114,6 @@ Delayed/problematic::
     statistical (blocked by num & co)
     hyperfine (blocked by indicatif & statistical)
 
-Avoided, for now::
-
-    miniz-sys-0.1.10
-        flate2 was patched to not use miniz, hopefully this works.
-        if not we can package miniz as a static C lib then miniz-sys
 
 Unblocking testing migrations
 -----------------------------
