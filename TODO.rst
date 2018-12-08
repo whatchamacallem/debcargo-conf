@@ -61,6 +61,15 @@ The lists below are calculated using some combinations of running::
 from the ``debcargo.git`` repository.
 
 
+Remove old libraries
+--------------------
+
+Should file a RM request to ftpmasters for these old crates:
+
+- syntex-* were uploaded by mistake, only rustfmt 0.10 (obsolete version) depends on them
+- crossbeam-utils-0.2, no longer needed
+
+
 Ready for upload (Request For Sponsor)
 --------------------------------------
 
@@ -173,11 +182,6 @@ dependencies of ripgrep 0.10
 ripgrep needs grep
 
 ignore => crossbeam-channel => parking_lot (NEW)
-
-dependencies of rustfmt
------------------------
-
-rustfmt needs syntex_syntax => syntex-errors (NEW)
 
 dependencies of mdbook/exa
 --------------------------
