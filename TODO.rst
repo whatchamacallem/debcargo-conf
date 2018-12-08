@@ -21,8 +21,6 @@ Binary crates worth packaging (please add if you know more):
 - rustfmt - rust coding style
 - bingrep - Grep through binaries from various OSs and architectures.
 
-
-
 To see lists of interesting binary crates, you can run something like::
 
   $ apt-get install koji-client
@@ -73,15 +71,23 @@ Should file a RM request to ftpmasters for these old crates:
 Ready for upload (Request For Sponsor)
 --------------------------------------
 
+When adding a package here, and it involves updating an existing package in a
+semver-incompatible way, please check the reverse dependencies by running::
+
+    $ aptitude search '~Dlibrust-$cratename'
+
+and try to verify that they won't be broken by your update. If they are, then:
+
+1. Document it below ("Delayed/problematic")
+2. File an issue upstream to report that they should update to the new library
+3. Write a patch if you can get that working, and document it also below.
+
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     sniffglue (update, bugfix - need better changelog)
-    md5 (update)
     encoding-rs (update)
     cmake (update)
-    tokio-executor (update)
-    tokio-timer (update)
     discard (update)
     chrono (update)
     cfg-if (update)
@@ -90,6 +96,9 @@ because all required dependencies are available in main::
 
 Delayed/problematic::
 
+    md5 (update) -- affects uuid
+    tokio-executor (update), tokio-timer (update)
+        latest versions needs crossbeam-utils 0.6, see below
     crossbeam-utils (update 0.5 → 0.6)
         too much other stuff depends on crossbeam-utils 0.5, so that is now in NEW
         this can be updated to 0.6 when crossbeam-utils-0.5 passes NEW
