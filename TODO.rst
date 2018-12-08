@@ -82,11 +82,10 @@ because all required dependencies are available in main::
 Delayed/problematic::
 
     crossbeam-utils (update 0.5 → 0.6)
-        cargo 0.31 requires 0.5. crossbeam-utils can probably update after next
-        cargo release got packaged, as it's updated in cargo's git repo already
+        too much other stuff depends on crossbeam-utils 0.5, so that is now in NEW
+        this can be updated to 0.6 when crossbeam-utils-0.5 passes NEW
     grep
         pcre2 feature depends on grep-pcre2 -> pcre2 -> pcre2-sys
-    crossbeam-utils-0.3.2 -- ???
     gcc-0.3.54 -- don't need this, completely obsoleted by cc.
         patch dependents to use cc instead.
     winutil -- dependency of hostname <- resolv-conf <- trust-dns-resolver
@@ -96,9 +95,6 @@ Delayed/problematic::
     indicatif (blocked by parking_lot)
     statistical (blocked by num & co)
     hyperfine (blocked by indicatif & statistical)
-
-infinity0: I've omitted the above for now since they are older versions, let's
-try to get the reverse-dependent crates using the latest versions of them.
 
 Avoided, for now::
 
@@ -170,14 +166,6 @@ Top-level page: https://qa.debian.org/excuses.php?package=rust-ripgrep
 - yaml-rust, needed by
     https://qa.debian.org/excuses.php?package=rust-clap
     also linked-hash-map as a dependency of this
-
-dependencies of debcargo
-------------------------
-
-Roughly in dependency order, i.e. earlier packages have less dependencies.
-Some versions might be out-of-date::
-
-    semver v0.9.0 -- uploaded, but should be updated when https://github.com/steveklabnik/semver/pull/174 is fixed
 
 dependencies of ripgrep 0.10
 ----------------------------
