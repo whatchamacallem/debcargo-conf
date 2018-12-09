@@ -140,8 +140,6 @@ Updates that require updates of other packages::
 
     env_logger (update to 0.5.13)
     ignore (update to 0.4.4)
-    libgit2-sys (update to 0.7.10)
-        libz-sys (update to 1.0.22)
 
 
 All-features transitive dependencies of ripgrep
