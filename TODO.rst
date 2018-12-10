@@ -165,9 +165,7 @@ Top-level page: https://qa.debian.org/excuses.php?package=rust-ripgrep
 dependencies of ripgrep 0.10
 ----------------------------
 
-ripgrep needs grep
-
-ignore => crossbeam-channel
+ripgrep needs ignore => crossbeam-channel (NEW)
 
 dependencies of mdbook/exa
 --------------------------
