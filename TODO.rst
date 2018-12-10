@@ -167,7 +167,7 @@ dependencies of ripgrep 0.10
 
 ripgrep needs grep
 
-ignore => crossbeam-channel => parking_lot (NEW)
+ignore => crossbeam-channel
 
 dependencies of mdbook/exa
 --------------------------
