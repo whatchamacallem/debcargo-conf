@@ -103,6 +103,7 @@ because all required dependencies are available in main::
     serde-json (update)
     simd (update)
     smallvec (update)
+    spin (update)
 
 Delayed/problematic::
 
