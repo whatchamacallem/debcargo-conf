@@ -101,6 +101,7 @@ because all required dependencies are available in main::
     quickcheck (update)
     syn (update)
     serde-json (update)
+    simd (update)
 
 Delayed/problematic::
 
