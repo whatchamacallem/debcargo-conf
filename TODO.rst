@@ -105,6 +105,7 @@ because all required dependencies are available in main::
     smallvec (update)
     spin (update)
     tar (update)
+    regex-syntax (update)
 
 Delayed/problematic::
 
