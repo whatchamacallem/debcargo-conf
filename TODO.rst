@@ -85,6 +85,7 @@ and try to verify that they won't be broken by your update. If they are, then:
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
+    pcre2
     sniffglue (update, bugfix - need better changelog)
     encoding-rs (update)
     cmake (update)
