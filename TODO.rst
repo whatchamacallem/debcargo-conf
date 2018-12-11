@@ -90,7 +90,6 @@ because all required dependencies are available in main::
     encoding-rs (update)
     cmake (update)
     discard (update)
-    chrono (update)
     cfg-if (update)
     backtrace-sys (update)
     serde (update)
