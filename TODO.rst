@@ -97,6 +97,7 @@ because all required dependencies are available in main::
     serde (update)
     byteorder (update)
     encoding-rs (update)
+    block-padding (update)
 
 Delayed/problematic::
 
