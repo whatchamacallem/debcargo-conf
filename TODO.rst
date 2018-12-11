@@ -102,6 +102,7 @@ because all required dependencies are available in main::
     syn (update)
     serde-json (update)
     simd (update)
+    smallvec (update)
 
 Delayed/problematic::
 
