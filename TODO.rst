@@ -95,6 +95,7 @@ because all required dependencies are available in main::
     cfg-if (update)
     backtrace-sys (update)
     serde (update)
+    byteorder (update)
 
 Delayed/problematic::
 
