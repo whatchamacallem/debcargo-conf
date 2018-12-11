@@ -96,6 +96,7 @@ because all required dependencies are available in main::
     backtrace-sys (update)
     serde (update)
     byteorder (update)
+    encoding-rs (update)
 
 Delayed/problematic::
 
