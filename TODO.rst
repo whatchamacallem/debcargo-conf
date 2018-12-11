@@ -98,6 +98,7 @@ because all required dependencies are available in main::
     byteorder (update)
     encoding-rs (update)
     block-padding (update)
+    quickcheck (update)
 
 Delayed/problematic::
 
