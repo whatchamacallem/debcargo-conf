@@ -100,6 +100,7 @@ because all required dependencies are available in main::
     block-padding (update)
     quickcheck (update)
     syn (update)
+    serde-json (update)
 
 Delayed/problematic::
 
