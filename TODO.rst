@@ -99,6 +99,7 @@ because all required dependencies are available in main::
     encoding-rs (update)
     block-padding (update)
     quickcheck (update)
+    syn (update)
 
 Delayed/problematic::
 
