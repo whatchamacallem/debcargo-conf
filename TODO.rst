@@ -104,6 +104,7 @@ because all required dependencies are available in main::
     simd (update)
     smallvec (update)
     spin (update)
+    tar (update)
 
 Delayed/problematic::
 
