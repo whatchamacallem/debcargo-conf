@@ -106,6 +106,7 @@ because all required dependencies are available in main::
     spin (update)
     tar (update)
     regex-syntax (update)
+    utf8-ranges (update)
 
 Delayed/problematic::
 
