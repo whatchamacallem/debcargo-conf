@@ -91,6 +91,7 @@ because all required dependencies are available in main::
     libdbus-sys
     macro-attr
     newtype-derive
+    libmount
     sniffglue (update, bugfix - need better changelog)
     encoding-rs (update)
     cmake (update)
