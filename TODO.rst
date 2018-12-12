@@ -89,6 +89,7 @@ because all required dependencies are available in main::
     gdk-pixbuf
     pcre2
     libdbus-sys
+    macro-attr
     sniffglue (update, bugfix - need better changelog)
     encoding-rs (update)
     cmake (update)
