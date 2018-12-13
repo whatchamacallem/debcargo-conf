@@ -113,6 +113,7 @@ because all required dependencies are available in main::
     tar (update)
     regex-syntax (update)
     utf8-ranges (update)
+    libc (update)
 
 Delayed/problematic::
 
