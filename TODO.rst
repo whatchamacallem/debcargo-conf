@@ -115,6 +115,7 @@ because all required dependencies are available in main::
     regex-syntax (update)
     utf8-ranges (update)
     libc (update)
+    filetime (update)
 
 Delayed/problematic::
 
