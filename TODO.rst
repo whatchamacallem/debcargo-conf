@@ -95,6 +95,7 @@ because all required dependencies are available in main::
     libudev-sys
     timerfd
     rustc-std-workspace-core
+    rustdoc-stripper
     sniffglue (update, bugfix - need better changelog)
     encoding-rs (update)
     cmake (update)
