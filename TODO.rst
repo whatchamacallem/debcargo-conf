@@ -94,6 +94,7 @@ because all required dependencies are available in main::
     libmount
     libudev-sys
     timerfd
+    rustc-std-workspace-core
     sniffglue (update, bugfix - need better changelog)
     encoding-rs (update)
     cmake (update)
