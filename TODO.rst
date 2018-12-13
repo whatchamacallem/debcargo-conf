@@ -93,6 +93,7 @@ because all required dependencies are available in main::
     newtype-derive
     libmount
     libudev-sys
+    timerfd
     sniffglue (update, bugfix - need better changelog)
     encoding-rs (update)
     cmake (update)
