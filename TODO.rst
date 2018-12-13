@@ -92,6 +92,7 @@ because all required dependencies are available in main::
     macro-attr
     newtype-derive
     libmount
+    libudev-sys
     sniffglue (update, bugfix - need better changelog)
     encoding-rs (update)
     cmake (update)
