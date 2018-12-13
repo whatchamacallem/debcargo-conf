@@ -34,6 +34,7 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     tokio-reactor
+    nitrokey-sys
     encoding-rs (update)
     serde-json (update)
     syn (update)
