@@ -1,0 +1,45 @@
+From f99c05bc94bec786e67da092bae9a52f033b90ed Mon Sep 17 00:00:00 2001
+From: Wolfgang Silbermayr <wolfgang@silbermayr.at>
+Date: Wed, 12 Dec 2018 07:19:58 +0100
+Subject: [PATCH] Update rustc_version build-dep to 0.2
+
+---
+ Cargo.toml | 2 +-
+ build.rs   | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index d815fc6..b41571f 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -23,7 +23,7 @@ repository = "https://github.com/DanielKeep/rust-custom-derive"
+ [dev-dependencies.custom_derive]
+ version = "0.1.1"
+ [build-dependencies.rustc_version]
+-version = "0.1.7"
++version = "0.2"
+ 
+ [features]
+ default = ["std"]
+diff --git a/build.rs b/build.rs
+index 779dff1..d4eeaaf 100644
+--- a/build.rs
++++ b/build.rs
+@@ -8,12 +8,12 @@ files in the project carrying such notice may not be copied, modified,
+ or distributed except according to those terms.
+ */
+ extern crate rustc_version;
+-use rustc_version::{version_matches};
++use rustc_version::{version, Version};
+ 
+ fn main() {
+     println!("cargo:rerun-if-changed=build.rs");
+ 
+-    if version_matches("1.8.0") {
++    if version().unwrap() == Version::new(1u64, 8u64, 0u64) {
+         println!("cargo:rustc-cfg=op_assign");
+     }
+ }
+-- 
+2.20.0
+

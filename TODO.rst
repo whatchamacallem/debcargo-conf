@@ -90,6 +90,7 @@ because all required dependencies are available in main::
     pcre2
     libdbus-sys
     macro-attr
+    newtype-derive
     sniffglue (update, bugfix - need better changelog)
     encoding-rs (update)
     cmake (update)
