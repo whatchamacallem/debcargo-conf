@@ -1,7 +1,7 @@
-Index: ignore/Cargo.toml
+Index: rust-ignore-0.4.4/Cargo.toml
 ===================================================================
---- ignore.orig/Cargo.toml
-+++ ignore/Cargo.toml
+--- rust-ignore-0.4.4.orig/Cargo.toml
++++ rust-ignore-0.4.4/Cargo.toml
 @@ -26,7 +26,7 @@ repository = "https://github.com/BurntSu
  name = "ignore"
  bench = false
@@ -11,3 +11,31 @@ Index: ignore/Cargo.toml
  
  [dependencies.globset]
  version = "0.4.2"
+Index: rust-ignore-0.4.4/src/walk.rs
+===================================================================
+--- rust-ignore-0.4.4.orig/src/walk.rs
++++ rust-ignore-0.4.4/src/walk.rs
+@@ -1446,12 +1446,12 @@ impl Worker {
+                 return None;
+             }
+             match self.rx.try_recv() {
+-                Some(Message::Work(work)) => {
++                Ok(Message::Work(work)) => {
+                     self.waiting(false);
+                     self.quitting(false);
+                     return Some(work);
+                 }
+-                Some(Message::Quit) => {
++                Ok(Message::Quit) => {
+                     // We can't just quit because a Message::Quit could be
+                     // spurious. For example, it's possible to observe that
+                     // all workers are waiting even if there's more work to
+@@ -1482,7 +1482,7 @@ impl Worker {
+                         // Otherwise, spin.
+                     }
+                 }
+-                None => {
++                Err(_) => {
+                     self.waiting(true);
+                     self.quitting(false);
+                     if self.num_waiting() == self.threads {
