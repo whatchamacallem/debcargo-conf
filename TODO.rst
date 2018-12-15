@@ -156,7 +156,6 @@ Unblocking crate updates
 Updates that require updates of other packages::
 
     env_logger (update to 0.5.13)
-    ignore (update to 0.4.4)
 
 
 All-features transitive dependencies of ripgrep
@@ -178,11 +177,6 @@ Top-level page: https://qa.debian.org/excuses.php?package=rust-ripgrep
 - yaml-rust, needed by
     https://qa.debian.org/excuses.php?package=rust-clap
     also linked-hash-map as a dependency of this
-
-dependencies of ripgrep 0.10
-----------------------------
-
-ripgrep needs ignore => crossbeam-channel (NEW)
 
 dependencies of mdbook/exa
 --------------------------
