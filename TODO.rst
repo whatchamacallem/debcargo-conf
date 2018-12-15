@@ -92,25 +92,9 @@ because all required dependencies are available in main::
     rustc-std-workspace-core
     rustdoc-stripper
     encoding-rs (update)
-    cmake (update)
-    discard (update)
-    cfg-if (update)
-    backtrace-sys (update)
-    serde (update)
-    byteorder (update)
-    encoding-rs (update)
-    block-padding (update)
-    quickcheck (update)
-    syn (update)
     serde-json (update)
-    simd (update)
-    smallvec (update)
-    spin (update)
-    tar (update)
-    regex-syntax (update)
-    utf8-ranges (update)
+    syn (update)
     libc (update)
-    filetime (update)
 
 Delayed/problematic::
 
