@@ -86,11 +86,6 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     newtype-derive
-    libmount
-    libudev-sys
-    timerfd
-    rustc-std-workspace-core
-    rustdoc-stripper
     encoding-rs (update)
     serde-json (update)
     syn (update)
