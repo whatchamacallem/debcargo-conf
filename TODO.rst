@@ -180,7 +180,12 @@ Needs:
 * derive-new (in NEW)
 * cargo-metadata (in NEW)
 * rustc-ap-syntax
-  * rustc-ap-rustc-data-structures
+  * rustc-ap-rustc_data_structures (prepared)
+    * ena
+    * rustc-ap-graphviz
+    * rustc-ap-rustc-cratesio-shim
+    * rustc-rayon
+    * rustc-rayon-core
   * rustc-ap-rustc-errors
   * rustc-ap-rustc-target
   * rustc-ap-serialize (to be uploaded, dep issue?!)
