@@ -191,3 +191,12 @@ Needs:
   * rustc-ap-serialize (to be uploaded, dep issue?!)
   * rustc-ap-syntax-pos
 
+
+dependencies of bingrep
+-----------------------
+
+Needs:
+* hexplay
+* metagoblin
+* prettytable-rs
+* scroll
