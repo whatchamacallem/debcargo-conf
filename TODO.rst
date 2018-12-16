@@ -18,7 +18,7 @@ Binary crates worth packaging (please add if you know more):
 - jql - JSON Query Language CLI tool.
 - recode_rs -  CLI tool converting between the character encodings.
 - rusty-tags - Create ctags files for cargo project.
-- rustfmt - rust coding style
+- rustfmt-nightly - rust coding style
 - bingrep - Grep through binaries from various OSs and architectures.
 
 To see lists of interesting binary crates, you can run something like::
@@ -172,3 +172,17 @@ To regenerate the below list; run something like::
     | awk '!x[$0]++' \
     | dev/filter-in-debian.sh \
     | sed -nre 's/(.*) 0$/\1/gp'
+
+dependencies of rustfmt-nightly
+-------------------------------
+
+Needs:
+* derive-new (in NEW)
+* cargo-metadata (in NEW)
+* rustc-ap-syntax
+  * rustc-ap-rustc-data-structures
+  * rustc-ap-rustc-errors
+  * rustc-ap-rustc-target
+  * rustc-ap-serialize (to be uploaded, dep issue?!)
+  * rustc-ap-syntax-pos
+
