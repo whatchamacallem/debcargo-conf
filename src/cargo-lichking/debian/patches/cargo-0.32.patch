@@ -1,0 +1,35 @@
+Index: cargo-lichking/Cargo.toml
+===================================================================
+--- cargo-lichking.orig/Cargo.toml
++++ cargo-lichking/Cargo.toml
+@@ -20,7 +20,7 @@ keywords = ["cargo", "licensing"]
+ license = "MIT/Apache-2.0"
+ repository = "https://github.com/Nemo157/cargo-lichking"
+ [dependencies.cargo]
+-version = "0.31"
++version = "0.32"
+ 
+ [dependencies.clap]
+ version = "2.20"
+Index: cargo-lichking/src/load.rs
+===================================================================
+--- cargo-lichking.orig/src/load.rs
++++ cargo-lichking/src/load.rs
+@@ -24,7 +24,7 @@ pub fn resolve_roots(
+         SelectedPackage::Specific(spec) => {
+             let (packages, _) = ops::resolve_ws(&workspace)?;
+             let package_id = spec.query(packages.package_ids())?;
+-            vec![packages.get(package_id)?.clone()]
++            vec![packages.get_one(package_id)?.clone()]
+         }
+     })
+ }
+@@ -40,7 +40,7 @@ pub fn resolve_packages<'a, I: IntoItera
+     let mut result = HashSet::new();
+     let mut to_check = roots.into_iter().map(|p| p.package_id()).collect::<Vec<_>>();
+     while let Some(id) = to_check.pop() {
+-        if let Ok(package) = packages.get(id) {
++        if let Ok(package) = packages.get_one(id) {
+             if result.insert(package) {
+                 let deps = resolve.deps_not_replaced(id);
+                 for dep_id in deps {
