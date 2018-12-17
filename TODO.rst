@@ -20,6 +20,7 @@ Binary crates worth packaging (please add if you know more):
 - rusty-tags - Create ctags files for cargo project.
 - rustfmt-nightly - rust coding style
 - bingrep - Grep through binaries from various OSs and architectures.
+- hg - Rust implement of hg
 
 To see lists of interesting binary crates, you can run something like::
 
