@@ -1,7 +1,116 @@
-=================
-Crates to package
-=================
+===============
+Immediate goals
+===============
 
+See end of this document for "eventual goals".
+
+
+Remove old libraries
+====================
+
+Should file a RM request to ftpmasters for these old crates:
+
+- syntex-* were uploaded by mistake, only rustfmt 0.10 (obsolete version) depends on them
+- crossbeam-utils-0.2, no longer needed
+
+
+Ready for upload (Request For Sponsor)
+======================================
+
+When adding a package here, and it involves updating an existing package in a
+semver-incompatible way, please check the reverse dependencies by running::
+
+    $ aptitude search '~Dlibrust-$cratename'
+
+and try to verify that they won't be broken by your update. If they are, then:
+
+1. Document it below ("Delayed/problematic")
+2. File an issue upstream to report that they should update to the new library
+3. Write a patch if you can get that working, and document it also below.
+
+These packages (RFS) are prepared in the master branch and can be uploaded
+because all required dependencies are available in main::
+
+    gdk-pixbuf
+    newtype-derive
+    grep-pcre2
+    encoding-rs (update)
+    serde-json (update)
+    syn (update)
+    tokio-executor (update), tokio-timer (update)
+    libc (update)
+
+Delayed/problematic::
+
+    md5 (update) -- affects uuid
+    grep
+        pcre2 feature depends on grep-pcre2 -> pcre2 -> pcre2-sys
+    gcc-0.3.54 -- don't need this, completely obsoleted by cc.
+        patch dependents to use cc instead.
+    winutil -- dependency of hostname <- resolv-conf <- trust-dns-resolver
+        doesn't build on linux
+
+    parking_lot (blocked by lock_api)
+    indicatif (blocked by parking_lot)
+    statistical (blocked by num & co)
+    hyperfine (blocked by indicatif & statistical)
+
+
+Unblocking testing migrations
+=============================
+
+Run ``dev/rust-excuses.mk refresh all`` to see these in a nice graph.
+
+Packages that are unblocked by uploads in NEW::
+
+    cc (cmake, nix, ctrlc, os-pipe, sha2-asm, most *-sys crates)
+        rayon (NEW)
+    rand (jobserver, tempfile)
+        stdweb
+            stdweb-internal-macros (TODO)
+    clap (ripgrep, structopt)
+        text-wrap
+            hyphenation
+
+
+New packages
+============
+
+Use ``dev/list-remaining-deps.sh`` to help you figure out what's missing.
+
+mdbook/exa
+----------
+
+tldr: exa needs zoneinfo_compiled (in NEW)
+We will need to update some versions of the dep. Besides that, we should be good.
+
+rustfmt-nightly
+---------------
+
+* derive-new (in NEW)
+* cargo-metadata (in NEW)
+* rustc-ap-syntax
+  * rustc-ap-rustc_data_structures (prepared)
+    * ena
+    * rustc-ap-graphviz
+    * rustc-ap-rustc-cratesio-shim
+    * rustc-rayon
+    * rustc-rayon-core
+  * rustc-ap-rustc-errors
+  * rustc-ap-rustc-target
+  * rustc-ap-serialize (to be uploaded, dep issue?!)
+  * rustc-ap-syntax-pos
+
+bingrep
+-------
+
+* hexplay
+* metagoblin
+* prettytable-rs
+* scroll
+
+
+==============
 Eventual goals
 ==============
 
@@ -49,109 +158,3 @@ Sccache is also helpful for reducing the build-time of things like firefox and t
 There are also more binaries here:
 
 https://github.com/rust-unofficial/awesome-rust
-
-Immediate goals
-===============
-
-
-Remove old libraries
---------------------
-
-Should file a RM request to ftpmasters for these old crates:
-
-- syntex-* were uploaded by mistake, only rustfmt 0.10 (obsolete version) depends on them
-- crossbeam-utils-0.2, no longer needed
-
-
-Ready for upload (Request For Sponsor)
---------------------------------------
-
-When adding a package here, and it involves updating an existing package in a
-semver-incompatible way, please check the reverse dependencies by running::
-
-    $ aptitude search '~Dlibrust-$cratename'
-
-and try to verify that they won't be broken by your update. If they are, then:
-
-1. Document it below ("Delayed/problematic")
-2. File an issue upstream to report that they should update to the new library
-3. Write a patch if you can get that working, and document it also below.
-
-These packages (RFS) are prepared in the master branch and can be uploaded
-because all required dependencies are available in main::
-
-    gdk-pixbuf
-    newtype-derive
-    grep-pcre2
-    encoding-rs (update)
-    serde-json (update)
-    syn (update)
-    tokio-executor (update), tokio-timer (update)
-    libc (update)
-
-Delayed/problematic::
-
-    md5 (update) -- affects uuid
-    grep
-        pcre2 feature depends on grep-pcre2 -> pcre2 -> pcre2-sys
-    gcc-0.3.54 -- don't need this, completely obsoleted by cc.
-        patch dependents to use cc instead.
-    winutil -- dependency of hostname <- resolv-conf <- trust-dns-resolver
-        doesn't build on linux
-
-    parking_lot (blocked by lock_api)
-    indicatif (blocked by parking_lot)
-    statistical (blocked by num & co)
-    hyperfine (blocked by indicatif & statistical)
-
-
-Unblocking testing migrations
------------------------------
-
-Packages that are unblocked by uploads in NEW::
-
-    cc (cmake, nix, ctrlc, os-pipe, sha2-asm, most *-sys crates)
-        rayon (NEW)
-    rand (jobserver, tempfile)
-        stdweb
-            stdweb-internal-macros (TODO)
-    clap (ripgrep, structopt)
-        text-wrap
-            hyphenation
-
-
-New packages
-------------
-
-Use ``dev/list-remaining-deps.sh`` to help you figure out what's missing.
-
-mdbook/exa
-``````````
-
-tldr: exa needs zoneinfo_compiled (in NEW)
-We will need to update some versions of the dep. Besides that, we should be good.
-
-rustfmt-nightly
-```````````````
-
-* derive-new (in NEW)
-* cargo-metadata (in NEW)
-* rustc-ap-syntax
-  * rustc-ap-rustc_data_structures (prepared)
-    * ena
-    * rustc-ap-graphviz
-    * rustc-ap-rustc-cratesio-shim
-    * rustc-rayon
-    * rustc-rayon-core
-  * rustc-ap-rustc-errors
-  * rustc-ap-rustc-target
-  * rustc-ap-serialize (to be uploaded, dep issue?!)
-  * rustc-ap-syntax-pos
-
-bingrep
-```````
-
-* hexplay
-* metagoblin
-* prettytable-rs
-* scroll
