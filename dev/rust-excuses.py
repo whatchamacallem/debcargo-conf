@@ -31,10 +31,13 @@ def print_all(*args, **kwargs):
 
 is_in_debian_cache = {}
 def is_in_debian(src):
+	global is_in_debian_cache
 	if src not in is_in_debian_cache:
 		n = subprocess.check_output("apt-cache showsrc %s 2>/dev/null | grep ^Package: | wc -l" % src, shell=True)
-		is_in_debian_cache[src] = n
-	return is_in_debian_cache[src]
+		is_in_debian_cache[src] = int(n.strip())
+	x = is_in_debian_cache[src]
+	print("in debian", src, x, file=sys.stderr)
+	return x
 
 def traverse(name, arch="", d=0):
 	if name in already_seen:
