@@ -88,6 +88,7 @@ because all required dependencies are available in main::
 
     gdk-pixbuf
     newtype-derive
+    grep-pcre2
     encoding-rs (update)
     serde-json (update)
     syn (update)
