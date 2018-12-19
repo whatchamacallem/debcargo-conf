@@ -12,6 +12,8 @@ Should file a RM request to ftpmasters for these old crates:
 
 - syntex-* were uploaded by mistake, only rustfmt 0.10 (obsolete version) depends on them
 - crossbeam-utils-0.2, no longer needed
+- bitflags-0.9, was required only by pulldown-cmark pre 0.2.0
+- owning-ref-0.3, was required only by lock-api pre 0.1.5
 
 
 Ready for upload (Request For Sponsor)
