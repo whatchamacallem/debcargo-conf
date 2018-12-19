@@ -36,7 +36,6 @@ def is_in_debian(src):
 		n = subprocess.check_output("apt-cache showsrc %s 2>/dev/null | grep ^Package: | wc -l" % src, shell=True)
 		is_in_debian_cache[src] = int(n.strip())
 	x = is_in_debian_cache[src]
-	print("in debian", src, x, file=sys.stderr)
 	return x
 
 def traverse(name, arch="", d=0):
