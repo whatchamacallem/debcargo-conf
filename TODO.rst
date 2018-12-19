@@ -58,17 +58,6 @@ Unblocking testing migrations
 
 Run ``dev/rust-excuses.mk refresh all`` to see these in a nice graph.
 
-Packages that are unblocked by uploads in NEW::
-
-    cc (cmake, nix, ctrlc, os-pipe, sha2-asm, most *-sys crates)
-        rayon (NEW)
-    rand (jobserver, tempfile)
-        stdweb
-            stdweb-internal-macros (TODO)
-    clap (ripgrep, structopt)
-        text-wrap
-            hyphenation
-
 
 New packages
 ============

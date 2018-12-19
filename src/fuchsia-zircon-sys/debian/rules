@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+include /usr/share/rustc/architecture.mk
+%:
+	dh $@ --buildsystem cargo
+
+# Upstream only works on specific architectures, so ignore test failures elsewhere.
+override_dh_auto_test:
+	case $(DEB_HOST_RUST_TYPE) in \
+	aarch64-*|x86_64-*) \
+	  dh_auto_test;; \
+	*) \
+	  dh_auto_test || true;; \
+	esac
