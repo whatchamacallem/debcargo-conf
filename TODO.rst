@@ -73,7 +73,6 @@ Use ``dev/list-remaining-deps.sh`` to help you figure out what's missing.
 mdbook/exa
 ----------
 
-tldr: exa needs zoneinfo_compiled (in NEW)
 We will need to update some versions of the dep. Besides that, we should be good.
 
 rustfmt-nightly
