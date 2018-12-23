@@ -33,12 +33,7 @@ and try to verify that they won't be broken by your update. If they are, then:
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    markup5ever
-    gdk
-    gtk
     maxminddb (update)
-    tokio-reactor
-    nitrokey-sys
     encoding-rs (update)
     serde-json (update)
     syn (update)
