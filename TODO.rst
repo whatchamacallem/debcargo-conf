@@ -70,11 +70,6 @@ New packages
 
 Use ``dev/list-remaining-deps.sh`` to help you figure out what's missing.
 
-mdbook/exa
-----------
-
-We will need to update some versions of the dep. Besides that, we should be good.
-
 rustfmt-nightly
 ---------------
 
@@ -110,7 +105,6 @@ Binary crates worth packaging (please add if you know more):
 - xsv - Command line program for manipulating CSV files
 - process_viewer - Process viewer GUI in rust (GTK)
 - cargo-edit - Cargo editing subcommands (add, rm, upgrade)
-- exa - Modern replacement for ls
 - tmux-hints - Find matches (e.g. urls) and navigate them by keyboard
 - grcov - collects and aggregates code coverage information for multiple source files.
 - rural - User-friendly command-line HTTP tool
@@ -131,7 +125,6 @@ Current output (on 2018-07-08) is:
 
 - aho-corasick
 - docopt
-- exa
 - cpp_demangle
 - permutate
 - cbindgen
