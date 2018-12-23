@@ -70,8 +70,6 @@ Use ``dev/list-remaining-deps.sh`` to help you figure out what's missing.
 rustfmt-nightly
 ---------------
 
-* derive-new (in NEW)
-* cargo-metadata (in NEW)
 * rustc-ap-syntax
   * rustc-ap-rustc_data_structures (prepared)
     * ena
