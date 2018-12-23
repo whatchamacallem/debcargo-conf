@@ -11,4 +11,7 @@ comm -13 \
    sort) \
  <(git branch --list -r 'origin/pending-*' --format='%(refname)' | \
    sed -e 's,refs/remotes/origin/pending-,,g' | \
-   sort)
+   sort) | \
+while read x; do
+	echo $x $(git show "pending-$x:src/$x/debian/changelog" | dpkg-parsechangelog -l- -SVersion)
+done
