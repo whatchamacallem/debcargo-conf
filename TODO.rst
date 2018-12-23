@@ -35,6 +35,7 @@ because all required dependencies are available in main::
 
     markup5ever
     gdk
+    gtk
     maxminddb (update)
     tokio-reactor
     nitrokey-sys
