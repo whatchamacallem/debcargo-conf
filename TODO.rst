@@ -46,6 +46,7 @@ because all required dependencies are available in main::
     syn (update)
     tokio-executor (update), tokio-timer (update)
     libc (update)
+    tokio-tcp
 
 Delayed/problematic::
 
