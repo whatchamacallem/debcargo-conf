@@ -39,6 +39,7 @@ because all required dependencies are available in main::
     rustyline
     der-parser
     gtk-rs-lgpl-docs
+    gtk
     maxminddb (update)
     encoding-rs (update)
     serde-json (update)
