@@ -139,11 +139,14 @@ as dependencies.
 In order to limit the number of duplicated libraries in the archive,
 please try to evaluate if a newer version of the dependencies could be used.
 
-To achieve that, after ./release.sh, try:
+To achieve that, after ./update.sh, try:
 $ cd build/<package>/
+$ rm -rf .pc # sometimes this is necessary due to minor debcargo bug
+$ quilt push -a
 $ quilt new relax-dep.diff
 $ quilt edit Cargo.toml
 $ quilt refresh
+$ cargo build # check that it works. if it does, then
 $ cp -R patches ../../src/<package>/debian
 
 
