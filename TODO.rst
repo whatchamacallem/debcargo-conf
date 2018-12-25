@@ -50,6 +50,7 @@ because all required dependencies are available in main::
     tokio-executor (update), tokio-timer (update)
     libc (update)
     tokio-tcp
+    sysinfo
 
 Delayed/problematic::
 
