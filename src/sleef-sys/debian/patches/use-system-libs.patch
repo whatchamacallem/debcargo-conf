@@ -1,0 +1,53 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -37,9 +37,6 @@
+ [build-dependencies.bindgen]
+ version = "^0.38"
+ 
+-[build-dependencies.cmake]
+-version = "^0.1"
+-
+ [features]
+ default = []
+ dft = []
+--- a/build.rs
++++ b/build.rs
+@@ -1,5 +1,4 @@
+ //! Builds the sleef library from source.
+-extern crate cmake;
+ extern crate bindgen;
+ 
+ use std::{path::PathBuf, env};
+@@ -15,23 +14,7 @@
+         }
+     }
+ 
+-    let dst = cmake::Config::new("sleef")
+-        .very_verbose(true)
+-        // no DFT libraries (should be behind a feature flag):
+-        .define("BUILD_DFT", "FALSE")
+-        // no tests (should build and run the tests behind a feature flag):
+-        .define("BUILD_TESTS", "FALSE")
+-        .define("BUILD_SHARED_LIBS", "TRUE")
+-        .build();
+-
+     println!("cargo:rustc-link-lib=sleef");
+-    println!("cargo:rustc-link-search=native={}", dst.join("lib").display());
+-
+-    let out_dir = PathBuf::from(env::var_os("OUT_DIR").expect("OUT_DIR was not set"));
+-    let sleef_header = out_dir.join("include").join("sleef.h");
+-    assert!(sleef_header.exists(),
+-            "error sleef.h header not found in OUT_DIR={}",
+-            out_dir.display());
+ 
+     // The bindgen::Builder is the main entry point
+     // to bindgen, and lets you build up options for
+@@ -39,7 +22,7 @@
+     let mut bindings = bindgen::Builder::default()
+     // The input header we would like to generate
+     // bindings for.
+-        .header(sleef_header.to_str().expect("failed to convert header path to string"))
++        .header("/usr/include/sleef.h")
+     // Rust does not support 80-bit precision floats:
+         .opaque_type("Sleef_longdouble2")
+     // The bindings should be no_std:
