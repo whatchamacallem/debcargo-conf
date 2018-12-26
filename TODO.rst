@@ -51,6 +51,7 @@ because all required dependencies are available in main::
     libc (update)
     tokio-tcp
     sysinfo
+    dbus
 
 Delayed/problematic::
 
