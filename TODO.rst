@@ -35,12 +35,7 @@ because all required dependencies are available in main::
 
     tokio-current-thread (update)
     separator (update)
-    der-parser
     maxminddb (update)
-    encoding-rs (update)
-    serde-json (update)
-    syn (update)
-    tokio-timer (update)
 
 Delayed/problematic::
 
