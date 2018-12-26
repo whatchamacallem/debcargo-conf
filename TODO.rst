@@ -34,24 +34,13 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     tokio-current-thread (update)
-    tokio-uds
-    tokio-udp
-    unveil
     separator (update)
-    pledge
-    rustyline
     der-parser
-    gtk-rs-lgpl-docs
-    gtk
     maxminddb (update)
     encoding-rs (update)
     serde-json (update)
     syn (update)
-    tokio-executor (update), tokio-timer (update)
-    libc (update)
-    tokio-tcp
-    sysinfo
-    dbus
+    tokio-timer (update)
 
 Delayed/problematic::
 
