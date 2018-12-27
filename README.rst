@@ -134,20 +134,33 @@ See ripgrep as example.
 Updating the dependencies
 -------------------------
 
-In some cases, libraries/programs are forcing an old version of a library
-as dependencies.
-In order to limit the number of duplicated libraries in the archive,
-please try to evaluate if a newer version of the dependencies could be used.
+In some cases, libraries/programs are forcing an old version of a library as
+dependencies. In order to limit the number of duplicated libraries in the
+archive, please try to evaluate if a newer version of the dependencies could be
+used.
 
-To achieve that, after ./update.sh, try:
-$ cd build/<package>/
-$ rm -rf .pc # sometimes this is necessary due to minor debcargo bug
-$ quilt push -a
-$ quilt new relax-dep.diff
-$ quilt edit Cargo.toml
-$ quilt refresh
-$ cargo build # check that it works. if it does, then
-$ cp -R patches ../../src/<package>/debian
+To achieve that, after ./update.sh, try::
+
+  $ cd build/<package>/
+  $ rm -rf .pc # sometimes this is necessary due to minor debcargo bug
+  $ quilt push -a
+  $ quilt new relax-dep.diff
+  $ quilt edit Cargo.toml
+  $ quilt refresh
+  $ cargo build # check that it works. if it does, then
+  $ cp -R patches ../../src/<package>/debian
+
+Suppose you want to change the dependency from 0.3 to 0.5. If the crate builds
+with no further source changes, then we would change the required version in
+``Cargo.toml`` from ``0.3`` to ``>= 0.3, < 0.6`` or something like that. Then
+the convention is to put all these changes into a single patch called
+``relax-dep-versions.patch``.
+
+OTOH, if the cargo build fails, and you can fix it up by editing the source
+code in a minor way to use the new crate API, then: for each crate that needs
+to be updated, you should instead name the patch ``update-dep-<crate>.patch``
+and add both the ``Cargo.toml`` and the source code changes to it. Use
+``quilt rename`` if that helps you.
 
 
 TODO
