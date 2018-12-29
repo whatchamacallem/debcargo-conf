@@ -1,0 +1,173 @@
+From 094cd2bf5d3a07a4cca4837da91c827b22613b71 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Emilio=20Cobos=20=C3=81lvarez?= <emilio@crisal.io>
+Date: Sat, 29 Dec 2018 14:24:48 +0100
+Subject: [PATCH] Update syn.
+
+Fixes #244
+---
+ Cargo.lock                      |  6 +++---
+ Cargo.toml                      |  2 +-
+ src/bindgen/error.rs            |  2 +-
+ src/bindgen/ir/cfg.rs           |  4 ----
+ src/bindgen/ir/documentation.rs | 14 ++++++------
+ src/bindgen/ir/repr.rs          |  8 ++-----
+ src/bindgen/parser.rs           |  4 ----
+ src/bindgen/utilities.rs        | 38 ++++++++++++++++++---------------
+ 8 files changed, 34 insertions(+), 44 deletions(-)
+
+Index: cbindgen/Cargo.toml
+===================================================================
+--- cbindgen.orig/Cargo.toml
++++ cbindgen/Cargo.toml
+@@ -45,7 +45,7 @@ version = "^1.0.58"
+ version = "1.0"
+ 
+ [dependencies.syn]
+-version = "0.14.0"
++version = "0.15.0"
+ features = ["clone-impls", "derive", "extra-traits", "full", "parsing", "printing"]
+ default-features = false
+ 
+Index: cbindgen/src/bindgen/error.rs
+===================================================================
+--- cbindgen.orig/src/bindgen/error.rs
++++ cbindgen/src/bindgen/error.rs
+@@ -7,7 +7,7 @@ use std::fmt;
+ pub use bindgen::cargo::cargo_expand::Error as CargoExpandError;
+ pub use bindgen::cargo::cargo_metadata::Error as CargoMetadataError;
+ pub use bindgen::cargo::cargo_toml::Error as CargoTomlError;
+-pub use syn::synom::ParseError;
++pub use syn::parse::Error as ParseError;
+ 
+ #[derive(Debug)]
+ pub enum Error {
+Index: cbindgen/src/bindgen/ir/cfg.rs
+===================================================================
+--- cbindgen.orig/src/bindgen/ir/cfg.rs
++++ cbindgen/src/bindgen/ir/cfg.rs
+@@ -108,10 +108,6 @@ impl Cfg {
+         let mut configs = Vec::new();
+ 
+         for attr in attrs {
+-            if attr.is_sugared_doc {
+-                continue;
+-            }
+-
+             match attr.interpret_meta() {
+                 Some(syn::Meta::List(syn::MetaList { ident, nested, .. })) => {
+                     if ident != "cfg" || nested.len() != 1 {
+Index: cbindgen/src/bindgen/ir/documentation.rs
+===================================================================
+--- cbindgen.orig/src/bindgen/ir/documentation.rs
++++ cbindgen/src/bindgen/ir/documentation.rs
+@@ -36,14 +36,12 @@ impl Documentation {
+                     let comment = comment.value();
+ 
+                     if &*name == "doc" {
+-                        let line = if attr.is_sugared_doc {
+-                            comment
+-                                .trim_left_matches("/// ")
+-                                .trim_left_matches("///")
+-                                .trim_right()
+-                        } else {
+-                            comment.trim_left_matches(" ").trim_right()
+-                        };
++                        // Try to catch both sugared and unsugared doc
++                        // attributes.
++                        let line = comment
++                            .trim_left_matches("///")
++                            .trim_left_matches(" ")
++                            .trim_right();
+                         if !line.starts_with("cbindgen:") {
+                             doc.push(line.to_owned());
+                         }
+Index: cbindgen/src/bindgen/ir/repr.rs
+===================================================================
+--- cbindgen.orig/src/bindgen/ir/repr.rs
++++ cbindgen/src/bindgen/ir/repr.rs
+@@ -55,12 +55,8 @@ impl Repr {
+         let ids = attrs
+             .iter()
+             .filter_map(|attr| {
+-                if attr.is_sugared_doc || attr.style != syn::AttrStyle::Outer {
+-                    return None;
+-                }
+-
+-                if let Some(syn::Meta::List(syn::MetaList { ident, nested, .. })) =
+-                    attr.interpret_meta()
++                if let syn::Meta::List(syn::MetaList { ident, nested, .. }) =
++                    attr.interpret_meta()?
+                 {
+                     if ident == "repr" {
+                         return Some(nested.into_iter().collect::<Vec<_>>());
+Index: cbindgen/src/bindgen/parser.rs
+===================================================================
+--- cbindgen.orig/src/bindgen/parser.rs
++++ cbindgen/src/bindgen/parser.rs
+@@ -342,10 +342,6 @@ impl Parser {
+                             // Last chance to find a module path
+                             let mut path_attr_found = false;
+                             for attr in &item.attrs {
+-                                if attr.is_sugared_doc {
+-                                    continue;
+-                                }
+-
+                                 match attr.interpret_meta() {
+                                     Some(syn::Meta::NameValue(syn::MetaNameValue {
+                                         ident,
+Index: cbindgen/src/bindgen/utilities.rs
+===================================================================
+--- cbindgen.orig/src/bindgen/utilities.rs
++++ cbindgen/src/bindgen/utilities.rs
+@@ -65,23 +65,25 @@ pub trait SynItemHelpers {
+ 
+ macro_rules! syn_item_match_helper {
+     ($s:ident => has_attrs: |$i:ident| $a:block, otherwise: || $b:block) => {
+-        match $s {
+-            &syn::Item::Const(ref item) => (|$i: &syn::ItemConst| $a)(item),
+-            &syn::Item::Enum(ref item) => (|$i: &syn::ItemEnum| $a)(item),
+-            &syn::Item::ExternCrate(ref item) => (|$i: &syn::ItemExternCrate| $a)(item),
+-            &syn::Item::Fn(ref item) => (|$i: &syn::ItemFn| $a)(item),
+-            &syn::Item::ForeignMod(ref item) => (|$i: &syn::ItemForeignMod| $a)(item),
+-            &syn::Item::Impl(ref item) => (|$i: &syn::ItemImpl| $a)(item),
+-            &syn::Item::Macro(ref item) => (|$i: &syn::ItemMacro| $a)(item),
+-            &syn::Item::Macro2(ref item) => (|$i: &syn::ItemMacro2| $a)(item),
+-            &syn::Item::Mod(ref item) => (|$i: &syn::ItemMod| $a)(item),
+-            &syn::Item::Static(ref item) => (|$i: &syn::ItemStatic| $a)(item),
+-            &syn::Item::Struct(ref item) => (|$i: &syn::ItemStruct| $a)(item),
+-            &syn::Item::Trait(ref item) => (|$i: &syn::ItemTrait| $a)(item),
+-            &syn::Item::Type(ref item) => (|$i: &syn::ItemType| $a)(item),
+-            &syn::Item::Union(ref item) => (|$i: &syn::ItemUnion| $a)(item),
+-            &syn::Item::Use(ref item) => (|$i: &syn::ItemUse| $a)(item),
+-            &syn::Item::Verbatim(_) => (|| $b)(),
++        match *$s {
++            syn::Item::Const(ref item) => (|$i: &syn::ItemConst| $a)(item),
++            syn::Item::Enum(ref item) => (|$i: &syn::ItemEnum| $a)(item),
++            syn::Item::ExternCrate(ref item) => (|$i: &syn::ItemExternCrate| $a)(item),
++            syn::Item::Fn(ref item) => (|$i: &syn::ItemFn| $a)(item),
++            syn::Item::ForeignMod(ref item) => (|$i: &syn::ItemForeignMod| $a)(item),
++            syn::Item::Impl(ref item) => (|$i: &syn::ItemImpl| $a)(item),
++            syn::Item::Macro(ref item) => (|$i: &syn::ItemMacro| $a)(item),
++            syn::Item::Macro2(ref item) => (|$i: &syn::ItemMacro2| $a)(item),
++            syn::Item::Mod(ref item) => (|$i: &syn::ItemMod| $a)(item),
++            syn::Item::Static(ref item) => (|$i: &syn::ItemStatic| $a)(item),
++            syn::Item::Struct(ref item) => (|$i: &syn::ItemStruct| $a)(item),
++            syn::Item::Trait(ref item) => (|$i: &syn::ItemTrait| $a)(item),
++            syn::Item::Type(ref item) => (|$i: &syn::ItemType| $a)(item),
++            syn::Item::Union(ref item) => (|$i: &syn::ItemUnion| $a)(item),
++            syn::Item::Use(ref item) => (|$i: &syn::ItemUse| $a)(item),
++            syn::Item::Existential(ref item) => (|$i: &syn::ItemExistential| $a)(item),
++            syn::Item::TraitAlias(ref item) => (|$i: &syn::ItemTraitAlias| $a)(item),
++            syn::Item::Verbatim(_) => (|| $b)(),
+         }
+     };
+ }
+@@ -189,6 +191,8 @@ impl_syn_item_helper!(syn::ItemTrait);
+ impl_syn_item_helper!(syn::ItemImpl);
+ impl_syn_item_helper!(syn::ItemMacro);
+ impl_syn_item_helper!(syn::ItemMacro2);
++impl_syn_item_helper!(syn::ItemExistential);
++impl_syn_item_helper!(syn::ItemTraitAlias);
+ 
+ impl SynItemHelpers for syn::ItemVerbatim {
+     fn has_attr_word(&self, _name: &str) -> bool {
