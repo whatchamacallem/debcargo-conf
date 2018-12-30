@@ -1,0 +1,280 @@
+From 255a50870498a325c2d72eaf88d9b5ed180a37c4 Mon Sep 17 00:00:00 2001
+From: Sylvestre Ledru <sylvestre@debian.org>
+Date: Sat, 29 Dec 2018 13:36:57 +0100
+Subject: [PATCH 1/2] Move from tempdir (deprecated) to tempfile
+
+---
+ Cargo.lock      | 80 +++++++++++++++++++++++++++++++++++++++++++++----
+ Cargo.toml      |  2 +-
+ src/lib.rs      |  2 +-
+ src/main.rs     |  8 +++--
+ src/producer.rs | 51 +++++++++++++++----------------
+ 5 files changed, 108 insertions(+), 35 deletions(-)
+
+Index: grcov/Cargo.toml
+===================================================================
+--- grcov.orig/Cargo.toml
++++ grcov/Cargo.toml
+@@ -46,8 +46,8 @@ version = "^0.9"
+ [dependencies.serde_json]
+ version = "^1.0"
+ 
+-[dependencies.tempdir]
+-version = "^0.3"
++[dependencies.tempfile]
++version = "3"
+ 
+ [dependencies.uuid]
+ version = "^0.7"
+Index: grcov/src/lib.rs
+===================================================================
+--- grcov.orig/src/lib.rs
++++ grcov/src/lib.rs
+@@ -4,7 +4,7 @@ extern crate crossbeam;
+ extern crate globset;
+ extern crate libc;
+ extern crate semver;
+-extern crate tempdir;
++extern crate tempfile;
+ extern crate uuid;
+ extern crate walkdir;
+ extern crate xml;
+Index: grcov/src/main.rs
+===================================================================
+--- grcov.orig/src/main.rs
++++ grcov/src/main.rs
+@@ -2,7 +2,7 @@ extern crate crossbeam;
+ extern crate grcov;
+ extern crate num_cpus;
+ extern crate serde_json;
+-extern crate tempdir;
++extern crate tempfile;
+ 
+ use crossbeam::queue::MsQueue;
+ use serde_json::Value;
+@@ -12,7 +12,6 @@ use std::fs::{self, File};
+ use std::path::PathBuf;
+ use std::sync::{Arc, Mutex};
+ use std::{env, process, thread};
+-use tempdir::TempDir;
+ 
+ #[global_allocator]
+ static GLOBAL: System = System;
+@@ -241,8 +240,9 @@ fn main() {
+         Some(PathBuf::from(prefix_dir))
+     };
+ 
+-    let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++    let tmp_dir = tempfile::tempdir().unwrap();
+     let tmp_path = tmp_dir.path().to_owned();
++    assert!(tmp_path.exists());
+ 
+     let result_map: Arc<SyncCovResultMap> = Arc::new(Mutex::new(HashMap::with_capacity(20_000)));
+     let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+Index: grcov/src/producer.rs
+===================================================================
+--- grcov.orig/src/producer.rs
++++ grcov/src/producer.rs
+@@ -1,3 +1,5 @@
++extern crate tempfile;
++
+ use std::cell::RefCell;
+ use std::collections::HashMap;
+ use std::env;
+@@ -481,7 +483,6 @@ mod tests {
+     use crossbeam::queue::MsQueue;
+     use serde_json::{self, Value};
+     use std::sync::Arc;
+-    use tempdir::TempDir;
+ 
+     fn check_produced(
+         directory: PathBuf,
+@@ -568,7 +569,7 @@ mod tests {
+     fn test_dir_producer() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         let mapping = producer(&tmp_path, &["test".to_string()], &queue, false, false);
+ 
+@@ -674,7 +675,7 @@ mod tests {
+     fn test_dir_producer_multiple_directories() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         let mapping = producer(
+             &tmp_path,
+@@ -697,7 +698,7 @@ mod tests {
+     fn test_dir_producer_directory_with_gcno_symlinks() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         let mapping = producer(
+             &tmp_path,
+@@ -717,7 +718,7 @@ mod tests {
+     fn test_dir_producer_directory_with_no_gcda() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         let mapping = producer(
+             &tmp_path,
+@@ -740,7 +741,7 @@ mod tests {
+     fn test_dir_producer_directory_with_no_gcda_ignore_orphan_gcno() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         let mapping = producer(
+             &tmp_path,
+@@ -760,7 +761,7 @@ mod tests {
+     fn test_zip_producer_with_gcda_dir() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         let mapping = producer(
+             &tmp_path,
+@@ -810,7 +811,7 @@ mod tests {
+     fn test_zip_producer_multiple_gcda_archives() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         let mapping = producer(
+             &tmp_path,
+@@ -870,7 +871,7 @@ mod tests {
+     fn test_zip_producer_gcno_with_no_path_mapping() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         let mapping = producer(
+             &tmp_path,
+@@ -911,7 +912,7 @@ mod tests {
+     fn test_zip_producer_different_order_of_zip_files() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         producer(
+             &tmp_path,
+@@ -961,7 +962,7 @@ mod tests {
+     fn test_zip_producer_info_files() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         producer(
+             &tmp_path,
+@@ -994,7 +995,7 @@ mod tests {
+     fn test_zip_producer_jacoco_xml_files() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         producer(
+             &tmp_path,
+@@ -1025,7 +1026,7 @@ mod tests {
+     fn test_zip_producer_both_info_and_jacoco_xml() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         producer(
+             &tmp_path,
+@@ -1070,7 +1071,7 @@ mod tests {
+     fn test_zip_producer_both_info_and_gcnogcda_files() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         producer(
+             &tmp_path,
+@@ -1124,7 +1125,7 @@ mod tests {
+     fn test_zip_producer_gcno_with_no_associated_gcda() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         let mapping = producer(
+             &tmp_path,
+@@ -1148,7 +1149,7 @@ mod tests {
+     fn test_zip_producer_gcno_with_associated_gcda_in_only_one_archive() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         let mapping = producer(
+             &tmp_path,
+@@ -1174,7 +1175,7 @@ mod tests {
+     fn test_zip_producer_with_gcda_archive_and_no_gcno_archive() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         producer(
+             &tmp_path,
+@@ -1190,7 +1191,7 @@ mod tests {
+     fn test_zip_producer_no_matching_gcno() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         producer(
+             &tmp_path,
+@@ -1228,7 +1229,7 @@ mod tests {
+     fn test_zip_producer_no_matching_gcno_two_gcda_archives() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         producer(
+             &tmp_path,
+@@ -1278,7 +1279,7 @@ mod tests {
+     fn test_zip_producer_no_matching_gcno_ignore_orphan_gcno() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         producer(
+             &tmp_path,
+@@ -1308,7 +1309,7 @@ mod tests {
+     fn test_zip_producer_no_matching_gcno_two_gcda_archives_ignore_orphan_gcno() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         producer(
+             &tmp_path,
+@@ -1350,7 +1351,7 @@ mod tests {
+     fn test_zip_producer_llvm_buffers() {
+         let queue: Arc<WorkQueue> = Arc::new(MsQueue::new());
+ 
+-        let tmp_dir = TempDir::new("grcov").expect("Failed to create temporary directory");
++        let tmp_dir = tempfile::tempdir().unwrap();
+         let tmp_path = tmp_dir.path().to_owned();
+         producer(
+             &tmp_path,

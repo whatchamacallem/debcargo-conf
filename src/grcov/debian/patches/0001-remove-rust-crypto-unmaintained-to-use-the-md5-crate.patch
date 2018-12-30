@@ -1,0 +1,67 @@
+From 01c675ec8aff45f04a0ef76054d91116beac5969 Mon Sep 17 00:00:00 2001
+From: Sylvestre Ledru <sylvestre@debian.org>
+Date: Sat, 29 Dec 2018 18:28:40 +0100
+Subject: [PATCH] remove rust-crypto (unmaintained) to use the md5 crate
+ instead
+
+---
+ Cargo.lock    | 44 +++++++-------------------------------------
+ Cargo.toml    |  2 +-
+ src/lib.rs    |  1 -
+ src/output.rs |  9 ++-------
+ 4 files changed, 10 insertions(+), 46 deletions(-)
+
+Index: grcov/Cargo.toml
+===================================================================
+--- grcov.orig/Cargo.toml
++++ grcov/Cargo.toml
+@@ -37,8 +37,8 @@ version = "^0.2"
+ [dependencies.num_cpus]
+ version = "^1.8"
+ 
+-[dependencies.rust-crypto]
+-version = "^0.2"
++[dependencies.md5]
++version = "^0.6"
+ 
+ [dependencies.semver]
+ version = "^0.9"
+Index: grcov/src/lib.rs
+===================================================================
+--- grcov.orig/src/lib.rs
++++ grcov/src/lib.rs
+@@ -1,4 +1,3 @@
+-extern crate crypto;
+ #[macro_use]
+ extern crate serde_json;
+ extern crate crossbeam;
+Index: grcov/src/output.rs
+===================================================================
+--- grcov.orig/src/output.rs
++++ grcov/src/output.rs
+@@ -1,11 +1,10 @@
+-use crypto::digest::Digest;
+-use crypto::md5::Md5;
+ use serde_json::{self, Value};
+ use std::collections::BTreeSet;
+ use std::fs::File;
+ use std::io::{self, BufWriter, Read, Write};
+ use std::path::PathBuf;
+ use uuid::Uuid;
++extern crate md5;
+ 
+ use defs::*;
+ 
+@@ -187,11 +186,7 @@ fn get_digest(path: PathBuf) -> String {
+         Ok(mut f) => {
+             let mut buffer = Vec::new();
+             f.read_to_end(&mut buffer).unwrap();
+-
+-            let mut hasher = Md5::new();
+-            hasher.input(buffer.as_slice());
+-
+-            hasher.result_str()
++            format!("{:x}", md5::compute(buffer.as_slice()))
+         }
+         Err(_) => Uuid::new_v4().to_string(),
+     }
