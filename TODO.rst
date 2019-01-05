@@ -100,7 +100,16 @@ https://github.com/mozilla/grcov/pull/236
 https://github.com/mozilla/grcov/pull/237
 * bzip2 (NEW)
 * zip (needs bzip2)
-* needs a more recent version of crossbeam
+* needs a more recent version of crossbeam (0.3 is in NEW
+  we will be able to upload 0.6 after that)
+
+
+tokei
+-----
+
+needs handlebars
+which needs pest
+which needs ucd-trie
 
 ==============
 Eventual goals
