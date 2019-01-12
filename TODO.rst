@@ -35,6 +35,8 @@ because all required dependencies are available in main::
 
     structopt-derive
     nitrokey "Fails with expected struct `std::io::Error`, found struct `rand::Error`"
+    rand_hc
+    rand_isaac
     rand_pcg
     rand_xorshift
 
