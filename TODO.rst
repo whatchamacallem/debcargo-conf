@@ -91,12 +91,7 @@ bingrep
 grcov
 -----
 
-* move from tempdir => tempfile
-https://github.com/mozilla/grcov/pull/236
-* do not use rust-crypto (dead)
-https://github.com/mozilla/grcov/pull/237
-* bzip2 (NEW)
-* zip (needs bzip2)
+* zip (NEW)
 * needs a more recent version of crossbeam (0.3 is in NEW
   we will be able to upload 0.6 after that)
 
