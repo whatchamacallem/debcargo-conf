@@ -37,7 +37,10 @@ because all required dependencies are available in main::
     hidapi-sys
     structopt
     nitrokey
+    nitrokey-test
     nitrokey-sys (update)
+    rdrand
+    rand_chacha
 
 Delayed/problematic::
 
