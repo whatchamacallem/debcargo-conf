@@ -39,6 +39,7 @@ because all required dependencies are available in main::
     nitrokey
     nitrokey-test
     nitrokey-sys (update)
+    rdrand
 
 Delayed/problematic::
 
