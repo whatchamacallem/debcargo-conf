@@ -40,6 +40,7 @@ because all required dependencies are available in main::
     nitrokey-test
     nitrokey-sys (update)
     rdrand
+    rand_chacha
 
 Delayed/problematic::
 
