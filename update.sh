@@ -44,6 +44,7 @@ if ! grep -q uploaders "$PKGCFG"; then
 fi
 
 run_debcargo
+git add -N "$PKGDIR"
 
 if ! git diff --quiet -- "$PKGDIR_REL"; then
 	read -p "Update wrote some changes to $PKGDIR_REL, press enter to git diff..." x || true
