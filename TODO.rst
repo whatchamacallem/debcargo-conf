@@ -35,6 +35,7 @@ because all required dependencies are available in main::
 
     nitrokey (update)
     nitrokey-sys (update)
+    rand_os
 
 Delayed/problematic::
 
