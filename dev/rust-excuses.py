@@ -42,9 +42,10 @@ def traverse(name, arch="", d=0):
 	if name in already_seen:
 		return
 	already_seen.add(name)
+	dependencies = excuses.get(name, {}).get("dependencies", {})
 
 	edges = set()
-	for arch, deps in excuses.get(name, {}).get("dependencies", {}).get("unsatisfiable-dependencies", {}).items():
+	for arch, deps in dependencies.get("unsatisfiable-dependencies", {}).items():
 		for dep in deps:
 			vers = ""
 			if dep.startswith("librust-"):
@@ -66,13 +67,16 @@ def traverse(name, arch="", d=0):
 	for edge in edges:
 		print(edge, file=rust_excuses)
 
-	for dep in excuses.get(name, {}).get("dependencies", {}).get("migrate-after", []):
+	for dep in dependencies.get("migrate-after", []) + dependencies.get("blocked-by", []):
 		if "/" in dep:
 			dep, arch = dep.split("/")
 			print(edge_dep_label(name, dep, arch), file=rust_excuses_arch)
 		else:
 			print_all(edge_dep(name, dep))
 		traverse(dep, arch, d+1)
+
+#import code
+#code.interact(local=locals())
 
 print_all("digraph {")
 for s in excuses.keys():
