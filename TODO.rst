@@ -36,9 +36,15 @@ because all required dependencies are available in main::
     nitrokey (update)
     nitrokey-sys (update)
     rand_os
+    pcap (removes clippy)
+    crossbeam-utils (update)
 
 Delayed/problematic::
 
+    tokio-core (blocked by tokio)
+        tokio (blocked by tokio-threadpool 0.1.10)
+            tokio-thradpool (blocked by crossbeam-channel 0.3.6)
+                crossbeam-channel (blocked by crossbeam-utils-0.6.3, RFS)
     md5 (update) -- affects uuid
     grep
         pcre2 feature depends on grep-pcre2 -> pcre2 -> pcre2-sys
