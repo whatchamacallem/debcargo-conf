@@ -35,6 +35,7 @@ because all required dependencies are available in main::
 
     nitrocli
     rand_core 0.2 (update, adds new binary packages)
+    colored_json
 
 Delayed/problematic::
 
