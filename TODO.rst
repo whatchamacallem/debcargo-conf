@@ -44,7 +44,7 @@ Delayed/problematic::
                 crossbeam-channel (blocked by rand 0.6, parking_lot 0.7)
                     rand 0.6.4 (blocked by rand_os 0.1.1, in NEW)
                     parking_lot 0.7 (blocked by parking_lot_core 0.4.0)
-                        parking_lot_core 0.4.0 (blocked by rand 0.7.0)
+                        parking_lot_core 0.4.0 (blocked by rand 0.6.4)
     md5 (update) -- affects uuid
     grep
         pcre2 feature depends on grep-pcre2 -> pcre2 -> pcre2-sys
