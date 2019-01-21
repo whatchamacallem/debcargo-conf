@@ -34,6 +34,7 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     crossbeam-epoch (update, adds a new binary package for `std` feature)
+    nitrocli
 
 Delayed/problematic::
 
