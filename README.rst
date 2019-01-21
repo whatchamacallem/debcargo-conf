@@ -3,11 +3,7 @@ Instructions
 
 To get set up, run::
 
-  apt update && apt install cargo debcargo
-
-As your regular user, update the crates.io index:
-
-  cargo search
+  apt update && apt install debcargo
 
 Then for each new package:
 
