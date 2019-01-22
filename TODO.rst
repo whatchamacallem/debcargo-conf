@@ -35,6 +35,7 @@ because all required dependencies are available in main::
 
     combine
     difference
+    pest_meta
 
 Delayed/problematic::
 
