@@ -38,6 +38,7 @@ because all required dependencies are available in main::
     colored_json
     dogged
     mint
+    wasm-bindgen-shared
 
 Delayed/problematic::
 
