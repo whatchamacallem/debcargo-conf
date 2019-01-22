@@ -99,14 +99,6 @@ bingrep
 * scroll
 
 
-grcov
------
-
-* zip (NEW)
-* needs a more recent version of crossbeam (0.3 is in NEW
-  we will be able to upload 0.6 after that)
-
-
 tokei
 -----
 
