@@ -36,6 +36,7 @@ because all required dependencies are available in main::
     sniffglue (update, fix ftbfs)
     rustyline (update, unblocks nix 0.13)
     toml_edit
+    pretty_assertions
 
 
 Delayed/problematic::
