@@ -33,12 +33,7 @@ and try to verify that they won't be broken by your update. If they are, then:
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    nitrocli
     rand_core 0.2 (update, adds new binary packages)
-    colored_json
-    dogged
-    mint
-    wasm-bindgen-shared
     encoding_rs 0.8.14 (update, adds new binary packages)
 
 Delayed/problematic::
