@@ -36,8 +36,6 @@ because all required dependencies are available in main::
     rand_core 0.2 (update, adds new binary packages)
     encoding_rs 0.8.14 (update, adds new binary packages)
     tokio-reactor (update)
-    env_proxy
-    environment
 
 Delayed/problematic::
 
