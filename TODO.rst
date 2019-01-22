@@ -39,6 +39,7 @@ because all required dependencies are available in main::
     dogged
     mint
     wasm-bindgen-shared
+    encoding_rs 0.8.14 (update, adds new binary packages)
 
 Delayed/problematic::
 
