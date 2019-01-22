@@ -37,6 +37,7 @@ because all required dependencies are available in main::
     encoding_rs 0.8.14 (update, adds new binary packages)
     tokio-reactor (update)
     wasm-bindgen-backend
+    wasm-bindgen-macro-support
 
 Delayed/problematic::
 
