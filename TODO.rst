@@ -39,6 +39,7 @@ because all required dependencies are available in main::
     wasm-bindgen-backend
     wasm-bindgen-macro-support
     wasm-bindgen-macro
+    wasm-bindgen
 
 Delayed/problematic::
 
