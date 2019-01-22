@@ -37,6 +37,7 @@ because all required dependencies are available in main::
     rand_core 0.2 (update, adds new binary packages)
     colored_json
     dogged
+    mint
 
 Delayed/problematic::
 
