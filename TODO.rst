@@ -37,6 +37,7 @@ because all required dependencies are available in main::
     rustyline (update, unblocks nix 0.13)
     toml_edit
     pretty_assertions
+    pest_generator
 
 
 Delayed/problematic::
