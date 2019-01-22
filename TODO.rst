@@ -38,6 +38,7 @@ because all required dependencies are available in main::
     tokio-reactor (update)
     wasm-bindgen-backend
     wasm-bindgen-macro-support
+    wasm-bindgen-macro
 
 Delayed/problematic::
 
