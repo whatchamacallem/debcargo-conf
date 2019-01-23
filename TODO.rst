@@ -42,9 +42,7 @@ Delayed/problematic::
         tokio (blocked by tokio-threadpool 0.1.10)
             tokio-thradpool
     md5 (update) -- affects uuid
-    grep
-        pcre2 feature depends on grep-pcre2 -> pcre2 -> pcre2-sys
-    gcc-0.3.54 -- don't need this, completely obsoleted by cc.
+    gcc -- don't need this, completely obsoleted by cc.
         patch dependents to use cc instead.
     winutil -- dependency of hostname <- resolv-conf <- trust-dns-resolver
         doesn't build on linux
