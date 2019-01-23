@@ -39,13 +39,13 @@ because all required dependencies are available in main::
     wasm-bindgen-macro-support
     wasm-bindgen-macro
     wasm-bindgen-shared
+    tokio
+    tokio-core (needs IGNORE_MISSING_BUILD_DEPS=1 ./build.sh tokio-core librust-tokio-dev*.deb librust-tokio+*.deb)
 
 
 Delayed/problematic::
 
     tokio-core (blocked by tokio)
-        tokio (blocked by tokio-threadpool 0.1.10)
-            tokio-thradpool
     md5 (update) -- affects uuid
     gcc -- don't need this, completely obsoleted by cc.
         patch dependents to use cc instead.
