@@ -36,6 +36,10 @@ because all required dependencies are available in main::
     combine
     difference
     pest_meta
+    wasm-bindgen-macro-support
+    wasm-bindgen-macro
+    wasm-bindgen-shared
+
 
 Delayed/problematic::
 
