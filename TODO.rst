@@ -41,6 +41,7 @@ because all required dependencies are available in main::
     wasm-bindgen-macro
     wasm-bindgen
     combine
+    difference
 
 Delayed/problematic::
 
