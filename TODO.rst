@@ -40,6 +40,7 @@ because all required dependencies are available in main::
     wasm-bindgen-macro
     wasm-bindgen-shared
     tokio
+    tokio-core (needs IGNORE_MISSING_BUILD_DEPS=1 ./build.sh tokio-core librust-tokio-dev*.deb librust-tokio+*.deb)
 
 
 Delayed/problematic::
