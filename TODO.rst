@@ -39,13 +39,12 @@ because all required dependencies are available in main::
     wasm-bindgen-macro-support
     wasm-bindgen-macro
     wasm-bindgen-shared
+    tokio
 
 
 Delayed/problematic::
 
     tokio-core (blocked by tokio)
-        tokio (blocked by tokio-threadpool 0.1.10)
-            tokio-thradpool
     md5 (update) -- affects uuid
     gcc -- don't need this, completely obsoleted by cc.
         patch dependents to use cc instead.
