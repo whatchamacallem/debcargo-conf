@@ -33,19 +33,21 @@ and try to verify that they won't be broken by your update. If they are, then:
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    nitrocli
     rand_core 0.2 (update, adds new binary packages)
-    colored_json
+    encoding_rs 0.8.14 (update, adds new binary packages)
+    tokio-reactor (update)
+    wasm-bindgen-backend
+    wasm-bindgen-macro-support
+    wasm-bindgen-macro
+    wasm-bindgen
+    combine
+    difference
 
 Delayed/problematic::
 
     tokio-core (blocked by tokio)
         tokio (blocked by tokio-threadpool 0.1.10)
-            tokio-thradpool (blocked by crossbeam-channel 0.3.6)
-                crossbeam-channel (blocked by rand 0.6, parking_lot 0.7)
-                    rand 0.6.4 (blocked by rand_os 0.1.1, in NEW)
-                    parking_lot 0.7 (blocked by parking_lot_core 0.4.0)
-                        parking_lot_core 0.4.0 (blocked by rand 0.6.4)
+            tokio-thradpool
     md5 (update) -- affects uuid
     grep
         pcre2 feature depends on grep-pcre2 -> pcre2 -> pcre2-sys
@@ -93,14 +95,6 @@ bingrep
 * metagoblin
 * prettytable-rs
 * scroll
-
-
-grcov
------
-
-* zip (NEW)
-* needs a more recent version of crossbeam (0.3 is in NEW
-  we will be able to upload 0.6 after that)
 
 
 tokei
