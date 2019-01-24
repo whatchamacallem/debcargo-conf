@@ -33,8 +33,7 @@ and try to verify that they won't be broken by your update. If they are, then:
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    combine
-    difference
+    difference (new binary: needs an ITP)
     pest_meta
     wasm-bindgen-macro-support
     wasm-bindgen-macro
