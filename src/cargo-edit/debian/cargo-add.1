@@ -1,0 +1,94 @@
+.\" Based on the --help output of cargo-add,
+.\" formatted as a man page by Robin Krahl <robin.krahl@ireas.org>
+.TH CARGO-ADD 1 2019-01-24
+.SH NAME
+cargo-add \- add dependencies to a Cargo.toml manifest file
+.SH SYNOPSIS
+\fBcargo add \fIcrate\fR... [\fB\-\-dev\fR|\fB\-\-build\fR|\fB\-\-optional\fR]
+[\fIoptions\fR]
+.br
+\fBcargo add \-\-help\fR
+.br
+\fBcargo add \-\-version\fR
+.SH DESCRIPTION
+\fBcargo add\fR allows you to add a dependency to a Cargo.toml manifest file.
+When no version is specified, \fBcargo add\fR will try to query the latest
+version's number from crates.io.
+If \fIcrate\fR is a GitHub or Gitlab repository URL or a local path, \fBcargo
+add\fR will try to automatically get the crate name and set the appropriate
+\fB\-\-git\fR or \fB\-\-path\fR value.
+.P
+Please note that \fBcargo\fR(1) treats versions like "1.2.3" as "^1.2.3" (and
+that "^1.2.3" is specified as ">=1.2.3 and <2.0.0").
+By default, \fBcargo add\fR will use this format, as it is the one that the
+crates.io registry suggests.
+One goal of \fBcargo add\fR is to prevent you from using wildcard dependencies
+(version set to "*").
+.SH OPTIONS
+.SS Specify what crate to add
+.TP
+\fB\-\-vers=\fIver\fR
+Specify the version to grab from the registry (crates.io).
+You can also specify versions as part of the name, for example \fBcargo add
+bitflags@0.3.2\fR.
+.TP
+\fB\-\-git=\fIuri\fR
+Specify a git repository to download the crate from.
+This does not work if either a version or path (or both) is specified.
+.TP
+\fB\-\-path=\fIuri\fR
+Specify the path the crate should be loaded from.
+.SS Specify where to add the crate
+.TP
+\fB\-D\fR, \fB\-\-dev\fR
+Add the crate as development dependency.
+.TP
+\fB\-B\fR, \fB\-\-build\fR
+Add the crate as build dependency.
+.TP
+\fB\-\-optional\fR
+Add the crate as an optional dependency (for use in featurs).
+This does not work for dev dependencies or build dependencies.
+.TP
+\fB\-\-target=\fItarget\fR
+Add the crate as a dependency to the given target platform.
+This does not work for dev dependencies or build dependencies.
+.SS Other options
+.TP
+\fB\-\-upgrade=\fImethod\fR
+Choose the method of semantic version upgrade.
+Must be one of \fBnone\fR (exact version), \fBpatch\fR (~ modifier),
+\fBminor\fR (^ modifier, default) or \fBall\fR (>=).
+.TP
+\fB\-\-manifest\-path=\fIpath\fR
+Path to the manifest to add a dependency to.
+.TP
+\fB\-\-allow-prerelease\fR
+Include prerelease versions when fetching from crates.io (for example 0.6.0-alpha).
+Defaults to false.
+.TP
+\fB\-q\fR, \fB\-\-quiet\fR
+Do not print any output in case of success.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Show a help message.
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Show version information.
+.SH EXAMPLES
+Add a dependency:
+    $ \fBcargo add regex@0.1.41 --dev\fR
+.P
+Query the latest version from crates.io and add it as build dependency:
+    $ \fBcargo add gcc \-\-build\fR
+.P
+Add a non-crates.io crate:
+    $ \fBcargo add local_experiment \-\-path=lib/trial-and-error/\fR
+.P
+Add a non-crates.io crate; the create name will be found automatically:
+    $ \fBcargo add lib/trial-and-error/\fR
+.P
+Add a crates.io crate with a local development path:
+    $ \fBcargo add my_helper --vers=1.3.1 \-\-path=lib/my_helper/\fR
+.SH SEE ALSO
+\fBcargo\fR(1), \fBcargo-rm\fR(1), \fBcargo-upgrade\fR(1)

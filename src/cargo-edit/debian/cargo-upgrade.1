@@ -1,0 +1,59 @@
+.\" Based on the --help output of cargo-upgrade,
+.\" formatted as a man page by Robin Krahl <robin.krahl@ireas.org>
+.TH CARGO-UPGRADE 1 2019-01-24
+.SH NAME
+cargo-upgtade \- upgrade a dependency in a Cargo.toml manifest file
+.SH SYNOPSIS
+\fBcargo upgrade \fR[\fIcrate\fR]... [\fIoptions\fR]
+.br
+\fBcargo upgrade \-\-help\fR
+.br
+\fBcargo upgrade \-\-version\fR
+.SH DESCRIPTION
+Upgrade dependencies in a Cargo.toml manifest file.
+This command differs from \fBcargo-update\fR(1), which updates the dependency
+versions recorded in the local lock file (Cargo.lock).
+.P
+If one or more \fIcrate\fR is provided, only the specified dependencies will
+be upgraded.  The version to upgrade to can be specified with for example
+\fBdocopt@0.8.0\fR.
+.P
+Development, build and all target dependencies will also be upgraded.
+Only dependencies from crates.io are supported.
+Git and path dependencies will be ignored.
+.P
+All packages in the workspace will be upgraded if the \fB\-\-all\fR flag is
+supplied.
+The \fB\-\-all\fR flag may be supplied in the presence of a virtual manifest.
+.SH OPTIONS
+.TP
+\fB\-\-all\fR
+Upgrade all packages in the workspace.
+.TP
+\fB\-\-manifest\-path=\fIpath\fR
+Path to the manifest to upgrade.
+.TP
+\fB\-\-allow-prerelease\fR
+Include prerelease versions when fetching from crates.io (for example 0.6.0-alpha).
+Defaults to false.
+.TP
+\fB\-\-dry\-run\fR
+Print changes to be made without making them.
+Defaults to false.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Show a help message.
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Show version information.
+.SH EXAMPLES
+Upgrade all dependencies for the current crate:
+    $ \fBcargo upgrade\fR
+.P
+Upgrade docopt (to ~0.9) and serde (to >=0.9,<2.0):
+    $ \fBcargo upgrade docopt@~0.9 serde@>=0.9,2.0\fR
+.P
+Upgrade regex (to the latest version) across all crates in the workspace:
+    $ \fBcargo upgrade regex \-\-all\fR
+.SH SEE ALSO
+\fBcargo\fR(1), \fBcargo-add\fR(1), \fBcargo-rm\fR(1)
