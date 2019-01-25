@@ -1,0 +1,92 @@
+.\" (C) Copyright 2019 Robin Krahl <robin.krahl@ireas.org>
+.TH RUSTY-TAGS 1 2019-01-25
+.SH NAME
+rusty-tags \- creates ctags/etags for a cargo project
+.SH SYNOPSIS
+\fBrusty-tags\fR [\fIoptions\fR] \fItags_kind\fR
+.SH DESCRIPTION
+\fBrusty-tags\fR creates tags for source code navigation using ctags for a
+\fBcargo\fR(1) project, all of its direct and indirect dependencies and the
+Rust standard library.
+It can be run anywhere inside a cargo project.
+\fBrusty-tags\fR creates a rusty-tags.vi (if \fItags_kind\fR is \fBvi\fR) or
+a rusty-tags.emacs file (if \fItags_kind\fR is \fBemacs\fR) beside the
+Cargo.toml file.
+Tags are also generated for every dependency.
+If a dependency reexports parts of its own dependencies, then these reexported
+parts are also contained in the tags file of the dependency.
+.P
+Tags for the standard library are created if the path to the Rust source is
+supplied by defining the environment variable \fBRUST_SRC_PATH\fR.
+.SH OPTIONS
+.TP
+\fB\-f\fR, \fB\-\-force\-recreate\fR
+Forces the recreation of the tags of all dependencies and the Rust standard
+library.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Prints help information.
+.TP
+\fB\-n\fR, \fB\-\-num-threads=\fInum\fR
+Set the number of threads used for the tags creation (default: number of
+available physical cpus).
+.TP
+\fB\-o\fR, \fB\-\-omit\-deps\fR
+Do not generate tags for dependencies.
+.TP
+\fB\-q\fR, \fB\-\-quiet\fR
+Do not output anything but errors.
+.TP
+\fB\-s\fR, \fB\-\-start-dir=\fIdir\fR
+Set the start directory for the search of the Cargo.toml file (default: current
+working directory).
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Prints version information.
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+Enable verbose output about all operations.
+.SH CONFIGURATION
+.SS rusty-tags configuration
+\fBrusty-tags\fR reads the configuration file ~/.rusty-tags/config.toml.  It
+supports these settings:
+.TP
+.B vi_tags
+The file name used for vi tags (default: rusty-tags.vi).
+.TP
+.B emacs_tags
+The file name used for emacs tags (default: rusty-tags.emacs).
+.TP
+.B ctags_exe
+The name or path to the \fBctags\fR(1) executable (default: ctags,
+exuberant-ctags, exctags, universal-ctags, uctags are tried in that order).
+.TP
+.B ctags_options
+The options given to the \fBctags\fR(1) executable (default: none).
+.SS vim configuration
+To use the generated tag files with vim, add the following to your vimrc file:
+    autocmd BufRead *.rs :setlocal tags=./rusty-tags.vi;/
+    autocmd BufWritePost *.rs :silent! exec "!rusty-tags vi --quiet \
+--start-dir=" . expand('%:p:h') . "&" | redraw!
+.P
+The first line ensures that vim will automatically search for a rusty-tags.vi
+file upwards the directory hierarchy.
+This setting is important if you want to jump to dependencies and the further
+jump to their dependencies.
+.P
+The second line ensures that your project's tag file gets updated if a file is
+written.
+.P
+If you have set the path to the Rust source code in the \fBRUST_SRC_PATH\fR
+environment variable, use this setting instead:
+    autocmd BufRead *.rs :setlocal tags=./rusty-tags.vi;/,$RUST_SRC_PATH/rusty-tags.vi
+.SH ENVIRONMENT
+.TP
+.B RUST_SRC_PATH
+The path to the source code of the Rust standard library to generate tags for.
+.SH FILES
+.TP
+.B ~/.rusty-tags/config.toml
+The configuration file for \fBrusty-tags\fR (see the \fBConfiguration\fR section).
+.SH SEE ALSO
+\fBctags\fR(1)
