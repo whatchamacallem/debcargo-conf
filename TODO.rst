@@ -34,6 +34,7 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     tokio-core (needs IGNORE_MISSING_BUILD_DEPS=1 ./build.sh tokio-core librust-tokio-dev*.deb librust-tokio+*.deb)
+    nitrocli (update)
 
 
 Delayed/problematic::
