@@ -33,14 +33,7 @@ and try to verify that they won't be broken by your update. If they are, then:
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    difference
-    pest_meta
-    wasm-bindgen-macro-support
-    wasm-bindgen-macro
-    wasm-bindgen-shared
-    tokio
     tokio-core (needs IGNORE_MISSING_BUILD_DEPS=1 ./build.sh tokio-core librust-tokio-dev*.deb librust-tokio+*.deb)
-    rusty-tags
 
 
 Delayed/problematic::
