@@ -40,14 +40,12 @@ because all required dependencies are available in main::
 
 Delayed/problematic::
 
-    tokio-core (blocked by tokio)
     md5 (update) -- affects uuid
     gcc -- don't need this, completely obsoleted by cc.
         patch dependents to use cc instead.
     winutil -- dependency of hostname <- resolv-conf <- trust-dns-resolver
         doesn't build on linux
 
-    parking_lot (blocked by lock_api)
     indicatif (blocked by parking_lot)
     statistical (blocked by num & co)
     hyperfine (blocked by indicatif & statistical)
