@@ -75,6 +75,11 @@ def traverse(name, arch="", d=0):
 			print_all(edge_dep(name, dep))
 		traverse(dep, arch, d+1)
 
+	if not dependencies:
+		age = excuses.get(name, {}).get("policy_info", {}).get("age", {})
+		if age.get("verdict", "") == "REJECTED_TEMPORARILY":
+			print_all('"%s" [fillcolor="#66ff99",style=filled]' % name)
+
 #import code
 #code.interact(local=locals())
 
