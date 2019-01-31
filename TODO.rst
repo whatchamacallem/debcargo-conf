@@ -36,6 +36,7 @@ because all required dependencies are available in main::
     tokio-core
     nitrocli (update)
     sniffglue (update, fix ftbfs)
+    iso8601 (update)
 
 
 Delayed/problematic::
