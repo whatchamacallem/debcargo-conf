@@ -33,11 +33,9 @@ and try to verify that they won't be broken by your update. If they are, then:
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    tokio-core
     tokio-async-await
     nitrocli (update)
     sniffglue (update, fix ftbfs)
-    iso8601 (update)
 
 
 Delayed/problematic::
