@@ -1,0 +1,53 @@
+.\" (C) Copyright 2019 Robin Krahl <robin.krahl@ireas.org>
+.TH DIFFERENCE 1 2019-01-23
+.SH NAME
+difference \- compares two strings and prints a colorful diff
+.SH SYNOPSIS
+\fBdifference\fR [\fB\-\-split \fIsplit\fR] \fIorig\fR \fIedit\fR
+.SH DESCRIPTION
+\fBdifference\fR compares the strings \fIorig\fR and \fIedit\fR and prints
+a colorful representation of the difference to the standard output.
+.SH OPTIONS
+.TP
+\fB\-s\fR, \fB\-\-split\fR \fBchar\fR|\fBword\fR|\fBline\fR
+Select the level of detail in the diff (default: \fB word\fR).
+.SH EXAMPLES
+In the examples, text that would be printed in red is formatted \fIin
+italics\fR, and text that would be printed in green is formatted \fBbold\fR.
+.P
+Compare characters:
+    $ \fBdifference --split char brown green\fR
+    \fIb\fBg\fRr\fIow\fBee\fRn
+.P
+Compare words:
+    $ \fBdifference --split word brown green\fR
+    \fIbrown\fB green\fR
+
+    $ \fBdifference --split word "The quick brown fox jumps over the lazy dog." \
+"The huge brown fox is cool."\fR
+    The \fIquick\fB huge\fR brown fox \fIjumps over the lazy dog.\fB is \
+really cool.\fR
+.P
+Compare lines:
+    $ \fBdifference --split word brown green\fR
+    \fIbrown\fR
+    \fBgreen\fR
+
+    $ \fBdifference --split word "The quick brown fox jumps over the lazy dog." \
+"The huge brown fox is cool."\fR
+    \fIThe quick brown fox jumps over the lazy dog.\fR
+    \fBThe huge brown fox is cool.\fR
+
+    $ \fBdifference --split line "Roses are red, violets are blue,\fR
+    > \fBI wrote this library here,\fR
+    > \fBjust for you.\fR
+    > \fB(It's true)." "Roses are red, violets are blue,\fR
+    > \fBI wrote this documentation here,\fR
+    > \fBjust for you.\fR
+    > (\fBIt's quite true)."\fR
+    Roses are red, violets are blue,
+    \fII wrote this library here,\fR
+    \fBI wrote this documentation here,\fR
+    just for you.
+    \fI(It's true).\fR
+    \fB(It's quite true).\fR

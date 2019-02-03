@@ -33,24 +33,21 @@ and try to verify that they won't be broken by your update. If they are, then:
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    rand_core 0.2 (update, adds new binary packages)
-    encoding_rs 0.8.14 (update, adds new binary packages)
-    tokio-reactor (update)
+    tokio-core
+    tokio-async-await
+    nitrocli (update)
+    sniffglue (update, fix ftbfs)
+    iso8601 (update)
+
 
 Delayed/problematic::
 
-    tokio-core (blocked by tokio)
-        tokio (blocked by tokio-threadpool 0.1.10)
-            tokio-thradpool
     md5 (update) -- affects uuid
-    grep
-        pcre2 feature depends on grep-pcre2 -> pcre2 -> pcre2-sys
-    gcc-0.3.54 -- don't need this, completely obsoleted by cc.
+    gcc -- don't need this, completely obsoleted by cc.
         patch dependents to use cc instead.
     winutil -- dependency of hostname <- resolv-conf <- trust-dns-resolver
         doesn't build on linux
 
-    parking_lot (blocked by lock_api)
     indicatif (blocked by parking_lot)
     statistical (blocked by num & co)
     hyperfine (blocked by indicatif & statistical)

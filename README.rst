@@ -60,17 +60,6 @@ on having to package all the dependencies of the newest version, you can::
   REALVER=<old-version> ./release.sh <rust-crate-name>
 
 
-DD instructions
-===============
-
-To set up a suitable build environment for ``./build.sh``::
-
-  $ sudo apt-get install devscripts reprepro debootstrap sbuild
-  $ sudo sbuild-createchroot --include=eatmydata,ccache,gnupg,dh-cargo,cargo,lintian,perl-openssl-defaults \
-      --chroot-prefix debcargo-unstable unstable \
-      /srv/chroot/debcargo-unstable-amd64-sbuild http://deb.debian.org/debian
-
-
 General packaging tips
 ======================
 
@@ -167,7 +156,32 @@ and add both the ``Cargo.toml`` and the source code changes to it. Use
 ``quilt rename`` if that helps you.
 
 
-TODO
-====
+DD instructions
+===============
 
-Maybe use ``--copyright-guess-harder``.
+To set up a suitable build environment for ``./build.sh``::
+
+  $ sudo apt-get install devscripts reprepro debootstrap sbuild
+  $ sudo sbuild-createchroot --include=eatmydata,ccache,gnupg,dh-cargo,cargo,lintian,perl-openssl-defaults \
+      --chroot-prefix debcargo-unstable unstable \
+      /srv/chroot/debcargo-unstable-amd64-sbuild http://deb.debian.org/debian
+
+Normally, ``./build.sh`` will fail early if not all the build dependencies are
+available in your local apt cache. If you are packaging a large dependency tree
+however, to avoid many round-trips through NEW it is possible to bypass this
+check and build all the packages together. Suppose package B depends on package
+A, then you can run something like::
+
+  $ export IGNORE_MISSING_BUILD_DEPS=1
+  $ ./release.sh A
+  $ ( cd build && ./build.sh A )
+  # push pending and checkout master
+  $ ./release.sh B
+  $ ( cd build && ./build.sh B librust-A*.deb )
+
+The extra arguments after ``./build.sh B <args>`` is extra deb files to pass to
+sbuild to use as dependencies. In this case, ``librust-A*.deb`` should have
+been built by the previous step.
+
+After everything is built successfully, you can ``dput`` all of them and then
+push all the ``pending-*`` branches as normal.
