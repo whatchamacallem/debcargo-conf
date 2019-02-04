@@ -38,6 +38,7 @@ because all required dependencies are available in main::
     toml_edit
     pretty_assertions
     pest_generator
+    blake2-rfc
 
 
 Delayed/problematic::
