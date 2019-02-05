@@ -39,6 +39,7 @@ because all required dependencies are available in main::
     pretty_assertions
     pest_generator
     blake2-rfc
+    rusty-tags (update)
 
 
 Delayed/problematic::
