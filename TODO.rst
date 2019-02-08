@@ -34,10 +34,6 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     rustyline (update, unblocks nix 0.13)
-    toml_edit
-    pretty_assertions
-    pest_generator
-    blake2-rfc
     rusty-tags (update)
 
 
