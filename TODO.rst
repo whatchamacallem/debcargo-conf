@@ -33,7 +33,6 @@ and try to verify that they won't be broken by your update. If they are, then:
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    sniffglue (update, fix ftbfs)
     rustyline (update, unblocks nix 0.13)
     toml_edit
     pretty_assertions
