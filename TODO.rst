@@ -34,6 +34,7 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     tempfile (update)
+    colored_json (update)
 
 
 Delayed/problematic::
