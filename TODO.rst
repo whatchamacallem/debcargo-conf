@@ -35,6 +35,7 @@ because all required dependencies are available in main::
 
     tempfile (update)
     colored_json (update)
+    combine (update)
 
 
 Delayed/problematic::
