@@ -112,6 +112,7 @@ Binary crates worth packaging (please add if you know more):
 - rustfmt-nightly - rust coding style
 - bingrep - Grep through binaries from various OSs and architectures.
 - hg - Rust implement of hg
+- bat - A cat clone with syntax highlighting, Git integration, and more.
 
 To see lists of interesting binary crates, you can run something like::
 
