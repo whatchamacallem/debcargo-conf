@@ -47,6 +47,7 @@ Delayed/problematic::
         doesn't build on linux
 
     indicatif (blocked by parking_lot)
+    sandboxfs (blocked by fuse and signal-hook)
     statistical (blocked by num & co)
     hyperfine (blocked by indicatif & statistical)
 
