@@ -46,6 +46,7 @@ Delayed/problematic::
 
     fuse (blocked by thread-scoped)
     indicatif (blocked by parking_lot)
+    sandboxfs (blocked by fuse and signal-hook)
     statistical (blocked by num & co)
     hyperfine (blocked by indicatif & statistical)
 
