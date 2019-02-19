@@ -98,15 +98,12 @@ Eventual goals
 Binary crates worth packaging (please add if you know more):
 
 - xsv - Command line program for manipulating CSV files
-- process_viewer - Process viewer GUI in rust (GTK)
 - cargo-edit - Cargo editing subcommands (add, rm, upgrade)
 - tmux-hints - Find matches (e.g. urls) and navigate them by keyboard
-- grcov - collects and aggregates code coverage information for multiple source files.
 - rural - User-friendly command-line HTTP tool
 - brewstillery - Brewer's, vinter's and distiller's calculator (GTK).
 - jql - JSON Query Language CLI tool.
 - recode_rs -  CLI tool converting between the character encodings.
-- rusty-tags - Create ctags files for cargo project.
 - rustfmt-nightly - rust coding style
 - bingrep - Grep through binaries from various OSs and architectures.
 - hg - Rust implement of hg
