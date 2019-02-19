@@ -44,6 +44,7 @@ Delayed/problematic::
     winutil -- dependency of hostname <- resolv-conf <- trust-dns-resolver
         doesn't build on linux
 
+    fuse (blocked by thread-scoped)
     indicatif (blocked by parking_lot)
     statistical (blocked by num & co)
     hyperfine (blocked by indicatif & statistical)
