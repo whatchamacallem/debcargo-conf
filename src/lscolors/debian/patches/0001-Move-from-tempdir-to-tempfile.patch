@@ -1,0 +1,40 @@
+From d995e5030716f17a31bc45f7d99283bf3108339b Mon Sep 17 00:00:00 2001
+From: Sylvestre Ledru <sylvestre@debian.org>
+Date: Tue, 19 Feb 2019 13:56:08 +0100
+Subject: [PATCH] Move from tempdir to tempfile
+
+---
+ Cargo.toml | 2 +-
+ src/lib.rs | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+Index: lscolors/Cargo.toml
+===================================================================
+--- lscolors.orig/Cargo.toml
++++ lscolors/Cargo.toml
+@@ -30,8 +30,8 @@ required-features = ["ansi_term"]
+ [dependencies.ansi_term]
+ version = "0.11"
+ optional = true
+-[dev-dependencies.tempdir]
+-version = "0.3"
++[dev-dependencies.tempfile]
++version = "^3"
+ 
+ [features]
+ default = ["ansi_term"]
+Index: lscolors/src/lib.rs
+===================================================================
+--- lscolors.orig/src/lib.rs
++++ lscolors/src/lib.rs
+@@ -395,8 +395,8 @@ mod tests {
+         assert_eq!(None, style_artifact.background);
+     }
+ 
+-    fn temp_dir() -> tempdir::TempDir {
+-        tempdir::TempDir::new("lscolors-test").expect("temporary directory")
++    fn temp_dir() -> tempfile::TempDir {
++        tempfile::tempdir().expect("temporary directory")
+     }
+ 
+     fn create_file<P: AsRef<Path>>(path: P) -> PathBuf {
