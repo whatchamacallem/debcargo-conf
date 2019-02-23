@@ -37,6 +37,7 @@ because all required dependencies are available in main::
     colored-json (update, reupload due to version mismatch)
     num_cpus (update)
     failure_derive (update)
+    regex (update)
     ident_case
 
 
