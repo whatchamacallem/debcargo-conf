@@ -35,6 +35,10 @@ because all required dependencies are available in main::
 
     nitrocli (update, reupload due to checksum problem)
     colored-json (update, reupload due to version mismatch)
+    num_cpus (update)
+    failure_derive (update)
+    regex (update)
+    ident_case
 
 
 Delayed/problematic::
