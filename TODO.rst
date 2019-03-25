@@ -84,13 +84,41 @@ bingrep
 * prettytable-rs
 * scroll
 
-
 tokei
 -----
 
 needs handlebars
 which needs pest
 which needs ucd-trie
+
+librsvg
+-------
+
+see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629
+
+[ ] alga
+[ ] c_vec
+[ ] cast
+[ ] criterion
+[ ] criterion-plot
+[ ] criterion-stats
+[ ] cssparser
+[ ] downcast-rs
+[ ] handlebars
+[ ] itertools-num
+[ ] matrixmultiply
+[ ] nalgebra
+[ ] num-traits-0.1.43
+[ ] pest_derive
+[ ] quote-0.3.15
+[ ] rand-0.4.2
+[ ] rawpointer
+[ ] simplelog
+[ ] syn-0.11.11
+[ ] synom
+[ ] thread-scoped (NEW)
+[ ] unicode-xid-0.0.4
+
 
 ==============
 Eventual goals
