@@ -66,15 +66,13 @@ rustfmt-nightly
 
 * rustc-ap-syntax
   * rustc-ap-rustc_data_structures (prepared)
-    * ena
-    * rustc-ap-graphviz
-    * rustc-ap-rustc-cratesio-shim
-    * rustc-rayon
-    * rustc-rayon-core
-  * rustc-ap-rustc-errors
+    * rustc-ap-graphviz (needs nightly)
+    * rustc-ap-rustc-cratesio-shim (needs nightly)
+  * rustc-ap-rustc-errors (depends on the rest of the list here)
   * rustc-ap-rustc-target
   * rustc-ap-serialize (to be uploaded, dep issue?!)
   * rustc-ap-syntax-pos
+  * rustc-ap-serialize (fails because of usage of nightly feature)
 
 bingrep
 -------
