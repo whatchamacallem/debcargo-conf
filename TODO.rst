@@ -125,6 +125,7 @@ Eventual goals
 Binary crates worth packaging (please add if you know more):
 
 - xsv - Command line program for manipulating CSV files
+- cargo-download - Download sources of a crate
 - cargo-edit - Cargo editing subcommands (add, rm, upgrade)
 - tmux-hints - Find matches (e.g. urls) and navigate them by keyboard
 - rural - User-friendly command-line HTTP tool
