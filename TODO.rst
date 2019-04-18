@@ -33,7 +33,17 @@ and try to verify that they won't be broken by your update. If they are, then:
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    (none, yay!)
+    num-derive
+    deflate
+    inflate
+    diesel_derives
+    sha-1
+    lzw
+    safe-transmute
+    jpeg-decoder
+    color_quant
+    num-rational
+    lru-cache
 
 Delayed/problematic::
 
