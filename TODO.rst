@@ -47,6 +47,7 @@ because all required dependencies are available in main::
     html5ever
     md-5
     errno-dragonfly
+    enum-as-inner
 
 Delayed/problematic::
 
