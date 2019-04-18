@@ -44,6 +44,7 @@ because all required dependencies are available in main::
     color_quant
     num-rational
     lru-cache
+    html5ever
 
 Delayed/problematic::
 
