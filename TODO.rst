@@ -45,6 +45,7 @@ because all required dependencies are available in main::
     num-rational
     lru-cache
     html5ever
+    md-5
 
 Delayed/problematic::
 
