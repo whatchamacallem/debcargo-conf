@@ -46,6 +46,7 @@ because all required dependencies are available in main::
     lru-cache
     html5ever
     md-5
+    errno-dragonfly
 
 Delayed/problematic::
 
