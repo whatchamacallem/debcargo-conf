@@ -132,6 +132,27 @@ see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629
 [ ] unicode-xid-0.0.4
 
 
+ripgrep (new version)
+---------------------
+
+* ripgrep
+  * bstr (new package)
+    * regex-automata (in NEW)
+  * grep 0.2.4
+    * grep-cli 0.1.2
+    * grep-pcre2
+      * pcre 0.2
+    * grep-printer 0.1.2
+      * bstr
+      * grep-matcher
+      * grep-searcher 0.1.4
+        * bstr
+        * grep-matcher
+  * ignore 0.4.7
+    * globset 0.4.3
+      * bstr
+
+
 ==============
 Eventual goals
 ==============
