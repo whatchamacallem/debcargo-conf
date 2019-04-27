@@ -48,6 +48,7 @@ because all required dependencies are available in main::
     cssparser
     bufstream
     bs58
+    sloppy-rfc4880
 
 Delayed/problematic::
 
