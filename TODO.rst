@@ -49,6 +49,7 @@ because all required dependencies are available in main::
     bufstream
     bs58
     sloppy-rfc4880
+    antidote
 
 Delayed/problematic::
 
