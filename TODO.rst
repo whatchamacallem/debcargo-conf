@@ -36,6 +36,7 @@ because all required dependencies are available in main::
     errno-dragonfly (it is really needed?)
     security-framework-sys
     diesel_derives
+    kamadak-exif
 
 Delayed/problematic::
 
