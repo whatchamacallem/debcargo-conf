@@ -47,6 +47,7 @@ because all required dependencies are available in main::
     winreg
     cssparser
     bufstream
+    bs58
 
 Delayed/problematic::
 
