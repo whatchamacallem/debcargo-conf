@@ -39,6 +39,7 @@ because all required dependencies are available in main::
     kamadak-exif
     cookie
     data-encoding
+    proc-macro-hack
 
 Delayed/problematic::
 
