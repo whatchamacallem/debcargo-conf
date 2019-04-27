@@ -37,6 +37,7 @@ because all required dependencies are available in main::
     security-framework-sys
     diesel_derives
     kamadak-exif
+    cookie
 
 Delayed/problematic::
 
