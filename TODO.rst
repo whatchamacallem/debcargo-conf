@@ -38,6 +38,7 @@ because all required dependencies are available in main::
     diesel_derives
     kamadak-exif
     cookie
+    data-encoding
 
 Delayed/problematic::
 
