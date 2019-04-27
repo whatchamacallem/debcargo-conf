@@ -41,6 +41,7 @@ because all required dependencies are available in main::
     data-encoding
     proc-macro-hack
     winutil
+    nibble_vec
 
 Delayed/problematic::
 
