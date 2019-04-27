@@ -40,6 +40,7 @@ because all required dependencies are available in main::
     cookie
     data-encoding
     proc-macro-hack
+    winutil
 
 Delayed/problematic::
 
