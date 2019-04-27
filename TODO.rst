@@ -42,6 +42,7 @@ because all required dependencies are available in main::
     proc-macro-hack
     winutil
     nibble_vec
+    endian-type
 
 Delayed/problematic::
 
