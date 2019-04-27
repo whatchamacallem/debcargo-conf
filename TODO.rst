@@ -44,6 +44,7 @@ because all required dependencies are available in main::
     nibble_vec
     endian-type
     widestring
+    winreg
 
 Delayed/problematic::
 
