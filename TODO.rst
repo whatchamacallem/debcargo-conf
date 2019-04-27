@@ -45,6 +45,7 @@ because all required dependencies are available in main::
     endian-type
     widestring
     winreg
+    cssparser
 
 Delayed/problematic::
 
