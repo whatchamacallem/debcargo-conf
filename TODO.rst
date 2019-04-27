@@ -43,6 +43,7 @@ because all required dependencies are available in main::
     winutil
     nibble_vec
     endian-type
+    widestring
 
 Delayed/problematic::
 
