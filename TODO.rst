@@ -50,6 +50,7 @@ because all required dependencies are available in main::
     bs58
     sloppy-rfc4880
     antidote
+    strum_macros
 
 Delayed/problematic::
 
