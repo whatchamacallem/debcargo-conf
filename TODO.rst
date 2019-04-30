@@ -51,6 +51,7 @@ because all required dependencies are available in main::
     sloppy-rfc4880
     antidote
     strum_macros
+    strum
 
 Delayed/problematic::
 
