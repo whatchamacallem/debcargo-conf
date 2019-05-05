@@ -53,6 +53,7 @@ because all required dependencies are available in main::
     strum_macros
     strum
     png
+    tiff
 
 Delayed/problematic::
 
