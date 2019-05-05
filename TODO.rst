@@ -55,6 +55,7 @@ because all required dependencies are available in main::
     png
     tiff
     gif
+    tokio-signal
 
 Delayed/problematic::
 
