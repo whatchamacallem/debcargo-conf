@@ -54,6 +54,7 @@ because all required dependencies are available in main::
     strum
     png
     tiff
+    gif
 
 Delayed/problematic::
 
