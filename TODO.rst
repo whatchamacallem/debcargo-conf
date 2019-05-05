@@ -56,6 +56,7 @@ because all required dependencies are available in main::
     tiff
     gif
     tokio-signal
+    mio-named-pipes
 
 Delayed/problematic::
 
