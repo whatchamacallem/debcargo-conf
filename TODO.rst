@@ -52,6 +52,7 @@ because all required dependencies are available in main::
     antidote
     strum_macros
     strum
+    png
 
 Delayed/problematic::
 
