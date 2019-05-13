@@ -145,18 +145,18 @@ ripgrep (new version)
 ---------------------
 
 * ripgrep
-  * bstr (new package)
+  * bstr (in NEW)
   * grep 0.2.4
     * grep-cli 0.1.2
     * grep-pcre2
       * pcre 0.2
     * grep-printer 0.1.2
-      * bstr
+      * bstr (NEW)
       * grep-searcher 0.1.4
-        * bstr
+        * bstr (NEW)
   * ignore 0.4.7
     * globset 0.4.3
-      * bstr
+      * bstr (NEW)
 
 
 ==============
