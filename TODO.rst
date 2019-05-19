@@ -159,6 +159,15 @@ ripgrep (new version)
       * bstr (NEW)
 
 
+bench
+-----
+* criterion
+  * cast (NEW)
+  * criteron-plot
+    * cast (NEW)
+  * rand-xoshiro (NEW)
+  * tinytemplate (NEW)
+
 ==============
 Eventual goals
 ==============
