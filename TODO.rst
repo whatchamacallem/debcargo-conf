@@ -33,30 +33,9 @@ and try to verify that they won't be broken by your update. If they are, then:
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    errno
-    security-framework-sys
-    diesel_derives
-    kamadak-exif
-    cookie
-    data-encoding
-    proc-macro-hack
-    winutil
-    nibble_vec
-    endian-type
-    widestring
-    winreg
-    cssparser
-    bufstream
-    bs58
-    sloppy-rfc4880
-    antidote
-    strum_macros
-    strum
     png
     tiff
     gif
-    tokio-signal
-    mio-named-pipes
 
 Delayed/problematic::
 
