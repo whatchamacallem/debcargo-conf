@@ -52,6 +52,11 @@ because all required dependencies are available in main::
     antidote
     strum_macros
     strum
+    png
+    tiff
+    gif
+    tokio-signal
+    mio-named-pipes
 
 Delayed/problematic::
 
@@ -140,22 +145,28 @@ ripgrep (new version)
 ---------------------
 
 * ripgrep
-  * bstr (new package)
-    * regex-automata (in NEW)
+  * bstr (in NEW)
   * grep 0.2.4
     * grep-cli 0.1.2
     * grep-pcre2
       * pcre 0.2
     * grep-printer 0.1.2
-      * bstr
-      * grep-matcher
+      * bstr (NEW)
       * grep-searcher 0.1.4
-        * bstr
-        * grep-matcher
+        * bstr (NEW)
   * ignore 0.4.7
     * globset 0.4.3
-      * bstr
+      * bstr (NEW)
 
+
+bench
+-----
+* criterion
+  * cast (NEW)
+  * criteron-plot
+    * cast (NEW)
+  * rand-xoshiro (NEW)
+  * tinytemplate (NEW)
 
 ==============
 Eventual goals
@@ -175,6 +186,7 @@ Binary crates worth packaging (please add if you know more):
 - bingrep - Grep through binaries from various OSs and architectures.
 - hg - Rust implement of hg
 - bat - A cat clone with syntax highlighting, Git integration, and more.
+- bench - simple benchmarking
 
 To see lists of interesting binary crates, you can run something like::
 
