@@ -138,6 +138,15 @@ ripgrep (new version)
       * bstr (NEW)
 
 
+bench
+-----
+* criterion
+  * cast (NEW)
+  * criteron-plot
+    * cast (NEW)
+  * rand-xoshiro (NEW)
+  * tinytemplate (NEW)
+
 ==============
 Eventual goals
 ==============
@@ -156,6 +165,7 @@ Binary crates worth packaging (please add if you know more):
 - bingrep - Grep through binaries from various OSs and architectures.
 - hg - Rust implement of hg
 - bat - A cat clone with syntax highlighting, Git integration, and more.
+- bench - simple benchmarking
 
 To see lists of interesting binary crates, you can run something like::
 
