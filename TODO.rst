@@ -36,6 +36,7 @@ because all required dependencies are available in main::
     png
     tiff
     gif
+    tokio-buf
 
 Delayed/problematic::
 
