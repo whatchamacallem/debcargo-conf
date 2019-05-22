@@ -159,11 +159,9 @@ sequoia-sqv
     * lalrpop (needs sequoia upstream fix to move to 0.17, see: https://gitlab.com/sequoia-pgp/sequoia/merge_requests/165)
       * lalrpop-util (NEW)
       * ascii-canvas (NEW)
-      * ena (0.13, needs upgrade)
     * buffered-reader (NEW)
     * nettle
       * nettle-sys (NEW)
-    * lazy_static (1.3.0, needs upgrade)
 
 ==============
 Eventual goals
