@@ -148,6 +148,23 @@ bench
   * rand-xoshiro (NEW)
   * tinytemplate (NEW)
 
+sequoia-sqv
+-----------
+* sequoia-sqv
+  * sequoia-openpgp (needs upstream fix to move to base64 0.10, see: https://gitlab.com/sequoia-pgp/sequoia/merge_requests/166)
+    * memsec
+      * getrandom
+        * fuchsia-cprng (NEW)
+        * libc (>= 0.2.54, needs upgrade)
+    * lalrpop (needs sequoia upstream fix to move to 0.17, see: https://gitlab.com/sequoia-pgp/sequoia/merge_requests/165)
+      * lalrpop-util (NEW)
+      * ascii-canvas (NEW)
+      * ena (0.13, needs upgrade)
+    * buffered-reader (NEW)
+    * nettle
+      * nettle-sys (NEW)
+    * lazy_static (1.3.0, needs upgrade)
+
 ==============
 Eventual goals
 ==============
@@ -167,6 +184,7 @@ Binary crates worth packaging (please add if you know more):
 - hg - Rust implement of hg
 - bat - A cat clone with syntax highlighting, Git integration, and more.
 - bench - simple benchmarking
+- sequoia-sqv - streamlined OpenPGP signature validation tool
 
 To see lists of interesting binary crates, you can run something like::
 
