@@ -37,6 +37,7 @@ because all required dependencies are available in main::
     tiff
     gif
     tokio-buf
+    crossbeam-queue
 
 Delayed/problematic::
 
