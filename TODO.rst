@@ -38,6 +38,7 @@ because all required dependencies are available in main::
     gif
     tokio-buf
     crossbeam-queue
+    humansize
 
 Delayed/problematic::
 
