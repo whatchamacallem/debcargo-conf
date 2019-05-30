@@ -1,0 +1,121 @@
+From 357f34460df8be7700173587d6a32aae2f8d863e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Emilio=20Cobos=20=C3=81lvarez?= <emilio@crisal.io>
+Date: Thu, 23 May 2019 16:40:06 +0200
+Subject: [PATCH] Do a better job at detecting the final binary location.
+
+Still not great, I guess we should convert the tests to run the library version
+of cbindgen, but this trivially-fixes #342.
+---
+ build.rs       | 18 +++++++++++++++---
+ tests/tests.rs | 25 ++++++++++---------------
+ 2 files changed, 25 insertions(+), 18 deletions(-)
+
+diff --git a/build.rs b/build.rs
+index 768db4d..5644b02 100644
+--- a/build.rs
++++ b/build.rs
+@@ -5,7 +5,6 @@ fn generate_tests() {
+     use std::io::Write;
+     use std::path::{Path, PathBuf};
+ 
+-    let profile = env::var("PROFILE").unwrap();
+     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+     let mut dst = File::create(Path::new(&out_dir).join("tests.rs")).unwrap();
+ 
+@@ -17,6 +16,19 @@ fn generate_tests() {
+ 
+     println!("cargo:rerun-if-changed={}", tests_dir.display());
+ 
++    // Try to make a decent guess at where our binary will end up in.
++    //
++    // TODO(emilio): Ideally running tests will just use the library-version of
++    // cbindgen instead of the built binary.
++    let cbindgen_path = out_dir
++        .parent()
++        .unwrap()
++        .parent()
++        .unwrap()
++        .parent()
++        .unwrap()
++        .join("cbindgen");
++
+     for entry in entries {
+         let path_segment = if entry.file_type().unwrap().is_file() {
+             match entry.path().extension().and_then(OsStr::to_str) {
+@@ -41,8 +53,8 @@ fn generate_tests() {
+ 
+         writeln!(
+             dst,
+-            "test_file!({}, test_{}, {:?}, {:?});",
+-            profile,
++            "test_file!({:?}, test_{}, {:?}, {:?});",
++            cbindgen_path,
+             identifier,
+             path_segment,
+             entry.path(),
+diff --git a/tests/tests.rs b/tests/tests.rs
+index 3870444..5fd78e6 100644
+--- a/tests/tests.rs
++++ b/tests/tests.rs
+@@ -6,19 +6,14 @@ use std::process::Command;
+ use std::{env, fs};
+ 
+ fn run_cbindgen(
+-    profile: &'static str,
++    cbindgen_path: &'static str,
+     path: &Path,
+     output: &Path,
+     language: Language,
+     style: Option<Style>,
+ ) {
+-    let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+-    let program = Path::new(&crate_dir)
+-        .join("target")
+-        .join(profile)
+-        .join("cbindgen");
+-
+-    let mut command = Command::new(program);
++    let program = Path::new(cbindgen_path);
++    let mut command = Command::new(&program);
+     match language {
+         Language::Cxx => {}
+         Language::C => {
+@@ -86,7 +81,7 @@ fn compile(cbindgen_output: &Path, language: Language) {
+ }
+ 
+ fn run_compile_test(
+-    profile: &'static str,
++    cbindgen_path: &'static str,
+     name: &'static str,
+     path: &Path,
+     language: Language,
+@@ -114,23 +109,23 @@ fn run_compile_test(
+         }
+     }
+ 
+-    run_cbindgen(profile, path, &output, language, style);
++    run_cbindgen(cbindgen_path, path, &output, language, style);
+     compile(&output, language);
+ }
+ 
+-fn test_file(profile: &'static str, name: &'static str, filename: &'static str) {
++fn test_file(cbindgen_path: &'static str, name: &'static str, filename: &'static str) {
+     let test = Path::new(filename);
+     for style in &[Style::Type, Style::Tag, Style::Both] {
+-        run_compile_test(profile, name, &test, Language::C, Some(*style));
++        run_compile_test(cbindgen_path, name, &test, Language::C, Some(*style));
+     }
+-    run_compile_test(profile, name, &test, Language::Cxx, None);
++    run_compile_test(cbindgen_path, name, &test, Language::Cxx, None);
+ }
+ 
+ macro_rules! test_file {
+-    ($profile:ident, $test_function_name:ident, $name:expr, $file:tt) => {
++    ($cbindgen_path:expr, $test_function_name:ident, $name:expr, $file:tt) => {
+         #[test]
+         fn $test_function_name() {
+-            test_file(stringify!($profile), $name, $file);
++            test_file($cbindgen_path, $name, $file);
+         }
+     };
+ }
