@@ -1,0 +1,34 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -122,10 +122,6 @@
+ version = "0.10.11"
+ optional = true
+ 
+-[dependencies.pretty_env_logger]
+-version = "0.3"
+-optional = true
+-
+ [dependencies.rustc-workspace-hack]
+ version = "1.0.0"
+ 
+@@ -182,7 +178,7 @@
+ 
+ [features]
+ deny-warnings = []
+-pretty-env-logger = ["pretty_env_logger"]
++pretty-env-logger = []
+ vendored-openssl = ["openssl"]
+ [target."cfg(target_os = \"macos\")".dependencies.core-foundation]
+ version = "0.6.0"
+--- a/src/bin/cargo/main.rs
++++ b/src/bin/cargo/main.rs
+@@ -17,9 +17,6 @@
+ use crate::command_prelude::*;
+ 
+ fn main() {
+-    #[cfg(feature = "pretty-env-logger")]
+-    pretty_env_logger::init();
+-    #[cfg(not(feature = "pretty-env-logger"))]
+     env_logger::init();
+     cargo::core::maybe_allow_nightly_features();
+ 
