@@ -1,0 +1,56 @@
+From 81fb2d97d3050b74dbdb83a9b4005a51b12cfaf1 Mon Sep 17 00:00:00 2001
+From: Ximin Luo <infinity0@debian.org>
+Date: Mon, 20 May 2019 20:18:24 -0700
+Subject: [PATCH] Work around rust-lang/rust#58516
+
+---
+ crates/macro-support/src/parser.rs | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/crates/macro-support/src/parser.rs b/crates/macro-support/src/parser.rs
+index d00802ce80..ed04b13e0b 100644
+--- a/src/parser.rs
++++ b/src/parser.rs
+@@ -60,6 +60,7 @@ macro_rules! methods {
+     ($(($name:ident $(($other:tt))*, $variant:ident($($contents:tt)*)),)*) => {
+         $(methods!(@method $name, $variant($($contents)*));)*
+ 
++        #[cfg(feature = "strict-macro")]
+         fn check_used(self) -> Result<(), Diagnostic> {
+             // Account for the fact this method was called
+             ATTRS.with(|state| state.checks.set(state.checks.get() + 1));
+@@ -69,9 +70,12 @@ macro_rules! methods {
+                 if used.get() {
+                     continue
+                 }
+-                if !cfg!(feature = "strict-macro") {
++                // The check below causes rustc to crash on powerpc64 platforms
++                // with an LLVM error. To avoid this, we instead use #[cfg()]
++                // and duplicate the function below. See #58516 for details.
++                /*if !cfg!(feature = "strict-macro") {
+                     continue
+-                }
++                }*/
+                 let span = match attr {
+                     $(BindgenAttr::$variant(span, ..) => span,)*
+                 };
+@@ -79,6 +83,19 @@ macro_rules! methods {
+             }
+             Diagnostic::from_vec(errors)
+         }
++
++        #[cfg(not(feature = "strict-macro"))]
++        fn check_used(self) -> Result<(), Diagnostic> {
++            // Account for the fact this method was called
++            ATTRS.with(|state| state.checks.set(state.checks.get() + 1));
++            let mut errors = Vec::new();
++            for (used, attr) in self.attrs.iter() {
++                if used.get() {
++                    continue
++                }
++            }
++            Diagnostic::from_vec(errors)
++        }
+     };
+ 
+     (@method $name:ident, $variant:ident(Span, String, Span)) => {
