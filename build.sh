@@ -49,7 +49,14 @@ if shouldbuild ${DEBSRC}_${DEBVER}.dsc "$PKGNAME/debian/changelog" ]; then
 		mv "${DEBSRC}_${UPSVER}.orig.tar.gz" "${DEBSRC}_${UPSVER}.orig.tar.gz.new"
 		apt-get -t unstable source "${DEBSRC}" # "=${DEBVER}"
 		# check that old tarball contains same contents as new tarball
-		diff -q <(zcat "${DEBSRC}_${UPSVER}.orig.tar.gz.new") <(zcat "${DEBSRC}_${UPSVER}.orig.tar.gz")
+		if ! diff -ru \
+			  --label "${DEBSRC}_${UPSVER}.orig.tar.gz.new" \
+			  <(zcat  "${DEBSRC}_${UPSVER}.orig.tar.gz.new" | tar -tvvf-) \
+			  --label "${DEBSRC}_${UPSVER}.orig.tar.gz" \
+			  <(zcat  "${DEBSRC}_${UPSVER}.orig.tar.gz" | tar -tvvf-); then
+			read -p "contents differ, continue with old tarball or abort? [y/N] " x
+			if [ "$x" != "y" ]; then exit 1; fi
+		fi
 		( cd "$PKGNAME" && dpkg-buildpackage -d -S --no-sign )
 	fi
 	# sign if not UNRELEASED
