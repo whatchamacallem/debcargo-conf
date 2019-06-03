@@ -39,6 +39,7 @@ because all required dependencies are available in main::
     tokio-buf
     crossbeam-queue
     humansize
+    ring
 
 Delayed/problematic::
 
