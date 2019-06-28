@@ -1,7 +1,5 @@
-Index: rust-encoding-rs-0.8.15/Cargo.toml
-===================================================================
---- rust-encoding-rs-0.8.15.orig/Cargo.toml
-+++ rust-encoding-rs-0.8.15/Cargo.toml
+--- a/Cargo.toml
++++ b/Cargo.toml
 @@ -31,9 +31,6 @@ version = "0.1.0"
  version = "1.0"
  optional = true
@@ -12,10 +10,275 @@ Index: rust-encoding-rs-0.8.15/Cargo.toml
  [dev-dependencies.bincode]
  version = "0.8"
  
-@@ -53,6 +50,5 @@ fast-legacy-encode = ["fast-hangul-encod
+@@ -53,6 +50,6 @@ fast-legacy-encode = ["fast-hangul-encod
  less-slow-big5-hanzi-encode = []
  less-slow-gb-hanzi-encode = []
  less-slow-kanji-encode = []
 -simd-accel = ["simd"]
++simd-accel = []
  [badges.travis-ci]
  repository = "hsivonen/encoding_rs"
+--- a/build.rs
++++ b/build.rs
+@@ -1,4 +1,4 @@
+ fn main() {
+-    #[cfg(feature = "simd-accel")]
++    #[cfg(feature = "simd-accel-disabled")]
+     println!("cargo:rustc-env=RUSTC_BOOTSTRAP=1");
+ }
+--- a/src/ascii.rs
++++ b/src/ascii.rs
+@@ -22,7 +22,7 @@
+ // different approaches based on benchmarking on Raspberry Pi 3.
+ 
+ #[cfg(all(
+-    feature = "simd-accel",
++    feature = "simd-accel-disabled",
+     any(
+         target_feature = "sse2",
+         all(target_endian = "little", target_arch = "aarch64"),
+@@ -32,7 +32,7 @@
+ use simd_funcs::*;
+ 
+ cfg_if! {
+-    if #[cfg(feature = "simd-accel")] {
++    if #[cfg(feature = "simd-accel-disabled")] {
+         #[allow(unused_imports)]
+         use ::std::intrinsics::unlikely;
+         #[allow(unused_imports)]
+@@ -872,7 +872,7 @@ macro_rules! pack_simd_stride {
+ }
+ 
+ cfg_if! {
+-    if #[cfg(all(feature = "simd-accel", target_endian = "little", target_arch = "aarch64"))] {
++    if #[cfg(all(feature = "simd-accel-disabled", target_endian = "little", target_arch = "aarch64"))] {
+         // SIMD with the same instructions for aligned and unaligned loads and stores
+ 
+         pub const SIMD_STRIDE_SIZE: usize = 16;
+@@ -900,7 +900,7 @@ cfg_if! {
+         ascii_simd_unalign!(basic_latin_to_ascii, u16, u8, basic_latin_to_ascii_stride_neither_aligned);
+         latin1_simd_unalign!(unpack_latin1, u8, u16, unpack_stride_neither_aligned);
+         latin1_simd_unalign!(pack_latin1, u16, u8, pack_stride_neither_aligned);
+-    } else if #[cfg(all(feature = "simd-accel", target_endian = "little", target_feature = "neon"))] {
++    } else if #[cfg(all(feature = "simd-accel-disabled", target_endian = "little", target_feature = "neon"))] {
+         // SIMD with different instructions for aligned and unaligned loads and stores.
+         //
+         // Newer microarchitectures are not supposed to have a performance difference between
+@@ -943,7 +943,7 @@ cfg_if! {
+         ascii_simd_check_align!(basic_latin_to_ascii, u16, u8, basic_latin_to_ascii_stride_both_aligned, basic_latin_to_ascii_stride_src_aligned, basic_latin_to_ascii_stride_dst_aligned, basic_latin_to_ascii_stride_neither_aligned);
+         latin1_simd_check_align!(unpack_latin1, u8, u16, unpack_stride_both_aligned, unpack_stride_src_aligned, unpack_stride_dst_aligned, unpack_stride_neither_aligned);
+         latin1_simd_check_align!(pack_latin1, u16, u8, pack_stride_both_aligned, pack_stride_src_aligned, pack_stride_dst_aligned, pack_stride_neither_aligned);
+-    } else if #[cfg(all(feature = "simd-accel", target_feature = "sse2"))] {
++    } else if #[cfg(all(feature = "simd-accel-disabled", target_feature = "sse2"))] {
+         // SIMD with different instructions for aligned and unaligned loads and stores.
+         //
+         // Newer microarchitectures are not supposed to have a performance difference between
+@@ -1205,7 +1205,7 @@ cfg_if! {
+ }
+ 
+ cfg_if! {
+-    if #[cfg(all(feature = "simd-accel", target_endian = "little", target_arch = "disabled"))] {
++    if #[cfg(all(feature = "simd-accel-disabled", target_endian = "little", target_arch = "disabled"))] {
+         #[inline(always)]
+         pub fn validate_ascii(slice: &[u8]) -> Option<(u8, usize)> {
+             let src = slice.as_ptr();
+@@ -1233,7 +1233,7 @@ cfg_if! {
+             }
+             None
+         }
+-    } else if #[cfg(all(feature = "simd-accel", target_feature = "sse2"))] {
++    } else if #[cfg(all(feature = "simd-accel-disabled", target_feature = "sse2"))] {
+         #[inline(always)]
+         pub fn validate_ascii(slice: &[u8]) -> Option<(u8, usize)> {
+             let src = slice.as_ptr();
+@@ -1409,9 +1409,9 @@ cfg_if! {
+ }
+ 
+ cfg_if! {
+-    if #[cfg(all(feature = "simd-accel", any(target_feature = "sse2", all(target_endian = "little", target_arch = "aarch64"))))] {
++    if #[cfg(all(feature = "simd-accel-disabled", any(target_feature = "sse2", all(target_endian = "little", target_arch = "aarch64"))))] {
+ 
+-    } else if #[cfg(all(feature = "simd-accel", target_endian = "little", target_feature = "neon"))] {
++    } else if #[cfg(all(feature = "simd-accel-disabled", target_endian = "little", target_feature = "neon"))] {
+         // Even with NEON enabled, we use the ALU path for ASCII validation, because testing
+         // on Exynos 5 indicated that using NEON isn't worthwhile where there are only
+         // vector reads without vector writes.
+--- a/src/handles.rs
++++ b/src/handles.rs
+@@ -17,7 +17,7 @@
+ //! bound check at the read/write time.
+ 
+ #[cfg(all(
+-    feature = "simd-accel",
++    feature = "simd-accel-disabled",
+     any(
+         target_feature = "sse2",
+         all(target_endian = "little", target_arch = "aarch64"),
+@@ -27,7 +27,7 @@
+ use simd_funcs::*;
+ 
+ #[cfg(all(
+-    feature = "simd-accel",
++    feature = "simd-accel-disabled",
+     any(
+         target_feature = "sse2",
+         all(target_endian = "little", target_arch = "aarch64"),
+@@ -116,7 +116,7 @@ impl UnalignedU16Slice {
+         }
+     }
+ 
+-    #[cfg(feature = "simd-accel")]
++    #[cfg(feature = "simd-accel-disabled")]
+     #[inline(always)]
+     pub fn simd_at(&self, i: usize) -> u16x8 {
+         assert!(i + SIMD_STRIDE_SIZE / 2 <= self.len);
+@@ -137,7 +137,7 @@ impl UnalignedU16Slice {
+         unsafe { UnalignedU16Slice::new(self.ptr.add(from * 2), self.len - from) }
+     }
+ 
+-    #[cfg(feature = "simd-accel")]
++    #[cfg(feature = "simd-accel-disabled")]
+     #[inline(always)]
+     pub fn copy_bmp_to<E: Endian>(&self, other: &mut [u16]) -> Option<(u16, usize)> {
+         assert!(self.len <= other.len());
+@@ -172,7 +172,7 @@ impl UnalignedU16Slice {
+         None
+     }
+ 
+-    #[cfg(not(feature = "simd-accel"))]
++    #[cfg(not(feature = "simd-accel-disabled"))]
+     #[inline(always)]
+     fn copy_bmp_to<E: Endian>(&self, other: &mut [u16]) -> Option<(u16, usize)> {
+         assert!(self.len <= other.len());
+@@ -217,7 +217,7 @@ fn swap_if_opposite_endian<E: Endian>(unit: u16) -> u16 {
+     }
+ }
+ 
+-#[cfg(not(feature = "simd-accel"))]
++#[cfg(not(feature = "simd-accel-disabled"))]
+ #[inline(always)]
+ fn copy_unaligned_basic_latin_to_ascii<E: Endian>(
+     src: UnalignedU16Slice,
+@@ -226,7 +226,7 @@ fn copy_unaligned_basic_latin_to_ascii<E: Endian>(
+     copy_unaligned_basic_latin_to_ascii_alu::<E>(src, dst, 0)
+ }
+ 
+-#[cfg(feature = "simd-accel")]
++#[cfg(feature = "simd-accel-disabled")]
+ #[inline(always)]
+ fn copy_unaligned_basic_latin_to_ascii<E: Endian>(
+     src: UnalignedU16Slice,
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -665,13 +665,13 @@
+ //! See the section [_UTF-16LE, UTF-16BE and Unicode Encoding Schemes_](#utf-16le-utf-16be-and-unicode-encoding-schemes)
+ //! for discussion about the UTF-16 family.
+ 
+-#![cfg_attr(feature = "simd-accel", feature(platform_intrinsics, core_intrinsics))]
++#![cfg_attr(feature = "simd-accel-disabled", feature(platform_intrinsics, core_intrinsics))]
+ 
+ #[macro_use]
+ extern crate cfg_if;
+ 
+ #[cfg(all(
+-    feature = "simd-accel",
++    feature = "simd-accel-disabled",
+     any(
+         target_feature = "sse2",
+         all(target_endian = "little", target_arch = "aarch64"),
+@@ -695,7 +695,7 @@ extern crate serde_json;
+ mod macros;
+ 
+ #[cfg(all(
+-    feature = "simd-accel",
++    feature = "simd-accel-disabled",
+     any(
+         target_feature = "sse2",
+         all(target_endian = "little", target_arch = "aarch64"),
+--- a/src/mem.rs
++++ b/src/mem.rs
+@@ -37,7 +37,7 @@ macro_rules! non_fuzz_debug_assert {
+ }
+ 
+ cfg_if! {
+-    if #[cfg(feature = "simd-accel")] {
++    if #[cfg(feature = "simd-accel-disabled")] {
+         use ::std::intrinsics::likely;
+         use ::std::intrinsics::unlikely;
+     } else {
+@@ -226,7 +226,7 @@ macro_rules! by_unit_check_simd {
+ }
+ 
+ cfg_if! {
+-    if #[cfg(all(feature = "simd-accel", any(target_feature = "sse2", all(target_endian = "little", target_arch = "aarch64"), all(target_endian = "little", target_feature = "neon"))))] {
++    if #[cfg(all(feature = "simd-accel-disabled", any(target_feature = "sse2", all(target_endian = "little", target_arch = "aarch64"), all(target_endian = "little", target_feature = "neon"))))] {
+         use simd_funcs::*;
+         use simd::u8x16;
+         use simd::u16x8;
+@@ -358,7 +358,7 @@ fn utf16_valid_up_to_alu(buffer: &[u16]) -> (usize, bool) {
+ }
+ 
+ cfg_if! {
+-    if #[cfg(all(feature = "simd-accel", any(target_feature = "sse2", all(target_endian = "little", target_arch = "aarch64"), all(target_endian = "little", target_feature = "neon"))))] {
++    if #[cfg(all(feature = "simd-accel-disabled", any(target_feature = "sse2", all(target_endian = "little", target_arch = "aarch64"), all(target_endian = "little", target_feature = "neon"))))] {
+         #[inline(always)]
+         fn is_str_latin1_impl(buffer: &str) -> Option<usize> {
+             let mut offset = 0usize;
+@@ -447,7 +447,7 @@ fn is_utf8_latin1_impl(buffer: &[u8]) -> Option<usize> {
+ }
+ 
+ cfg_if! {
+-    if #[cfg(all(feature = "simd-accel", any(target_feature = "sse2", all(target_endian = "little", target_arch = "aarch64"), all(target_endian = "little", target_feature = "neon"))))] {
++    if #[cfg(all(feature = "simd-accel-disabled", any(target_feature = "sse2", all(target_endian = "little", target_arch = "aarch64"), all(target_endian = "little", target_feature = "neon"))))] {
+         #[inline(always)]
+         fn is_utf16_bidi_impl(buffer: &[u16]) -> bool {
+             let mut offset = 0usize;
+@@ -497,7 +497,7 @@ cfg_if! {
+ }
+ 
+ cfg_if! {
+-    if #[cfg(all(feature = "simd-accel", any(target_feature = "sse2", all(target_endian = "little", target_arch = "aarch64"), all(target_endian = "little", target_feature = "neon"))))] {
++    if #[cfg(all(feature = "simd-accel-disabled", any(target_feature = "sse2", all(target_endian = "little", target_arch = "aarch64"), all(target_endian = "little", target_feature = "neon"))))] {
+         #[inline(always)]
+         fn check_utf16_for_latin1_and_bidi_impl(buffer: &[u16]) -> Latin1Bidi {
+             let mut offset = 0usize;
+--- a/src/utf_8.rs
++++ b/src/utf_8.rs
+@@ -16,7 +16,7 @@ use mem::convert_utf16_to_utf8_partial;
+ use variant::*;
+ 
+ cfg_if! {
+-    if #[cfg(feature = "simd-accel")] {
++    if #[cfg(feature = "simd-accel-disabled")] {
+         use ::std::intrinsics::unlikely;
+         use ::std::intrinsics::likely;
+     } else {
+--- a/src/x_user_defined.rs
++++ b/src/x_user_defined.rs
+@@ -12,7 +12,7 @@ use handles::*;
+ use variant::*;
+ 
+ cfg_if! {
+-    if #[cfg(feature = "simd-accel")] {
++    if #[cfg(feature = "simd-accel-disabled")] {
+         use simd_funcs::*;
+         use simd::u16x8;
+ 
+@@ -72,7 +72,7 @@ impl UserDefinedDecoder {
+         Utf8Destination
+     );
+ 
+-    #[cfg(not(feature = "simd-accel"))]
++    #[cfg(not(feature = "simd-accel-disabled"))]
+     pub fn decode_to_utf16_raw(
+         &mut self,
+         src: &[u8],
+@@ -102,7 +102,7 @@ impl UserDefinedDecoder {
+         (pending, length, length)
+     }
+ 
+-    #[cfg(feature = "simd-accel")]
++    #[cfg(feature = "simd-accel-disabled")]
+     pub fn decode_to_utf16_raw(
+         &mut self,
+         src: &[u8],
