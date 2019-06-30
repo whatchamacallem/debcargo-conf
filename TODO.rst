@@ -37,6 +37,13 @@ because all required dependencies are available in main::
     argon2rs
     darling_core
     derive_more
+    env_proxy (update)
+    ident_case (update)
+    nitrocli (update)
+    num_cpus (update)
+    pest_meta (update)
+    rusty-tags (update)
+    tempfile (update)
 
 Delayed/problematic::
 
