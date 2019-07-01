@@ -35,8 +35,10 @@ because all required dependencies are available in main::
 
     packed_simd
     argon2rs
+    ctor
     darling_core
     derive_more
+    output_vt100
     env_proxy (update)
     ident_case (update)
     nitrocli (update)
