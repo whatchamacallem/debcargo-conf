@@ -39,6 +39,9 @@ because all required dependencies are available in main::
     darling_core
     derive_more
     output_vt100
+    gettext-rs
+    gettext-sys
+    locale_config
     env_proxy (update)
     ident_case (update)
     nitrocli (update)
