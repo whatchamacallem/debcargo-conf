@@ -37,6 +37,7 @@ because all required dependencies are available in main::
     darling_core
     gettext-rs
     dotenv
+    assert_matches
     env_proxy (update)
     num_cpus (update)
     pest_meta (update)
