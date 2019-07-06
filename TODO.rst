@@ -39,6 +39,7 @@ because all required dependencies are available in main::
     dotenv
     assert_matches
     edit-distance
+    target
     env_proxy (update)
     num_cpus (update)
     pest_meta (update)
