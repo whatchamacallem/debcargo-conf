@@ -38,6 +38,7 @@ because all required dependencies are available in main::
     gettext-rs
     dotenv
     assert_matches
+    edit-distance
     env_proxy (update)
     num_cpus (update)
     pest_meta (update)
