@@ -34,6 +34,21 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     packed_simd
+    argon2rs
+    ctor
+    darling_core
+    derive_more
+    output_vt100
+    gettext-rs
+    gettext-sys
+    locale_config
+    env_proxy (update)
+    ident_case (update)
+    nitrocli (update)
+    num_cpus (update)
+    pest_meta (update)
+    rusty-tags (update)
+    tempfile (update)
 
 Delayed/problematic::
 
