@@ -45,6 +45,7 @@ because all required dependencies are available in main::
     pest_meta (update)
     rusty-tags (update)
     tempfile (update)
+    redox_syscall (update)
 
 Delayed/problematic::
 
