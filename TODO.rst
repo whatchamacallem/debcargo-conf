@@ -37,7 +37,6 @@ because all required dependencies are available in main::
     darling_core
     gettext-rs
     env_proxy (update)
-    nitrocli (update)
     num_cpus (update)
     pest_meta (update)
     rusty-tags (update)
