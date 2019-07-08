@@ -41,6 +41,8 @@ because all required dependencies are available in main::
     pest_meta (update)
     rusty-tags (update)
     tempfile (update)
+    atk
+    glib (update, introduces new feature)
 
 Delayed/problematic::
 
