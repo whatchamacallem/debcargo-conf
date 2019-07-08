@@ -46,6 +46,7 @@ because all required dependencies are available in main::
     gio (update, introduces new feature)
     cairo-rs (update, introduces new feature)
     pango (update, introduces new feature)
+    gdk (update, introduces new feature)
 
 Delayed/problematic::
 
