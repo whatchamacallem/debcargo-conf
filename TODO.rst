@@ -45,6 +45,7 @@ because all required dependencies are available in main::
     glib (update, introduces new feature)
     gio (update, introduces new feature)
     cairo-rs (update, introduces new feature)
+    pango (update, introduces new feature)
 
 Delayed/problematic::
 
