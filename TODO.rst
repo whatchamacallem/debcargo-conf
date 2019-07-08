@@ -44,6 +44,7 @@ because all required dependencies are available in main::
     atk
     glib (update, introduces new feature)
     gio (update, introduces new feature)
+    cairo-rs (update, introduces new feature)
 
 Delayed/problematic::
 
