@@ -43,6 +43,7 @@ because all required dependencies are available in main::
     tempfile (update)
     atk
     glib (update, introduces new feature)
+    gio (update, introduces new feature)
 
 Delayed/problematic::
 
