@@ -48,6 +48,7 @@ because all required dependencies are available in main::
     pango (update, introduces new feature)
     gdk (update, introduces new feature)
     gtk (update, introduces new feature)
+    bumpalo
 
 Delayed/problematic::
 
