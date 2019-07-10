@@ -54,6 +54,7 @@ because all required dependencies are available in main::
     rand_core 0.3.0 (so we can update rand_core to 0.5.0)
     stackvector
     static_assertions
+    doc-comment
 
 Delayed/problematic::
 
