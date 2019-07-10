@@ -55,6 +55,7 @@ because all required dependencies are available in main::
     stackvector
     static_assertions
     doc-comment
+    diesel
 
 Delayed/problematic::
 
