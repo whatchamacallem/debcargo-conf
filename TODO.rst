@@ -56,6 +56,7 @@ because all required dependencies are available in main::
     static_assertions
     doc-comment
     diesel
+    sha3
 
 Delayed/problematic::
 
