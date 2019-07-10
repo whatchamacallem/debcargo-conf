@@ -50,6 +50,7 @@ because all required dependencies are available in main::
     gtk (update, introduces new feature)
     bumpalo
     getrandom
+    md5-asm
 
 Delayed/problematic::
 
