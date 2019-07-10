@@ -52,6 +52,7 @@ because all required dependencies are available in main::
     getrandom
     md5-asm
     rand_core 0.3.0 (so we can update rand_core to 0.5.0)
+    stackvector
 
 Delayed/problematic::
 
