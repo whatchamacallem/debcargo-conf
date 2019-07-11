@@ -59,6 +59,7 @@ because all required dependencies are available in main::
     sha3
     nom 4.2.3 (so we can update nom to 5.0.0)
     glob
+    toml (update, introduces new feature)
 
 Delayed/problematic::
 
