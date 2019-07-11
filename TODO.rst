@@ -48,6 +48,16 @@ because all required dependencies are available in main::
     pango (update, introduces new feature)
     gdk (update, introduces new feature)
     gtk (update, introduces new feature)
+    bumpalo
+    getrandom
+    md5-asm
+    rand_core 0.3.0 (so we can update rand_core to 0.5.0)
+    stackvector
+    static_assertions
+    doc-comment
+    diesel
+    sha3
+    nom 4.2.3 (so we can update nom to 5.0.0)
 
 Delayed/problematic::
 
