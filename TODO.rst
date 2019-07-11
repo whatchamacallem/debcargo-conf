@@ -66,6 +66,9 @@ Delayed/problematic::
         patch dependents to use cc instead.
     winutil -- dependency of hostname <- resolv-conf <- trust-dns-resolver
         doesn't build on linux
+    nom 4.2
+        unblocks pktparse
+        unblocks der-parser
 
     fuse (blocked by thread-scoped)
     indicatif (blocked by parking_lot)
