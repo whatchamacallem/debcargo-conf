@@ -57,6 +57,7 @@ because all required dependencies are available in main::
     doc-comment
     diesel
     sha3
+    nom 4.2.3 (so we can update nom to 5.0.0)
 
 Delayed/problematic::
 
