@@ -60,6 +60,7 @@ because all required dependencies are available in main::
     nom 4.2.3 (so we can update nom to 5.0.0)
     glob
     toml (update, introduces new feature)
+    toml_edit (previous upload rejected due to missing entry in d/copyright)
 
 Delayed/problematic::
 
