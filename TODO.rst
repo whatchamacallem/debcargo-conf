@@ -58,6 +58,17 @@ because all required dependencies are available in main::
     diesel
     sha3
     nom 4.2.3 (so we can update nom to 5.0.0)
+    glob
+    toml (update, introduces new feature)
+    toml_edit (previous upload rejected due to missing entry in d/copyright)
+    hostname
+    ppv-lite86
+    ipnetwork
+    ipconfig
+    caps
+    data-encoding-macro-internal
+    want (update)
+    bytes (update)
 
 Delayed/problematic::
 
@@ -66,6 +77,13 @@ Delayed/problematic::
         patch dependents to use cc instead.
     winutil -- dependency of hostname <- resolv-conf <- trust-dns-resolver
         doesn't build on linux
+    nom 4.2
+        unblocks pktparse
+        unblocks der-parser
+
+    trust-dns-proto
+        librust-socket2-0.3+default-dev (>= 0.3.9-~~)
+        librust-tokio-timer-0.2+default-dev (>= 0.2.10-~~)
 
     fuse (blocked by thread-scoped)
     indicatif (blocked by parking_lot)
