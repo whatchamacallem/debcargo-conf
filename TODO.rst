@@ -64,6 +64,7 @@ because all required dependencies are available in main::
     hostname
     ppv-lite86
     ipnetwork
+    ipconfig
 
 Delayed/problematic::
 
