@@ -73,6 +73,10 @@ Delayed/problematic::
         unblocks pktparse
         unblocks der-parser
 
+    trust-dns-proto
+        librust-socket2-0.3+default-dev (>= 0.3.9-~~)
+        librust-tokio-timer-0.2+default-dev (>= 0.2.10-~~)
+
     fuse (blocked by thread-scoped)
     indicatif (blocked by parking_lot)
     sandboxfs (blocked by fuse and signal-hook)
