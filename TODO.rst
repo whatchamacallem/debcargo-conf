@@ -67,6 +67,8 @@ because all required dependencies are available in main::
     ipconfig
     caps
     data-encoding-macro-internal
+    want (update)
+    bytes (update)
 
 Delayed/problematic::
 
