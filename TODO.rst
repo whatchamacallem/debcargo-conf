@@ -66,6 +66,7 @@ because all required dependencies are available in main::
     ipnetwork
     ipconfig
     caps
+    data-encoding-macro-internal
 
 Delayed/problematic::
 
