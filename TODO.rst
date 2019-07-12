@@ -68,6 +68,7 @@ because all required dependencies are available in main::
     caps
     data-encoding-macro-internal
     users (update)
+    rustyline
 
 Delayed/problematic::
 
