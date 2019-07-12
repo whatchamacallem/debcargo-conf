@@ -65,6 +65,7 @@ because all required dependencies are available in main::
     ppv-lite86
     ipnetwork
     ipconfig
+    caps
 
 Delayed/problematic::
 
