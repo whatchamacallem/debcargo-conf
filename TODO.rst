@@ -61,6 +61,7 @@ because all required dependencies are available in main::
     glob
     toml (update, introduces new feature)
     toml_edit (previous upload rejected due to missing entry in d/copyright)
+    hostname
 
 Delayed/problematic::
 
