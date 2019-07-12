@@ -58,7 +58,7 @@ because all required dependencies are available in main::
     diesel
     sha3
     nom 4.2.3 (so we can update nom to 5.0.0)
-    glob
+    glob (update)
     toml (update, introduces new feature)
     toml_edit (previous upload rejected due to missing entry in d/copyright)
     hostname
@@ -69,6 +69,7 @@ because all required dependencies are available in main::
     data-encoding-macro-internal
     want (update)
     bytes (update)
+    users (update)
 
 Delayed/problematic::
 
