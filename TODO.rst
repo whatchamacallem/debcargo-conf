@@ -62,6 +62,7 @@ because all required dependencies are available in main::
     toml (update, introduces new feature)
     toml_edit (previous upload rejected due to missing entry in d/copyright)
     hostname
+    ppv-lite86
 
 Delayed/problematic::
 
