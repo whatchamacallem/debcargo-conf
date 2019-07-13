@@ -71,6 +71,7 @@ because all required dependencies are available in main::
     rustyline
     http-body
     quick-xml
+    pretty_assertions (update)
 
 Delayed/problematic::
 
