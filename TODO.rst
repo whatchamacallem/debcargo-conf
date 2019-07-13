@@ -35,10 +35,15 @@ because all required dependencies are available in main::
 
     packed_simd
     darling_core
+    dotenv
+    assert_matches
+    edit-distance
+    target
     env_proxy (update)
     num_cpus (update)
     pest_meta (update)
     rusty-tags (update)
+    redox_syscall (update)
     atk (needs glib)
     glib (update, introduces new feature)
     gio (update, introduces new feature)
