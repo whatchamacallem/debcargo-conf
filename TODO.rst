@@ -55,8 +55,6 @@ because all required dependencies are available in main::
     stackvector
     static_assertions
     doc-comment
-    diesel
-    sha3
     nom 4.2.3 (so we can update nom to 5.0.0)
     glob (update)
     toml (update, introduces new feature)
