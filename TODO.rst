@@ -69,6 +69,8 @@ because all required dependencies are available in main::
     data-encoding-macro-internal
     users (update)
     rustyline
+    http-body
+    quick-xml
 
 Delayed/problematic::
 
