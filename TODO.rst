@@ -39,7 +39,6 @@ because all required dependencies are available in main::
     num_cpus (update)
     pest_meta (update)
     rusty-tags (update)
-    tempfile (update)
     atk (needs glib)
     glib (update, introduces new feature)
     gio (update, introduces new feature)
