@@ -168,7 +168,7 @@ DD instructions
 
 To set up a suitable build environment for ``./build.sh``::
 
-  $ sudo apt-get install devscripts reprepro debootstrap sbuild
+  $ sudo apt-get install devscripts reprepro debootstrap sbuild dh-cargo
   $ sudo sbuild-createchroot --include=eatmydata,ccache,gnupg,dh-cargo,cargo,lintian,perl-openssl-defaults \
       --chroot-prefix debcargo-unstable unstable \
       /srv/chroot/debcargo-unstable-amd64-sbuild http://deb.debian.org/debian
