@@ -72,6 +72,7 @@ because all required dependencies are available in main::
     http-body
     quick-xml
     pretty_assertions (update)
+    dirs-sys
 
 Delayed/problematic::
 
