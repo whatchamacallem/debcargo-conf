@@ -48,17 +48,8 @@ because all required dependencies are available in main::
     gtk (update, introduces new feature)
     glob (update)
     toml (update, introduces new feature)
-    toml_edit (previous upload rejected due to missing entry in d/copyright)
-    ppv-lite86
-    ipnetwork
-    ipconfig
-    caps
-    data-encoding-macro-internal
     users (update)
-    http-body
-    quick-xml
     pretty_assertions (update)
-    dirs-sys
 
 Delayed/problematic::
 
