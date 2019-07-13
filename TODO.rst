@@ -35,38 +35,27 @@ because all required dependencies are available in main::
 
     packed_simd
     darling_core
-    gettext-rs
     env_proxy (update)
     num_cpus (update)
     pest_meta (update)
     rusty-tags (update)
     tempfile (update)
-    atk
+    atk (needs glib)
     glib (update, introduces new feature)
     gio (update, introduces new feature)
     cairo-rs (update, introduces new feature)
     pango (update, introduces new feature)
     gdk (update, introduces new feature)
     gtk (update, introduces new feature)
-    bumpalo
-    getrandom
-    md5-asm
-    rand_core 0.3.0 (so we can update rand_core to 0.5.0)
-    stackvector
-    static_assertions
-    doc-comment
-    nom 4.2.3 (so we can update nom to 5.0.0)
     glob (update)
     toml (update, introduces new feature)
     toml_edit (previous upload rejected due to missing entry in d/copyright)
-    hostname
     ppv-lite86
     ipnetwork
     ipconfig
     caps
     data-encoding-macro-internal
     users (update)
-    rustyline
     http-body
     quick-xml
     pretty_assertions (update)
