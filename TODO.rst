@@ -55,6 +55,7 @@ because all required dependencies are available in main::
     toml (update, introduces new feature)
     users (update)
     pretty_assertions (update)
+    image
 
 Delayed/problematic::
 
