@@ -33,7 +33,6 @@ and try to verify that they won't be broken by your update. If they are, then:
 These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
-    clicolors-control
     packed_simd
     atk (needs glib)
     glib (update, introduces new feature)
@@ -43,7 +42,6 @@ because all required dependencies are available in main::
     gdk (update, introduces new feature)
     gtk (update, introduces new feature)
     glob (update)
-    findshlibs (update)
 
 Delayed/problematic::
 
