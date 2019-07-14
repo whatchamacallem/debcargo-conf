@@ -43,7 +43,6 @@ because all required dependencies are available in main::
     gtk (update, introduces new feature)
     glob (update)
     users (update)
-    assert_cli
     darling_macro
 
 Delayed/problematic::
