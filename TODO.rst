@@ -53,6 +53,8 @@ Delayed/problematic::
     nom 4.2
         unblocks pktparse
         unblocks der-parser
+    bindgen-0.50.0
+        unblocks nettle-sys
 
     trust-dns-proto
         librust-socket2-0.3+default-dev (>= 0.3.9-~~)
