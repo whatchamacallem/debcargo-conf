@@ -34,28 +34,15 @@ These packages (RFS) are prepared in the master branch and can be uploaded
 because all required dependencies are available in main::
 
     packed_simd
-    darling_core
-    dotenv
-    assert_matches
-    edit-distance
-    target
-    env_proxy (update)
-    num_cpus (update)
-    pest_meta (update)
-    rusty-tags (update)
-    redox_syscall (update)
     atk (needs glib)
     glib (update, introduces new feature)
-    gio (update, introduces new feature)
+    gio (update, introduces new feature, depends on glib)
     cairo-rs (update, introduces new feature)
     pango (update, introduces new feature)
     gdk (update, introduces new feature)
     gtk (update, introduces new feature)
     glob (update)
-    toml (update, introduces new feature)
     users (update)
-    pretty_assertions (update)
-    image
 
 Delayed/problematic::
 
