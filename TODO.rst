@@ -44,6 +44,7 @@ because all required dependencies are available in main::
     glob (update)
     users (update)
     assert_cli
+    darling_macro
 
 Delayed/problematic::
 
