@@ -43,6 +43,7 @@ because all required dependencies are available in main::
     gtk (update, introduces new feature)
     glob (update)
     string (update, introduces new feature)
+    tokio-sync
 
 Delayed/problematic::
 
