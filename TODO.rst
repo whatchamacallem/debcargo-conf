@@ -42,6 +42,7 @@ because all required dependencies are available in main::
     gdk (update, introduces new feature)
     gtk (update, introduces new feature)
     glob (update)
+    string (update, introduces new feature)
 
 Delayed/problematic::
 
