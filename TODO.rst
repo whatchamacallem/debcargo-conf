@@ -50,13 +50,15 @@ Delayed/problematic::
     md5 (update) -- affects uuid
     gcc -- don't need this, completely obsoleted by cc.
         patch dependents to use cc instead.
-    winutil -- dependency of hostname <- resolv-conf <- trust-dns-resolver
-        doesn't build on linux
     nom 4.2
         unblocks pktparse
         unblocks der-parser
     bindgen-0.50.0
         unblocks nettle-sys
+    crossbeam-deque
+        unblocks rayon-core
+        unblocks rayon
+        unblocks tokio-threadpool
 
     trust-dns-proto
         librust-socket2-0.3+default-dev (>= 0.3.9-~~)
