@@ -45,6 +45,7 @@ because all required dependencies are available in main::
     string (update, introduces new feature)
     tokio-sync
     darling_core (update)
+    stream-cipher
 
 Delayed/problematic::
 
