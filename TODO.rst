@@ -48,6 +48,7 @@ because all required dependencies are available in main::
     stream-cipher
     console
     rand_core 0.4
+    rand_chacha 0.1
 
 Delayed/problematic::
 
