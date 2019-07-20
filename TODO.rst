@@ -49,6 +49,7 @@ because all required dependencies are available in main::
     console
     rand_core 0.4
     rand_chacha 0.1
+    rand_hc 0.1
 
 Delayed/problematic::
 
