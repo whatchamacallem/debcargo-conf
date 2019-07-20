@@ -47,6 +47,7 @@ because all required dependencies are available in main::
     darling_core (update)
     stream-cipher
     console
+    rand_core 0.4
 
 Delayed/problematic::
 
