@@ -47,6 +47,17 @@ because all required dependencies are available in main::
     darling_core (update)
     stream-cipher
     console
+    rand_core 0.4
+    rand_chacha 0.1
+    rand_hc 0.1
+    rand_isaac 0.1
+    rand_jitter 0.1
+    rand_pcg 0.1
+    rand_xorshift 0.1
+    migrations_internals
+    rand_os 0.1
+    rand 0.6
+    sha1-asm
 
 Delayed/problematic::
 
@@ -72,6 +83,8 @@ Delayed/problematic::
     sandboxfs (blocked by fuse and signal-hook)
     statistical (blocked by num & co)
     hyperfine (blocked by indicatif & statistical)
+
+    rand_jitter (blocked by rand_core update to 0.5)
 
 
 Unblocking testing migrations
