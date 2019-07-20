@@ -56,6 +56,7 @@ because all required dependencies are available in main::
     rand_os 0.1
     rand 0.6
     sha1-asm
+    x509-parser
 
 Delayed/problematic::
 
