@@ -57,6 +57,7 @@ because all required dependencies are available in main::
     migrations_internals
     rand_os 0.1
     rand 0.6
+    sha1-asm
 
 Delayed/problematic::
 
