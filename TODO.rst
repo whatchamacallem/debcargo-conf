@@ -46,6 +46,7 @@ because all required dependencies are available in main::
     tokio-sync
     darling_core (update)
     stream-cipher
+    console
 
 Delayed/problematic::
 
