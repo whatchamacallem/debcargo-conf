@@ -53,6 +53,7 @@ because all required dependencies are available in main::
     rand_isaac 0.1
     rand_jitter 0.1
     rand_pcg 0.1
+    rand_xorshift 0.1
 
 Delayed/problematic::
 
