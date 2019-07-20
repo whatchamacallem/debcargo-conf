@@ -77,6 +77,8 @@ Delayed/problematic::
     statistical (blocked by num & co)
     hyperfine (blocked by indicatif & statistical)
 
+    rand_jitter (blocked by rand_core update to 0.5)
+
 
 Unblocking testing migrations
 =============================
