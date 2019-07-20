@@ -56,6 +56,7 @@ because all required dependencies are available in main::
     rand_xorshift 0.1
     migrations_internals
     rand_os 0.1
+    rand 0.6
 
 Delayed/problematic::
 
