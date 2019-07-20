@@ -47,8 +47,6 @@ because all required dependencies are available in main::
     darling_core (update)
     stream-cipher
     console
-    rand_core 0.4
-    rand_chacha 0.1
     rand_hc 0.1
     rand_isaac 0.1
     rand_jitter 0.1
