@@ -57,6 +57,7 @@ because all required dependencies are available in main::
     rand 0.6
     sha1-asm
     x509-parser
+    backtrace
 
 Delayed/problematic::
 
@@ -72,6 +73,10 @@ Delayed/problematic::
         unblocks rayon-core
         unblocks rayon
         unblocks tokio-threadpool
+
+    compiler_builtins (nightly only, needs to be removed from)
+        backtrace
+        backtrace-sys
 
     trust-dns-proto
         librust-socket2-0.3+default-dev (>= 0.3.9-~~)
