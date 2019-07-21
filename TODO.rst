@@ -58,6 +58,7 @@ because all required dependencies are available in main::
     sha1-asm
     x509-parser
     backtrace
+    gzip-header
 
 Delayed/problematic::
 
