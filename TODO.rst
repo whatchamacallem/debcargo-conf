@@ -47,6 +47,19 @@ because all required dependencies are available in main::
     darling_core (update)
     stream-cipher
     console
+    rand_hc 0.1
+    rand_isaac 0.1
+    rand_jitter 0.1
+    rand_pcg 0.1
+    rand_xorshift 0.1
+    migrations_internals
+    rand_os 0.1
+    rand 0.6
+    sha1-asm
+    x509-parser
+    backtrace
+    gzip-header
+    pest_generator (update)
 
 Delayed/problematic::
 
@@ -63,6 +76,10 @@ Delayed/problematic::
         unblocks rayon
         unblocks tokio-threadpool
 
+    compiler_builtins (nightly only, needs to be removed from)
+        backtrace
+        backtrace-sys
+
     trust-dns-proto
         librust-socket2-0.3+default-dev (>= 0.3.9-~~)
         librust-tokio-timer-0.2+default-dev (>= 0.2.10-~~)
@@ -72,6 +89,8 @@ Delayed/problematic::
     sandboxfs (blocked by fuse and signal-hook)
     statistical (blocked by num & co)
     hyperfine (blocked by indicatif & statistical)
+
+    rand_jitter (blocked by rand_core update to 0.5)
 
 
 Unblocking testing migrations
