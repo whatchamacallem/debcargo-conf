@@ -59,6 +59,7 @@ because all required dependencies are available in main::
     x509-parser
     backtrace
     gzip-header
+    pest_generator (update)
 
 Delayed/problematic::
 
