@@ -60,6 +60,7 @@ because all required dependencies are available in main::
     backtrace
     gzip-header
     pest_generator (update)
+    wild
 
 Delayed/problematic::
 
