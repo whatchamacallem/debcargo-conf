@@ -61,6 +61,7 @@ because all required dependencies are available in main::
     gzip-header
     pest_generator (update)
     fs_extra
+    native-tls
 
 Delayed/problematic::
 
