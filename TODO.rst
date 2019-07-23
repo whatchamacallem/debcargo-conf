@@ -62,6 +62,7 @@ because all required dependencies are available in main::
     pest_generator (update)
     fs_extra
     native-tls
+    try_from
 
 Delayed/problematic::
 
