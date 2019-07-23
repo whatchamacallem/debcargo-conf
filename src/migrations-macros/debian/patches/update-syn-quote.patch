@@ -1,0 +1,149 @@
+commit 52d6c9e107d34512a858608f3b2891a600a7b39f
+Author: Bastien Orivel <eijebong@bananium.fr>
+Date:   Sat Feb 23 17:27:16 2019 +0100
+
+    Update syn to 0.15 in the migrations_macros crate
+
+diff --git a/diesel_migrations/migrations_macros/src/embed_migrations.rs b/diesel_migrations/migrations_macros/src/embed_migrations.rs
+index 82541361..4dc2a7f9 100644
+--- a/src/embed_migrations.rs
++++ b/src/embed_migrations.rs
+@@ -1,4 +1,4 @@
+-use quote;
++use proc_macro2;
+ use syn;
+ 
+ use migrations::migration_directory_from_given_path;
+@@ -8,7 +8,7 @@ use std::path::Path;
+ 
+ use util::{get_option, get_options_from_input};
+ 
+-pub fn derive_embed_migrations(input: &syn::DeriveInput) -> quote::Tokens {
++pub fn derive_embed_migrations(input: &syn::DeriveInput) -> proc_macro2::TokenStream {
+     fn bug() -> ! {
+         panic!(
+             "This is a bug. Please open a Github issue \
+@@ -16,12 +16,14 @@ pub fn derive_embed_migrations(input: &syn::DeriveInput) -> quote::Tokens {
+         );
+     }
+ 
+-    let options = get_options_from_input("embed_migrations_options", &input.attrs, bug);
++    let options =
++        get_options_from_input(&parse_quote!(embed_migrations_options), &input.attrs, bug);
+     let migrations_path_opt = options
+         .as_ref()
+         .map(|o| get_option(o, "migrations_path", bug));
+-    let migrations_expr = migration_directory_from_given_path(migrations_path_opt)
+-        .and_then(|path| migration_literals_from_path(&path));
++    let migrations_expr =
++        migration_directory_from_given_path(migrations_path_opt.as_ref().map(String::as_str))
++            .and_then(|path| migration_literals_from_path(&path));
+     let migrations_expr = match migrations_expr {
+         Ok(v) => v,
+         Err(e) => panic!("Error reading migrations: {}", e),
+@@ -78,7 +80,7 @@ pub fn derive_embed_migrations(input: &syn::DeriveInput) -> quote::Tokens {
+     }
+ }
+ 
+-fn migration_literals_from_path(path: &Path) -> Result<Vec<quote::Tokens>, Box<Error>> {
++fn migration_literals_from_path(path: &Path) -> Result<Vec<proc_macro2::TokenStream>, Box<Error>> {
+     let mut migrations = migration_paths_in_directory(path)?;
+ 
+     migrations.sort_by_key(|a| a.path());
+@@ -89,7 +91,7 @@ fn migration_literals_from_path(path: &Path) -> Result<Vec<quote::Tokens>, Box<E
+         .collect()
+ }
+ 
+-fn migration_literal_from_path(path: &Path) -> Result<quote::Tokens, Box<Error>> {
++fn migration_literal_from_path(path: &Path) -> Result<proc_macro2::TokenStream, Box<Error>> {
+     let version = version_from_path(path)?;
+     let sql_file = path.join("up.sql");
+     let sql_file_path = sql_file.to_str();
+diff --git a/diesel_migrations/migrations_macros/src/lib.rs b/diesel_migrations/migrations_macros/src/lib.rs
+index 0a83234e..b8f3bfc9 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -23,8 +23,10 @@
+ #![cfg_attr(test, allow(clippy::option_unwrap_used, clippy::result_unwrap_used))]
+ extern crate migrations_internals;
+ extern crate proc_macro;
++extern crate proc_macro2;
+ #[macro_use]
+ extern crate quote;
++#[macro_use]
+ extern crate syn;
+ 
+ mod embed_migrations;
+@@ -32,11 +34,11 @@ mod migrations;
+ mod util;
+ 
+ use proc_macro::TokenStream;
+-use syn::parse_derive_input;
++use syn::DeriveInput;
+ 
+ #[proc_macro_derive(EmbedMigrations, attributes(embed_migrations_options))]
+ pub fn derive_embed_migrations(input: TokenStream) -> TokenStream {
+-    let item = parse_derive_input(&input.to_string()).unwrap();
++    let item = parse_macro_input!(input as DeriveInput);
+     embed_migrations::derive_embed_migrations(&item)
+         .to_string()
+         .parse()
+diff --git a/diesel_migrations/migrations_macros/src/util.rs b/diesel_migrations/migrations_macros/src/util.rs
+index 8c502bef..4d8330f4 100644
+--- a/src/util.rs
++++ b/src/util.rs
+@@ -1,8 +1,11 @@
+ use syn::*;
+ 
+-pub fn str_value_of_meta_item<'a>(item: &'a MetaItem, name: &str) -> &'a str {
++pub fn str_value_of_meta_item(item: &Meta, name: &str) -> String {
+     match *item {
+-        MetaItem::NameValue(_, Lit::Str(ref value, _)) => &*value,
++        Meta::NameValue(MetaNameValue {
++            lit: Lit::Str(ref value),
++            ..
++        }) => value.value(),
+         _ => panic!(
+             r#"`{}` must be in the form `#[{}="something"]`"#,
+             name, name
+@@ -11,17 +14,20 @@ pub fn str_value_of_meta_item<'a>(item: &'a MetaItem, name: &str) -> &'a str {
+ }
+ 
+ pub fn get_options_from_input(
+-    name: &str,
++    name: &Path,
+     attrs: &[Attribute],
+     on_bug: fn() -> !,
+-) -> Option<Vec<MetaItem>> {
+-    let options = attrs.iter().find(|a| a.name() == name).map(|a| &a.value);
++) -> Option<Vec<Meta>> {
++    let options = attrs
++        .iter()
++        .find(|a| &a.path == name)
++        .map(|a| a.parse_meta());
+     match options {
+-        Some(&MetaItem::List(_, ref options)) => Some(
+-            options
++        Some(Ok(Meta::List(MetaList { ref nested, .. }))) => Some(
++            nested
+                 .iter()
+                 .map(|o| match *o {
+-                    NestedMetaItem::MetaItem(ref m) => m.clone(),
++                    NestedMeta::Meta(ref m) => m.clone(),
+                     _ => on_bug(),
+                 })
+                 .collect(),
+@@ -31,11 +37,11 @@ pub fn get_options_from_input(
+     }
+ }
+ 
+-pub fn get_option<'a>(options: &'a [MetaItem], option_name: &str, on_bug: fn() -> !) -> &'a str {
++pub fn get_option(options: &[Meta], option_name: &str, on_bug: fn() -> !) -> String {
+     get_optional_option(options, option_name).unwrap_or_else(|| on_bug())
+ }
+ 
+-pub fn get_optional_option<'a>(options: &'a [MetaItem], option_name: &str) -> Option<&'a str> {
++pub fn get_optional_option(options: &[Meta], option_name: &str) -> Option<String> {
+     options
+         .iter()
+         .find(|a| a.name() == option_name)
