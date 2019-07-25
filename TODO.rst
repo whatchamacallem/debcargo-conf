@@ -66,6 +66,9 @@ because all required dependencies are available in main::
     bigdecimal
     mysqlclient-sys
     pq-sys
+    im-rc
+    cargo
+    proptest
 
 Delayed/problematic::
 
