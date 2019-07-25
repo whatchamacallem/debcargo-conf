@@ -65,6 +65,7 @@ because all required dependencies are available in main::
     try_from
     bigdecimal
     mysqlclient-sys
+    pq-sys
 
 Delayed/problematic::
 
