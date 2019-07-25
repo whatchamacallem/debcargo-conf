@@ -63,6 +63,7 @@ because all required dependencies are available in main::
     fs_extra
     native-tls
     try_from
+    bigdecimal
 
 Delayed/problematic::
 
