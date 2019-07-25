@@ -64,6 +64,7 @@ because all required dependencies are available in main::
     native-tls
     try_from
     bigdecimal
+    mysqlclient-sys
 
 Delayed/problematic::
 
