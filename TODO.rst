@@ -38,21 +38,7 @@ If they are broken, then:
 
 Old delayed/problematic list, to be moved to src/*/debian/BLOCK::
 
-    nom 4.2
-        unblocks pktparse
-        unblocks der-parser
-    bindgen-0.50.0
-        unblocks nettle-sys
-    crossbeam-deque
-        unblocks rayon-core
-        unblocks rayon
-        unblocks tokio-threadpool
-    compiler_builtins (nightly only, needs to be removed from)
-        backtrace
-        backtrace-sys
-    trust-dns-proto
-        librust-socket2-0.3+default-dev (>= 0.3.9-~~)
-        librust-tokio-timer-0.2+default-dev (>= 0.2.10-~~)
+    none
 
 
 Unblocking testing migrations
