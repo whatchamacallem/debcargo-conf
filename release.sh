@@ -59,12 +59,12 @@ if test -z "$DISTRO"; then
 fi
 dch -m -r -D $DISTRO ""
 git add debian/changelog
-git rm -f debian/RFS
+git rm debian/RFS
 )
 
 revert_git_changes() {
-	git reset
-	git checkout -- "$PKGDIR/debian/changelog"
+	git reset --merge
+	git checkout -- "$PKGDIR/debian/changelog" "$PKGDIR/debian/RFS"
 	git checkout "$PREVBRANCH"
 	git branch -d "$RELBRANCH"
 }

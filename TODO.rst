@@ -20,7 +20,8 @@ Ready for upload (Request For Sponsor)
 ======================================
 
 If you do not have upload rights, simply `touch src/$crate/debian/RFS` in your
-crate's directory and a DD or DM will get around to it at some point.
+crate's directory, commit and push it, and a DD or DM will get around to it at
+some point.
 
 To list all packages under RFS, run `dev/list-rfs.sh`.
 
@@ -35,10 +36,6 @@ If they are broken, then:
 1. Document the problem in `debian/BLOCK`.
 2. File an issue upstream to report that they should update to the new library
 3. Write a patch if you can get that working, and document it.
-
-Old delayed/problematic list, to be moved to src/*/debian/BLOCK::
-
-    none
 
 
 Unblocking testing migrations
@@ -87,11 +84,9 @@ see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629
 
 [ ] alga
 [ ] c_vec
-[ ] cast
 [ ] criterion
 [ ] criterion-plot
 [ ] criterion-stats
-[ ] cssparser
 [ ] downcast-rs
 [ ] handlebars
 [ ] itertools-num
@@ -105,7 +100,6 @@ see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629
 [ ] simplelog
 [ ] syn-0.11.11
 [ ] synom
-[ ] thread-scoped (NEW)
 [ ] unicode-xid-0.0.4
 
 
