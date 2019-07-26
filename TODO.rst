@@ -19,62 +19,25 @@ Should file a RM request to ftpmasters for these old crates:
 Ready for upload (Request For Sponsor)
 ======================================
 
-When adding a package here, and it involves updating an existing package in a
-semver-incompatible way, please check the reverse dependencies by running::
+If you do not have upload rights, simply `touch src/$crate/debian/RFS` in your
+crate's directory and a DD or DM will get around to it at some point.
+
+To list all packages under RFS, run `dev/list-rfs.sh`.
+
+If your update breaks semver compatibility, please first check the reverse
+dependencies by running::
 
     $ aptitude search '~Dlibrust-$cratename'
 
-and try to verify that they won't be broken by your update. If they are, then:
+and try to verify that they won't be broken by your update, by building them.
+If they are broken, then:
 
-1. Document it below ("Delayed/problematic")
+1. Document the problem in `debian/BLOCK`.
 2. File an issue upstream to report that they should update to the new library
-3. Write a patch if you can get that working, and document it also below.
+3. Write a patch if you can get that working, and document it.
 
-These packages (RFS) are prepared in the master branch and can be uploaded
-because all required dependencies are available in main::
+Old delayed/problematic list, to be moved to src/*/debian/BLOCK::
 
-    packed_simd
-    atk (needs glib)
-    glib (update, introduces new feature)
-    gio (update, introduces new feature, depends on glib)
-    cairo-rs (update, introduces new feature)
-    pango (update, introduces new feature)
-    gdk (update, introduces new feature)
-    gtk (update, introduces new feature)
-    glob (update)
-    string (update, introduces new feature)
-    tokio-sync
-    darling_core (update)
-    stream-cipher
-    console
-    rand_hc 0.1
-    rand_isaac 0.1
-    rand_jitter 0.1
-    rand_pcg 0.1
-    rand_xorshift 0.1
-    migrations_internals
-    rand_os 0.1
-    rand 0.6
-    sha1-asm
-    x509-parser
-    backtrace
-    gzip-header
-    pest_generator (update)
-    fs_extra
-    native-tls
-    try_from
-    bigdecimal
-    mysqlclient-sys
-    pq-sys
-    im-rc
-    cargo
-    proptest
-
-Delayed/problematic::
-
-    md5 (update) -- affects uuid
-    gcc -- don't need this, completely obsoleted by cc.
-        patch dependents to use cc instead.
     nom 4.2
         unblocks pktparse
         unblocks der-parser
@@ -84,22 +47,12 @@ Delayed/problematic::
         unblocks rayon-core
         unblocks rayon
         unblocks tokio-threadpool
-
     compiler_builtins (nightly only, needs to be removed from)
         backtrace
         backtrace-sys
-
     trust-dns-proto
         librust-socket2-0.3+default-dev (>= 0.3.9-~~)
         librust-tokio-timer-0.2+default-dev (>= 0.2.10-~~)
-
-    fuse (blocked by thread-scoped)
-    indicatif (blocked by parking_lot)
-    sandboxfs (blocked by fuse and signal-hook)
-    statistical (blocked by num & co)
-    hyperfine (blocked by indicatif & statistical)
-
-    rand_jitter (blocked by rand_core update to 0.5)
 
 
 Unblocking testing migrations
