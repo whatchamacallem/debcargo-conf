@@ -1,5 +1,7 @@
 #!/bin/sh
 
+abort() { local x=$1; shift; for i in "$@"; do echo >&2 "$0: abort: $i"; done; exit "$x"; }
+
 echo >&2 "Note, this script is not very accurate and may print out redundant stuff,"
 echo >&2 "e.g. dependencies of crates that we already patched away in Debian."
 
