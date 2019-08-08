@@ -72,6 +72,10 @@ check_build_deps() {
 		# this is because dpkg-checkbuilddeps only works on installed pkgs
 		apt-cache dumpavail -o APT::Default-Release=unstable | \
 		sed -e 's/Package: .*/\0\nStatus: install ok installed/g' > dpkg-dummy/status
+		if ! test -s dpkg-dummy/status; then
+			echo >&2 "couldn't generate dpkg-dummy/status, is Debian unstable in your APT sources?"
+			exit 1
+		fi
 	fi
 	( cd "$PKGNAME" && dpkg-checkbuilddeps --admindir=../dpkg-dummy )
 }
