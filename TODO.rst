@@ -145,6 +145,23 @@ sequoia-sqv
     * nettle
       * nettle-sys (NEW)
 
+rustup
+------
+
+* rustup (not available as a crate)
+ * git-testament
+   * git-testament-derive
+ * markdown
+   * pipeline
+ * rand
+   * rand_core
+   * rand_hc
+ * retry
+ * scopeguard
+ * wait-timeout
+ * xz2
+   * lzma-sys
+
 ==============
 Eventual goals
 ==============
@@ -165,6 +182,7 @@ Binary crates worth packaging (please add if you know more):
 - bat - A cat clone with syntax highlighting, Git integration, and more.
 - bench - simple benchmarking
 - sequoia-sqv - streamlined OpenPGP signature validation tool
+- rustup - installing and managing multiple rust toolchains
 
 To see lists of interesting binary crates, you can run something like::
 
