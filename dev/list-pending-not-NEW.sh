@@ -13,5 +13,5 @@ comm -13 \
    sed -e 's,refs/remotes/origin/pending-,,g' | \
    sort) | \
 while read x; do
-	echo $x $(git show "pending-$x:src/$x/debian/changelog" | dpkg-parsechangelog -l- -SVersion)
+	echo $x $(git show "origin/pending-$x:src/$x/debian/changelog" | dpkg-parsechangelog -l- -SVersion)
 done
