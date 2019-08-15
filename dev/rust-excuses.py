@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+# the excuses file can be found here:
+# https://release.debian.org/britney/excuses.yaml
 
 import re
 import subprocess
