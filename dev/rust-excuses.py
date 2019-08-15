@@ -7,6 +7,14 @@ import subprocess
 import sys
 import yaml
 
+if len(sys.argv) != 3:
+    print("""Generates dot files to show the migration deps
+Usage: %s excuses.dot excuses_arch.dot
+
+Expects excuses.yaml in the current dir
+    """ % sys.argv[0])
+    sys.exit(0)
+
 print("parsing excuses.yaml...", file=sys.stderr)
 with open("excuses.yaml") as fp:
 	y = yaml.load(fp)
