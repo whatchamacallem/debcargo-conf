@@ -23,7 +23,20 @@
  
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -120,7 +120,7 @@
+@@ -25,6 +25,12 @@
+     }
+ }
+ 
++impl From<syn::Error> for Error {
++    fn from(e: syn::Error) -> Error {
++        Error(e.to_compile_error())
++    }
++}
++
+ decl_derive!([Fail, attributes(fail, cause)] => fail_derive);
+ 
+ fn fail_derive(s: synstructure::Structure) -> TokenStream {
+@@ -120,7 +126,7 @@
          }
  
          let format_string = match msg.nested[0] {
@@ -32,7 +45,7 @@
                  nv.lit.clone()
              }
              _ => {
-@@ -131,44 +131,21 @@
+@@ -131,12 +137,12 @@
              }
          };
          let args = msg.nested.iter().skip(1).map(|arg| match *arg {
@@ -44,32 +57,18 @@
              }
 -            syn::NestedMeta::Meta(syn::Meta::Word(ref id)) => {
 -                let id_s = id.to_string();
--                if id_s.starts_with("_") {
--                    if let Ok(idx) = id_s[1..].parse::<usize>() {
--                        let bi = match v.bindings().get(idx) {
--                            Some(bi) => bi,
--                            None => {
--                                return Err(Error::new(
--                                    arg.span(),
--                                    &format!(
--                                        "display attempted to access field `{}` in `{}::{}` which \
--                                     does not exist (there are {} field{})",
--                                        idx,
--                                        s.ast().ident,
--                                        v.ast().ident,
--                                        v.bindings().len(),
--                                        if v.bindings().len() != 1 { "s" } else { "" }
--                                    )
--                                ));
--                            }
--                        };
--                        return Ok(quote!(#bi));
--                    }
--                }
 +            syn::NestedMeta::Meta(syn::Meta::Path(ref path)) => {
++                let id_s = path.get_ident().map(syn::Ident::to_string).unwrap_or("".to_string());
+                 if id_s.starts_with("_") {
+                     if let Ok(idx) = id_s[1..].parse::<usize>() {
+                         let bi = match v.bindings().get(idx) {
+@@ -160,15 +166,16 @@
+                     }
+                 }
                  for bi in v.bindings() {
 -                    if bi.ast().ident.as_ref() == Some(id) {
-+                    if path.is_ident(&(bi.ast().ident)) {
++                    let id = bi.ast().ident.as_ref();
++                    if id.is_some() && path.is_ident(id.unwrap()) {
                          return Ok(quote!(#bi));
                      }
                  }
@@ -83,7 +82,7 @@
                          s.ast().ident,
                          v.ast().ident
                      )
-@@ -192,8 +169,8 @@
+@@ -192,8 +199,8 @@
  fn find_error_msg(attrs: &[syn::Attribute]) -> Result<Option<syn::MetaList>, Error> {
      let mut error_msg = None;
      for attr in attrs {
@@ -94,7 +93,7 @@
                  if error_msg.is_some() {
                      return Err(Error::new(
                          meta.span(),
-@@ -223,7 +200,7 @@
+@@ -223,7 +230,7 @@
                  segments: ref path, ..
              },
          }) => path.last().map_or(false, |s| {
@@ -103,7 +102,7 @@
          }),
          _ => false,
      }
-@@ -232,18 +209,18 @@
+@@ -232,18 +239,18 @@
  fn is_cause(bi: &&synstructure::BindingInfo) -> bool {
      let mut found_cause = false;
      for attr in &bi.ast().attrs {
