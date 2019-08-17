@@ -108,9 +108,7 @@ ripgrep (new version)
 
 * ripgrep
   * grep 0.2.4
-    * grep-cli 0.1.3
     * grep-printer 0.1.3
-      * grep-searcher 0.1.6
 
 bench
 -----
