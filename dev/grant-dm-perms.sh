@@ -1,6 +1,11 @@
 #!/bin/sh
 # Grant DM upload permissions on all crates maintained by a DM.
 
+if [ "$#" -ne 1 ]; then
+    echo "Syntax: $0 <email>"
+    exit 1
+fi
+
 m="$1"
 shift
 grep -l "$m" src/*/debian/copyright src/*/debian/debcargo.toml \
