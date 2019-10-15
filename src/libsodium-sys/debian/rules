@@ -1,0 +1,9 @@
+#!/usr/bin/make -f
+include /usr/share/rustc/architecture.mk
+%:
+	dh $@ --buildsystem cargo
+
+# Force dynamic linking
+override_dh_auto_test:
+	export SODIUM_USE_PKG_CONFIG=1; \
+	dh_auto_test
