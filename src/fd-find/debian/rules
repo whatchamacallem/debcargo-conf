@@ -3,9 +3,8 @@
 	dh $@ --buildsystem cargo
 
 override_dh_install:
-# fd is already used by another packages. Install fd into /usr/fd-find/bin/
-# to be added to the path
-# and create as symlink ot have fd-find in the path
+# fd is already used by another packages. Install fd into /usr/lib/cargo/bin/
+# and create a symlink to have fd-find in the path
 	mkdir -p debian/fd-find/usr/lib/cargo/bin/ debian/fd-find/usr/share/fish/completions/ debian/fd-find/usr/share/zsh/vendor-completions/ debian/fd-find/usr/share/bash-completion/completions/
 	mv debian/fd-find/usr/bin/fd debian/fd-find/usr/lib/cargo/bin/
 	cd debian/fd-find/usr/bin/ && ln -s ../lib/cargo/bin/fd fdfind
