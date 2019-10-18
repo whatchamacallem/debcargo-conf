@@ -9,6 +9,6 @@ for i in src/*/debian/RFS; do
     # trim the content
     content=$(xargs echo -n < "$i")
     if test -n "$content"; then
-        echo "=> $content"
+        echo "  $content"
     fi
 done
