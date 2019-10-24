@@ -122,17 +122,10 @@ bench
 sequoia-sqv
 -----------
 * sequoia-sqv
-  * sequoia-openpgp (needs upstream fix to move to base64 0.10, see: https://gitlab.com/sequoia-pgp/sequoia/merge_requests/166)
-    * memsec
-      * getrandom
-        * fuchsia-cprng (NEW)
-        * libc (>= 0.2.54, needs upgrade)
-    * lalrpop (needs sequoia upstream fix to move to 0.17, see: https://gitlab.com/sequoia-pgp/sequoia/merge_requests/165)
-      * lalrpop-util (NEW)
-      * ascii-canvas (NEW)
-    * buffered-reader (NEW)
-    * nettle
-      * nettle-sys (NEW)
+  * sequoia-openpgp
+    * lalrpop (NEW)
+    * nettle (NEW)
+    * sequoia-rfc2822 (maybe going away upstream, see https://gitlab.com/sequoia-pgp/sequoia/issues/279)
 
 rustup
 ------
