@@ -1,45 +1,16 @@
-Index: nitrokey/Cargo.toml
-===================================================================
---- nitrokey.orig/Cargo.toml
-+++ nitrokey/Cargo.toml
-@@ -29,12 +29,8 @@ version = "0.2"
- [dependencies.nitrokey-sys]
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -30,11 +30,9 @@
  version = "3.4"
  
--[dependencies.rand_core]
+ [dependencies.rand_core]
 -version = "0.3"
 -default-features = false
--
++version = "0.5"
++features = ["getrandom"]
+ 
 -[dependencies.rand_os]
 -version = "0.1"
-+[dependencies.rand]
-+version = ">= 0.5"
  [dev-dependencies.nitrokey-test]
  version = "0.1"
  
-Index: nitrokey/src/util.rs
-===================================================================
---- nitrokey.orig/src/util.rs
-+++ nitrokey/src/util.rs
-@@ -4,8 +4,8 @@ use std::fmt;
- use std::os::raw::{c_char, c_int};
- 
- use libc::{c_void, free};
--use rand_core::RngCore;
--use rand_os::OsRng;
-+use rand::RngCore;
-+use rand::rngs::OsRng;
- 
- /// Error types returned by Nitrokey device or by the library.
- #[derive(Clone, Copy, Debug, PartialEq)]
-@@ -186,8 +186,8 @@ impl From<c_int> for CommandError {
-     }
- }
- 
--impl From<rand_core::Error> for CommandError {
--    fn from(_error: rand_core::Error) -> Self {
-+impl From<rand::Error> for CommandError {
-+    fn from(_error: rand::Error) -> Self {
-         CommandError::RngError
-     }
- }
