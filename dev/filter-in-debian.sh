@@ -5,7 +5,7 @@ set -e
 
 while read crate ver; do
 	pkg="${crate//_/-}"
-	fullpkg=librust-"${pkg}${ver:+-$ver}"-dev
-	numpkg="$(apt-cache show "$fullpkg" 2>/dev/null | grep "^Package: $fullpkg" | wc -l)"
+	fullpkg=rust-"${pkg}${ver:+-$ver}"
+	numpkg="$(apt-cache showsrc "$fullpkg" 2>/dev/null | grep "^Package: $fullpkg" | wc -l)"
 	echo "$crate $ver $numpkg"
 done
