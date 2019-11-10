@@ -123,9 +123,6 @@ sequoia-sqv
 -----------
 * sequoia-sqv
   * sequoia-openpgp
-    * lalrpop (NEW)
-    * nettle (NEW)
-    * sequoia-rfc2822 (maybe going away upstream, see https://gitlab.com/sequoia-pgp/sequoia/issues/279)
 
 rustup
 ------
