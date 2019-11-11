@@ -192,3 +192,13 @@ been built by the previous step.
 
 After everything is built successfully, you can ``dput`` all of them and then
 push all the ``pending-*`` branches as normal.
+
+Packaging the existing revision
+===============================
+
+In order to build a package A already in ``debcargo-conf/src``
+in the exact version which is present here, do the following::
+
+  $ ./repackage.sh A
+  $ cd build
+  $ ./build.sh A
