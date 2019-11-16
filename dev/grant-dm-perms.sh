@@ -12,5 +12,5 @@ grep -l "$m" src/*/debian/copyright src/*/debian/debcargo.toml \
 | sed -nre 's,src/(.*)/debian/.*,\1,gp' \
 | sort -u \
 | dev/filter-in-debian.sh \
-| sed -nre 's/^(.*)\s1$/rust-\1/gp' \
+| sed -nre 's/^(.*)\s[1-9][0-9]*$/rust-\1/gp' \
 | xargs -r dcut "$@" dm --uid "$m" --allow
