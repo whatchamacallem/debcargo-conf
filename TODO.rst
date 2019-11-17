@@ -122,7 +122,6 @@ bench
 sequoia-sqv
 -----------
 * sequoia-sqv
-  * sequoia-openpgp
 
 rustup
 ------
