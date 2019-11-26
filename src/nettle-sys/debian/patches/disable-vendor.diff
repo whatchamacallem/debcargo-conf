@@ -14,3 +14,30 @@
  [features]
  vendored = ["nettle-src"]
 +nettle-src = []
+diff --git a/build.rs b/build.rs
+index 44f7af3..ede4b2f 100644
+--- a/build.rs
++++ b/build.rs
+@@ -1,7 +1,5 @@
+ extern crate bindgen;
+ extern crate pkg_config;
+-#[cfg(feature = "vendored")]
+-extern crate nettle_src;
+ 
+ use std::env;
+ use std::fs;
+@@ -36,14 +34,6 @@ fn main() {
+     println!("cargo:rerun-if-env-changed=NETTLE_STATIC");
+     println!("cargo:rerun-if-env-changed={}", NETTLE_PREGENERATED_BINDINGS);
+ 
+-    #[cfg(feature = "vendored")]
+-    {
+-        let artifacts = nettle_src::Build::new().build();
+-        println!("cargo:vendored=1");
+-        env::set_var("PKG_CONFIG_PATH",
+-                     artifacts.lib_dir().join("pkgconfig"));
+-    }
+-
+     let nettle = pkg_config::probe_library("nettle hogweed").unwrap();
+ 
+     let mode = match env::var_os("NETTLE_STATIC") {
