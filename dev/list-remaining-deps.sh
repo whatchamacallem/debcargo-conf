@@ -27,5 +27,5 @@ for c in "$@"; do \
 | sed -e 's/ v/ /g' \
 | dev/filter-semver.sh \
 | awk '!x[$0]++' \
-| dev/filter-in-debian.sh \
+| dev/filter-crate-in-debian.sh \
 | sed -nre 's/(.*) 0$/\1/gp'
