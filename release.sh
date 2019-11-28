@@ -107,7 +107,7 @@ new binaries, then you can just go ahead and directly dput the source package.
 
   cd build && dput ${DEBSRC}_${DEBVER}_source.changes
 
-For your reference, this source package builds $(grep ^Package build/$CRATE/debian/control | wc -l) binary package(s).
+For your reference, this source package builds $(grep ^Package build/${CRATE//_/-}/debian/control | wc -l) binary package(s).
 
 If this is a NEW source package or introduces NEW binary packages not already
 in the Debian archive, you will need to build a binary package out of it. The
