@@ -11,3 +11,20 @@ Index: fd-find/Cargo.toml
  [target."cfg(all(unix, not(target_os = \"redox\")))".dependencies.libc]
  version = "0.2"
  [badges.appveyor]
+Index: fd-find/src/main.rs
+===================================================================
+--- fd-find.orig/src/main.rs
++++ fd-find/src/main.rs
+@@ -36,9 +36,9 @@ use crate::internal::{
+ };
+ 
+ // We use jemalloc for performance reasons, see https://github.com/sharkdp/fd/pull/481
+-#[cfg(all(not(windows), not(target_env = "musl")))]
+-#[global_allocator]
+-static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
++// #[cfg(all(not(windows), not(target_env = "musl")))]
++// #[global_allocator]
++// static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
+ 
+ fn main() {
+     let checked_args = transform_args_with_exec(env::args_os());
