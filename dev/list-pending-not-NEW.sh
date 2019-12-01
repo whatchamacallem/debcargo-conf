@@ -1,6 +1,6 @@
 #!/bin/bash
 # List pending branches that we have, but that are not in NEW.
-# You might find it also useful to pipe the output of this into filter-in-debian.sh
+# You might find it also useful to pipe the output of this into filter-package-in-debian.sh
 set -e
 
 git fetch origin --prune
