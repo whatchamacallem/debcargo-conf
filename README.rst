@@ -57,6 +57,23 @@ on having to package all the dependencies of the newest version, you can::
   REALVER=<old-version> ./release.sh <rust-crate-name>
 
 
+Repository structure
+====================
+
+`pending-*` branches are managed by `./release.sh`, so please don't manage them
+yourself as you will interfere with the working of that script. The intention
+is that they should only differ from the master branch by 1 commit, i.e. the
+`dch -r` commit created by `./release.sh`.
+
+If you want to create separate non-master branches, that is fine - just don't
+call them `pending-*` and don't run `./release.sh` on those branches. If you
+want to test your crate, instead run::
+
+  cd build && [SOURCEONLY=1] ./build.sh <rust-crate-name> [<old-version>]
+
+omitting or not omitting the stuff in [] as needed.
+
+
 General packaging tips
 ======================
 
@@ -202,3 +219,6 @@ in the exact version which is present here, do the following::
   $ ./repackage.sh A
   $ cd build
   $ ./build.sh A
+
+If this package is already in the archive and you want to recreate that, you
+will need to use the exact same version of debcargo that was used previously.
