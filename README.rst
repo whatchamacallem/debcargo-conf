@@ -148,6 +148,16 @@ For now, testsuites aren't executed for library.
 However, for binary, it is strongly recommended to run the testsuites.
 See ripgrep as example.
 
+Binary-crate has "required-features"
+------------------------------------
+
+See ``src/dotenv`` for an example on dealing with this.
+
+Binary-crate has conflicting name
+---------------------------------
+
+See ``src/fd-find`` for an example on dealing with this.
+
 Updating the dependencies
 -------------------------
 
