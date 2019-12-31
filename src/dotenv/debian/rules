@@ -6,16 +6,8 @@ include /usr/share/dpkg/pkg-info.mk
 	dh $@ --buildsystem cargo
 
 override_dh_auto_install:
-	dh_auto_install -- --features cli
-
-override_dh_install:
-# dotenv is already used by another packages. Install dotenv into /usr/lib/cargo/bin/
-# and create a symlink to have dotenv-rust in the path
-	mkdir -p debian/dotenv/usr/lib/cargo/bin
-	mv debian/dotenv/usr/bin/dotenv debian/dotenv/usr/lib/cargo/bin/
-	cd debian/dotenv/usr/bin/ && ln -s ../lib/cargo/bin/dotenv dotenv-rust
-	dh_install
-	dh_missing
+	# /usr/bin/dotenv already used, install into /usr/lib/cargo/bin
+	DEB_CARGO_INSTALL_PREFIX=/usr/lib/cargo dh_auto_install -- --features cli
 
 override_dh_installman:
 	help2man \
