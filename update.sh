@@ -87,7 +87,7 @@ You can test-build your package by running:
 
   cd build && ./build.sh $CRATE $VER
 
-This assumes that you have set up sbuild; see "DD instructions" in README.rst
+This assumes that you have set up sbuild; see "Build environment" in README.rst
 for details. Try to fix any lintian errors, but note that some errors are due
 to lintian being out-of-date and/or are expected at this stage of the process
 (e.g. bad-distribution-in-changes-file). Ask on IRC when in doubt.

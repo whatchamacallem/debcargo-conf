@@ -56,6 +56,20 @@ on having to package all the dependencies of the newest version, you can::
   REALVER=<old-version> ./update.sh  <rust-crate-name>  # then
   REALVER=<old-version> ./release.sh <rust-crate-name>
 
+Repackaging the existing revision
+---------------------------------
+
+In order to build a package A already in ``debcargo-conf/src``
+in the exact version which is present here, do the following::
+
+  $ ./repackage.sh A
+  $ cd build
+  $ ./build.sh A
+
+If this package is already in the archive and you want to recreate that
+exactly, you will need to use the exact same version of debcargo that was
+used previously. This version is mentioned in ``debian/changelog``.
+
 
 Repository structure
 ====================
@@ -72,6 +86,37 @@ want to test your crate, instead run::
   cd build && [SOURCEONLY=1] ./build.sh <rust-crate-name> [<old-version>]
 
 omitting or not omitting the stuff in [] as needed.
+
+
+Build environment
+=================
+
+To set up a suitable build environment for ``./build.sh``::
+
+  $ sudo apt-get install devscripts reprepro debootstrap sbuild dh-cargo
+  $ sudo sbuild-createchroot --include=eatmydata,ccache,gnupg,dh-cargo,cargo,lintian,perl-openssl-defaults \
+      --chroot-prefix debcargo-unstable unstable \
+      /srv/chroot/debcargo-unstable-amd64-sbuild http://deb.debian.org/debian
+
+Normally, ``./build.sh`` will fail early if not all the build dependencies are
+available in your local apt cache. If you are packaging a large dependency tree
+however, to avoid many round-trips through NEW it is possible to bypass this
+check and build all the packages together. Suppose package B depends on package
+A, then you can run something like::
+
+  $ export IGNORE_MISSING_BUILD_DEPS=1
+  $ ./release.sh A
+  $ ( cd build && ./build.sh A )
+  # push pending and checkout master
+  $ ./release.sh B
+  $ ( cd build && ./build.sh B librust-A*.deb )
+
+The extra arguments after ``./build.sh B <args>`` is extra deb files to pass to
+sbuild to use as dependencies. In this case, ``librust-A*.deb`` should have
+been built by the previous step.
+
+After everything is built successfully, you can ``dput`` all of them and then
+push all the ``pending-*`` branches as normal.
 
 
 General packaging tips
@@ -188,47 +233,3 @@ code in a minor way to use the new crate API, then: for each crate that needs
 to be updated, you should instead name the patch ``update-dep-<crate>.patch``
 and add both the ``Cargo.toml`` and the source code changes to it. Use
 ``quilt rename`` if that helps you.
-
-
-DD instructions
-===============
-
-To set up a suitable build environment for ``./build.sh``::
-
-  $ sudo apt-get install devscripts reprepro debootstrap sbuild dh-cargo
-  $ sudo sbuild-createchroot --include=eatmydata,ccache,gnupg,dh-cargo,cargo,lintian,perl-openssl-defaults \
-      --chroot-prefix debcargo-unstable unstable \
-      /srv/chroot/debcargo-unstable-amd64-sbuild http://deb.debian.org/debian
-
-Normally, ``./build.sh`` will fail early if not all the build dependencies are
-available in your local apt cache. If you are packaging a large dependency tree
-however, to avoid many round-trips through NEW it is possible to bypass this
-check and build all the packages together. Suppose package B depends on package
-A, then you can run something like::
-
-  $ export IGNORE_MISSING_BUILD_DEPS=1
-  $ ./release.sh A
-  $ ( cd build && ./build.sh A )
-  # push pending and checkout master
-  $ ./release.sh B
-  $ ( cd build && ./build.sh B librust-A*.deb )
-
-The extra arguments after ``./build.sh B <args>`` is extra deb files to pass to
-sbuild to use as dependencies. In this case, ``librust-A*.deb`` should have
-been built by the previous step.
-
-After everything is built successfully, you can ``dput`` all of them and then
-push all the ``pending-*`` branches as normal.
-
-Packaging the existing revision
-===============================
-
-In order to build a package A already in ``debcargo-conf/src``
-in the exact version which is present here, do the following::
-
-  $ ./repackage.sh A
-  $ cd build
-  $ ./build.sh A
-
-If this package is already in the archive and you want to recreate that, you
-will need to use the exact same version of debcargo that was used previously.
