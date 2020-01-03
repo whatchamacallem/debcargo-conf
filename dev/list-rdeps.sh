@@ -15,13 +15,13 @@ if [ $(($(date +%s) - $(stat -c %Y /var/cache/apt/pkgcache.bin))) -gt 7200 ]; th
 fi
 
 echo "Version in unstable:"
-aptitude versions --disable-columns -F '%p' --group-by=none "~e^rust-${pkg}$ ~rnative ~Aunstable"
+aptitude versions --disable-columns -F '%p' --group-by=none "~e^rust-${pkg}$"
 echo
 
 echo "Versions of rdeps:"
 aptitude versions --group-by=none --disable-columns -F '%p %t' \
   "~rnative ~D^librust-${pkg}(-dev|\+\w+-dev)$" \
-  | grep unstable | while read rdep ver archives; do
+  | grep "${ARCHIVE:-unstable}" | while read rdep ver archives; do
 	apt-cache show "${rdep}=${ver}" \
 	  | grep-dctrl -FDepends -e "librust-${pkg}(\+|-[0-9]).*-dev" -sPackage,Version,Depends - \
 	  | sed -Ee "/Depends/s/.*(librust-${pkg}(\+|-[0-9])\S*-dev[^,]*).*/Depends: \1/g" \
