@@ -23,7 +23,7 @@ aptitude versions --group-by=none --disable-columns -F '%p %t' \
 	  | cut -d: -f2 | cut '-d ' -f2 \
 	  | sed -z -e 's/\n\n/\t/g' -e 's/\n/ /g' -e 's/\t/\n/g'
 done | sort | while read rdep ver dep; do
-	printf "%-40s %-10s %s\n" "$rdep" "$ver" "$dep"
+	printf "%-40s %-10s     depends on     %s\n" "$rdep" "$ver" "$dep"
 done
 echo
 
