@@ -9,6 +9,11 @@ which aptitude >/dev/null || abort 1 "aptitude not found, install it"
 pkg="${1//_/-}"
 pkg="${pkg#rust-}"
 
+if [ $(($(date +%s) - $(stat -c %Y /var/cache/apt/pkgcache.bin))) -gt 7200 ]; then
+	read -p "APT cache is a bit old, update? [Y/n] " x
+	if [ "$x" != "n" ]; then sudo apt update; fi
+fi
+
 echo "Version in unstable:"
 aptitude versions --disable-columns -F '%p' --group-by=none "~e^rust-${pkg}$ ~rnative ~Aunstable"
 echo
