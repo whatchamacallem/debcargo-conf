@@ -1,9 +1,13 @@
 #!/bin/bash
 set -e
 
+abort() { local x=$1; shift; for i in "$@"; do echo >&2 "$0: abort: $i"; done; exit "$x"; }
+
+which grep-dctrl >/dev/null || abort 1 "grep-dctrl not found, install dctrl-tools"
+which aptitude >/dev/null || abort 1 "aptitude not found, install it"
+
 pkg="${1//_/-}"
 pkg="${pkg#rust-}"
-which grep-dctrl >/dev/null
 
 echo "Version in unstable:"
 aptitude versions --disable-columns -F '%p' --group-by=none "~e^rust-${pkg}$ ~rnative ~Aunstable"
