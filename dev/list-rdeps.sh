@@ -2,10 +2,11 @@
 set -e
 
 pkg="${1//_/-}"
+pkg="${pkg#rust-}"
 which grep-dctrl >/dev/null
 
 echo "Version in unstable:"
-aptitude versions --disable-columns -F '%p' --group-by=none '~e^rust-unicode-xid$ ~rnative ~Aunstable'
+aptitude versions --disable-columns -F '%p' --group-by=none "~e^rust-${pkg}$ ~rnative ~Aunstable"
 echo
 
 echo "Versions of rdeps:"
@@ -53,5 +54,5 @@ Hi, please remove this package on all architectures. It is an old rust library
 that is preventing newer ones from migrating to testing. Nothing else in the
 archive depends on it these days.
 
-# then save and exit.
+# then save and exit, and proceed with submitting the report.
 eof
