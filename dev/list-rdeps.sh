@@ -14,7 +14,7 @@ if [ $(($(date +%s) - $(stat -c %Y /var/cache/apt/pkgcache.bin))) -gt 7200 ]; th
 	if [ "$x" != "n" ]; then sudo apt update; fi
 fi
 
-echo "Version in unstable:"
+echo "Version in ${ARCHIVE:-unstable}:"
 aptitude versions --disable-columns -F '%p' --group-by=none "~e^rust-${pkg}$"
 echo
 
