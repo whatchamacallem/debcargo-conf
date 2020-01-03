@@ -1,0 +1,24 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -28,7 +28,7 @@
+ [[bin]]
+ name = "cargo-outdated"
+ [dependencies.cargo]
+-version = "0.40"
++version = "0.41"
+ 
+ [dependencies.docopt]
+ version = "1.0.0"
+--- a/src/cargo_ops/elaborate_workspace.rs
++++ b/src/cargo_ops/elaborate_workspace.rs
+@@ -56,7 +56,9 @@
+             options.all_features(),
+             options.no_default_features(),
+         );
+-        let (packages, resolve) = ops::resolve_ws_with_opts(workspace, opts, &specs)?;
++        let ws_resolve = ops::resolve_ws_with_opts(workspace, opts, &specs)?;
++        let packages = ws_resolve.pkg_set;
++        let resolve = ws_resolve.targeted_resolve;
+         let mut pkgs = HashMap::new();
+         let mut pkg_deps = HashMap::new();
+         for pkg in packages.get_many(packages.package_ids())? {
