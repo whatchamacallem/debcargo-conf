@@ -15,7 +15,7 @@ if [ $(($(date +%s) - $(stat -c %Y /var/cache/apt/pkgcache.bin))) -gt 7200 ]; th
 fi
 
 echo "Version in ${ARCHIVE:-unstable}:"
-aptitude versions --disable-columns -F '%p' --group-by=none "~e^rust-${pkg}$"
+aptitude versions --disable-columns -F '%p' --group-by=none "~e^rust-${pkg}$ ~A${ARCHIVE}" || echo "(not in unstable)"
 echo
 
 echo "Versions of rdeps:"
