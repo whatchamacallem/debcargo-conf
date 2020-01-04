@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -o pipefail
 
 abort() { local x=$1; shift; for i in "$@"; do echo >&2 "$0: abort: $i"; done; exit "$x"; }
 
@@ -14,21 +15,24 @@ if [ $(($(date +%s) - $(stat -c %Y /var/cache/apt/pkgcache.bin))) -gt 7200 ]; th
 	if [ "$x" != "n" ]; then sudo apt update; fi
 fi
 
-echo "Version in ${ARCHIVE:-unstable}:"
-aptitude versions --disable-columns -F '%p' --group-by=none "~e^rust-${pkg}$ ~A${ARCHIVE}" || echo "(not in unstable)"
+ARCHIVE="${ARCHIVE:-unstable}"
+apt_versions() {
+	aptitude versions --disable-columns -F '%p %t' --group-by=none "~rnative $1" | grep "$ARCHIVE"
+}
+
+echo "Version in $ARCHIVE:"
+apt_versions "~e^rust-${pkg}$" || echo "(not in unstable)"
 echo
 
-echo "Versions of rdeps:"
-aptitude versions --group-by=none --disable-columns -F '%p %t' \
-  "~rnative ~D^librust-${pkg}(-dev|\+\w+-dev)$" \
-  | grep "${ARCHIVE:-unstable}" | while read rdep ver archives; do
+echo "Versions of rdeps in $ARCHIVE:"
+apt_versions "~D^librust-${pkg}(-dev|\+\w+-dev)$" | while read rdep ver archives; do
 	apt-cache show "${rdep}=${ver}" \
 	  | grep-dctrl -FDepends -e "librust-${pkg}(\+|-[0-9]).*-dev" -sPackage,Version,Depends - \
 	  | sed -Ee "/Depends/s/.*(librust-${pkg}(\+|-[0-9])\S*-dev[^,]*).*/Depends: \1/g" \
 	  | cut -d: -f2 | cut '-d ' -f2 \
 	  | sed -z -e 's/\n\n/\t/g' -e 's/\n/ /g' -e 's/\t/\n/g'
 done | sort | while read rdep ver dep; do
-	printf "%-40s %-10s     depends on     %s\n" "$rdep" "$ver" "$dep"
+	printf "%-48s %-10s     depends on     %s\n" "$rdep" "$ver" "$dep"
 done
 echo
 
