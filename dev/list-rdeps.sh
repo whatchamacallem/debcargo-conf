@@ -25,14 +25,14 @@ apt_versions "~e^rust-${pkg}$" || echo "(not in unstable)"
 echo
 
 echo "Versions of rdeps in $ARCHIVE:"
-apt_versions "~D^librust-${pkg}(-dev|\+\w+-dev)$" | while read rdep ver archives; do
+apt_versions "~D^librust-${pkg}~(\+~|-[0-9]~).*-dev$" | while read rdep ver archives; do
 	apt-cache show "${rdep}=${ver}" \
 	  | grep-dctrl -FDepends -e "librust-${pkg}(\+|-[0-9]).*-dev" -sPackage,Version,Depends - \
-	  | sed -Ee "/Depends/s/.*(librust-${pkg}(\+|-[0-9])\S*-dev[^,]*).*/Depends: \1/g" \
-	  | cut -d: -f2 | cut '-d ' -f2 \
+	  | cut -d: -f2 | cut '-d ' -f2- \
 	  | sed -z -e 's/\n\n/\t/g' -e 's/\n/ /g' -e 's/\t/\n/g'
-done | sort | while read rdep ver dep; do
-	printf "%-48s %-10s     depends on     %s\n" "$rdep" "$ver" "$dep"
+done | sort | while read rdep ver deps; do
+	rustdeps="$(printf "%s" "$deps" | tr ',' '\n' | egrep -wo "librust-${pkg}(\+|-[0-9])\S*-dev" | tr '\n' ' ')"
+	printf "%-48s %-16s depends on     %s\n" "$rdep" "$ver" "$rustdeps"
 done
 echo
 
