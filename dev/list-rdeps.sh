@@ -44,7 +44,7 @@ list_rdeps() {
 		  | cut -d: -f2 | cut '-d ' -f2- \
 		  | sed -z -e 's/\n\n/\t/g' -e 's/\n/ /g' -e 's/\t/\n/g'
 	done | sort | while read rdep ver deps; do
-		local rustdeps="$(printf "%s" "$deps" | tr ',' '\n' | egrep -wo "librust-${pkg}(\+|-[0-9])\S*-dev" | tr '\n' ' ')"
+		local rustdeps="$(printf "%s" "$deps" | tr ',' '\n' | egrep -wo "librust-${pkg}(\+|-[0-9])\S*-dev[^,]*" | tr '\n' '\t' | sed -e 's/\t/, /g')"
 		local stat="$(installability "$rdep" "$ver")"
 		printf "%s %-48s %-16s depends on     %s\n" "$stat" "$rdep" "$ver" "$rustdeps"
 	done
