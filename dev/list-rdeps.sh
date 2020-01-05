@@ -18,11 +18,22 @@ apt_versions() {
 	aptitude versions --disable-columns -F '%p %t' --group-by=none "~rnative $1" | grep "$ARCHIVE"
 }
 
+inst_cache=$(mktemp)
+# https://stackoverflow.com/a/14812383 inside "trap" avoids running handler twice
+trap 'excode=$?; rm -rf "'"$inst_cache"'"; trap - EXIT' EXIT HUP INT QUIT PIPE TERM
+
 installability() {
-	if apt -t "$ARCHIVE" -s install "$1=$2" 2>/dev/null >/dev/null; then
-		echo " "
+	local r=$(grep -F "$1=$2" "$inst_cache" | cut -f2)
+	if [ -n "$r" ]; then
+		echo "$r"
 	else
-		echo "X"
+		if apt -t "$ARCHIVE" -s install "$1=$2" 2>/dev/null >/dev/null; then
+			r=" "
+		else
+			r="X"
+		fi
+		printf "%s=%s\t%s\n" "$1" "$2" "$r" >> "$inst_cache"
+		echo "$r"
 	fi
 }
 
