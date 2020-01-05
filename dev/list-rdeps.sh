@@ -20,8 +20,19 @@ apt_versions() {
 	aptitude versions --disable-columns -F '%p %t' --group-by=none "~rnative $1" | grep "$ARCHIVE"
 }
 
-echo "Version in $ARCHIVE:"
-apt_versions "~e^rust-${pkg}$" || echo "(not in unstable)"
+installability() {
+	if apt -t "$ARCHIVE" -s install "$1=$2" 2>/dev/null >/dev/null; then
+		echo " "
+	else
+		echo "X"
+	fi
+}
+
+echo "Versions of rust-${pkg} in $ARCHIVE:"
+apt_versions "~e^rust-${pkg}$" | sort | while read binpkg ver archive; do
+	stat="$(installability "$binpkg" "$ver")"
+	printf "%s %-48s %-16s\n" "$stat" "$binpkg" "$ver"
+done
 echo
 
 echo "Versions of rdeps in $ARCHIVE:"
@@ -32,15 +43,24 @@ apt_versions "~D^librust-${pkg}~(\+~|-[0-9]~).*-dev$" | while read rdep ver arch
 	  | sed -z -e 's/\n\n/\t/g' -e 's/\n/ /g' -e 's/\t/\n/g'
 done | sort | while read rdep ver deps; do
 	rustdeps="$(printf "%s" "$deps" | tr ',' '\n' | egrep -wo "librust-${pkg}(\+|-[0-9])\S*-dev" | tr '\n' ' ')"
-	printf "%-48s %-16s depends on     %s\n" "$rdep" "$ver" "$rustdeps"
+	stat="$(installability "$rdep" "$ver")"
+	printf "%s %-48s %-16s depends on     %s\n" "$stat" "$rdep" "$ver" "$rustdeps"
 done
 echo
 
 cat <<eof
-You must upgrade any rdep that depends on an old version of ${pkg}, by patching
-Cargo.toml to accept the new version of ${pkg} as a dependency. Of course,
-check that the build works - if it doesn't, then you'll need to further patch
-the source code of the rdep to use the API of the new version of ${pkg}.
+If any package is marked "X" (to the left of the package) it means it is not
+installable even in $ARCHIVE - you should check why this is so by attempting to
+install it yourself, e.g. via aptitude, and see why it can't be installed. This
+must be fixed before migration is attempted. For example, it may depend on a
+package which is not yet in Debian.
+
+One common reason, for an rdep, is that its dependency (on rust-${pkg}) is out
+of date - check the "depends" column above to see if this is the case. If so,
+you must upgrade it to the current version, by patching Cargo.toml to accept
+the new version of ${pkg} as a dependency. Of course, check that the build
+works - if it doesn't, then you'll need to further patch the source code of the
+rdep to use the API of the new version of ${pkg}.
 
 Alternatively, if any rdep is obsolete (i.e. nothing else depends on it) then
 you should file a RM request to remove it from the Debian archive:
