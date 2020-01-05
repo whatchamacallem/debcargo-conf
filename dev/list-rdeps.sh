@@ -63,29 +63,6 @@ works - if it doesn't, then you'll need to further patch the source code of the
 rdep to use the API of the new version of ${pkg}.
 
 Alternatively, if any rdep is obsolete (i.e. nothing else depends on it) then
-you should file a RM request to remove it from the Debian archive:
-
-$ reportbug ftp.debian.org
-[..]
-What sort of request is this?
-[..]
- 6 ROM       Package removal - Request Of Maintainer.
-[..]
-Choose the request type: 6
-[..]
-Is the removal to be done in a suite other than "unstable"? Don't select anything for "unstable"
-[..]
-Choose the suite: # input nothing here, i.e. "unstable"
-Please enter the reason for removal: obsolete package, prevents others from migrating to testing
-Is this removal request for specific architectures? [y|N|?]? n
-[..]
-# An editor will spawn, probably nano. add
-#   X-Debbugs-Cc: pkg-rust-maintainers@alioth-lists.debian.net
-# to the header, and then add the following text to the body:
-
-Hi, please remove this package on all architectures. It is an old rust library
-that is preventing newer ones from migrating to testing. Nothing else in the
-archive depends on it these days.
-
-# then save and exit, and proceed with submitting the report.
+you should file a RM request to remove it from the Debian archive. See the
+section "Remove an obsolete package" in RELEASE.rst for instructions on that.
 eof

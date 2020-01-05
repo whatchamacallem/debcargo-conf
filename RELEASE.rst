@@ -41,3 +41,32 @@ the one in Debian Testing not Debian Unstable. To view a summary of this, run::
   dev/list-rdeps.sh $crate
 
 It will also give you some follow-up instructions to fix the problem.
+
+Remove an obsolete package
+==========================
+
+::
+
+  $ reportbug ftp.debian.org
+  [..]
+  What sort of request is this?
+  [..]
+   6 ROM       Package removal - Request Of Maintainer.
+  [..]
+  Choose the request type: 6
+  [..]
+  Is the removal to be done in a suite other than "unstable"? Don't select anything for "unstable"
+  [..]
+  Choose the suite: # input nothing here, i.e. "unstable"
+  Please enter the reason for removal: obsolete package, prevents others from migrating to testing
+  Is this removal request for specific architectures? [y|N|?]? n
+  [..]
+  # An editor will spawn, probably nano. add
+  #   X-Debbugs-Cc: pkg-rust-maintainers@alioth-lists.debian.net
+  # to the header, and then add the following text to the body:
+
+  Hi, please remove this package on all architectures. It is an old rust library
+  that is preventing newer ones from migrating to testing. Nothing else in the
+  archive depends on it these days.
+
+  # then save and exit, and proceed with submitting the report.
