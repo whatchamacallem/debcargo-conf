@@ -56,6 +56,11 @@ installability() {
 	fi
 }
 
+# variables for BFS over rdeps
+declare -A seen
+declare -a queue
+shopt -s lastpipe
+
 list_rdeps() {
 	pkg="${1//_/-}"
 	pkg="${pkg#rust-}"
@@ -83,11 +88,28 @@ list_rdeps() {
 		local rustdeps="$(printf "%s" "$deps" | tr ',' '\n' | egrep -wo "librust-${pkg}(\+|-[0-9])\S*-dev[^,]*" | tr '\n' '\t' | sed -e 's/\t/, /g')"
 		local stat="$(installability "$rdep" "$ver")"
 		printf "%s %-48s %-16s depends on     %s\n" "$stat" "$rdep" "$ver" "$rustdeps"
+		local src="$(apt-cache show "$rdep=$ver" | grep-dctrl -n -sSource - | sed -Ee 's/^rust-(\S*).*/\1/g')"
+		if [ -n "$src" ] && [ -z "${seen[$src]}" ]; then
+			seen["$src"]="1"
+			queue+=("$src") # subprocess, var doesn't write to parent
+		fi
 	done
 	echo
 }
 
-for i in "$@"; do list_rdeps "$i"; done
+if [ "$1" = "@" ]; then
+	shift
+	queue+=("$@")
+	while [ -n "${queue[0]}" ]; do
+		echo "queue: ${queue[@]}"
+		src="${queue[0]}"
+		seen["$src"]="1"
+		queue=("${queue[@]:1}")
+		list_rdeps "$src"
+	done
+else
+	for i in "$@"; do list_rdeps "$i"; done
+fi
 
 cat <<eof
 If any package is marked "X" (to the left of the package) it means it is not
