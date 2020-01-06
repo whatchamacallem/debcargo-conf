@@ -92,8 +92,26 @@ for details. Try to fix any lintian errors, but note that some errors are due
 to lintian being out-of-date and/or are expected at this stage of the process
 (e.g. bad-distribution-in-changes-file). Ask on IRC when in doubt.
 
-When satisfied with the output (both of debcargo after running ./update.sh, and
-of lintian after running ./build.sh), you can commit and push all your changes.
+If your update includes raising the semver level i.e. from 0.x.* to 0.y.* or
+from x.*.* to y.*.*., then you should also check the reverse-deps of your
+package, by running:
+
+  dev/list-rdeps.sh $CRATE
+
+If any of the reverse-dependencies depend on an older version of your crate,
+please try to update those too, to depend on the newer version that you just
+packaged. If this is impossible or too hard, you should retain the old version
+of your crate by running \`./update.sh $CRATE <OLD SEMVER>\`, where <OLD
+SEMVER> looks like 0.n or n - but you must have a good reason for this, which
+you should document in src/$PKGNAME-<OLD SEMVER>/debian/debcargo.toml.
+
+When satisfied with all of these outputs:
+
+- of debcargo after running ./update.sh
+- of lintian after running ./build.sh
+- of dev/list-rdeps.sh $CRATE
+
+then you can commit and push all your changes.
 
 Then, ask a Debian Developer to run \`./release.sh $*\`. This finalises your
 changes in the changelog, and allows them to build and upload the package. If
