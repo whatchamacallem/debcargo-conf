@@ -1,6 +1,6 @@
 #!/bin/bash
+
 set -e
-set -o pipefail
 
 abort() { local x=$1; shift; for i in "$@"; do echo >&2 "$0: abort: $i"; done; exit "$x"; }
 
@@ -8,6 +8,21 @@ which grep-dctrl >/dev/null || abort 1 "grep-dctrl not found, install dctrl-tool
 which aptitude >/dev/null || abort 1 "aptitude not found, install it"
 
 ARCHIVE="${ARCHIVE:-unstable}"
+ARCHIVT="${ARCHIVT:-testing}"
+
+if ! grep "$ARCHIVE" -qR /etc/apt/sources.list /etc/apt/sources.list.d/ || \
+   ! grep "$ARCHIVT" -qR /etc/apt/sources.list /etc/apt/sources.list.d/; then
+	cat <<-eof
+To make this script work, you will need Debian Testing *AND* Debian Unstable
+in your sources.list. If you want your system to prefer Debian Testing, be
+sure to also add these lines to your /etc/apt/apt.conf:
+
+APT::Default-Release "$ARCHIVT";
+
+After these changes, make sure to re-run \`apt-get update\`.
+eof
+	exit 1
+fi
 
 if [ $(($(date +%s) - $(stat -c %Y /var/cache/apt/pkgcache.bin))) -gt 7200 ]; then
 	read -p "APT cache is a bit old, update? [Y/n] " x
@@ -15,12 +30,16 @@ if [ $(($(date +%s) - $(stat -c %Y /var/cache/apt/pkgcache.bin))) -gt 7200 ]; th
 fi
 
 apt_versions() {
-	aptitude versions --disable-columns -F '%p %t' --group-by=none "~rnative $1" | grep "$ARCHIVE"
+	aptitude versions --disable-columns -F '%p %t' --group-by=none "~rnative $1" || true
 }
 
-inst_cache=$(mktemp)
-# https://stackoverflow.com/a/14812383 inside "trap" avoids running handler twice
-trap 'excode=$?; rm -rf "'"$inst_cache"'"; trap - EXIT' EXIT HUP INT QUIT PIPE TERM
+if [ -n "$INST_CACHE" ]; then
+	inst_cache="$INST_CACHE"
+else
+	inst_cache=$(mktemp)
+	# https://stackoverflow.com/a/14812383 inside "trap" avoids running handler twice
+	trap 'excode=$?; rm -rf "'"$inst_cache"'"; trap - EXIT' EXIT HUP INT QUIT PIPE TERM
+fi
 
 installability() {
 	local r=$(grep -F "$1=$2" "$inst_cache" | cut -f2)
@@ -42,14 +61,20 @@ list_rdeps() {
 	pkg="${pkg#rust-}"
 
 	echo "Versions of rust-${pkg} in $ARCHIVE:"
-	apt_versions "~e^rust-${pkg}$" | sort | while read binpkg ver archive; do
+	apt_versions "~e^rust-${pkg}$" | grep "$ARCHIVE" | sort | while read binpkg ver archive; do
 		local stat="$(installability "$binpkg" "$ver")"
 		printf "%s %-48s %-16s\n" "$stat" "$binpkg" "$ver"
 	done
 	echo
 
-	echo "Versions of rdeps of rust-${pkg} in $ARCHIVE:"
-	apt_versions "~D^librust-${pkg}~(\+~|-[0-9]~).*-dev$" | while read rdep ver archives; do
+	echo "Versions of rdeps of rust-${pkg} in $ARCHIVE, that also exist in $ARCHIVT:"
+	local versions="$(apt_versions "~D^librust-${pkg}~(\+~|-[0-9]~).*-dev$")"
+	printf "%s\n" "$versions" | grep "$ARCHIVE" | while read rdep ver archive; do
+		if ! printf "%s\n" "$versions" | grep "$ARCHIVT" | grep -qF "$rdep"; then
+			# we're only interested in packages in both archives.
+			# if a pkg-ver is not in either archive, this doesn't affect the migration process
+			continue
+		fi
 		apt-cache show "${rdep}=${ver}" \
 		  | grep-dctrl -FDepends -e "librust-${pkg}(\+|-[0-9]).*-dev" -sPackage,Version,Depends - \
 		  | cut -d: -f2 | cut '-d ' -f2- \
