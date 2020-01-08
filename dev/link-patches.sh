@@ -43,7 +43,6 @@ problem, press Ctrl-D then quickly Ctrl-C.
 eof
 $SHELL
 quilt refresh
-cargo build
 
 done
 
