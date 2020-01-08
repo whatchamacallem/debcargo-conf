@@ -1,0 +1,25 @@
+From ae1a2edf999ddb4b706dbfee04199cae1f19adce Mon Sep 17 00:00:00 2001
+From: Aleksey Kladov <aleksey.kladov@gmail.com>
+Date: Wed, 1 Jan 2020 13:46:45 +0100
+Subject: [PATCH] Paper over unfortunate --all-targets interaction
+
+closes #79
+---
+ examples/reentrant_init_deadlocks.rs | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/examples/reentrant_init_deadlocks.rs b/examples/reentrant_init_deadlocks.rs
+index bad2bc3..af4b5b7 100644
+--- a/examples/reentrant_init_deadlocks.rs
++++ b/examples/reentrant_init_deadlocks.rs
+@@ -5,3 +5,10 @@ fn main() {
+         2
+     });
+ }
++
++/// Dummy test to make it seem hang when compiled as `--test`
++/// See https://github.com/matklad/once_cell/issues/79
++#[test]
++fn dummy_test() {
++    std::thread::sleep(std::time::Duration::from_secs(4));
++}
