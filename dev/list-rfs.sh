@@ -9,7 +9,7 @@ done | sort  | while read t i; do
     fi
     echo "$(date -d@"$t") $pkg"
     # trim the content
-    content=$(xargs echo -n < "$i")
+    content=$(xargs '-d\n' echo -n < "$i")
     if test -n "$content"; then
         echo "  $content"
     fi
