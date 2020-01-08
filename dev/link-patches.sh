@@ -33,7 +33,7 @@ sensible-editor Cargo.toml
 quilt refresh
 find src -type f -execdir quilt add '{}' +
 
-while ! cargo build; do
+while ! cargo build --all-features; do
 
 cat <<-eof
 Spawning a sub-shell. Please try to fix the build failure by editing files in
