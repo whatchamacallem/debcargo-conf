@@ -1,9 +1,9 @@
 #!/usr/bin/make -f
 # Output a nice graph of why stuff isn't yet in Debian Testing.
 #
-# - Red nodes means it's not in Debian
-# - Yellow nodes means it's in Debian, but something else needs a different
-#   version of it.
+# - Red oval nodes means it's not in Debian
+# - Yellow oval nodes means it's in Debian, but something else needs a
+#   different version of it.
 # - For nodes with no children, it probably means that there is an older
 #   version already in Debian Testing, and something else needs this specific
 #   older version and can't work with the newer version. Unfortunately the
@@ -28,7 +28,7 @@ rust-excuses.dot rust-excuses-arch.dot: excuses.yaml dev/rust-excuses.py
 	dev/rust-excuses.py rust-excuses.dot rust-excuses-arch.dot
 
 %.png: %.dot
-	dot -Tpng "$<" > "$@"
+	unflatten -c 10 "$<" | dot -Tpng > "$@"
 
 refresh:
 	$(DOWNLOAD)

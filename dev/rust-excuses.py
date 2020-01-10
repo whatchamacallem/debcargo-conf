@@ -1,4 +1,6 @@
-#!/usr/bin/python3
+#!/usr/bin/pypy3
+# pypy3 runs faster than python3
+#
 # the excuses file can be found here:
 # https://release.debian.org/britney/excuses.yaml
 
@@ -32,23 +34,17 @@ rust_excuses_arch = open(sys.argv[2], "w")
 
 already_seen = set()
 
-
 def edge_dep(name, dep):
     return " ".join(['"%s"' % name, "->", '"%s"' % dep])
 
-
 def edge_dep_label(name, dep, label):
     return " ".join(['"%s"' % name, "->", '"%s"' % dep, '[label="%s"]' % label])
-
 
 def print_all(*args, **kwargs):
     print(*args, **kwargs, file=rust_excuses)
     print(*args, **kwargs, file=rust_excuses_arch)
 
-
 is_in_debian_cache = {}
-
-
 def is_in_debian(src):
     global is_in_debian_cache
     if src not in is_in_debian_cache:
@@ -60,6 +56,11 @@ def is_in_debian(src):
     x = is_in_debian_cache[src]
     return x
 
+
+BG_NOT_IN_DEBIAN = "#cc0000"
+BG_OLD_IN_DEBIAN = "#ffcc66"
+BG_TOO_NEW = "#66ff99"
+BG_MISC_FAIL = "#ff6666"
 
 def traverse(name, arch="", d=0):
     if name in already_seen:
@@ -87,9 +88,9 @@ def traverse(name, arch="", d=0):
             )
             if dep not in already_seen:
                 if is_in_debian(dep):
-                    print_all('"%s" [fillcolor="#ffcc66",style=filled]' % dep)
+                    print_all('"%s" [fillcolor="%s",style=filled]' % (dep, BG_OLD_IN_DEBIAN))
                 else:
-                    print_all('"%s" [fillcolor="#ff6666",style=filled]' % dep)
+                    print_all('"%s" [fillcolor="%s",style=filled]' % (dep, BG_NOT_IN_DEBIAN))
     for edge in edges:
         print(edge, file=rust_excuses)
 
@@ -103,10 +104,16 @@ def traverse(name, arch="", d=0):
             print_all(edge_dep(name, dep))
         traverse(dep, arch, d + 1)
 
-    if not dependencies:
-        age = excuses.get(name, {}).get("policy_info", {}).get("age", {})
-        if age.get("verdict", "") == "REJECTED_TEMPORARILY":
-            print_all('"%s" [fillcolor="#66ff99",style=filled]' % name)
+    policy = excuses.get(name, {}).get("policy_info", {})
+    failed = [k for (k, v) in policy.items() if v.get("verdict", "") != "PASS"]
+    attrs = {"shape": "box"}
+    if "age" in failed:
+        failed = failed.remove("age")
+        attrs.update({ "fillcolor": BG_TOO_NEW, "style": "filled" })
+    if failed:
+        attrs.update({ "label": "\\N\\nfailed: %s" % ",".join(failed) })
+        attrs.update({ "fillcolor": BG_MISC_FAIL, "style": "filled" })
+    print_all('"%s" [%s]' % (name, ",".join("%s=\"%s\"" % p for p in attrs.items())))
 
 
 # import code
