@@ -78,6 +78,11 @@ list_rdeps() {
 		if ! printf "%s\n" "$versions" | grep "$ARCHIVT" | grep -qF "$rdep"; then
 			# we're only interested in packages in both archives.
 			# if a pkg-ver is not in either archive, this doesn't affect the migration process
+			#
+			# FIXME: actually, this is not true in the case where we are upgrading
+			# X from version A to B in unstable, but we want to keep X-A in testing.
+			# In this case, X-A has to go through unstable first and we are interested
+			# in keeping this installable, so can't continue here...
 			continue
 		fi
 		apt-cache show "${rdep}=${ver}" \
