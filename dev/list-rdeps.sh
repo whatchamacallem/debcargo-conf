@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+shopt -s lastpipe # important for populating associative arrays via pipes
 
 abort() { local x=$1; shift; for i in "$@"; do echo >&2 "$0: abort: $i"; done; exit "$x"; }
 
@@ -33,6 +34,17 @@ apt_versions() {
 	aptitude versions --disable-columns -F '%p %t' --group-by=none "~rnative $1" || true
 }
 
+# versions of source packages in unstable. used to ignore cruft (i.e. binary
+# packages left over in unstable after an update, no longer built by a source)
+declare -A srcver
+src_version() {
+	local src="$1"
+	if [ -z "${srcver[$src]}" ]; then
+		srcver["$src"]="$(apt_versions "librust-${src}-dev" | grep "$ARCHIVE" | cut '-d ' -f2)"
+	fi
+	echo "${srcver[$src]}"
+}
+
 if [ -n "$INST_CACHE" ]; then
 	inst_cache="$INST_CACHE"
 else
@@ -59,7 +71,6 @@ installability() {
 # variables for BFS over rdeps
 declare -A seen
 declare -a queue
-shopt -s lastpipe
 
 list_rdeps() {
 	pkg="${1//_/-}"
@@ -67,20 +78,21 @@ list_rdeps() {
 
 	echo "Versions of rust-${pkg} in $ARCHIVE:"
 	apt_versions "~e^rust-${pkg}$" | grep "$ARCHIVE" | sort | while read binpkg ver archive; do
+		if [ "$ver" != "$(src_version "$pkg")" ]; then continue; fi
 		local stat="$(installability "$binpkg" "$ver")"
 		printf "%s %-48s %-16s\n" "$stat" "$binpkg" "$ver"
 	done
 	echo
 
 	echo "Versions of rdeps of rust-${pkg} in $ARCHIVE, that also exist in $ARCHIVT:"
-	local versions="$(apt_versions "~D^librust-${pkg}~(\+~|-[0-9]~).*-dev$")"
-	printf "%s\n" "$versions" | grep "$ARCHIVE" | while read rdep ver archive; do
+	local rdeps="$(apt_versions "~D^librust-${pkg}~(\+~|-[0-9]~).*-dev$")"
+	printf "%s\n" "$rdeps" | grep "$ARCHIVE" | while read rdep ver archive; do
 		# we're interested in packages in both archives.
-		if ! printf "%s\n" "$versions" | grep "$ARCHIVT" | grep -qF "$rdep"; then
+		if ! printf "%s\n" "$rdeps" | grep "$ARCHIVT" | grep -qF "$rdep"; then
 			local rdepv="$(echo "$rdep" | sed -E -e 's/-[0-9.]+-dev$/-dev/')"
 			# we're also interested in old-semver packages where the main version is in testing,
 			# since this implies that we're interested in trying to migrate the old-semver package
-			if ! printf "%s\n" "$versions" | grep "$ARCHIVT" | grep -qF "$rdepv"; then
+			if ! printf "%s\n" "$rdeps" | grep "$ARCHIVT" | grep -qF "$rdepv"; then
 				# if a rdep matches none of these, we're not interested (at this time) in migrating them;
 				# they will show up on `dev/rust-excuses.mk` later in a more obvious way
 				continue
@@ -91,14 +103,15 @@ list_rdeps() {
 		  | cut -d: -f2 | cut '-d ' -f2- \
 		  | sed -z -e 's/\n\n/\t/g' -e 's/\n/ /g' -e 's/\t/\n/g'
 	done | sort | while read rdep ver deps; do
-		local rustdeps="$(printf "%s" "$deps" | tr ',' '\n' | egrep -wo "librust-${pkg}(\+|-[0-9])\S*-dev[^,]*" | tr '\n' '\t' | sed -e 's/\t/, /g')"
-		local stat="$(installability "$rdep" "$ver")"
-		printf "%s %-48s %-16s depends on     %s\n" "$stat" "$rdep" "$ver" "$rustdeps"
 		local src="$(apt-cache show "$rdep=$ver" | grep-dctrl -n -sSource - | sed -Ee 's/^rust-(\S*).*/\1/g')"
 		if [ -n "$src" ] && [ -z "${seen[$src]}" ]; then
 			seen["$src"]="1"
 			queue+=("$src") # subprocess, var doesn't write to parent
 		fi
+		if [ "$ver" != "$(src_version "$src")" ]; then continue; fi
+		local rustdeps="$(printf "%s" "$deps" | tr ',' '\n' | egrep -wo "librust-${pkg}(\+|-[0-9])\S*-dev[^,]*" | tr '\n' '\t' | sed -e 's/\t/, /g')"
+		local stat="$(installability "$rdep" "$ver")"
+		printf "%s %-48s %-16s depends on     %s\n" "$stat" "$rdep" "$ver" "$rustdeps"
 	done
 	echo
 }
