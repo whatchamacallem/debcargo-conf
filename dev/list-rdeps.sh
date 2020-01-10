@@ -75,15 +75,16 @@ list_rdeps() {
 	echo "Versions of rdeps of rust-${pkg} in $ARCHIVE, that also exist in $ARCHIVT:"
 	local versions="$(apt_versions "~D^librust-${pkg}~(\+~|-[0-9]~).*-dev$")"
 	printf "%s\n" "$versions" | grep "$ARCHIVE" | while read rdep ver archive; do
+		# we're interested in packages in both archives.
 		if ! printf "%s\n" "$versions" | grep "$ARCHIVT" | grep -qF "$rdep"; then
-			# we're only interested in packages in both archives.
-			# if a pkg-ver is not in either archive, this doesn't affect the migration process
-			#
-			# FIXME: actually, this is not true in the case where we are upgrading
-			# X from version A to B in unstable, but we want to keep X-A in testing.
-			# In this case, X-A has to go through unstable first and we are interested
-			# in keeping this installable, so can't continue here...
-			continue
+			local rdepv="$(echo "$rdep" | sed -E -e 's/-[0-9.]+-dev$/-dev/')"
+			# we're also interested in old-semver packages where the main version is in testing,
+			# since this implies that we're interested in trying to migrate the old-semver package
+			if ! printf "%s\n" "$versions" | grep "$ARCHIVT" | grep -qF "$rdepv"; then
+				# if a rdep matches none of these, we're not interested (at this time) in migrating them;
+				# they will show up on `dev/rust-excuses.mk` later in a more obvious way
+				continue
+			fi
 		fi
 		apt-cache show "${rdep}=${ver}" \
 		  | grep-dctrl -FDepends -e "librust-${pkg}(\+|-[0-9]).*-dev" -sPackage,Version,Depends - \
