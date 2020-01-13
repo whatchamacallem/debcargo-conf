@@ -1,0 +1,41 @@
+From 0aef945671ed473a9e6b4931dad7945a2f924254 Mon Sep 17 00:00:00 2001
+From: Vinzent Steinberg <Vinzent.Steinberg@gmail.com>
+Date: Fri, 2 Aug 2019 17:25:22 +0200
+Subject: [PATCH] Upgrade to Rand 0.7
+
+This bumps the MSRV to 1.32 for the `rand` feature.
+
+`SmallRng` is not used for the tests anymore, since enabling the corresponding
+feature would force other crates to use the feature as well.
+---
+ Cargo.toml   | 2 +-
+ src/crand.rs | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 6ae3872..bfaee32 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -32,6 +32,6 @@ default-features = false
+ 
+ [dependencies.rand]
+-version = "0.5"
++version = "0.7"
+ optional = true
+ default-features = false
+ 
+diff --git a/src/crand.rs b/src/crand.rs
+index 9e43974..651a896 100644
+--- a/src/crand.rs
++++ b/src/crand.rs
+@@ -42,8 +42,8 @@ where
+ }
+ 
+ #[cfg(test)]
+-fn test_rng() -> SmallRng {
+-    SmallRng::from_seed([42; 16])
++fn test_rng() -> StdRng {
++    StdRng::from_seed([42; 32])
+ }
+ 
+ #[test]
