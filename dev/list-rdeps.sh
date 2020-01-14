@@ -11,8 +11,12 @@ which aptitude >/dev/null || abort 1 "aptitude not found, install it"
 ARCHIVE="${ARCHIVE:-unstable}"
 ARCHIVT="${ARCHIVT:-testing}"
 
-if ! grep "$ARCHIVE" -qR /etc/apt/sources.list /etc/apt/sources.list.d/ || \
-   ! grep "$ARCHIVT" -qR /etc/apt/sources.list /etc/apt/sources.list.d/; then
+grep_sources_entry() {
+	grep '^deb[^#]*://[^#[:space:]]*[[:space:]]*'"$@"
+}
+
+if ! grep_sources_entry "$ARCHIVE" -qR /etc/apt/sources.list /etc/apt/sources.list.d/ || \
+   ! grep_sources_entry "$ARCHIVT" -qR /etc/apt/sources.list /etc/apt/sources.list.d/; then
 	cat <<-eof
 To make this script work, you will need Debian Testing *AND* Debian Unstable
 in your sources.list. If you want your system to prefer Debian Testing, be
