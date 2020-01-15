@@ -119,10 +119,6 @@ bench
   * rand-xoshiro (NEW)
   * tinytemplate (NEW)
 
-sequoia-sqv
------------
-* sequoia-sqv
-
 rustup
 ------
 
