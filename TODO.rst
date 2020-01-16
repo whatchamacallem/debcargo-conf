@@ -103,13 +103,6 @@ see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629
 [ ] unicode-xid-0.0.4
 
 
-ripgrep (new version)
----------------------
-
-* ripgrep
-  * grep 0.2.4
-    * grep-printer 0.1.3
-
 bench
 -----
 * criterion
