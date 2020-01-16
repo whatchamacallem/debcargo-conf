@@ -9,10 +9,10 @@ import subprocess
 import sys
 import yaml
 
-if len(sys.argv) != 3:
+if len(sys.argv) != 4:
     print(
         """Generates dot files to show the migration deps
-Usage: %s excuses.dot excuses_arch.dot
+Usage: %s excuses.dot excuses_arch.dot regressions.list
 
 Expects excuses.yaml in the current dir
     """
@@ -31,6 +31,7 @@ for e in y["sources"]:
 print("generating dot files...", file=sys.stderr)
 rust_excuses = open(sys.argv[1], "w")
 rust_excuses_arch = open(sys.argv[2], "w")
+rust_regressions = open(sys.argv[3], "w")
 
 already_seen = set()
 
@@ -108,8 +109,16 @@ def traverse(name, arch="", d=0):
     failed = [k for (k, v) in policy.items() if v.get("verdict", "") != "PASS"]
     attrs = {"shape": "box"}
     if "age" in failed:
-        failed = failed.remove("age")
+        failed.remove("age")
         attrs.update({ "fillcolor": BG_TOO_NEW, "style": "filled" })
+    if "autopkgtest" in failed:
+        for k, v in policy["autopkgtest"].items():
+            if k == "verdict": continue
+            for uu in v.values():
+                if "REGRESSION" in uu:
+                    for u in uu:
+                        if u and u.startswith("https://ci.debian.net/data/autopkgtest/testing"):
+                            print(u, file=rust_regressions)
     if failed:
         attrs.update({ "label": "\\N\\nfailed: %s" % ",".join(failed) })
         attrs.update({ "fillcolor": BG_MISC_FAIL, "style": "filled" })

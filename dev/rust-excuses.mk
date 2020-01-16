@@ -13,7 +13,7 @@
 # Usage:
 # $ dev/rust-excuses.mk refresh all
 
-DST = rust-excuses.png rust-excuses-arch.png
+DST = rust-excuses.png rust-excuses-arch.png rust-regressions.list
 DOWNLOAD = wget -N --no-use-server-timestamps https://release.debian.org/britney/excuses.yaml
 
 all: $(DST)
@@ -24,8 +24,8 @@ clean:
 excuses.yaml:
 	$(DOWNLOAD)
 
-rust-excuses.dot rust-excuses-arch.dot: excuses.yaml dev/rust-excuses.py
-	dev/rust-excuses.py rust-excuses.dot rust-excuses-arch.dot
+rust-excuses.dot rust-excuses-arch.dot rust-regressions.list: excuses.yaml dev/rust-excuses.py
+	dev/rust-excuses.py rust-excuses.dot rust-excuses-arch.dot rust-regressions.list
 
 %.png: %.dot
 	unflatten -c 10 "$<" | dot -Tpng > "$@"
