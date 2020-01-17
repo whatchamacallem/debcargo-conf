@@ -35,8 +35,9 @@ classify() {
 	fi
 	if [ "$c" = 0 ]; then
 		results["UNKNOWN"]+="$url"$'\n'
-		results["UNKNOWN"]+="$(zgrep ^error "$url" | head -n3 || true)"
-		results["UNKNOWN"]+=$'\n\n'
+		results["UNKNOWN"]+="$(zgrep ^error "$url" | head -n3 || true)"$'\n'
+		results["UNKNOWN"]+="$(zgrep -w FAIL "$url" | sort -u || true)"$'\n'
+		results["UNKNOWN"]+=$'\n'
 	fi
 }
 
