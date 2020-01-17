@@ -10,20 +10,17 @@ Remove old libraries
 
 Should file a RM request to ftpmasters for these old crates:
 
-- syntex-* were uploaded by mistake, only rustfmt 0.10 (obsolete version) depends on them
-- crossbeam-utils-0.2, no longer needed
-- bitflags-0.9, was required only by pulldown-cmark pre 0.2.0
-- owning-ref-0.3, was required only by lock-api pre 0.1.5
+(no old crates, yay!)
 
 
 Ready for upload (Request For Sponsor)
 ======================================
 
-If you do not have upload rights, simply `touch src/$crate/debian/RFS` in your
-crate's directory, commit and push it, and a DD or DM will get around to it at
-some point.
+If you do not have upload rights, simply ``touch src/$crate/debian/RFS`` in
+your crate's directory, commit and push it, and a DD or DM will get around to
+it at some point.
 
-To list all packages under RFS, run `dev/list-rfs.sh`.
+To list all packages under RFS, run ``dev/list-rfs.sh``.
 
 If your update breaks semver compatibility, please first check the reverse
 dependencies by running::
@@ -33,7 +30,7 @@ dependencies by running::
 and try to verify that they won't be broken by your update, by building them.
 If they are broken, then:
 
-1. Document the problem in `debian/BLOCK`.
+1. Document the problem in ``debian/BLOCK``.
 2. File an issue upstream to report that they should update to the new library
 3. Write a patch if you can get that working, and document it.
 
@@ -42,6 +39,12 @@ Unblocking testing migrations
 =============================
 
 Run ``dev/rust-excuses.mk refresh all`` to see these in a nice graph.
+
+Run ``dev/rust-regressions.sh`` to analyse autopkgtest regressions.
+
+From the excuses graph, find the lowest crates i.e. those with no arrows going
+outwards to other crates. Then run ``dev/list-rdeps.sh @ $lowest_crotes`` to
+see which of its rdeps are broken, and need to be fixed.
 
 
 New packages
@@ -67,8 +70,6 @@ bingrep
 
 * hexplay
 * metagoblin
-* prettytable-rs
-* scroll
 
 tokei
 -----
@@ -97,7 +98,6 @@ see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629
 [ ] quote-0.3.15
 [ ] rand-0.4.2
 [ ] rawpointer
-[ ] simplelog
 [ ] syn-0.11.11
 [ ] synom
 [ ] unicode-xid-0.0.4
@@ -106,11 +106,7 @@ see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629
 bench
 -----
 * criterion
-  * cast (NEW)
   * criteron-plot
-    * cast (NEW)
-  * rand-xoshiro (NEW)
-  * tinytemplate (NEW)
 
 rustup
 ------
@@ -120,14 +116,8 @@ rustup
    * git-testament-derive
  * markdown
    * pipeline
- * rand
-   * rand_core
-   * rand_hc
  * retry
- * scopeguard
- * wait-timeout
  * xz2
-   * lzma-sys
 
 ==============
 Eventual goals
@@ -135,40 +125,49 @@ Eventual goals
 
 Binary crates worth packaging (please add if you know more):
 
-- xsv - Command line program for manipulating CSV files
+- bench - simple benchmarking
+- bingrep - Grep through binaries from various OSs and architectures.
+- brewstillery - Brewer's, vinter's and distiller's calculator (GTK).
 - cargo-download - Download sources of a crate
 - cargo-edit - Cargo editing subcommands (add, rm, upgrade)
-- tmux-hints - Find matches (e.g. urls) and navigate them by keyboard
-- rural - User-friendly command-line HTTP tool
-- brewstillery - Brewer's, vinter's and distiller's calculator (GTK).
+- hg - Rust implement of hg
 - jql - JSON Query Language CLI tool.
 - recode_rs -  CLI tool converting between the character encodings.
+- rural - User-friendly command-line HTTP tool
 - rustfmt-nightly - rust coding style
-- bingrep - Grep through binaries from various OSs and architectures.
-- hg - Rust implement of hg
-- bat - A cat clone with syntax highlighting, Git integration, and more.
-- bench - simple benchmarking
-- sequoia-sqv - streamlined OpenPGP signature validation tool
 - rustup - installing and managing multiple rust toolchains
+- tmux-hints - Find matches (e.g. urls) and navigate them by keyboard
+- xsv - Command line program for manipulating CSV files
 
 To see lists of interesting binary crates, you can run something like::
 
   $ apt-get install koji-client
   $ koji -p fedora search package 'rust-*' | cut -b6- | dev/filter-binary-crates.sh
 
-Current output (on 2018-07-08) is:
+Current output (on 2020-01-17), minus stuff already in Debian, is:
 
-- aho-corasick
-- docopt
-- cpp_demangle
-- permutate
-- cbindgen
-- rustdoc-stripper
-- difference
-- pretty-git-prompt
-- peg
-- varlink
-- varlink-cli
+  afterburn
+  alloc-no-stdlib
+  alloc-stdlib
+  askalono-cli
+  brotli
+  brotli-decompressor
+  cargo-c
+  comrak
+  coreos-installer
+  ffsend
+  heatseeker
+  jql
+  lsd
+  multipart
+  open
+  permutate
+  pretty-git-prompt
+  qrcode
+  skim
+  starship
+  varlink-cli
+  varlink_generator
 
 Sccache is also helpful for reducing the build-time of things like firefox and thunderbird
 
