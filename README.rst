@@ -19,8 +19,8 @@ and follow its instructions.
 
 Note that ``new-package.sh`` is just a symlink to ``update.sh``, to help newcomers.
 
-To package an older version of a crate
---------------------------------------
+To package a co-installable older version of a crate
+----------------------------------------------------
 
 To maintain an old version of a crate alongside the latest one, first make sure
 the latest version is packaged by doing all of the above, then run::
@@ -87,6 +87,17 @@ want to test your crate, instead run::
 
 omitting or not omitting the stuff in [] as needed.
 
+Like many other Debian git repositories, we don't follow "feature branch"
+practises here. We generally don't package just 1 or 2 rust crates at a time,
+but all of its dependencies and sometimes some reverse-dependencies too. So
+normally we'll be touching a few dozen packages at once. In this context, it's
+good to merge often, to avoid conflicts with someone else that might also need
+to touch those too in the next few days.
+
+To match a release (i.e. a ``.deb`` or a ``.dsc`` file) to a commit, find the
+commit message that actually says "Release package X". This will usually be a
+merge commit.
+
 
 Build environment
 =================
@@ -97,6 +108,9 @@ To set up a suitable build environment for ``./build.sh``::
   $ sudo sbuild-createchroot --include=eatmydata,ccache,gnupg,dh-cargo,cargo,lintian,perl-openssl-defaults \
       --chroot-prefix debcargo-unstable unstable \
       /srv/chroot/debcargo-unstable-amd64-sbuild http://deb.debian.org/debian
+
+An explanation of this, plus more recipes, can be found on the `sbuild wiki
+page <https://wiki.debian.org/sbuild>`_.
 
 Normally, ``./build.sh`` will fail early if not all the build dependencies are
 available in your local apt cache. If you are packaging a large dependency tree
@@ -174,30 +188,30 @@ a newer version of debcargo and one of the dependencies relating to generating
 the tarball was updated and its behaviour changed - compression settings,
 tarball archive ordering, etc. This will cause your upload to get REJECTED by
 the Debian FTP archive for having a different orig.tar. In this case, set
-REUSE_EXISTING_ORIG_TARBALL=1 when running ``./release.sh``.
+``REUSE_EXISTING_ORIG_TARBALL=1`` when running ``./release.sh``.
 
 ITPs
 ----
 
 Don't file ITPs for library crates, but do file them for binary crates.
 
-For now (updated 2018-09) we have several hundred crates to upload. Submitting
-ITPs for these is unnecessary since we're the only ones uploading and there is
-no chance of conflict. It would only be spam for the bug tracker. Please
-instead co-ordinate uploads on the #debian-rust IRC channel.
+Generally we'll be uploading a dozen crates or so at once. Submitting ITPs for
+these is unnecessary since we're the only ones uploading and there is no chance
+of conflict. It would only be spam for the bug tracker. Please instead
+co-ordinate uploads on the ``#debian-rust`` IRC channel.
 
 Testing
 -------
 
 Debian has two types of tests:
 
-1. pre-install tests run in debian/rules
-2. post-install tests defined in debian/tests/control
+1. pre-install tests run in ``debian/rules``
+2. post-install tests defined in ``debian/tests/control``
 
 For Debian rust packages, in (1) we run the crate's test suite with default
 features but only if there are no dev-dependencies, and in (2) we run the whole
-test suite with each feature enabled separately plus --no-default-features and
---all-features.
+test suite with each feature enabled separately plus ``--no-default-features``
+and ``--all-features``.
 
 Sometimes, tests require extra tweaks and settings to work. In this case, you
 can tweak ``debian/rules`` for (1), and for (2) you will simply have to mark
@@ -214,7 +228,7 @@ disable tests for all combinations of features. Sometimes this is correct e.g.
 if the test actually breaks for all features. Sometimes this is *not* correct,
 e.g. if the test only breaks for ``--no-default-features``. In the latter case
 you should instead patch the crate to ignore those tests when the relevant
-features are absent - see commit 457f5d76 for an example.
+features are absent - e.g. ``src/regex-automata/debian/patches/ignore-std-tests.patch``.
 
 Binary-crate has "required-features"
 ------------------------------------
@@ -234,7 +248,7 @@ dependencies. In order to limit the number of duplicated libraries in the
 archive, please try to evaluate if a newer version of the dependencies could be
 used.
 
-To achieve that, after ./update.sh, try::
+To achieve that, after ``./update.sh``, try::
 
   $ cd build/<package>/
   $ rm -rf .pc # sometimes this is necessary due to minor debcargo bug
@@ -254,5 +268,6 @@ the convention is to put all these changes into a single patch called
 OTOH, if the cargo build fails, and you can fix it up by editing the source
 code in a minor way to use the new crate API, then: for each crate that needs
 to be updated, you should instead name the patch ``update-dep-<crate>.patch``
-and add both the ``Cargo.toml`` and the source code changes to it. Use
-``quilt rename`` if that helps you.
+and add both the ``Cargo.toml`` and the source code changes to it. The change
+to ``Cargo.toml`` would then simply say (e.g.) ``0.5`` since the older versions
+actually don't work, and not the version range from the previous paragraph.
