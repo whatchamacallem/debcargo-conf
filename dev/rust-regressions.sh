@@ -15,8 +15,7 @@ declare -A results
 classify() {
 	local c=0
 	local url="$1"
-	local name="${url#ci.debian.net/data/autopkgtest/testing/*/r/}"
-	name="${name%%/*}"
+	local name="$(zegrep -o 'autopkgtest \[[0-9:]+\]: testing package [^[:space:]]+' "$url" | cut '-d ' -f5)"
 	if zegrep -q '^error\[E0554\]' "$url"; then
 		results["falsepositive_unstable"]+="$name"$'\n'
 		c=$((c+1))
