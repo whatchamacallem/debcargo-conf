@@ -35,7 +35,12 @@ if [ $(($(date +%s) - $(stat -c %Y /var/cache/apt/pkgcache.bin))) -gt 7200 ]; th
 fi
 
 apt_versions() {
-	aptitude versions --disable-columns -F '%p %t' --group-by=none "~rnative $1" || true
+	aptitude versions --disable-columns -F '%e %p %t' --group-by=none "~rnative $1" || true
+}
+
+all_rust_packages="$(apt_versions "~e^rust-")"
+quick_apt_versions() {
+	printf "%s\n" "$all_rust_packages" | awk "\$1 ~ /$1/ && \$2 ~ /$2/ && \$3 ~ /$3/ && \$4 ~ /$4/ { ${5:-print} }"
 }
 
 # versions of source packages in unstable. used to ignore cruft (i.e. binary
@@ -44,7 +49,7 @@ declare -A srcver
 src_version() {
 	local src="$1"
 	if [ -z "${srcver[$src]}" ]; then
-		srcver["$src"]="$(apt_versions "librust-${src}-dev" | grep "$ARCHIVE" | cut '-d ' -f2)"
+		srcver["$src"]="$(quick_apt_versions "" "^librust-${src}-dev$" "" "\y$ARCHIVE\y" 'print $3')"
 	fi
 	echo "${srcver[$src]}"
 }
@@ -81,7 +86,7 @@ list_rdeps() {
 	pkg="${pkg#rust-}"
 
 	echo "Versions of rust-${pkg} in $ARCHIVE:"
-	apt_versions "~e^rust-${pkg}$" | grep "$ARCHIVE" | sort | while read binpkg ver archive; do
+	quick_apt_versions "^rust-${pkg}$" "" "" "\y$ARCHIVE\y" | sort | while read srcpkg binpkg ver archive; do
 		if [ "$ver" != "$(src_version "$pkg")" ]; then continue; fi
 		local stat="$(installability "$binpkg" "$ver")"
 		printf "%s %-48s %-16s\n" "$stat" "$binpkg" "$ver"
@@ -90,7 +95,7 @@ list_rdeps() {
 
 	echo "Versions of rdeps of rust-${pkg} in $ARCHIVE, that also exist in $ARCHIVT:"
 	local rdeps="$(apt_versions "~D^librust-${pkg}~(\+~|-[0-9]~).*-dev$")"
-	printf "%s\n" "$rdeps" | grep "$ARCHIVE" | while read rdep ver archive; do
+	printf "%s\n" "$rdeps" | grep "$ARCHIVE" | while read src rdep ver archive; do
 		# we're interested in packages in both archives.
 		if ! printf "%s\n" "$rdeps" | grep "$ARCHIVT" | grep -qF "$rdep"; then
 			local rdepv="$(echo "$rdep" | sed -E -e 's/-[0-9.]+-dev$/-dev/')"
