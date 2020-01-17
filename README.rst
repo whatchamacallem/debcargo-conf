@@ -189,9 +189,32 @@ instead co-ordinate uploads on the #debian-rust IRC channel.
 Testing
 -------
 
-For now, testsuites aren't executed for library.
-However, for binary, it is strongly recommended to run the testsuites.
-See ripgrep as example.
+Debian has two types of tests:
+
+1. pre-install tests run in debian/rules
+2. post-install tests defined in debian/tests/control
+
+For Debian rust packages, in (1) we run the crate's test suite with default
+features but only if there are no dev-dependencies, and in (2) we run the whole
+test suite with each feature enabled separately plus --no-default-features and
+--all-features.
+
+Sometimes, tests require extra tweaks and settings to work. In this case, you
+can tweak ``debian/rules`` for (1), and for (2) you will simply have to mark
+the relevant tests as broken using ``test_is_broken = true``. See the existing
+crate configs for examples.
+
+Other times, the tests are simply broken or can't be run in Debian. In this
+case you should disable the test in (1) by running ``dh_auto_test -- build``
+instead of the default ``dh_auto_test -- test --all``, and for (2) again you
+should mark the relevant tests as broken.
+
+Please note that ``[packages.lib]\ntest_is_broken = true`` will transitively
+disable tests for all combinations of features. Sometimes this is correct e.g.
+if the test actually breaks for all features. Sometimes this is *not* correct,
+e.g. if the test only breaks for ``--no-default-features``. In the latter case
+you should instead patch the crate to ignore those tests when the relevant
+features are absent - see commit 457f5d76 for an example.
 
 Binary-crate has "required-features"
 ------------------------------------
