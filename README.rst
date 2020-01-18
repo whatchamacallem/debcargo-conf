@@ -271,3 +271,13 @@ to be updated, you should instead name the patch ``update-dep-<crate>.patch``
 and add both the ``Cargo.toml`` and the source code changes to it. The change
 to ``Cargo.toml`` would then simply say (e.g.) ``0.5`` since the older versions
 actually don't work, and not the version range from the previous paragraph.
+
+Help, something went wrong!
+---------------------------
+
+Sometimes, the error messages are not the most informative. In this case you
+can try re-running the command with ``RUST_BACKTRACE=1``. If you are using the
+``debcargo`` from Debian's own repositories, you should also install the
+``debcargo-dbgsym`` package, otherwise the stack trace will be next to useless.
+Make sure you have the `debug repository <https://wiki.debian.org/HowToGetABacktrace#Installing_the_debugging_symbols>`_
+enabled in your APT sources.
