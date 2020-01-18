@@ -40,7 +40,7 @@ apt_versions() {
 
 all_rust_packages="$(apt_versions "~e^rust-")"
 quick_apt_versions() {
-	printf "%s\n" "$all_rust_packages" | awk "\$1 ~ /$1/ && \$2 ~ /$2/ && \$3 ~ /$3/ && \$4 ~ /$4/ { ${5:-print} }"
+	printf "%s\n" "$all_rust_packages" | gawk "\$1 ~ /$1/ && \$2 ~ /$2/ && \$3 ~ /$3/ && \$4 ~ /$4/ { ${5:-print} }"
 }
 
 # versions of source packages in unstable. used to ignore cruft (i.e. binary
