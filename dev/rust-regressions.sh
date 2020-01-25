@@ -16,7 +16,8 @@ classify() {
 	local c=0
 	local url="$1"
 	local name="$(zegrep -o 'autopkgtest \[[0-9:]+\]: testing package [^[:space:]]+' "$url" | cut '-d ' -f5)"
-	if zegrep -q '^error\[E0554\]' "$url"; then
+	if zegrep -q '^error\[E0554\]' "$url" && \
+	 ! zegrep -q "^cargo-auto-test: re-running test with RUSTC_BOOTSTRAP due to E0554" "$url"; then
 		results["falsepositive_unstable"]+="$name"$'\n'
 		c=$((c+1))
 	fi

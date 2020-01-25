@@ -58,7 +58,7 @@ BUILDDIR="$PWD/build/$PKGNAME"
 PKGCFG="$PKGDIR/debian/debcargo.toml"
 
 mkdir -p "$(dirname $BUILDDIR)"
-cp "$PWD/build.sh" "$PWD/build/build.sh"
+ln -srf "$PWD/build.sh" "$PWD/build/build.sh"
 chmod +x "$PWD/build/build.sh"
 
 if [ -z "$CRATE" ]; then
