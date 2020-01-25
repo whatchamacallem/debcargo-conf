@@ -91,10 +91,16 @@ if [ "$SOURCEONLY" = 1 ]; then
 	exit
 fi
 
+AUTOPKGTEST_OPTS=()
+if [ "$RUN_AUTOPKGTEST" = 1 ]; then
+	AUTOPKGTEST_OPTS=(--run-autopkgtest --autopkgtest-root-arg= --autopkgtest-opts="-- schroot ${CHROOT}")
+fi
+
 sbuild --no-source --arch-any --arch-all \
   ${CHROOT:+-c $CHROOT} \
   ${DISTRIBUTION:+-d $DISTRIBUTION} \
   ${@/#/--extra-package=} \
+  "${AUTOPKGTEST_OPTS[@]}" \
   ${DEBSRC}_${DEBVER}.dsc
 changestool ${DEBSRC}_${DEBVER}_${DEB_HOST_ARCH}.changes adddsc ${DEBSRC}_${DEBVER}.dsc
 
