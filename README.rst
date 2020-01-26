@@ -272,6 +272,13 @@ and add both the ``Cargo.toml`` and the source code changes to it. The change
 to ``Cargo.toml`` would then simply say (e.g.) ``0.5`` since the older versions
 actually don't work, and not the version range from the previous paragraph.
 
+If you want to make a crate work with an older dependency version than listed
+in ``Cargo.toml`` (for example 0.3 instead of 0.5), you cannot use a flexible
+version requirement like ``>= 0.3, < 0.6``.  Instead you have to specify only
+the older version, in this example ``0.3`` (`explanation`_).
+
+.. _explanation: https://salsa.debian.org/rust-team/debcargo-conf/merge_requests/86#note_135456
+
 Help, something went wrong!
 ---------------------------
 
