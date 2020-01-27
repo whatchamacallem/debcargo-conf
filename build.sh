@@ -38,17 +38,16 @@ DEB_HOST_ARCH=$(dpkg-architecture -q DEB_HOST_ARCH)
 SRCNAME="${DEBSRC}_${DEBVER}"
 BUILDNAME="${DEBSRC}_${DEBVER}_${DEB_HOST_ARCH}"
 if [ -z "$CHROOT" ]; then
-	#if schroot -i -c "debcargo-unstable-${DEB_HOST_ARCH}-sbuild" >/dev/null 2>&1; then
+	if schroot -i -c "debcargo-unstable-${DEB_HOST_ARCH}-sbuild" >/dev/null 2>&1; then
 		CHROOT="debcargo-unstable-${DEB_HOST_ARCH}-sbuild"
-	#el
-	if schroot -i -c "unstable-${DEB_HOST_ARCH}-sbuild" >/dev/null 2>&1; then
+	elif schroot -i -c "unstable-${DEB_HOST_ARCH}-sbuild" >/dev/null 2>&1; then
 		CHROOT="unstable-${DEB_HOST_ARCH}-sbuild"
 		echo >&2 "Automatically using sbuild chroot unstable-${DEB_HOST_ARCH}-sbuild; however it's"
 		echo >&2 "strongly recommended to create a separate chroot debcargo-unstable-${DEB_HOST_ARCH}-sbuild"
 		echo >&2 "so your builds won't have to re-download & re-install cargo, rustc, and llvm every time."
 		echo >&2 "See README.rst section \"Build environment\" for details."
 		sleep 1
-	else
+	elif [ "$SOURCEONLY" != 1 ]; then
 		abort 1 "could not automatically find a suitable chroot; set CHROOT"
 	fi
 fi
