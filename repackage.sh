@@ -7,5 +7,5 @@ if ! shouldbuild "$BUILDDIR/debian/changelog" "$PKGDIR/debian/changelog" && \
 	exit 0
 fi
 
-REALVER="$(sed -nre "s/.*Package .* (.*) from crates.io.*/\1/gp" "$PKGDIR/debian/changelog" | head -n1)"
+REALVER="$(get_existing_version "$PKGDIR")"
 run_debcargo --no-overlay-write-back --changelog-ready

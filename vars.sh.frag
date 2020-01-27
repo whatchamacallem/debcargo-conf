@@ -75,3 +75,7 @@ shouldbuild() {
 	local src="$2"
 	test ! -e "$dst" -o "$src" -nt "$dst"
 }
+
+get_existing_version() {
+	sed -nre "s/.*Package .* (.*) from crates.io.*/\1/gp" "$1/debian/changelog" | head -n1
+}

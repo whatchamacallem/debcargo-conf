@@ -42,6 +42,25 @@ the one in Debian Testing not Debian Unstable. To view a summary of this, run::
 
 It will also give you some follow-up instructions to fix the problem.
 
+
+Source-only re-upload
+=====================
+
+Two aspects of Debian infrastructure policy, run by two different teams,
+interact badly when it comes to the Debian Rust Team:
+
+1. Uploads with new binary packages have to be done as binary (not source-only)
+   uploads, into the FTP team's NEW queue.
+2. Uploads that are valid candidates for Debian Testing have to be source-only
+   uploads, to be considered by the Release team's migration script.
+
+For your convenience, ``./release.sh`` can do these quickly. After a
+binary-upload is accepted from the NEW queue, and you merge the relevant
+pending branch, do a source-only re-upload by simply running::
+
+  RERELEASE=1 ./release.sh <rust-crate-name> [<old-version>]
+
+
 Remove an obsolete package
 ==========================
 
