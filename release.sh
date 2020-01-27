@@ -121,19 +121,22 @@ DEBVER=$(dpkg-parsechangelog -l $BUILDDIR/debian/changelog -SVersion)
 DEBSRC=$(dpkg-parsechangelog -l $BUILDDIR/debian/changelog -SSource)
 DEB_HOST_ARCH=$(dpkg-architecture -q DEB_HOST_ARCH)
 
-print_upload_instructions() {
 if [ "$RERELEASE" = 1 ]; then
+
+( cd build && dput "${DEBSRC}_${DEBVER}_source.changes" )
+git push origin "$RELBRANCH"
+git checkout master
+
 cat <<eof
-Upload the source package
-=========================
-
-Since you set RERELEASE=1, this package is presumably already in Debian. Go
-ahead and directly dput the source package.
-
-  cd build && dput ${DEBSRC}_${DEBVER}_source.changes
+Source-only re-release of $CRATE uploaded. You need to perform the following steps:
 eof
+
 else
+
 cat <<eof
+Release of $CRATE ready as a source package in ${BUILDDIR#$PWD/}. You need to
+perform the following steps:
+
 Build the package if necessary, and upload
 ==========================================
 
@@ -156,15 +159,6 @@ for setting up a build environment for release.
 
 If the build fails e.g. due to missing Build-Dependencies you should revert
 what I did (see below) and package those missing Build-Dependencies first.
-eof
-fi
-}
-
-cat >&2 <<eof
-Release of $CRATE ready as a source package in ${BUILDDIR#$PWD/}. You need to
-perform the following steps:
-
-$(print_upload_instructions)
 
 Push this pending-release branch
 ================================
@@ -175,6 +169,11 @@ master to continue development on other packages.
 
   git push origin $RELBRANCH && git checkout master
 
+eof
+
+fi
+
+cat >&2 <<eof
 Merge the pending-release branch if/when ACCEPTED
 =================================================
 

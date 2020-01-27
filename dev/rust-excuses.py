@@ -62,6 +62,7 @@ BG_NOT_IN_DEBIAN = "#cc0000"
 BG_OLD_IN_DEBIAN = "#ffcc66"
 BG_TOO_NEW = "#66ff99"
 BG_MISC_FAIL = "#ff6666"
+BG_SOURCEONLY = "#9999ff"
 
 def traverse(name, arch="", d=0):
     if name in already_seen:
@@ -121,7 +122,8 @@ def traverse(name, arch="", d=0):
                             print(u, file=rust_regressions)
     if failed:
         attrs.update({ "label": "\\N\\nfailed: %s" % ",".join(failed) })
-        attrs.update({ "fillcolor": BG_MISC_FAIL, "style": "filled" })
+        bg = BG_SOURCEONLY if failed == ["builtonbuildd"] else BG_MISC_FAIL
+        attrs.update({ "fillcolor": bg, "style": "filled" })
     print_all('"%s" [%s]' % (name, ",".join("%s=\"%s\"" % p for p in attrs.items())))
 
 
