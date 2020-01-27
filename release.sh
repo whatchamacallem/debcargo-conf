@@ -130,6 +130,7 @@ git checkout master
 
 cat <<eof
 Source-only re-release of $CRATE uploaded. You need to perform the following steps:
+
 eof
 
 else
