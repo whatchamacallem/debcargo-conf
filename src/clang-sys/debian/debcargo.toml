@@ -2,13 +2,17 @@ overlay = "."
 uploaders = [
   "Ximin Luo <infinity0@debian.org>",
   "kpcyrd <git@rxv.cc>",
+  "Wolfgang Silbermayr <wolfgang@silbermayr.at>",
 ]
 excludes = ["ci/**"]
-extra_test_deps = ["llvm", "clang"]
 
 [source]
 build_depends = ["llvm", "clang"]
 
 [packages.lib]
-depends = ["libclang-dev"]
-recommends = ["llvm", "clang"]
+depends = ["libclang-dev", "llvm", "clang"]
+extra_test_depends = ["llvm", "clang"]
+
+[packages."lib+@"]
+# The `runtime` and `static` features can't be combined (see build.rs)
+test_is_broken = true
