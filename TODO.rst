@@ -124,15 +124,15 @@ tokio/futures/hyper with async/await
 
 *dependency tree*
 
-* futures 0.3.1
-   * futures-executor 0.3.1
-   * futures-util 0.3.1
-      * futures-task 0.3.1
-      * futures-channel 0.3.1
-         * futures-core 0.3.1
-         * future-sink 0.3.1
-      * futures-io 0.3.1
-      * futures-macro 0.3.1
+* futures 0.3.4
+   * futures-executor 0.3.4
+   * futures-util 0.3.4
+      * futures-task 0.3.4
+      * futures-channel 0.3.4
+         * futures-core 0.3.4
+         * future-sink 0.3.4
+      * futures-io 0.3.4
+      * futures-macro 0.3.4
       * pin-utils 0.1.0-alpha.4
       * proc-macro-nested 0.1.3
 
@@ -140,7 +140,7 @@ tokio/futures/hyper with async/await
 
 * tokio 0.2.10
    * bytes 0.5.3 (outdated)
-   * futures-core 0.3.1 (see above)
+   * futures-core 0.3.4 (see above)
    * pin-project-lite 0.1.1
    * tokio-macros 0.2.3
 
@@ -149,17 +149,17 @@ tokio/futures/hyper with async/await
 
 * tokio-util 0.2.0
    * tokio 0.2.10 (+ subset of dependencies)
-   * futures-sink 0.3.1 (see above)
+   * futures-sink 0.3.4 (see above)
 
 * hyper 0.13.1
-   * futures-* 0.3.1 (see above)
+   * futures-* 0.3.4 (see above)
    * h2 0.2.1
-      * futures-* 0.3.1 (see above)
+      * futures-* 0.3.4 (see above)
       * http 0.2.0
          * bytes 0.5.3 (needed for tokio anyway)
       * tokio 0.2.10 (see above)
       * tokio-util 0.2.0 (see above)
-   * http-body 0.3.1
+   * http-body 0.3.4
       * http 0.2.0 (+ deps)
    * pin-project 0.4.7
       * pin-project-internal 0.4.7
@@ -222,17 +222,17 @@ tokio/futures/hyper with async/await
 
 *NEW, installable as-is*
 
-* pin-utils
-* proc-macro-nested
+* pin-utils (NEW)
+* proc-macro-nested (NEW)
 * futures-sink
 * futures-task
 * futures-io
 * futures-macro
 * tokio-macros
 * pin-project-lite
-* tower-service
+* tower-service (NEW)
 * pin-project-internal + pin-project
-* paste-impl + paste
+* paste-impl (NEW) + paste
 * webasm-bindgen-futures
 
 *NEW, with dependency within transition*
