@@ -84,12 +84,14 @@ declare -a queue
 list_rdeps() {
 	pkg="${1//_/-}"
 	pkg="${pkg#rust-}"
+	declare -a binpkgs
 
 	echo "Versions of rust-${pkg} in $ARCHIVE:"
 	quick_apt_versions "^rust-${pkg}$" "" "" "\y$ARCHIVE\y" | sort | while read srcpkg binpkg ver archive; do
 		if [ "$ver" != "$(src_version "$pkg")" ]; then continue; fi
 		local stat="$(installability "$binpkg" "$ver")"
 		printf "%s %-48s %-16s\n" "$stat" "$binpkg" "$ver"
+		binpkgs+=("$binpkg=$ver")
 	done
 	echo
 
@@ -121,6 +123,23 @@ list_rdeps() {
 		local rustdeps="$(printf "%s" "$deps" | tr ',' '\n' | egrep -wo "librust-${pkg}(\+|-[0-9])\S*-dev[^,]*" | tr '\n' '\t' | sed -e 's/\t/, /g')"
 		local stat="$(installability "$rdep" "$ver")"
 		printf "%s %-48s %-16s depends on     %s\n" "$stat" "$rdep" "$ver" "$rustdeps"
+	done
+	echo
+
+	echo "Source packages in unstable whose autopkgtests are triggered by rust-$pkg:"
+	while [ -n "${binpkgs[0]}" ]; do
+		local binver="${binpkgs[0]}"
+		binpkgs=("${binpkgs[@]:1}")
+
+		local binpkg="${binver/=*/}"
+		binpkg="$(apt-cache show "$binver" | grep-dctrl -F Package -ns Package -s Provides -e "${binpkg//\+/\\+}" | tr '\n' '|' | sed -e 's/ \+\(([^)]*)\)\?,\? */|/g' -e 's/+/\\+/g' -e 's/|\+$//g' -e 's/|{2,}/|/g')"
+		# check for bin package + all its provided virtual feature packages in one go
+		grep-dctrl -F Testsuite-Triggers -s Package,Version -w "$binpkg" /var/lib/apt/lists/*_dists_"$ARCHIVE"_*_source_Sources* \
+		  | cut -d: -f2 | cut '-d ' -f2- \
+		  | sed -z -e 's/\n\n/\t/g' -e 's/\n/ /g' -e 's/\t/\n/g' \
+		  | while read triggered ver; do
+		    printf "  %-48s %-16s triggered by     %s\n" "$triggered" "$ver" "$binver"
+		done
 	done
 	echo
 }
