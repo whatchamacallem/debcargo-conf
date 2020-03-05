@@ -22,7 +22,7 @@ Expects excuses.yaml in the current dir
 
 print("parsing excuses.yaml...", file=sys.stderr)
 with open("excuses.yaml") as fp:
-    y = yaml.load(fp)
+    y = yaml.load(fp, Loader=yaml.FullLoader)
 
 excuses = {}
 for e in y["sources"]:
