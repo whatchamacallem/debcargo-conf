@@ -1,0 +1,22 @@
+these features use #feature(), which is not supported on a stable toolchain.
+since we don't support unstable toolchains, we can patch these out altogether
+to make them unavailable in Debian.
+
+Index: regex/Cargo.toml
+===================================================================
+--- regex.orig/Cargo.toml
++++ regex/Cargo.toml
+@@ -101,7 +101,6 @@ version = "0.7"
+ 
+ [features]
+ default = ["std", "perf", "unicode"]
+-pattern = []
+ perf = ["perf-cache", "perf-dfa", "perf-inline", "perf-literal"]
+ perf-cache = ["thread_local"]
+ perf-dfa = []
+@@ -116,5 +115,4 @@ unicode-gencat = ["regex-syntax/unicode-
+ unicode-perl = ["regex-syntax/unicode-perl"]
+ unicode-script = ["regex-syntax/unicode-script"]
+ unicode-segment = ["regex-syntax/unicode-segment"]
+-unstable = ["pattern"]
+ use_std = ["std"]
