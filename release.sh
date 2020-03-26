@@ -137,26 +137,84 @@ eof
 
 else
 
+unstable_bin_packages="$(rmadison --noconf --suite unstable --source-and-binary "${DEBSRC}" | grep -v 'source$' | cut -d ' ' -f 1 | sort -u)"
+upload_bin_packages="$(grep '^Binary' "build/${DEBSRC}_${DEBVER}.dsc" | sed -e 's/^Binary: //' -e 's/, /,/g' | tr ',' '\n' | sort -u)"
+diff_bin_packages="$(diff -u0 <(echo "$unstable_bin_packages") <(echo "$upload_bin_packages") | tail -n-2)"
+new_bin_packages="$(echo "$diff_bin_packages" | grep '^+' | sed -e 's/^+//g')"
+rm_bin_packages="$(echo "$diff_bin_packages" | grep '^-' | sed -e 's/^-//g')"
+
 cat <<eof
 Release of $CRATE ready as a source package in ${BUILDDIR#$PWD/}. You need to
 perform the following steps:
 
 Build the package if necessary, and upload
 ==========================================
+eof
 
-If the source package is already in Debian and this version does not introduce
+if [ -z "$unstable_bin_packages" ]; then
+cat <<eof
+Since this is a NEW source package not already in the Debian archive, you will need to build a binary package out of it.
+
+For your reference, this source package builds $(echo "$upload_bin_packages" | wc -l) binary package(s):
+$upload_bin_packages
+eof
+
+else
+
+if [ -z "$new_bin_packages" ]; then
+
+cat <<eof
+Since the source package is already in Debian and this version does not introduce
 new binaries, then you can just go ahead and directly dput the source package.
 
   cd build && dput ${DEBSRC}_${DEBVER}_source.changes
 
-For your reference, this source package builds $(grep ^Package build/${CRATE//_/-}/debian/control | wc -l) binary package(s):
-$(sed -ne 's/^Package: //pg' build/hmac/debian/control | tr '\n' ',')
+For your reference, this source package builds $(echo "$upload_bin_packages" | wc -l) binary package(s):
+$upload_bin_packages
+eof
 
-If this is a NEW source package or introduces NEW binary packages not already
-in the Debian archive, you will need to build a binary package out of it. The
-recommended way is to run something like:
+
+else
+
+cat <<eof
+ATTENTION: this upload introduces NEW binary packages not already in the Debian
+archive, you will need to build a binary package out of it.
+
+PLEASE THINK CAREFULLY BEFORE UPLOADING NEW VERSIONS WITH NEW BINARY PACKAGES,
+AS SUCH UPLOADS CAN AFFECT ONGOING TRANSITIONS AND DELAY THEM SIGNIFICANTLY.
+
+For your reference, this source package builds $(echo "$upload_bin_packages" | wc -l) binary package(s):
+$upload_bin_packages
+
+Of those, the following are NEW:
+$new_bin_packages
+eof
+
+fi
+
+cat <<eof
+
+The recommended way to build and upload is to run something like:
 
   cd build && ./build.sh $CRATE $VER && dput ${DEBSRC}_${DEBVER}_${DEB_HOST_ARCH}.changes
+eof
+
+fi
+
+if [ -n "$rm_bin_packages" ]; then
+
+cat <<eof
+
+ATTENTION: The following binary packages which are currently available in
+Debian unstable are no longer built from ${DEBSRC}, please investigate whether
+this is intentional, and file RM requests where appropriate:
+
+$rm_bin_packages
+eof
+
+fi
+
+cat <<eof
 
 This assumes you followed the "Build environment" instructions in README.rst,
 for setting up a build environment for release.
