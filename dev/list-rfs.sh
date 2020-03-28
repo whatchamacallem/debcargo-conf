@@ -7,7 +7,7 @@ done | sort  | while read t i; do
         # If a pending branch exists, skip it
         continue
     fi
-    echo "$(date -d@"$t") $pkg"
+    echo -e "$(date -d@"$t") \e[32m$pkg\e[0m"
     # trim the content
     content=$(xargs '-d\n' echo -n < "$i")
     if test -n "$content"; then

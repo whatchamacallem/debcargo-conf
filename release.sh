@@ -176,7 +176,10 @@ eof
 
 else
 
+RED=`echo -e "\033[1;31m"`
+NC=`echo -e "\033[0m"`
 cat <<eof
+${RED}
 ATTENTION: this upload introduces NEW binary packages not already in the Debian
 archive, you will need to build a binary package out of it.
 
@@ -188,6 +191,7 @@ $upload_bin_packages
 
 Of those, the following are NEW:
 $new_bin_packages
+${NC}
 eof
 
 fi
@@ -215,7 +219,6 @@ eof
 fi
 
 cat <<eof
-
 This assumes you followed the "Build environment" instructions in README.rst,
 for setting up a build environment for release.
 
