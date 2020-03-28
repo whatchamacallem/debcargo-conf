@@ -2,6 +2,9 @@
 
 . ./vars.sh.frag
 
+RED=`echo -e "\033[1;31m"`
+NC=`echo -e "\033[0m"`
+
 if test ! -d $PKGDIR_REL; then
     abort 1 "Cannot find $PKGDIR_REL. Did you run ./new-package.sh before?"
 fi
@@ -153,10 +156,12 @@ eof
 
 if [ -z "$unstable_bin_packages" ]; then
 cat <<eof
+${RED}
 Since this is a NEW source package not already in the Debian archive, you will need to build a binary package out of it.
 
 For your reference, this source package builds $(echo "$upload_bin_packages" | wc -l) binary package(s):
 $upload_bin_packages
+${NC}
 eof
 
 else
@@ -176,8 +181,6 @@ eof
 
 else
 
-RED=`echo -e "\033[1;31m"`
-NC=`echo -e "\033[0m"`
 cat <<eof
 ${RED}
 ATTENTION: this upload introduces NEW binary packages not already in the Debian
