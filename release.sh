@@ -146,6 +146,14 @@ diff_bin_packages="$(diff -u0 <(echo "$unstable_bin_packages") <(echo "$upload_b
 new_bin_packages="$(echo "$diff_bin_packages" | grep '^+' | sed -e 's/^+//g')"
 rm_bin_packages="$(echo "$diff_bin_packages" | grep '^-' | sed -e 's/^-//g')"
 
+show_build_notice() {
+cat <<eof
+The recommended way to build and upload is to run something like:
+
+  cd build && ./build.sh $CRATE $VER && dput ${DEBSRC}_${DEBVER}_${DEB_HOST_ARCH}.changes
+eof
+}
+
 cat <<eof
 Release of $CRATE ready as a source package in ${BUILDDIR#$PWD/}. You need to
 perform the following steps:
@@ -163,11 +171,9 @@ For your reference, this source package builds $(echo "$upload_bin_packages" | w
 $upload_bin_packages
 ${NC}
 eof
+show_build_notice
 
-else
-
-if [ -z "$new_bin_packages" ]; then
-
+elif [ -z "$new_bin_packages" ]; then
 cat <<eof
 Since the source package is already in Debian and this version does not introduce
 new binaries, then you can just go ahead and directly dput the source package.
@@ -177,10 +183,9 @@ new binaries, then you can just go ahead and directly dput the source package.
 For your reference, this source package builds $(echo "$upload_bin_packages" | wc -l) binary package(s):
 $upload_bin_packages
 eof
-
+# don't show build notice
 
 else
-
 cat <<eof
 ${RED}
 ATTENTION: this upload introduces NEW binary packages not already in the Debian
@@ -196,17 +201,9 @@ Of those, the following are NEW:
 $new_bin_packages
 ${NC}
 eof
+show_build_notice
 
-fi
-
-cat <<eof
-
-The recommended way to build and upload is to run something like:
-
-  cd build && ./build.sh $CRATE $VER && dput ${DEBSRC}_${DEBVER}_${DEB_HOST_ARCH}.changes
-eof
-
-fi
+fi # end decision-making on show_build_notice
 
 if [ -n "$rm_bin_packages" ]; then
 
