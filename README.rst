@@ -222,6 +222,8 @@ Other times, the tests are simply broken or can't be run in Debian. In this
 case you should disable the test in (1) by running ``dh_auto_test -- build``
 instead of the default ``dh_auto_test -- test --all``, and for (2) again you
 should mark the relevant tests as broken.
+These tests are going to be marked as flaky in autopkgtest, still executed but
+won't fail the autopkgtest run.
 
 Please note that ``[packages.lib]\ntest_is_broken = true`` will transitively
 disable tests for all combinations of features. Sometimes this is correct e.g.
