@@ -1,0 +1,40 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -48,7 +48,7 @@
+ allow-unsafe-code = ["libc"]
+ composite = ["xfixes"]
+ damage = ["xfixes"]
+-default = ["vendor-xcb-proto", "allow-unsafe-code"]
++default = ["allow-unsafe-code"]
+ dpms = []
+ dri2 = []
+ dri3 = []
+@@ -62,7 +62,7 @@
+ shape = []
+ shm = []
+ sync = []
+-vendor-xcb-proto = []
++#vendor-xcb-proto = []
+ xevie = []
+ xf86dri = []
+ xf86vidmode = []
+--- a/build.rs
++++ b/build.rs
+@@ -51,14 +51,16 @@
+     for py_file in list_files_with_extension("code_generator_helpers", "py") {
+         println!("cargo:rerun-if-changed={}", py_file.to_str().unwrap());
+     }
++    /*
+     for py_file in list_files_with_extension(pythondir.join("xcbgen"), "py") {
+         println!("cargo:rerun-if-changed={}", py_file.to_str().unwrap());
+     }
++    */
+     for xml_file in list_files_with_extension(&includedir, "xml") {
+         println!("cargo:rerun-if-changed={}", xml_file.to_str().unwrap());
+     }
+ 
+-    let status = Command::new("python")
++    let status = Command::new("python3")
+         .arg("rs_code_generator.py")
+         .arg("-p")
+         .arg(&pythondir)

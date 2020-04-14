@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+
+override_dh_auto_test:
+ifeq ($(DEB_HOST_ARCH),mips64el)
+	echo tests are disabled on mips64el due to build hang.
+else
+ifeq ($(DEB_HOST_ARCH),mipsel)
+	echo tests are disabled on mips64el due to build hang.
+else
+	dh_auto_test -- test --all || true
+endif
+endif
