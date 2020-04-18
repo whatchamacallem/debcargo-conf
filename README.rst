@@ -146,7 +146,7 @@ instructions below may seem a bit opaque.
    clears out your build directory, making the subsequent steps a bit faster.
 2. ``./update.sh <CRATE>`` for all your relevant packages
 3. Do any manual updates.
-4. ``cd build` then ``IGNORE_MISSING_BUILD_DEPS=1 ./build.sh <CRATE> *.deb``
+4. ``cd build`` then ``IGNORE_MISSING_BUILD_DEPS=1 ./build.sh <CRATE> *.deb``
    for all your relevant packages, in dependency order.
 5. Deal with any issues that come up.
 6. Push your updates to our git.
@@ -166,8 +166,8 @@ I like to have 4 shell windows open for this:
 2. To explore git, to remember what step you're on and to lookup previous
    reference material.
 3. To explore the build directory, e.g. logs and crate source code.
-4. To run a build. Try to have one running in the background at all times, for
-   the next package you didn't look at yet, to save time waiting.
+4. To run a build. Try to have one running here at all times, for the next
+   package you didn't look at yet, to save time waiting.
 
 There are also various scripts in ``dev/*`` that might help you. They should
 have a couple lines at the top of the source code describing their
