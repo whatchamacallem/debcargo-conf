@@ -1,4 +1,10 @@
 #!/bin/bash
+#
+# Envvars:
+# INST_CACHE
+#     If running this script multiple times, set this to a path where we will
+#     write data to be re-used next time. This makes the script slightly
+#     quicker, but if the data is too old it will give inaccurate results.
 
 set -e
 shopt -s lastpipe # important for populating associative arrays via pipes

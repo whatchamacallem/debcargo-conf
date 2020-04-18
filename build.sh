@@ -1,4 +1,19 @@
 #!/bin/bash
+# Build a packaged crate.
+#
+# This script is not run directly, but linked into ./build/ when running one of
+# the other scripts, so you should do that instead of running this directly.
+#
+# Usage: [REALVER=<EXACTVER>] ./build.sh <CRATE> [<SEMVER>] [<EXTRA DEPENDENCY DEB> ...]
+#
+# Envvars:
+# IGNORE_MISSING_BUILD_DEPS=1
+#     Don't abort on missing build deps. You'll need
+#     this when giving extra dependency debs.
+# DISTRIBUTION=$suite
+#     Release to something other than unstable, e.g. experimental
+# CHROOT=$chroot
+#     Build using another schroot than debcargo-unstable-amd64-sbuild
 set -e
 
 SCRIPTDIR="$(dirname $(readlink -f "$0"))"
@@ -110,6 +125,9 @@ EXTRA_DEBS=( "$@" )
 if [ -n "${EXTRA_DEBS[*]}" ]; then
     EXTRA_DEBS_SBUILD=("${EXTRA_DEBS[@]/#/--extra-package=}")
     EXTRA_DEBS_REPO_TMP=$(mktemp -d "${SRCNAME}_REPO_XXXXXXXX")
+    # trap cleans up even if user does Ctrl-C
+    # https://stackoverflow.com/a/14812383 inside "trap" avoids running handler twice
+    trap 'excode=$?; rm -rf "'"$EXTRA_DEBS_REPO_TMP"'"; trap - EXIT' EXIT HUP INT QUIT PIPE TERM
     # symlinks don't work here
     ln -f "${EXTRA_DEBS[@]}" "$EXTRA_DEBS_REPO_TMP/"
     ( cd "$EXTRA_DEBS_REPO_TMP"; apt-ftparchive packages . > Packages )
@@ -140,10 +158,6 @@ if [ "$SKIP_AUTOPKGTEST" != 1 ]; then
 	# this is a bit of a hack but works OK for now, until sbuild supports %SBUILD_BUILD_DIR in --autopkgtest-opt
 	sed -ne '/autopkgtest .*: testing package .* version .*/,$p' "$BUILDNAME.build" > "$BUILDNAME.test.log"
 	"$SCRIPTDIR/dev/rust-regressions.sh" "$BUILDNAME.test.log"
-fi
-
-if [ -d "$EXTRA_DEBS_REPO_TMP" ]; then
-    rm -rf "$EXTRA_DEBS_REPO_TMP";
 fi
 
 changestool "$BUILDNAME.changes" adddsc "$SRCNAME.dsc"

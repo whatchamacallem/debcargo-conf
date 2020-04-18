@@ -1,4 +1,10 @@
 #!/bin/sh
+# Package or update a new or existing crate.
+#
+# Usage: [REALVER=<EXACTVER>] ./release.sh <CRATE> [<SEMVER>]
+#
+# Envvars:
+# See also ./vars.sh.frag for its envvars, which we pass through.
 
 . ./vars.sh.frag
 

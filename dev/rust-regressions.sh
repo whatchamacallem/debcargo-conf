@@ -73,7 +73,12 @@ if [ -z "$*" ]; then
 	fi
 	if [ -z "$DEB_RUST_SKIP_CI_DL" ]; then
 		echo >&2 "Downloading CI test logs. If you did this recently and want to skip, re-run me with DEB_RUST_SKIP_CI_DL=1"
-		wget -nv --mirror $(< rust-regressions.list)
+		if ! wget -nv --mirror $(< rust-regressions.list); then
+			if [ -z "$DEB_RUST_NOFAIL_CI_DL" ]; then
+				echo >&2 "abort: Download failed or partially-failed. If you want me to continue, re-run me with DEB_RUST_NOFAIL_CI_DL=1"
+				exit 1
+			fi
+		fi
 	fi
 	cat rust-regressions.list | while read url; do
 		classify "${url#https://}"

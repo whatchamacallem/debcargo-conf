@@ -1,4 +1,27 @@
 #!/bin/bash
+# Release a packaged crate to Debian.
+#
+# Usage: [REALVER=<EXACTVER>] ./release.sh <CRATE> [<SEMVER>]
+#
+# Envvars:
+# See also ./vars.sh.frag for its envvars, which we pass through.
+# See also ./build.sh for its envvars, which we pass through.
+# RERELEASE=1
+#     Bump the changelog for a source-only reupload, required for migration to
+#     Debian Testing, and automatically dput the tarball. You need this after a
+#     NEW upload. This is a dumb consequence of two independently-thought-out
+#     policies but nobody on either team has expressed interest in fixing it,
+#     claiming "not my department".
+# NOUPDATE=1
+#     Tell debcargo not to attempt to update to the latest version, i.e.
+#     autodetect REALVER. Set this if you get unexpected diffs when releasing.
+#     We probably want to switch this on by default, please complain in our IRC
+#     channel if you agree.
+# REUSE_EXISTING_ORIG_TARBALL=1
+#     Re-use the existing .orig tarball. This is needed if it was previously
+#     generated with an old version of debcargo, otherwise you'll get
+#     auto-REJECT from Debian FTP. TODO: we probably want to set this
+#     automatically on if the Debian version ends with -2 or above.
 
 . ./vars.sh.frag
 
