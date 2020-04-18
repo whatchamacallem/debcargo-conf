@@ -1,5 +1,7 @@
-Instructions
-============
+.. contents::
+
+Packaging a crate for Debian
+============================
 
 To get set up, run::
 
@@ -71,34 +73,6 @@ exactly, you will need to use the exact same version of debcargo that was
 used previously. This version is mentioned in ``debian/changelog``.
 
 
-Repository structure
-====================
-
-`pending-*` branches are managed by `./release.sh`, so please don't manage them
-yourself as you will interfere with the working of that script. The intention
-is that they should only differ from the master branch by 1 commit, i.e. the
-`dch -r` commit created by `./release.sh`.
-
-If you want to create separate non-master branches, that is fine - just don't
-call them `pending-*` and don't run `./release.sh` on those branches. If you
-want to test your crate, instead run::
-
-  cd build && [SOURCEONLY=1] ./build.sh <rust-crate-name> [<old-version>]
-
-omitting or not omitting the stuff in [] as needed.
-
-Like many other Debian git repositories, we don't follow "feature branch"
-practises here. We generally don't package just 1 or 2 rust crates at a time,
-but all of its dependencies and sometimes some reverse-dependencies too. So
-normally we'll be touching a few dozen packages at once. In this context, it's
-good to merge often, to avoid conflicts with someone else that might also need
-to touch those too in the next few days.
-
-To match a release (i.e. a ``.deb`` or a ``.dsc`` file) to a commit, find the
-commit message that actually says "Release package X". This will usually be a
-merge commit.
-
-
 Build environment
 =================
 
@@ -133,6 +107,75 @@ After everything is built successfully, you can ``dput`` all of them and then
 push all the ``pending-*`` branches as normal.
 
 
+Repository structure
+====================
+
+``pending-*`` branches are managed by ``./release.sh``, so please don't manage
+them yourself as you will interfere with the working of that script. The
+intention is that they should only differ from the master branch by 1 commit,
+i.e. the ``dch -r`` commit created by ``./release.sh``.
+
+If you want to create separate non-master branches, that is fine - just don't
+call them ``pending-*`` and don't run ``./release.sh`` on those branches. If you
+want to test your crate, instead run::
+
+  cd build && [SOURCEONLY=1] ./build.sh <rust-crate-name> [<old-version>]
+
+omitting or not omitting the stuff in [] as needed.
+
+Like many other Debian git repositories, we don't follow "feature branch"
+practises here. We generally don't package just 1 or 2 rust crates at a time,
+but all of its dependencies and sometimes some reverse-dependencies too. So
+normally we'll be touching a few dozen packages at once. In this context, it's
+good to merge often, to avoid conflicts with someone else that might also need
+to touch those too in the next few days.
+
+To match a release (i.e. a ``.deb`` or a ``.dsc`` file) to a commit, find the
+commit message that actually says "Release package X". This will usually be a
+merge commit.
+
+
+Expert mode & packaging multiple packages
+=========================================
+
+You should get used to the single-packaging workflow a bit first, including
+doing a few `test builds <#build-environment>`_ of your package. Otherwise the
+instructions below may seem a bit opaque.
+
+1. ``rm -rf build/* && sbuild-update -udr debcargo-unstable-amd64-sbuild`` -
+   clears out your build directory, making the subsequent steps a bit faster.
+2. ``./update.sh <CRATE>`` for all your relevant packages
+3. Do any manual updates.
+4. ``cd build` then ``IGNORE_MISSING_BUILD_DEPS=1 ./build.sh <CRATE> *.deb``
+   for all your relevant packages, in dependency order.
+5. Deal with any issues that come up.
+6. Push your updates to our git.
+7. Run ``dev/list-rdeps <CRATE> [<CRATE> ...]`` on all the crates you updated.
+   Any reverse-dependencies that are affected, also need to be updated and you
+   should repeat steps 1-7 (including this step) for them as well, until this
+   step lists no new packages that are affected.
+8. ``./release.sh <CRATE>`` for all the packages you updated, running the build
+   again if necessary. It may be possible to do this out of dependency order,
+   assuming you didn't have to make significant changes in step (5). If you
+   did, then this step also has to be done in dependency order.
+9. Push your ``pending-*`` branches to our git.
+
+I like to have 4 shell windows open for this:
+
+1. To do the manual updates.
+2. To explore git, to remember what step you're on and to lookup previous
+   reference material.
+3. To explore the build directory, e.g. logs and crate source code.
+4. To run a build. Try to have one running in the background at all times, for
+   the next package you didn't look at yet, to save time waiting.
+
+There are also various scripts in ``dev/*`` that might help you. They should
+have a couple lines at the top of the source code describing their
+functionality and some brief usage instructions.
+
+Whew, thanks for all your work!
+
+
 General packaging tips
 ======================
 
@@ -143,8 +186,8 @@ Patch away dependencies on "clippy" unless it is a "real" dependency. Usually
 crates only use clippy to lint themselves and it is not a "real" dependency
 in the sense that they actually import clippy's code for what they do.
 
-If you want to be sure, `rg clippy` and check that all the usages of it are
-inside `cfg_attr` declarations. If so, then just get rid of it.
+If you want to be sure, ``rg clippy`` and check that all the usages of it are
+inside ``cfg_attr`` declarations. If so, then just get rid of it.
 
 OS-specific crates
 ------------------
