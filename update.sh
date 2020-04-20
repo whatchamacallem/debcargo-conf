@@ -45,17 +45,17 @@ if ! grep -q uploaders "$PKGCFG"; then
 	uploader="${uploader:-$DEBFULLNAME <$DEBEMAIL>}"
 	sed -i -e 's/^\(overlay.*\)$/\1\nuploaders = ["'"$uploader"'"]/' "$PKGCFG"
 	echo >&2 "$0: Auto-added $uploader to uploaders in debcargo.toml, based on d/copyright"
-	if [ "$uploader" != "$DEBFULLNAME <$DEBEMAIL>" ]; then
-		read >&2 -p "$0: You may also want to add yourself; ctrl-c if you want to do that, or press enter to continue... " x
-	fi
+#	if [ "$uploader" != "$DEBFULLNAME <$DEBEMAIL>" ]; then
+##		read >&2 -p "$0: You may also want to add yourself; ctrl-c if you want to do that, or press enter to continue... " x
+#	fi
 fi
 
 run_debcargo
 git add -N "$PKGDIR"
 
 if ! git diff --quiet -- "$PKGDIR_REL"; then
-	read -p "Update wrote some changes to $PKGDIR_REL, press enter to git diff..." x || true
-	git diff -- "$PKGDIR_REL"
+#	read -p "Update wrote some changes to $PKGDIR_REL, press enter to git diff..." x || true
+#	git diff -- "$PKGDIR_REL"
 	echo >&2 "-- end of git diff --"
 fi
 
