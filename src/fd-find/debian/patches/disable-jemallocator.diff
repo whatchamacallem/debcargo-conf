@@ -2,7 +2,7 @@ Index: fd-find/Cargo.toml
 ===================================================================
 --- fd-find.orig/Cargo.toml
 +++ fd-find/Cargo.toml
-@@ -80,8 +80,6 @@ version = "2.31.2"
+@@ -83,8 +83,6 @@ version = "2.31.2"
  
  [build-dependencies.version_check]
  version = "0.9"
@@ -15,8 +15,8 @@ Index: fd-find/src/main.rs
 ===================================================================
 --- fd-find.orig/src/main.rs
 +++ fd-find/src/main.rs
-@@ -36,9 +36,9 @@ use crate::internal::{
- };
+@@ -30,9 +30,9 @@ use crate::options::Options;
+ use crate::regex_helper::pattern_has_uppercase_char;
  
  // We use jemalloc for performance reasons, see https://github.com/sharkdp/fd/pull/481
 -#[cfg(all(not(windows), not(target_env = "musl")))]
@@ -26,5 +26,5 @@ Index: fd-find/src/main.rs
 +// #[global_allocator]
 +// static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
  
- fn main() {
-     let checked_args = transform_args_with_exec(env::args_os());
+ fn run() -> Result<ExitCode> {
+     let matches = app::build_app().get_matches_from(env::args_os());
