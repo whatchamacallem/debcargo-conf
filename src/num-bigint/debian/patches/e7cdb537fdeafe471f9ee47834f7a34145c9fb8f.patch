@@ -1,0 +1,70 @@
+From e7cdb537fdeafe471f9ee47834f7a34145c9fb8f Mon Sep 17 00:00:00 2001
+From: Josh Stone <cuviper@gmail.com>
+Date: Mon, 13 Jan 2020 23:55:17 -0800
+Subject: [PATCH] Fix benchmarks for the rand upgrade
+
+---
+ benches/bigint.rs | 3 ++-
+ benches/gcd.rs    | 3 ++-
+ benches/roots.rs  | 3 ++-
+ ci/test_full.sh   | 4 ++--
+ 4 files changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/benches/bigint.rs b/benches/bigint.rs
+index 90a7e85..5474185 100644
+--- a/benches/bigint.rs
++++ b/benches/bigint.rs
+@@ -9,7 +9,8 @@ extern crate test;
+ 
+ use num_bigint::{BigInt, BigUint, RandBigInt};
+ use num_traits::{FromPrimitive, Num, One, Pow, Zero};
+-use rand::{SeedableRng, StdRng};
++use rand::rngs::StdRng;
++use rand::SeedableRng;
+ use std::mem::replace;
+ use test::Bencher;
+ 
+diff --git a/benches/gcd.rs b/benches/gcd.rs
+index 5fe5260..a2b177a 100644
+--- a/benches/gcd.rs
++++ b/benches/gcd.rs
+@@ -10,7 +10,8 @@ extern crate test;
+ use num_bigint::{BigUint, RandBigInt};
+ use num_integer::Integer;
+ use num_traits::Zero;
+-use rand::{SeedableRng, StdRng};
++use rand::rngs::StdRng;
++use rand::SeedableRng;
+ use test::Bencher;
+ 
+ fn get_rng() -> StdRng {
+diff --git a/benches/roots.rs b/benches/roots.rs
+index 51e67d9..b5c0aad 100644
+--- a/benches/roots.rs
++++ b/benches/roots.rs
+@@ -8,7 +8,8 @@ extern crate test;
+ 
+ use num_bigint::{BigUint, RandBigInt};
+ use num_traits::Pow;
+-use rand::{SeedableRng, StdRng};
++use rand::rngs::StdRng;
++use rand::SeedableRng;
+ use test::Bencher;
+ 
+ // The `big64` cases demonstrate the speed of cases where the value
+diff --git a/ci/test_full.sh b/ci/test_full.sh
+index 37505bd..43e989b 100755
+--- a/ci/test_full.sh
++++ b/ci/test_full.sh
+@@ -49,9 +49,9 @@ if test -n "${NO_STD_FEATURES:+true}"; then
+   cargo test --no-default-features --features="$NO_STD_FEATURES"
+ fi
+ 
+-# make sure benchmarks can be built
++# make sure benchmarks can be built and sanity-tested
+ if [[ "$TRAVIS_RUST_VERSION" == "nightly" ]]; then
+-  cargo bench --all-features --no-run
++  cargo test --benches --all-features
+ fi
+ 
+ case "$STD_FEATURES" in
