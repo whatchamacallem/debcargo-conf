@@ -24,6 +24,7 @@ for f in $(awk '{print $1}' LIST_UPLOAD.txt|sed -e "s|rust-||g"); do
 		RERELEASE=1 ./release.sh $PKG
 		git checkout master && git merge origin/pending-$f
 		git branch -d pending-$f
+		git push origin master :pending-$f
 	fi
 	cd $BASE_DIR
 done
