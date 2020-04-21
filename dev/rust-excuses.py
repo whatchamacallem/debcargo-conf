@@ -61,8 +61,10 @@ def is_in_debian(src):
 BG_NOT_IN_DEBIAN = "#cc0000"
 BG_OLD_IN_DEBIAN = "#ffcc66"
 BG_TOO_NEW = "#66ff99"
+BG_MISC_WAIT = "#ffcc99"
 BG_MISC_FAIL = "#ff6666"
 BG_SOURCEONLY = "#9999ff"
+VERDICT_FAIL = ("REJECTED_CANNOT_DETERMINE_IF_PERMANENT", "REJECTED_NEEDS_APPROVAL", "REJECTED_PERMANENTLY")
 
 def traverse(name, arch="", d=0):
     if name in already_seen:
@@ -107,10 +109,10 @@ def traverse(name, arch="", d=0):
         traverse(dep, arch, d + 1)
 
     policy = excuses.get(name, {}).get("policy_info", {})
-    failed = [k for (k, v) in policy.items() if v.get("verdict", "") != "PASS"]
+    failed = {k: v["verdict"] for (k, v) in policy.items() if v.get("verdict", "") != "PASS"}
     attrs = {"shape": "box"}
     if "age" in failed:
-        failed.remove("age")
+        del failed["age"]
         attrs.update({ "fillcolor": BG_TOO_NEW, "style": "filled" })
     if "autopkgtest" in failed:
         for k, v in policy["autopkgtest"].items():
@@ -121,8 +123,15 @@ def traverse(name, arch="", d=0):
                         if u and u.startswith("https://ci.debian.net/data/autopkgtest/testing"):
                             print(u, file=rust_regressions)
     if failed:
-        attrs.update({ "label": "\\N\\nfailed: %s" % ",".join(failed) })
-        bg = BG_SOURCEONLY if failed == ["builtonbuildd"] else BG_MISC_FAIL
+        if list(failed.keys()) == ["builtonbuildd"]:
+            bg = BG_SOURCEONLY
+            attrs.update({ "label": "\\N\\nneeds source-only upload" })
+        elif any(v in VERDICT_FAIL for v in failed.values()):
+            bg = BG_MISC_FAIL
+            attrs.update({ "label": "\\N\\nfailed: %s" % ",".join(failed.keys()) })
+        else:
+            bg = BG_MISC_WAIT
+            attrs.update({ "label": "\\N\\nwaiting: %s" % ",".join(failed.keys()) })
         attrs.update({ "fillcolor": bg, "style": "filled" })
     print_all('"%s" [%s]' % (name, ",".join("%s=\"%s\"" % p for p in attrs.items())))
 
