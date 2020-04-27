@@ -1,0 +1,65 @@
+From 3accc10973272de29f098c5db11951a122238d99 Mon Sep 17 00:00:00 2001
+From: Justus Winter <justus@sequoia-pgp.org>
+Date: Mon, 27 Apr 2020 16:13:33 +0200
+Subject: [PATCH] openpgp: Fix tests when building without compression support.
+
+  - Fixes #495.
+---
+ src/parse.rs                                          | 2 ++
+ src/policy.rs                                         | 4 ++--
+ .../tests/data/messages/encrypted-to-testy-no-compression.gpg | 1 +
+ 3 files changed, 5 insertions(+), 2 deletions(-)
+ create mode 100644 tests/data/messages/encrypted-to-testy-no-compression.gpg
+
+diff --git a/src/parse.rs b/src/parse.rs
+index c8c42a29..cfcb6b3b 100644
+--- a/src/parse.rs
++++ b/src/parse.rs
+@@ -4264,6 +4264,7 @@ mod test {
+         // signed.  But what makes these particularly complex is the
+         // use of an indeterminate length encoding, which checks the
+         // buffered_reader::Reserve hack.
++        #[cfg(feature = "compression-deflate")]
+         DecryptTest {
+             filename: "seip/msg-compression-not-signed-password-123.pgp",
+             algo: SymmetricAlgorithm::AES128,
+@@ -4277,6 +4278,7 @@ mod test {
+                 (Tag::MDC, &[ 1, 1 ]),
+             ],
+         },
++        #[cfg(feature = "compression-deflate")]
+         DecryptTest {
+             filename: "seip/msg-compression-signed-password-123.pgp",
+             algo: SymmetricAlgorithm::AES128,
+diff --git a/src/policy.rs b/src/policy.rs
+index 29daed81..884cc702 100644
+--- a/src/policy.rs
++++ b/src/policy.rs
+@@ -1846,14 +1846,14 @@ mod test {
+ 
+         let p = &P::new();
+         Decryptor::from_bytes(
+-            p, crate::tests::message("encrypted-to-testy.gpg"),
++            p, crate::tests::message("encrypted-to-testy-no-compression.gpg"),
+             Helper {}, crate::frozen_time()).unwrap();
+ 
+         // Reject the AES256.
+         let p = &mut P::new();
+         p.reject_symmetric_algo(SymmetricAlgorithm::AES256);
+         let r = Decryptor::from_bytes(
+-            p, crate::tests::message("encrypted-to-testy.gpg"),
++            p, crate::tests::message("encrypted-to-testy-no-compression.gpg"),
+             Helper {}, crate::frozen_time());
+         match r {
+             Ok(_) => panic!(),
+diff --git a/tests/data/messages/encrypted-to-testy-no-compression.gpg b/tests/data/messages/encrypted-to-testy-no-compression.gpg
+new file mode 100644
+index 00000000..d6920e38
+--- /dev/null
++++ b/tests/data/messages/encrypted-to-testy-no-compression.gpg
+@@ -0,0 +1 @@
++…IâfÉ&2ÿV „GUp¦­º£°Â4­S›Eâ`Ú<Ì,yu14#’û¶xà¾sú1¤]œD2Eª…ÿôO</E@o'eşâ#õ"¼íF tğş Ğ¦£]ïÛ™U¹Ï"ï+wQÏQÌ*ß@;Ô&p zj×¢7Ö,ÙÑıœŠû¤{ìPÅ{ß¾…`úM?Q)èI@\ÅD›Â*®7&9Ù{´µÊ;gåÃ@>±Y°ÂÅÛ»ÉfoãúC,X-¼…Ï]HqYó%_RlLŸEƒ¼w£u."ys½'®—”E*…h$qe–Ö;nã¥,·Âpİ‡şKô€Ò>l+UYq•ÏX v31ıÙ°Ï²GŞêo&P–’¥o?ÇÍ„1Ìäî|UÀêÌ&%ªî²ŸLğ²´˜æÂ‘
+\ No newline at end of file
+-- 
+2.26.2
+
