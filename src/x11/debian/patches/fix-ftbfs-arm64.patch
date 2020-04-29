@@ -1,0 +1,19 @@
+--- a/examples/xrecord.rs
++++ b/examples/xrecord.rs
+@@ -13,6 +13,7 @@
+ };
+ 
+ use std::os::raw::{
++    c_char,
+     c_int
+ };
+ use x11::xlib;
+@@ -92,7 +93,7 @@
+     }
+ }
+ 
+-unsafe extern "C" fn record_callback(_:*mut i8, raw_data: *mut xrecord::XRecordInterceptData) {
++unsafe extern "C" fn record_callback(_:*mut c_char, raw_data: *mut xrecord::XRecordInterceptData) {
+     EVENT_COUNT += 1;
+     let data = &*raw_data;
+ 
