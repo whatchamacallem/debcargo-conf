@@ -243,6 +243,19 @@ tokio/futures/hyper with async/await
 * tokio-tls (after tokio)
 * tokio-util (after tokio, bytes, futures-core, futures-sink, pin-project-lite)
 
+fractal
+-------
+
+* gspell
+   * gspell-sys
+* gstreamer-editing-services
+* gstreamer-player
+* html2pango
+* letter-avatar
+* loggerv
+* mdl
+* secret-service (WIP)
+* sourceview4
 
 ==============
 Eventual goals
