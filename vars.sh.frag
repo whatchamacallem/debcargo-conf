@@ -55,7 +55,7 @@ fi
 CRATE="$1"
 VER="$2"
 
-if [ -n "$CRATE" -a -z "$VER" ] && grep -q crate_src_path "src/$CRATE/debian/debcargo.toml"; then
+if [ -n "$CRATE" -a -z "$VER" ] && grep -q crate_src_path "src/$CRATE/debian/debcargo.toml" 2>/dev/null; then
 	# special hack for crate_src_path, could be cleaner...
 	PKGNAME="$CRATE"
 	PKGBASE="$CRATE"
