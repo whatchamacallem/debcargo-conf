@@ -55,8 +55,15 @@ fi
 CRATE="$1"
 VER="$2"
 
-PKGNAME=${PKGNAME:-$($DEBCARGO deb-src-name "$CRATE" $VER || abort 1 "couldn't find crate $CRATE")}
-PKGBASE=${PKGBASE:-$($DEBCARGO deb-src-name "$CRATE" || abort 1 "couldn't find crate $CRATE")}
+if [ -n "$CRATE" -a -z "$VER" ] && grep -q crate_src_path "src/$CRATE/debian/debcargo.toml"; then
+	# special hack for crate_src_path, could be cleaner...
+	PKGNAME="$CRATE"
+	PKGBASE="$CRATE"
+else
+	PKGNAME=${PKGNAME:-$($DEBCARGO deb-src-name "$CRATE" $VER || abort 1 "couldn't find crate $CRATE")}
+	PKGBASE=${PKGBASE:-$($DEBCARGO deb-src-name "$CRATE" || abort 1 "couldn't find crate $CRATE")}
+fi
+
 PKGDIR_REL="src/$PKGNAME"
 PKGDIR="$PWD/$PKGDIR_REL"
 BUILDDIR="$PWD/build/$PKGNAME"
