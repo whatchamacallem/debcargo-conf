@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo --with bash-completion
+
+override_dh_install:
+	mkdir -p debian/dfrs/usr/share/zsh/vendor-completions debian/dfrs/usr/share/fish/completions
+	debian/dfrs/usr/bin/dfrs completions bash > debian/dfrs.bash
+	debian/dfrs/usr/bin/dfrs completions zsh > debian/dfrs/usr/share/zsh/vendor-completions/_dfrs
+	debian/dfrs/usr/bin/dfrs completions fish > debian/dfrs/usr/share/fish/completions/dfrs.fish
+	dh_install
+	dh_missing
+
+override_dh_installman:
+	scdoc < contrib/man/dfrs.1.scd > debian/dfrs.1
+	dh_installman -O--buildsystem=cargo
