@@ -1,0 +1,48 @@
+diff --git a/examples/fsevent-async-demo.rs b/examples/fsevent-async-demo.rs
+index 9d12bc4..1158ad4 100644
+--- a/examples/fsevent-async-demo.rs
++++ b/examples/fsevent-async-demo.rs
+@@ -3,6 +3,10 @@ extern crate fsevent;
+ use std::sync::mpsc::channel;
+ use std::thread;
+ 
++#[cfg(not(target_arch = "macOS"))]
++fn main() {}
++
++#[cfg(target_arch = "macOS")]
+ fn main() {
+     let (sender, receiver) = channel();
+ 
+diff --git a/examples/fsevent-demo.rs b/examples/fsevent-demo.rs
+index 3900a73..ae54c96 100644
+--- a/examples/fsevent-demo.rs
++++ b/examples/fsevent-demo.rs
+@@ -2,6 +2,10 @@ extern crate fsevent;
+ use std::sync::mpsc::channel;
+ use std::thread;
+ 
++#[cfg(not(target_arch = "macOS"))]
++fn main() {}
++
++#[cfg(target_arch = "macOS")]
+ fn main() {
+     let (sender, receiver) = channel();
+ 
+diff --git a/src/lib.rs b/src/lib.rs
+index 628e751..dd99b9b 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1,3 +1,4 @@
++#![cfg(target_arch = "macOS")]
+ #![deny(trivial_numeric_casts, unstable_features, unused_import_braces, unused_qualifications)]
+ #![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
+ 
+diff --git a/tests/fsevent.rs b/tests/fsevent.rs
+index 42eb537..374508d 100644
+--- a/tests/fsevent.rs
++++ b/tests/fsevent.rs
+@@ -1,3 +1,4 @@
++#![cfg(target_arch = "macOS")]
+ extern crate fsevent;
+ extern crate tempfile;
+ extern crate time;
