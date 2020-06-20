@@ -1,2 +1,14 @@
 overlay = "."
 uploaders = ["Daniel Kahn Gillmor <dkg@fifthhorseman.net>"]
+
+# always needs at least one crypto backend (nettle is the only one available)
+# this should track the version of nettle needed:
+[packages.lib]
+depends = ["librust-nettle-7+default-dev"]
+
+# the auto-generated quickcheck feature needs to include "rand".  This
+# is why x-quickcheck exists for now upstream, see
+# https://github.com/rust-lang/cargo/issues/5565)
+# this should track the version of rand needed:
+[packages."lib+quickcheck"]
+depends = ["librust-rand-0.7-dev"]
