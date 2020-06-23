@@ -1,0 +1,15 @@
+Description: Fixes a failed autopkg test case by backporting the fix from upstream
+Origin: https://github.com/clux/loggerv/commit/97e521dac76c14abfc1aee57bcb317e3d1b16f00
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -876,7 +876,7 @@
+         assert_eq!(logger.include_level, DEFAULT_INCLUDE_LEVEL);
+         assert_eq!(logger.include_line_numbers, DEFAULT_INCLUDE_LINE_NUMBERS);
+         assert_eq!(logger.include_module_path, DEFAULT_INCLUDE_MODULE_PATH);
+-        assert_eq!(logger.colors, DEFAULT_COLORS);
++        assert_eq!(logger.colors, DEFAULT_COLORS && atty::is(atty::Stream::Stdout) && atty::is(atty::Stream::Stderr));
+         assert_eq!(logger.level, DEFAULT_LEVEL);
+         assert_eq!(logger.separator, String::from(DEFAULT_SEPARATOR));
+         assert_eq!(logger.error.color, DEFAULT_ERROR_COLOR);
