@@ -268,14 +268,21 @@ Binary crates worth packaging (please add if you know more):
 - brewstillery - Brewer's, vinter's and distiller's calculator (GTK).
 - cargo-download - Download sources of a crate
 - cargo-edit - Cargo editing subcommands (add, rm, upgrade)
+- diskonaut - interactive disk usage tui tool
+- fractal - Matrix messaging client (GTK, https://wiki.gnome.org/Apps/Fractal)
 - hg - Rust implement of hg
 - jql - JSON Query Language CLI tool.
+- podcasts - Podcasts app (GTK, https://wiki.gnome.org/Apps/Podcasts)
 - recode_rs -  CLI tool converting between the character encodings.
 - rural - User-friendly command-line HTTP tool
+- rust-analyzer - modular rust compiler frontend with LSP
 - rustfmt-nightly - rust coding style
 - rustup - installing and managing multiple rust toolchains
+- shortwave - Internet radio client (GTK, https://gitlab.gnome.org/World/Shortwave)
 - tmux-hints - Find matches (e.g. urls) and navigate them by keyboard
+- viu - Command-line image viewer
 - xsv - Command line program for manipulating CSV files
+- zola - static site generator (https://www.getzola.org/)
 
 To see lists of interesting binary crates, you can run something like::
 
