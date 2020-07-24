@@ -2,16 +2,20 @@
 
 include /usr/share/dpkg/pkg-info.mk
 
+BIN_NAME = hexyl
+BIN_DESCRIPTION = "command-line hex viewer"
+
 %:
 	dh $@ --buildsystem cargo
 
 override_dh_installman:
 	help2man \
-		--name hexyl \
+		--name $(BIN_DESCRIPTION) \
 		--no-info \
 		--no-discard-stderr \
 		--version-string $(DEB_VERSION_UPSTREAM) \
-		debian/hexyl/usr/bin/hexyl > debian/hexyl.1
+		--output debian/$(BIN_NAME).1 \
+		debian/$(BIN_NAME)/usr/bin/$(BIN_NAME)
 	dh_installman -O--buildsystem=cargo
 
 override_dh_auto_test:
