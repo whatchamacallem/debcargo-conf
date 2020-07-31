@@ -266,12 +266,14 @@ Binary crates worth packaging (please add if you know more):
 - bench - simple benchmarking
 - bingrep - Grep through binaries from various OSs and architectures.
 - brewstillery - Brewer's, vinter's and distiller's calculator (GTK).
+- cargo-deb - Create Debian packages from Cargo projects
 - cargo-download - Download sources of a crate
 - cargo-edit - Cargo editing subcommands (add, rm, upgrade)
 - diskonaut - interactive disk usage tui tool
 - fractal - Matrix messaging client (GTK, https://wiki.gnome.org/Apps/Fractal)
 - hg - Rust implement of hg
 - jql - JSON Query Language CLI tool.
+- meli - terminal mail client (https://meli.delivery/)
 - podcasts - Podcasts app (GTK, https://wiki.gnome.org/Apps/Podcasts)
 - recode_rs -  CLI tool converting between the character encodings.
 - rural - User-friendly command-line HTTP tool
