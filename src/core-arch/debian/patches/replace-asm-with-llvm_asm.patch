@@ -1,0 +1,288 @@
+Index: core-arch/src/acle/barrier/cp15.rs
+===================================================================
+--- core-arch.orig/src/acle/barrier/cp15.rs
++++ core-arch/src/acle/barrier/cp15.rs
+@@ -8,20 +8,20 @@ pub struct SY;
+ impl super::super::sealed::Dmb for SY {
+     #[inline(always)]
+     unsafe fn __dmb(&self) {
+-        asm!("mcr p15, 0, r0, c7, c10, 5" : : : "memory" : "volatile")
++        llvm_asm!("mcr p15, 0, r0, c7, c10, 5" : : : "memory" : "volatile")
+     }
+ }
+ 
+ impl super::super::sealed::Dsb for SY {
+     #[inline(always)]
+     unsafe fn __dsb(&self) {
+-        asm!("mcr p15, 0, r0, c7, c10, 4" : : : "memory" : "volatile")
++        llvm_asm!("mcr p15, 0, r0, c7, c10, 4" : : : "memory" : "volatile")
+     }
+ }
+ 
+ impl super::super::sealed::Isb for SY {
+     #[inline(always)]
+     unsafe fn __isb(&self) {
+-        asm!("mcr p15, 0, r0, c7, c5, 4" : : : "memory" : "volatile")
++        llvm_asm!("mcr p15, 0, r0, c7, c5, 4" : : : "memory" : "volatile")
+     }
+ }
+Index: core-arch/src/acle/hints.rs
+===================================================================
+--- core-arch.orig/src/acle/hints.rs
++++ core-arch/src/acle/hints.rs
+@@ -85,7 +85,7 @@ pub unsafe fn __yield() {
+ pub unsafe fn __dbg(imm4: u32) {
+     macro_rules! call {
+         ($imm4:expr) => {
+-            asm!(concat!("DBG ", stringify!($imm4)) : : : : "volatile")
++            llvm_asm!(concat!("DBG ", stringify!($imm4)) : : : : "volatile")
+         }
+     }
+ 
+@@ -117,7 +117,7 @@ pub unsafe fn __dbg(imm4: u32) {
+ /// will increase execution time.
+ #[inline(always)]
+ pub unsafe fn __nop() {
+-    asm!("NOP" : : : : "volatile")
++    llvm_asm!("NOP" : : : : "volatile")
+ }
+ 
+ extern "C" {
+Index: core-arch/src/acle/registers/mod.rs
+===================================================================
+--- core-arch.orig/src/acle/registers/mod.rs
++++ core-arch/src/acle/registers/mod.rs
+@@ -4,7 +4,7 @@ macro_rules! rsr {
+         impl super::super::sealed::Rsr for $R {
+             unsafe fn __rsr(&self) -> u32 {
+                 let r: u32;
+-                asm!(concat!("mrs $0,", stringify!($R)) : "=r"(r) : : : "volatile");
++                llvm_asm!(concat!("mrs $0,", stringify!($R)) : "=r"(r) : : : "volatile");
+                 r
+             }
+         }
+@@ -17,7 +17,7 @@ macro_rules! rsrp {
+         impl super::super::sealed::Rsrp for $R {
+             unsafe fn __rsrp(&self) -> *const u8 {
+                 let r: *const u8;
+-                asm!(concat!("mrs $0,", stringify!($R)) : "=r"(r) : : : "volatile");
++                llvm_asm!(concat!("mrs $0,", stringify!($R)) : "=r"(r) : : : "volatile");
+                 r
+             }
+         }
+@@ -29,7 +29,7 @@ macro_rules! wsr {
+     ($R:ident) => {
+         impl super::super::sealed::Wsr for $R {
+             unsafe fn __wsr(&self, value: u32) {
+-                asm!(concat!("msr ", stringify!($R), ",$0") : : "r"(value) : : "volatile");
++                llvm_asm!(concat!("msr ", stringify!($R), ",$0") : : "r"(value) : : "volatile");
+             }
+         }
+     };
+@@ -40,7 +40,7 @@ macro_rules! wsrp {
+     ($R:ident) => {
+         impl super::super::sealed::Wsrp for $R {
+             unsafe fn __wsrp(&self, value: *const u8) {
+-                asm!(concat!("msr ", stringify!($R), ",$0") : : "r"(value) : : "volatile");
++                llvm_asm!(concat!("msr ", stringify!($R), ",$0") : : "r"(value) : : "volatile");
+             }
+         }
+     };
+Index: core-arch/src/arm/armclang.rs
+===================================================================
+--- core-arch.orig/src/arm/armclang.rs
++++ core-arch/src/arm/armclang.rs
+@@ -51,14 +51,14 @@ pub unsafe fn __breakpoint(val: i32) {
+     #[cfg(target_arch = "arm")]
+     macro_rules! call {
+         ($imm8:expr) => {
+-            asm!(concat!("BKPT ", stringify!($imm8)) : : : : "volatile")
++            llvm_asm!(concat!("BKPT ", stringify!($imm8)) : : : : "volatile")
+         }
+     }
+ 
+     #[cfg(target_arch = "aarch64")]
+     macro_rules! call {
+         ($imm8:expr) => {
+-            asm!(concat!("BRK ", stringify!($imm8)) : : : : "volatile")
++            llvm_asm!(concat!("BRK ", stringify!($imm8)) : : : : "volatile")
+         }
+     }
+ 
+Index: core-arch/src/x86/bt.rs
+===================================================================
+--- core-arch.orig/src/x86/bt.rs
++++ core-arch/src/x86/bt.rs
+@@ -7,7 +7,7 @@ use stdsimd_test::assert_instr;
+ #[unstable(feature = "simd_x86_bittest", issue = "59414")]
+ pub unsafe fn _bittest(p: *const i32, b: i32) -> u8 {
+     let r: u8;
+-    asm!("btl $2, $1\n\tsetc ${0:b}"
++    llvm_asm!("btl $2, $1\n\tsetc ${0:b}"
+          : "=r"(r)
+          : "*m"(p), "r"(b)
+          : "cc", "memory");
+@@ -20,7 +20,7 @@ pub unsafe fn _bittest(p: *const i32, b:
+ #[unstable(feature = "simd_x86_bittest", issue = "59414")]
+ pub unsafe fn _bittestandset(p: *mut i32, b: i32) -> u8 {
+     let r: u8;
+-    asm!("btsl $2, $1\n\tsetc ${0:b}"
++    llvm_asm!("btsl $2, $1\n\tsetc ${0:b}"
+          : "=r"(r), "+*m"(p)
+          : "r"(b)
+          : "cc", "memory");
+@@ -33,7 +33,7 @@ pub unsafe fn _bittestandset(p: *mut i32
+ #[unstable(feature = "simd_x86_bittest", issue = "59414")]
+ pub unsafe fn _bittestandreset(p: *mut i32, b: i32) -> u8 {
+     let r: u8;
+-    asm!("btrl $2, $1\n\tsetc ${0:b}"
++    llvm_asm!("btrl $2, $1\n\tsetc ${0:b}"
+          : "=r"(r), "+*m"(p)
+          : "r"(b)
+          : "cc", "memory");
+@@ -46,7 +46,7 @@ pub unsafe fn _bittestandreset(p: *mut i
+ #[unstable(feature = "simd_x86_bittest", issue = "59414")]
+ pub unsafe fn _bittestandcomplement(p: *mut i32, b: i32) -> u8 {
+     let r: u8;
+-    asm!("btcl $2, $1\n\tsetc ${0:b}"
++    llvm_asm!("btcl $2, $1\n\tsetc ${0:b}"
+          : "=r"(r), "+*m"(p)
+          : "r"(b)
+          : "cc", "memory");
+Index: core-arch/src/x86/cpuid.rs
+===================================================================
+--- core-arch.orig/src/x86/cpuid.rs
++++ core-arch/src/x86/cpuid.rs
+@@ -57,7 +57,7 @@ pub unsafe fn __cpuid_count(leaf: u32, s
+     let edx;
+     #[cfg(target_arch = "x86")]
+     {
+-        asm!("cpuid"
++        llvm_asm!("cpuid"
+              : "={eax}"(eax), "={ebx}"(ebx), "={ecx}"(ecx), "={edx}"(edx)
+              : "{eax}"(leaf), "{ecx}"(sub_leaf)
+              : :);
+@@ -65,7 +65,7 @@ pub unsafe fn __cpuid_count(leaf: u32, s
+     #[cfg(target_arch = "x86_64")]
+     {
+         // x86-64 uses %rbx as the base register, so preserve it.
+-        asm!("cpuid\n"
++        llvm_asm!("cpuid\n"
+              : "={eax}"(eax), "={ebx}"(ebx), "={ecx}"(ecx), "={edx}"(edx)
+              : "{eax}"(leaf), "{ecx}"(sub_leaf)
+              : "rbx" :);
+@@ -113,7 +113,7 @@ pub fn has_cpuid() -> bool {
+             // If it is, then `cpuid` is available.
+             let result: u32;
+             let _temp: u32;
+-            asm!(r#"
++            llvm_asm!(r#"
+                  # Read eflags into $0 and copy it into $1:
+                  pushfd
+                  pop     $0
+Index: core-arch/src/x86/eflags.rs
+===================================================================
+--- core-arch.orig/src/x86/eflags.rs
++++ core-arch/src/x86/eflags.rs
+@@ -13,7 +13,7 @@
+ #[doc(hidden)]
+ pub unsafe fn __readeflags() -> u32 {
+     let eflags: u32;
+-    asm!("pushfd; popl $0" : "=r"(eflags) : : : "volatile");
++    llvm_asm!("pushfd; popl $0" : "=r"(eflags) : : : "volatile");
+     eflags
+ }
+ 
+@@ -30,7 +30,7 @@ pub unsafe fn __readeflags() -> u32 {
+ #[doc(hidden)]
+ pub unsafe fn __readeflags() -> u64 {
+     let eflags: u64;
+-    asm!("pushfq; popq $0" : "=r"(eflags) : : : "volatile");
++    llvm_asm!("pushfq; popq $0" : "=r"(eflags) : : : "volatile");
+     eflags
+ }
+ 
+@@ -46,7 +46,7 @@ pub unsafe fn __readeflags() -> u64 {
+ )]
+ #[doc(hidden)]
+ pub unsafe fn __writeeflags(eflags: u32) {
+-    asm!("pushl $0; popfd" : : "r"(eflags) : "cc", "flags" : "volatile");
++    llvm_asm!("pushl $0; popfd" : : "r"(eflags) : "cc", "flags" : "volatile");
+ }
+ 
+ /// Write EFLAGS.
+@@ -61,7 +61,7 @@ pub unsafe fn __writeeflags(eflags: u32)
+ )]
+ #[doc(hidden)]
+ pub unsafe fn __writeeflags(eflags: u64) {
+-    asm!("pushq $0; popfq" : : "r"(eflags) : "cc", "flags" : "volatile");
++    llvm_asm!("pushq $0; popfq" : : "r"(eflags) : "cc", "flags" : "volatile");
+ }
+ 
+ #[cfg(test)]
+Index: core-arch/src/x86/xsave.rs
+===================================================================
+--- core-arch.orig/src/x86/xsave.rs
++++ core-arch/src/x86/xsave.rs
+@@ -87,7 +87,7 @@ pub unsafe fn _xsetbv(a: u32, val: u64)
+ pub unsafe fn _xgetbv(xcr_no: u32) -> u64 {
+     let eax: u32;
+     let edx: u32;
+-    asm!("xgetbv" : "={eax}"(eax), "={edx}"(edx) : "{ecx}"(xcr_no));
++    llvm_asm!("xgetbv" : "={eax}"(eax), "={edx}"(edx) : "{ecx}"(xcr_no));
+     ((edx as u64) << 32) | (eax as u64)
+ }
+ 
+Index: core-arch/src/x86_64/bt.rs
+===================================================================
+--- core-arch.orig/src/x86_64/bt.rs
++++ core-arch/src/x86_64/bt.rs
+@@ -7,7 +7,7 @@ use stdsimd_test::assert_instr;
+ #[unstable(feature = "simd_x86_bittest", issue = "59414")]
+ pub unsafe fn _bittest64(p: *const i64, b: i64) -> u8 {
+     let r: u8;
+-    asm!("btq $2, $1\n\tsetc ${0:b}"
++    llvm_asm!("btq $2, $1\n\tsetc ${0:b}"
+          : "=r"(r)
+          : "*m"(p), "r"(b)
+          : "cc", "memory");
+@@ -20,7 +20,7 @@ pub unsafe fn _bittest64(p: *const i64,
+ #[unstable(feature = "simd_x86_bittest", issue = "59414")]
+ pub unsafe fn _bittestandset64(p: *mut i64, b: i64) -> u8 {
+     let r: u8;
+-    asm!("btsq $2, $1\n\tsetc ${0:b}"
++    llvm_asm!("btsq $2, $1\n\tsetc ${0:b}"
+          : "=r"(r), "+*m"(p)
+          : "r"(b)
+          : "cc", "memory");
+@@ -33,7 +33,7 @@ pub unsafe fn _bittestandset64(p: *mut i
+ #[unstable(feature = "simd_x86_bittest", issue = "59414")]
+ pub unsafe fn _bittestandreset64(p: *mut i64, b: i64) -> u8 {
+     let r: u8;
+-    asm!("btrq $2, $1\n\tsetc ${0:b}"
++    llvm_asm!("btrq $2, $1\n\tsetc ${0:b}"
+          : "=r"(r), "+*m"(p)
+          : "r"(b)
+          : "cc", "memory");
+@@ -46,7 +46,7 @@ pub unsafe fn _bittestandreset64(p: *mut
+ #[unstable(feature = "simd_x86_bittest", issue = "59414")]
+ pub unsafe fn _bittestandcomplement64(p: *mut i64, b: i64) -> u8 {
+     let r: u8;
+-    asm!("btcq $2, $1\n\tsetc ${0:b}"
++    llvm_asm!("btcq $2, $1\n\tsetc ${0:b}"
+          : "=r"(r), "+*m"(p)
+          : "r"(b)
+          : "cc", "memory");
+Index: core-arch/src/lib.rs
+===================================================================
+--- core-arch.orig/src/lib.rs
++++ core-arch/src/lib.rs
+@@ -9,7 +9,7 @@
+     platform_intrinsics,
+     repr_simd,
+     simd_ffi,
+-    asm,
++    llvm_asm,
+     proc_macro_hygiene,
+     stmt_expr_attributes,
+     core_intrinsics,
