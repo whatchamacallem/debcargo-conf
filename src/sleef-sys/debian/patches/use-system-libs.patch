@@ -1,6 +1,8 @@
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -37,9 +37,6 @@
+Index: sleef-sys/Cargo.toml
+===================================================================
+--- sleef-sys.orig/Cargo.toml
++++ sleef-sys/Cargo.toml
+@@ -37,9 +37,6 @@ default-features = false
  [build-dependencies.bindgen]
  version = "^0.46"
  
@@ -10,15 +12,17 @@
  [build-dependencies.env_logger]
  version = "0.6"
  
---- a/build.rs
-+++ b/build.rs
+Index: sleef-sys/build.rs
+===================================================================
+--- sleef-sys.orig/build.rs
++++ sleef-sys/build.rs
 @@ -1,5 +1,4 @@
  //! Builds the sleef library from source.
 -extern crate cmake;
  extern crate bindgen;
  extern crate env_logger;
  
-@@ -17,23 +16,7 @@
+@@ -17,23 +16,17 @@ fn main() {
          }
      }
  
@@ -33,21 +37,21 @@
 -
      println!("cargo:rustc-link-lib=sleef");
 -    println!("cargo:rustc-link-search=native={}", dst.join("lib").display());
--
+ 
 -    let out_dir = PathBuf::from(env::var_os("OUT_DIR").expect("OUT_DIR was not set"));
 -    let sleef_header = out_dir.join("include").join("sleef.h");
 -    assert!(sleef_header.exists(),
 -            "error sleef.h header not found in OUT_DIR={}",
 -            out_dir.display());
++    let usr_include = PathBuf::from("/usr/include");
++    // this only tries to cover architectures where sleef is actually
++    // available, it does not try to be comprehensive.
++    let mut multiarch = target.clone();
++    multiarch = multiarch.replace("-unknown",""); //all architectures
++    multiarch = multiarch.replace("armv7","arm"); //armhf
++    multiarch = multiarch.replace("i686","i386"); //i386
++
++    let sleef_header = usr_include.join(multiarch).join("sleef.h");
  
      // The bindgen::Builder is the main entry point
      // to bindgen, and lets you build up options for
-@@ -41,7 +24,7 @@
-     let mut bindings = bindgen::Builder::default()
-     // The input header we would like to generate
-     // bindings for.
--        .header(sleef_header.to_str().expect("failed to convert header path to string"))
-+        .header("/usr/include/sleef.h")
-     // Rust does not support 80-bit precision floats:
-         .opaque_type("Sleef_longdouble2")
-     // The bindings should be no_std:
