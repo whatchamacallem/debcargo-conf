@@ -1,0 +1,97 @@
+From f18009e5d57bb4ee03511a9a2b6fd933d58d539f Mon Sep 17 00:00:00 2001
+From: sharkdp <davidpeter@web.de>
+Date: Sun, 20 Sep 2020 19:50:39 +0200
+Subject: [PATCH] Remove 'liquid' dependency
+
+---
+ CHANGELOG.md           |   4 +-
+ Cargo.lock             | 272 -----------------------------------------
+ Cargo.toml             |   8 +-
+ assets/manual/bat.1.in |   2 +-
+ build.rs               |  28 +++--
+ 5 files changed, 24 insertions(+), 290 deletions(-)
+
+Index: bat/Cargo.toml
+===================================================================
+--- bat.orig/Cargo.toml
++++ bat/Cargo.toml
+@@ -109,12 +109,8 @@ version = "0.3"
+ version = "2.33"
+ optional = true
+ 
+-[build-dependencies.liquid]
+-version = "0.21"
+-optional = true
+-
+ [features]
+-application = ["atty", "clap", "dirs", "git", "lazy_static", "liquid", "paging", "wild", "regex-onig"]
++application = ["atty", "clap", "dirs", "git", "lazy_static", "paging", "wild", "regex-onig"]
+ default = ["application"]
+ git = ["git2"]
+ paging = ["shell-words"]
+Index: bat/assets/manual/bat.1.in
+===================================================================
+--- bat.orig/assets/manual/bat.1.in
++++ bat/assets/manual/bat.1.in
+@@ -1,4 +1,4 @@
+-.TH {{PROJECT_EXECUTABLE | upcase}} "1"
++.TH {{PROJECT_EXECUTABLE_UPPERCASE}} "1"
+ .SH NAME
+ {{PROJECT_EXECUTABLE}} \- a cat(1) clone with syntax highlighting and Git integration.
+ .SH "USAGE"
+Index: bat/build.rs
+===================================================================
+--- bat.orig/build.rs
++++ bat/build.rs
+@@ -8,6 +8,7 @@ fn main() {}
+ 
+ #[cfg(feature = "application")]
+ fn main() -> Result<(), Box<dyn std::error::Error>> {
++    use std::collections::HashMap;
+     use std::error::Error;
+     use std::fs;
+     use std::path::Path;
+@@ -15,27 +16,32 @@ fn main() -> Result<(), Box<dyn std::err
+     // Read environment variables.
+     let project_name = option_env!("PROJECT_NAME").unwrap_or("bat");
+     let executable_name = option_env!("PROJECT_EXECUTABLE").unwrap_or(project_name);
++    let executable_name_uppercase = executable_name.to_uppercase();
+     static PROJECT_VERSION: &str = env!("CARGO_PKG_VERSION");
+ 
+-    /// Generates a file from a liquid template.
++    /// Generates a file from a template.
+     fn template(
+-        variables: &liquid::Object,
++        variables: &HashMap<&str, &str>,
+         in_file: &str,
+         out_file: impl AsRef<Path>,
+     ) -> Result<(), Box<dyn Error>> {
+-        let template = liquid::ParserBuilder::with_stdlib()
+-            .build()?
+-            .parse(&fs::read_to_string(in_file)?)?;
++        let mut content = fs::read_to_string(in_file)?;
+ 
+-        fs::write(out_file, template.render(variables)?)?;
++        for (variable_name, value) in variables {
++            // Replace {{variable_name}} by the value
++            let pattern = format!("{{{{{variable_name}}}}}", variable_name = variable_name);
++            content = content.replace(&pattern, value);
++        }
++
++        fs::write(out_file, content)?;
+         Ok(())
+     }
+ 
+-    let variables = liquid::object!({
+-        "PROJECT_NAME": project_name,
+-        "PROJECT_EXECUTABLE": executable_name,
+-        "PROJECT_VERSION": PROJECT_VERSION,
+-    });
++    let mut variables = HashMap::new();
++    variables.insert("PROJECT_NAME", project_name);
++    variables.insert("PROJECT_EXECUTABLE", executable_name);
++    variables.insert("PROJECT_EXECUTABLE_UPPERCASE", &executable_name_uppercase);
++    variables.insert("PROJECT_VERSION", PROJECT_VERSION);
+ 
+     let out_dir_env = std::env::var_os("OUT_DIR").expect("OUT_DIR to be set in build.rs");
+     let out_dir = Path::new(&out_dir_env);
