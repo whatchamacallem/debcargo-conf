@@ -1,0 +1,152 @@
+diff --git a/benches/bench_fill_bytes.rs b/benches/bench_fill_bytes.rs
+deleted file mode 100644
+index c8c2d7b..0000000
+--- a/benches/bench_fill_bytes.rs
++++ /dev/null
+@@ -1,56 +0,0 @@
+-#![feature(test)]
+-#![allow(bad_style)]
+-
+-extern crate test;
+-use test::Bencher;
+-
+-use randomize::*;
+-
+-#[bench]
+-fn bench_fill_bytes_PCG32(b: &mut Bencher) {
+-  let mut v = vec![0u8; 1_000_000];
+-  let mut gen = PCG32::seed(clock_u64(), 5);
+-  b.iter(|| {
+-    gen.fill_bytes(&mut v[..]);
+-  });
+-  println!("{}", v[0]);
+-}
+-
+-#[bench]
+-fn bench_fill_bytes_PCG64(b: &mut Bencher) {
+-  let mut v = vec![0u8; 1_000_000];
+-  let mut gen = PCG64::seed(u128::from(clock_u64()), 5);
+-  b.iter(|| {
+-    gen.fill_bytes(&mut v[..]);
+-  });
+-  println!("{}", v[0]);
+-}
+-
+-#[bench]
+-fn bench_fill_bytes_AnyPCG32(b: &mut Bencher) {
+-  let mut v = vec![0u8; 1_000_000];
+-  let mut gen = AnyPCG::new(PCG32::seed(clock_u64(), 5));
+-  b.iter(|| {
+-    gen.fill_bytes(&mut v[..]);
+-  });
+-  println!("{}", v[0]);
+-}
+-
+-#[bench]
+-fn bench_fill_bytes_AnyPCG64(b: &mut Bencher) {
+-  let mut v = vec![0u8; 1_000_000];
+-  let mut gen = AnyPCG::new(PCG64::seed(u128::from(clock_u64()), 5));
+-  b.iter(|| {
+-    gen.fill_bytes(&mut v[..]);
+-  });
+-  println!("{}", v[0]);
+-}
+-
+-/// A `u64` based on the system clock.
+-fn clock_u64() -> u64 {
+-  let now = std::time::SystemTime::now();
+-  match now.duration_since(std::time::SystemTime::UNIX_EPOCH) {
+-    Ok(dur) => dur.as_secs(),
+-    Err(ste) => ste.duration().as_secs(),
+-  }
+-}
+diff --git a/benches/bench_generators.rs b/benches/bench_generators.rs
+deleted file mode 100644
+index 3133c33..0000000
+--- a/benches/bench_generators.rs
++++ /dev/null
+@@ -1,84 +0,0 @@
+-#![feature(test)]
+-
+-extern crate test;
+-use test::Bencher;
+-
+-use randomize::{formulas::*, *};
+-
+-// Note(Lokathor): This is provided for comparison purposes with the PCGs. LCGs
+-// smaller than 128 bit definitely won't pass any statistical tests, but an
+-// LCG128 actually could pass if you keep only the high 64 from each state
+-// change. There isn't an actual struct provided for this in the lib, because
+-// the increased cost of a 128-bit multiply makes this perform only as fast as a
+-// PCG32, even with the reduced output "permutation" complexity. I suppose if
+-// you wanted 64-bit output with speed over quality you could use this, but I'm
+-// not going to build that for you.
+-#[bench]
+-fn bench_lcg128_top32(b: &mut Bencher) {
+-  let mut state = u128::from(clock_u64());
+-  let mut x = 0u32;
+-  b.iter(|| {
+-    for _ in 0..1_000_000 {
+-      state = lcg128(state, PCG_MULTIPLIER_128, 1);
+-      x = (state >> 96) as u32;
+-    }
+-  });
+-  println!("{},{}", state, x);
+-}
+-
+-#[bench]
+-fn bench_pcg32(b: &mut Bencher) {
+-  let mut gen = PCG32::seed(clock_u64(), 5);
+-  let mut x = 0;
+-  b.iter(|| {
+-    for _ in 0..1_000_000 {
+-      x = gen.next_u32();
+-    }
+-  });
+-  println!("{:?} {}", gen, x);
+-}
+-
+-#[bench]
+-fn bench_pcg64(b: &mut Bencher) {
+-  let mut gen = PCG64::seed(u128::from(clock_u64()), 5);
+-  let mut x = 0;
+-  b.iter(|| {
+-    for _ in 0..1_000_000 {
+-      x = gen.next_u64();
+-    }
+-  });
+-  println!("{:?} {}", gen, x);
+-}
+-
+-#[bench]
+-fn bench_any32(b: &mut Bencher) {
+-  let mut gen = AnyPCG::new(PCG32::seed(clock_u64(), 5));
+-  let mut x = 0;
+-  b.iter(|| {
+-    for _ in 0..1_000_000 {
+-      x = gen.next_u32();
+-    }
+-  });
+-  println!("{:?} {}", gen, x);
+-}
+-
+-#[bench]
+-fn bench_any64(b: &mut Bencher) {
+-  let mut gen = AnyPCG::new(PCG64::seed(u128::from(clock_u64()), 5));
+-  let mut x = 0;
+-  b.iter(|| {
+-    for _ in 0..1_000_000 {
+-      x = gen.next_u64();
+-    }
+-  });
+-  println!("{:?} {}", gen, x);
+-}
+-
+-/// A `u64` based on the system clock.
+-fn clock_u64() -> u64 {
+-  let now = std::time::SystemTime::now();
+-  match now.duration_since(std::time::SystemTime::UNIX_EPOCH) {
+-    Ok(dur) => dur.as_secs(),
+-    Err(ste) => ste.duration().as_secs(),
+-  }
+-}

@@ -1,0 +1,93 @@
+diff --git a/src/bin/randomize.rs b/src/bin/randomize.rs
+deleted file mode 100644
+index 868d6b8..0000000
+--- a/src/bin/randomize.rs
++++ /dev/null
+@@ -1,87 +0,0 @@
+-#![allow(clippy::cast_lossless)]
+-
+-use randomize::*;
+-use std::io::*;
+-
+-pub fn main() {
+-  match std::env::args()
+-    .nth(1)
+-    .expect("must specify a generator!")
+-    .as_ref()
+-  {
+-    "PCG32" => {
+-      let r = clock_u64();
+-      let mut gen = PCG32::from([r, r]);
+-      runner32(|| gen.next_u32())
+-    }
+-    "PCG64" => {
+-      let r = u128::from(clock_u64());
+-      let mut gen = PCG64::from([r, r]);
+-      runner64(|| gen.next_u64())
+-    }
+-    "LCG128-high32" => {
+-      let mut r = u128::from(clock_u64());
+-      runner32(|| {
+-        r = lcg128(r, PCG_MULTIPLIER_128, 1);
+-        (r >> 96) as u32
+-      })
+-    }
+-    "LCG128-high64" => {
+-      let mut r = u128::from(clock_u64());
+-      runner64(|| {
+-        r = lcg128(r, PCG_MULTIPLIER_128, 1);
+-        (r >> 64) as u64
+-      })
+-    }
+-    unknown => panic!("Unknown generator: {:?}", unknown),
+-  };
+-}
+-
+-/// A `u64` based on the system clock.
+-fn clock_u64() -> u64 {
+-  let now = std::time::SystemTime::now();
+-  match now.duration_since(std::time::SystemTime::UNIX_EPOCH) {
+-    Ok(dur) => dur.as_secs(),
+-    Err(ste) => ste.duration().as_secs(),
+-  }
+-}
+-
+-fn runner32<F: FnMut() -> u32>(mut f: F) {
+-  // arbitrary selection of one cache line at a time
+-  const BYTE_BUFFER_LENGTH: usize = 64;
+-  const U32_COUNT: usize = BYTE_BUFFER_LENGTH / core::mem::size_of::<u32>();
+-
+-  let mut buf: [u32; U32_COUNT] = [0; U32_COUNT];
+-  let stdout: Stdout = std::io::stdout();
+-  let mut lock: StdoutLock = stdout.lock();
+-  loop {
+-    for buf_mut in buf.iter_mut() {
+-      *buf_mut = f();
+-    }
+-    lock
+-      .write_all(unsafe {
+-        core::slice::from_raw_parts(buf.as_ptr() as *const u8, BYTE_BUFFER_LENGTH)
+-      })
+-      .expect("failed to write to stdout!");
+-  }
+-}
+-
+-fn runner64<F: FnMut() -> u64>(mut f: F) {
+-  // arbitrary selection of one cache line at a time
+-  const BYTE_BUFFER_LENGTH: usize = 64;
+-  const U64_COUNT: usize = BYTE_BUFFER_LENGTH / core::mem::size_of::<u64>();
+-
+-  let mut buf: [u64; U64_COUNT] = [0; U64_COUNT];
+-  let stdout: Stdout = std::io::stdout();
+-  let mut lock: StdoutLock = stdout.lock();
+-  loop {
+-    for buf_mut in buf.iter_mut() {
+-      *buf_mut = f();
+-    }
+-    lock
+-      .write_all(unsafe {
+-        core::slice::from_raw_parts(buf.as_ptr() as *const u8, BYTE_BUFFER_LENGTH)
+-      })
+-      .expect("failed to write to stdout!");
+-  }
+-}
