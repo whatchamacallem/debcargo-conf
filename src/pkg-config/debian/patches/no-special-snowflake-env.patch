@@ -1,21 +1,3 @@
---- a/tests/test.rs
-+++ b/tests/test.rs
-@@ -34,7 +34,6 @@
-     pkg_config::probe_library(name)
- }
- 
--#[test]
- fn cross_disabled() {
-     let _g = LOCK.lock();
-     reset();
-@@ -46,7 +45,6 @@
-     }
- }
- 
--#[test]
- fn cross_enabled() {
-     let _g = LOCK.lock();
-     reset();
 --- a/src/lib.rs
 +++ b/src/lib.rs
 @@ -9,8 +9,6 @@
@@ -27,22 +9,63 @@
  //! * `FOO_NO_PKG_CONFIG` - if set, this will disable running `pkg-config` when
  //!   probing for the library named `foo`.
  //!
-@@ -344,17 +342,7 @@
+@@ -106,9 +104,8 @@ pub enum Error {
+     /// Contains the name of the responsible environment variable.
+     EnvNoPkgConfig(String),
+ 
+-    /// Cross compilation detected.
+-    ///
+-    /// Override with `PKG_CONFIG_ALLOW_CROSS=1`.
++    /// Cross compilation detected. Kept for compatibility;
++    /// the Debian package never emits this.
+     CrossCompilation,
+ 
+     /// Failed to run `pkg-config`.
+@@ -152,11 +145,6 @@ impl fmt::Display for Error {
+     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+         match *self {
+             Error::EnvNoPkgConfig(ref name) => write!(f, "Aborted because {} is set", name),
+-            Error::CrossCompilation => write!(
+-                f,
+-                "Cross compilation detected. \
+-                 Use PKG_CONFIG_ALLOW_CROSS=1 to override"
+-            ),
+             Error::Command {
+                 ref command,
+                 ref cause,
+@@ -180,7 +168,7 @@ impl fmt::Display for Error {
+                 }
+                 Ok(())
+             }
+-            Error::__Nonexhaustive => panic!(),
++            Error::CrossCompilation | Error::__Nonexhaustive => panic!(),
+         }
+     }
+ }
+@@ -341,6 +329,8 @@ impl Config {
+         if host == target {
+             return true;
+         }
++        // always enable PKG_CONFIG_ALLOW_CROSS override in Debian
++        return true;
  
          // pkg-config may not be aware of cross-compilation, and require
          // a wrapper script that sets up platform-specific prefixes.
--        match self.targetted_env_var("PKG_CONFIG_ALLOW_CROSS") {
--            // don't use pkg-config if explicitly disabled
--            Ok(ref val) if val == "0" => false,
--            Ok(_) => true,
--            Err(_) => {
--                // if not disabled, and pkg-config is customized,
--                // then assume it's prepared for cross-compilation
--                self.targetted_env_var("PKG_CONFIG").is_ok()
--                    || self.targetted_env_var("PKG_CONFIG_SYSROOT_DIR").is_ok()
--            }
--        }
-+        true
-     }
+--- a/tests/test.rs
++++ b/tests/test.rs
+@@ -34,7 +34,6 @@ fn find(name: &str) -> Result<pkg_config
+     pkg_config::probe_library(name)
+ }
  
-     /// Deprecated in favor of the top level `get_variable` function
+-#[test]
+ fn cross_disabled() {
+     let _g = LOCK.lock();
+     reset();
+@@ -46,7 +45,6 @@ fn cross_disabled() {
+     }
+ }
+ 
+-#[test]
+ fn cross_enabled() {
+     let _g = LOCK.lock();
+     reset();
