@@ -20,6 +20,7 @@ fi
 test -d "src/$pkg/debian/patches" || mkdir "src/$pkg/debian/patches"
 rm -rf "build/$pkg/debian/patches"
 rm -rf "build/$pkg/.pc"
+mkdir -p "build/$pkg/debian"
 ln -sfT "$PWD/src/$pkg/debian/patches" "build/$pkg/debian/patches"
 
 if [ -z "$2" ]; then exit 0; fi
