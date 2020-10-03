@@ -65,6 +65,15 @@ rustfmt-nightly
   * rustc-ap-syntax-pos
   * rustc-ap-serialize (fails because of usage of nightly feature)
 
+bat update
+----------
+
+Needs syntect => onig => onig-sys => bindgen 0.55 (for librust-bindgen-0.51+runtime-dev)
+Disabling syntect in bat causes:
+error[E0433]: failed to resolve: use of undeclared type or module `syntect`
+ --> src/terminal.rs:4:5
+
+
 bingrep
 -------
 
