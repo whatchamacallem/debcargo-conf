@@ -1,0 +1,35 @@
+This reverts commit 9a1983982a3e0ac012231e34d5688cfd76b2aaa5.
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -32,11 +32,11 @@ version = "~1.0"
+ version = "~2.33"
+ 
+ [dependencies.git2]
+-version = "~0.13"
++version = ">= 0.9"
+ default-features = false
+ 
+ [dependencies.memchr]
+-version = "~2.3"
++version = ">= 2.2"
+ 
+ [dependencies.slog]
+ version = "~2.5"
+diff --git a/src/stack.rs b/src/stack.rs
+index ff7015c..d7cf3c8 100644
+--- a/src/stack.rs
++++ b/src/stack.rs
+@@ -29,9 +29,9 @@ pub fn working_stack<'repo>(
+     }
+ 
+     let mut revwalk = repo.revwalk()?;
+-    revwalk.set_sorting(git2::Sort::TOPOLOGICAL)?;
++    revwalk.set_sorting(git2::Sort::TOPOLOGICAL);
+     revwalk.push_head()?;
+-    revwalk.simplify_first_parent()?;
++    revwalk.simplify_first_parent();
+     debug!(logger, "head pushed"; "head" => head.name());
+ 
+     let base_commit = match user_provided_base {
+
