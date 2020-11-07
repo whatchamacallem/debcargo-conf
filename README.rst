@@ -344,7 +344,7 @@ Some ramblings
 --------------
 
 In ``#debian-rust`` came these two blog posts along with the remark of _good read_
-* https://blog.hackeriet.no/packaging-a-rust-project-for-debian/
-* https://blog.hackeriet.no/packaging-rust-part-II/
+ * https://blog.hackeriet.no/packaging-a-rust-project-for-debian/
+ * https://blog.hackeriet.no/packaging-rust-part-II/
 
 Now are they, those two blog posts, parked here. Waiting for better integration.
