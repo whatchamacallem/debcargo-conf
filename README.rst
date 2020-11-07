@@ -338,3 +338,13 @@ can try re-running the command with ``RUST_BACKTRACE=1``. If you are using the
 ``debcargo-dbgsym`` package, otherwise the stack trace will be next to useless.
 Make sure you have the `debug repository <https://wiki.debian.org/HowToGetABacktrace#Installing_the_debugging_symbols>`_
 enabled in your APT sources.
+
+
+Some ramblings
+--------------
+
+In ``#debian-rust`` came these two blog posts along with the remark of _good read_
+* https://blog.hackeriet.no/packaging-a-rust-project-for-debian/
+* https://blog.hackeriet.no/packaging-rust-part-II/
+
+Now are they, those two blog posts, parked here. Waiting for better integration.
