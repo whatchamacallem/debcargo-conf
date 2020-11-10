@@ -276,6 +276,8 @@ Binary crates worth packaging (please add if you know more):
 - bingrep - Grep through binaries from various OSs and architectures.
 - brewstillery - Brewer's, vinter's and distiller's calculator (GTK).
 - cargo-deb - Create Debian packages from Cargo projects
+- cargo-debstatus - Print the status of crate’s dependencies in Debian
+  * blocked on postgres
 - cargo-download - Download sources of a crate
 - cargo-edit - Cargo editing subcommands (add, rm, upgrade)
 - diskonaut - interactive disk usage tui tool
@@ -284,7 +286,8 @@ Binary crates worth packaging (please add if you know more):
 - jql - JSON Query Language CLI tool.
 - meli - terminal mail client (https://meli.delivery/)
 - podcasts - Podcasts app (GTK, https://wiki.gnome.org/Apps/Podcasts)
-- recode_rs -  CLI tool converting between the character encodings.
+- recode_rs - CLI tool converting between the character encodings.
+- resvg - SVG renderer (in Debian; packaged separately, but doesn’t build anymore)
 - rural - User-friendly command-line HTTP tool
 - rust-analyzer - modular rust compiler frontend with LSP
 - rustfmt-nightly - rust coding style
