@@ -1,0 +1,42 @@
+Avoid the optional digest feature for now.
+
+We just want to build the binary sha1cdsum and ship the standard
+sha1collisiondetection crate, and shipping the digest-trait feature
+would require an upgrade of a large number of rust-crypto packages.
+Once those updates are done, then we can add the digest-trait feature
+back.
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -30,9 +30,6 @@
+ name = "sha1cdsum"
+ path = "src/main.rs"
+ required-features = ["std"]
+-[dependencies.digest]
+-version = "0.9"
+-optional = true
+ 
+ [dependencies.generic-array]
+ version = ">= 0.12, < 0.15"
+@@ -40,9 +37,6 @@
+ [dependencies.libc]
+ version = "0.2"
+ 
+-[dependencies.sha-1]
+-version = "0.9"
+-optional = true
+ [dev-dependencies.getrandom]
+ version = "0.1"
+ 
+@@ -50,9 +44,8 @@
+ version = "0.3"
+ 
+ [features]
+-default = ["std", "digest-trait"]
+-digest-trait = ["digest", "sha-1"]
++default = ["std"]
+-std = ["digest/std"]
++std = []
+ [badges.gitlab]
+ repository = "sequoia-pgp/sha1collisiondetection"
+
