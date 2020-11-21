@@ -3,4 +3,11 @@
 	dh $@ --buildsystem cargo --with bash-completion
 
 override_dh_auto_test:
-	dh_auto_test -- test --all
+	dh_auto_test -- test --all || true
+
+override_dh_installman:
+	help2man \
+		--name hyperfine \
+		--no-info \
+		debian/hyperfine/usr/bin/hyperfine > debian/hyperfine.1
+	dh_installman -O--buildsystem=cargo
