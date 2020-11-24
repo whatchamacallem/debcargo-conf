@@ -1,0 +1,12 @@
+Index: tree-sitter/binding_rust/build.rs
+===================================================================
+--- tree-sitter.orig/binding_rust/build.rs
++++ tree-sitter/binding_rust/build.rs
+@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
+ use std::{env, fs};
+ 
+ fn main() {
++    println!("dh-cargo:deb-built-using=tree-sitter=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
+     println!("cargo:rerun-if-env-changed=TREE_SITTER_STATIC_ANALYSIS");
+     if env::var("TREE_SITTER_STATIC_ANALYSIS").is_ok() {
+         if let (Some(clang_path), Some(scan_build_path)) = (which("clang"), which("scan-build")) {
