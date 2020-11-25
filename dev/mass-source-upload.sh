@@ -5,8 +5,10 @@ set -e
 BASE_DIR=$(pwd)
 
 if test ! -f LIST_UPLOAD.txt; then
-	echo "Could not find LIST_UPLOAD.txt"
-	echo "Run python3 dev/rust-excuses-source-upload.py > LIST_UPLOAD.txt"
+        echo "Could not find LIST_UPLOAD.txt"
+        echo "Run:"
+        echo "wget https://release.debian.org/britney/excuses.yaml"
+        echo "python3 dev/rust-excuses-source-upload.py > LIST_UPLOAD.txt"
 	exit 1
 fi
 
