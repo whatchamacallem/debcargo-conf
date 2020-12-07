@@ -331,6 +331,7 @@ the older version, in this example ``0.3`` (`explanation`_).
 .. _explanation: https://salsa.debian.org/rust-team/debcargo-conf/merge_requests/86#note_135456
 
 Information on patch headers is available in `dep3`_.
+Use (some of) the headers to explain **why** the patch exists.
 
 .. _dep3: https://dep-team.pages.debian.net/deps/dep3/
 
