@@ -305,6 +305,7 @@ To achieve that, after ``./update.sh``, try::
   $ quilt push -a
   $ quilt new relax-dep.diff
   $ quilt edit Cargo.toml
+  $ quilt header -e --dep3
   $ quilt refresh
   $ cargo build # check that it works. if it does, then
   $ cp -R patches ../../src/<package>/debian
@@ -328,6 +329,10 @@ version requirement like ``>= 0.3, < 0.6``.  Instead you have to specify only
 the older version, in this example ``0.3`` (`explanation`_).
 
 .. _explanation: https://salsa.debian.org/rust-team/debcargo-conf/merge_requests/86#note_135456
+
+Information on patch headers is available in `dep3`_.
+
+.. _dep3: https://dep-team.pages.debian.net/deps/dep3/
 
 Help, something went wrong!
 ---------------------------
