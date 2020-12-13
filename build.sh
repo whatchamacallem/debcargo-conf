@@ -97,12 +97,15 @@ if shouldbuild "$SRCNAME.dsc" "$PKGNAME/debian/changelog" ]; then
 	fi
 fi
 
+EXTRA_DEBS=( "$@" )
+
 check_build_deps() {
 	mkdir -p dpkg-dummy
 	if shouldbuild dpkg-dummy/status /var/cache/apt/pkgcache.bin; then
 		# pretend dpkg status file that marks all packages as installed
 		# this is because dpkg-checkbuilddeps only works on installed pkgs
-		apt-cache dumpavail -o APT::Default-Release=unstable | \
+		( apt-cache dumpavail -o APT::Default-Release=unstable && \
+			for i in ${EXTRA_DEBS[*]}; do apt-cache show $(echo $i | cut -d_ -f1); done ) | \
 		sed -e 's/Package: .*/\0\nStatus: install ok installed/g' > dpkg-dummy/status
 		if ! test -s dpkg-dummy/status; then
 			abort 1 "couldn't generate dpkg-dummy/status, is Debian unstable in your APT sources?"
@@ -121,7 +124,6 @@ if [ "$SOURCEONLY" = 1 ]; then
 	exit
 fi
 
-EXTRA_DEBS=( "$@" )
 if [ -n "${EXTRA_DEBS[*]}" ]; then
     EXTRA_DEBS_SBUILD=("${EXTRA_DEBS[@]/#/--extra-package=}")
     EXTRA_DEBS_REPO_TMP=$(mktemp -d "${SRCNAME}_REPO_XXXXXXXX")
