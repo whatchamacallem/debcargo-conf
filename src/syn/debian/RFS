@@ -1,6 +1,9 @@
-autopkg fails:
-- missing dev-dep insta (does not build)
-- missing dev-dep reqwest 0.10+blocking
-  -> reqwest 0.10 introduces many new deps, including futures-util not yet in Debian
-  -> we need to have syn updated first before futures-util could become available
-- missing dev-dep ref-cast and ref-cast-impl
+no pre-install test executed because of dev-deps's presence
+post-install (autopkg tests) can be made to work with following build order:
+- syn
+- console (UPDATE) ; ron (UPDATE) ; globwalk (NEW) -> insta (NEW)
+- reqwest dev-dep relaxed (0.10 -> 0.9)
+- ref-cast-impl (NEW) -> ref-cast (NEW)
+- rebuild syn and autopkgtest will run
+
+Autopkgtest currently fails, so does cargo test. Advise to get that fixed before uploading.
