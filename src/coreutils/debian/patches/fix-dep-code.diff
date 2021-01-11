@@ -1,0 +1,133 @@
+Index: coreutils/src/uu/shred/src/shred.rs
+===================================================================
+--- coreutils.orig/src/uu/shred/src/shred.rs
++++ coreutils/src/uu/shred/src/shred.rs
+@@ -8,7 +8,8 @@
+ 
+ // spell-checker:ignore (ToDO) NAMESET FILESIZE fstab coeff journaling writeback REiser journaled
+ 
+-use rand::{Rng, ThreadRng};
++use rand::{Rng, thread_rng};
++use rand::prelude::SliceRandom;
+ use std::cell::{Cell, RefCell};
+ use std::fs;
+ use std::fs::{File, OpenOptions};
+@@ -118,7 +119,7 @@ struct BytesGenerator<'a> {
+     block_size: usize,
+     exact: bool, // if false, every block's size is block_size
+     gen_type: PassType<'a>,
+-    rng: Option<RefCell<ThreadRng>>,
++    rng: Option<RefCell<rand::rngs::ThreadRng>>,
+ }
+ 
+ impl<'a> BytesGenerator<'a> {
+@@ -421,7 +422,8 @@ fn wipe_file(
+         for pattern in PATTERNS.iter().take(remainder) {
+             pass_sequence.push(PassType::Pattern(pattern));
+         }
+-        rand::thread_rng().shuffle(&mut pass_sequence[..]); // randomize the order of application
++        let mut rng = rand::thread_rng();
++	pass_sequence.shuffle(&mut rng); // randomize the order of application
+ 
+         let n_random = 3 + n_passes / 10; // Minimum 3 random passes; ratio of 10 after
+                                           // Evenly space random passes; ensures one at the beginning and end
+Index: coreutils/src/uu/shuf/src/shuf.rs
+===================================================================
+--- coreutils.orig/src/uu/shuf/src/shuf.rs
++++ coreutils/src/uu/shuf/src/shuf.rs
+@@ -210,7 +210,7 @@ fn shuf_bytes(
+     });
+ 
+     let mut rng = match random {
+-        Some(r) => WrappedRng::RngFile(rand::read::ReadRng::new(match File::open(&r[..]) {
++        Some(r) => WrappedRng::RngFile(rand::rngs::adapter::ReadRng::new(match File::open(&r[..]) {
+             Ok(f) => f,
+             Err(e) => crash!(1, "failed to open random source '{}': {}", &r[..], e),
+         })),
+@@ -271,8 +271,8 @@ fn parse_range(input_range: String) -> R
+ }
+ 
+ enum WrappedRng {
+-    RngFile(rand::read::ReadRng<File>),
+-    RngDefault(rand::ThreadRng),
++    RngFile(rand::rngs::adapter::ReadRng<File>),
++    RngDefault(rand::rngs::ThreadRng),
+ }
+ 
+ impl WrappedRng {
+Index: coreutils/src/uu/more/src/more.rs
+===================================================================
+--- coreutils.orig/src/uu/more/src/more.rs
++++ coreutils/src/uu/more/src/more.rs
+@@ -19,6 +19,8 @@ extern crate nix;
+ #[cfg(all(unix, not(target_os = "fuchsia")))]
+ use nix::sys::termios;
+ 
++use nix::sys::termios::LocalFlags;
++
+ #[cfg(target_os = "redox")]
+ extern crate redox_termios;
+ #[cfg(target_os = "redox")]
+@@ -92,10 +94,10 @@ fn help(usage: &str) {
+ fn setup_term() -> termios::Termios {
+     let mut term = termios::tcgetattr(0).unwrap();
+     // Unset canonical mode, so we get characters immediately
+-    term.c_lflag.remove(termios::ICANON);
++    term.local_flags.remove(LocalFlags::ICANON);
+     // Disable local echo
+-    term.c_lflag.remove(termios::ECHO);
+-    termios::tcsetattr(0, termios::TCSADRAIN, &term).unwrap();
++    term.local_flags.remove(LocalFlags::ECHO);
++    termios::tcsetattr(0, termios::SetArg::TCSADRAIN, &term).unwrap();
+     term
+ }
+ 
+@@ -110,8 +112,8 @@ fn setup_term() -> redox_termios::Termio
+     let mut term = redox_termios::Termios::default();
+     let fd = syscall::dup(0, b"termios").unwrap();
+     syscall::read(fd, &mut term).unwrap();
+-    term.c_lflag &= !redox_termios::ICANON;
+-    term.c_lflag &= !redox_termios::ECHO;
++    term.c_lflag &= !redox_LocalFlags::ICANON;
++    term.c_lflag &= !redox_LocalFlags::ECHO;
+     syscall::write(fd, &term).unwrap();
+     let _ = syscall::close(fd);
+     term
+@@ -119,9 +121,9 @@ fn setup_term() -> redox_termios::Termio
+ 
+ #[cfg(all(unix, not(target_os = "fuchsia")))]
+ fn reset_term(term: &mut termios::Termios) {
+-    term.c_lflag.insert(termios::ICANON);
+-    term.c_lflag.insert(termios::ECHO);
+-    termios::tcsetattr(0, termios::TCSADRAIN, &term).unwrap();
++    term.local_flags.insert(LocalFlags::ICANON);
++    term.local_flags.insert(LocalFlags::ECHO);
++    termios::tcsetattr(0, LocalFlags::TCSADRAIN, &term).unwrap();
+ }
+ 
+ #[cfg(any(windows, target_os = "fuchsia"))]
+Index: coreutils/src/uu/env/src/env.rs
+===================================================================
+--- coreutils.orig/src/uu/env/src/env.rs
++++ coreutils/src/uu/env/src/env.rs
+@@ -92,7 +92,7 @@ fn load_config_file(opts: &mut Options)
+ 
+         for (_, prop) in &conf {
+             // ignore all INI section lines (treat them as comments)
+-            for (key, value) in prop {
++            for (key, value) in prop.iter() {
+                 env::set_var(key, value);
+             }
+         }
+Index: coreutils/src/uu/hashsum/src/hashsum.rs
+===================================================================
+--- coreutils.orig/src/uu/hashsum/src/hashsum.rs
++++ coreutils/src/uu/hashsum/src/hashsum.rs
+@@ -605,6 +605,6 @@ fn digest_reader<'a, T: Read>(
+         let mut bytes = Vec::new();
+         bytes.resize((output_bits + 7) / 8, 0);
+         digest.result(&mut bytes);
+-        Ok(bytes.to_hex())
++        Ok(bytes.to_vec().to_hex())
+     }
+ }
