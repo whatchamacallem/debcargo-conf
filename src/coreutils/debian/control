@@ -24,7 +24,8 @@ Build-Depends: debhelper (>= 12),
  librust-itertools-dev, librust-bit-set-dev, librust-dunce-dev,
  librust-data-encoding-dev, librust-platform-info-dev,
  librust-num-traits-dev (>= 0.2.14),
- librust-smallvec-dev, librust-rand-pcg-dev
+ librust-smallvec-dev, librust-rand-pcg-dev,
+ librust-thiserror-dev
 Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
 Uploaders:
  Sylvestre Ledru <sylvestre@debian.org>
@@ -34,7 +35,7 @@ Vcs-Browser: https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/co
 Homepage: https://github.com/uutils/coreutils
 Rules-Requires-Root: no
 
-Package: coreutils
+Package: rust-coreutils
 Architecture: any
 Multi-Arch: allowed
 Depends:
@@ -47,9 +48,20 @@ Suggests:
  ${cargo:Suggests}
 Provides:
  ${cargo:Provides}
+Breaks: coreutils
+Replaces: coreutils
 Built-Using: ${cargo:Built-Using}
 XB-X-Cargo-Built-Using: ${cargo:X-Cargo-Built-Using}
-Description: Coreutils ~ GNU coreutils; implemented as universal (cross-platform) utils, written in Rust
- This package contains the following binaries built from the Rust crate
- "coreutils":
-  - coreutils
+Description: Universal coreutils utils, written in Rust
+ This packages replaces the GNU coreutils package written in C.
+ It should be a drop-in replacement but:
+  * Some options have NOT been implemented,
+  * A few binaries are missing (ex: dd),
+  * Might have important bugs,
+  * Might be slower,
+  * Output of the binaries might be slightly different.
+ .
+ It might break your system.
+ .
+ This is an EXPERIMENTAL package. It should not be used in
+ production.

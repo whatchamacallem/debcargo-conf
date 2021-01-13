@@ -2,10 +2,17 @@
 %:
 	dh $@ --buildsystem cargo
 
-dh_auto_test:
-	sed -i -e "s|debug|release|" GNUmakefile
-	make install
+override_dh_auto_test:
 
+override_dh_auto_install:
+	sed -i -e "s|debug|release|" GNUmakefile
+	DESTDIR=$(CURDIR)/debian/tmp/ make install
+	for f in $(CURDIR)/debian/tmp/usr/local/bin/*; do \
+		filename=$$(basename $$f); \
+		help2man $$f > docs/$$filename.1; \
+	done
+
+override_dh_doc:
 # override_dh_install:
 # 	mkdir -p debian/sn0int/usr/share/zsh/vendor-completions debian/sn0int/usr/share/fish/completions
 # 	cp -f completions/_sn0int debian/sn0int/usr/share/zsh/vendor-completions/
