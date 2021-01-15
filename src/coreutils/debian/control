@@ -1,6 +1,6 @@
 Source: rust-coreutils
 Section: utils
-Priority: optional
+Priority: required
 Build-Depends: debhelper (>= 12),
  dh-cargo (>= 24),
  cargo:native,
@@ -23,13 +23,11 @@ Build-Depends: debhelper (>= 12),
  librust-tempfile-dev, librust-nix-dev, librust-fs-extra-dev,
  librust-itertools-dev, librust-bit-set-dev, librust-dunce-dev,
  librust-data-encoding-dev, librust-platform-info-dev,
- librust-num-traits-dev (>= 0.2.14),
- librust-smallvec-dev, librust-rand-pcg-dev,
- librust-thiserror-dev, librust-lazy-static-dev,
+ librust-num-traits-dev (>= 0.2.14), librust-smallvec-dev,
+ librust-rand-pcg-dev, librust-thiserror-dev, librust-lazy-static-dev,
  librust-byteorder-dev, librust-hostname-dev,
- librust-fnv-dev, librust-wild-dev, librust-cpp-syn-dev,
- librust-backtrace-sys-dev,
- python3-sphinx, help2man
+ librust-fnv-dev, librust-wild-dev, librust-cpp-dev,
+ librust-backtrace-sys-dev, python3-sphinx, help2man
 Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
 Uploaders:
  Sylvestre Ledru <sylvestre@debian.org>
@@ -51,9 +49,12 @@ Recommends:
 Suggests:
  ${cargo:Suggests}
 Provides:
- ${cargo:Provides}
+ ${cargo:Provides},
+ coreutils
+Conflicts: coreutils
 Breaks: coreutils
 Replaces: coreutils
+Essential: yes
 Built-Using: ${cargo:Built-Using}
 XB-X-Cargo-Built-Using: ${cargo:X-Cargo-Built-Using}
 Description: Universal coreutils utils, written in Rust
