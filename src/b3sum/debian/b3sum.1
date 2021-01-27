@@ -1,0 +1,62 @@
+.TH B3SUM "1" "November 2020" "b3sum 0.3.7" "User Commands"
+.SH NAME
+b3sum \- compute and check BLAKE3 hash
+.SH "USAGE"
+.B b3sum
+[FLAGS] [OPTIONS] [FILE]...
+.SH DESCRIPTION
+.PP
+Print or check BLAKE3 checksums.
+.PP
+With no FILE, or when FILE is \-, read standard input.
+.SS "FLAGS:"
+.TP
+\fB\-c\fR, \fB\-\-check\fR
+Reads BLAKE3 sums from the [file]s and checks them
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Prints help information
+.TP
+\fB\-\-keyed\fR
+Uses the keyed mode. The secret key is read from standard
+input, and it must be exactly 32 raw bytes.
+.TP
+\fB\-\-no\-mmap\fR
+Disables memory mapping. Currently this also disables
+multithreading.
+.TP
+\fB\-\-no\-names\fR
+Omits filenames in the output
+.TP
+\fB\-\-quiet\fR
+Skips printing OK for each successfully verified file.
+Must be used with \fB\-\-check\fR.
+.TP
+\fB\-\-raw\fR
+Writes raw output bytes to stdout, rather than hex.
+\fB\-\-no\-names\fR is implied. In this case, only a single
+input is allowed.
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Prints version information
+.SS "OPTIONS:"
+.TP
+\fB\-\-derive\-key\fR <CONTEXT>
+Uses the key derivation mode, with the given
+context string. Cannot be used with \fB\-\-keyed\fR.
+.TP
+\fB\-l\fR, \fB\-\-length\fR <LEN>
+The number of output bytes, prior to hex
+encoding (default 32)
+.TP
+\fB\-\-num\-threads\fR <NUM>
+The maximum number of threads to use. By
+default, this is the number of logical cores.
+If this flag is omitted, or if its value is 0,
+RAYON_NUM_THREADS is also respected.
+.SS "ARGS:"
+.TP
+<FILE>...
+Files to hash, or checkfiles to check. When no file is given,
+or when \- is given, read standard input.
+.SH "SEE ALSO"
