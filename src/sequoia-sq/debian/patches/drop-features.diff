@@ -1,7 +1,10 @@
-Drop net features
+Drop net and autocrypt features
 
 Since the sequoia-net crate is not in debian yet, and tokio is not up
 to the version that sq needs, we just build without sequoia-net or tokio.
+
+Since sequoia-autocrypt is in NEW, we'll skip it for now too (it
+should be easy to rebuild once sequoia-autocrypt is out of NEW)
 
 The compression-related features aren't necessary
 (sequoia-openpgp/default already has compression enabled), and the
@@ -9,11 +12,16 @@ choice of crypto backends isn't relevant on debian, where we just rely
 directly on nettle.
 
 --- a/Cargo.toml
-+++ b//Cargo.toml
-@@ -52,11 +52,6 @@
- version = "0.23"
- default-features = false
++++ b/Cargo.toml
+@@ -48,16 +48,6 @@
+ [dependencies.rpassword]
+ version = "5.0"
  
+-[dependencies.sequoia-autocrypt]
+-version = "0.23"
+-optional = true
+-default-features = false
+-
 -[dependencies.sequoia-net]
 -version = "0.23"
 -optional = true
@@ -22,11 +30,10 @@ directly on nettle.
  [dependencies.sequoia-openpgp]
  version = "1.0.0"
  default-features = false
-@@ -66,11 +61,6 @@
- 
+@@ -68,10 +58,6 @@
  [dependencies.term_size]
  version = "0.3"
--
+ 
 -[dependencies.tokio]
 -version = "0.2.19"
 -features = ["rt-core", "io-util", "io-driver"]
@@ -34,16 +41,17 @@ directly on nettle.
  [dev-dependencies.assert_cli]
  version = "0.6"
  [build-dependencies.clap]
-@@ -81,13 +71,7 @@
+@@ -82,14 +68,7 @@
  default-features = false
  
  [features]
+-autocrypt = ["sequoia-autocrypt"]
 -compression = ["buffered-reader/compression", "sequoia-openpgp/compression"]
 -compression-bzip2 = ["buffered-reader/compression-bzip2", "sequoia-openpgp/compression-bzip2"]
 -compression-deflate = ["buffered-reader/compression-deflate", "sequoia-openpgp/compression-deflate"]
 -crypto-cng = ["sequoia-openpgp/crypto-cng"]
 -crypto-nettle = ["sequoia-openpgp/crypto-nettle"]
--default = ["buffered-reader/compression", "sequoia-openpgp/default", "net"]
+-default = ["buffered-reader/compression", "sequoia-openpgp/default", "net", "autocrypt"]
 -net = ["sequoia-net", "tokio"]
 +default = ["buffered-reader/compression", "sequoia-openpgp/default"]
  [badges.gitlab]
