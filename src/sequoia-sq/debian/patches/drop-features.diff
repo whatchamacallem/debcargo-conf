@@ -1,10 +1,7 @@
-Drop net and autocrypt features
+Drop net feature
 
 Since the sequoia-net crate is not in debian yet, and tokio is not up
 to the version that sq needs, we just build without sequoia-net or tokio.
-
-Since sequoia-autocrypt is in NEW, we'll skip it for now too (it
-should be easy to rebuild once sequoia-autocrypt is out of NEW)
 
 The compression-related features aren't necessary
 (sequoia-openpgp/default already has compression enabled), and the
@@ -13,15 +10,10 @@ directly on nettle.
 
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -48,16 +48,6 @@
- [dependencies.rpassword]
- version = "5.0"
+@@ -53,11 +53,6 @@
+ optional = true
+ default-features = false
  
--[dependencies.sequoia-autocrypt]
--version = "0.23"
--optional = true
--default-features = false
--
 -[dependencies.sequoia-net]
 -version = "0.23"
 -optional = true
@@ -30,7 +22,7 @@ directly on nettle.
  [dependencies.sequoia-openpgp]
  version = "1.0.0"
  default-features = false
-@@ -68,10 +58,6 @@
+@@ -68,10 +63,6 @@
  [dependencies.term_size]
  version = "0.3"
  
@@ -41,11 +33,10 @@ directly on nettle.
  [dev-dependencies.assert_cli]
  version = "0.6"
  [build-dependencies.clap]
-@@ -82,14 +68,7 @@
- default-features = false
+@@ -83,13 +74,7 @@
  
  [features]
--autocrypt = ["sequoia-autocrypt"]
+ autocrypt = ["sequoia-autocrypt"]
 -compression = ["buffered-reader/compression", "sequoia-openpgp/compression"]
 -compression-bzip2 = ["buffered-reader/compression-bzip2", "sequoia-openpgp/compression-bzip2"]
 -compression-deflate = ["buffered-reader/compression-deflate", "sequoia-openpgp/compression-deflate"]
@@ -53,7 +44,7 @@ directly on nettle.
 -crypto-nettle = ["sequoia-openpgp/crypto-nettle"]
 -default = ["buffered-reader/compression", "sequoia-openpgp/default", "net", "autocrypt"]
 -net = ["sequoia-net", "tokio"]
-+default = ["buffered-reader/compression", "sequoia-openpgp/default"]
++default = ["buffered-reader/compression", "sequoia-openpgp/default", "autocrypt"]
  [badges.gitlab]
  repository = "sequoia-pgp/sequoia"
  
