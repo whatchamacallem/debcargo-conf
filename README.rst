@@ -3,7 +3,7 @@
 Packaging a crate for Debian
 ============================
 
-To get set up, run::
+To get set up, run at Debian unstable (recommended)::
 
   apt update && apt install debcargo
 
