@@ -1,0 +1,33 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -36,5 +36,3 @@
+ [features]
+ vendored = ["nettle-src"]
+ nettle-src = []
+-[target."cfg(target_env = \"msvc\")".build-dependencies.vcpkg]
+-version = "0.2.9"
+--- a/build.rs
++++ b/build.rs
+@@ -3,22 +3,6 @@
+ use std::path::{Path, PathBuf};
+ 
+ 
+-#[cfg(all(target_env = "msvc", not(feature = "vendored")))]
+-fn try_vcpkg() -> Option<Vec<PathBuf>> {
+-    let lib = vcpkg::Config::new()
+-        .emit_includes(true)
+-        .find_package("nettle");
+-
+-    match lib {
+-        Ok(lib) => Some(lib.include_paths),
+-        Err(e) => {
+-            println!("note: vcpkg did not find openssl: {}", e);
+-            None
+-        }
+-    }
+-}
+-
+-#[cfg(any(not(target_env = "msvc"), feature = "vendored"))]
+ fn try_vcpkg() -> Option<Vec<PathBuf>> { None }
+ 
+ fn print_library(lib: &pkg_config::Library, mode: &str) {
