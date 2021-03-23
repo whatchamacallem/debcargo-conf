@@ -1,0 +1,186 @@
+From ac992b942e57fb68131a72d238c188e30f306941 Mon Sep 17 00:00:00 2001
+From: "Neal H. Walfield" <neal@pep.foundation>
+Date: Tue, 23 Mar 2021 09:44:20 +0100
+Subject: [PATCH] openpgp: Short-circuit regex alternations with empty
+ branches.
+
+  - The regex 'a|b|' is an alternation of three branches: 'a', 'b',
+    and ''.  The last branch matches anything, so the alternation
+    matches anything, and therefore the whole thing can be
+    elided.
+
+  - This is required for regex <= 1.3.7, which doesn't support empty
+    alternations.
+
+  - Unfortunately, this is the version in Debian Bullseye.
+
+  - Fixes #694.
+---
+ src/regex/grammar.lalrpop | 92 ++++++++++++++++++++++---------
+ src/regex/mod.rs          | 25 +++++++++
+ 2 files changed, 92 insertions(+), 25 deletions(-)
+
+diff --git a/src/regex/grammar.lalrpop b/src/regex/grammar.lalrpop
+index e9e619b5..46fd7a70 100644
+--- a/src/regex/grammar.lalrpop
++++ b/src/regex/grammar.lalrpop
+@@ -17,7 +17,19 @@ pub(crate) Regex : Hir = {
+     <l:LBranch> <r:RBranch*> => {
+         let mut r = r;
+         r.insert(0, l);
+-        Hir::alternation(r)
++
++        // If any of the branches are empty, then that branch matches
++        // everything, and we can just short circuit the whole
++        // alternation.
++        //
++        // This is actually required for version 1.3.7 of the regex
++        // crate, which is the version that is in Debian Bullseye.
++        // See issue #694 for details.
++        if r.iter().any(|b| b.kind().is_empty()) {
++            hir::Hir::empty()
++        } else {
++            Hir::alternation(r)
++        }
+     },
+ }
+ 
+@@ -30,45 +42,75 @@ RBranch : Hir = {
+ }
+ 
+ Branch : Hir = {
+-    <p:Piece*> => {
+-        hir::Hir::group(hir::Group {
+-            kind: hir::GroupKind::NonCapturing,
+-            hir: Box::new(hir::Hir::concat(p)),
+-        })
++    => {
++        hir::Hir::empty()
++    },
++    <p:Piece+> => {
++        if p.iter().all(|p| p.kind().is_empty()) {
++            // All pieces are empty.  Just return empty.
++            hir::Hir::empty()
++        } else {
++            hir::Hir::group(hir::Group {
++                kind: hir::GroupKind::NonCapturing,
++                hir: Box::new(hir::Hir::concat(p)),
++            })
++        }
+     },
+ }
+ 
+ Piece : Hir = {
+     <a:Atom> => a,
+     <a:Atom> STAR => {
+-        hir::Hir::repetition(hir::Repetition {
+-            kind: hir::RepetitionKind::ZeroOrMore,
+-            greedy: true,
+-            hir: Box::new(a)
+-        })
++        if a.kind().is_empty() {
++            // Piece is empty.  This is equivalent to empty so just
++            // return it.
++            a
++        } else {
++            hir::Hir::repetition(hir::Repetition {
++                kind: hir::RepetitionKind::ZeroOrMore,
++                greedy: true,
++                hir: Box::new(a)
++            })
++        }
+     },
+     <a:Atom> PLUS => {
+-        hir::Hir::repetition(hir::Repetition {
+-            kind: hir::RepetitionKind::OneOrMore,
+-            greedy: true,
+-            hir: Box::new(a)
+-        })
++        if a.kind().is_empty() {
++            // Piece is empty.  This is equivalent to empty so just
++            // return it.
++            a
++        } else {
++            hir::Hir::repetition(hir::Repetition {
++                kind: hir::RepetitionKind::OneOrMore,
++                greedy: true,
++                hir: Box::new(a)
++            })
++        }
+     },
+     <a:Atom> QUESTION => {
+-        hir::Hir::repetition(hir::Repetition {
+-            kind: hir::RepetitionKind::ZeroOrOne,
+-            greedy: true,
+-            hir: Box::new(a)
+-        })
++        if a.kind().is_empty() {
++            // Piece is empty.  This is equivalent to empty so just
++            // return it.
++            a
++        } else {
++            hir::Hir::repetition(hir::Repetition {
++                kind: hir::RepetitionKind::ZeroOrOne,
++                greedy: true,
++                hir: Box::new(a)
++            })
++        }
+     },
+ }
+ 
+ Atom : Hir = {
+     LPAREN <r:Regex> RPAREN => {
+-        hir::Hir::group(hir::Group {
+-            kind: hir::GroupKind::NonCapturing,
+-            hir: Box::new(r),
+-        })
++        if r.kind().is_empty() {
++            r
++        } else {
++            hir::Hir::group(hir::Group {
++                kind: hir::GroupKind::NonCapturing,
++                hir: Box::new(r),
++            })
++        }
+     },
+ 
+     Range,
+diff --git a/src/regex/mod.rs b/src/regex/mod.rs
+index c61878a1..0d4fd7b3 100644
+--- a/src/regex/mod.rs
++++ b/src/regex/mod.rs
+@@ -1197,6 +1197,31 @@ mod tests {
+             (true, "d"),
+             (true, "eeee"),
+         ]);
++        // A nested empty.
++        a("(a|)|b", &[
++            (true, "a"),
++            (true, "b"),
++        ]);
++        // empty+
++        a("(a|b|()+)", &[
++            (true, "a"),
++            (true, "b"),
++        ]);
++        // (empty)+
++        a("(a|b|(())+)", &[
++            (true, "a"),
++            (true, "b"),
++        ]);
++        // Multiple empty branches.
++        a("(a|b|(()())())", &[
++            (true, "a"),
++            (true, "b"),
++        ]);
++        a("(a|b|(()())())|", &[
++            (true, "a"),
++            (true, "b"),
++        ]);
++
+         // This is: "ab" or "cd", not a followed by b or c followed by d:
+         //
+         //   A regular expression is zero or more branches, separated by '|'.
+-- 
+2.30.2
+
