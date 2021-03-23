@@ -1,0 +1,48 @@
+diff --git a/src/sandbox/seccomp.rs b/src/sandbox/seccomp.rs
+index bfa2e49..0cb5837 100644
+--- a/src/sandbox/seccomp.rs
++++ b/src/sandbox/seccomp.rs
+@@ -43,6 +44,8 @@ pub fn activate_stage1() -> Result<(), syscallz::Error> {
+     #[cfg(target_arch = "arm")]
+     ctx.allow_syscall(Syscall::send)?;
+     ctx.allow_syscall(Syscall::sendto)?;
++    #[cfg(target_arch = "arm")]
++    ctx.allow_syscall(Syscall::recv)?;
+     ctx.allow_syscall(Syscall::recvfrom)?;
+     ctx.allow_syscall(Syscall::sendmsg)?;
+     ctx.allow_syscall(Syscall::recvmsg)?;
+@@ -99,7 +102,7 @@ pub fn activate_stage1() -> Result<(), syscallz::Error> {
+     ctx.allow_syscall(Syscall::exit_group)?;
+     ctx.allow_syscall(Syscall::set_robust_list)?;
+     ctx.allow_syscall(Syscall::openat)?;
+-    #[cfg(target_arch = "aarch64")]
++    #[cfg(any(target_arch = "x86_64", target_arch = "aarch64"))]
+     ctx.allow_syscall(Syscall::newfstatat)?;
+     ctx.allow_syscall(Syscall::seccomp)?; // needed for stage2
+     ctx.allow_syscall(Syscall::getrandom)?;
+@@ -117,6 +120,7 @@ pub fn activate_stage1() -> Result<(), syscallz::Error> {
+     #[cfg(not(target_arch = "aarch64"))]
+     ctx.allow_syscall(Syscall::access)?; // needed for debian /etc/ld.so.nohwcap
+     ctx.allow_syscall(Syscall::faccessat)?; // needed for debian /etc/ld.so.nohwcap
++    ctx.allow_syscall(Syscall::eventfd2)?;
+ 
+     ctx.load()?;
+ 
+@@ -153,13 +157,15 @@ pub fn activate_stage2() -> Result<(), syscallz::Error> {
+     // ctx.allow_syscall(Syscall::socket)?;
+     // ctx.allow_syscall(Syscall::connect)?;
+     // ctx.allow_syscall(Syscall::sendto)?;
++    #[cfg(target_arch = "arm")]
++    ctx.allow_syscall(Syscall::recv)?;
+     // ctx.allow_syscall(Syscall::recvfrom)?;
+     // ctx.allow_syscall(Syscall::sendmsg)?;
+     // ctx.allow_syscall(Syscall::recvmsg)?;
+     // ctx.allow_syscall(Syscall::bind)?;
+-    // ctx.allow_syscall(Syscall::getsockname)?;
++    ctx.allow_syscall(Syscall::getsockname)?;
+     ctx.allow_syscall(Syscall::setsockopt)?;
+-    // ctx.allow_syscall(Syscall::getsockopt)?;
++    ctx.allow_syscall(Syscall::getsockopt)?;
+     ctx.allow_syscall(Syscall::clone)?;
+     // ctx.allow_syscall(Syscall::uname)?;
+     // ctx.allow_syscall(Syscall::fcntl)?;
