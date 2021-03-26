@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_auto_test:
+	dh_auto_test -- test --all
+
+UPSTREAM_FILES = .cargo_vcs_info.json .gitignore .travis.yml CHANGELOG.md Cargo.toml Cargo.toml.orig LICENSE-* README.md src/*.rs tests/test.*
+
+override_dh_auto_install:
+	touch -d @$(SOURCE_DATE_EPOCH) $(UPSTREAM_FILES)
+	chmod ugo-x $(UPSTREAM_FILES)
+	dh_auto_install --buildsystem cargo
