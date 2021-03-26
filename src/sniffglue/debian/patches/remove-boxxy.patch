@@ -1,0 +1,48 @@
+Index: sniffglue/Cargo.toml
+===================================================================
+--- sniffglue.orig/Cargo.toml
++++ sniffglue/Cargo.toml
+@@ -102,8 +102,6 @@ version = "0.5"
+ 
+ [dependencies.users]
+ version = "0.10"
+-[dev-dependencies.boxxy]
+-version = "0.11"
+ [target."cfg(target_os=\"linux\")".dependencies.syscallz]
+ version = "0.15.0"
+ [badges.travis-ci]
+Index: sniffglue/examples/boxxy.rs
+===================================================================
+--- sniffglue.orig/examples/boxxy.rs
++++ /dev/null
+@@ -1,30 +0,0 @@
+-#[macro_use] extern crate boxxy;
+-extern crate sniffglue;
+-extern crate env_logger;
+-
+-fn stage1(sh: &mut boxxy::Shell, _args: Vec<String>) -> Result<(), boxxy::Error> {
+-    shprintln!(sh, "[*] starting stage1");
+-    sniffglue::sandbox::activate_stage1().unwrap();
+-    shprintln!(sh, "[+] activated!");
+-    Ok(())
+-}
+-
+-fn stage2(sh: &mut boxxy::Shell, _args: Vec<String>) -> Result<(), boxxy::Error> {
+-    shprintln!(sh, "[*] starting stage2");
+-    sniffglue::sandbox::activate_stage2().unwrap();
+-    shprintln!(sh, "[+] activated!");
+-    Ok(())
+-}
+-
+-fn main() {
+-    env_logger::init();
+-
+-    println!("stage1        activate sandbox stage1/2");
+-    println!("stage2        activate sandbox stage2/2");
+-
+-    let toolbox = boxxy::Toolbox::new().with(vec![
+-            ("stage1", stage1),
+-            ("stage2", stage2),
+-        ]);
+-    boxxy::Shell::new(toolbox).run()
+-}
