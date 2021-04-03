@@ -37,13 +37,17 @@ in case users already added /usr/lib/cargo/bin/ in their PATH to get fd or other
 Repack
 ======
 
-cd <source>
+cd $TARGET
+rm -rf build/coreutils
+./update.sh coreutils # will fail
+
+cd <tagged-source-of-coreutils>
 cp -R $TARGET/src/coreutils/debian $TARGET/build/coreutils/
 cp Cargo.toml $TARGET/build/coreutils/
 cp -R src/* $TARGET/build/coreutils/src/
 cd $TARGET/build
 rm -rf coreutils.orig
-tar zcvf rust-coreutils_0.0.2.orig.tar.gz coreutils/
+tar zcvf rust-coreutils_0.0.5.orig.tar.gz coreutils/
 
 
 For now, we are following upstream version.
@@ -51,4 +55,4 @@ If one day, we want to replace GNU/coreutils package with this one,
 we will have to follow the version of the GNU version as we have some packages
 having an explicit minimal dep (ex: initramfs-tools-core, xinit, initscripts)
 
- -- Sylvestre Ledru <sylvestre@debian.org>, Tue, 23 Mar 2021 14:30:57 +0100
+ -- Sylvestre Ledru <sylvestre@debian.org>, Sat,  3 Apr 2021 14:04:40 +0200
