@@ -2,17 +2,17 @@ Index: coreutils/src/uu/shred/src/shred.rs
 ===================================================================
 --- coreutils.orig/src/uu/shred/src/shred.rs
 +++ coreutils/src/uu/shred/src/shred.rs
-@@ -8,7 +8,8 @@
- 
+@@ -9,7 +9,8 @@
  // spell-checker:ignore (ToDO) NAMESET FILESIZE fstab coeff journaling writeback REiser journaled
  
+ use clap::{App, Arg};
 -use rand::{Rng, ThreadRng};
 +use rand::{Rng, thread_rng};
 +use rand::prelude::SliceRandom;
  use std::cell::{Cell, RefCell};
  use std::fs;
  use std::fs::{File, OpenOptions};
-@@ -118,7 +119,7 @@ struct BytesGenerator<'a> {
+@@ -119,7 +120,7 @@ struct BytesGenerator<'a> {
      block_size: usize,
      exact: bool, // if false, every block's size is block_size
      gen_type: PassType<'a>,
@@ -21,7 +21,7 @@ Index: coreutils/src/uu/shred/src/shred.rs
      bytes: [u8; BLOCK_SIZE],
  }
  
-@@ -436,7 +437,8 @@ fn wipe_file(
+@@ -473,7 +474,8 @@ fn wipe_file(
          for pattern in PATTERNS.iter().take(remainder) {
              pass_sequence.push(PassType::Pattern(pattern));
          }
@@ -35,16 +35,16 @@ Index: coreutils/src/uu/shuf/src/shuf.rs
 ===================================================================
 --- coreutils.orig/src/uu/shuf/src/shuf.rs
 +++ coreutils/src/uu/shuf/src/shuf.rs
-@@ -210,7 +210,7 @@ fn shuf_bytes(
+@@ -233,7 +233,7 @@ fn shuf_bytes(input: &mut Vec<&[u8]>, op
      });
  
-     let mut rng = match random {
+     let mut rng = match opts.random_source {
 -        Some(r) => WrappedRng::RngFile(rand::read::ReadRng::new(match File::open(&r[..]) {
 +        Some(r) => WrappedRng::RngFile(rand::rngs::adapter::ReadRng::new(match File::open(&r[..]) {
              Ok(f) => f,
              Err(e) => crash!(1, "failed to open random source '{}': {}", &r[..], e),
          })),
-@@ -271,8 +271,8 @@ fn parse_range(input_range: String) -> R
+@@ -294,8 +294,8 @@ fn parse_range(input_range: &str) -> Res
  }
  
  enum WrappedRng {
@@ -59,53 +59,15 @@ Index: coreutils/src/uu/more/src/more.rs
 ===================================================================
 --- coreutils.orig/src/uu/more/src/more.rs
 +++ coreutils/src/uu/more/src/more.rs
-@@ -19,6 +19,8 @@ extern crate nix;
+@@ -18,6 +18,8 @@ extern crate nix;
  #[cfg(all(unix, not(target_os = "fuchsia")))]
- use nix::sys::termios;
+ use nix::sys::termios::{self, LocalFlags, SetArg};
  
 +use nix::sys::termios::LocalFlags;
 +
  #[cfg(target_os = "redox")]
  extern crate redox_termios;
  #[cfg(target_os = "redox")]
-@@ -92,10 +94,10 @@ fn help(usage: &str) {
- fn setup_term() -> termios::Termios {
-     let mut term = termios::tcgetattr(0).unwrap();
-     // Unset canonical mode, so we get characters immediately
--    term.c_lflag.remove(termios::ICANON);
-+    term.local_flags.remove(LocalFlags::ICANON);
-     // Disable local echo
--    term.c_lflag.remove(termios::ECHO);
--    termios::tcsetattr(0, termios::TCSADRAIN, &term).unwrap();
-+    term.local_flags.remove(LocalFlags::ECHO);
-+    termios::tcsetattr(0, termios::SetArg::TCSADRAIN, &term).unwrap();
-     term
- }
- 
-@@ -110,8 +112,8 @@ fn setup_term() -> redox_termios::Termio
-     let mut term = redox_termios::Termios::default();
-     let fd = syscall::dup(0, b"termios").unwrap();
-     syscall::read(fd, &mut term).unwrap();
--    term.c_lflag &= !redox_termios::ICANON;
--    term.c_lflag &= !redox_termios::ECHO;
-+    term.c_lflag &= !redox_LocalFlags::ICANON;
-+    term.c_lflag &= !redox_LocalFlags::ECHO;
-     syscall::write(fd, &term).unwrap();
-     let _ = syscall::close(fd);
-     term
-@@ -119,9 +121,9 @@ fn setup_term() -> redox_termios::Termio
- 
- #[cfg(all(unix, not(target_os = "fuchsia")))]
- fn reset_term(term: &mut termios::Termios) {
--    term.c_lflag.insert(termios::ICANON);
--    term.c_lflag.insert(termios::ECHO);
--    termios::tcsetattr(0, termios::TCSADRAIN, &term).unwrap();
-+    term.local_flags.insert(LocalFlags::ICANON);
-+    term.local_flags.insert(LocalFlags::ECHO);
-+    termios::tcsetattr(0, termios::SetArg::TCSADRAIN, &term).unwrap();
- }
- 
- #[cfg(any(windows, target_os = "fuchsia"))]
 Index: coreutils/src/uu/env/src/env.rs
 ===================================================================
 --- coreutils.orig/src/uu/env/src/env.rs
