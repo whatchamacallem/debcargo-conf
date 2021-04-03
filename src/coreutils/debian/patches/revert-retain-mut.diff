@@ -10,22 +10,22 @@ Date:   Sat Mar 27 22:02:49 2021 +0300
     
     Co-authored-by: Ivan Rymarchyk <irymarchyk@arlo.com>
 
-diff --git b/src/uu/tee/Cargo.toml a/src/uu/tee/Cargo.toml
-index 51bba2e4..99a6ec23 100644
---- b/src/uu/tee/Cargo.toml
-+++ a/src/uu/tee/Cargo.toml
+Index: coreutils/src/uu/tee/Cargo.toml
+===================================================================
+--- coreutils.orig/src/uu/tee/Cargo.toml
++++ coreutils/src/uu/tee/Cargo.toml
 @@ -17,7 +17,6 @@ path = "src/tee.rs"
  [dependencies]
  clap = "2.33.3"
  libc = "0.2.42"
 -retain_mut = "0.1.2"
- uucore = { version=">=0.0.7", package="uucore", path="../../uucore", features=["libc"] }
+ uucore = { version=">=0.0.8", package="uucore", path="../../uucore", features=["libc"] }
  uucore_procs = { version=">=0.0.5", package="uucore_procs", path="../../uucore_procs" }
  
-diff --git b/src/uu/tee/src/tee.rs a/src/uu/tee/src/tee.rs
-index 7c6a86b4..c54fa0d1 100644
---- b/src/uu/tee/src/tee.rs
-+++ a/src/uu/tee/src/tee.rs
+Index: coreutils/src/uu/tee/src/tee.rs
+===================================================================
+--- coreutils.orig/src/uu/tee/src/tee.rs
++++ coreutils/src/uu/tee/src/tee.rs
 @@ -9,7 +9,6 @@
  extern crate uucore;
  
@@ -81,7 +81,7 @@ index 7c6a86b4..c54fa0d1 100644
      let inner: Box<dyn Write> = {
          let mut options = OpenOptions::new();
          let mode = if append {
-@@ -140,68 +125,55 @@ fn open(name: String, append: bool) -> Box<dyn Write> {
+@@ -140,68 +125,55 @@ fn open(name: String, append: bool) -> B
              Err(_) => Box::new(sink()),
          }
      };
