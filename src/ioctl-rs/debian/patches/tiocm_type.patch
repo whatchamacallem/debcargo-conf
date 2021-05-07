@@ -1,0 +1,119 @@
+Author: Dorota Czaplejewicz
+Forwarded: https://github.com/dcuddeback/ioctl-rs/pull/6
+Description: Use a dedicated type for TIOCM requests
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -41,8 +41,8 @@ pub fn tiocnxcl(fd: RawFd) -> io::Result
+ }
+ 
+ /// Get the status of modem bits.
+-pub fn tiocmget(fd: RawFd) -> io::Result<c_int> {
+-    let mut bits: c_int = unsafe { mem::uninitialized() };
++pub fn tiocmget(fd: RawFd) -> io::Result<BitsInt> {
++    let mut bits: BitsInt = unsafe { mem::uninitialized() };
+ 
+     match unsafe { ioctl(fd, TIOCMGET, &mut bits) } {
+         0 => Ok(bits),
+@@ -51,7 +51,7 @@ pub fn tiocmget(fd: RawFd) -> io::Result
+ }
+ 
+ /// Set the status of modem bits.
+-pub fn tiocmset(fd: RawFd, bits: c_int) -> io::Result<()> {
++pub fn tiocmset(fd: RawFd, bits: BitsInt) -> io::Result<()> {
+     match unsafe { ioctl(fd, TIOCMSET, &bits) } {
+         0 => Ok(()),
+         _ => Err(io::Error::last_os_error())
+@@ -59,7 +59,7 @@ pub fn tiocmset(fd: RawFd, bits: c_int)
+ }
+ 
+ /// Set the indicated modem bits.
+-pub fn tiocmbis(fd: RawFd, bits: c_int) -> io::Result<()> {
++pub fn tiocmbis(fd: RawFd, bits: BitsInt) -> io::Result<()> {
+     match unsafe { ioctl(fd, TIOCMBIS, &bits) } {
+         0 => Ok(()),
+         _ => Err(io::Error::last_os_error())
+@@ -67,9 +67,26 @@ pub fn tiocmbis(fd: RawFd, bits: c_int)
+ }
+ 
+ /// Clear the indicated modem bits.
+-pub fn tiocmbic(fd: RawFd, bits: c_int) -> io::Result<()> {
++pub fn tiocmbic(fd: RawFd, bits: BitsInt) -> io::Result<()> {
+     match unsafe { ioctl(fd, TIOCMBIC, &bits) } {
+         0 => Ok(()),
+         _ => Err(io::Error::last_os_error())
+     }
+ }
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    ///
++    /// Will fail to compile if types don't match.
++    #[allow(dead_code)]
++    fn compile_bits() {
++        tiocmbic(0, TIOCM_RTS).unwrap();
++    }
++
++    #[allow(dead_code)]
++    fn compile_get_bits() {
++        let bits = tiocmget(0).unwrap();
++        tiocmset(0, bits).unwrap();
++    }
++}
+--- a/src/os/dragonfly.rs
++++ b/src/os/dragonfly.rs
+@@ -67,6 +67,8 @@ pub const TIOCM_RNG: c_int = 0x00000080;
+ pub const TIOCM_RI: c_int = 0x00000080;
+ pub const TIOCM_DSR: c_int = 0x00000100;
+ 
++pub type BitsInt = c_int;
++
+ extern "C" {
+     pub fn ioctl(fildes: c_int, request: c_ulong, ...) -> c_int;
+ }
+--- a/src/os/freebsd.rs
++++ b/src/os/freebsd.rs
+@@ -67,6 +67,8 @@ pub const TIOCM_RNG: c_int = 0x00000080;
+ pub const TIOCM_RI: c_int = 0x00000080;
+ pub const TIOCM_DSR: c_int = 0x00000100;
+ 
++pub type BitsInt = c_int;
++
+ extern "C" {
+     pub fn ioctl(fildes: c_int, request: c_ulong, ...) -> c_int;
+ }
+--- a/src/os/linux.rs
++++ b/src/os/linux.rs
+@@ -115,6 +115,8 @@ pub const TIOCM_RNG: c_uint = 0x00000080
+ pub const TIOCM_RI: c_uint = 0x00000080;
+ pub const TIOCM_DSR: c_uint = 0x00000100;
+ 
++pub type BitsInt = c_uint;
++
+ extern "C" {
+     pub fn ioctl(fd: c_int, request: c_uint, ...) -> c_int;
+ }
+--- a/src/os/macos.rs
++++ b/src/os/macos.rs
+@@ -76,6 +76,8 @@ pub const TIOCM_RNG: c_int = 0x00000080;
+ pub const TIOCM_RI: c_int = 0x00000080;
+ pub const TIOCM_DSR: c_int = 0x00000100;
+ 
++pub type BitsInt = c_int;
++
+ extern "C" {
+     pub fn ioctl(fildes: c_int, request: c_ulong, ...) -> c_int;
+ }
+--- a/src/os/openbsd.rs
++++ b/src/os/openbsd.rs
+@@ -67,6 +67,8 @@ pub const TIOCM_RNG: c_int = 0x00000080;
+ pub const TIOCM_RI: c_int = 0x00000080;
+ pub const TIOCM_DSR: c_int = 0x00000100;
+ 
++pub type BitsInt = c_int;
++
+ extern "C" {
+     pub fn ioctl(fildes: c_int, request: c_ulong, ...) -> c_int;
+ }

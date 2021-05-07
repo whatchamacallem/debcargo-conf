@@ -1,0 +1,34 @@
+Author: Henry-Nicolas Tourneur <debian@nilux.be>
+Forwarded: not-needed
+Description: Fix compilation errors with c_int / c_uint type incompatibilities
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/tty.rs
++++ b/src/tty.rs
+@@ -10,7 +10,7 @@ use std::time::Duration;
+ 
+ use std::os::unix::prelude::*;
+ 
+-use libc::{c_int, c_void, size_t};
++use libc::{c_int, c_uint, c_void, size_t};
+ 
+ use core::{SerialDevice, SerialPortSettings};
+ 
+@@ -85,7 +85,7 @@ impl TTYPort {
+         Ok(port)
+     }
+ 
+-    fn set_pin(&mut self, pin: c_int, level: bool) -> core::Result<()> {
++    fn set_pin(&mut self, pin: c_uint, level: bool) -> core::Result<()> {
+         let retval = if level {
+             ioctl::tiocmbis(self.fd, pin)
+         }
+@@ -99,7 +99,7 @@ impl TTYPort {
+         }
+     }
+ 
+-    fn read_pin(&mut self, pin: c_int) -> core::Result<bool> {
++    fn read_pin(&mut self, pin: c_uint) -> core::Result<bool> {
+         match ioctl::tiocmget(self.fd) {
+             Ok(pins) => Ok(pins & pin != 0),
+             Err(err) => Err(super::error::from_io_error(err)),
