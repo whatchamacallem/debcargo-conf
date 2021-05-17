@@ -1,0 +1,21 @@
+--- a/src/avahi.rs
++++ b/src/avahi.rs
+@@ -70,13 +70,16 @@ impl Avahi {
+     }
+ 
+     pub fn publish(&self, net_iface: Option<&str>, port: u16) -> Result<(), zbus::Error> {
+-        let server = ServerProxy::new(&self.connection.clone())?;
++        let server = self.connection.clone(); 
++        let server = ServerProxy::new(&server)?;
+         
+         // FIXME: Make this async when it's possible
+         let group_path = server.entry_group_new()?;
+         println!("group: {}", group_path.as_str());
+ 
+-        let group = EntryGroupProxy::new_for(&self.connection.clone(), "org.freedesktop.Avahi", &group_path)?;
++        let group = self.connection.clone();
++        let group = EntryGroupProxy::new_for(&group, "org.freedesktop.Avahi", &group_path)?;
++
+         let txt = "accuracy=exact".to_string();
+         let array: Vec<Vec<u8>> = vec![txt.into_bytes()];
+ 
