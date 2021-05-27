@@ -1,0 +1,51 @@
+Description: Update dev dependency difference from 0.4 to 2.0.0
+Author: Christopher Hoskin <mans0954@debian.org>
+Forwarded: https://github.com/johannhof/markdown.rs/pull/40
+Last-Update: 2021-05-26
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -33,7 +33,7 @@
+ [dependencies.regex]
+ version = "1"
+ [dev-dependencies.difference]
+-version = "0.4"
++version = "2.0.0"
+ 
+ [features]
+ default = []
+--- a/tests/lib.rs
++++ b/tests/lib.rs
+@@ -1,4 +1,5 @@
+ extern crate markdown;
++#[macro_use(assert_diff)]
+ extern crate difference;
+ 
+ mod fixtures;
+--- a/tests/fixtures/mod.rs
++++ b/tests/fixtures/mod.rs
+@@ -2,7 +2,6 @@
+ use std::fs::File;
+ use std::io::Read;
+ use markdown;
+-use difference;
+ 
+ fn compare(name: &str) {
+     let html = format!("tests/fixtures/docs-maruku-unittest/{}.html", name);
+@@ -15,7 +14,7 @@
+     File::open(md).unwrap().read_to_string(&mut tokens).unwrap();
+     println!("{:?}", markdown::tokenize(&tokens));
+ 
+-    difference::assert_diff(&comp, &markdown::file_to_html(md).unwrap(), " ", 0);
++    assert_diff!(&comp, &markdown::file_to_html(md).unwrap(), " ", 0);
+ }
+ 
+ fn roundtrip(name: &str) {
+@@ -34,7 +33,7 @@
+     
+     println!("BEGIN\n{}\nEND", out);
+     
+-    difference::assert_diff(&comp, &markdown::to_html(&out), " ", 0);
++    assert_diff!(&comp, &markdown::to_html(&out), " ", 0);
+ }
+ 
+ #[test]
