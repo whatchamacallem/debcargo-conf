@@ -1,25 +1,20 @@
 Clean up dependencies for sequoia-openpgp:
 
-drop all crypto-crng and windows stuff
-
-And we fake out the "vendored-nettle" thing, since on debian,
-nettle is linked dynamically
+drop all crypto-cng and windows stuff
 
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -102,39 +102,10 @@
+@@ -117,37 +117,12 @@
  compression = ["compression-deflate", "compression-bzip2"]
  compression-bzip2 = ["bzip2", "buffered-reader/compression-bzip2"]
  compression-deflate = ["flate2", "buffered-reader/compression-deflate"]
 -crypto-cng = ["winapi", "win-crypto-ng", "ed25519-dalek", "num-bigint-dig"]
  crypto-nettle = ["nettle"]
  default = ["compression", "crypto-nettle"]
- vendored = ["vendored-nettle"]
--vendored-nettle = ["nettle/vendored"]
--[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.chrono]
--version = "0.4.10"
--features = ["std"]
--default-features = false
+ [target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.chrono]
+ version = "0.4.10"
+ features = ["std"]
+ default-features = false
 -[target."cfg(windows)".dependencies.eax]
 -version = "0.3"
 -
@@ -44,7 +39,6 @@ nettle is linked dynamically
 -features = ["bcrypt"]
 -optional = true
 -default-features = false
-+vendored-nettle = []
  [badges.gitlab]
  repository = "sequoia-pgp/sequoia"
  

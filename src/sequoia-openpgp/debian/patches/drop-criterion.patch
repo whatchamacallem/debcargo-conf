@@ -1,0 +1,31 @@
+Avoid testing dependency on criterion crate
+
+Criterion is only needed for the benchmark tests, which are not run by
+debian's autopkgtests.
+
+I'm avoiding this dev-dependency in debian for now, because packaging
+all of the recursive dependencies of criterion is a complicated mess.
+
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -33,9 +33,6 @@
+ name = "pad"
+ required-features = ["compression-deflate"]
+ 
+-[[bench]]
+-name = "run_benchmarks"
+-harness = false
+ [dependencies.anyhow]
+ version = "1.0.18"
+ 
+@@ -96,9 +93,6 @@
+ 
+ [dependencies.unicode-normalization]
+ version = "0.1.9"
+-[dev-dependencies.criterion]
+-version = "0.3.4"
+-features = ["html_reports"]
+ 
+ [dev-dependencies.quickcheck]
+ version = "0.9"
