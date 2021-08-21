@@ -1,23 +1,6 @@
 #!/usr/bin/make -f
 %:
-	dh $@ --buildsystem cargo --with bash-completion
+	dh $@ --buildsystem cargo
 
-export TMPDIR=$(CURDIR)/tmp
-
-override_dh_auto_configure:
-	mkdir -p $(CURDIR)/tmp
-	dh_auto_configure $@
-
-override_dh_auto_clean:
-	dh_auto_clean $@
-	rm -rf $(CURDIR)/tmp
-
-override_dh_install:
-	mkdir -p debian/ripgrep/usr/share/zsh/vendor-completions debian/ripgrep/usr/share/fish/completions
-	cp -f complete/_rg debian/ripgrep/usr/share/zsh/vendor-completions/
-	cp -f target/*/release/build/*/out/rg.fish debian/ripgrep/usr/share/fish/completions/
-	dh_install
-	dh_missing
-
-override_dh_auto_test:
-	dh_auto_test -- test --all
+execute_after_dh_testdir:
+	find . ! -newermt "jan 01, 2000" -exec touch {} +
