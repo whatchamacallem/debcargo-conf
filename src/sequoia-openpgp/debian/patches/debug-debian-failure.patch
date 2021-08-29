@@ -1,0 +1,47 @@
+commit 28d60e85ee3c611635a7ad92e162f9c1266f94db
+gpg: Signature made Fri 27 Aug 2021 10:37:09 AM CEST
+gpg:                using EDDSA key D1FE45FB978F6B65C4C0B9AA686F55B4AB2B3386
+gpg: Good signature from "Justus Winter (Code Signing Key) <justus@sequoia-pgp.org>" [ultimate]
+gpg:                 aka "Justus Winter (Code Signing Key) <justus@pep-project.org>" [ultimate]
+Author: Justus Winter <justus@sequoia-pgp.org>
+Date:   Fri Aug 27 10:36:53 2021 +0200
+
+    xxx debugging parse::stream::test::decryptor
+
+diff --git a/src/parse/stream.rs b/src/parse/stream.rs
+index 4058cc9f..1df0419d 100644
+--- a/src/parse/stream.rs
++++ b/src/parse/stream.rs
+@@ -3226,8 +3226,23 @@ mod test {
+             "brainpoolP256r1", "brainpoolP384r1", "brainpoolP512r1",
+             "secp256k1",
+         ] {
++            eprintln!("\nTesting {}...", alg);
++
++            let sha256sum = |f: String| {
++                use crate::crypto::hash::Digest;
++                let mut h =
++                    crate::types::HashAlgorithm::SHA256.context().unwrap();
++                h.update(crate::tests::message(&f));
++                let d = h.into_digest().unwrap();
++                eprintln!("SHA256({:?}) = {}",
++                          f, crate::fmt::hex::encode(&d));
++            };
++            sha256sum(format!("encrypted/{}.sec.pgp", alg));
++            sha256sum(format!("encrypted/{}.msg.pgp", alg));
++
+             let key = Cert::from_bytes(crate::tests::message(
+                 &format!("encrypted/{}.sec.pgp", alg)))?;
++            eprintln!("Read key with fingerprint {}", key.fingerprint());
+             if let Some(k) =
+                 key.with_policy(&p, None)?.keys().subkeys().supported().next()
+             {
+@@ -3241,7 +3256,7 @@ mod test {
+                     _ => (),
+                 }
+             } else {
+-                eprintln!("Skipping {} because we don't support algorithm",
++                eprintln!("Skipping {} because we don't support the algorithm",
+                           alg);
+                 continue;
+             }
