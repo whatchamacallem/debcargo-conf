@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "configure" ] ; then
+
+    echo "Creating/updating gps-share user account..."
+    adduser --system --ingroup dialout --home /run/gps-share \
+            --gecos "GPSD system user" --shell /bin/false \
+            --quiet --disabled-password gps-share || {
+        # adduser failed. Why?
+        if getent passwd gps-share >/dev/null ; then
+            echo "Non-system user gps-share found. I will not overwrite a non-system" >&2
+            echo "user.  Remove the user and reinstall gps-share." >&2
+            exit 1
+        fi
+        # unknown adduser error, simply exit
+        exit 1
+    }
+
+
+fi
+
+#DEBHELPER#
+
+exit 0

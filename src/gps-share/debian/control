@@ -1,0 +1,54 @@
+Source: rust-gps-share
+Section: misc
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 24),
+ cargo:native,
+ rustc:native,
+ libstd-rust-dev,
+ librust-clap-2+default-dev (>= 2.23.1-~~),
+ librust-libc-0.2+default-dev (>= 0.2.21-~~),
+ librust-libudev-0.3+default-dev,
+ librust-serial-0.4+default-dev,
+ librust-signal-hook-0.1+default-dev (>= 0.1.13-~~),
+ librust-zbus-1+default-dev,
+ librust-zvariant-2+default-dev (>= 2.6-~~),
+ help2man
+Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
+Uploaders:
+ Henry-Nicolas Tourneur <debian@nilux.be>
+Standards-Version: 4.5.1
+Vcs-Git: https://salsa.debian.org/rust-team/debcargo-conf.git [src/gps-share]
+Vcs-Browser: https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/gps-share
+Rules-Requires-Root: no
+
+Package: gps-share
+Architecture: any
+Multi-Arch: allowed
+Section: misc
+Depends:
+ adduser (>= 3.34),
+ ${misc:Depends},
+ ${shlibs:Depends},
+ ${cargo:Depends}
+Recommends:
+ ${cargo:Recommends}
+Suggests:
+ ${cargo:Suggests}
+Provides:
+ ${cargo:Provides}
+Built-Using: ${cargo:Built-Using}
+XB-X-Cargo-Built-Using: ${cargo:X-Cargo-Built-Using}
+Description: Utility to share your GPS device on local network
+ gps-share has two goals:
+ .
+  - Share your GPS device on the local network so that all machines in your home
+   or office can make use of it.
+  - Enable support for standalone (i-e not part of a cellular modem) GPS devices
+   in Geoclue. Since Geoclue has been able to make use of network NMEA sources
+   since 2015, gps-share works out of the box with Geoclue.
+ .
+ The latter means that it is a replacement for GPSD and Gypsy.
+ While "why not GPSD?" has already been documented, Gypsy has
+ been unmaintained for many years now. I did not feel like reviving a dead
+ project and I really wanted to code in Rust so I decided to create gps-share.
