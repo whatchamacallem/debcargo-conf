@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Given a full version string, output just the part that is significant for
 # semver. i.e.. 0.x.* becomes 0.x and x.* becomes x for x != 0.
 sed -r \

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Package or update a new or existing crate.
 #
 # Usage: [REALVER=<EXACTVER>] ./release.sh <CRATE> [<SEMVER>]

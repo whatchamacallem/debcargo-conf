@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Grant DM upload permissions on all crates maintained by a DM.
 
 if [ "$#" -ne 1 ]; then

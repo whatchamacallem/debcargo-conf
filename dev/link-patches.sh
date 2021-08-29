@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Symlink {build => src}/$pkg/debian/patches for easier editing.
 #
 # If you give a second argument $2, will create this patch, add Cargo.toml to

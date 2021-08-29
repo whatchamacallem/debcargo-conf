@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Repackage a crate at the exact version that it was packaged at.
 #
 # Usage: ./repackage.sh <CRATE> [<SEMVER>]
