@@ -354,3 +354,28 @@ In ``#debian-rust`` came these two blog posts along with the remark of _good rea
  * https://blog.hackeriet.no/packaging-rust-part-II/
 
 Now are they, those two blog posts, parked here. Waiting for better integration.
+
+
+Developing Rust code using Debian-packaged crates
+=================================================
+
+While perhaps not the stated intention, the Rust ecosystem in Debian
+is actually quite usable for developing Rust code in general. Thanks
+to `source replacement
+<https://doc.rust-lang.org/cargo/reference/source-replacement.html>`_,
+Cargo can be configured to use only local, Debian-provided packages by
+placing something like the following in ``~/.cargo/config.toml``::
+
+  [net]
+  offline = true
+  
+  [source]
+  
+  [source.crates-io]
+  replace-with = "debian"
+  
+  [source.debian]
+  directory = "/usr/share/cargo/registry
+
+In this state, Cargo will only look for crates installed as Debian
+packages on the local system.
