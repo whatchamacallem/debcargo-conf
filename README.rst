@@ -375,7 +375,7 @@ placing something like the following in ``~/.cargo/config.toml``::
   replace-with = "debian"
   
   [source.debian]
-  directory = "/usr/share/cargo/registry
+  directory = "/usr/share/cargo/registry"
 
 In this state, Cargo will only look for crates installed as Debian
 packages on the local system.
