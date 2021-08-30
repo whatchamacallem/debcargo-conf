@@ -364,7 +364,8 @@ is actually quite usable for developing Rust code in general. Thanks
 to `source replacement
 <https://doc.rust-lang.org/cargo/reference/source-replacement.html>`_,
 Cargo can be configured to use only local, Debian-provided packages by
-placing something like the following in ``~/.cargo/config.toml``::
+placing something like the following in ``~/.cargo/config.toml`` (for
+user-wide effect) or in a given project's ``.cargo/config.toml``::
 
   [net]
   offline = true
