@@ -1,0 +1,94 @@
+commit 4f608ae26ef6e5437b14b75f6d571e5a3281ef66
+gpg: Signature made Mon 30 Aug 2021 12:27:48 PM CEST
+gpg:                using EDDSA key D1FE45FB978F6B65C4C0B9AA686F55B4AB2B3386
+gpg: Good signature from "Justus Winter (Code Signing Key) <justus@sequoia-pgp.org>" [ultimate]
+gpg:                 aka "Justus Winter (Code Signing Key) <justus@pep-project.org>" [ultimate]
+Author: Justus Winter <justus@sequoia-pgp.org>
+Date:   Fri Aug 27 10:36:53 2021 +0200
+
+    xxx debugging parse::stream::test::decryptor
+
+diff --git a/src/parse/stream.rs b/src/parse/stream.rs
+index 4058cc9f..8ff204f6 100644
+--- a/src/parse/stream.rs
++++ b/src/parse/stream.rs
+@@ -2361,6 +2361,7 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
+         let mut skesks: Vec<packet::SKESK> = Vec::new();
+ 
+         while let PacketParserResult::Some(mut pp) = ppr {
++            dbg!((pp.packet.tag(), pp.packet.kind()));
+             v.policy.packet(&pp.packet)?;
+             v.helper.inspect(&pp)?;
+ 
+@@ -2376,7 +2377,7 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
+                                .into());
+                 }
+             } else {
+-                if let Err(err) = pp.possible_message() {
++                if let Err(err) = dbg!(pp.possible_message()) {
+                     t!("Malformed message: {}", err);
+                     return Err(err.context("Malformed OpenPGP message"));
+                 }
+@@ -2478,8 +2479,8 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
+ 
+         // We can only get here if we didn't encounter a literal data
+         // packet.
+-        Err(Error::MalformedMessage(
+-            "Malformed OpenPGP message".into()).into())
++        Err(dbg!(Error::MalformedMessage(
++            "Malformed OpenPGP message".into()).into()))
+     }
+ 
+     /// Verifies the given data in detached verification mode.
+@@ -3219,6 +3220,7 @@ mod test {
+ 
+     #[test]
+     fn decryptor() -> Result<()> {
++        eprintln!("Now is {:?}", std::time::SystemTime::now());
+         let p = P::new();
+         for alg in &[
+             "rsa", "elg", "cv25519", "cv25519.unclamped",
+@@ -3226,8 +3228,23 @@ mod test {
+             "brainpoolP256r1", "brainpoolP384r1", "brainpoolP512r1",
+             "secp256k1",
+         ] {
++            eprintln!("\nTesting {}...", alg);
++
++            let sha256sum = |f: String| {
++                use crate::crypto::hash::Digest;
++                let mut h =
++                    crate::types::HashAlgorithm::SHA256.context().unwrap();
++                h.update(crate::tests::message(&f));
++                let d = h.into_digest().unwrap();
++                eprintln!("SHA256({:?}) = {}",
++                          f, crate::fmt::hex::encode(&d));
++            };
++            sha256sum(format!("encrypted/{}.sec.pgp", alg));
++            sha256sum(format!("encrypted/{}.msg.pgp", alg));
++
+             let key = Cert::from_bytes(crate::tests::message(
+                 &format!("encrypted/{}.sec.pgp", alg)))?;
++            eprintln!("Read key with fingerprint {}", key.fingerprint());
+             if let Some(k) =
+                 key.with_policy(&p, None)?.keys().subkeys().supported().next()
+             {
+@@ -3241,7 +3258,7 @@ mod test {
+                     _ => (),
+                 }
+             } else {
+-                eprintln!("Skipping {} because we don't support algorithm",
++                eprintln!("Skipping {} because we don't support the algorithm",
+                           alg);
+                 continue;
+             }
+@@ -3249,8 +3266,8 @@ mod test {
+             let h = VHelper::for_decryption(0, 0, 0, 0, Vec::new(),
+                                             vec![key], Vec::new());
+             let mut d = DecryptorBuilder::from_bytes(
+-                crate::tests::message(&format!("encrypted/{}.msg.pgp", alg)))?
+-                .with_policy(&p, None, h)?;
++                crate::tests::message(&format!("encrypted/{}.msg.pgp", alg))).unwrap()
++                .with_policy(&p, None, h).unwrap();
+             assert!(d.message_processed());
+ 
+             if d.helper_ref().error > 0 {

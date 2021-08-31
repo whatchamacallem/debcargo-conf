@@ -11,9 +11,9 @@ shopt -s lastpipe # important for populating associative arrays via pipes
 
 abort() { local x=$1; shift; for i in "$@"; do echo >&2 "$0: abort: $i"; done; exit "$x"; }
 
-which grep-dctrl >/dev/null || abort 1 "grep-dctrl not found, install dctrl-tools"
-which aptitude >/dev/null || abort 1 "aptitude not found, install it"
-which gawk >/dev/null || abort 1 "gawk not found, install gawk"
+type grep-dctrl >/dev/null || abort 1 "grep-dctrl not found, install dctrl-tools"
+type aptitude >/dev/null || abort 1 "aptitude not found, install it"
+type gawk >/dev/null || abort 1 "gawk not found, install gawk"
 
 ARCHIVE="${ARCHIVE:-unstable}"
 ARCHIVT="${ARCHIVT:-testing}"
