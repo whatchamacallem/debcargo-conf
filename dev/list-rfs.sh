@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 for i in src/*/debian/RFS; do
     echo "$(git log -1 --pretty="format:%ct" "$i")" "$i"
 done | sort  | while read t i; do

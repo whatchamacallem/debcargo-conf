@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 abort() { local x=$1; shift; for i in "$@"; do echo >&2 "$0: abort: $i"; done; exit "$x"; }
 
@@ -7,8 +7,8 @@ echo >&2 "e.g. dependencies of crates that we already patched away in Debian."
 
 if [ -n "$DEBCARGO" ]; then
 	true
-elif which debcargo >/dev/null; then
-	DEBCARGO=$(which debcargo)
+elif type -p debcargo >/dev/null 2>&1; then
+	DEBCARGO=$(type -p debcargo)
 elif [ -f "$HOME/.cargo/bin/debcargo" ]; then
 	DEBCARGO="$HOME/.cargo/bin/debcargo"
 else

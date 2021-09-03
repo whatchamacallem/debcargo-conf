@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # List all packages that produce rust binaries, from this repo.
 grep -l "\[packages.bin\]" src/*/debian/debcargo.toml \
   | cut -d/ -f2 \

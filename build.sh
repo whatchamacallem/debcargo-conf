@@ -27,8 +27,8 @@ fi
 
 if [ -n "$DEBCARGO" ]; then
 	true
-elif which debcargo >/dev/null; then
-	DEBCARGO=$(which debcargo)
+elif type -p debcargo >/dev/null 2>&1; then
+	DEBCARGO=$(type -p debcargo)
 elif [ -f "$HOME/.cargo/bin/debcargo" ]; then
 	DEBCARGO="$HOME/.cargo/bin/debcargo"
 else
