@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_auto_test:
+	# build.rs requires exactly one of these feature to be chosen
+	dh_auto_test -- test --no-default-features --features keccak
+	dh_auto_test -- test --no-default-features --features shake
+	dh_auto_test -- test --no-default-features --features sha3
+	dh_auto_test -- test --no-default-features --features cshake
+	dh_auto_test -- test --no-default-features --features kmac
+	dh_auto_test -- test --no-default-features --features tuple_hash
+	dh_auto_test -- test --no-default-features --features parallel_hash
+	dh_auto_test -- test --no-default-features --features k12
+	dh_auto_test -- test --no-default-features --features fips202
+	dh_auto_test -- test --no-default-features --features sp800
