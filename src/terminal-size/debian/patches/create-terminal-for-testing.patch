@@ -13,13 +13,13 @@ Index: terminal-size/src/unix.rs
 +    let slavename;
 +    let slavefd;
 +    unsafe {
-+        use libc::{posix_openpt,O_RDWR,O_NOCTTY,grantpt,unlockpt,ptsname_r,winsize,ioctl,TIOCSWINSZ,open};
++        use libc::{posix_openpt,O_RDWR,O_NOCTTY,grantpt,unlockpt,ptsname_r,winsize,ioctl,TIOCSWINSZ,open,c_char};
 +        use std::ffi::CStr;
 +        let masterfd = posix_openpt(O_RDWR | O_NOCTTY);
 +        if masterfd < 0 {panic!("posix_openpt failed");}
 +        if grantpt(masterfd) < 0 {panic!("grantpt failed");}
 +        if unlockpt(masterfd) < 0 {panic!("unlockpt failed");}
-+        let mut slavenamearr:[i8;1024] = [0;1024];
++        let mut slavenamearr:[c_char;1024] = [0;1024];
 +        if ptsname_r(masterfd,slavenamearr.as_mut_ptr(),1024) != 0 {panic!("ptsname_r failed");}
 +        slavename = CStr::from_ptr(slavenamearr.as_mut_ptr()).to_str().unwrap();
 +        let ws = winsize {
