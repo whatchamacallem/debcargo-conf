@@ -1,0 +1,63 @@
+Debian runs tests with stdin/stdout/stderr not connected to terminals, so testing against
+the users terminal doesn't work, we instead create a pseudo terminal specifically to use
+for testing.
+Index: terminal-size/src/unix.rs
+===================================================================
+--- terminal-size.orig/src/unix.rs
++++ terminal-size/src/unix.rs
+@@ -48,6 +48,29 @@ fn compare_with_stty() {
+     use std::process::Command;
+     use std::process::Stdio;
+ 
++    //in debian the tests run without a terminal, create one for testing
++    let slavename;
++    let slavefd;
++    unsafe {
++        use libc::{posix_openpt,O_RDWR,O_NOCTTY,grantpt,unlockpt,ptsname_r,winsize,ioctl,TIOCSWINSZ,open};
++        use std::ffi::CStr;
++        let masterfd = posix_openpt(O_RDWR | O_NOCTTY);
++        if masterfd < 0 {panic!("posix_openpt failed");}
++        if grantpt(masterfd) < 0 {panic!("grantpt failed");}
++        if unlockpt(masterfd) < 0 {panic!("unlockpt failed");}
++        let mut slavenamearr:[i8;1024] = [0;1024];
++        if ptsname_r(masterfd,slavenamearr.as_mut_ptr(),1024) != 0 {panic!("ptsname_r failed");}
++        slavename = CStr::from_ptr(slavenamearr.as_mut_ptr()).to_str().unwrap();
++        let ws = winsize {
++            ws_row: 123,
++            ws_col: 456,
++            ws_xpixel: 0,
++            ws_ypixel: 0,
++        };
++        if ioctl(masterfd,TIOCSWINSZ,&ws) != 0 {panic!("TIOCSWINSZ failed")}
++        slavefd = open(slavenamearr.as_mut_ptr(), O_RDWR|O_NOCTTY);
++    }
++
+     let (rows, cols) = if cfg!(target_os = "illumos") {
+         // illumos stty(1) does not accept a device argument, instead using
+         // stdin unconditionally:
+@@ -83,14 +106,14 @@ fn compare_with_stty() {
+             Command::new("stty")
+                 .arg("size")
+                 .arg("-F")
+-                .arg("/dev/stderr")
++                .arg(slavename)
+                 .stderr(Stdio::inherit())
+                 .output()
+                 .unwrap()
+         } else {
+             Command::new("stty")
+                 .arg("-f")
+-                .arg("/dev/stderr")
++                .arg(slavename)
+                 .arg("size")
+                 .stderr(Stdio::inherit())
+                 .output()
+@@ -108,7 +131,7 @@ fn compare_with_stty() {
+     };
+     println!("{} {}", rows, cols);
+ 
+-    if let Some((Width(w), Height(h))) = terminal_size() {
++    if let Some((Width(w), Height(h))) = terminal_size_using_fd(slavefd) {
+         assert_eq!(rows, h);
+         assert_eq!(cols, w);
+     } else {
