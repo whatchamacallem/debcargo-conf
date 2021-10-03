@@ -1,0 +1,374 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 751911f..3a5a5a9 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -28,17 +28,12 @@ version = "1.0"
+ version = "5.0.0"
+ 
+ [dependencies.rust-ini]
+-version = "0.13"
++version = "0.16"
+ optional = true
+ 
+ [dependencies.serde]
+ version = "1.0.8"
+ 
+-[dependencies.serde-hjson]
+-version = "0.9"
+-optional = true
+-default-features = false
+-
+ [dependencies.serde_json]
+ version = "1.0.2"
+ optional = true
+@@ -61,8 +56,7 @@ version = "0.6"
+ version = "1.0.8"
+ 
+ [features]
+-default = ["toml", "json", "yaml", "hjson", "ini"]
+-hjson = ["serde-hjson"]
++default = ["toml", "json", "yaml", "ini"]
+ ini = ["rust-ini"]
+ json = ["serde_json"]
+ yaml = ["yaml-rust"]
+diff --git a/src/file/format/hjson.rs b/src/file/format/hjson.rs
+deleted file mode 100644
+index 457cfbf..0000000
+--- a/src/file/format/hjson.rs
++++ /dev/null
+@@ -1,55 +0,0 @@
+-use serde_hjson;
+-use source::Source;
+-use std::collections::HashMap;
+-use std::error::Error;
+-use value::{Value, ValueKind};
+-
+-pub fn parse(
+-    uri: Option<&String>,
+-    text: &str,
+-) -> Result<HashMap<String, Value>, Box<dyn Error + Send + Sync>> {
+-    // Parse a JSON object value from the text
+-    // TODO: Have a proper error fire if the root of a file is ever not a Table
+-    let value = from_hjson_value(uri, &serde_hjson::from_str(text)?);
+-    match value.kind {
+-        ValueKind::Table(map) => Ok(map),
+-
+-        _ => Ok(HashMap::new()),
+-    }
+-}
+-
+-fn from_hjson_value(uri: Option<&String>, value: &serde_hjson::Value) -> Value {
+-    match *value {
+-        serde_hjson::Value::String(ref value) => Value::new(uri, ValueKind::String(value.clone())),
+-
+-        serde_hjson::Value::I64(value) => Value::new(uri, ValueKind::Integer(value)),
+-
+-        serde_hjson::Value::U64(value) => Value::new(uri, ValueKind::Integer(value as i64)),
+-
+-        serde_hjson::Value::F64(value) => Value::new(uri, ValueKind::Float(value)),
+-
+-        serde_hjson::Value::Bool(value) => Value::new(uri, ValueKind::Boolean(value)),
+-
+-        serde_hjson::Value::Object(ref table) => {
+-            let mut m = HashMap::new();
+-
+-            for (key, value) in table {
+-                m.insert(key.clone(), from_hjson_value(uri, value));
+-            }
+-
+-            Value::new(uri, ValueKind::Table(m))
+-        }
+-
+-        serde_hjson::Value::Array(ref array) => {
+-            let mut l = Vec::new();
+-
+-            for value in array {
+-                l.push(from_hjson_value(uri, value));
+-            }
+-
+-            Value::new(uri, ValueKind::Array(l))
+-        }
+-
+-        serde_hjson::Value::Null => Value::new(uri, ValueKind::Nil),
+-    }
+-}
+diff --git a/src/file/format/ini.rs b/src/file/format/ini.rs
+index e5a109f..4395c45 100644
+--- a/src/file/format/ini.rs
++++ b/src/file/format/ini.rs
+@@ -11,17 +11,17 @@ pub fn parse(
+     let mut map: HashMap<String, Value> = HashMap::new();
+     let i = Ini::load_from_str(text)?;
+     for (sec, prop) in i.iter() {
+-        match *sec {
++        match sec {
+             Some(ref sec) => {
+                 let mut sec_map: HashMap<String, Value> = HashMap::new();
+                 for (k, v) in prop.iter() {
+-                    sec_map.insert(k.clone(), Value::new(uri, ValueKind::String(v.clone())));
++                    sec_map.insert(k.to_owned(), Value::new(uri, ValueKind::String(v.to_owned())));
+                 }
+-                map.insert(sec.clone(), Value::new(uri, ValueKind::Table(sec_map)));
++                map.insert((*sec).to_owned(), Value::new(uri, ValueKind::Table(sec_map)));
+             }
+             None => {
+                 for (k, v) in prop.iter() {
+-                    map.insert(k.clone(), Value::new(uri, ValueKind::String(v.clone())));
++                    map.insert(k.to_owned(), Value::new(uri, ValueKind::String(v.to_owned())));
+                 }
+             }
+         }
+diff --git a/src/file/format/mod.rs b/src/file/format/mod.rs
+index f46ae13..819644f 100644
+--- a/src/file/format/mod.rs
++++ b/src/file/format/mod.rs
+@@ -16,9 +16,6 @@ mod json;
+ #[cfg(feature = "yaml")]
+ mod yaml;
+ 
+-#[cfg(feature = "hjson")]
+-mod hjson;
+-
+ #[cfg(feature = "ini")]
+ mod ini;
+ 
+@@ -36,9 +33,6 @@ pub enum FileFormat {
+     #[cfg(feature = "yaml")]
+     Yaml,
+ 
+-    /// HJSON (parsed with serde_hjson)
+-    #[cfg(feature = "hjson")]
+-    Hjson,
+     /// INI (parsed with rust_ini)
+     #[cfg(feature = "ini")]
+     Ini,
+@@ -59,9 +53,6 @@ lazy_static! {
+         #[cfg(feature = "yaml")]
+         formats.insert(FileFormat::Yaml, vec!["yaml", "yml"]);
+ 
+-        #[cfg(feature = "hjson")]
+-        formats.insert(FileFormat::Hjson, vec!["hjson"]);
+-
+         #[cfg(feature = "ini")]
+         formats.insert(FileFormat::Ini, vec!["ini"]);
+ 
+@@ -97,9 +88,6 @@ impl FileFormat {
+             #[cfg(feature = "yaml")]
+             FileFormat::Yaml => yaml::parse(uri, text),
+ 
+-            #[cfg(feature = "hjson")]
+-            FileFormat::Hjson => hjson::parse(uri, text),
+-
+             #[cfg(feature = "ini")]
+             FileFormat::Ini => ini::parse(uri, text),
+         }
+diff --git a/src/lib.rs b/src/lib.rs
+index a47a671..6f0079c 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -45,9 +45,6 @@ extern crate serde_json;
+ #[cfg(feature = "yaml")]
+ extern crate yaml_rust;
+ 
+-#[cfg(feature = "hjson")]
+-extern crate serde_hjson;
+-
+ #[cfg(feature = "ini")]
+ extern crate ini;
+ 
+diff --git a/tests/Settings-invalid.hjson b/tests/Settings-invalid.hjson
+deleted file mode 100644
+index 7e31ec3..0000000
+--- a/tests/Settings-invalid.hjson
++++ /dev/null
+@@ -1,4 +0,0 @@
+-{
+-  ok: true,
+-  error
+-}
+diff --git a/tests/Settings.hjson b/tests/Settings.hjson
+deleted file mode 100644
+index 3e04ccf..0000000
+--- a/tests/Settings.hjson
++++ /dev/null
+@@ -1,16 +0,0 @@
+-{
+-  debug: true
+-  production: false
+-  arr: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+-  place: {
+-    name: Torre di Pisa
+-    longitude: 43.7224985
+-    latitude: 10.3970522
+-    favorite: false
+-    reviews: 3866
+-    rating: 4.5
+-    creator: {
+-      name: John Smith
+-    }
+-  }
+-}
+diff --git a/tests/datetime.rs b/tests/datetime.rs
+index 6c1e620..7ee8ec3 100644
+--- a/tests/datetime.rs
++++ b/tests/datetime.rs
+@@ -1,7 +1,6 @@
+ #![cfg(all(
+     feature = "toml",
+     feature = "json",
+-    feature = "hjson",
+     feature = "yaml",
+     feature = "ini",
+ ))]
+@@ -37,15 +36,6 @@ fn make() -> Config {
+             FileFormat::Toml,
+         ))
+         .unwrap()
+-        .merge(File::from_str(
+-            r#"
+-            {
+-                "hjson_datetime": "2017-05-10T02:14:53Z"
+-            }
+-            "#,
+-            FileFormat::Hjson,
+-        ))
+-        .unwrap()
+         .merge(File::from_str(
+             r#"
+                 ini_datetime = 2017-05-10T02:14:53Z
+@@ -75,11 +65,6 @@ fn test_datetime_string() {
+ 
+     assert_eq!(&date, "2017-06-12T10:58:30Z");
+ 
+-    // HJSON
+-    let date: String = s.get("hjson_datetime").unwrap();
+-
+-    assert_eq!(&date, "2017-05-10T02:14:53Z");
+-
+     // INI
+     let date: String = s.get("ini_datetime").unwrap();
+ 
+@@ -105,11 +90,6 @@ fn test_datetime() {
+ 
+     assert_eq!(date, Utc.ymd(2017, 6, 12).and_hms(10, 58, 30));
+ 
+-    // HJSON
+-    let date: DateTime<Utc> = s.get("hjson_datetime").unwrap();
+-
+-    assert_eq!(date, Utc.ymd(2017, 5, 10).and_hms(2, 14, 53));
+-
+     // INI
+     let date: DateTime<Utc> = s.get("ini_datetime").unwrap();
+ 
+diff --git a/tests/file.rs b/tests/file.rs
+index 0680c2a..bef0669 100644
+--- a/tests/file.rs
++++ b/tests/file.rs
+@@ -49,7 +49,7 @@ fn test_file_auto_not_found() {
+ #[test]
+ fn test_file_ext() {
+     let mut c = Config::default();
+-    c.merge(File::with_name("tests/Settings.json")).unwrap();
++    c.merge(File::with_name("tests/Settings.yaml")).unwrap();
+ 
+     assert_eq!(c.get("debug").ok(), Some(true));
+     assert_eq!(c.get("production").ok(), Some(false));
+diff --git a/tests/file_hjson.rs b/tests/file_hjson.rs
+deleted file mode 100644
+index 87318eb..0000000
+--- a/tests/file_hjson.rs
++++ /dev/null
+@@ -1,80 +0,0 @@
+-#![cfg(feature = "hjson")]
+-
+-extern crate config;
+-extern crate float_cmp;
+-extern crate serde;
+-
+-#[macro_use]
+-extern crate serde_derive;
+-
+-use config::*;
+-use float_cmp::ApproxEqUlps;
+-use std::collections::HashMap;
+-use std::path::PathBuf;
+-
+-#[derive(Debug, Deserialize)]
+-struct Place {
+-    name: String,
+-    longitude: f64,
+-    latitude: f64,
+-    favorite: bool,
+-    telephone: Option<String>,
+-    reviews: u64,
+-    creator: HashMap<String, Value>,
+-    rating: Option<f32>,
+-}
+-
+-#[derive(Debug, Deserialize)]
+-struct Settings {
+-    debug: f64,
+-    production: Option<String>,
+-    place: Place,
+-    #[serde(rename = "arr")]
+-    elements: Vec<String>,
+-}
+-
+-fn make() -> Config {
+-    let mut c = Config::default();
+-    c.merge(File::new("tests/Settings", FileFormat::Hjson))
+-        .unwrap();
+-
+-    c
+-}
+-
+-#[test]
+-fn test_file() {
+-    let c = make();
+-
+-    // Deserialize the entire file as single struct
+-    let s: Settings = c.try_into().unwrap();
+-
+-    assert!(s.debug.approx_eq_ulps(&1.0, 2));
+-    assert_eq!(s.production, Some("false".to_string()));
+-    assert_eq!(s.place.name, "Torre di Pisa");
+-    assert!(s.place.longitude.approx_eq_ulps(&43.7224985, 2));
+-    assert!(s.place.latitude.approx_eq_ulps(&10.3970522, 2));
+-    assert_eq!(s.place.favorite, false);
+-    assert_eq!(s.place.reviews, 3866);
+-    assert_eq!(s.place.rating, Some(4.5));
+-    assert_eq!(s.place.telephone, None);
+-    assert_eq!(s.elements.len(), 10);
+-    assert_eq!(s.elements[3], "4".to_string());
+-    assert_eq!(
+-        s.place.creator["name"].clone().into_str().unwrap(),
+-        "John Smith".to_string()
+-    );
+-}
+-
+-#[test]
+-fn test_error_parse() {
+-    let mut c = Config::default();
+-    let res = c.merge(File::new("tests/Settings-invalid", FileFormat::Hjson));
+-
+-    let path: PathBuf = ["tests", "Settings-invalid.hjson"].iter().collect();
+-
+-    assert!(res.is_err());
+-    assert_eq!(
+-        res.unwrap_err().to_string(),
+-        format!("Found a punctuator where a key name was expected (check your syntax or use quotes if the key name includes {{}}[],: or whitespace) at line 4 column 1 in {}", path.display())
+-    );
+-}
+diff --git a/tests/file_ini.rs b/tests/file_ini.rs
+index 088eb2c..6dc3522 100644
+--- a/tests/file_ini.rs
++++ b/tests/file_ini.rs
+@@ -64,7 +64,7 @@ fn test_error_parse() {
+     assert_eq!(
+         res.unwrap_err().to_string(),
+         format!(
+-            r#"2:0 Expecting "[Some('='), Some(':')]" but found EOF. in {}"#,
++            r#"2:0 expecting "[Some('='), Some(':')]" but found EOF. in {}"#,
+             path.display()
+         )
+     );
