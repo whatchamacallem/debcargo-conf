@@ -1,0 +1,27 @@
+Description: fix group list buffer overflow
+Origin: ed neville, <https://github.com/nix-rust/nix/pull/1542>
+Bug: https://rustsec.org/advisories/RUSTSEC-2021-0119.html
+Bug-Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=995562
+Forwarded: not-needed
+Last-Update: 2021-10-03
+
+--- rust-nix-0.19.0.orig/src/unistd.rs
++++ rust-nix-0.19.0/src/unistd.rs
+@@ -1512,8 +1512,7 @@ pub fn getgrouplist(user: &CStr, group:
+         Ok(None) | Err(_) => <c_int>::max_value(),
+     };
+     use std::cmp::min;
+-    let mut ngroups = min(ngroups_max, 8);
+-    let mut groups = Vec::<Gid>::with_capacity(ngroups as usize);
++    let mut groups = Vec::<Gid>::with_capacity(min(ngroups_max, 8) as usize);
+     cfg_if! {
+         if #[cfg(any(target_os = "ios", target_os = "macos"))] {
+             type getgrouplist_group_t = c_int;
+@@ -1523,6 +1522,7 @@ pub fn getgrouplist(user: &CStr, group:
+     }
+     let gid: gid_t = group.into();
+     loop {
++        let mut ngroups = groups.capacity() as i32;
+         let ret = unsafe {
+             libc::getgrouplist(user.as_ptr(),
+                                gid as getgrouplist_group_t,
