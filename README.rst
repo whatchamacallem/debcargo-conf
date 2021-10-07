@@ -86,6 +86,9 @@ To set up a suitable build environment for ``./build.sh``::
 An explanation of this, plus more recipes, can be found on the `sbuild wiki
 page <https://wiki.debian.org/sbuild>`_.
 
+If you need to pass additional options to sbuild, like "--arch=i386", then set
+the SBUILD_OPTS environment variable.
+
 Normally, ``./build.sh`` will fail early if not all the build dependencies are
 available in your local apt cache. If you are packaging a large dependency tree
 however, to avoid many round-trips through NEW it is possible to bypass this
