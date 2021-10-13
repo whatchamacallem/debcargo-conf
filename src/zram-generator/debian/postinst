@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+
+case "${1}" in
+    configure)
+   		# load kernel module after install
+   		test ! -d /sys/module/zram && modprobe zram
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument \`${1}'" >&2
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0
