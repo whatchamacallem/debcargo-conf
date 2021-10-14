@@ -30,6 +30,10 @@ override_dh_install:
 	install -Dpm644 debian/zram-generator.conf  $(DESTDIR)/etc/systemd/
 	install -Dpm644 debian/20-zram-generator.conf  $(DESTDIR)/etc/modules-load.d/
 
+override_dh_dwz:
+	# Don't do anything. fails because of the
+	# https://github.com/rust-lang/rust/issues/66118
+
 override_dh_clean:
 	rm -f man/zram-generator.8 man/zram-generator.8.html man/zram-generator.conf.5 man/zram-generator.conf.5.html
 	rm -f units/systemd-zram-setup@.service
