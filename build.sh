@@ -14,6 +14,8 @@
 #     Release to something other than unstable, e.g. experimental
 # CHROOT=$chroot
 #     Build using another schroot than debcargo-unstable-amd64-sbuild
+# SBUILD_OPTS=
+#     will pass to sbuild; for example SBUILD_OPTS=--arch=i386
 set -e
 
 SCRIPTDIR="$(dirname $(readlink -f "$0"))"
@@ -154,6 +156,7 @@ SBUILD_CONFIG="$SCRIPTDIR/dev/sbuildrc" sbuild --no-source --arch-any --arch-all
   "${EXTRA_DEBS_AUTOPKGTEST_OPTS[@]}" \
   "${AUTOPKGTEST_OPTS[@]}" \
   "${LINTIAN_OPTS[@]}" \
+   ${SBUILD_OPTS} \
   "$SRCNAME.dsc"
 if [ "$SKIP_AUTOPKGTEST" != 1 ]; then
 	report "analyzing autopkgtest log: $BUILDNAME.test.log"
