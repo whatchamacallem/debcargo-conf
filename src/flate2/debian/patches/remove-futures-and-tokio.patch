@@ -1,3 +1,4 @@
+only in patch2:
 Index: flate2/tests/async-reader.rs
 ===================================================================
 --- flate2.orig/tests/async-reader.rs
@@ -12,7 +13,7 @@ Index: flate2/Cargo.toml
 ===================================================================
 --- flate2.orig/Cargo.toml
 +++ flate2/Cargo.toml
-@@ -29,10 +29,6 @@ version = "0.1.6"
+@@ -32,10 +32,6 @@ optional = true
  [dependencies.crc32fast]
  version = "1.2.0"
  
@@ -23,9 +24,9 @@ Index: flate2/Cargo.toml
  [dependencies.libc]
  version = "0.2.65"
  
-@@ -44,12 +40,6 @@ optional = true
- version = "0.3.5"
+@@ -49,12 +45,6 @@ version = "0.4.0"
  optional = true
+ default-features = false
  
 -[dependencies.tokio-io]
 -version = "0.1.11"
@@ -36,7 +37,7 @@ Index: flate2/Cargo.toml
  [dev-dependencies.quickcheck]
  version = "0.9"
  default-features = false
-@@ -57,20 +47,10 @@ default-features = false
+@@ -62,22 +52,12 @@ default-features = false
  [dev-dependencies.rand]
  version = "0.7"
  
@@ -50,10 +51,12 @@ Index: flate2/Cargo.toml
 -version = "0.1.10"
 -
  [features]
+ any_zlib = []
+ cloudflare_zlib = ["any_zlib", "cloudflare-zlib-sys"]
  default = ["rust_backend"]
  rust_backend = ["miniz_oxide"]
  miniz-sys = ["zlib"]
 -tokio = ["tokio-io", "futures"]
- zlib = ["libz-sys"]
+ zlib = ["any_zlib", "libz-sys"]
+ zlib-ng-compat = ["zlib", "libz-sys/zlib-ng"]
  [target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies.miniz_oxide]
- version = "0.3.5"
