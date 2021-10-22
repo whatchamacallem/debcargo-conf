@@ -11,5 +11,8 @@ git diff --quiet origin/master || \
 { echo >&2 "Please sync with origin/master before running this."; exit 1; }
 
 git merge "${packages[@]/#/pending-}"
-git push origin master "${packages[@]/#/:pending-}"
+git push origin master
+if [ "${PENDING_LOCAL}" != 1 ]; then
+  git push origin "${packages[@]/#/:pending-}"
+fi
 dev/sync-pending-branches.sh
