@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-packages=( $(dev/list-pending-not-NEW.sh | dev/filter-package-in-debian.sh | grep -v ' 0$' | cut '-d ' -f1) )
+packages=( $(dev/list-pending.sh | dev/filter-package-in-debian.sh | grep -v ' 0$' | cut '-d ' -f1) )
 
 if [ -z "$packages" ]; then exit 0; fi
 set -x
