@@ -1,0 +1,55 @@
+Index: jpeg-decoder/Cargo.toml
+===================================================================
+--- jpeg-decoder.orig/Cargo.toml
++++ jpeg-decoder/Cargo.toml
+@@ -28,8 +28,6 @@ harness = false
+ [dependencies.rayon]
+ version = "1.0"
+ optional = true
+-[dev-dependencies.criterion]
+-version = "0.3"
+ 
+ [dev-dependencies.png]
+ version = "0.16"
+Index: jpeg-decoder/benches/decoding_benchmark.rs
+===================================================================
+--- jpeg-decoder.orig/benches/decoding_benchmark.rs
++++ jpeg-decoder/benches/decoding_benchmark.rs
+@@ -1,12 +1,14 @@
+-extern crate criterion;
++//this bench has been nerfed to allow the rest of the testsuite to run
++//in Debian.
++//extern crate criterion;
+ extern crate jpeg_decoder;
+ 
+-use criterion::{black_box, Criterion};
++//use criterion::{black_box, Criterion};
+ 
+ use jpeg_decoder as jpeg;
+ use jpeg_decoder::ImageInfo;
+ 
+-fn read_image(image: &[u8]) -> Vec<u8> {
++/*fn read_image(image: &[u8]) -> Vec<u8> {
+     jpeg::Decoder::new(black_box(image)).decode().unwrap()
+ }
+ 
+@@ -15,9 +17,9 @@ fn read_metadata(image: &[u8]) -> ImageI
+     decoder.read_info().unwrap();
+     decoder.info().unwrap()
+ }
+-
++*/
+ fn main() {
+-    let mut c = Criterion::default().configure_from_args();
++    /*let mut c = Criterion::default().configure_from_args();
+     c.bench_function("decode a 512x512 JPEG", |b| b.iter(|| {
+         read_image(include_bytes!("tower.jpg"))
+     }));
+@@ -33,5 +35,5 @@ fn main() {
+     c.bench_function("extract metadata from an image", |b| b.iter(|| {
+         read_metadata(include_bytes!("tower.jpg"))
+     }));
+-    c.final_summary();
++    c.final_summary();*/
+ }
+\ No newline at end of file
