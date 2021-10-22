@@ -8,7 +8,13 @@ git_hash() {
 
 git fetch origin --prune
 PREVBRANCH="$(git rev-parse --abbrev-ref HEAD)"
+
+# delete merged
 git branch --merged | tr -d ' ' | grep ^pending- | xargs -trn1 git branch -d
+merged=( $(git branch --list -r 'origin/pending-*' --format='%(refname:lstrip=3)' --merged) )
+git push origin "${merged[@]/#/:}"
+
+# sync local branches
 git branch --list -r 'origin/pending-*' --format='%(refname:lstrip=3)' | while read b; do
 	if [ -z "$(git_hash "$b")" ]; then
 		git checkout "$b"
