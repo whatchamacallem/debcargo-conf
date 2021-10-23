@@ -8,9 +8,9 @@ Index: curl-sys/Cargo.toml
  static-curl = []
 -static-ssl = ["openssl-sys/vendored"]
 +static-ssl = ["openssl-sys"]
+ upkeep_7_62_0 = []
  zlib-ng-compat = ["libz-sys/zlib-ng", "static-curl"]
  [target."cfg(all(unix, not(target_os = \"macos\")))".dependencies.openssl-sys]
- version = "0.9"
 Index: curl-sys/build.rs
 ===================================================================
 --- curl-sys.orig/build.rs
@@ -24,6 +24,6 @@ Index: curl-sys/build.rs
 +    // On Debian, always probe for a system-wide libcurl even when linking statically
 +    if true {
 +        if cfg!(feature = "static-curl") { println!("cargo:static=1"); }
-         // OSX and Haiku ships libcurl by default, so we just use that version
+         // OSX ships libcurl by default, so we just use that version
          // so long as it has the right features enabled.
-         if target.contains("apple") || target.contains("haiku") {
+         if target.contains("apple") && (!cfg!(feature = "http2") || curl_config_reports_http2()) {
