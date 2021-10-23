@@ -100,6 +100,10 @@ if shouldbuild "$SRCNAME.dsc" "$PKGNAME/debian/changelog" ]; then
 fi
 
 EXTRA_DEBS=( "$@" )
+if [ -n "$*" -a -z "$IGNORE_MISSING_BUILD_DEPS" ]; then
+	IGNORE_MISSING_BUILD_DEPS=1
+	echo >&2 "Given non-empty extra debs; defaulting IGNORE_MISSING_BUILD_DEPS=1"
+fi
 
 check_build_deps() {
 	mkdir -p dpkg-dummy
