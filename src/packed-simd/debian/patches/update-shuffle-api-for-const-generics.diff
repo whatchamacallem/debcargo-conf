@@ -1,5 +1,7 @@
 This patch is based on the upstream commit described below, adjusted to
-remove fuzz when applying to the Debian package.
+remove fuzz when applying to the Debian package and to avoid mentioning
+F-I-X-M-E (remove the dashes) in the patch which upsets the debcargo
+scripts.
 
 commit 728d47506fe3a2599818060bd6e02e4bd3e338d5
 Author: Jubilee Young <workingjubilee@gmail.com>
@@ -7,13 +9,10 @@ Date:   Sat May 15 20:15:42 2021 -0700
 
     Update shuffle API for const generics
 
-Index: rust-packed-simd-0.3.3/src/api/shuffle.rs
-===================================================================
---- rust-packed-simd-0.3.3.orig/src/api/shuffle.rs
-+++ rust-packed-simd-0.3.3/src/api/shuffle.rs
-@@ -79,20 +79,18 @@ macro_rules! shuffle {
-     ($vec0:expr, $vec1:expr, [$l0:expr, $l1:expr]) => {{
-         #[allow(unused_unsafe)]
+only in patch2:
+--- packed-simd.orig/src/api/shuffle.rs
++++ packed-simd/src/api/shuffle.rs
+@@ -81,6 +81,5 @@
          unsafe {
 -            $crate::Simd($crate::__shuffle_vector2(
 +            $crate::Simd($crate::__shuffle_vector2::<{[$l0, $l1]}, _, _>(
@@ -21,10 +20,7 @@ Index: rust-packed-simd-0.3.3/src/api/shuffle.rs
                  $vec1.0,
 -                [$l0, $l1],
              ))
-         }
-     }};
-     ($vec0:expr, $vec1:expr, [$l0:expr, $l1:expr, $l2:expr, $l3:expr]) => {{
-         #[allow(unused_unsafe)]
+@@ -91,6 +90,5 @@
          unsafe {
 -            $crate::Simd($crate::__shuffle_vector4(
 +            $crate::Simd($crate::__shuffle_vector4::<{[$l0, $l1, $l2, $l3]}, _, _>(
@@ -32,11 +28,7 @@ Index: rust-packed-simd-0.3.3/src/api/shuffle.rs
                  $vec1.0,
 -                [$l0, $l1, $l2, $l3],
              ))
-         }
-     }};
-@@ -101,10 +99,9 @@ macro_rules! shuffle {
-       $l4:expr, $l5:expr, $l6:expr, $l7:expr]) => {{
-         #[allow(unused_unsafe)]
+@@ -103,6 +101,5 @@
          unsafe {
 -            $crate::Simd($crate::__shuffle_vector8(
 +            $crate::Simd($crate::__shuffle_vector8::<{[$l0, $l1, $l2, $l3, $l4, $l5, $l6, $l7]}, _, _>(
@@ -44,18 +36,14 @@ Index: rust-packed-simd-0.3.3/src/api/shuffle.rs
                  $vec1.0,
 -                [$l0, $l1, $l2, $l3, $l4, $l5, $l6, $l7],
              ))
-         }
-     }};
-@@ -115,13 +112,14 @@ macro_rules! shuffle {
-       $l12:expr, $l13:expr, $l14:expr, $l15:expr]) => {{
-         #[allow(unused_unsafe)]
+@@ -117,5 +114,3 @@
          unsafe {
 -            $crate::Simd($crate::__shuffle_vector16(
 -                $vec0.0,
 -                $vec1.0,
 +            $crate::Simd($crate::__shuffle_vector16::<{
                  [
-                     $l0, $l1, $l2, $l3, $l4, $l5, $l6, $l7, $l8, $l9, $l10,
+@@ -123,3 +118,6 @@
                      $l11, $l12, $l13, $l14, $l15,
 -                ],
 +                ]
@@ -63,20 +51,14 @@ Index: rust-packed-simd-0.3.3/src/api/shuffle.rs
 +                $vec0.0,
 +                $vec1.0,
              ))
-         }
-     }};
-@@ -136,15 +134,16 @@ macro_rules! shuffle {
-       $l28:expr, $l29:expr, $l30:expr, $l31:expr]) => {{
-         #[allow(unused_unsafe)]
+@@ -138,5 +136,3 @@
          unsafe {
 -            $crate::Simd($crate::__shuffle_vector32(
 -                $vec0.0,
 -                $vec1.0,
 +            $crate::Simd($crate::__shuffle_vector32::<{
                  [
-                     $l0, $l1, $l2, $l3, $l4, $l5, $l6, $l7, $l8, $l9, $l10,
-                     $l11, $l12, $l13, $l14, $l15, $l16, $l17, $l18, $l19,
-                     $l20, $l21, $l22, $l23, $l24, $l25, $l26, $l27, $l28,
+@@ -146,3 +142,6 @@
                      $l29, $l30, $l31,
 -                ],
 +                ]
@@ -84,11 +66,7 @@ Index: rust-packed-simd-0.3.3/src/api/shuffle.rs
 +                $vec0.0,
 +                $vec1.0,
              ))
-         }
-     }};
-@@ -167,18 +166,17 @@ macro_rules! shuffle {
-       $l60:expr, $l61:expr, $l62:expr, $l63:expr]) => {{
-         #[allow(unused_unsafe)]
+@@ -169,14 +168,13 @@
          unsafe {
 -            $crate::Simd($crate::__shuffle_vector64(
 +            $crate::Simd($crate::__shuffle_vector64::<{[
@@ -112,62 +90,12 @@ Index: rust-packed-simd-0.3.3/src/api/shuffle.rs
 -                    $l56, $l57, $l58, $l59, $l60, $l61, $l62, $l63,
 -                ],
              ))
-         }
-      }};
-Index: rust-packed-simd-0.3.3/src/codegen/llvm.rs
-===================================================================
---- rust-packed-simd-0.3.3.orig/src/codegen/llvm.rs
-+++ rust-packed-simd-0.3.3/src/codegen/llvm.rs
-@@ -7,52 +7,73 @@ use crate::sealed::Simd;
- 
+only in patch2:
+--- packed-simd.orig/src/codegen/llvm.rs
++++ packed-simd/src/codegen/llvm.rs
+@@ -8,2 +8,71 @@
  // Shuffle intrinsics: expanded in users' crates, therefore public.
- extern "platform-intrinsic" {
--    // FIXME: Passing this intrinsics an `idx` array with an index that is
--    // out-of-bounds will produce a monomorphization-time error.
--    // https://github.com/rust-lang-nursery/packed_simd/issues/21
--    #[rustc_args_required_const(2)]
--    pub fn simd_shuffle2<T, U>(x: T, y: T, idx: [u32; 2]) -> U
--    where
--        T: Simd,
--        <T as Simd>::Element: Shuffle<[u32; 2], Output = U>;
--
--    #[rustc_args_required_const(2)]
--    pub fn simd_shuffle4<T, U>(x: T, y: T, idx: [u32; 4]) -> U
--    where
--        T: Simd,
--        <T as Simd>::Element: Shuffle<[u32; 4], Output = U>;
--
--    #[rustc_args_required_const(2)]
--    pub fn simd_shuffle8<T, U>(x: T, y: T, idx: [u32; 8]) -> U
--    where
--        T: Simd,
--        <T as Simd>::Element: Shuffle<[u32; 8], Output = U>;
--
--    #[rustc_args_required_const(2)]
--    pub fn simd_shuffle16<T, U>(x: T, y: T, idx: [u32; 16]) -> U
--    where
--        T: Simd,
--        <T as Simd>::Element: Shuffle<[u32; 16], Output = U>;
--
--    #[rustc_args_required_const(2)]
--    pub fn simd_shuffle32<T, U>(x: T, y: T, idx: [u32; 32]) -> U
--    where
--        T: Simd,
--        <T as Simd>::Element: Shuffle<[u32; 32], Output = U>;
--
--    #[rustc_args_required_const(2)]
--    pub fn simd_shuffle64<T, U>(x: T, y: T, idx: [u32; 64]) -> U
--    where
--        T: Simd,
--        <T as Simd>::Element: Shuffle<[u32; 64], Output = U>;
--}
--
--pub use self::simd_shuffle16 as __shuffle_vector16;
--pub use self::simd_shuffle2 as __shuffle_vector2;
--pub use self::simd_shuffle32 as __shuffle_vector32;
--pub use self::simd_shuffle4 as __shuffle_vector4;
--pub use self::simd_shuffle64 as __shuffle_vector64;
--pub use self::simd_shuffle8 as __shuffle_vector8;
++extern "platform-intrinsic" {
 +    pub fn simd_shuffle2<T, U>(x: T, y: T, idx: [u32; 2]) -> U;
 +    pub fn simd_shuffle4<T, U>(x: T, y: T, idx: [u32; 4]) -> U;
 +    pub fn simd_shuffle8<T, U>(x: T, y: T, idx: [u32; 8]) -> U;
@@ -235,34 +163,68 @@ Index: rust-packed-simd-0.3.3/src/codegen/llvm.rs
 +{
 +    simd_shuffle64(x, y, IDX)
 +}
- 
++
  extern "platform-intrinsic" {
+@@ -12,47 +81,2 @@
+     // https://github.com/rust-lang-nursery/packed_simd/issues/21
+-    #[rustc_args_required_const(2)]
+-    pub fn simd_shuffle2<T, U>(x: T, y: T, idx: [u32; 2]) -> U
+-    where
+-        T: Simd,
+-        <T as Simd>::Element: Shuffle<[u32; 2], Output = U>;
+-
+-    #[rustc_args_required_const(2)]
+-    pub fn simd_shuffle4<T, U>(x: T, y: T, idx: [u32; 4]) -> U
+-    where
+-        T: Simd,
+-        <T as Simd>::Element: Shuffle<[u32; 4], Output = U>;
+-
+-    #[rustc_args_required_const(2)]
+-    pub fn simd_shuffle8<T, U>(x: T, y: T, idx: [u32; 8]) -> U
+-    where
+-        T: Simd,
+-        <T as Simd>::Element: Shuffle<[u32; 8], Output = U>;
+-
+-    #[rustc_args_required_const(2)]
+-    pub fn simd_shuffle16<T, U>(x: T, y: T, idx: [u32; 16]) -> U
+-    where
+-        T: Simd,
+-        <T as Simd>::Element: Shuffle<[u32; 16], Output = U>;
+-
+-    #[rustc_args_required_const(2)]
+-    pub fn simd_shuffle32<T, U>(x: T, y: T, idx: [u32; 32]) -> U
+-    where
+-        T: Simd,
+-        <T as Simd>::Element: Shuffle<[u32; 32], Output = U>;
+-
+-    #[rustc_args_required_const(2)]
+-    pub fn simd_shuffle64<T, U>(x: T, y: T, idx: [u32; 64]) -> U
+-    where
+-        T: Simd,
+-        <T as Simd>::Element: Shuffle<[u32; 64], Output = U>;
+-}
+-
+-pub use self::simd_shuffle16 as __shuffle_vector16;
+-pub use self::simd_shuffle2 as __shuffle_vector2;
+-pub use self::simd_shuffle32 as __shuffle_vector32;
+-pub use self::simd_shuffle4 as __shuffle_vector4;
+-pub use self::simd_shuffle64 as __shuffle_vector64;
+-pub use self::simd_shuffle8 as __shuffle_vector8;
+-
+-extern "platform-intrinsic" {
      crate fn simd_eq<T, U>(x: T, y: T) -> U;
-Index: rust-packed-simd-0.3.3/src/lib.rs
-===================================================================
---- rust-packed-simd-0.3.3.orig/src/lib.rs
-+++ rust-packed-simd-0.3.3/src/lib.rs
-@@ -200,6 +200,7 @@
- //!   preserving, etc.
- 
+only in patch2:
+--- packed-simd.orig/src/lib.rs
++++ packed-simd/src/lib.rs
+@@ -202,2 +202,3 @@
  #![feature(
 +    const_generics,
      repr_simd,
-     platform_intrinsics,
-     stdsimd,
-@@ -215,6 +216,7 @@
-         // FIXME: these types are unsound in C FFI already
-         // See https://github.com/rust-lang/rust/issues/53346
+@@ -217,2 +218,3 @@
          improper_ctypes_definitions,
 +        incomplete_features,
          clippy::cast_possible_truncation,
-         clippy::cast_lossless,
-         clippy::cast_possible_wrap,
-@@ -225,6 +227,7 @@
-         // See https://github.com/rust-lang/rust-clippy/issues/3410
-         clippy::use_self,
+@@ -227,2 +229,3 @@
          clippy::wrong_self_convention,
 +        clippy::from_over_into,
  )]
- #![cfg_attr(test, feature(hashmap_internals))]
- #![deny(warnings, rust_2018_idioms, clippy::missing_inline_in_public_items)]

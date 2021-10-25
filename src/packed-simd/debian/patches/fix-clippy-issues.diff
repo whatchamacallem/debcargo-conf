@@ -1,5 +1,6 @@
 This patch is based on the upstream commit described below, with changes
-to files not present in the Debian package removed.
+to files not present in the Debian package removed and to remove mentions
+of F-I-X-M-E (remove dashes) which upsets the Debian cargo tools.
 
 commit acd3aef63607d8c1b256943f9f53e7bfb7680352
 Author: gnzlbg <gonzalobg88@gmail.com>
@@ -28,24 +29,6 @@ diff --git a/src/api/cmp/partial_eq.rs b/src/api/cmp/partial_eq.rs
 index 7e2782f0f..1712a0de5 100644
 --- a/src/api/cmp/partial_eq.rs
 +++ b/src/api/cmp/partial_eq.rs
-@@ -7,7 +7,7 @@ macro_rules! impl_cmp_partial_eq {
-         ($true:expr, $false:expr)
-     ) => {
-         // FIXME: https://github.com/rust-lang-nursery/rust-clippy/issues/2892
--        #[cfg_attr(feature = "cargo-clippy", allow(clippy::partialeq_ne_impl))]
-+        #[allow(clippy::partialeq_ne_impl)]
-         impl crate::cmp::PartialEq<$id> for $id {
-             #[inline]
-             fn eq(&self, other: &Self) -> bool {
-@@ -20,7 +20,7 @@ macro_rules! impl_cmp_partial_eq {
-         }
- 
-         // FIXME: https://github.com/rust-lang-nursery/rust-clippy/issues/2892
--        #[cfg_attr(feature = "cargo-clippy", allow(clippy::partialeq_ne_impl))]
-+        #[allow(clippy::partialeq_ne_impl)]
-         impl crate::cmp::PartialEq<LexicographicallyOrdered<$id>>
-             for LexicographicallyOrdered<$id>
-         {
 @@ -34,12 +34,13 @@ macro_rules! impl_cmp_partial_eq {
              }
          }
@@ -318,15 +301,6 @@ index 38b8a73c9..75e5aad5c 100644
          impl<T> crate::cmp::PartialEq<$id<T>> for $id<T> {
              #[inline]
              fn eq(&self, other: &Self) -> bool {
-@@ -437,7 +434,7 @@ macro_rules! impl_minimal_p {
-         }
- 
-         // FIXME: https://github.com/rust-lang-nursery/rust-clippy/issues/2892
--        #[cfg_attr(feature = "cargo-clippy", allow(clippy::partialeq_ne_impl))]
-+        #[allow(clippy::partialeq_ne_impl)]
-         impl<T> crate::cmp::PartialEq<LexicographicallyOrdered<$id<T>>>
-             for LexicographicallyOrdered<$id<T>>
-         {
 @@ -621,8 +618,7 @@ macro_rules! impl_minimal_p {
              #[inline]
              pub unsafe fn from_slice_aligned_unchecked(slice: &[$elem_ty])
