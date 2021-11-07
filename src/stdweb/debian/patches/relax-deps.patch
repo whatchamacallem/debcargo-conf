@@ -1,0 +1,25 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -68,7 +68,7 @@ version = "1"
+ [dev-dependencies.serde_json]
+ version = "1"
+ [build-dependencies.rustc_version]
+-version = "0.2"
++version = "0.4"
+ 
+ [features]
+ default = ["serde", "serde_json"]
+--- a/build.rs
++++ b/build.rs
+@@ -2,10 +2,5 @@ extern crate rustc_version;
+ use rustc_version::{version, version_meta, Channel};
+ 
+ fn main() {
+-    let mut current = version().unwrap();
+-    current.pre = Vec::new();
+-
+-    if version_meta().unwrap().channel == Channel::Nightly {
+-        println!( "cargo:rustc-cfg=rust_nightly" );
+-    }
++    // debian does not use nightly
+ }
