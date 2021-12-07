@@ -1,0 +1,21 @@
+Description: tolerate lack of / mount.
+ Some chroot environments may not have an accessible root mount,
+ tolerate this case in the testsuite.
+Author: Peter Michael Green <plugwash@debian.org>
+
+--- rust-libmount-0.1.15.orig/src/remount.rs
++++ rust-libmount-0.1.15/src/remount.rs
+@@ -375,7 +375,12 @@ mod test {
+ 
+     #[test]
+     fn test_get_mountpoint_flags() {
+-        assert!(get_mountpoint_flags(Path::new("/")).is_ok());
++        let res = get_mountpoint_flags(Path::new("/"));
++        match res {
++            Ok(v) => {},
++            Err(RemountError::UnknownMountPoint(p)) => assert_eq!(p, Path::new("/")), // in some chroot environments mount point information on the / mountpoint may be unavailable.
++            Err(e) => panic!("{}",e)
++        }
+     }
+ 
+     #[test]
