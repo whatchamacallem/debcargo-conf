@@ -1,0 +1,153 @@
+Description: Remove rustyline-dervive
+ rustyline-derive is not currently in Debian, disable examples that
+ depend on it so the rest of the testsuite can run.
+Author: Peter Michael Green <plugwash@debian.org>
+
+Index: rustyline/Cargo.toml
+===================================================================
+--- rustyline.orig/Cargo.toml
++++ rustyline/Cargo.toml
+@@ -55,9 +55,6 @@ version = "0.3"
+ [dev-dependencies.env_logger]
+ version = "0.9"
+ 
+-[dev-dependencies.rustyline-derive]
+-version = "0.3.1"
+-
+ [dev-dependencies.tempfile]
+ version = "3.1.0"
+ 
+Index: rustyline/examples/diy_hints.rs
+===================================================================
+--- rustyline.orig/examples/diy_hints.rs
++++ rustyline/examples/diy_hints.rs
+@@ -2,7 +2,7 @@ use std::collections::HashSet;
+ 
+ use rustyline::Editor;
+ use rustyline::{hint::Hinter, Context};
+-use rustyline_derive::{Completer, Helper, Highlighter, Validator};
++/*use rustyline_derive::{Completer, Helper, Highlighter, Validator};
+ 
+ #[derive(Completer, Helper, Validator, Highlighter)]
+ struct DIYHinter {
+@@ -39,10 +39,10 @@ fn diy_hints() -> HashSet<String> {
+     set.insert(String::from("hget key field"));
+     set.insert(String::from("hset key field value"));
+     set
+-}
++}*/
+ 
+ fn main() -> rustyline::Result<()> {
+-    println!("This is a DIY hint hack of rustyline");
++    /*println!("This is a DIY hint hack of rustyline");
+     let h = DIYHinter { hints: diy_hints() };
+ 
+     let mut rl: Editor<DIYHinter> = Editor::new();
+@@ -51,5 +51,6 @@ fn main() -> rustyline::Result<()> {
+     loop {
+         let input = rl.readline("> ")?;
+         println!("input: {}", input);
+-    }
++    }*/
++    Ok(())
+ }
+Index: rustyline/examples/example.rs
+===================================================================
+--- rustyline.orig/examples/example.rs
++++ rustyline/examples/example.rs
+@@ -7,7 +7,7 @@ use rustyline::highlight::{Highlighter,
+ use rustyline::hint::{Hinter, HistoryHinter};
+ use rustyline::validate::{self, MatchingBracketValidator, Validator};
+ use rustyline::{Cmd, CompletionType, Config, Context, EditMode, Editor, KeyPress};
+-use rustyline_derive::Helper;
++/*use rustyline_derive::Helper;
+ 
+ #[derive(Helper)]
+ struct MyHelper {
+@@ -75,11 +75,11 @@ impl Validator for MyHelper {
+         self.validator.validate_while_typing()
+     }
+ }
+-
++*/
+ // To debug rustyline:
+ // RUST_LOG=rustyline=debug cargo run --example example 2> debug.log
+ fn main() -> rustyline::Result<()> {
+-    env_logger::init();
++    /*env_logger::init();
+     let config = Config::builder()
+         .history_ignore_space(true)
+         .completion_type(CompletionType::List)
+@@ -125,5 +125,6 @@ fn main() -> rustyline::Result<()> {
+         }
+         count += 1;
+     }
+-    rl.save_history("history.txt")
++    rl.save_history("history.txt")*/
++    Ok(())
+ }
+Index: rustyline/examples/input_validation.rs
+===================================================================
+--- rustyline.orig/examples/input_validation.rs
++++ rustyline/examples/input_validation.rs
+@@ -1,7 +1,7 @@
+ use rustyline::error::ReadlineError;
+ use rustyline::validate::{ValidationContext, ValidationResult, Validator};
+ use rustyline::Editor;
+-use rustyline_derive::{Completer, Helper, Highlighter, Hinter};
++/*use rustyline_derive::{Completer, Helper, Highlighter, Hinter};
+ 
+ #[derive(Completer, Helper, Highlighter, Hinter)]
+ struct InputValidator {}
+@@ -19,14 +19,14 @@ impl Validator for InputValidator {
+         };
+         Ok(result)
+     }
+-}
++}*/
+ 
+ fn main() -> rustyline::Result<()> {
+-    let h = InputValidator {};
++    /*let h = InputValidator {};
+     let mut rl = Editor::new();
+     rl.set_helper(Some(h));
+ 
+     let input = rl.readline("> ")?;
+-    println!("Input: {}", input);
++    println!("Input: {}", input);*/
+     Ok(())
+ }
+Index: rustyline/examples/read_password.rs
+===================================================================
+--- rustyline.orig/examples/read_password.rs
++++ rustyline/examples/read_password.rs
+@@ -3,7 +3,7 @@ use std::borrow::Cow::{self, Borrowed, O
+ use rustyline::config::Configurer;
+ use rustyline::highlight::Highlighter;
+ use rustyline::{ColorMode, Editor};
+-use rustyline_derive::{Completer, Helper, Hinter, Validator};
++/*use rustyline_derive::{Completer, Helper, Hinter, Validator};
+ 
+ #[derive(Completer, Helper, Hinter, Validator)]
+ struct MaskingHighlighter {
+@@ -23,10 +23,10 @@ impl Highlighter for MaskingHighlighter
+     fn highlight_char(&self, _line: &str, _pos: usize) -> bool {
+         self.masking
+     }
+-}
++}*/
+ 
+ fn main() -> rustyline::Result<()> {
+-    println!("This is just a hack. Reading passwords securely requires more than that.");
++    /*println!("This is just a hack. Reading passwords securely requires more than that.");
+     let h = MaskingHighlighter { masking: false };
+     let mut rl = Editor::new();
+     rl.set_helper(Some(h));
+@@ -38,6 +38,6 @@ fn main() -> rustyline::Result<()> {
+     rl.set_color_mode(ColorMode::Forced); // force masking
+     rl.set_auto_add_history(false); // make sure password is not added to history
+     let passwd = rl.readline("Password:")?;
+-    println!("Secret: {}", passwd);
++    println!("Secret: {}", passwd);*/
+     Ok(())
+ }
