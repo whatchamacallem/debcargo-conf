@@ -1,0 +1,49 @@
+Index: futures/tests/io_cursor.rs
+===================================================================
+--- futures.orig/tests/io_cursor.rs
++++ futures/tests/io_cursor.rs
+@@ -1,11 +1,11 @@
+-use assert_matches::assert_matches;
++//use assert_matches::assert_matches;
+ use futures::executor::block_on;
+ use futures::future::lazy;
+ use futures::io::{AsyncWrite, Cursor};
+ use futures::task::Poll;
+ use std::pin::Pin;
+ 
+-#[test]
++/*#[test]
+ fn cursor_asyncwrite_vec() {
+     let mut cursor = Cursor::new(vec![0; 5]);
+     block_on(lazy(|cx| {
+@@ -15,9 +15,9 @@ fn cursor_asyncwrite_vec() {
+         assert_matches!(Pin::new(&mut cursor).poll_write(cx, &[6, 7]), Poll::Ready(Ok(2)));
+     }));
+     assert_eq!(cursor.into_inner(), [1, 2, 3, 4, 5, 6, 6, 7]);
+-}
++}*/
+ 
+-#[test]
++/*#[test]
+ fn cursor_asyncwrite_box() {
+     let mut cursor = Cursor::new(vec![0; 5].into_boxed_slice());
+     block_on(lazy(|cx| {
+@@ -28,3 +28,4 @@ fn cursor_asyncwrite_box() {
+     }));
+     assert_eq!(&*cursor.into_inner(), [1, 2, 3, 4, 5]);
+ }
++*/
+\ No newline at end of file
+Index: futures/Cargo.toml
+===================================================================
+--- futures.orig/Cargo.toml
++++ futures/Cargo.toml
+@@ -58,8 +58,6 @@ default-features = false
+ version = "0.3.17"
+ features = ["sink"]
+ default-features = false
+-[dev-dependencies.assert_matches]
+-version = "1.3.0"
+ 
+ [dev-dependencies.pin-project]
+ version = "1.0.1"
