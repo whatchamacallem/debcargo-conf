@@ -1,8 +1,7 @@
-diff --git a/build.rs b/build.rs
-new file mode 100644
-index 0000000..ca906fa
+Index: redox-syscall/build.rs
+===================================================================
 --- /dev/null
-+++ b/build.rs
++++ redox-syscall/build.rs
 @@ -0,0 +1,9 @@
 +use std::env;
 +
@@ -13,15 +12,14 @@ index 0000000..ca906fa
 +        }
 +    }
 +}
-diff --git a/src/lib.rs b/src/lib.rs
-index 6b8d130..42526f0 100644
---- a/src/lib.rs
-+++ b/src/lib.rs
+Index: redox-syscall/src/lib.rs
+===================================================================
+--- redox-syscall.orig/src/lib.rs
++++ redox-syscall/src/lib.rs
 @@ -1,5 +1,5 @@
+ #![feature(asm)]
 -#![feature(llvm_asm)]
--#![feature(const_fn)]
 +#![cfg_attr(nightly, feature(llvm_asm))]
-+#![cfg_attr(nightly, feature(const_fn))]
  #![cfg_attr(not(test), no_std)]
  
  #[cfg(test)]
@@ -33,7 +31,7 @@ index 6b8d130..42526f0 100644
  pub use self::io::*;
  pub use self::number::*;
  pub use self::scheme::*;
-@@ -47,6 +48,7 @@ pub mod error;
+@@ -51,6 +52,7 @@ pub mod error;
  pub mod flag;
  
  /// Functions for low level hardware control
