@@ -1,0 +1,27 @@
+Index: blake3/Cargo.toml
+===================================================================
+--- blake3.orig/Cargo.toml
++++ blake3/Cargo.toml
+@@ -48,9 +48,6 @@ optional = true
+ [dev-dependencies.hex]
+ version = "0.4.2"
+ 
+-[dev-dependencies.page_size]
+-version = "0.4.1"
+-
+ [dev-dependencies.rand]
+ version = ">= 0.7, < 0.9"
+ 
+Index: blake3/benches/bench.rs
+===================================================================
+--- blake3.orig/benches/bench.rs
++++ blake3/benches/bench.rs
+@@ -25,7 +25,7 @@ pub struct RandomInput {
+ impl RandomInput {
+     pub fn new(b: &mut Bencher, len: usize) -> Self {
+         b.bytes += len as u64;
+-        let page_size: usize = page_size::get();
++        let page_size: usize = 65536;// page_size::get();
+         let mut buf = vec![0u8; len + page_size];
+         let mut rng = rand::thread_rng();
+         rng.fill_bytes(&mut buf);
