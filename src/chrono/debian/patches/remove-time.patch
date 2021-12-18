@@ -1,0 +1,41 @@
+Description: Remove dependency on time crate.
+ The dependency on time 0.1 is only needed for compatibility, since time 0.1
+ is not currently in Debian sid, that shouldn't be a problem for us anymore.
+ See: https://github.com/chronotope/chrono/commit/5115c6f5f93d112d48b618edfa1b47d004c39d10
+Author: Peter Michael Green <plugwash@debian.org>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2021-12-18
+
+--- rust-chrono-0.4.19.orig/Cargo.toml
++++ rust-chrono-0.4.19/Cargo.toml
+@@ -54,9 +54,6 @@ version = "1.0.99"
+ optional = true
+ default-features = false
+ 
+-[dependencies.time]
+-version = "0.1.42"
+-optional = true
+ [dev-dependencies.bincode]
+ version = "1"
+ 
+@@ -78,8 +75,7 @@ version = "1"
+ __doctest = []
+ alloc = []
+ clock = ["libc", "std", "winapi"]
+-default = ["clock", "std", "oldtime"]
+-oldtime = ["time"]
++default = ["clock", "std"]
+ std = []
+ [target."cfg(windows)".dependencies.winapi]
+ version = "0.3.0"
