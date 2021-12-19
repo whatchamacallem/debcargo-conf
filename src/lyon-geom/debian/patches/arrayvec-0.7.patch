@@ -1,0 +1,377 @@
+This patch is based on the upstream commit described below, adapted
+for use in the Debian package by Peter Michael Green.
+
+commit 67ad0177d1efddfb4f5e7d6c451a9202a7ff2158
+Author: Violeta Hernández <eric.ivan.hdz@gmail.com>
+Date:   Wed Jun 9 23:36:49 2021 -0500
+
+    Bump `arrayvec` to 0.7
+
+only in patch2:
+Index: lyon-geom/src/cubic_bezier.rs
+===================================================================
+--- lyon-geom.orig/src/cubic_bezier.rs
++++ lyon-geom/src/cubic_bezier.rs
+@@ -70,7 +70,7 @@ impl<S: Scalar> CubicBezierSegment<S> {
+ 
+     /// Return the parameter values corresponding to a given x coordinate.
+     /// See also solve_t_for_x for monotonic curves.
+-    pub fn solve_t_for_x(&self, x: S) -> ArrayVec<[S; 3]> {
++    pub fn solve_t_for_x(&self, x: S) -> ArrayVec<S, 3> {
+         if self.is_a_point(S::ZERO)
+             || (self.non_point_is_linear(S::ZERO) && self.from.x == self.to.x)
+         {
+@@ -82,7 +82,7 @@ impl<S: Scalar> CubicBezierSegment<S> {
+ 
+     /// Return the parameter values corresponding to a given y coordinate.
+     /// See also solve_t_for_y for monotonic curves.
+-    pub fn solve_t_for_y(&self, y: S) -> ArrayVec<[S; 3]> {
++    pub fn solve_t_for_y(&self, y: S) -> ArrayVec<S, 3> {
+         if self.is_a_point(S::ZERO)
+             || (self.non_point_is_linear(S::ZERO) && self.from.y == self.to.y)
+         {
+@@ -99,7 +99,7 @@ impl<S: Scalar> CubicBezierSegment<S> {
+         ctrl1: S,
+         ctrl2: S,
+         to: S,
+-    ) -> ArrayVec<[S; 3]> {
++    ) -> ArrayVec<S, 3> {
+         let mut result = ArrayVec::new();
+ 
+         let a = -from + S::THREE * ctrl1 - S::THREE * ctrl2 + to;
+@@ -321,10 +321,10 @@ impl<S: Scalar> CubicBezierSegment<S> {
+     where
+         F: FnMut(S),
+     {
+-        let mut x_extrema: ArrayVec<[S; 3]> = ArrayVec::new();
++        let mut x_extrema: ArrayVec<S, 3> = ArrayVec::new();
+         self.for_each_local_x_extremum_t(&mut|t| { x_extrema.push(t) });
+ 
+-        let mut y_extrema: ArrayVec<[S; 3]> = ArrayVec::new();
++        let mut y_extrema: ArrayVec<S, 3> = ArrayVec::new();
+         self.for_each_local_y_extremum_t(&mut|t| { y_extrema.push(t) });
+ 
+         let mut it_x = x_extrema.iter().cloned();
+@@ -654,15 +654,15 @@ impl<S: Scalar> CubicBezierSegment<S> {
+     /// but not endpoint/endpoint intersections.
+     ///
+     /// Returns no intersections if either curve is a point.
+-    pub fn cubic_intersections_t(&self, curve: &CubicBezierSegment<S>) -> ArrayVec<[(S, S); 9]> {
++    pub fn cubic_intersections_t(&self, curve: &CubicBezierSegment<S>) -> ArrayVec<(S, S), 9> {
+         cubic_bezier_intersections_t(self, curve)
+     }
+ 
+     /// Computes the intersection points (if any) between this segment and another one.
+-    pub fn cubic_intersections(&self, curve: &CubicBezierSegment<S>) -> ArrayVec<[Point<S>; 9]> {
++    pub fn cubic_intersections(&self, curve: &CubicBezierSegment<S>) -> ArrayVec<Point<S>, 9> {
+         let intersections = self.cubic_intersections_t(curve);
+ 
+-        let mut result_with_repeats = ArrayVec::<[_; 9]>::new();
++        let mut result_with_repeats = ArrayVec::<_, 9>::new();
+         for (t, _) in intersections {
+             result_with_repeats.push(self.sample(t));
+         }
+@@ -718,12 +718,12 @@ impl<S: Scalar> CubicBezierSegment<S> {
+     /// but not endpoint/endpoint intersections.
+     ///
+     /// Returns no intersections if either curve is a point.
+-    pub fn quadratic_intersections_t(&self, curve: &QuadraticBezierSegment<S>) -> ArrayVec<[(S, S); 9]> {
++    pub fn quadratic_intersections_t(&self, curve: &QuadraticBezierSegment<S>) -> ArrayVec<(S, S), 9> {
+         self.cubic_intersections_t(&curve.to_cubic())
+     }
+ 
+     /// Computes the intersection points (if any) between this segment and a quadratic bézier segment.
+-    pub fn quadratic_intersections(&self, curve: &QuadraticBezierSegment<S>) -> ArrayVec<[Point<S>; 9]> {
++    pub fn quadratic_intersections(&self, curve: &QuadraticBezierSegment<S>) -> ArrayVec<Point<S>, 9> {
+         self.cubic_intersections(&curve.to_cubic())
+     }
+ 
+@@ -732,7 +732,7 @@ impl<S: Scalar> CubicBezierSegment<S> {
+     /// The result is provided in the form of the `t` parameters of each
+     /// point along curve. To get the intersection points, sample the curve
+     /// at the corresponding values.
+-    pub fn line_intersections_t(&self, line: &Line<S>) -> ArrayVec<[S; 3]> {
++    pub fn line_intersections_t(&self, line: &Line<S>) -> ArrayVec<S, 3> {
+         if line.vector.square_length() < S::EPSILON {
+             return ArrayVec::new();
+         }
+@@ -768,7 +768,7 @@ impl<S: Scalar> CubicBezierSegment<S> {
+     }
+ 
+     /// Computes the intersection points (if any) between this segment and a line.
+-    pub fn line_intersections(&self, line: &Line<S>) -> ArrayVec<[Point<S>; 3]> {
++    pub fn line_intersections(&self, line: &Line<S>) -> ArrayVec<Point<S>, 3> {
+         let intersections = self.line_intersections_t(&line);
+ 
+         let mut result = ArrayVec::new();
+@@ -784,7 +784,7 @@ impl<S: Scalar> CubicBezierSegment<S> {
+     /// The result is provided in the form of the `t` parameters of each
+     /// point along curve and segment. To get the intersection points, sample
+     /// the segments at the corresponding values.
+-    pub fn line_segment_intersections_t(&self, segment: &LineSegment<S>) -> ArrayVec<[(S, S); 3]> {
++    pub fn line_segment_intersections_t(&self, segment: &LineSegment<S>) -> ArrayVec<(S, S), 3> {
+         if !self.fast_bounding_rect().intersects(&segment.bounding_rect()) {
+             return ArrayVec::new();
+         }
+@@ -821,7 +821,7 @@ impl<S: Scalar> CubicBezierSegment<S> {
+     #[inline]
+     pub fn to(&self) -> Point<S> { self.to }
+ 
+-    pub fn line_segment_intersections(&self, segment: &LineSegment<S>) -> ArrayVec<[Point<S>; 3]> {
++    pub fn line_segment_intersections(&self, segment: &LineSegment<S>) -> ArrayVec<Point<S>, 3> {
+         let intersections = self.line_segment_intersections_t(&segment);
+ 
+         let mut result = ArrayVec::new();
+@@ -1106,7 +1106,7 @@ fn test_monotonic() {
+ #[test]
+ fn test_line_segment_intersections() {
+     use crate::math::point;
+-    fn assert_approx_eq(a: ArrayVec<[(f32, f32); 3]>, b: &[(f32, f32)], epsilon: f32) {
++    fn assert_approx_eq(a: ArrayVec<(f32, f32), 3>, b: &[(f32, f32)], epsilon: f32) {
+         for i in 0..a.len() {
+             if f32::abs(a[i].0 - b[i].0) > epsilon || f32::abs(a[i].1 - b[i].1) > epsilon {
+                 println!("{:?} != {:?}", a, b);
+@@ -1142,7 +1142,7 @@ fn test_line_segment_intersections() {
+ #[test]
+ fn test_parameters_for_value() {
+     use crate::math::point;
+-    fn assert_approx_eq(a: ArrayVec<[f32; 3]>, b: &[f32], epsilon: f32) {
++    fn assert_approx_eq(a: ArrayVec<f32, 3>, b: &[f32], epsilon: f32) {
+         for i in 0..a.len() {
+             if f32::abs(a[i] - b[i]) > epsilon {
+                 println!("{:?} != {:?}", a, b);
+Index: lyon-geom/src/cubic_bezier_intersections.rs
+===================================================================
+--- lyon-geom.orig/src/cubic_bezier_intersections.rs
++++ lyon-geom/src/cubic_bezier_intersections.rs
+@@ -23,7 +23,7 @@ use std::ops::Range;
+ pub fn cubic_bezier_intersections_t<S: Scalar>(
+     curve1: &CubicBezierSegment<S>,
+     curve2: &CubicBezierSegment<S>,
+-) -> ArrayVec<[(S, S); 9]> {
++) -> ArrayVec<(S, S), 9> {
+     if !curve1.fast_bounding_rect().intersects(&curve2.fast_bounding_rect())
+         || curve1 == curve2
+         || (curve1.from == curve2.to
+@@ -89,7 +89,7 @@ fn point_curve_intersections<S: Scalar>(
+     pt: &Point<S>,
+     curve: &CubicBezierSegment<S>,
+     epsilon: S,
+-) -> ArrayVec<[S; 9]> {
++) -> ArrayVec<S, 9> {
+     let mut result = ArrayVec::new();
+ 
+     // (If both endpoints are epsilon close, we only return S::ZERO.)
+@@ -139,7 +139,7 @@ fn point_curve_intersections<S: Scalar>(
+     // diagonally just outside the hull.  This is a rare case (could we even ignore it?).
+     #[inline]
+     fn maybe_add<S: Scalar>(t: S, pt: &Point<S>, curve: &CubicBezierSegment<S>, epsilon: S,
+-                            result: &mut ArrayVec<[S; 9]>) -> bool
++                            result: &mut ArrayVec<S, 9>) -> bool
+     {
+         if (curve.sample(t) - *pt).square_length() < epsilon {
+             result.push(t);
+@@ -160,7 +160,7 @@ fn line_curve_intersections<S: Scalar>(
+     line_as_curve: &CubicBezierSegment<S>,
+     curve: &CubicBezierSegment<S>,
+     flip: bool,
+-) -> ArrayVec<[(S, S); 9]> {
++) -> ArrayVec<(S, S), 9> {
+     let mut result = ArrayVec::new();
+     let baseline = line_as_curve.baseline();
+     let curve_intersections = curve.line_intersections_t(&baseline.to_line());
+@@ -186,7 +186,7 @@ fn line_curve_intersections<S: Scalar>(
+ fn line_line_intersections<S: Scalar>(
+     curve1: &CubicBezierSegment<S>,
+     curve2: &CubicBezierSegment<S>,
+-) -> ArrayVec<[(S, S); 9]> {
++) -> ArrayVec<(S, S), 9> {
+     let mut result = ArrayVec::new();
+ 
+     let intersection = curve1.baseline().to_line().intersection(&curve2.baseline().to_line());
+@@ -200,7 +200,7 @@ fn line_line_intersections<S: Scalar>(
+     fn parameters_for_line_point<S: Scalar>(
+         curve: &CubicBezierSegment<S>,
+         pt: &Point<S>,
+-    ) -> ArrayVec<[S; 3]> {
++    ) -> ArrayVec<S, 3> {
+         let line_is_mostly_vertical =
+             S::abs(curve.from.y - curve.to.y) >= S::abs(curve.from.x - curve.to.x);
+         if line_is_mostly_vertical {
+@@ -245,7 +245,7 @@ fn add_curve_intersections<S: Scalar>(
+     curve2: &CubicBezierSegment<S>,
+     domain1: &Range<S>,
+     domain2: &Range<S>,
+-    intersections: &mut ArrayVec<[(S, S); 9]>,
++    intersections: &mut ArrayVec<(S, S), 9>,
+     flip: bool,
+     mut recursion_count: u32,
+     mut call_count: u32,
+@@ -388,7 +388,7 @@ fn add_point_curve_intersection<S: Scala
+     curve: &CubicBezierSegment<S>,
+     pt_domain: &Range<S>,
+     curve_domain: &Range<S>,
+-    intersections: &mut ArrayVec<[(S, S); 9]>,
++    intersections: &mut ArrayVec<(S, S), 9>,
+     flip: bool,
+ ) {
+     let pt = pt_curve.from;
+@@ -466,7 +466,7 @@ fn add_intersection<S: Scalar>(
+     t2: S,
+     orig_curve2: &CubicBezierSegment<S>,
+     flip: bool,
+-    intersections: &mut ArrayVec<[(S, S); 9]>,
++    intersections: &mut ArrayVec<(S, S), 9>,
+ ) {
+     let (t1, t2) = if flip { (t2, t1) } else { (t1, t2) };
+     // (This should probably depend in some way on how large our input coefficients are.)
+Index: lyon-geom/src/monotonic.rs
+===================================================================
+--- lyon-geom.orig/src/monotonic.rs
++++ lyon-geom/src/monotonic.rs
+@@ -128,7 +128,7 @@ impl<S: Scalar> Monotonic<QuadraticBezie
+         &self, self_t_range: Range<S>,
+         other: &Self, other_t_range: Range<S>,
+         tolerance: S,
+-    ) -> ArrayVec<[(S, S);2]> {
++    ) -> ArrayVec<(S, S),2> {
+         monotonic_segment_intersecions(
+             self, self_t_range,
+             other, other_t_range,
+@@ -140,7 +140,7 @@ impl<S: Scalar> Monotonic<QuadraticBezie
+         &self, self_t_range: Range<S>,
+         other: &Self, other_t_range: Range<S>,
+         tolerance: S,
+-    ) -> ArrayVec<[Point<S>;2]> {
++    ) -> ArrayVec<Point<S>,2> {
+         let intersections = monotonic_segment_intersecions(
+             self, self_t_range,
+             other, other_t_range,
+@@ -348,7 +348,7 @@ pub(crate) fn monotonic_segment_intersec
+     a: &A, a_t_range: Range<S>,
+     b: &B, b_t_range: Range<S>,
+     tolerance: S,
+-) -> ArrayVec<[(S, S); 2]>
++) -> ArrayVec<(S, S), 2>
+ where
+     A: Segment<Scalar=S> + MonotonicSegment<Scalar=S> + BoundingRect<Scalar=S>,
+     B: Segment<Scalar=S> + MonotonicSegment<Scalar=S> + BoundingRect<Scalar=S>,
+Index: lyon-geom/src/quadratic_bezier.rs
+===================================================================
+--- lyon-geom.orig/src/quadratic_bezier.rs
++++ lyon-geom/src/quadratic_bezier.rs
+@@ -444,7 +444,7 @@ impl<S: Scalar> QuadraticBezierSegment<S
+     /// The result is provided in the form of the `t` parameters of each
+     /// point along curve. To get the intersection points, sample the curve
+     /// at the corresponding values.
+-    pub fn line_intersections_t(&self, line: &Line<S>) -> ArrayVec<[S; 2]> {
++    pub fn line_intersections_t(&self, line: &Line<S>) -> ArrayVec<S, 2> {
+         // TODO: a specific quadratic bézier vs line intersection function
+         // would allow for better performance.
+         let intersections = self.to_cubic().line_intersections_t(line);
+@@ -458,7 +458,7 @@ impl<S: Scalar> QuadraticBezierSegment<S
+     }
+ 
+     /// Computes the intersection points (if any) between this segment a line.
+-    pub fn line_intersections(&self, line: &Line<S>) -> ArrayVec<[Point<S>;2]> {
++    pub fn line_intersections(&self, line: &Line<S>) -> ArrayVec<Point<S>,2> {
+         let intersections = self.to_cubic().line_intersections_t(line);
+ 
+         let mut result = ArrayVec::new();
+@@ -474,7 +474,7 @@ impl<S: Scalar> QuadraticBezierSegment<S
+     /// The result is provided in the form of the `t` parameters of each
+     /// point along curve and segment. To get the intersection points, sample
+     /// the segments at the corresponding values.
+-    pub fn line_segment_intersections_t(&self, segment: &LineSegment<S>) -> ArrayVec<[(S, S); 2]> {
++    pub fn line_segment_intersections_t(&self, segment: &LineSegment<S>) -> ArrayVec<(S, S), 2> {
+         // TODO: a specific quadratic bézier vs line intersection function
+         // would allow for better performance.
+         let intersections = self.to_cubic().line_segment_intersections_t(&segment);
+@@ -495,7 +495,7 @@ impl<S: Scalar> QuadraticBezierSegment<S
+     pub fn to(&self) -> Point<S> { self.to }
+ 
+     /// Computes the intersection points (if any) between this segment a line segment.
+-    pub fn line_segment_intersections(&self, segment: &LineSegment<S>) -> ArrayVec<[Point<S>; 2]> {
++    pub fn line_segment_intersections(&self, segment: &LineSegment<S>) -> ArrayVec<Point<S>, 2> {
+         let intersections = self.to_cubic().line_segment_intersections_t(&segment);
+         assert!(intersections.len() <= 2);
+ 
+Index: lyon-geom/src/utils.rs
+===================================================================
+--- lyon-geom.orig/src/utils.rs
++++ lyon-geom/src/utils.rs
+@@ -50,7 +50,7 @@ pub fn directed_angle2<S: Scalar>(center
+     directed_angle(a - center, b - center)
+ }
+ 
+-pub fn cubic_polynomial_roots<S: Scalar>(a: S, b: S, c: S, d: S) -> ArrayVec<[S; 3]> {
++pub fn cubic_polynomial_roots<S: Scalar>(a: S, b: S, c: S, d: S) -> ArrayVec<S, 3> {
+     let mut result = ArrayVec::new();
+ 
+     if S::abs(a) < S::EPSILON {
+@@ -112,7 +112,7 @@ pub fn cubic_polynomial_roots<S: Scalar>
+ 
+ #[test]
+ fn cubic_polynomial() {
+-    fn assert_approx_eq(a: ArrayVec<[f32; 3]>, b: &[f32], epsilon: f32) {
++    fn assert_approx_eq(a: ArrayVec<f32, 3>, b: &[f32], epsilon: f32) {
+         for i in 0..a.len() {
+             if f32::abs(a[i] - b[i]) > epsilon {
+                 println!("{:?} != {:?}", a, b);
+Index: lyon-geom/Cargo.toml
+===================================================================
+--- lyon-geom.orig/Cargo.toml
++++ lyon-geom/Cargo.toml
+@@ -24,7 +24,7 @@ repository = "https://github.com/nical/l
+ [lib]
+ name = "lyon_geom"
+ [dependencies.arrayvec]
+-version = "0.5"
++version = "0.7"
+ 
+ [dependencies.euclid]
+ version = "0.20.0"
+Index: lyon-geom/src/cubic_to_quadratic.rs
+===================================================================
+--- lyon-geom.orig/src/cubic_to_quadratic.rs
++++ lyon-geom/src/cubic_to_quadratic.rs
+@@ -95,7 +95,7 @@ fn make_monotonic<S: Scalar>(curve: &Qua
+ /*
+ pub struct MonotonicQuadraticBezierSegments<S> {
+     curve: CubicBezierSegment<S>,
+-    splits: ArrayVec<[S; 4]>,
++    splits: ArrayVec<S, 4>,
+     t0: S,
+     idx: u8,
+ }
+Index: lyon-geom/src/flatten_cubic.rs
+===================================================================
+--- lyon-geom.orig/src/flatten_cubic.rs
++++ lyon-geom/src/flatten_cubic.rs
+@@ -30,7 +30,7 @@ impl<S: Scalar> Flattened<S> {
+     /// Creates an iterator that yields points along a cubic bezier segment, useful to build a
+     /// flattened approximation of the curve given a certain tolerance.
+     pub fn new(bezier: CubicBezierSegment<S>, tolerance: S) -> Self {
+-        let mut inflections: ArrayVec<[S; 2]> = ArrayVec::new();
++        let mut inflections: ArrayVec<S, 2> = ArrayVec::new();
+         find_cubic_bezier_inflection_points(&bezier, &mut|t| { inflections.push(t); });
+ 
+         let mut iter = Flattened {
+@@ -121,7 +121,7 @@ pub fn flatten_cubic_bezier<S: Scalar, F
+     tolerance: S,
+     call_back: &mut F,
+ ) {
+-    let mut inflections: ArrayVec<[S; 2]> = ArrayVec::new();
++    let mut inflections: ArrayVec<S, 2> = ArrayVec::new();
+     find_cubic_bezier_inflection_points(&bezier, &mut|t| { inflections.push(t); });
+ 
+     if let Some(&t1) = inflections.get(0) {
+@@ -142,7 +142,7 @@ pub fn flatten_cubic_bezier_with_t<S: Sc
+     tolerance: S,
+     call_back: &mut F,
+ ) {
+-    let mut inflections: ArrayVec<[S; 2]> = ArrayVec::new();
++    let mut inflections: ArrayVec<S, 2> = ArrayVec::new();
+     find_cubic_bezier_inflection_points(&bezier, &mut|t| { inflections.push(t); });
+ 
+     let mut t = S::ZERO;
