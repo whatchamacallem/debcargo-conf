@@ -1,0 +1,136 @@
+This patch is based on the upstream commit described below, adapted to apply
+to the version of kurbo currently in Debian.
+
+commit 3fb31746da57351b036248e547c448dfaac7e527
+Author: Colin Rofls <colin@cmyr.net>
+Date:   Fri Sep 17 16:06:32 2021 -0400
+
+    Update arrayvec to use const generics
+
+Index: kurbo/src/bezpath.rs
+===================================================================
+--- kurbo.orig/src/bezpath.rs
++++ kurbo/src/bezpath.rs
+@@ -696,7 +696,7 @@ impl ParamCurveNearest for PathSeg {
+ }
+ 
+ impl ParamCurveExtrema for PathSeg {
+-    fn extrema(&self) -> ArrayVec<[f64; MAX_EXTREMA]> {
++    fn extrema(&self) -> ArrayVec<f64, MAX_EXTREMA> {
+         match *self {
+             PathSeg::Line(line) => line.extrema(),
+             PathSeg::Quad(quad) => quad.extrema(),
+@@ -847,7 +847,7 @@ impl PathSeg {
+     /// let point = seg.eval(intersection.segment_t);
+     /// assert_eq!(point, Point::new(1.0, 0.0));
+     /// ```
+-    pub fn intersect_line(&self, line: Line) -> ArrayVec<[LineIntersection; 3]> {
++    pub fn intersect_line(&self, line: Line) -> ArrayVec<LineIntersection, 3> {
+         const EPSILON: f64 = 1e-9;
+         let p0 = line.p0;
+         let p1 = line.p1;
+Index: kurbo/src/common.rs
+===================================================================
+--- kurbo.orig/src/common.rs
++++ kurbo/src/common.rs
+@@ -51,7 +51,7 @@ impl FloatExt<f32> for f32 {
+ /// See: <http://mathworld.wolfram.com/CubicFormula.html>
+ ///
+ /// Returns values of x for which c0 + c1 x + c2 x² + c3 x³ = 0.
+-pub fn solve_cubic(c0: f64, c1: f64, c2: f64, c3: f64) -> ArrayVec<[f64; 3]> {
++pub fn solve_cubic(c0: f64, c1: f64, c2: f64, c3: f64) -> ArrayVec<f64, 3> {
+     let mut result = ArrayVec::new();
+     let c3_recip = c3.recip();
+     let scaled_c2 = c2 * c3_recip;
+@@ -102,7 +102,7 @@ pub fn solve_cubic(c0: f64, c1: f64, c2:
+ /// the other root might be out of representable range. In the degenerate
+ /// case where all coefficients are zero, so that all values of x satisfy
+ /// the equation, a single `0.0` is returned.
+-pub fn solve_quadratic(c0: f64, c1: f64, c2: f64) -> ArrayVec<[f64; 2]> {
++pub fn solve_quadratic(c0: f64, c1: f64, c2: f64) -> ArrayVec<f64, 2> {
+     let mut result = ArrayVec::new();
+     let sc0 = c0 * c2.recip();
+     let sc1 = c1 * c2.recip();
+@@ -231,9 +231,9 @@ pub const GAUSS_LEGENDRE_COEFFS_24: &[(f
+ #[cfg(test)]
+ mod tests {
+     use crate::common::*;
+-    use arrayvec::{Array, ArrayVec};
++    use arrayvec::ArrayVec;
+ 
+-    fn verify<T: Array<Item = f64>>(mut roots: ArrayVec<T>, expected: &[f64]) {
++    fn verify<const N: usize>(mut roots: ArrayVec<f64, N>, expected: &[f64]) {
+         assert!(expected.len() == roots.len());
+         let epsilon = 1e-6;
+         roots.sort_by(|a, b| a.partial_cmp(b).unwrap());
+Index: kurbo/src/cubicbez.rs
+===================================================================
+--- kurbo.orig/src/cubicbez.rs
++++ kurbo/src/cubicbez.rs
+@@ -265,8 +265,8 @@ impl ParamCurveNearest for CubicBez {
+ impl ParamCurveCurvature for CubicBez {}
+ 
+ impl ParamCurveExtrema for CubicBez {
+-    fn extrema(&self) -> ArrayVec<[f64; MAX_EXTREMA]> {
+-        fn one_coord(result: &mut ArrayVec<[f64; MAX_EXTREMA]>, d0: f64, d1: f64, d2: f64) {
++    fn extrema(&self) -> ArrayVec<f64, MAX_EXTREMA> {
++        fn one_coord(result: &mut ArrayVec<f64, MAX_EXTREMA>, d0: f64, d1: f64, d2: f64) {
+             let a = d0 - 2.0 * d1 + d2;
+             let b = 2.0 * (d1 - d0);
+             let c = d0;
+Index: kurbo/src/line.rs
+===================================================================
+--- kurbo.orig/src/line.rs
++++ kurbo/src/line.rs
+@@ -111,7 +111,7 @@ impl ParamCurveCurvature for Line {
+ 
+ impl ParamCurveExtrema for Line {
+     #[inline]
+-    fn extrema(&self) -> ArrayVec<[f64; MAX_EXTREMA]> {
++    fn extrema(&self) -> ArrayVec<f64, MAX_EXTREMA> {
+         ArrayVec::new()
+     }
+ }
+Index: kurbo/src/param_curve.rs
+===================================================================
+--- kurbo.orig/src/param_curve.rs
++++ kurbo/src/param_curve.rs
+@@ -178,10 +178,10 @@ pub trait ParamCurveExtrema: ParamCurve
+     /// cubic Béziers.
+     ///
+     /// The extrema should be reported in increasing parameter order.
+-    fn extrema(&self) -> ArrayVec<[f64; MAX_EXTREMA]>;
++    fn extrema(&self) -> ArrayVec<f64, MAX_EXTREMA>;
+ 
+     /// Return parameter ranges, each of which is monotonic within the range.
+-    fn extrema_ranges(&self) -> ArrayVec<[Range<f64>; MAX_EXTREMA + 1]> {
++    fn extrema_ranges(&self) -> ArrayVec<Range<f64>, { MAX_EXTREMA + 1 }> {
+         let mut result = ArrayVec::new();
+         let mut t0 = 0.0;
+         for t in self.extrema() {
+Index: kurbo/src/quadbez.rs
+===================================================================
+--- kurbo.orig/src/quadbez.rs
++++ kurbo/src/quadbez.rs
+@@ -322,7 +322,7 @@ impl ParamCurveNearest for QuadBez {
+ impl ParamCurveCurvature for QuadBez {}
+ 
+ impl ParamCurveExtrema for QuadBez {
+-    fn extrema(&self) -> ArrayVec<[f64; MAX_EXTREMA]> {
++    fn extrema(&self) -> ArrayVec<f64, MAX_EXTREMA> {
+         let mut result = ArrayVec::new();
+         let d0 = self.p1 - self.p0;
+         let d1 = self.p2 - self.p1;
+Index: kurbo/Cargo.toml
+===================================================================
+--- kurbo.orig/Cargo.toml
++++ kurbo/Cargo.toml
+@@ -24,7 +24,7 @@ repository = "https://github.com/lineben
+ [package.metadata.docs.rs]
+ features = ["mint", "serde"]
+ [dependencies.arrayvec]
+-version = "0.5.1"
++version = "0.7.1"
+ 
+ [dependencies.mint]
+ version = "0.5.1"
