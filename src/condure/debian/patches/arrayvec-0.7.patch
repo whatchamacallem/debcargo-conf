@@ -1,0 +1,184 @@
+Index: condure/Cargo.toml
+===================================================================
+--- condure.orig/Cargo.toml
++++ condure/Cargo.toml
+@@ -36,7 +36,7 @@ panic = "abort"
+ name = "server"
+ harness = false
+ [dependencies.arrayvec]
+-version = "0.5"
++version = "0.7"
+ 
+ [dependencies.base64]
+ version = ">= 0.12, < 0.14"
+Index: condure/src/connection.rs
+===================================================================
+--- condure.orig/src/connection.rs
++++ condure/src/connection.rs
+@@ -395,7 +395,7 @@ enum ServerReqState {
+ }
+ 
+ pub struct ServerReqConnection {
+-    id: ArrayString<[u8; 32]>,
++    id: ArrayString<32>,
+     peer_addr: Option<SocketAddr>,
+     secure: bool,
+     timeout: Duration,
+@@ -985,7 +985,7 @@ enum ServerStreamState {
+ }
+ 
+ struct ServerStreamData {
+-    id: ArrayString<[u8; 32]>,
++    id: ArrayString<32>,
+     peer_addr: Option<SocketAddr>,
+     secure: bool,
+     client_timeout: Duration,
+@@ -996,9 +996,9 @@ struct ServerStreamData {
+     cont: [u8; 32],
+     cont_len: usize,
+     cont_left: usize,
+-    to_addr: Option<ArrayVec<[u8; 64]>>,
++    to_addr: Option<ArrayVec<u8, 64>>,
+     websocket: bool,
+-    ws_accept: Option<ArrayString<[u8; 28]>>, // base64_encode(sha1_hash) = 28 bytes
++    ws_accept: Option<ArrayString<28>>, // base64_encode(sha1_hash) = 28 bytes
+     in_seq: u32,
+     out_seq: u32,
+     in_credits: u32,
+Index: condure/src/server.rs
+===================================================================
+--- condure.orig/src/server.rs
++++ condure/src/server.rs
+@@ -245,7 +245,7 @@ impl ZhttpSender for zhttpsocket::Client
+ 
+ struct ClientStreamHandle {
+     inner: zhttpsocket::ClientStreamHandle,
+-    out: VecDeque<(ArrayVec<[u8; 64]>, zmq::Message)>,
++    out: VecDeque<(ArrayVec<u8, 64>, zmq::Message)>,
+     send_to_allowed: bool,
+ }
+ 
+@@ -346,7 +346,7 @@ impl Stream {
+ }
+ 
+ struct Connection {
+-    id: ArrayString<[u8; 32]>,
++    id: ArrayString<32>,
+     stream: Stream,
+     conn: ServerConnection,
+     want: Want,
+@@ -527,7 +527,7 @@ impl Connection {
+     }
+ 
+     fn process_with_stream<S: Read + Write + WriteVectored + Shutdown>(
+-        id: &ArrayString<[u8; 32]>,
++        id: &ArrayString<32>,
+         conn: &mut ServerConnection,
+         want: &mut Want,
+         stream: &mut S,
+@@ -682,7 +682,7 @@ impl Worker {
+         }
+     }
+ 
+-    fn gen_id(id: usize, ckey: usize, next_cid: &mut u32) -> ArrayString<[u8; 32]> {
++    fn gen_id(id: usize, ckey: usize, next_cid: &mut u32) -> ArrayString<32> {
+         let mut buf = [0; 32];
+         let mut c = io::Cursor::new(&mut buf[..]);
+ 
+@@ -817,7 +817,7 @@ impl Worker {
+         let ka_batch = (stream_maxconn + (KEEP_ALIVE_BATCHES - 1)) / KEEP_ALIVE_BATCHES;
+ 
+         let mut ka_nodes: Slab<list::Node<usize>> = Slab::with_capacity(ka_batch);
+-        let mut ka_addrs: Vec<(ArrayVec<[u8; 64]>, list::List)> = Vec::with_capacity(ka_batch);
++        let mut ka_addrs: Vec<(ArrayVec<u8, 64>, list::List)> = Vec::with_capacity(ka_batch);
+         let mut ka_ids_mem: Vec<zhttppacket::Id> = Vec::with_capacity(ka_batch);
+ 
+         let mut zwrite_nodes: Slab<list::Node<ZWrite>> = Slab::with_capacity(maxconn + 1);
+Index: condure/src/tls.rs
+===================================================================
+--- condure.orig/src/tls.rs
++++ condure/src/tls.rs
+@@ -321,7 +321,7 @@ impl TlsAcceptor {
+ 
+ pub struct TlsStream {
+     stream: Option<Stream>,
+-    id: ArrayString<[u8; 32]>,
++    id: ArrayString<32>,
+ }
+ 
+ impl TlsStream {
+Index: condure/src/zhttpsocket.rs
+===================================================================
+--- condure.orig/src/zhttpsocket.rs
++++ condure/src/zhttpsocket.rs
+@@ -281,29 +281,29 @@ struct ReqPipeEnd {
+ struct StreamPipeEnd {
+     sender: channel::Sender<arena::Rc<zmq::Message>>,
+     receiver_any: channel::Receiver<zmq::Message>,
+-    receiver_addr: channel::Receiver<(ArrayVec<[u8; 64]>, zmq::Message)>,
++    receiver_addr: channel::Receiver<(ArrayVec<u8, 64>, zmq::Message)>,
+ }
+ 
+ enum ControlRequest {
+     Stop,
+     SetClientReq(Vec<SpecInfo>),
+     SetClientStream(Vec<SpecInfo>, Vec<SpecInfo>, Vec<SpecInfo>),
+-    AddClientReqHandle(ReqPipeEnd, ArrayString<[u8; 8]>),
+-    AddClientStreamHandle(StreamPipeEnd, ArrayString<[u8; 8]>),
++    AddClientReqHandle(ReqPipeEnd, ArrayString<8>),
++    AddClientStreamHandle(StreamPipeEnd, ArrayString<8>),
+ }
+ 
+ type ControlResponse = Result<(), String>;
+ 
+ struct ReqPipe {
+     pe: ReqPipeEnd,
+-    filter: ArrayString<[u8; 8]>,
++    filter: ArrayString<8>,
+     valid: bool,
+     readable: bool,
+ }
+ 
+ struct StreamPipe {
+     pe: StreamPipeEnd,
+-    filter: ArrayString<[u8; 8]>,
++    filter: ArrayString<8>,
+     valid: bool,
+     readable_any: bool,
+     readable_addr: bool,
+@@ -328,7 +328,7 @@ impl ReqHandles {
+         self.nodes.len()
+     }
+ 
+-    fn add<F>(&mut self, pe: ReqPipeEnd, filter: ArrayString<[u8; 8]>, f: F)
++    fn add<F>(&mut self, pe: ReqPipeEnd, filter: ArrayString<8>, f: F)
+     where
+         F: Fn(&ReqPipe, usize),
+     {
+@@ -494,7 +494,7 @@ impl StreamHandles {
+         self.nodes.len()
+     }
+ 
+-    fn add<F>(&mut self, pe: StreamPipeEnd, filter: ArrayString<[u8; 8]>, f: F)
++    fn add<F>(&mut self, pe: StreamPipeEnd, filter: ArrayString<8>, f: F)
+     where
+         F: Fn(&StreamPipe, usize),
+     {
+@@ -612,7 +612,7 @@ impl StreamHandles {
+         None
+     }
+ 
+-    fn recv_addr(&mut self) -> Option<(ArrayVec<[u8; 64]>, zmq::Message)> {
++    fn recv_addr(&mut self) -> Option<(ArrayVec<u8, 64>, zmq::Message)> {
+         if self.cur.is_none() {
+             return None;
+         }
+@@ -1420,7 +1420,7 @@ impl ClientReqHandle {
+ 
+ pub struct ClientStreamHandle {
+     sender_any: channel::Sender<zmq::Message>,
+-    sender_addr: channel::Sender<(ArrayVec<[u8; 64]>, zmq::Message)>,
++    sender_addr: channel::Sender<(ArrayVec<u8, 64>, zmq::Message)>,
+     receiver: channel::Receiver<arena::Rc<zmq::Message>>,
+ }
+ 
