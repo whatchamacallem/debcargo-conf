@@ -1,0 +1,48 @@
+Patch for rand 0.7 based on a partial revert of upstream commit
+f54a37cf2a9e109c280688276de672cf1c7d5591
+
+--- time.orig/Cargo.toml
++++ time/Cargo.toml
+@@ -50,3 +50,3 @@
+ [dependencies.rand]
+-version = "0.8.4"
++version = "0.7.3"
+ optional = true
+@@ -63,3 +63,3 @@
+ [dev-dependencies.rand]
+-version = "0.8.4"
++version = "0.7.3"
+ default-features = false
+--- time.orig/src/rand.rs
++++ time/src/rand.rs
+@@ -10,6 +10,6 @@
+         Time::__from_hms_nanos_unchecked(
+-            rng.gen_range(0..24),
+-            rng.gen_range(0..60),
+-            rng.gen_range(0..60),
+-            rng.gen_range(0..1_000_000_000),
++            rng.gen_range(0, 24),
++            rng.gen_range(0, 60),
++            rng.gen_range(0, 60),
++            rng.gen_range(0, 1_000_000_000),
+         )
+@@ -21,3 +21,3 @@
+         Date::from_julian_day_unchecked(
+-            rng.gen_range(Date::MIN.to_julian_day()..=Date::MAX.to_julian_day()),
++            rng.gen_range(Date::MIN.to_julian_day(), Date::MAX.to_julian_day() + 1),
+         )
+@@ -28,3 +28,3 @@
+     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> UtcOffset {
+-        let seconds = rng.gen_range(-86399..=86399);
++        let seconds = rng.gen_range(-86399, 86399+1);
+         UtcOffset::__from_hms_unchecked(
+@@ -53,3 +53,3 @@
+         Duration::nanoseconds_i128(
+-            rng.gen_range(Duration::MIN.whole_nanoseconds()..=Duration::MAX.whole_nanoseconds()),
++            rng.gen_range(Duration::MIN.whole_nanoseconds(), Duration::MAX.whole_nanoseconds()+1),
+         )
+@@ -62,3 +62,3 @@
+ 
+-        match rng.gen_range(0..7) {
++        match rng.gen_range(0, 7) {
+             0 => Monday,
