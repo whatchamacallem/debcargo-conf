@@ -14,6 +14,10 @@ done | sort  | while read t i; do
     if grep -q FIXME $(dirname "$i")/copyright; then
         echo -e "\e[31mRFS but still contains FIXME in debian/copyright\e[0m"
     fi
+    if test `grep urgency $(dirname "$i")/changelog|wc -l` -eq 1; then
+        # If there is only one item in the changelog, mark the package as NEW
+        echo -e "\e[31mNEW package\e[0m"
+    fi
     # trim the content
     content=$(xargs '-d\n' echo -n < "$i")
     if test -n "$content"; then
