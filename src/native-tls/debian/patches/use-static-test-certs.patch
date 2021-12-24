@@ -1,0 +1,558 @@
+Upstream switched from using static test certs to using the test-cert-gen
+crate which we do not have in Debian, this patch reverts back to using
+static test certs, it is mostly a revert of upstream commit
+d808f9a203219d123e900ef4993adf9c210ec8fd but with some adjustments
+for use in the Debian package.
+
+only in patch2:
+Index: native-tls/src/lib.rs
+===================================================================
+--- native-tls.orig/src/lib.rs
++++ native-tls/src/lib.rs
+@@ -101,6 +101,11 @@
+ #[cfg(any(target_os = "macos", target_os = "ios"))]
+ extern crate lazy_static;
+ 
++#[cfg(test)]
++extern crate hex;
++#[cfg(test)]
++extern crate base64;
++
+ use std::any::Any;
+ use std::error;
+ use std::fmt;
+Index: native-tls/src/test.rs
+===================================================================
+--- native-tls.orig/src/test.rs
++++ native-tls/src/test.rs
+@@ -1,7 +1,8 @@
+-use std::fs;
++use hex;
++use base64;
++#[allow(unused_imports)]
+ use std::io::{Read, Write};
+ use std::net::{TcpListener, TcpStream};
+-use std::process::{Command, Stdio};
+ use std::string::String;
+ use std::thread;
+ 
+@@ -53,12 +54,8 @@ fn connect_no_root_certs() {
+ 
+ #[test]
+ fn server_no_root_certs() {
+-    let keys = test_cert_gen::keys();
+-
+-    let identity = p!(Identity::from_pkcs12(
+-        &keys.server.pkcs12,
+-        &keys.server.pkcs12_password
+-    ));
++    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
+     let builder = p!(TlsAcceptor::new(identity));
+ 
+     let listener = p!(TcpListener::bind("0.0.0.0:0"));
+@@ -75,14 +72,15 @@ fn server_no_root_certs() {
+         p!(socket.write_all(b"world"));
+     });
+ 
+-    let root_ca = Certificate::from_der(&keys.client.cert_der).unwrap();
++    let root_ca = include_bytes!("../test/root-ca.pem");
++    let root_ca = Certificate::from_pem(root_ca).unwrap();
+ 
+     let socket = p!(TcpStream::connect(("localhost", port)));
+     let builder = p!(TlsConnector::builder()
+         .disable_built_in_roots(true)
+         .add_root_certificate(root_ca)
+         .build());
+-    let mut socket = p!(builder.connect("localhost", socket));
++    let mut socket = p!(builder.connect("foobar.com", socket));
+ 
+     p!(socket.write_all(b"hello"));
+     let mut buf = vec![];
+@@ -94,12 +92,8 @@ fn server_no_root_certs() {
+ 
+ #[test]
+ fn server() {
+-    let keys = test_cert_gen::keys();
+-
+-    let identity = p!(Identity::from_pkcs12(
+-        &keys.server.pkcs12,
+-        &keys.server.pkcs12_password
+-    ));
++    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
+     let builder = p!(TlsAcceptor::new(identity));
+ 
+     let listener = p!(TcpListener::bind("0.0.0.0:0"));
+@@ -116,13 +110,14 @@ fn server() {
+         p!(socket.write_all(b"world"));
+     });
+ 
+-    let root_ca = Certificate::from_der(&keys.client.cert_der).unwrap();
++    let root_ca = include_bytes!("../test/root-ca.pem");
++    let root_ca = Certificate::from_pem(root_ca).unwrap();
+ 
+     let socket = p!(TcpStream::connect(("localhost", port)));
+     let builder = p!(TlsConnector::builder()
+         .add_root_certificate(root_ca)
+         .build());
+-    let mut socket = p!(builder.connect("localhost", socket));
++    let mut socket = p!(builder.connect("foobar.com", socket));
+ 
+     p!(socket.write_all(b"hello"));
+     let mut buf = vec![];
+@@ -133,36 +128,47 @@ fn server() {
+ }
+ 
+ #[test]
+-fn certificate_from_pem() {
+-    let dir = tempfile::tempdir().unwrap();
+-    let keys = test_cert_gen::keys();
+-
+-    let der_path = dir.path().join("cert.der");
+-    fs::write(&der_path, &keys.client.cert_der).unwrap();
+-    let output = Command::new("openssl")
+-        .arg("x509")
+-        .arg("-in")
+-        .arg(der_path)
+-        .arg("-inform")
+-        .arg("der")
+-        .stderr(Stdio::piped())
+-        .output()
+-        .unwrap();
++#[cfg(not(target_os = "ios"))]
++fn server_pem() {
++    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
++    let builder = p!(TlsAcceptor::new(identity));
++
++    let listener = p!(TcpListener::bind("0.0.0.0:0"));
++    let port = p!(listener.local_addr()).port();
++
++    let j = thread::spawn(move || {
++        let socket = p!(listener.accept()).0;
++        let mut socket = p!(builder.accept(socket));
+ 
+-    assert!(output.status.success());
++        let mut buf = [0; 5];
++        p!(socket.read_exact(&mut buf));
++        assert_eq!(&buf, b"hello");
+ 
+-    let cert = Certificate::from_pem(&output.stdout).unwrap();
+-    assert_eq!(cert.to_der().unwrap(), keys.client.cert_der);
++        p!(socket.write_all(b"world"));
++    });
++
++    let root_ca = include_bytes!("../test/root-ca.pem");
++    let root_ca = Certificate::from_pem(root_ca).unwrap();
++
++    let socket = p!(TcpStream::connect(("localhost", port)));
++    let builder = p!(TlsConnector::builder()
++        .add_root_certificate(root_ca)
++        .build());
++    let mut socket = p!(builder.connect("foobar.com", socket));
++
++    p!(socket.write_all(b"hello"));
++    let mut buf = vec![];
++    p!(socket.read_to_end(&mut buf));
++    assert_eq!(buf, b"world");
++
++    p!(j.join());
+ }
+ 
+ #[test]
+ fn peer_certificate() {
+-    let keys = test_cert_gen::keys();
+-
+-    let identity = p!(Identity::from_pkcs12(
+-        &keys.server.pkcs12,
+-        &keys.server.pkcs12_password
+-    ));
++    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
+     let builder = p!(TlsAcceptor::new(identity));
+ 
+     let listener = p!(TcpListener::bind("0.0.0.0:0"));
+@@ -174,28 +180,26 @@ fn peer_certificate() {
+         assert!(socket.peer_certificate().unwrap().is_none());
+     });
+ 
+-    let root_ca = Certificate::from_der(&keys.client.cert_der).unwrap();
++    let root_ca = include_bytes!("../test/root-ca.pem");
++    let root_ca = Certificate::from_pem(root_ca).unwrap();
+ 
+     let socket = p!(TcpStream::connect(("localhost", port)));
+     let builder = p!(TlsConnector::builder()
+         .add_root_certificate(root_ca)
+         .build());
+-    let socket = p!(builder.connect("localhost", socket));
++    let socket = p!(builder.connect("foobar.com", socket));
+ 
++    let cert_der = Certificate::from_pem(include_bytes!("../test/cert.pem")).unwrap().to_der().unwrap();
+     let cert = socket.peer_certificate().unwrap().unwrap();
+-    assert_eq!(cert.to_der().unwrap(), keys.client.cert_der);
++    assert_eq!(cert.to_der().unwrap(), &cert_der[..]);
+ 
+     p!(j.join());
+ }
+ 
+ #[test]
+ fn server_tls11_only() {
+-    let keys = test_cert_gen::keys();
+-
+-    let identity = p!(Identity::from_pkcs12(
+-        &keys.server.pkcs12,
+-        &keys.server.pkcs12_password
+-    ));
++    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
+     let builder = p!(TlsAcceptor::builder(identity)
+         .min_protocol_version(Some(Protocol::Tlsv11))
+         .max_protocol_version(Some(Protocol::Tlsv11))
+@@ -215,7 +219,8 @@ fn server_tls11_only() {
+         p!(socket.write_all(b"world"));
+     });
+ 
+-    let root_ca = Certificate::from_der(&keys.client.cert_der).unwrap();
++    let root_ca = include_bytes!("../test/root-ca.pem");
++    let root_ca = Certificate::from_pem(root_ca).unwrap();
+ 
+     let socket = p!(TcpStream::connect(("localhost", port)));
+     let builder = p!(TlsConnector::builder()
+@@ -223,7 +228,7 @@ fn server_tls11_only() {
+         .min_protocol_version(Some(Protocol::Tlsv11))
+         .max_protocol_version(Some(Protocol::Tlsv11))
+         .build());
+-    let mut socket = p!(builder.connect("localhost", socket));
++    let mut socket = p!(builder.connect("foobar.com", socket));
+ 
+     p!(socket.write_all(b"hello"));
+     let mut buf = vec![];
+@@ -235,12 +240,8 @@ fn server_tls11_only() {
+ 
+ #[test]
+ fn server_no_shared_protocol() {
+-    let keys = test_cert_gen::keys();
+-
+-    let identity = p!(Identity::from_pkcs12(
+-        &keys.server.pkcs12,
+-        &keys.server.pkcs12_password
+-    ));
++    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
+     let builder = p!(TlsAcceptor::builder(identity)
+         .min_protocol_version(Some(Protocol::Tlsv12))
+         .build());
+@@ -253,7 +254,8 @@ fn server_no_shared_protocol() {
+         assert!(builder.accept(socket).is_err());
+     });
+ 
+-    let root_ca = Certificate::from_der(&keys.client.cert_der).unwrap();
++    let root_ca = include_bytes!("../test/root-ca.pem");
++    let root_ca = Certificate::from_pem(root_ca).unwrap();
+ 
+     let socket = p!(TcpStream::connect(("localhost", port)));
+     let builder = p!(TlsConnector::builder()
+@@ -261,19 +263,15 @@ fn server_no_shared_protocol() {
+         .min_protocol_version(Some(Protocol::Tlsv11))
+         .max_protocol_version(Some(Protocol::Tlsv11))
+         .build());
+-    assert!(builder.connect("localhost", socket).is_err());
++    assert!(builder.connect("foobar.com", socket).is_err());
+ 
+     p!(j.join());
+ }
+ 
+ #[test]
+ fn server_untrusted() {
+-    let keys = test_cert_gen::keys();
+-
+-    let identity = p!(Identity::from_pkcs12(
+-        &keys.server.pkcs12,
+-        &keys.server.pkcs12_password
+-    ));
++    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
+     let builder = p!(TlsAcceptor::new(identity));
+ 
+     let listener = p!(TcpListener::bind("0.0.0.0:0"));
+@@ -288,19 +286,15 @@ fn server_untrusted() {
+ 
+     let socket = p!(TcpStream::connect(("localhost", port)));
+     let builder = p!(TlsConnector::new());
+-    builder.connect("localhost", socket).unwrap_err();
++    builder.connect("foobar.com", socket).unwrap_err();
+ 
+     p!(j.join());
+ }
+ 
+ #[test]
+ fn server_untrusted_unverified() {
+-    let keys = test_cert_gen::keys();
+-
+-    let identity = p!(Identity::from_pkcs12(
+-        &keys.server.pkcs12,
+-        &keys.server.pkcs12_password
+-    ));
++    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
+     let builder = p!(TlsAcceptor::new(identity));
+ 
+     let listener = p!(TcpListener::bind("0.0.0.0:0"));
+@@ -321,7 +315,7 @@ fn server_untrusted_unverified() {
+     let builder = p!(TlsConnector::builder()
+         .danger_accept_invalid_certs(true)
+         .build());
+-    let mut socket = p!(builder.connect("localhost", socket));
++    let mut socket = p!(builder.connect("foobar.com", socket));
+ 
+     p!(socket.write_all(b"hello"));
+     let mut buf = vec![];
+@@ -333,26 +327,15 @@ fn server_untrusted_unverified() {
+ 
+ #[test]
+ fn import_same_identity_multiple_times() {
+-    let keys = test_cert_gen::keys();
+-
+-    let _ = p!(Identity::from_pkcs12(
+-        &keys.server.pkcs12,
+-        &keys.server.pkcs12_password
+-    ));
+-    let _ = p!(Identity::from_pkcs12(
+-        &keys.server.pkcs12,
+-        &keys.server.pkcs12_password
+-    ));
++    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let _ = p!(Identity::from_pkcs12(buf, "mypass"));
++    let _ = p!(Identity::from_pkcs12(buf, "mypass"));
+ }
+ 
+ #[test]
+ fn shutdown() {
+-    let keys = test_cert_gen::keys();
+-
+-    let identity = p!(Identity::from_pkcs12(
+-        &keys.server.pkcs12,
+-        &keys.server.pkcs12_password
+-    ));
++    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
+     let builder = p!(TlsAcceptor::new(identity));
+ 
+     let listener = p!(TcpListener::bind("0.0.0.0:0"));
+@@ -370,19 +353,66 @@ fn shutdown() {
+         p!(socket.shutdown());
+     });
+ 
+-    let root_ca = Certificate::from_der(&keys.client.cert_der).unwrap();
++    let root_ca = include_bytes!("../test/root-ca.pem");
++    let root_ca = Certificate::from_pem(root_ca).unwrap();
+ 
+     let socket = p!(TcpStream::connect(("localhost", port)));
+     let builder = p!(TlsConnector::builder()
+         .add_root_certificate(root_ca)
+         .build());
+-    let mut socket = p!(builder.connect("localhost", socket));
++    let mut socket = p!(builder.connect("foobar.com", socket));
+ 
+     p!(socket.write_all(b"hello"));
+     p!(socket.shutdown());
+ 
+     p!(j.join());
+ }
++
++#[test]
++#[cfg_attr(target_os = "ios", ignore)]
++fn tls_server_end_point() {
++    let expected = "4712b939fbcb42a6b5101b42139a25b14f81b418facabd378746f12f85cc6544";
++
++    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
++    let builder = p!(TlsAcceptor::new(identity));
++
++    let listener = p!(TcpListener::bind("0.0.0.0:0"));
++    let port = p!(listener.local_addr()).port();
++
++    let j = thread::spawn(move || {
++        let socket = p!(listener.accept()).0;
++        let mut socket = p!(builder.accept(socket));
++
++        let binding = socket.tls_server_end_point().unwrap().unwrap();
++        assert_eq!(hex::encode(binding), expected);
++
++        let mut buf = [0; 5];
++        p!(socket.read_exact(&mut buf));
++        assert_eq!(&buf, b"hello");
++
++        p!(socket.write_all(b"world"));
++    });
++
++    let root_ca = include_bytes!("../test/root-ca.pem");
++    let root_ca = Certificate::from_pem(root_ca).unwrap();
++
++    let socket = p!(TcpStream::connect(("localhost", port)));
++    let builder = p!(TlsConnector::builder()
++        .add_root_certificate(root_ca)
++        .build());
++    let mut socket = p!(builder.connect("foobar.com", socket));
++
++    let binding = socket.tls_server_end_point().unwrap().unwrap();
++    assert_eq!(hex::encode(binding), expected);
++
++    p!(socket.write_all(b"hello"));
++    let mut buf = vec![];
++    p!(socket.read_to_end(&mut buf));
++    assert_eq!(buf, b"world");
++
++    p!(j.join());
++}
+ 
+ #[test]
+ #[cfg(feature = "alpn")]
+Index: native-tls/test/cert.pem
+===================================================================
+--- /dev/null
++++ native-tls/test/cert.pem
+@@ -0,0 +1,20 @@
++-----BEGIN CERTIFICATE-----
++MIIDGzCCAgMCCQCHcfe97pgvpTANBgkqhkiG9w0BAQsFADBFMQswCQYDVQQGEwJB
++VTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0
++cyBQdHkgTHRkMB4XDTE2MDgxNDE3MDAwM1oXDTI2MDgxMjE3MDAwM1owWjELMAkG
++A1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoMGEludGVybmV0
++IFdpZGdpdHMgUHR5IEx0ZDETMBEGA1UEAwwKZm9vYmFyLmNvbTCCASIwDQYJKoZI
++hvcNAQEBBQADggEPADCCAQoCggEBAKj0JYxEsxejUIX+I5GH0Hg2G0kX/y1H0+Ub
++3mw2/Ja5BD/yN96/7zMSumXF8uS3SkmpyiJkbyD01TSRTqjlP7/VCBlyUIChlpLQ
++mrGaijZiT/VCyPXqmcwFzXS5IOTpX1olJfW8rA41U1LCIcDUyFf6LtZ/v8rSeKr6
++TuE6SGV4WRaBm1SrjWBeHVV866CRrtSS1ieT2asFsAyOZqWhk2fakwwBDFWDhOGI
++ubfO+5aq9cBJbNRlzsgB3UZs3gC0O6GzbnZ6oT0TiJMeTsXXjABLUlaq/rrqFF4Y
++euZkkbHTFBMz288PUc3m3ZTcpN+E7+ZOUBRZXKD20K07NugqCzUCAwEAATANBgkq
++hkiG9w0BAQsFAAOCAQEASvYHuIl5C0NHBELPpVHNuLbQsDQNKVj3a54+9q1JkiMM
++6taEJYfw7K1Xjm4RoiFSHpQBh+PWZS3hToToL2Zx8JfMR5MuAirdPAy1Sia/J/qE
++wQdJccqmvuLkLTSlsGbEJ/LUUgOAgrgHOZM5lUgIhCneA0/dWJ3PsN0zvn69/faY
++oo1iiolWiIHWWBUSdr3jM2AJaVAsTmLh00cKaDNk37JB940xConBGSl98JPrNrf9
++dUAiT0iIBngDBdHnn/yTj+InVEFyZSKrNtiDSObFHxPcxGteHNrCPJdP1e+GqkHp
++HJMRZVCQpSMzvHlofHSNgzWV1MX5h1CP4SGZdBDTfA==
++-----END CERTIFICATE-----
++
+Index: native-tls/test/root-ca.pem
+===================================================================
+--- /dev/null
++++ native-tls/test/root-ca.pem
+@@ -0,0 +1,21 @@
++-----BEGIN CERTIFICATE-----
++MIIDXTCCAkWgAwIBAgIJAOIvDiVb18eVMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
++BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
++aWRnaXRzIFB0eSBMdGQwHhcNMTYwODE0MTY1NjExWhcNMjYwODEyMTY1NjExWjBF
++MQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50
++ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
++CgKCAQEArVHWFn52Lbl1l59exduZntVSZyDYpzDND+S2LUcO6fRBWhV/1Kzox+2G
++ZptbuMGmfI3iAnb0CFT4uC3kBkQQlXonGATSVyaFTFR+jq/lc0SP+9Bd7SBXieIV
++eIXlY1TvlwIvj3Ntw9zX+scTA4SXxH6M0rKv9gTOub2vCMSHeF16X8DQr4XsZuQr
++7Cp7j1I4aqOJyap5JTl5ijmG8cnu0n+8UcRlBzy99dLWJG0AfI3VRJdWpGTNVZ92
++aFff3RpK3F/WI2gp3qV1ynRAKuvmncGC3LDvYfcc2dgsc1N6Ffq8GIrkgRob6eBc
++klDHp1d023Lwre+VaVDSo1//Y72UFwIDAQABo1AwTjAdBgNVHQ4EFgQUbNOlA6sN
++XyzJjYqciKeId7g3/ZowHwYDVR0jBBgwFoAUbNOlA6sNXyzJjYqciKeId7g3/Zow
++DAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAVVaR5QWLZIRR4Dw6TSBn
++BQiLpBSXN6oAxdDw6n4PtwW6CzydaA+creiK6LfwEsiifUfQe9f+T+TBSpdIYtMv
++Z2H2tjlFX8VrjUFvPrvn5c28CuLI0foBgY8XGSkR2YMYzWw2jPEq3Th/KM5Catn3
++AFm3bGKWMtGPR4v+90chEN0jzaAmJYRrVUh9vea27bOCn31Nse6XXQPmSI6Gyncy
++OAPUsvPClF3IjeL1tmBotWqSGn1cYxLo+Lwjk22A9h6vjcNQRyZF2VLVvtwYrNU3
++mwJ6GCLsLHpwW/yjyvn8iEltnJvByM/eeRnfXV6WDObyiZsE/n6DxIRJodQzFqy9
++GA==
++-----END CERTIFICATE-----
+Index: native-tls/Cargo.toml
+===================================================================
+--- native-tls.orig/Cargo.toml
++++ native-tls/Cargo.toml
+@@ -21,11 +21,11 @@ repository = "https://github.com/sfackle
+ [package.metadata.docs.rs]
+ features = ["alpn"]
+ rustdoc-args = ["--cfg", "docsrs"]
+-[dev-dependencies.tempfile]
+-version = "3.0"
++[dev-dependencies.hex]
++version = "0.4"
+ 
+-[dev-dependencies.test-cert-gen]
+-version = "0.1"
++[dev-dependencies.base64]
++version = "0.13"
+ 
+ [features]
+ alpn = []
+Index: native-tls/test/identity.p12.base64
+===================================================================
+--- /dev/null
++++ native-tls/test/identity.p12.base64
+@@ -0,0 +1,71 @@
++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
++1AtaiynBj4rxwVojBAhG1bOCIgVvyAICCAA=
