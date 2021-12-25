@@ -1,0 +1,72 @@
+Index: fern/Cargo.toml
+===================================================================
+--- fern.orig/Cargo.toml
++++ fern/Cargo.toml
+@@ -64,8 +64,8 @@ version = "0.4"
+ [dev-dependencies.clap]
+ version = "2.22"
+ 
+-[dev-dependencies.tempdir]
+-version = "0.3"
++[dev-dependencies.tempfile]
++version = "3"
+ 
+ [features]
+ date-based = ["chrono"]
+Index: fern/tests/file_logging.rs
+===================================================================
+--- fern.orig/tests/file_logging.rs
++++ fern/tests/file_logging.rs
+@@ -10,7 +10,7 @@ use support::manual_log;
+ #[test]
+ fn test_basic_logging_file_logging() {
+     // Create a temporary directory to put a log file into for testing
+-    let temp_log_dir = tempdir::TempDir::new("fern").expect("Failed to set up temporary directory");
++    let temp_log_dir = tempfile::TempDir::new().expect("Failed to set up temporary directory");
+     let log_file = temp_log_dir.path().join("test.log");
+ 
+     {
+@@ -70,7 +70,7 @@ fn test_basic_logging_file_logging() {
+ #[test]
+ fn test_custom_line_separators() {
+     // Create a temporary directory to put a log file into for testing
+-    let temp_log_dir = tempdir::TempDir::new("fern").expect("Failed to set up temporary directory");
++    let temp_log_dir = tempfile::TempDir::new().expect("Failed to set up temporary directory");
+     let log_file = temp_log_dir.path().join("test_custom_line_sep.log");
+ 
+     {
+Index: fern/tests/meta_logging.rs
+===================================================================
+--- fern.orig/tests/meta_logging.rs
++++ fern/tests/meta_logging.rs
+@@ -36,7 +36,7 @@ impl<'a> fmt::Display for VerboseDisplay
+ #[test]
+ fn file_deadlock() {
+     // Create a temporary directory to put a log file into for testing
+-    let temp_log_dir = tempdir::TempDir::new("fern").expect("Failed to set up temporary directory");
++    let temp_log_dir = tempfile::TempDir::new().expect("Failed to set up temporary directory");
+     let log_file = temp_log_dir.path().join("test.log");
+ 
+     {
+Index: fern/tests/reopen_logging.rs
+===================================================================
+--- fern.orig/tests/reopen_logging.rs
++++ fern/tests/reopen_logging.rs
+@@ -11,7 +11,7 @@ use support::manual_log;
+ #[test]
+ fn test_basic_logging_reopen_logging() {
+     // Create a temporary directory to put a log file into for testing
+-    let temp_log_dir = tempdir::TempDir::new("fern").expect("Failed to set up temporary directory");
++    let temp_log_dir = tempfile::TempDir::new().expect("Failed to set up temporary directory");
+     let log_file = temp_log_dir.path().join("test.log");
+ 
+     {
+@@ -71,7 +71,7 @@ fn test_basic_logging_reopen_logging() {
+ #[test]
+ fn test_custom_line_separators() {
+     // Create a temporary directory to put a log file into for testing
+-    let temp_log_dir = tempdir::TempDir::new("fern").expect("Failed to set up temporary directory");
++    let temp_log_dir = tempfile::TempDir::new().expect("Failed to set up temporary directory");
+     let log_file = temp_log_dir.path().join("test_custom_line_sep.log");
+ 
+     {
