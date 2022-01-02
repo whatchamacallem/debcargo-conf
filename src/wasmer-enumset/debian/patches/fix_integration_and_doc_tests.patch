@@ -1,0 +1,130 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index e95707f..882e44b 100755
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -11,6 +11,7 @@
+ //! Enums to be used with [`EnumSet`] should be defined using `#[derive(EnumSetType)]`:
+ //!
+ //! ```rust
++//! # extern crate wasmer_enumset as enumset;
+ //! # use enumset::*;
+ //! #[derive(EnumSetType, Debug)]
+ //! pub enum Enum {
+@@ -26,6 +27,7 @@
+ //! `#[derive(EnumSetType)]` creates operator overloads that allow you to create EnumSets like so:
+ //!
+ //! ```rust
++//! # extern crate wasmer_enumset as enumset;
+ //! # use enumset::*;
+ //! # #[derive(EnumSetType, Debug)] pub enum Enum { A, B, C, D, E, F, G }
+ //! let new_set = Enum::A | Enum::C | Enum::G;
+@@ -35,6 +37,7 @@
+ //! All bitwise operations you would expect to work on bitsets also work on both EnumSets and
+ //! enums with `#[derive(EnumSetType)]`:
+ //! ```rust
++//! # extern crate wasmer_enumset as enumset;
+ //! # use enumset::*;
+ //! # #[derive(EnumSetType, Debug)] pub enum Enum { A, B, C, D, E, F, G }
+ //! // Intersection of sets
+@@ -56,6 +59,7 @@
+ //! The [`enum_set!`] macro allows you to create EnumSets in constant contexts:
+ //!
+ //! ```rust
++//! # extern crate wasmer_enumset as enumset;
+ //! # use enumset::*;
+ //! # #[derive(EnumSetType, Debug)] pub enum Enum { A, B, C, D, E, F, G }
+ //! const CONST_SET: EnumSet<Enum> = enum_set!(Enum::A | Enum::B);
+@@ -65,6 +69,7 @@
+ //! Mutable operations on the [`EnumSet`] otherwise similarly to Rust's builtin sets:
+ //!
+ //! ```rust
++//! # extern crate wasmer_enumset as enumset;
+ //! # use enumset::*;
+ //! # #[derive(EnumSetType, Debug)] pub enum Enum { A, B, C, D, E, F, G }
+ //! let mut set = EnumSet::new();
+@@ -202,6 +207,7 @@ use crate::private::EnumSetTypeRepr;
+ /// Deriving a plain EnumSetType:
+ ///
+ /// ```rust
++/// # extern crate wasmer_enumset as enumset;
+ /// # use enumset::*;
+ /// #[derive(EnumSetType)]
+ /// pub enum Enum {
+@@ -212,6 +218,7 @@ use crate::private::EnumSetTypeRepr;
+ /// Deriving a sparse EnumSetType:
+ ///
+ /// ```rust
++/// # extern crate wasmer_enumset as enumset;
+ /// # use enumset::*;
+ /// #[derive(EnumSetType)]
+ /// pub enum SparseEnum {
+@@ -222,6 +229,7 @@ use crate::private::EnumSetTypeRepr;
+ /// Deriving an EnumSetType without adding ops:
+ ///
+ /// ```rust
++/// # extern crate wasmer_enumset as enumset;
+ /// # use enumset::*;
+ /// #[derive(EnumSetType)]
+ /// #[enumset(no_ops)]
+@@ -687,6 +695,7 @@ impl<T: EnumSetType> FromIterator<EnumSet<T>> for EnumSet<T> {
+ /// # Examples
+ ///
+ /// ```rust
++/// # extern crate wasmer_enumset as enumset;
+ /// # use enumset::*;
+ /// # #[derive(EnumSetType, Debug)] enum Enum { A, B, C }
+ /// const CONST_SET: EnumSet<Enum> = enum_set!(Enum::A | Enum::B);
+@@ -696,6 +705,7 @@ impl<T: EnumSetType> FromIterator<EnumSet<T>> for EnumSet<T> {
+ /// This macro is strongly typed. For example, the following will not compile:
+ ///
+ /// ```compile_fail
++/// # extern crate wasmer_enumset as enumset;
+ /// # use enumset::*;
+ /// # #[derive(EnumSetType, Debug)] enum Enum { A, B, C }
+ /// # #[derive(EnumSetType, Debug)] enum Enum2 { A, B, C }
+diff --git a/tests/compile-fail/variants.rs b/tests/compile-fail/variants.rs
+index bfa9c11..347923f 100755
+--- a/tests/compile-fail/variants.rs
++++ b/tests/compile-fail/variants.rs
+@@ -1,3 +1,4 @@
++extern crate wasmer_enumset as enumset;
+ use enumset::*;
+ 
+ #[derive(EnumSetType)]
+@@ -49,4 +50,4 @@ struct BadItemType {
+ 
+ }
+ 
+-fn main() { }
+\ No newline at end of file
++fn main() { }
+diff --git a/tests/ops.rs b/tests/ops.rs
+index aa7019b..191d91c 100755
+--- a/tests/ops.rs
++++ b/tests/ops.rs
+@@ -1,5 +1,6 @@
+ #![allow(dead_code)]
+ 
++extern crate wasmer_enumset as enumset;
+ use enumset::*;
+ use std::collections::{HashSet, BTreeSet};
+ 
+@@ -416,4 +417,4 @@ bits_tests!(test_u128_bits, U128, (), u128,
+             as_u128 try_as_u128 as_u128_truncated from_u128 try_from_u128 from_u128_truncated);
+ bits_tests!(test_uize_bits, U32, (U128), usize,
+             as_usize try_as_usize as_usize_truncated
+-            from_usize try_from_usize from_usize_truncated);
+\ No newline at end of file
++            from_usize try_from_usize from_usize_truncated);
+diff --git a/tests/serde.rs b/tests/serde.rs
+index 88318c1..aad3f4c 100755
+--- a/tests/serde.rs
++++ b/tests/serde.rs
+@@ -1,6 +1,7 @@
+ #![cfg(feature = "serde")]
+ #![allow(dead_code)]
+ 
++extern crate wasmer_enumset as enumset;
+ use enumset::*;
+ use serde_derive::*;
+ 
