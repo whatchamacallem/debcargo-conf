@@ -1,0 +1,69 @@
+diff --git a/tests/google.rs b/tests/google.rs
+index 57f1e93..297013d 100644
+--- a/tests/google.rs
++++ b/tests/google.rs
+@@ -48,33 +48,6 @@ cfg_if! {
+     }
+ }
+ 
+-#[tokio::test]
+-async fn fetch_google() {
+-    drop(env_logger::try_init());
+-
+-    // First up, resolve google.com
+-    let addr = t!("google.com:443".to_socket_addrs()).next().unwrap();
+-
+-    let socket = TcpStream::connect(&addr).await.unwrap();
+-
+-    // Send off the request by first negotiating an SSL handshake, then writing
+-    // of our request, then flushing, then finally read off the response.
+-    let builder = TlsConnector::builder();
+-    let connector = t!(builder.build());
+-    let connector = tokio_native_tls::TlsConnector::from(connector);
+-    let mut socket = t!(connector.connect("google.com", socket).await);
+-    t!(socket.write_all(b"GET / HTTP/1.0\r\n\r\n").await);
+-    let mut data = Vec::new();
+-    t!(socket.read_to_end(&mut data).await);
+-
+-    // any response code is fine
+-    assert!(data.starts_with(b"HTTP/1.0 "));
+-
+-    let data = String::from_utf8_lossy(&data);
+-    let data = data.trim_end();
+-    assert!(data.ends_with("</html>") || data.ends_with("</HTML>"));
+-}
+-
+ fn native2io(e: native_tls::Error) -> io::Error {
+     io::Error::new(io::ErrorKind::Other, e)
+ }
+diff --git a/tests/smoke.rs b/tests/smoke.rs
+index f7fe60e..dedb780 100644
+--- a/tests/smoke.rs
++++ b/tests/smoke.rs
+@@ -1,7 +1,7 @@
+ use futures::join;
+ use lazy_static::lazy_static;
+ use native_tls::{Certificate, Identity};
+-use std::{fs, io::Error, path::PathBuf, process::Command};
++use std::{io::Error, path::PathBuf, process::Command};
+ use tokio::{
+     io::{AsyncReadExt, AsyncWrite, AsyncWriteExt},
+     net::{TcpListener, TcpStream},
+@@ -135,13 +135,13 @@ async fn one_byte_at_a_time() {
+ }
+ 
+ fn context() -> (TlsAcceptor, TlsConnector) {
+-    let pkcs12 = fs::read(CERT_DIR.join("identity.p12")).unwrap();
+-    let der = fs::read(CERT_DIR.join("root-ca.der")).unwrap();
++    let pkcs12 = include_bytes!("identity.p12");
++    let der = include_bytes!("root-ca.der");
+ 
+-    let identity = Identity::from_pkcs12(&pkcs12, "mypass").unwrap();
++    let identity = Identity::from_pkcs12(pkcs12, "mypass").unwrap();
+     let acceptor = native_tls::TlsAcceptor::builder(identity).build().unwrap();
+ 
+-    let cert = Certificate::from_der(&der).unwrap();
++    let cert = Certificate::from_der(der).unwrap();
+     let connector = native_tls::TlsConnector::builder()
+         .add_root_certificate(cert)
+         .build()
