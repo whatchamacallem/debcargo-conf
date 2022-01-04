@@ -1,0 +1,51 @@
+This patch is based on the commit below which has been submitted
+as part of https://github.com/rust-lang/libm/pull/249 
+adapted for use in the Debian package.
+
+commit db80cfb90663284dd351f85284cb2a1b295d4043
+Author: Peter Michael Green <plugwash@debian.org>
+Date:   Wed Dec 22 00:21:25 2021 +0000
+
+    round to storage format in some tests before comparison to prevent spurious errors on x87.
+
+Index: rust-libm-0.2.1/src/math/fma.rs
+===================================================================
+--- rust-libm-0.2.1.orig/src/math/fma.rs
++++ rust-libm-0.2.1/src/math/fma.rs
+@@ -218,6 +218,9 @@ mod tests {
+             -0.00000000000000022204460492503126,
+         );
+ 
+-        assert_eq!(fma(-0.992, -0.992, -0.992), -0.00793599999988632,);
++        let result = fma(-0.992, -0.992, -0.992);
++        //force rounding to storage format on x87 to prevent superious errors.
++        #[cfg(all(target_arch = "x86", not(target_feature = "sse2")))]force_eval!(result);
++        assert_eq!(result, -0.00793599999988632,);
+     }
+ }
+Index: rust-libm-0.2.1/src/math/pow.rs
+===================================================================
+--- rust-libm-0.2.1.orig/src/math/pow.rs
++++ rust-libm-0.2.1/src/math/pow.rs
+@@ -484,6 +484,8 @@ mod tests {
+                 let exp = expected(*val);
+                 let res = computed(*val);
+ 
++                #[cfg(all(target_arch = "x86", not(target_feature = "sse2")))]force_eval!(exp);
++                #[cfg(all(target_arch = "x86", not(target_feature = "sse2")))]force_eval!(res);
+                 assert!(
+                     if exp.is_nan() {
+                         res.is_nan()
+Index: rust-libm-0.2.1/src/math/sin.rs
+===================================================================
+--- rust-libm-0.2.1.orig/src/math/sin.rs
++++ rust-libm-0.2.1/src/math/sin.rs
+@@ -81,5 +81,7 @@ pub fn sin(x: f64) -> f64 {
+ fn test_near_pi() {
+     let x = f64::from_bits(0x400921fb000FD5DD); // 3.141592026217707
+     let sx = f64::from_bits(0x3ea50d15ced1a4a2); // 6.273720864039205e-7
+-    assert_eq!(sin(x), sx);
++    let result = sin(x);
++    #[cfg(all(target_arch = "x86", not(target_feature = "sse2")))]force_eval!(result);
++    assert_eq!(result, sx);
+ }

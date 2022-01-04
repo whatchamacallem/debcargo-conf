@@ -1,0 +1,21 @@
+commit 1606eeae5c1a916adb926d2972ab63a781b1b670
+Author: Peter Michael Green <plugwash@debian.org>
+Date:   Tue Jan 4 20:38:09 2022 +0000
+
+    only allow x87-specific result in j1f.rs test on x87
+
+diff --git a/src/math/j1f.rs b/src/math/j1f.rs
+index 225b719..775ff2b 100644
+--- a/src/math/j1f.rs
++++ b/src/math/j1f.rs
+@@ -371,8 +371,7 @@ mod tests {
+     fn test_y1f_2002() {
+         //allow slightly different result on x87
+         let res = y1f(2.0000002_f32);
+-        if res != -0.10703231_f32 {
+-            assert_eq!(res, -0.10703229_f32);
+-        }
++        if cfg!(all(target_arch = "x86", not(target_feature = "sse2"))) && (res == -0.10703231_f32) { return };
++        assert_eq!(res, -0.10703229_f32);
+     }
+ }

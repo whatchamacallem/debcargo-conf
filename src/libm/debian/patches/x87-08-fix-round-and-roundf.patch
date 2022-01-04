@@ -1,0 +1,39 @@
+This patch contains fixes for round and roundf that are similar
+to those made to other functions in https://github.com/rust-lang/libm/pull/249
+they are not included in the PR because since the latest release
+upstream reimplemented found and roundf in terms of trunc and truncf.
+
+Index: rust-libm-0.2.1.newpatches/src/math/round.rs
+===================================================================
+--- rust-libm-0.2.1.newpatches.orig/src/math/round.rs
++++ rust-libm-0.2.1.newpatches/src/math/round.rs
+@@ -19,7 +19,11 @@ pub fn round(mut x: f64) -> f64 {
+     if i >> 63 != 0 {
+         x = -x;
+     }
+-    y = x + TOINT - TOINT - x;
++    // use force_eval to force rounding to storage format on x87.
++    let tmp = x + TOINT;
++    #[cfg(all(target_arch = "x86", not(target_feature = "sse2")))]
++    let tmp = force_eval!(tmp);
++    y = tmp - TOINT - x;
+     if y > 0.5 {
+         y = y + x - 1.0;
+     } else if y <= -0.5 {
+Index: rust-libm-0.2.1.newpatches/src/math/roundf.rs
+===================================================================
+--- rust-libm-0.2.1.newpatches.orig/src/math/roundf.rs
++++ rust-libm-0.2.1.newpatches/src/math/roundf.rs
+@@ -18,7 +18,11 @@ pub fn roundf(mut x: f32) -> f32 {
+     if i >> 31 != 0 {
+         x = -x;
+     }
+-    y = x + TOINT - TOINT - x;
++    // use force_eval to force rounding to storage format on x87.
++    let tmp = x + TOINT;
++    #[cfg(all(target_arch = "x86", not(target_feature = "sse2")))]
++    let tmp = force_eval!(tmp);
++    y = tmp - TOINT - x;
+     if y > 0.5f32 {
+         y = y + x - 1.0;
+     } else if y <= -0.5f32 {
