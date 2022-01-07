@@ -1,0 +1,14 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/pkg-info.mk
+
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_installman:
+	help2man \
+		--name rustfilt \
+		--no-info \
+		--version-string $(DEB_VERSION_UPSTREAM) \
+		debian/rustfilt/usr/bin/rustfilt > debian/rustfilt.1
+	dh_installman -O--buildsystem=cargo
