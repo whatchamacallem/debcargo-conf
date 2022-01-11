@@ -112,10 +112,11 @@ check_build_deps() {
 		# this is because dpkg-checkbuilddeps only works on installed pkgs
 		( apt-cache dumpavail -o APT::Default-Release=$DISTRIBUTION && \
 			for i in ${EXTRA_DEBS[*]}; do apt-cache show $(echo $i | cut -d_ -f1); done ) | \
-		sed -e 's/Package: .*/\0\nStatus: install ok installed/g' > dpkg-dummy/status
-		if ! test -s dpkg-dummy/status; then
+		sed -e 's/Package: .*/\0\nStatus: install ok installed/g' > dpkg-dummy/status.tmp
+		if ! test -s dpkg-dummy/status.tmp; then
 			abort 1 "couldn't generate dpkg-dummy/status, is Debian unstable in your APT sources?"
 		fi
+		mv dpkg-dummy/status{.tmp,}
 	fi
 	( cd "$PKGNAME" && dpkg-checkbuilddeps --admindir=../dpkg-dummy )
 }
