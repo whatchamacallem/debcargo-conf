@@ -3,8 +3,17 @@ set -e
 
 case "${1}" in
     configure)
-   		# load kernel module after install
-   		test ! -d /sys/module/zram && modprobe zram
+        # load kernel module after install
+        if [ ! -d /sys/module/zram ]; then
+            if [ -d /run/systemd/system ]; then
+                systemctl restart systemd-modules-load.service
+            elif command -v modprobe 2>/dev/null; then
+                modprobe zram
+            else
+                echo "Failed to load the required zram kernel module."
+                echo "Please load manually for zram support."
+            fi
+        fi
         ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
