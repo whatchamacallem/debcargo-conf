@@ -110,7 +110,7 @@ check_build_deps() {
 	if shouldbuild dpkg-dummy/status /var/cache/apt/pkgcache.bin; then
 		# pretend dpkg status file that marks all packages as installed
 		# this is because dpkg-checkbuilddeps only works on installed pkgs
-		( apt-cache dumpavail -o APT::Default-Release=unstable && \
+		( apt-cache dumpavail -o APT::Default-Release=$DISTRIBUTION && \
 			for i in ${EXTRA_DEBS[*]}; do apt-cache show $(echo $i | cut -d_ -f1); done ) | \
 		sed -e 's/Package: .*/\0\nStatus: install ok installed/g' > dpkg-dummy/status
 		if ! test -s dpkg-dummy/status; then
