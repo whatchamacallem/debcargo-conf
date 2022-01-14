@@ -2,33 +2,33 @@ Index: bat/Cargo.toml
 ===================================================================
 --- bat.orig/Cargo.toml
 +++ bat/Cargo.toml
-@@ -35,8 +35,8 @@ version = "^0.12.1"
- version = "0.2.14"
- optional = true
+@@ -37,9 +37,9 @@ optional = true
+ [dependencies.bincode]
+ version = "1.0"
  
 -[dependencies.bugreport]
 -version = "0.4"
+-optional = true
 +#[dependencies.bugreport]
 +#version = "0.4"
++#optional = true
  
  [dependencies.clap]
- version = "2.33"
+ version = "2.34"
 Index: bat/src/bin/bat/main.rs
 ===================================================================
 --- bat.orig/src/bin/bat/main.rs
 +++ bat/src/bin/bat/main.rs
-@@ -226,7 +226,7 @@ fn run_controller(inputs: Vec<Input>, co
+@@ -273,13 +273,13 @@ fn invoke_bugreport(app: &App) {
  fn run() -> Result<bool> {
      let app = App::new()?;
  
 -    if app.matches.is_present("diagnostic") {
 +/*    if app.matches.is_present("diagnostic") {
-         use bugreport::{bugreport, collector::*, format::Markdown};
-         let pager = bat::config::get_pager_executable(app.matches.value_of("pager"))
-             .unwrap_or_else(|| "less".to_owned()); // FIXME: Avoid non-canonical path to "less".
-@@ -268,7 +268,7 @@ fn run() -> Result<bool> {
-         report.print::<Markdown>();
- 
+         #[cfg(feature = "bugreport")]
+         invoke_bugreport(&app);
+         #[cfg(not(feature = "bugreport"))]
+         println!("bat has been built without the 'bugreport' feature. The '--diagnostic' option is not available.");
          return Ok(true);
 -    }
 +    }*/
