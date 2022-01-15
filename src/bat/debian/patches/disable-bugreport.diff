@@ -2,36 +2,25 @@ Index: bat/Cargo.toml
 ===================================================================
 --- bat.orig/Cargo.toml
 +++ bat/Cargo.toml
-@@ -35,8 +35,8 @@ version = "^0.12.1"
- version = "0.2.14"
- optional = true
+@@ -37,9 +37,9 @@ optional = true
+ [dependencies.bincode]
+ version = "1.0"
  
 -[dependencies.bugreport]
 -version = "0.4"
+-optional = true
 +#[dependencies.bugreport]
 +#version = "0.4"
++#optional = true
  
  [dependencies.clap]
- version = "2.33"
-Index: bat/src/bin/bat/main.rs
-===================================================================
---- bat.orig/src/bin/bat/main.rs
-+++ bat/src/bin/bat/main.rs
-@@ -226,7 +226,7 @@ fn run_controller(inputs: Vec<Input>, co
- fn run() -> Result<bool> {
-     let app = App::new()?;
+ version = "2.34"
+@@ -140,7 +140,7 @@ version = "2.34"
+ optional = true
  
--    if app.matches.is_present("diagnostic") {
-+/*    if app.matches.is_present("diagnostic") {
-         use bugreport::{bugreport, collector::*, format::Markdown};
-         let pager = bat::config::get_pager_executable(app.matches.value_of("pager"))
-             .unwrap_or_else(|| "less".to_owned()); // FIXME: Avoid non-canonical path to "less".
-@@ -268,7 +268,7 @@ fn run() -> Result<bool> {
-         report.print::<Markdown>();
- 
-         return Ok(true);
--    }
-+    }*/
- 
-     match app.matches.subcommand() {
-         ("cache", Some(cache_matches)) => {
+ [features]
+-application = ["bugreport", "build-assets", "git", "minimal-application"]
++application = ["build-assets", "git", "minimal-application"]
+ build-assets = ["syntect/yaml-load", "syntect/dump-create", "regex", "walkdir"]
+ default = ["application"]
+ git = ["git2"]
