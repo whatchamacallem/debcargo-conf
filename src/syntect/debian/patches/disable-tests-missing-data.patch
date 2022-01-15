@@ -1,0 +1,320 @@
+Index: syntect/src/dumps.rs
+===================================================================
+--- syntect.orig/src/dumps.rs
++++ syntect/src/dumps.rs
+@@ -164,7 +164,7 @@ impl ThemeSet {
+ 
+ #[cfg(test)]
+ mod tests {
+-    #[cfg(all(feature = "yaml-load", any(feature = "dump-create", feature = "dump-create-rs"), any(feature = "dump-load", feature = "dump-load-rs")))]
++    /*#[cfg(all(feature = "yaml-load", any(feature = "dump-create", feature = "dump-create-rs"), any(feature = "dump-load", feature = "dump-load-rs")))]
+     #[test]
+     fn can_dump_and_load() {
+         use super::*;
+@@ -177,9 +177,9 @@ mod tests {
+         println!("{:?}", bin.len());
+         let ss2: SyntaxSet = from_binary(&bin[..]);
+         assert_eq!(ss.syntaxes().len(), ss2.syntaxes().len());
+-    }
++    }*/
+ 
+-    #[cfg(all(feature = "yaml-load", any(feature = "dump-create", feature = "dump-create-rs"), any(feature = "dump-load", feature = "dump-load-rs")))]
++    /*#[cfg(all(feature = "yaml-load", any(feature = "dump-create", feature = "dump-create-rs"), any(feature = "dump-load", feature = "dump-load-rs")))]
+     #[test]
+     fn dump_is_deterministic() {
+         use super::*;
+@@ -198,7 +198,7 @@ mod tests {
+         // vector, so check the length first to fail faster.
+         assert_eq!(bin1.len(), bin2.len());
+         assert_eq!(bin1, bin2);
+-    }
++    }*/
+ 
+     #[cfg(all(feature = "assets", any(feature = "dump-load", feature = "dump-load-rs")))]
+     #[test]
+Index: syntect/src/easy.rs
+===================================================================
+--- syntect.orig/src/easy.rs
++++ syntect/src/easy.rs
+@@ -92,7 +92,7 @@ impl<'a> HighlightFile<'a> {
+     /// Using the `newlines` mode is a bit involved but yields more robust and glitch-free highlighting,
+     /// as well as being slightly faster since it can re-use a line buffer.
+     ///
+-    /// ```
++    /// ```ignore
+     /// use syntect::parsing::SyntaxSet;
+     /// use syntect::highlighting::{ThemeSet, Style};
+     /// use syntect::util::as_24_bit_terminal_escaped;
+@@ -119,7 +119,7 @@ impl<'a> HighlightFile<'a> {
+     ///
+     /// This example uses `reader.lines()` to get lines without a newline character, it's simpler but may break on rare tricky cases.
+     ///
+-    /// ```
++    /// ```ignore
+     /// use syntect::parsing::SyntaxSet;
+     /// use syntect::highlighting::{ThemeSet, Style};
+     /// use syntect::util::as_24_bit_terminal_escaped;
+@@ -232,7 +232,7 @@ mod tests {
+         assert!(ranges.len() > 4);
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn can_highlight_file() {
+         let ss = SyntaxSet::load_defaults_nonewlines();
+         let ts = ThemeSet::load_defaults();
+@@ -240,7 +240,7 @@ mod tests {
+                            &ss,
+                            &ts.themes["base16-ocean.dark"])
+             .unwrap();
+-    }
++    }*/
+ 
+     #[test]
+     fn can_find_regions() {
+Index: syntect/src/highlighting/highlighter.rs
+===================================================================
+--- syntect.orig/src/highlighting/highlighter.rs
++++ syntect/src/highlighting/highlighter.rs
+@@ -377,7 +377,7 @@ mod tests {
+     use crate::highlighting::{ThemeSet, Style, Color, FontStyle};
+     use crate::parsing::{ SyntaxSet, ScopeStack, ParseState};
+ 
+-    #[test]
++    /*#[test]
+     fn can_parse() {
+         let ps = SyntaxSet::load_from_folder("testdata/Packages").unwrap();
+         let mut state = {
+@@ -457,7 +457,7 @@ mod tests {
+                        font_style: FontStyle::empty(),
+                    },
+                     "multiline comment"));
+-    }
++    }*/
+ 
+     // see issues #133 and #203, this test tests the fixes for those issues
+     #[test]
+@@ -536,7 +536,7 @@ mod tests {
+         assert_eq!(full_mod, StyleModifier { foreground: Some(c1), background: None, font_style: Some(FontStyle::ITALIC) });
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_ranges() {
+         let ps = SyntaxSet::load_from_folder("testdata/Packages").unwrap();
+         let mut state = {
+@@ -569,5 +569,5 @@ mod tests {
+                        font_style: FontStyle::empty(),
+                    },
+                     "5", Range { start: 30, end: 31 }));
+-    }
++    }*/
+ }
+Index: syntect/src/highlighting/theme_set.rs
+===================================================================
+--- syntect.orig/src/highlighting/theme_set.rs
++++ syntect/src/highlighting/theme_set.rs
+@@ -71,7 +71,7 @@ impl ThemeSet {
+ #[cfg(test)]
+ mod tests {
+     use crate::highlighting::{ThemeSet, Color};
+-    #[test]
++    /*#[test]
+     fn can_parse_common_themes() {
+         let themes = ThemeSet::load_from_folder("testdata").unwrap();
+         let all_themes: Vec<&str> = themes.themes.keys().map(|x| &**x).collect();
+@@ -96,5 +96,5 @@ mod tests {
+                        a: 0xFF,
+                    });
+         // assert!(false);
+-    }
++    }*/
+ }
+Index: syntect/src/html.rs
+===================================================================
+--- syntect.orig/src/html.rs
++++ syntect/src/html.rs
+@@ -526,7 +526,7 @@ mod tests {
+     use crate::highlighting::{HighlightIterator, HighlightState, Highlighter, Style, ThemeSet};
+     use crate::parsing::{ParseState, ScopeStack, SyntaxDefinition, SyntaxSet, SyntaxSetBuilder};
+     use crate::util::LinesWithEndings;
+-    #[test]
++    /*#[test]
+     fn tokens() {
+         let ss = SyntaxSet::load_defaults_newlines();
+         let syntax = ss.find_syntax_by_name("Markdown").unwrap();
+@@ -551,9 +551,9 @@ mod tests {
+         let html2 = styled_line_to_highlighted_html(&regions[..], IncludeBackground::Yes);
+         println!("{}", html2);
+         assert_eq!(html2, include_str!("../testdata/test1.html").trim_end());
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn strings() {
+         let ss = SyntaxSet::load_defaults_newlines();
+         let ts = ThemeSet::load_defaults();
+@@ -579,9 +579,9 @@ mod tests {
+         .unwrap();
+         println!("{}", html3);
+         assert_eq!(html3, include_str!("../testdata/test4.html"));
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn tricky_test_syntax() {
+         // This syntax I wrote tests edge cases of prototypes
+         // I verified the output HTML against what ST3 does with the same syntax and file
+@@ -597,9 +597,9 @@ mod tests {
+         .unwrap();
+         println!("{}", html);
+         assert_eq!(html, include_str!("../testdata/test5.html"));
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_classed_html_generator_doesnt_panic() {
+         let current_code = "{\n    \"headers\": [\"Number\", \"Title\"],\n    \"records\": [\n        [\"1\", \"Gutenberg\"],\n        [\"2\", \"Printing\"]\n    ],\n}\n";
+         let syntax_def = SyntaxDefinition::load_from_str(
+@@ -619,7 +619,7 @@ mod tests {
+             html_generator.parse_html_for_line_which_includes_newline(&line);
+         }
+         html_generator.finalize();
+-    }
++    }*/
+ 
+     #[test]
+     fn test_classed_html_generator() {
+Index: syntect/src/parsing/metadata.rs
+===================================================================
+--- syntect.orig/src/parsing/metadata.rs
++++ syntect/src/parsing/metadata.rs
+@@ -416,7 +416,7 @@ mod tests {
+     use super::*;
+     use crate::parsing::SyntaxSet;
+ 
+-    #[test]
++    /*#[test]
+     fn load_raw() {
+         let comments_file: &str = "testdata/Packages/Go/Comments.tmPreferences";
+         assert!(Path::new(comments_file).exists());
+@@ -495,5 +495,5 @@ mod tests {
+         assert_eq!(indent_ctx.decrease_indent("struct This {}"), false);
+         assert_eq!(indent_ctx.increase_indent("struct This {}"), false);
+ 
+-    }
++    }*/
+ }
+Index: syntect/src/parsing/parser.rs
+===================================================================
+--- syntect.orig/src/parsing/parser.rs
++++ syntect/src/parsing/parser.rs
+@@ -664,9 +664,9 @@ mod tests {
+     use crate::parsing::ScopeStackOp::{Push, Pop, Clear, Restore};
+     use crate::util::debug_print_ops;
+ 
+-    const TEST_SYNTAX: &str = include_str!("../../testdata/parser_tests.sublime-syntax");
++    //const TEST_SYNTAX: &str = include_str!("../../testdata/parser_tests.sublime-syntax");
+ 
+-    #[test]
++    /*#[test]
+     fn can_parse_simple() {
+         let ss = SyntaxSet::load_from_folder("testdata/Packages").unwrap();
+         let mut state = {
+@@ -861,9 +861,9 @@ mod tests {
+         assert_eq!(state1, state2);
+         ops(&mut state1, "}", &ss);
+         assert_ne!(state1, state2);
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn can_parse_non_nested_clear_scopes() {
+         let line = "'hello #simple_cleared_scopes_test world test \\n '";
+         let expect = [
+@@ -872,9 +872,9 @@ mod tests {
+             "<source.test>, <string.quoted.single.example>, <constant.character.escape.example>",
+         ];
+         expect_scope_stacks(&line, &expect, TEST_SYNTAX);
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn can_parse_non_nested_too_many_clear_scopes() {
+         let line = "'hello #too_many_cleared_scopes_test world test \\n '";
+         let expect = [
+@@ -883,9 +883,9 @@ mod tests {
+             "<source.test>, <string.quoted.single.example>, <constant.character.escape.example>",
+         ];
+         expect_scope_stacks(&line, &expect, TEST_SYNTAX);
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn can_parse_nested_clear_scopes() {
+         let line = "'hello #nested_clear_scopes_test world foo bar test \\n '";
+         let expect = [
+@@ -917,7 +917,7 @@ mod tests {
+             "<source.test>, <test>, <keyword.control.test>",
+         ];
+         expect_scope_stacks(&line, &expect, TEST_SYNTAX);
+-    }
++    }*/
+ 
+     #[test]
+     fn can_parse_prototype_that_pops_main() {
+@@ -966,7 +966,7 @@ contexts:
+         expect_scope_stacks(&line, &expect, syntax);
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn can_parse_issue120() {
+         let syntax = SyntaxDefinition::load_from_str(
+             include_str!("../../testdata/embed_escape_test.sublime-syntax"),
+@@ -992,7 +992,7 @@ contexts:
+             "<top-level.test>",
+         ];
+         expect_scope_stacks_with_syntax(&line2, &expect2, syntax.clone());
+-    }
++    }*/
+ 
+     #[test]
+     fn can_parse_non_consuming_pop_that_would_loop() {
+Index: syntect/src/parsing/syntax_set.rs
+===================================================================
+--- syntect.orig/src/parsing/syntax_set.rs
++++ syntect/src/parsing/syntax_set.rs
+@@ -237,7 +237,7 @@ impl SyntaxSet {
+     /// When determining how to highlight a file, use this in combination with a fallback to plain
+     /// text:
+     ///
+-    /// ```
++    /// ```ignore
+     /// use syntect::parsing::SyntaxSet;
+     /// let ss = SyntaxSet::load_defaults_newlines();
+     /// let syntax = ss.find_syntax_for_file("testdata/highlight_test.erb")
+@@ -786,7 +786,7 @@ mod tests {
+     use crate::parsing::{ParseState, Scope, syntax_definition};
+     use std::collections::HashMap;
+ 
+-    #[test]
++    /*#[test]
+     fn can_load() {
+         let mut builder = SyntaxSetBuilder::new();
+         builder.add_from_folder("testdata/Packages", false).unwrap();
+@@ -838,7 +838,7 @@ mod tests {
+         let main_context = ps.get_context(&syntax.contexts["main"]);
+         let count = syntax_definition::context_iter(&ps, main_context).count();
+         assert_eq!(count, 109);
+-    }
++    }*/
+ 
+     #[test]
+     fn can_clone() {
