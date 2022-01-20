@@ -2,7 +2,7 @@ Index: condure/Cargo.toml
 ===================================================================
 --- condure.orig/Cargo.toml
 +++ condure/Cargo.toml
-@@ -36,7 +36,7 @@ panic = "abort"
+@@ -45,7 +45,7 @@ name = "condure"
  name = "server"
  harness = false
  [dependencies.arrayvec]
@@ -15,93 +15,284 @@ Index: condure/src/connection.rs
 ===================================================================
 --- condure.orig/src/connection.rs
 +++ condure/src/connection.rs
-@@ -395,7 +395,7 @@ enum ServerReqState {
+@@ -67,7 +67,7 @@ const WS_ACCEPT_MAX: usize = 28; // base
+ const ZHTTP_SESSION_TIMEOUT: Duration = Duration::from_secs(60);
+ 
+ pub trait CidProvider {
+-    fn get_new_assigned_cid(&mut self) -> ArrayString<[u8; 32]>;
++    fn get_new_assigned_cid(&mut self) -> ArrayString<32>;
  }
  
- pub struct ServerReqConnection {
--    id: ArrayString<[u8; 32]>,
-+    id: ArrayString<32>,
-     peer_addr: Option<SocketAddr>,
-     secure: bool,
-     timeout: Duration,
-@@ -985,7 +985,7 @@ enum ServerStreamState {
+ pub trait Identify {
+@@ -94,7 +94,7 @@ fn get_host<'a>(headers: &'a [httparse::
+     "localhost"
  }
  
- struct ServerStreamData {
--    id: ArrayString<[u8; 32]>,
-+    id: ArrayString<32>,
-     peer_addr: Option<SocketAddr>,
-     secure: bool,
-     client_timeout: Duration,
-@@ -996,9 +996,9 @@ struct ServerStreamData {
-     cont: [u8; 32],
-     cont_len: usize,
-     cont_left: usize,
+-fn calculate_ws_accept(key: &[u8]) -> Result<ArrayString<[u8; WS_ACCEPT_MAX]>, ()> {
++fn calculate_ws_accept(key: &[u8]) -> Result<ArrayString<WS_ACCEPT_MAX>, ()> {
+     let input_len = key.len() + websocket::WS_GUID.len();
+ 
+     if input_len > WS_HASH_INPUT_MAX {
+@@ -390,7 +390,7 @@ impl MessageTracker {
+ }
+ 
+ struct ServerStreamSharedDataInner {
 -    to_addr: Option<ArrayVec<[u8; 64]>>,
 +    to_addr: Option<ArrayVec<u8, 64>>,
-     websocket: bool,
--    ws_accept: Option<ArrayString<[u8; 28]>>, // base64_encode(sha1_hash) = 28 bytes
-+    ws_accept: Option<ArrayString<28>>, // base64_encode(sha1_hash) = 28 bytes
-     in_seq: u32,
      out_seq: u32,
-     in_credits: u32,
+ }
+ 
+@@ -428,7 +428,7 @@ impl ServerStreamSharedData {
+         s.out_seq = 0;
+     }
+ 
+-    fn set_to_addr(&self, addr: Option<ArrayVec<[u8; 64]>>) {
++    fn set_to_addr(&self, addr: Option<ArrayVec<u8, 64>>) {
+         let s = &mut *self.inner.borrow_mut();
+ 
+         s.to_addr = addr;
+@@ -1390,7 +1390,7 @@ struct ZhttpStreamSessionOut<'a> {
+     instance_id: &'a str,
+     id: &'a str,
+     packet_buf: &'a RefCell<Vec<u8>>,
+-    sender_stream: &'a AsyncLocalSender<(ArrayVec<[u8; 64]>, zmq::Message)>,
++    sender_stream: &'a AsyncLocalSender<(ArrayVec<u8, 64>, zmq::Message)>,
+     shared: &'a ServerStreamSharedData,
+ }
+ 
+@@ -1399,7 +1399,7 @@ impl<'a> ZhttpStreamSessionOut<'a> {
+         instance_id: &'a str,
+         id: &'a str,
+         packet_buf: &'a RefCell<Vec<u8>>,
+-        sender_stream: &'a AsyncLocalSender<(ArrayVec<[u8; 64]>, zmq::Message)>,
++        sender_stream: &'a AsyncLocalSender<(ArrayVec<u8, 64>, zmq::Message)>,
+         shared: &'a ServerStreamSharedData,
+     ) -> Self {
+         Self {
+@@ -1862,7 +1862,7 @@ async fn server_req_handler<S: AsyncRead
+ 
+ async fn server_req_connection_inner<P: CidProvider, S: AsyncRead + AsyncWrite + Identify>(
+     token: CancellationToken,
+-    cid: &mut ArrayString<[u8; 32]>,
++    cid: &mut ArrayString<32>,
+     cid_provider: &mut P,
+     mut stream: S,
+     peer_addr: Option<SocketAddr>,
+@@ -1931,7 +1931,7 @@ async fn server_req_connection_inner<P:
+ 
+ pub async fn server_req_connection<P: CidProvider, S: AsyncRead + AsyncWrite + Identify>(
+     token: CancellationToken,
+-    mut cid: ArrayString<[u8; 32]>,
++    mut cid: ArrayString<32>,
+     cid_provider: &mut P,
+     stream: S,
+     peer_addr: Option<SocketAddr>,
+@@ -2600,7 +2600,7 @@ async fn server_stream_handler<S, R1, R2
+     tmp_buf: &RefCell<Vec<u8>>,
+     instance_id: &str,
+     zsender: &AsyncLocalSender<zmq::Message>,
+-    zsender_stream: &AsyncLocalSender<(ArrayVec<[u8; 64]>, zmq::Message)>,
++    zsender_stream: &AsyncLocalSender<(ArrayVec<u8, 64>, zmq::Message)>,
+     zreceiver: &AsyncLocalReceiver<(arena::Rc<zhttppacket::OwnedResponse>, usize)>,
+     shared: &ServerStreamSharedData,
+     refresh_stream_timeout: &R1,
+@@ -2673,7 +2673,7 @@ where
+             id, req.method, scheme, host, req.uri
+         );
+ 
+-        let ws_accept: Option<ArrayString<[u8; WS_ACCEPT_MAX]>> = if websocket {
++        let ws_accept: Option<ArrayString<WS_ACCEPT_MAX>> = if websocket {
+             if req.method != "GET" || req.body_size != http1::BodySize::NoBody || ws_key.is_none() {
+                 return Err(ServerError::InvalidWebSocketRequest);
+             }
+@@ -3017,7 +3017,7 @@ where
+ 
+ async fn server_stream_connection_inner<P: CidProvider, S: AsyncRead + AsyncWrite + Identify>(
+     token: CancellationToken,
+-    cid: &mut ArrayString<[u8; 32]>,
++    cid: &mut ArrayString<32>,
+     cid_provider: &mut P,
+     mut stream: S,
+     peer_addr: Option<SocketAddr>,
+@@ -3030,7 +3030,7 @@ async fn server_stream_connection_inner<
+     stream_timeout: Duration,
+     instance_id: &str,
+     zsender: AsyncLocalSender<zmq::Message>,
+-    zsender_stream: AsyncLocalSender<(ArrayVec<[u8; 64]>, zmq::Message)>,
++    zsender_stream: AsyncLocalSender<(ArrayVec<u8, 64>, zmq::Message)>,
+     zreceiver: &AsyncLocalReceiver<(arena::Rc<zhttppacket::OwnedResponse>, usize)>,
+     shared: arena::Rc<ServerStreamSharedData>,
+ ) -> Result<(), ServerError> {
+@@ -3165,7 +3165,7 @@ async fn server_stream_connection_inner<
+ 
+ pub async fn server_stream_connection<P: CidProvider, S: AsyncRead + AsyncWrite + Identify>(
+     token: CancellationToken,
+-    mut cid: ArrayString<[u8; 32]>,
++    mut cid: ArrayString<32>,
+     cid_provider: &mut P,
+     stream: S,
+     peer_addr: Option<SocketAddr>,
+@@ -3178,7 +3178,7 @@ pub async fn server_stream_connection<P:
+     timeout: Duration,
+     instance_id: &str,
+     zsender: AsyncLocalSender<zmq::Message>,
+-    zsender_stream: AsyncLocalSender<(ArrayVec<[u8; 64]>, zmq::Message)>,
++    zsender_stream: AsyncLocalSender<(ArrayVec<u8, 64>, zmq::Message)>,
+     zreceiver: AsyncLocalReceiver<(arena::Rc<zhttppacket::OwnedResponse>, usize)>,
+     shared: arena::Rc<ServerStreamSharedData>,
+ ) {
+@@ -3429,11 +3429,11 @@ mod tests {
+     }
+ 
+     struct SimpleCidProvider {
+-        cid: ArrayString<[u8; 32]>,
++        cid: ArrayString<32>,
+     }
+ 
+     impl CidProvider for SimpleCidProvider {
+-        fn get_new_assigned_cid(&mut self) -> ArrayString<[u8; 32]> {
++        fn get_new_assigned_cid(&mut self) -> ArrayString<32> {
+             self.cid
+         }
+     }
+@@ -4130,7 +4130,7 @@ mod tests {
+         sock: Rc<RefCell<FakeSock>>,
+         secure: bool,
+         s_from_conn: channel::LocalSender<zmq::Message>,
+-        s_stream_from_conn: channel::LocalSender<(ArrayVec<[u8; 64]>, zmq::Message)>,
++        s_stream_from_conn: channel::LocalSender<(ArrayVec<u8, 64>, zmq::Message)>,
+         r_to_conn: channel::LocalReceiver<(arena::Rc<zhttppacket::OwnedResponse>, usize)>,
+     ) -> Result<(), ServerError> {
+         let mut cid = ArrayString::from_str("1").unwrap();
 Index: condure/src/server.rs
 ===================================================================
 --- condure.orig/src/server.rs
 +++ condure/src/server.rs
-@@ -245,7 +245,7 @@ impl ZhttpSender for zhttpsocket::Client
- 
- struct ClientStreamHandle {
-     inner: zhttpsocket::ClientStreamHandle,
--    out: VecDeque<(ArrayVec<[u8; 64]>, zmq::Message)>,
-+    out: VecDeque<(ArrayVec<u8, 64>, zmq::Message)>,
-     send_to_allowed: bool,
+@@ -197,7 +197,7 @@ fn async_local_channel<T>(
+     (s, r)
  }
  
-@@ -346,7 +346,7 @@ impl Stream {
+-fn gen_id(id: usize, ckey: usize, next_cid: &mut u32) -> ArrayString<[u8; 32]> {
++fn gen_id(id: usize, ckey: usize, next_cid: &mut u32) -> ArrayString<32> {
+     let mut buf = [0; 32];
+     let mut c = io::Cursor::new(&mut buf[..]);
+ 
+@@ -263,7 +263,7 @@ impl<'a> BatchGroup<'a, '_> {
+ 
+ struct Batch {
+     nodes: Slab<list::Node<usize>>,
+-    addrs: Vec<(ArrayVec<[u8; 64]>, list::List)>,
++    addrs: Vec<(ArrayVec<u8, 64>, list::List)>,
+     addr_index: usize,
+     group_ids: arena::ReusableVec,
+     last_group_ckeys: Vec<usize>,
+@@ -413,7 +413,7 @@ struct ConnectionDone {
  }
  
- struct Connection {
+ struct ConnectionItem {
 -    id: ArrayString<[u8; 32]>,
 +    id: ArrayString<32>,
-     stream: Stream,
-     conn: ServerConnection,
-     want: Want,
-@@ -527,7 +527,7 @@ impl Connection {
+     stop: Option<CancellationSender>,
+     zreceiver_sender: Option<AsyncLocalSender<(arena::Rc<zhttppacket::OwnedResponse>, usize)>>,
+     shared: Option<arena::Rc<ServerStreamSharedData>>,
+@@ -473,7 +473,7 @@ impl Connections {
+         stop: CancellationSender,
+         zreceiver_sender: AsyncLocalSender<(arena::Rc<zhttppacket::OwnedResponse>, usize)>,
+         shared: Option<arena::Rc<ServerStreamSharedData>>,
+-    ) -> Result<(usize, ArrayString<[u8; 32]>), ()> {
++    ) -> Result<(usize, ArrayString<32>), ()> {
+         let items = &mut *self.items.borrow_mut();
+         let c = &mut *self.inner.borrow_mut();
+ 
+@@ -521,7 +521,7 @@ impl Connections {
+         ci.zreceiver_sender.unwrap().into_inner()
      }
  
-     fn process_with_stream<S: Read + Write + WriteVectored + Shutdown>(
--        id: &ArrayString<[u8; 32]>,
-+        id: &ArrayString<32>,
-         conn: &mut ServerConnection,
-         want: &mut Want,
-         stream: &mut S,
-@@ -682,7 +682,7 @@ impl Worker {
-         }
+-    fn regen_id(&self, worker_id: usize, ckey: usize) -> ArrayString<[u8; 32]> {
++    fn regen_id(&self, worker_id: usize, ckey: usize) -> ArrayString<32> {
+         let nkey = ckey;
+ 
+         let items = &mut *self.items.borrow_mut();
+@@ -659,7 +659,7 @@ impl Connections {
+         &self,
+         from: &str,
+         btype: BatchType,
+-    ) -> Option<(usize, ArrayVec<[u8; 64]>, zmq::Message)> {
++    ) -> Option<(usize, ArrayVec<u8, 64>, zmq::Message)> {
+         let items = &mut *self.items.borrow_mut();
+         let nodes = &mut items.nodes;
+         let batch = &mut items.batch;
+@@ -704,7 +704,7 @@ impl Connections {
+ 
+             let data = &data[..size];
+ 
+-            let mut addr = ArrayVec::<[u8; 64]>::new();
++            let mut addr = ArrayVec::<u8, 64>::new();
+             if addr.try_extend_from_slice(group.addr()).is_err() {
+                 error!("failed to prepare addr");
+                 continue;
+@@ -746,7 +746,7 @@ impl<'a> ConnectionCid<'a> {
+ }
+ 
+ impl CidProvider for ConnectionCid<'_> {
+-    fn get_new_assigned_cid(&mut self) -> ArrayString<[u8; 32]> {
++    fn get_new_assigned_cid(&mut self) -> ArrayString<32> {
+         self.conns.regen_id(self.worker_id, self.ckey)
      }
+ }
+@@ -769,7 +769,7 @@ struct ConnectionReqOpts {
+ struct ConnectionStreamOpts {
+     messages_max: usize,
+     sender: channel::LocalSender<zmq::Message>,
+-    sender_stream: channel::LocalSender<(ArrayVec<[u8; 64]>, zmq::Message)>,
++    sender_stream: channel::LocalSender<(ArrayVec<u8, 64>, zmq::Message)>,
+     stream_shared_mem: Rc<arena::RcMemory<ServerStreamSharedData>>,
+ }
  
--    fn gen_id(id: usize, ckey: usize, next_cid: &mut u32) -> ArrayString<[u8; 32]> {
-+    fn gen_id(id: usize, ckey: usize, next_cid: &mut u32) -> ArrayString<32> {
-         let mut buf = [0; 32];
-         let mut c = io::Cursor::new(&mut buf[..]);
- 
-@@ -817,7 +817,7 @@ impl Worker {
-         let ka_batch = (stream_maxconn + (KEEP_ALIVE_BATCHES - 1)) / KEEP_ALIVE_BATCHES;
- 
-         let mut ka_nodes: Slab<list::Node<usize>> = Slab::with_capacity(ka_batch);
--        let mut ka_addrs: Vec<(ArrayVec<[u8; 64]>, list::List)> = Vec::with_capacity(ka_batch);
-+        let mut ka_addrs: Vec<(ArrayVec<u8, 64>, list::List)> = Vec::with_capacity(ka_batch);
-         let mut ka_ids_mem: Vec<zhttppacket::Id> = Vec::with_capacity(ka_batch);
- 
-         let mut zwrite_nodes: Slab<list::Node<ZWrite>> = Slab::with_capacity(maxconn + 1);
+@@ -1550,7 +1550,7 @@ impl Worker {
+         done: AsyncLocalSender<zhttpsocket::AsyncClientStreamHandle>,
+         instance_id: Rc<String>,
+         zstream_out_receiver: AsyncLocalReceiver<zmq::Message>,
+-        zstream_out_stream_receiver: AsyncLocalReceiver<(ArrayVec<[u8; 64]>, zmq::Message)>,
++        zstream_out_stream_receiver: AsyncLocalReceiver<(ArrayVec<u8, 64>, zmq::Message)>,
+         r_cdone: AsyncLocalReceiver<ConnectionDone>,
+         s_cdone: AsyncLocalSender<ConnectionDone>,
+         stream_handle: zhttpsocket::AsyncClientStreamHandle,
+@@ -1742,7 +1742,7 @@ impl Worker {
+         done: channel::LocalSender<ConnectionDone>,
+         worker_id: usize,
+         ckey: usize,
+-        cid: ArrayString<[u8; 32]>,
++        cid: ArrayString<32>,
+         stream: Stream,
+         peer_addr: SocketAddr,
+         zreceiver: channel::LocalReceiver<(arena::Rc<zhttppacket::OwnedResponse>, usize)>,
+@@ -1806,7 +1806,7 @@ impl Worker {
+         done: channel::LocalSender<ConnectionDone>,
+         worker_id: usize,
+         ckey: usize,
+-        cid: ArrayString<[u8; 32]>,
++        cid: ArrayString<32>,
+         stream: Stream,
+         peer_addr: SocketAddr,
+         zreceiver: channel::LocalReceiver<(arena::Rc<zhttppacket::OwnedResponse>, usize)>,
+@@ -1879,7 +1879,7 @@ impl Worker {
+         stop: AsyncLocalReceiver<()>,
+         _done: AsyncLocalSender<()>,
+         instance_id: Rc<String>,
+-        sender: channel::LocalSender<(ArrayVec<[u8; 64]>, zmq::Message)>,
++        sender: channel::LocalSender<(ArrayVec<u8, 64>, zmq::Message)>,
+         conns: Rc<Connections>,
+     ) {
+         debug!("worker {}: task started: keep_alives", id);
 Index: condure/src/tls.rs
 ===================================================================
 --- condure.orig/src/tls.rs
 +++ condure/src/tls.rs
-@@ -321,7 +321,7 @@ impl TlsAcceptor {
- 
+@@ -337,7 +337,7 @@ impl TlsAcceptor {
  pub struct TlsStream {
-     stream: Option<Stream>,
+     stream: Stream<'static>,
+     tcp_stream: Box<TcpStream>,
 -    id: ArrayString<[u8; 32]>,
 +    id: ArrayString<32>,
  }
@@ -111,12 +302,21 @@ Index: condure/src/zhttpsocket.rs
 ===================================================================
 --- condure.orig/src/zhttpsocket.rs
 +++ condure/src/zhttpsocket.rs
-@@ -281,29 +281,29 @@ struct ReqPipeEnd {
+@@ -295,7 +295,7 @@ struct ReqPipeEnd {
  struct StreamPipeEnd {
-     sender: channel::Sender<arena::Rc<zmq::Message>>,
+     sender: channel::Sender<arena::Arc<zmq::Message>>,
      receiver_any: channel::Receiver<zmq::Message>,
 -    receiver_addr: channel::Receiver<(ArrayVec<[u8; 64]>, zmq::Message)>,
 +    receiver_addr: channel::Receiver<(ArrayVec<u8, 64>, zmq::Message)>,
+ }
+ 
+ struct AsyncReqPipeEnd {
+@@ -306,28 +306,28 @@ struct AsyncReqPipeEnd {
+ struct AsyncStreamPipeEnd {
+     sender: AsyncSender<arena::Arc<zmq::Message>>,
+     receiver_any: AsyncReceiver<zmq::Message>,
+-    receiver_addr: AsyncReceiver<(ArrayVec<[u8; 64]>, zmq::Message)>,
++    receiver_addr: AsyncReceiver<(ArrayVec<u8, 64>, zmq::Message)>,
  }
  
  enum ControlRequest {
@@ -132,53 +332,79 @@ Index: condure/src/zhttpsocket.rs
  type ControlResponse = Result<(), String>;
  
  struct ReqPipe {
-     pe: ReqPipeEnd,
+     pe: AsyncReqPipeEnd,
 -    filter: ArrayString<[u8; 8]>,
 +    filter: ArrayString<8>,
-     valid: bool,
-     readable: bool,
+     valid: Cell<bool>,
  }
  
  struct StreamPipe {
-     pe: StreamPipeEnd,
+     pe: AsyncStreamPipeEnd,
 -    filter: ArrayString<[u8; 8]>,
 +    filter: ArrayString<8>,
-     valid: bool,
-     readable_any: bool,
-     readable_addr: bool,
-@@ -328,7 +328,7 @@ impl ReqHandles {
+     valid: Cell<bool>,
+ }
+ 
+@@ -398,7 +398,7 @@ impl ReqHandles {
          self.nodes.len()
      }
  
--    fn add<F>(&mut self, pe: ReqPipeEnd, filter: ArrayString<[u8; 8]>, f: F)
-+    fn add<F>(&mut self, pe: ReqPipeEnd, filter: ArrayString<8>, f: F)
-     where
-         F: Fn(&ReqPipe, usize),
-     {
-@@ -494,7 +494,7 @@ impl StreamHandles {
+-    fn add(&mut self, pe: AsyncReqPipeEnd, filter: ArrayString<[u8; 8]>) {
++    fn add(&mut self, pe: AsyncReqPipeEnd, filter: ArrayString<8>) {
+         assert!(self.nodes.len() < self.nodes.capacity());
+ 
+         let key = self.nodes.insert(list::Node::new(ReqPipe {
+@@ -513,7 +513,7 @@ struct StreamHandles {
+     nodes: Slab<list::Node<StreamPipe>>,
+     list: list::List,
+     recv_any_scratch: RefCell<RecvScratch<zmq::Message>>,
+-    recv_addr_scratch: RefCell<RecvScratch<(ArrayVec<[u8; 64]>, zmq::Message)>>,
++    recv_addr_scratch: RefCell<RecvScratch<(ArrayVec<u8, 64>, zmq::Message)>>,
+     need_cleanup: Cell<bool>,
+ }
+ 
+@@ -532,7 +532,7 @@ impl StreamHandles {
          self.nodes.len()
      }
  
--    fn add<F>(&mut self, pe: StreamPipeEnd, filter: ArrayString<[u8; 8]>, f: F)
-+    fn add<F>(&mut self, pe: StreamPipeEnd, filter: ArrayString<8>, f: F)
-     where
-         F: Fn(&StreamPipe, usize),
-     {
-@@ -612,7 +612,7 @@ impl StreamHandles {
-         None
-     }
+-    fn add(&mut self, pe: AsyncStreamPipeEnd, filter: ArrayString<[u8; 8]>) {
++    fn add(&mut self, pe: AsyncStreamPipeEnd, filter: ArrayString<8>) {
+         assert!(self.nodes.len() < self.nodes.capacity());
  
--    fn recv_addr(&mut self) -> Option<(ArrayVec<[u8; 64]>, zmq::Message)> {
-+    fn recv_addr(&mut self) -> Option<(ArrayVec<u8, 64>, zmq::Message)> {
-         if self.cur.is_none() {
-             return None;
+         let key = self.nodes.insert(list::Node::new(StreamPipe {
+@@ -582,7 +582,7 @@ impl StreamHandles {
          }
-@@ -1420,7 +1420,7 @@ impl ClientReqHandle {
+     }
+ 
+-    async fn recv_addr(&self) -> (ArrayVec<[u8; 64]>, zmq::Message) {
++    async fn recv_addr(&self) -> (ArrayVec<u8, 64>, zmq::Message) {
+         let mut scratch = self.recv_addr_scratch.borrow_mut();
+ 
+         let (mut tasks, slice_scratch) = scratch.get();
+@@ -1289,7 +1289,7 @@ impl AsyncClientReqHandle {
  
  pub struct ClientStreamHandle {
      sender_any: channel::Sender<zmq::Message>,
 -    sender_addr: channel::Sender<(ArrayVec<[u8; 64]>, zmq::Message)>,
 +    sender_addr: channel::Sender<(ArrayVec<u8, 64>, zmq::Message)>,
-     receiver: channel::Receiver<arena::Rc<zmq::Message>>,
+     receiver: channel::Receiver<arena::Arc<zmq::Message>>,
  }
  
+@@ -1344,7 +1344,7 @@ impl ClientStreamHandle {
+ 
+ pub struct AsyncClientStreamHandle {
+     sender_any: AsyncSender<zmq::Message>,
+-    sender_addr: AsyncSender<(ArrayVec<[u8; 64]>, zmq::Message)>,
++    sender_addr: AsyncSender<(ArrayVec<u8, 64>, zmq::Message)>,
+     receiver: AsyncReceiver<arena::Arc<zmq::Message>>,
+ }
+ 
+@@ -1373,7 +1373,7 @@ impl AsyncClientStreamHandle {
+ 
+     pub async fn send_to_addr(
+         &self,
+-        addr: ArrayVec<[u8; 64]>,
++        addr: ArrayVec<u8, 64>,
+         msg: zmq::Message,
+     ) -> Result<(), io::Error> {
+         match self.sender_addr.send((addr, msg)).await {
