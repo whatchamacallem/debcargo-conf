@@ -1,0 +1,41 @@
+Index: petgraph/Cargo.toml
+===================================================================
+--- petgraph.orig/Cargo.toml
++++ petgraph/Cargo.toml
+@@ -56,7 +56,10 @@ version = "0.10"
+ default-features = false
+ 
+ [dev-dependencies.rand]
+-version = "0.5.5"
++version = "0.8"
++
++[dev-dependencies.rand_chacha]
++version = "0.3"
+ 
+ [features]
+ all = ["unstable", "matrix_graph", "stable_graph", "graphmap"]
+Index: petgraph/tests/unionfind.rs
+===================================================================
+--- petgraph.orig/tests/unionfind.rs
++++ petgraph/tests/unionfind.rs
+@@ -2,7 +2,8 @@ extern crate petgraph;
+ extern crate rand;
+ 
+ use petgraph::unionfind::UnionFind;
+-use rand::{thread_rng, ChaChaRng, Rng, SeedableRng};
++use rand::{thread_rng, Rng, SeedableRng};
++use rand_chacha::ChaChaRng;
+ use std::collections::HashSet;
+ 
+ #[test]
+@@ -67,8 +68,8 @@ fn uf_rand() {
+     let mut rng = ChaChaRng::from_rng(thread_rng()).unwrap();
+     let mut u = UnionFind::new(n);
+     for _ in 0..100 {
+-        let a = rng.gen_range(0, n);
+-        let b = rng.gen_range(0, n);
++        let a = rng.gen_range(0.. n);
++        let b = rng.gen_range(0.. n);
+         let ar = u.find(a);
+         let br = u.find(b);
+         assert_eq!(ar != br, u.union(a, b));
