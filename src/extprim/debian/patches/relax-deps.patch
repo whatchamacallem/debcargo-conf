@@ -1,27 +1,18 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -26,7 +26,7 @@ repository = "https://github.com/kennytm
- version = "0.2"
- 
+@@ -28,3 +28,3 @@
  [dependencies.rand]
 -version = "0.6"
-+version = ">= 0.6, < 0.8"
++version = ">= 0.6, < 0.9"
  optional = true
- 
- [dependencies.serde]
-@@ -36,7 +36,7 @@ optional = true
- [dev-dependencies.extprim_literals]
- version = "2.0"
+@@ -38,3 +38,3 @@
  [build-dependencies.rustc_version]
 -version = "0.2"
 +version = "0.4"
  
- [build-dependencies.semver]
- version = "0.9"
 --- a/build.rs
 +++ b/build.rs
-@@ -1,16 +1,15 @@
- extern crate rustc_version;
+@@ -2,8 +2,6 @@
  extern crate semver;
 -use rustc_version::{version_meta, Channel};
 -use semver::Version;
@@ -32,12 +23,10 @@
 -    let channel = match version.channel {
 +    let channel = match version_meta().unwrap().channel {
          Channel::Dev | Channel::Nightly => "unstable",
-         Channel::Beta | Channel::Stable => "stable",
+@@ -11,4 +9,5 @@
      };
 +
      println!("cargo:rustc-cfg=extprim_channel=\"{}\"", channel);
 -    if version.semver >= Version::new(1, 26, 0) {
 +    if version().unwrap() >= Version::parse("1.26.0").unwrap() {
          println!("cargo:rustc-cfg=extprim_has_stable_i128");
-     }
- }
