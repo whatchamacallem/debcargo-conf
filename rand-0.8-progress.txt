@@ -1,0 +1,123 @@
+summary of problems still to be addressed:
+
+proptest gets two additional test failures when updated for the
+new rand, I have opened a bug report about this upstream.
+
+We need to figure out what to do about rust-petgraph, I tried to port it to the
+new version of rust-quickcheck but failed, i'm leaning towards simply removing
+the quickcheck feature from petgraph.
+
+newsboat is maintained outside the rust team, coordination with it's maintainer
+or a NMU will be needed.
+
+details of individual packages:
+
+random family crates:
+
+rust-getrandom:
+   new upstream version tested and uploaded to experimental
+rust-rand:
+   new version tested and uploaded to experimental.
+rust-rand-chacha:
+   new upstream version tested and uploaded to experimental
+rust-rand-core:
+   new upstream version tested and uploaded to experimental
+rust-rand-hc:
+   new upstream version tested and uploaded to experimental
+rust-rand-isaac:
+   not investigated yet.
+rust-rand-os:
+  no new upstream, suggest removal.
+rust-rand-pcg:
+  new upstream version tested and uploaded to experimental
+rust-rand-xorshift:
+  new upstream version tested and uploaded to experimental
+rust-rand-xoshiro
+  new upstream version tested and uploaded to experimental
+
+
+Direct reverse-dependencies of rust-getrandom:
+
+rust-const-random-macro:
+   new upstream version tested but not uploaded
+rust-memsec:
+   dependency relaxation tested but not uploaded. Has issues (binary renamed, 
+   and test failure due to no-default-features) with current debcargo
+rust-nettle: new upstream version tested but not uploaded
+
+
+Reverse dependencies of rust-rand*
+
+elan:
+   builds after some patching of dependencies, no tests run.
+newsboat:
+   builds after patching of dependencies, tests appear to be run as part of
+   build, not rust team, bug filed at
+   https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1004259
+rust-extprim
+   just a dependency bump needed for rand, I also fixed some other issues with
+   the testsuite.
+rust-hyperfine:
+   not in testing, not investigated yet.
+rust-im-rc
+   rand dependency was dealt with with a simple patch, but it
+   took a bit of effort to get the testsuite to work.
+rust-nitrokey
+   not investigated yet
+rust-num-bigint
+   not investigated yet
+rust-num-complex
+   not investigated yet
+rust-parking-lot-core-0.4
+   not investigated yet
+rust-pbkdf2
+   not investigated yet
+rust-phf-generator
+   not investigated yet
+rust-pleaser
+   not investigated yet
+rust-proptest:
+   patch applied from upstream, but introduces 4 new test failures, i've
+   uploaded it to experimental with the tests in question disabled but I don't
+   want to upload to unstable until I have upstream's
+   opinion on the matter
+rust-petgraph:
+   Failed to port to new quickcheck, will probablly drop feature. Also seems to
+   have issues running tests with no-default-features which will need to be
+   looked at.
+rust-quickcheck 
+   updating to 1.0 (which has switched tor rand 0.8 upstream seems the most
+   sensible course of action, though it has it's own reverse-dependencies to
+   deal with.
+rust-statistical
+   not in testing not investigated yet
+rust-rspotify
+   not in testing and broken in unstable
+rust-tempfile:
+   tests passed after updating to 3.2.0 (3.3.0 has dependencies which can't be 
+   satisfied without adding new packages)
+rust-time
+   not investigated yet
+rust-trust-dns-proto
+   not investigated yet
+rust-uuid
+   not investigated yet
+
+
+Packages depending on rust-quickcheck
+
+rust-diesel
+  not in testing. not investigated yet
+rust-im-rc:
+  patched for quickcheck at the same time as rand
+rust-num-bigint:
+  not in testing not investigated yet.
+rust-petgraph:
+  Failed to port to new quickcheck, will probablly drop feature.
+
+Crates that showed up in searches, but didn't turn out to be related to rand
+
+rust-random:
+  different random number generator whose name starts with rust-rand
+
+
