@@ -1,0 +1,107 @@
+Index: findutils/Cargo.toml
+===================================================================
+--- findutils.orig/Cargo.toml
++++ findutils/Cargo.toml
+@@ -12,7 +12,7 @@
+ 
+ [package]
+ edition = "2018"
+-name = "findutils"
++name = "rust_findutils"
+ version = "0.2.0"
+ authors = ["uutils developers"]
+ description = "Rust implementation of GNU findutils"
+Index: findutils/Cargo.lock
+===================================================================
+--- findutils.orig/Cargo.lock
++++ findutils/Cargo.lock
+@@ -77,7 +77,7 @@ source = "registry+https://github.com/ru
+ checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
+ 
+ [[package]]
+-name = "findutils"
++name = "rust_findutils"
+ version = "0.2.0"
+ dependencies = [
+  "assert_cmd",
+Index: findutils/src/find/main.rs
+===================================================================
+--- findutils.orig/src/find/main.rs
++++ findutils/src/find/main.rs
+@@ -4,12 +4,12 @@
+ // license that can be found in the LICENSE file or at
+ // https://opensource.org/licenses/MIT.
+ 
+-extern crate findutils;
++extern crate rust_findutils;
+ extern crate glob;
+ 
+ fn main() {
+     let args = std::env::args().collect::<Vec<String>>();
+     let strs: Vec<&str> = args.iter().map(|s| s.as_ref()).collect();
+-    let deps = findutils::find::StandardDependencies::new();
+-    std::process::exit(findutils::find::find_main(&strs, &deps));
++    let deps = rust_findutils::find::StandardDependencies::new();
++    std::process::exit(rust_findutils::find::find_main(&strs, &deps));
+ }
+Index: findutils/tests/common/test_helpers.rs
+===================================================================
+--- findutils.orig/tests/common/test_helpers.rs
++++ findutils/tests/common/test_helpers.rs
+@@ -11,8 +11,8 @@ use std::time::SystemTime;
+ use std::vec::Vec;
+ use walkdir::{DirEntry, WalkDir};
+ 
+-use findutils::find::matchers::MatcherIO;
+-use findutils::find::Dependencies;
++use rust_findutils::find::matchers::MatcherIO;
++use rust_findutils::find::Dependencies;
+ 
+ /// A copy of find::tests::FakeDependencies.
+ /// TODO: find out how to share #[cfg(test)] functions/structs between unit
+Index: findutils/tests/exec_unit_tests.rs
+===================================================================
+--- findutils.orig/tests/exec_unit_tests.rs
++++ findutils/tests/exec_unit_tests.rs
+@@ -8,7 +8,7 @@
+ /// ! But as the tests require running an external executable, they need to be run
+ /// ! as integration tests so we can ensure that our testing-commandline binary
+ /// ! has been built.
+-extern crate findutils;
++extern crate ruts-findutils;
+ extern crate walkdir;
+ 
+ use std::env;
+@@ -18,8 +18,8 @@ use tempfile::Builder;
+ use walkdir::WalkDir;
+ 
+ use common::test_helpers::*;
+-use findutils::find::matchers::exec::*;
+-use findutils::find::matchers::Matcher;
++use rust_findutils::find::matchers::exec::*;
++use rust_findutils::find::matchers::Matcher;
+ 
+ mod common;
+ 
+Index: findutils/tests/find_exec_tests.rs
+===================================================================
+--- findutils.orig/tests/find_exec_tests.rs
++++ findutils/tests/find_exec_tests.rs
+@@ -9,7 +9,7 @@
+ /// ! But as the tests require running an external executable, they need to be run
+ /// ! as integration tests so we can ensure that our testing-commandline binary
+ /// ! has been built.
+-extern crate findutils;
++extern crate rust_findutils;
+ extern crate tempfile;
+ extern crate walkdir;
+ 
+@@ -19,7 +19,7 @@ use std::io::Read;
+ use tempfile::Builder;
+ 
+ use common::test_helpers::*;
+-use findutils::find::find_main;
++use rust_findutils::find::find_main;
+ 
+ mod common;
+ #[test]
