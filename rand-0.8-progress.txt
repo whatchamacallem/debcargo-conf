@@ -1,14 +1,17 @@
 summary of problems still to be addressed:
 
 proptest gets two additional test failures when updated for the
-new rand, I have opened a bug report about this upstream.
+new rand, I have opened a bug report about this upstream. It appears that this
+is caused by rand deciding to panic rather than returning bad results for very
+large floating point ranges. After some testing I don't belive this will have
+any downstream impacts and plan to just disable the tests in question.
 
 We need to figure out what to do about rust-petgraph, I tried to port it to the
 new version of rust-quickcheck but failed, i'm leaning towards simply removing
 the quickcheck feature from petgraph.
 
-newsboat is maintained outside the rust team, coordination with it's maintainer
-or a NMU will be needed.
+newsboat is maintained outside the rust team, it's maintainer is happy with a
+NMu.
 
 details of individual packages:
 
@@ -63,24 +66,36 @@ rust-im-rc
    rand dependency was dealt with with a simple patch, but it
    took a bit of effort to get the testsuite to work.
 rust-nitrokey
-   not investigated yet
+   unstable version:
+       rand dependency bumped, unfortunately I was not able to run the testsuite
+       due to unrelated issues, but I was able to use it to build nitrocli, so that
+       is good enough for me.
+    experimental version:
+       rand dependency bumped, unfortunately I was not able to run the testsuite
+       due to unrelated issues.
 rust-num-bigint
-   not investigated yet
+   builds fine and tests pass after dropping Debian patches.
 rust-num-complex
-   not investigated yet
+   builds fine and tests pass after dropping Debian patch
 rust-parking-lot-core-0.4
-   not investigated yet
+   builds fine and tests pass after updating patch.
 rust-pbkdf2
-   not investigated yet
+   not in testing
+   tests pass in an upstream context after updating to 0.6.0 (newer versions 
+   introduce unwanted dependencies) and patching rand dependency. Unable to run
+   tests in a Debian context due to breakage in rust-sha-1
 rust-phf-generator
-   not investigated yet
+   needs an older version (2.4.4) of debcargo for phf-generator 0.8
+   there was also a newer version of phf-generator in debcargo-conf which should
+   be restored when the rand transition is done.
+   autopkgtest passes with new rand after removing dev-dependency on criterion.
 rust-pleaser
    not investigated yet
 rust-proptest:
    patch applied from upstream, but introduces 4 new test failures, i've
-   uploaded it to experimental with the tests in question disabled but I don't
-   want to upload to unstable until I have upstream's
-   opinion on the matter
+   uploaded it to experimental with the tests in question disabled and after
+   some discussion upstream and some testing of packages that use proptest
+   plan to do the same in unstable.
 rust-petgraph:
    Failed to port to new quickcheck, will probablly drop feature. Also seems to
    have issues running tests with no-default-features which will need to be
@@ -92,7 +107,7 @@ rust-quickcheck
 rust-statistical
    not in testing not investigated yet
 rust-rspotify
-   not in testing and broken in unstable
+   not in testing, broken in unstable I don't intend to touch this.
 rust-tempfile:
    tests passed after updating to 3.2.0 (3.3.0 has dependencies which can't be 
    satisfied without adding new packages)
@@ -107,11 +122,11 @@ rust-uuid
 Packages depending on rust-quickcheck
 
 rust-diesel
-  not in testing. not investigated yet
+  not in testing. many unsatisfiable dependencies (at least one not in Debian at all)
 rust-im-rc:
   patched for quickcheck at the same time as rand
 rust-num-bigint:
-  not in testing not investigated yet.
+   builds fine and tests pass after dropping Debian patches.
 rust-petgraph:
   Failed to port to new quickcheck, will probablly drop feature.
 
