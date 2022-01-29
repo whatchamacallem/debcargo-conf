@@ -1,17 +1,21 @@
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -28,7 +28,8 @@
+Index: parking-lot-core-0.4/Cargo.toml
+===================================================================
+--- parking-lot-core-0.4.orig/Cargo.toml
++++ parking-lot-core-0.4/Cargo.toml
+@@ -28,7 +28,8 @@ version = ">= 0.4.5, < 0.6"
  optional = true
  
  [dependencies.rand]
 -version = "0.6"
-+version = "0.7"
++version = "0.8"
 +features = ["small_rng"]
  
  [dependencies.smallvec]
  version = ">= 0.6, < 2"
---- a/src/parking_lot.rs
-+++ b/src/parking_lot.rs
+Index: parking-lot-core-0.4/src/parking_lot.rs
+===================================================================
+--- parking-lot-core-0.4.orig/src/parking_lot.rs
++++ parking-lot-core-0.4/src/parking_lot.rs
 @@ -6,7 +6,7 @@
  // copied, modified, or distributed except according to those terms.
  
@@ -21,3 +25,12 @@
  use smallvec::SmallVec;
  use std::cell::{Cell, UnsafeCell};
  use std::mem;
+@@ -107,7 +107,7 @@ impl FairTimeout {
+     fn should_timeout(&mut self) -> bool {
+         let now = Instant::now();
+         if now > self.timeout {
+-            self.timeout = now + Duration::new(0, self.rng.gen_range(0, 1000000));
++            self.timeout = now + Duration::new(0, self.rng.gen_range(0 .. 1000000));
+             true
+         } else {
+             false
