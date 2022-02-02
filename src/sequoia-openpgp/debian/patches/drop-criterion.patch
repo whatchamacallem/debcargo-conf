@@ -1,15 +1,22 @@
-Avoid testing dependency on criterion crate
+From db42cf4e61590cdb8ba29a5773c4df28c3c06f33 Mon Sep 17 00:00:00 2001
+From: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Date: Wed, 2 Feb 2022 02:52:23 -0500
+Subject: [PATCH 2/2] Avoid testing dependency on criterion crate
 
 Criterion is only needed for the benchmark tests, which are not run by
 debian's autopkgtests.
 
 I'm avoiding this dev-dependency in debian for now, because packaging
 all of the recursive dependencies of criterion is a complicated mess.
+---
+ Cargo.toml | 6 ------
+ 1 file changed, 6 deletions(-)
 
-
+diff --git a/Cargo.toml b/Cargo.toml
+index 542504b..8ad8202 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -33,9 +33,6 @@
+@@ -33,9 +33,6 @@ bench = false
  name = "pad"
  required-features = ["compression-deflate"]
  
@@ -19,13 +26,16 @@ all of the recursive dependencies of criterion is a complicated mess.
  [dependencies.anyhow]
  version = "1.0.18"
  
-@@ -96,9 +93,6 @@
- 
- [dependencies.unicode-normalization]
- version = "0.1.9"
+@@ -97,9 +94,6 @@ version = "1.0.2"
+ [dependencies.xxhash-rust]
+ version = "0.8"
+ features = ["xxh3"]
 -[dev-dependencies.criterion]
 -version = "0.3.4"
 -features = ["html_reports"]
  
  [dev-dependencies.quickcheck]
- version = "0.9"
+ version = "1"
+-- 
+2.34.1
+
