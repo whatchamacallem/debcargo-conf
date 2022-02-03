@@ -1,0 +1,40 @@
+Index: petgraph/benches/common/factories.rs
+===================================================================
+--- petgraph.orig/benches/common/factories.rs
++++ petgraph/benches/common/factories.rs
+@@ -237,14 +237,17 @@ pub fn digraph() -> GraphFactory<Directe
+     graph()
+ }
+ 
++#[cfg(feature = "stable_graph")]
+ pub fn stable_graph<Ty: EdgeType>() -> GraphFactory<Ty, StableGraph<(), (), Ty>> {
+     GraphFactory::new()
+ }
+ 
++#[cfg(feature = "stable_graph")]
+ pub fn stable_ungraph() -> GraphFactory<Undirected, StableGraph<(), (), Undirected>> {
+     stable_graph()
+ }
+ 
++#[cfg(feature = "stable_graph")]
+ pub fn stable_digraph() -> GraphFactory<Directed, StableGraph<(), (), Directed>> {
+     stable_graph()
+ }
+Index: petgraph/benches/stable_graph.rs
+===================================================================
+--- petgraph.orig/benches/stable_graph.rs
++++ petgraph/benches/stable_graph.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "stable_graph")]
+ #![feature(test)]
+ 
+ extern crate petgraph;
+Index: petgraph/benches/matrix_graph.rs
+===================================================================
+--- petgraph.orig/benches/matrix_graph.rs
++++ petgraph/benches/matrix_graph.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "matrix_graph")]
+ #![feature(test)]
+ 
+ extern crate petgraph;
