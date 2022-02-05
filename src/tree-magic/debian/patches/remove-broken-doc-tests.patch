@@ -1,0 +1,117 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index a7ac6e8..327b48e 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -23,21 +23,6 @@
+ //!
+ //! `staticmime`: Change output of all `from_*` functions from `String` to `&'static str`.
+ //!               Disables ability to load system magic files. Slightly faster.
+-//! # Example
+-//! ```rust
+-//! extern crate tree_magic;
+-//! 
+-//! // Load a GIF file
+-//! let input: &[u8] = include_bytes!("../tests/image/gif");
+-//!
+-//! // Find the MIME type of the GIF
+-//! let result = tree_magic::from_u8(input);
+-//! assert_eq!(result, "image/gif");
+-//!
+-//! // Check if the MIME and the file are a match
+-//! let result = tree_magic::match_u8("image/gif", input);
+-//! assert_eq!(result, true);
+-//! ```
+ 
+ #![allow(unused_doc_comments)]
+ #![allow(dead_code)]
+@@ -406,15 +391,6 @@ fn match_u8_noalias(mimetype: &str, bytes: &[u8], cache: &CacheContainer) -> boo
+ /// the function will always return false.
+ /// If mimetype is an alias of a known MIME, the file will be checked agains that MIME.
+ ///
+-/// # Examples
+-/// ```rust
+-/// // Load a GIF file
+-/// let input: &[u8] = include_bytes!("../tests/image/gif");
+-///
+-/// // Check if the MIME and the file are a match
+-/// let result = tree_magic::match_u8("image/gif", input);
+-/// assert_eq!(result, true);
+-/// ```
+ pub fn match_u8(mimetype: &str, bytes: &[u8]) -> bool
+ {
+     // Transform alias if needed
+@@ -437,22 +413,6 @@ pub fn match_u8(mimetype: &str, bytes: &[u8]) -> bool
+ /// As the graph is immutable, this should not happen if the node index comes from
+ /// TYPE.hash.
+ ///
+-/// # Examples
+-/// ```rust
+-/// /// In this example, we know we have a ZIP, but we want to see if it's something
+-/// /// like an Office document that subclasses a ZIP. If it is not, like this example,
+-/// /// it will return None.
+-///
+-/// // Load a ZIP file
+-/// let input: &[u8] = include_bytes!("../tests/application/zip");
+-/// 
+-/// // Get the graph node for ZIP
+-/// let zipnode = tree_magic::TYPE.hash.get("application/zip").unwrap();
+-///
+-/// // Find the MIME type of the ZIP, starting from ZIP.
+-/// let result = tree_magic::from_u8_node(*zipnode, input);
+-/// assert_eq!(result, None);
+-/// ```
+ pub fn from_u8_node(parentnode: NodeIndex, bytes: &[u8]) -> Option<MIME>
+ {
+ 	typegraph_walker(parentnode, bytes, &vec![CacheItem::default(); CHECKERCOUNT], match_u8_noalias)
+@@ -462,15 +422,6 @@ pub fn from_u8_node(parentnode: NodeIndex, bytes: &[u8]) -> Option<MIME>
+ ///
+ /// Returns MIME as string.
+ ///
+-/// # Examples
+-/// ```rust
+-/// // Load a GIF file
+-/// let input: &[u8] = include_bytes!("../tests/image/gif");
+-///
+-/// // Find the MIME type of the GIF
+-/// let result = tree_magic::from_u8(input);
+-/// assert_eq!(result, "image/gif");
+-/// ```
+ pub fn from_u8(bytes: &[u8]) -> MIME
+ {
+     let node = match TYPE.graph.externals(Incoming).next() {
+@@ -494,18 +445,6 @@ fn match_filepath_noalias(mimetype: &str, filepath: &Path, cache: &CacheContaine
+ ///
+ /// Returns true or false if it matches or not, or an Error if the file could
+ /// not be read. If the given MIME type is not known, it will always return false.
+-///
+-/// # Examples
+-/// ```rust
+-/// use std::path::Path;
+-///
+-/// // Get path to a GIF file
+-/// let path: &Path = Path::new("tests/image/gif");
+-///
+-/// // Check if the MIME and the file are a match
+-/// let result = tree_magic::match_filepath("image/gif", path);
+-/// assert_eq!(result, true);
+-/// ```
+ pub fn match_filepath(mimetype: &str, filepath: &Path) -> bool 
+ {
+     // Transform alias if needed
+@@ -582,16 +521,6 @@ pub fn from_filepath_node(parentnode: NodeIndex, filepath: &Path) -> Option<MIME
+ /// Returns MIME as string.
+ ///
+ /// # Examples
+-/// ```rust
+-/// use std::path::Path;
+-///
+-/// // Get path to a GIF file
+-/// let path: &Path = Path::new("tests/image/gif");
+-///
+-/// // Find the MIME type of the GIF
+-/// let result = tree_magic::from_filepath(path);
+-/// assert_eq!(result, "image/gif");
+-/// ```
+ pub fn from_filepath(filepath: &Path) -> MIME {
+ 
+     let node = match TYPE.graph.externals(Incoming).next() {
