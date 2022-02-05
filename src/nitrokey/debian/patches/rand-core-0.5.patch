@@ -1,0 +1,23 @@
+--- a/src/util.rs
++++ b/src/util.rs
+@@ -4,8 +4,7 @@
+ use std::os::raw::{c_char, c_int};
+ 
+ use libc::{c_void, free};
+-use rand_core::RngCore;
+-use rand_os::OsRng;
++use rand_core::{RngCore, OsRng};
+ 
+ /// Error types returned by Nitrokey device or by the library.
+ #[derive(Clone, Copy, Debug, PartialEq)]
+@@ -113,9 +112,8 @@
+ }
+ 
+ pub fn generate_password(length: usize) -> Result<Vec<u8>, CommandError> {
+-    let mut rng = OsRng::new()?;
+     let mut data = vec![0u8; length];
+-    rng.fill_bytes(&mut data[..]);
++    OsRng.fill_bytes(&mut data[..]);
+     Ok(data)
+ }
+ 
