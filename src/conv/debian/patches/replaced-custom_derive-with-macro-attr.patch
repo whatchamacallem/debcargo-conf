@@ -1,0 +1,249 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index f309bb1..5f81e2c 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -20,7 +20,7 @@ readme = "README.md"
+ keywords = ["from", "into", "conversion", "approximation"]
+ license = "MIT"
+ repository = "https://github.com/DanielKeep/rust-conv"
+-[dependencies.custom_derive]
+-version = "0.1.2"
++[dependencies.macro-attr]
++version = "0.2.0"
+ [dev-dependencies.quickcheck]
+ version = "0.2.21, < 0.2.25"
+diff --git a/src/errors.rs b/src/errors.rs
+index 9e005b0..026afdb 100644
+--- a/src/errors.rs
++++ b/src/errors.rs
+@@ -224,7 +224,7 @@ macro_rules! IntoInner {
+     };
+ }
+ 
+-custom_derive!{
++macro_attr!{
+     /**
+     A general error enumeration that subsumes all other conversion errors.
+ 
+@@ -232,16 +232,16 @@ custom_derive!{
+     */
+     #[derive(
+         Copy, Clone, Eq, PartialEq, Ord, PartialOrd,
+-        IntoInner, DummyDebug, FromNoError,
+-        EnumDesc(
++        IntoInner!, DummyDebug!, FromNoError!,
++        EnumDesc!(
+             NegOverflow => "conversion resulted in negative overflow",
+             PosOverflow => "conversion resulted in positive overflow",
+             Unrepresentable => "could not convert unrepresentable value",
+         ),
+-        FromName(Unrepresentable),
+-        FromName(NegOverflow),
+-        FromName(PosOverflow),
+-        FromRemap(RangeError(NegOverflow, PosOverflow))
++        FromName!(Unrepresentable),
++        FromName!(NegOverflow),
++        FromName!(PosOverflow),
++        FromRemap!(RangeError(NegOverflow, PosOverflow))
+     )]
+     pub enum GeneralError<T> {
+         /// Input was too negative for the target type.
+@@ -268,7 +268,7 @@ impl<T> From<FloatError<T>> for GeneralError<T> {
+     }
+ }
+ 
+-custom_derive! {
++macro_attr! {
+     /**
+     A general error enumeration that subsumes all other conversion errors, but discards all input payloads the errors may be carrying.
+ 
+@@ -276,18 +276,18 @@ custom_derive! {
+     */
+     #[derive(
+         Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug,
+-        FromNoError,
+-        EnumDesc(
++        FromNoError!,
++        EnumDesc!(
+             NegOverflow => "conversion resulted in negative overflow",
+             PosOverflow => "conversion resulted in positive overflow",
+             Unrepresentable => "could not convert unrepresentable value",
+         ),
+-        FromName(Unrepresentable<T>),
+-        FromName(NegOverflow<T>),
+-        FromName(PosOverflow<T>),
+-        FromRemap(RangeErrorKind(NegOverflow, PosOverflow)),
+-        FromRemap(RangeError<T>(NegOverflow, PosOverflow)),
+-        FromRemap(GeneralError<T>(NegOverflow, PosOverflow, Unrepresentable))
++        FromName!(Unrepresentable<T>),
++        FromName!(NegOverflow<T>),
++        FromName!(PosOverflow<T>),
++        FromRemap!(RangeErrorKind(NegOverflow, PosOverflow)),
++        FromRemap!(RangeError<T>(NegOverflow, PosOverflow)),
++        FromRemap!(GeneralError<T>(NegOverflow, PosOverflow, Unrepresentable))
+     )]
+     pub enum GeneralErrorKind {
+         /// Input was too negative for the target type.
+@@ -334,51 +334,51 @@ impl Error for NoError {
+     }
+ }
+ 
+-custom_derive! {
++macro_attr! {
+     /// Indicates that the conversion failed because the value was not representable.
+     #[derive(
+         Copy, Clone, Eq, PartialEq, Ord, PartialOrd,
+-        IntoInner, DummyDebug, FromNoError,
+-        Desc("could not convert unrepresentable value")
++        IntoInner!, DummyDebug!, FromNoError!,
++        Desc!("could not convert unrepresentable value")
+     )]
+     pub struct Unrepresentable<T>(pub T);
+ }
+ 
+-custom_derive! {
++macro_attr! {
+     /// Indicates that the conversion failed due to a negative overflow.
+     #[derive(
+         Copy, Clone, Eq, PartialEq, Ord, PartialOrd,
+-        IntoInner, DummyDebug, FromNoError,
+-        Desc("conversion resulted in negative overflow")
++        IntoInner!, DummyDebug!, FromNoError!,
++        Desc!("conversion resulted in negative overflow")
+     )]
+     pub struct NegOverflow<T>(pub T);
+ }
+ 
+-custom_derive! {
++macro_attr! {
+     /// Indicates that the conversion failed due to a positive overflow.
+     #[derive(
+         Copy, Clone, Eq, PartialEq, Ord, PartialOrd,
+-        IntoInner, DummyDebug, FromNoError,
+-        Desc("conversion resulted in positive overflow")
++        IntoInner!, DummyDebug!, FromNoError!,
++        Desc!("conversion resulted in positive overflow")
+     )]
+     pub struct PosOverflow<T>(pub T);
+ }
+ 
+-custom_derive! {
++macro_attr! {
+     /**
+     Indicates that a conversion from a floating point type failed.
+     */
+     #[derive(
+         Copy, Clone, Eq, PartialEq, Ord, PartialOrd,
+-        IntoInner, DummyDebug, FromNoError,
+-        EnumDesc(
++        IntoInner!, DummyDebug!, FromNoError!,
++        EnumDesc!(
+             NegOverflow => "conversion resulted in negative overflow",
+             PosOverflow => "conversion resulted in positive overflow",
+             NotANumber => "conversion target does not support not-a-number",
+         ),
+-        FromName(NegOverflow),
+-        FromName(PosOverflow),
+-        FromRemap(RangeError(NegOverflow, PosOverflow))
++        FromName!(NegOverflow),
++        FromName!(PosOverflow),
++        FromRemap!(RangeError(NegOverflow, PosOverflow))
+     )]
+     pub enum FloatError<T> {
+         /// Input was too negative for the target type.
+@@ -392,19 +392,19 @@ custom_derive! {
+     }
+ }
+ 
+-custom_derive! {
++macro_attr! {
+     /**
+     Indicates that a conversion failed due to a range error.
+     */
+     #[derive(
+         Copy, Clone, Eq, PartialEq, Ord, PartialOrd,
+-        IntoInner, DummyDebug, FromNoError,
+-        EnumDesc(
++        IntoInner!, DummyDebug!, FromNoError!,
++        EnumDesc!(
+             NegOverflow => "conversion resulted in negative overflow",
+             PosOverflow => "conversion resulted in positive overflow",
+         ),
+-        FromName(NegOverflow),
+-        FromName(PosOverflow)
++        FromName!(NegOverflow),
++        FromName!(PosOverflow)
+     )]
+     pub enum RangeError<T> {
+         /// Input was too negative for the target type.
+@@ -415,7 +415,7 @@ custom_derive! {
+     }
+ }
+ 
+-custom_derive! {
++macro_attr! {
+     /**
+     Indicates that a conversion failed due to a range error.
+ 
+@@ -423,14 +423,14 @@ custom_derive! {
+     */
+     #[derive(
+         Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug,
+-        FromNoError,
+-        EnumDesc(
++        FromNoError!,
++        EnumDesc!(
+             NegOverflow => "conversion resulted in negative overflow",
+             PosOverflow => "conversion resulted in positive overflow",
+         ),
+-        FromName(NegOverflow<T>),
+-        FromName(PosOverflow<T>),
+-        FromRemap(RangeError<T>(NegOverflow, PosOverflow))
++        FromName!(NegOverflow<T>),
++        FromName!(PosOverflow<T>),
++        FromRemap!(RangeError<T>(NegOverflow, PosOverflow))
+     )]
+     pub enum RangeErrorKind {
+         /// Input was too negative for the target type.
+diff --git a/src/lib.rs b/src/lib.rs
+index 195b8d1..a05e73c 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -204,7 +204,8 @@ fn too_many_errors() -> Result<(), GeneralErrorKind> {
+ 
+ #![deny(missing_docs)]
+ 
+-#[macro_use] extern crate custom_derive;
++#[macro_use]
++extern crate macro_attr;
+ 
+ // Exported macros.
+ pub mod macros;
+diff --git a/src/macros.rs b/src/macros.rs
+index f0609ec..d9643d8 100644
+--- a/src/macros.rs
++++ b/src/macros.rs
+@@ -13,18 +13,18 @@ This macro attempts to derive an implementation of the [`TryFrom`](../trait.TryF
+ 
+ If a conversion fails (due to there being no matching variant for the specified integer value `src`), then the conversion returns `Err(Unrepresentable(src))` (see [`Unrepresentable`](../errors/struct.Unrepresentable.html)).
+ 
+-It is compatible with the [`custom_derive!`](https://crates.io/crates/custom_derive) macro.
++It is compatible with the [`macro_attr!`](https://crates.io/crates/macro_attr) macro.
+ 
+ ## Example
+ 
+-Using `custom_derive!`:
++Using `macro_attr!`:
+ 
+ ```
+ #[macro_use] extern crate conv;
+-#[macro_use] extern crate custom_derive;
++#[macro_use] extern crate macro_attr;
+ 
+-custom_derive! {
+-    #[derive(Debug, PartialEq, TryFrom(i32))]
++macro_attr! {
++    #[derive(Debug, PartialEq, TryFrom!(i32))]
+     enum Colours {
+         Red = 0,
+         Green = 5,
