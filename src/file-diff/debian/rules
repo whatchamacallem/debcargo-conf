@@ -5,6 +5,15 @@ include /usr/share/dpkg/pkg-info.mk
 %:
 	dh $@ --buildsystem cargo
 
+override_dh_auto_install:
+	dh_auto_install
+	# These files are x86_64 binaries without source code, so no DFSG compatible
+	# Thus, tests using them on non x86_64 fail
+	find . -name 'rust_hello' -delete
+	find . -name 'c_hello' -delete
+	find . -name 'c_hello_copy' -delete
+	find . -type d -empty -delete
+
 override_dh_dwz:
 	# Don't do anything. fails because of the
 	# https://github.com/rust-lang/rust/issues/66118
