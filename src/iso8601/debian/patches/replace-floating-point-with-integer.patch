@@ -13,7 +13,7 @@ Index: iso8601/src/parsers.rs
 ===================================================================
 --- iso8601.orig/src/parsers.rs
 +++ iso8601/src/parsers.rs
-@@ -100,14 +100,6 @@ fn sign(i: &[u8]) -> IResult<&[u8], i32>
+@@ -101,14 +101,6 @@ fn sign(i: &[u8]) -> IResult<&[u8], i32>
      })(i)
  }
  
@@ -28,7 +28,7 @@ Index: iso8601/src/parsers.rs
  // DATE
  
  // [+/-]YYYY
-@@ -211,8 +203,25 @@ fn time_second(i: &[u8]) -> IResult<&[u8
+@@ -204,8 +196,25 @@ fn time_second(i: &[u8]) -> IResult<&[u8
      n_digit_in_range(i, 2, 0..=60)
  }
  
@@ -56,16 +56,16 @@ Index: iso8601/src/parsers.rs
  }
  
  // HH:MM:[SS][.(m*)][(Z|+...|-...)]
-@@ -221,7 +230,7 @@ pub fn parse_time(i: &[u8]) -> IResult<&
-     let (i, _) = opt(tag(b":"))(i)?;
-     let (i, m) = time_minute(i)?;
-     let (i, s) = opt(preceded(opt(tag(b":")), time_second))(i)?;
--    let (i, ms) = opt(map(preceded(one_of(",."), fractions), time_millisecond))(i)?;
-+    let (i, ms) = opt(preceded(one_of(",."), time_millisecond))(i)?;
-     let (i, z) = match opt(alt((timezone_hour, timezone_utc)))(i) {
-         Ok(ok) => ok,
-         Err(nom::Err::Incomplete(_)) => (i, None),
-@@ -304,13 +313,30 @@ fn duration_minute(i: &[u8]) -> IResult<
+@@ -216,7 +225,7 @@ pub fn parse_time(i: &[u8]) -> IResult<&
+             opt(tag(b":")),                                                // :
+             time_minute,                                                   // MM
+             opt(preceded(opt(tag(b":")), time_second)),                    // [SS]
+-            opt(map(preceded(one_of(",."), fractions), time_millisecond)), // [.(m*)]
++            opt(preceded(one_of(",."), time_millisecond)),                 // [.(m*)]
+             opt(alt((timezone_hour, timezone_utc))),                       // [(Z|+...|-...)]
+         )),
+         |(h, _, m, s, ms, z)| {
+@@ -288,13 +297,30 @@ fn duration_minute(i: &[u8]) -> IResult<
  // S[S][[,.][MS]]
  fn duration_second_and_millisecond(i: &[u8]) -> IResult<&[u8], (u32, u32)> {
      let (i, s) = m_to_n_digit_in_range(i, 1, 2, 0..=60)?;
