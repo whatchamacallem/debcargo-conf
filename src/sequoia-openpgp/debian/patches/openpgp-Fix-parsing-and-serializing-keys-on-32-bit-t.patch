@@ -1,0 +1,148 @@
+From 827ee8254d194106809aea25090921c8d7802de7 Mon Sep 17 00:00:00 2001
+From: Justus Winter <justus@sequoia-pgp.org>
+Date: Fri, 21 Jan 2022 15:42:59 +0100
+Subject: [PATCH] openpgp: Fix parsing and serializing keys on 32-bit time_t
+ systems.
+
+  - Previously, during parsing and serialization, OpenPGP's unsigned
+    32-bit timestamps were converted to Rust's SystemTime, which uses
+    time_t.  On platforms where that is a signed 32-bit value, the time
+    was truncated.  See #668.
+
+  - One way to fix that is to make Rust's SystemTime independent of
+    time_t.  See https://github.com/rust-lang/rust/issues/44394.
+
+  - The other way is not to convert to SystemTime at the API
+    boundary.  See
+    https://gitlab.com/sequoia-pgp/sequoia/-/issues/806.
+
+  - This fixes handling during parsing and serialization, but doesn't
+    address the API issue.
+
+  - Fixes #802.
+---
+ src/packet/key.rs | 37 +++++++++++++++++++++++++++++++++++++
+ src/packet/mod.rs | 15 +++++++++++++++
+ src/parse.rs      |  6 ++----
+ src/serialize.rs  |  2 +-
+ 4 files changed, 55 insertions(+), 5 deletions(-)
+
+diff --git a/src/packet/key.rs b/src/packet/key.rs
+index 4ddb1aeb..dd5c9c7c 100644
+--- a/src/packet/key.rs
++++ b/src/packet/key.rs
+@@ -915,6 +915,35 @@ impl<P, R> Key4<P, R>
+     }
+ }
+ 
++impl<P, R> Key4<P, R>
++where
++    P: key::KeyParts,
++    R: key::KeyRole,
++{
++    /// Creates an OpenPGP public key from the specified key material.
++    ///
++    /// This is an internal version for parse.rs that avoids going
++    /// through SystemTime.
++    pub(crate) fn make<T>(creation_time: T,
++                          pk_algo: PublicKeyAlgorithm,
++                          mpis: mpi::PublicKey,
++                          secret: Option<SecretKeyMaterial>)
++                          -> Result<Self>
++    where
++        T: Into<Timestamp>,
++    {
++        Ok(Key4 {
++            common: Default::default(),
++            creation_time: creation_time.into(),
++            pk_algo,
++            mpis,
++            secret,
++            p: std::marker::PhantomData,
++            r: std::marker::PhantomData,
++        })
++    }
++}
++
+ impl<R> Key4<key::PublicParts, R>
+     where R: key::KeyRole,
+ {
+@@ -1035,6 +1064,14 @@ impl<P, R> Key4<P, R>
+         self.creation_time.into()
+     }
+ 
++    /// Gets the `Key`'s creation time without converting it to a
++    /// system time.
++    ///
++    /// This conversion may truncate the time to signed 32-bit time_t.
++    pub(crate) fn creation_time_raw(&self) -> Timestamp {
++        self.creation_time
++    }
++
+     /// Sets the `Key`'s creation time.
+     ///
+     /// `timestamp` is converted to OpenPGP's internal format,
+diff --git a/src/packet/mod.rs b/src/packet/mod.rs
+index e33ee469..edae051f 100644
+--- a/src/packet/mod.rs
++++ b/src/packet/mod.rs
+@@ -2010,4 +2010,19 @@ mod test {
+             }
+         }
+     }
++
++    /// Problem on systems with 32-bit time_t.
++    #[test]
++    fn issue_802() -> Result<()> {
++        let pp = crate::PacketPile::from_bytes(b"-----BEGIN PGP ARMORED FILE-----
++
++xiEE/////xIJKyQDAwIIAQENAFYp8M2JngCfc04tIwMBCuU=
++-----END PGP ARMORED FILE-----
++")?;
++        let p = pp.path_ref(&[0]).unwrap();
++        let buf = p.to_vec().expect("Failed to serialize packet");
++        let q = Packet::from_bytes(&buf).unwrap();
++        assert_eq!(p, &q);
++        Ok(())
++    }
+ }
+diff --git a/src/parse.rs b/src/parse.rs
+index 3afc077c..d1b5a440 100644
+--- a/src/parse.rs
++++ b/src/parse.rs
+@@ -2229,8 +2229,7 @@ impl Key4<key::UnspecifiedParts, key::UnspecifiedRole>
+             -> Result<Key4<key::PublicParts, R>>
+             where R: key::KeyRole
+         {
+-            Key4::new(Timestamp::from(creation_time),
+-                      pk_algo, mpis)
++            Key4::make(creation_time, pk_algo, mpis, None)
+         }
+         fn s<R>(creation_time: u32,
+                 pk_algo: PublicKeyAlgorithm,
+@@ -2239,8 +2238,7 @@ impl Key4<key::UnspecifiedParts, key::UnspecifiedRole>
+             -> Result<Key4<key::SecretParts, R>>
+             where R: key::KeyRole
+         {
+-            Key4::with_secret(Timestamp::from(creation_time),
+-                              pk_algo, mpis, secret)
++            Key4::make(creation_time, pk_algo, mpis, Some(secret))
+         }
+ 
+         let tag = php.header.ctb().tag();
+diff --git a/src/serialize.rs b/src/serialize.rs
+index 08b9cc40..6656e439 100644
+--- a/src/serialize.rs
++++ b/src/serialize.rs
+@@ -1807,7 +1807,7 @@ impl<P, R> Marshal for Key4<P, R>
+         let have_secret_key = P::significant_secrets() && self.has_secret();
+ 
+         write_byte(o, 4)?; // Version.
+-        write_be_u32(o, Timestamp::try_from(self.creation_time())?.into())?;
++        write_be_u32(o, self.creation_time_raw().into())?;
+         write_byte(o, self.pk_algo().into())?;
+         self.mpis().serialize(o)?;
+ 
+-- 
+2.34.1
+
