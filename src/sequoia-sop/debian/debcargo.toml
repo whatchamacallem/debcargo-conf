@@ -20,3 +20,16 @@ build_depends = ["bash-completion"]
 
 [packages.bin]
 section = "utils"
+
+# all feature-specific sequoia openpgp tests will fail unless one
+# crypto-* feature is included.  This issue stems from choices made in
+# the sequoia-openpgp crate.
+# See https://bugs.debian.org/985741 for more info.
+[packages.lib]
+test_is_broken = true
+[packages."lib+crypto-nettle"]
+test_is_broken = false
+[packages."lib+default"]
+test_is_broken = false
+[packages."lib+@"]
+test_is_broken = false
