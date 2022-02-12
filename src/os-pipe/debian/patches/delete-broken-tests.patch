@@ -1,0 +1,92 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index a65e7d7..8ff01e5 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -370,87 +370,6 @@ mod tests {
+         assert_eq!(out, data);
+     }
+ 
+-    #[test]
+-    fn test_pipes_are_not_inheritable() {
+-        // Create pipes for a child process.
+-        let (input_reader, mut input_writer) = crate::pipe().unwrap();
+-        let (mut output_reader, output_writer) = crate::pipe().unwrap();
+-
+-        // Create a bunch of duplicated copies, which we'll close later. This
+-        // tests that duplication preserves non-inheritability.
+-        let ir_dup = input_reader.try_clone().unwrap();
+-        let iw_dup = input_writer.try_clone().unwrap();
+-        let or_dup = output_reader.try_clone().unwrap();
+-        let ow_dup = output_writer.try_clone().unwrap();
+-
+-        // Spawn the child. Note that this temporary Command object takes
+-        // ownership of our copies of the child's stdin and stdout, and then
+-        // closes them immediately when it drops. That stops us from blocking
+-        // our own read below. We use our own simple implementation of cat for
+-        // compatibility with Windows.
+-        let mut child = Command::new(path_to_exe("cat"))
+-            .stdin(input_reader)
+-            .stdout(output_writer)
+-            .spawn()
+-            .unwrap();
+-
+-        // Drop all the dups now that the child is spawned.
+-        drop(ir_dup);
+-        drop(iw_dup);
+-        drop(or_dup);
+-        drop(ow_dup);
+-
+-        // Write to the child's stdin. This is a small write, so it shouldn't
+-        // block.
+-        input_writer.write_all(b"hello").unwrap();
+-        drop(input_writer);
+-
+-        // Read from the child's stdout. If this child has accidentally
+-        // inherited the write end of its own stdin, then it will never exit,
+-        // and this read will block forever. That's what this test is all
+-        // about.
+-        let mut output = Vec::new();
+-        output_reader.read_to_end(&mut output).unwrap();
+-        child.wait().unwrap();
+-
+-        // Confirm that we got the right bytes.
+-        assert_eq!(b"hello", &*output);
+-    }
+-
+-    #[test]
+-    fn test_parent_handles() {
+-        // This test invokes the `swap` test program, which uses parent_stdout() and
+-        // parent_stderr() to swap the outputs for another child that it spawns.
+-
+-        // Create pipes for a child process.
+-        let (reader, mut writer) = crate::pipe().unwrap();
+-
+-        // Write input. This shouldn't block because it's small. Then close the write end, or else
+-        // the child will hang.
+-        writer.write_all(b"quack").unwrap();
+-        drop(writer);
+-
+-        // Use `swap` to run `cat_both`. `cat_both will read "quack" from stdin
+-        // and write it to stdout and stderr with different tags. But because we
+-        // run it inside `swap`, the tags in the output should be backwards.
+-        let output = Command::new(path_to_exe("swap"))
+-            .arg(path_to_exe("cat_both"))
+-            .stdin(reader)
+-            .output()
+-            .unwrap();
+-
+-        // Check for a clean exit.
+-        assert!(
+-            output.status.success(),
+-            "child process returned {:#?}",
+-            output
+-        );
+-
+-        // Confirm that we got the right bytes.
+-        assert_eq!(b"stderr: quack", &*output.stdout);
+-        assert_eq!(b"stdout: quack", &*output.stderr);
+-    }
+-
+     #[test]
+     fn test_parent_handles_dont_close() {
+         // Open and close each parent pipe multiple times. If this closes the
