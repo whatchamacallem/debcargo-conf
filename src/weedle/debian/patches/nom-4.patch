@@ -1,0 +1,563 @@
+This patch reverts from nom 5 to nom 4, porting to nom 7 seems to be non-trivial
+and I (Peter Green) don't want to further increase the number of versions of the
+nom package in Debian. 
+
+It is based on a revert of upstream commit 29a11888d30ba13b8736d59bf557456c8cca75b4
+adapted for use in the Debian package.
+
+Index: weedle/.travis.yml
+===================================================================
+--- weedle.orig/.travis.yml
++++ weedle/.travis.yml
+@@ -1,6 +1,6 @@
+ language: rust
+ rust:
+-    stable
++    nightly
+ cache: cargo
+ script:
+-    - cargo test
++    - cargo test
+\ No newline at end of file
+Index: weedle/src/common.rs
+===================================================================
+--- weedle.orig/src/common.rs
++++ weedle/src/common.rs
+@@ -87,7 +87,7 @@ ast_types! {
+                 take_while!(|c: char| c.is_ascii_alphanumeric() || c == '_' || c == '-') >>
+                 (())
+             )) >>
+-            (id)
++            (id.0)
+         )),
+     )
+ 
+Index: weedle/src/lib.rs
+===================================================================
+--- weedle.orig/src/lib.rs
++++ weedle/src/lib.rs
+@@ -24,36 +24,25 @@
+ // need a higher recusion limit for macros
+ #![recursion_limit = "128"]
+ 
+-#[macro_use(
+-    alt,
+-    cond,
+-    do_parse,
+-    map,
+-    many0,
+-    opt,
+-    recognize,
+-    separated_list,
+-    separated_nonempty_list,
+-    terminated
+-)]
++#[macro_use]
+ extern crate nom;
+ 
+-use self::argument::ArgumentList;
+-use self::attribute::ExtendedAttributeList;
+-use self::common::{Braced, Identifier, Parenthesized, PunctuatedNonEmpty};
+-use self::dictionary::DictionaryMembers;
+-use self::interface::{Inheritance, InterfaceMembers};
+-use self::literal::StringLit;
+-use self::mixin::MixinMembers;
+-use self::namespace::NamespaceMembers;
+-use self::types::{AttributedType, ReturnType};
+-pub use nom::{error::ErrorKind, Err, IResult};
++use argument::ArgumentList;
++use attribute::ExtendedAttributeList;
++use common::{Braced, Identifier, Parenthesized, PunctuatedNonEmpty};
++use dictionary::DictionaryMembers;
++use interface::{Inheritance, InterfaceMembers};
++use literal::StringLit;
++use mixin::MixinMembers;
++use namespace::NamespaceMembers;
++pub use nom::{types::CompleteStr, Err, Context, IResult};
++use types::{AttributedType, ReturnType};
+ 
+ #[macro_use]
+-mod macros;
+-#[macro_use]
+ mod whitespace;
+ #[macro_use]
++mod macros;
++#[macro_use]
+ pub mod term;
+ pub mod argument;
+ pub mod attribute;
+@@ -80,30 +69,30 @@ pub mod types;
+ ///
+ /// println!("{:?}", parsed);
+ /// ```
+-pub fn parse(raw: &str) -> Result<Definitions<'_>, Err<(&str, ErrorKind)>> {
+-    let (remaining, parsed) = Definitions::parse(raw)?;
+-    assert!(
+-        remaining.is_empty(),
+-        "There is redundant raw data after parsing"
+-    );
+-    Ok(parsed)
++pub fn parse<'a>(raw: &'a str) -> Result<Definitions<'a>, Err<CompleteStr<'a>, u32>> {
++    let (remaining, parsed) = Definitions::parse(CompleteStr(raw))?;
++    if remaining.len() > 0 {
++        Result::Err(Err::Failure(nom::Context::Code(remaining, nom::ErrorKind::Custom(0))))
++    } else {
++        Ok(parsed)
++    }
+ }
+ 
+ pub trait Parse<'a>: Sized {
+-    fn parse(input: &'a str) -> IResult<&'a str, Self>;
++    fn parse(input: CompleteStr<'a>) -> IResult<CompleteStr<'a>, Self>;
+ }
+ 
+ /// Parses WebIDL definitions. It is the root struct for a complete WebIDL definition.
+ ///
+ /// ### Example
+ /// ```
+-/// use weedle::{Definitions, Parse};
++/// use weedle::{Definitions, CompleteStr, Parse};
+ ///
+-/// let (_, parsed) = Definitions::parse("
++/// let (_, parsed) = Definitions::parse(CompleteStr("
+ ///     interface Window {
+ ///         readonly attribute Storage sessionStorage;
+ ///     };
+-/// ").unwrap();
++/// ")).unwrap();
+ ///
+ /// println!("{:?}", parsed);
+ /// ```
+Index: weedle/src/literal.rs
+===================================================================
+--- weedle.orig/src/literal.rs
++++ weedle/src/literal.rs
+@@ -5,33 +5,42 @@ ast_types! {
+         /// Parses `-?[1-9][0-9]*`
+         #[derive(Copy)]
+         Dec(struct DecLit<'a>(
+-            &'a str = ws!(recognize!(do_parse!(
+-                opt!(char!('-')) >>
+-                one_of!("123456789") >>
+-                take_while!(|c: char| c.is_ascii_digit()) >>
+-                (())
+-            ))),
++            &'a str = map!(
++                ws!(recognize!(do_parse!(
++                    opt!(char!('-')) >>
++                    one_of!("123456789") >>
++                    take_while!(|c: char| c.is_ascii_digit()) >>
++                    (())
++                ))),
++                |inner| inner.0
++            ),
+         )),
+         /// Parses `-?0[Xx][0-9A-Fa-f]+)`
+         #[derive(Copy)]
+         Hex(struct HexLit<'a>(
+-            &'a str = ws!(recognize!(do_parse!(
+-                opt!(char!('-')) >>
+-                char!('0') >>
+-                alt!(char!('x') | char!('X')) >>
+-                take_while!(|c: char| c.is_ascii_hexdigit()) >>
+-                (())
+-            ))),
++            &'a str = map!(
++                ws!(recognize!(do_parse!(
++                    opt!(char!('-')) >>
++                    char!('0') >>
++                    alt!(char!('x') | char!('X')) >>
++                    take_while!(|c: char| c.is_ascii_hexdigit()) >>
++                    (())
++                ))),
++                |inner| inner.0
++            ),
+         )),
+         /// Parses `-?0[0-7]*`
+         #[derive(Copy)]
+         Oct(struct OctLit<'a>(
+-            &'a str = ws!(recognize!(do_parse!(
+-                opt!(char!('-')) >>
+-                char!('0') >>
+-                take_while!(|c| '0' <= c && c <= '7') >>
+-                (())
+-            ))),
++            &'a str = map!(
++                ws!(recognize!(do_parse!(
++                    opt!(char!('-')) >>
++                    char!('0') >>
++                    take_while!(|c| '0' <= c && c <= '7') >>
++                    (())
++                ))),
++                |inner| inner.0
++            ),
+         )),
+     }
+ 
+@@ -44,7 +53,7 @@ ast_types! {
+             char!('"') >>
+             s: take_while!(|c| c != '"') >>
+             char!('"') >>
+-            (s)
++            (s.0)
+         )),
+     )
+ 
+@@ -94,47 +103,50 @@ ast_types! {
+         /// Parses `/-?(([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)([Ee][+-]?[0-9]+)?|[0-9]+[Ee][+-]?[0-9]+)/`
+         #[derive(Copy)]
+         Value(struct FloatValueLit<'a>(
+-            &'a str = ws!(recognize!(do_parse!(
+-                opt!(char!('-')) >>
+-                alt!(
+-                    do_parse!(
+-                        // (?:[0-9]+\.[0-9]*|[0-9]*\.[0-9]+)
+-                        alt!(
+-                            do_parse!(
++            &'a str = map!(
++                ws!(recognize!(do_parse!(
++                    opt!(char!('-')) >>
++                    alt!(
++                        do_parse!(
++                            // (?:[0-9]+\.[0-9]*|[0-9]*\.[0-9]+)
++                            alt!(
++                                do_parse!(
++                                    take_while1!(|c: char| c.is_ascii_digit()) >>
++                                    char!('.') >>
++                                    take_while!(|c: char| c.is_ascii_digit()) >>
++                                    (())
++                                )
++                                |
++                                do_parse!(
++                                    take_while!(|c: char| c.is_ascii_digit()) >>
++                                    char!('.') >>
++                                    take_while1!(|c: char| c.is_ascii_digit()) >>
++                                    (())
++                                )
++                            ) >>
++                            // (?:[Ee][+-]?[0-9]+)?
++                            opt!(do_parse!(
++                                alt!(char!('e') | char!('E')) >>
++                                opt!(alt!(char!('+') | char!('-'))) >>
+                                 take_while1!(|c: char| c.is_ascii_digit()) >>
+-                                char!('.') >>
+-                                take_while!(|c: char| c.is_ascii_digit()) >>
+                                 (())
+-                            )
+-                            |
+-                            do_parse!(
+-                                take_while!(|c: char| c.is_ascii_digit()) >>
+-                                char!('.') >>
+-                                take_while1!(|c: char| c.is_ascii_digit()) >>
+-                                (())
+-                            )
+-                        ) >>
+-                        // (?:[Ee][+-]?[0-9]+)?
+-                        opt!(do_parse!(
++                            )) >>
++                            (())
++                        )
++                        |
++                        // [0-9]+[Ee][+-]?[0-9]+
++                        do_parse!(
++                            take_while1!(|c: char| c.is_ascii_digit()) >>
+                             alt!(char!('e') | char!('E')) >>
+                             opt!(alt!(char!('+') | char!('-'))) >>
+                             take_while1!(|c: char| c.is_ascii_digit()) >>
+                             (())
+-                        )) >>
+-                        (())
+-                    )
+-                    |
+-                    // [0-9]+[Ee][+-]?[0-9]+
+-                    do_parse!(
+-                        take_while1!(|c: char| c.is_ascii_digit()) >>
+-                        alt!(char!('e') | char!('E')) >>
+-                        opt!(alt!(char!('+') | char!('-'))) >>
+-                        take_while1!(|c: char| c.is_ascii_digit()) >>
+-                        (())
+-                    )
+-                ) >>
+-                (())
+-            ))),
++                        )
++                    ) >>
++                    (())
++                ))),
++                |inner| inner.0
++            ),
+         )),
+         NegInfinity(term!(-Infinity)),
+         Infinity(term!(Infinity)),
+Index: weedle/src/macros.rs
+===================================================================
+--- weedle.orig/src/macros.rs
++++ weedle/src/macros.rs
+@@ -1,48 +1,6 @@
+-macro_rules! tag {
+-    ($i:expr, $tag: expr) => {
+-        nom::bytes::complete::tag($tag)($i)
+-    };
+-}
+-
+-macro_rules! take_while {
+-    ($input:expr, $submac:ident!( $($args:tt)* )) => {
+-        $crate::macros::take_while!($input, (|c| $submac!(c, $($args)*)))
+-    };
+-    ($input:expr, $f:expr) => {
+-        nom::bytes::complete::take_while($f)($input)
+-    };
+-}
+-
+-macro_rules! take_while1 {
+-    ($input:expr, $submac:ident!( $($args:tt)* )) => {
+-        $crate::macros::take_while1!($input, (|c| $submac!(c, $($args)*)))
+-    };
+-    ($input:expr, $f:expr) => {
+-        nom::bytes::complete::take_while1($f)($input)
+-    };
+-}
+-
+-macro_rules! take_until {
+-    ($i:expr, $substr:expr) => {
+-        nom::bytes::complete::take_until($substr)($i)
+-    };
+-}
+-
+-macro_rules! one_of {
+-    ($i:expr, $inp: expr) => {
+-        nom::character::complete::one_of($inp)($i)
+-    };
+-}
+-
+-macro_rules! char {
+-    ($i:expr, $c: expr) => {
+-        nom::character::complete::char($c)($i)
+-    };
+-}
+-
+ macro_rules! parser {
+     ($submac:ident!( $($args:tt)* )) => {
+-        fn parse(input: &'a str) -> $crate::IResult<&'a str, Self> {
++        fn parse(input: $crate::CompleteStr<'a>) -> $crate::IResult<$crate::CompleteStr<'a>, Self> {
+             $submac!(input, $($args)*)
+         }
+     };
+@@ -192,7 +150,7 @@ macro_rules! __ast_tuple_struct {
+         pub struct $name<$($maybe_a)*>(pub $inner);
+ 
+         impl<'a> $crate::Parse<'a> for $name<$($maybe_a)*> {
+-            fn parse(input: &'a str) -> $crate::IResult<&'a str, Self> {
++            fn parse(input: $crate::CompleteStr<'a>) -> $crate::IResult<$crate::CompleteStr<'a>, Self> {
+                 use $crate::nom::lib::std::result::Result::*;
+ 
+                 match $submac!(input, $($args)*) {
+@@ -330,7 +288,7 @@ macro_rules! __ast_struct {
+         }
+ 
+         impl<'a> $crate::Parse<'a> for $name {
+-            fn parse(input: &'a str) -> $crate::IResult<&'a str, Self> {
++            fn parse(input: $crate::CompleteStr<'a>) -> $crate::IResult<$crate::CompleteStr<'a>, Self> {
+                 __ast_struct! {
+                     @build_parser
+                     { input, }
+@@ -358,7 +316,7 @@ macro_rules! __ast_struct {
+         }
+ 
+         impl<'a> $crate::Parse<'a> for $name<'a> {
+-            fn parse(input: &'a str) -> $crate::IResult<&'a str, Self> {
++            fn parse(input: $crate::CompleteStr<'a>) -> $crate::IResult<$crate::CompleteStr<'a>, Self> {
+                 __ast_struct! {
+                     @build_parser
+                     { input, }
+@@ -386,7 +344,7 @@ macro_rules! __ast_struct {
+         }
+ 
+         impl<'a, $($generics),+> $crate::Parse<'a> for $name<$($generics),+> where $($bounds)+ {
+-            fn parse(input: &'a str) -> $crate::IResult<&'a str, Self> {
++            fn parse(input: $crate::CompleteStr<'a>) -> $crate::IResult<$crate::CompleteStr<'a>, Self> {
+                 __ast_struct! {
+                     @build_parser
+                     { input, }
+@@ -569,22 +527,22 @@ macro_rules! test {
+     (err $name:ident { $raw:expr => $typ:ty }) => {
+         #[test]
+         fn $name() {
+-            <$typ>::parse($raw).unwrap_err();
++            <$typ>::parse($crate::nom::types::CompleteStr($raw)).unwrap_err();
+         }
+     };
+     ($name:ident { $raw:expr => $rem:expr; $typ:ty => $val:expr }) => {
+         #[test]
+         fn $name() {
+-            let (rem, parsed) = <$typ>::parse($raw).unwrap();
+-            assert_eq!(rem, $rem);
++            let (rem, parsed) = <$typ>::parse($crate::nom::types::CompleteStr($raw)).unwrap();
++            assert_eq!(rem, $crate::nom::types::CompleteStr($rem));
+             assert_eq!(parsed, $val);
+         }
+     };
+     ($name:ident { $raw:expr => $rem:expr; $typ:ty; $($body:tt)* }) => {
+         #[test]
+         fn $name() {
+-            let (_rem, _parsed) = <$typ>::parse($raw).unwrap();
+-            assert_eq!(_rem, $rem);
++            let (_rem, _parsed) = <$typ>::parse($crate::nom::types::CompleteStr($raw)).unwrap();
++            assert_eq!(_rem, $crate::nom::types::CompleteStr($rem));
+             test!(@arg _parsed $($body)*);
+         }
+     };
+@@ -598,10 +556,11 @@ macro_rules! test_variants {
+             $(
+                 mod $variant {
+                     use $crate::types::*;
++                    use $crate::nom::types::CompleteStr;
+                     #[test]
+                     fn should_parse() {
+-                        let (rem, parsed) = $struct_::parse($value).unwrap();
+-                        assert_eq!(rem, "");
++                        let (rem, parsed) = $struct_::parse(CompleteStr($value)).unwrap();
++                        assert_eq!(rem, CompleteStr(""));
+                         match parsed {
+                             $struct_::$variant(_) => {},
+                             _ => { panic!("Failed to parse"); }
+Index: weedle/src/term.rs
+===================================================================
+--- weedle.orig/src/term.rs
++++ weedle/src/term.rs
+@@ -21,11 +21,11 @@ macro_rules! ident_tag (
+             match tag!($i, $tok) {
+                 Err(e) => Err(e),
+                 Ok((i, o)) => {
+-                    use nom::{character::is_alphanumeric, Err as NomErr, error::ErrorKind};
+                     let mut res = Ok((i, o));
+                     if let Some(&c) = i.as_bytes().first() {
++                        use $crate::nom::{Context, Err, ErrorKind, is_alphanumeric};
+                         if is_alphanumeric(c) || c == b'_' || c == b'-' {
+-                            res = Err(NomErr::Error(($i, ErrorKind::Tag)));
++                            res = Err(Err::Error(Context::Code($i, ErrorKind::Tag::<u32>)));
+                         }
+                     }
+                     res
+@@ -572,39 +572,40 @@ mod test {
+                 mod $m {
+                     use super::super::$typ;
+                     use crate::Parse;
++                    use nom::types::CompleteStr;
+ 
+                     #[test]
+                     fn should_parse() {
+-                        let (rem, parsed) = $typ::parse(concat!($string)).unwrap();
+-                        assert_eq!(rem, "");
++                        let (rem, parsed) = $typ::parse(CompleteStr(concat!($string))).unwrap();
++                        assert_eq!(rem, CompleteStr(""));
+                         assert_eq!(parsed, $typ);
+                     }
+ 
+                     #[test]
+                     fn should_parse_with_preceding_spaces() {
+-                        let (rem, parsed) = $typ::parse(concat!("  ", $string)).unwrap();
+-                        assert_eq!(rem, "");
++                        let (rem, parsed) = $typ::parse(CompleteStr(concat!("  ", $string))).unwrap();
++                        assert_eq!(rem, CompleteStr(""));
+                         assert_eq!(parsed, $typ);
+                     }
+ 
+                     #[test]
+                     fn should_parse_with_succeeding_spaces() {
+-                        let (rem, parsed) = $typ::parse(concat!($string, "  ")).unwrap();
+-                        assert_eq!(rem, "");
++                        let (rem, parsed) = $typ::parse(CompleteStr(concat!($string, "  "))).unwrap();
++                        assert_eq!(rem, CompleteStr(""));
+                         assert_eq!(parsed, $typ);
+                     }
+ 
+                     #[test]
+                     fn should_parse_with_surrounding_spaces() {
+-                        let (rem, parsed) = $typ::parse(concat!("  ", $string, "  ")).unwrap();
+-                        assert_eq!(rem, "");
++                        let (rem, parsed) = $typ::parse(CompleteStr(concat!("  ", $string, "  "))).unwrap();
++                        assert_eq!(rem, CompleteStr(""));
+                         assert_eq!(parsed, $typ);
+                     }
+ 
+                     #[test]
+                     fn should_parse_if_anything_next() {
+-                        let (rem, parsed) = $typ::parse(concat!($string, "  anything")).unwrap();
+-                        assert_eq!(rem, "anything");
++                        let (rem, parsed) = $typ::parse(CompleteStr(concat!($string, "  anything"))).unwrap();
++                        assert_eq!(rem, CompleteStr("anything"));
+                         assert_eq!(parsed, $typ);
+                     }
+                 }
+Index: weedle/src/types.rs
+===================================================================
+--- weedle.orig/src/types.rs
++++ weedle/src/types.rs
+@@ -338,8 +338,10 @@ mod test {
+     #[test]
+     fn should_parse_union_member_type_attributed_union() {
+         use crate::types::UnionMemberType;
+-        let (rem, parsed) = UnionMemberType::parse("([Clamp] byte or [Named] byte)").unwrap();
+-        assert_eq!(rem, "");
++        let (rem, parsed) =
++            UnionMemberType::parse(nom::types::CompleteStr("([Clamp] byte or [Named] byte)"))
++                .unwrap();
++        assert_eq!(rem, nom::types::CompleteStr(""));
+         match parsed {
+             UnionMemberType::Union(MayBeNull {
+                 type_:
+Index: weedle/src/whitespace.rs
+===================================================================
+--- weedle.orig/src/whitespace.rs
++++ weedle/src/whitespace.rs
+@@ -1,18 +1,25 @@
+-use crate::IResult;
++use crate::{CompleteStr, IResult};
+ 
+-pub(crate) fn sp(input: &str) -> IResult<&str, &str> {
++pub fn sp(input: CompleteStr) -> IResult<CompleteStr, CompleteStr> {
+     recognize!(
+         input,
+-        many0!(alt!(
+-            // ignores line comments
+-            do_parse!(tag!("//") >> take_until!("\n") >> char!('\n') >> (()))
+-            |
+-            // ignores whitespace
+-            map!(take_while1!(|c| c == '\t' || c == '\n' || c == '\r' || c == ' '), |_| ())
+-            |
+-            // ignores block comments
+-            do_parse!(tag!("/*") >> take_until!("*/") >> tag!("*/") >> (()))
+-        ))
++        many0!(
++            alt!(
++                do_parse!(tag!("//") >> take_until!("\n") >> char!('\n') >> (()))
++                |
++                map!(
++                    take_while1!(|c| c == '\t' || c == '\n' || c == '\r' || c == ' '),
++                    |_| ()
++                )
++                |
++                do_parse!(
++                    tag!("/*") >>
++                    take_until!("*/") >>
++                    tag!("*/") >>
++                    (())
++                )
++            )
++        )
+     )
+ }
+ 
+Index: weedle/Cargo.toml
+===================================================================
+--- weedle.orig/Cargo.toml
++++ weedle/Cargo.toml
+@@ -22,6 +22,4 @@ readme = "./README.md"
+ license = "MIT"
+ repository = "https://github.com/rustwasm/weedle"
+ [dependencies.nom]
+-version = "5.0.0"
+-features = ["std"]
+-default-features = false
++version = "4.0.0"
