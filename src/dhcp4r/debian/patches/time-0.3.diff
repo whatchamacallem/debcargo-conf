@@ -1,0 +1,24 @@
+Index: dhcp4r/Cargo.toml
+===================================================================
+--- dhcp4r.orig/Cargo.toml
++++ dhcp4r/Cargo.toml
+@@ -28,4 +28,5 @@ version = ">= 5.0.1, < 8.0"
+ [dependencies.num-traits]
+ version = "^0.2"
+ [dev-dependencies.time]
+-version = "0.2"
++version = "^0.3"
++features = ["local-offset","formatting"]
+Index: dhcp4r/examples/monitor.rs
+===================================================================
+--- dhcp4r.orig/examples/monitor.rs
++++ dhcp4r/examples/monitor.rs
+@@ -24,7 +24,7 @@ impl server::Handler for MyServer {
+                 };
+                 println!(
+                     "{}\t{}\t{}\tOnline",
+-                    time::OffsetDateTime::now_local().format("%Y-%m-%dT%H:%M:%S"),
++                    time::OffsetDateTime::now_local().unwrap().format(&time::format_description::parse("[year]-[month]-[day]T[hour]:[minute]:[second]").unwrap()).unwrap(),
+                     chaddr(&in_packet.chaddr),
+                     Ipv4Addr::from(req_ip)
+                 );
