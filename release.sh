@@ -36,7 +36,7 @@ if test ! -f "$PKGDIR_REL/debian/changelog"; then
 	abort 1 "Cannot find $PKGDIR_REL/debian/changelog. Did you run ./new-package.sh before?"
 fi
 
-if git grep --quiet FIXME -- "$PKGDIR_REL" :^"$PKGDIR_REL/debian/*.debcargo.hint" :^"$PKGDIR_REL/debian/changelog"; then
+if git grep --quiet FIXME -- "$PKGDIR_REL" :^"$PKGDIR_REL/debian/*.debcargo.hint" :^"$PKGDIR_REL/debian/changelog" :^"$PKGDIR_REL/debian/patches/*"; then
 	abort 1 "FIXMEs remain in $PKGDIR_REL, fix and commit those first."
 fi
 
