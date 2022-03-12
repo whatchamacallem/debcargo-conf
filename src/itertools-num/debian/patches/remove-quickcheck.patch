@@ -1,0 +1,45 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 311d67a..9d869a7 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -26,6 +26,4 @@ version = "0.2.2"
+ [dev-dependencies.itertools]
+ version = "0.10"
+ 
+-[dev-dependencies.quickcheck]
+-version = "0.7"
+ default-features = false
+diff --git a/tests/quick.rs b/tests/quick.rs
+deleted file mode 100644
+index 835ed80..0000000
+--- a/tests/quick.rs
++++ /dev/null
+@@ -1,28 +0,0 @@
+-#[macro_use]
+-extern crate quickcheck;
+-extern crate itertools_num;
+-
+-fn exact_size<I: ExactSizeIterator>(mut it: I) -> bool {
+-    // check every iteration
+-    let (mut low, mut hi) = it.size_hint();
+-    if Some(low) != hi { return false; }
+-    while let Some(_) = it.next() {
+-        let (xlow, xhi) = it.size_hint();
+-        if low != xlow + 1 { return false; }
+-        low = xlow;
+-        hi = xhi;
+-        if Some(low) != hi { return false; }
+-    }
+-    let (low, hi) = it.size_hint();
+-    low == 0 && hi == Some(0)
+-}
+-
+-
+-quickcheck! {
+-    fn size_linspace(a: f32, b: f32, n: usize) -> bool {
+-        let it = itertools_num::linspace(a, b, n);
+-        it.len() == n &&
+-            exact_size(it)
+-    }
+-}
+-
