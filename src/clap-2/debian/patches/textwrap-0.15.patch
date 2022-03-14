@@ -1,0 +1,29 @@
+Index: clap-2/Cargo.toml
+===================================================================
+--- clap-2.orig/Cargo.toml
++++ clap-2/Cargo.toml
+@@ -73,7 +73,7 @@ version = "0.3.0"
+ optional = true
+ 
+ [dependencies.textwrap]
+-version = "0.11.0"
++version = "0.15.0"
+ 
+ [dependencies.unicode-width]
+ version = "0.1.4"
+Index: clap-2/src/app/help.rs
+===================================================================
+--- clap-2.orig/src/app/help.rs
++++ clap-2/src/app/help.rs
+@@ -1013,9 +1013,9 @@ impl<'a> Help<'a> {
+ }
+ 
+ fn wrap_help(help: &str, avail_chars: usize) -> String {
+-    let wrapper = textwrap::Wrapper::new(avail_chars).break_words(false);
++    let options = &textwrap::Options::new(avail_chars).break_words(false);
+     help.lines()
+-        .map(|line| wrapper.fill(line))
++        .map(|line| textwrap::fill(line,options))
+         .collect::<Vec<String>>()
+         .join("\n")
+ }
