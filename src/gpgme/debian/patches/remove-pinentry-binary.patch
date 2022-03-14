@@ -1,0 +1,66 @@
+From b2a207a004ae1e773edc13af65790c8adeb0bddd Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Alexander=20Kj=C3=A4ll?= <alexander.kjall@gmail.com>
+Date: Mon, 14 Mar 2022 18:47:09 +0100
+Subject: [PATCH 1/2] delete pinentry binary
+
+---
+ Cargo.toml          |  3 ---
+ src/bin/pinentry.rs | 18 ------------------
+ tests/common/mod.rs |  2 +-
+ 3 files changed, 1 insertion(+), 22 deletions(-)
+ delete mode 100644 src/bin/pinentry.rs
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 59f3bca..50f1a57 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -22,9 +22,6 @@ categories = ["api-bindings"]
+ license = "LGPL-2.1"
+ repository = "https://github.com/gpg-rs/gpgme"
+ 
+-[[bin]]
+-name = "pinentry"
+-test = false
+ [dependencies.bitflags]
+ version = "1"
+ 
+diff --git a/src/bin/pinentry.rs b/src/bin/pinentry.rs
+deleted file mode 100644
+index 94cdffb..0000000
+--- a/src/bin/pinentry.rs
++++ /dev/null
+@@ -1,18 +0,0 @@
+-use std::{io, io::prelude::*};
+-
+-#[allow(dead_code)]
+-fn main() {
+-    println!("OK Your orders please");
+-
+-    let stdin = io::stdin();
+-    let mut lines = stdin.lock().lines();
+-    while let Some(Ok(cmd)) = lines.next() {
+-        match cmd.split(' ').nth(0) {
+-            Some("GETPIN") => {
+-                println!("D abc");
+-                println!("OK");
+-            }
+-            _ => println!("OK"),
+-        }
+-    }
+-}
+diff --git a/tests/common/mod.rs b/tests/common/mod.rs
+index 96578e2..a4b4907 100644
+--- a/tests/common/mod.rs
++++ b/tests/common/mod.rs
+@@ -68,7 +68,7 @@ fn import_key(key: &[u8]) {
+ fn setup_agent(dir: &Path) {
+     env::set_var("GNUPGHOME", dir);
+     env::set_var("GPG_AGENT_INFO", "");
+-    let pinentry = Path::new(env!("CARGO_BIN_EXE_pinentry"));
++    let pinentry = Path::new("pinentry");
+     if !pinentry.exists() {
+         panic!("Unable to find pinentry program");
+     }
+-- 
+2.35.1
+
