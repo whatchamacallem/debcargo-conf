@@ -1,0 +1,273 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index f81de52..e4a47f4 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -28,12 +28,6 @@ all-features = true
+ name = "weezl"
+ bench = false
+ 
+-[[bin]]
+-name = "lzw"
+-path = "bin/lzw.rs"
+-bench = false
+-required-features = ["std"]
+-
+ [[example]]
+ name = "lzw-compress"
+ required-features = ["std"]
+@@ -54,17 +48,11 @@ required-features = ["std"]
+ name = "roundtrip_vec"
+ required-features = ["alloc"]
+ 
+-[[bench]]
+-name = "msb8"
+-harness = false
+-required-features = ["std"]
+ [dependencies.futures]
+ version = "0.3.12"
+ features = ["std"]
+ optional = true
+ default-features = false
+-[dev-dependencies.criterion]
+-version = "0.3.1"
+ 
+ [dev-dependencies.tokio]
+ version = "1"
+diff --git a/benches/msb8.rs b/benches/msb8.rs
+deleted file mode 100644
+index a7e5dc5..0000000
+--- a/benches/msb8.rs
++++ /dev/null
+@@ -1,54 +0,0 @@
+-extern crate criterion;
+-extern crate weezl;
+-
+-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+-use std::fs;
+-use weezl::{decode::Decoder, BitOrder, LzwStatus};
+-
+-pub fn criterion_benchmark(c: &mut Criterion, file: &str) {
+-    let data = fs::read(file).expect("Benchmark input not found");
+-    let mut group = c.benchmark_group("msb-8");
+-    let id = BenchmarkId::new(file, data.len());
+-    let mut outbuf = vec![0; 1 << 26]; // 64MB, what wuff uses..
+-    let mut decode_once = |data: &[u8]| {
+-        let mut decoder = Decoder::new(BitOrder::Msb, 8);
+-        let mut written = 0;
+-        let outbuf = outbuf.as_mut_slice();
+-        let mut data = data;
+-        loop {
+-            let result = decoder.decode_bytes(data, &mut outbuf[..]);
+-            let done = result.status.expect("Error");
+-            data = &data[result.consumed_in..];
+-            written += result.consumed_out;
+-            black_box(&outbuf[..result.consumed_out]);
+-            if let LzwStatus::Done = done {
+-                break;
+-            }
+-            if let LzwStatus::NoProgress = done {
+-                panic!("Need to make progress");
+-            }
+-        }
+-        written
+-    };
+-    group.throughput(Throughput::Bytes(decode_once(&data) as u64));
+-    group.bench_with_input(id, &data, |b, data| {
+-        b.iter(|| {
+-            decode_once(data);
+-        })
+-    });
+-}
+-
+-pub fn bench_toml(c: &mut Criterion) {
+-    criterion_benchmark(c, "benches/Cargo-8-msb.lzw");
+-}
+-
+-pub fn bench_binary(c: &mut Criterion) {
+-    criterion_benchmark(c, "benches/binary-8-msb.lzw");
+-}
+-
+-pub fn bench_lib(c: &mut Criterion) {
+-    criterion_benchmark(c, "benches/lib-8-msb.lzw");
+-}
+-
+-criterion_group!(benches, bench_toml, bench_binary, bench_lib);
+-criterion_main!(benches);
+diff --git a/src/decode.rs b/src/decode.rs
+index 719c438..e4591e5 100644
+--- a/src/decode.rs
++++ b/src/decode.rs
+@@ -1235,85 +1235,4 @@ mod tests {
+     fn invalid_code_size_high() {
+         let _ = Decoder::new(BitOrder::Msb, 14);
+     }
+-
+-    fn make_encoded() -> Vec<u8> {
+-        const FILE: &'static [u8] = include_bytes!(concat!(
+-            env!("CARGO_MANIFEST_DIR"),
+-            "/benches/binary-8-msb.lzw"
+-        ));
+-        return Vec::from(FILE);
+-    }
+-
+-    #[test]
+-    #[cfg(feature = "std")]
+-    fn into_stream_buffer_no_alloc() {
+-        let encoded = make_encoded();
+-        let mut decoder = Decoder::new(BitOrder::Msb, 8);
+-
+-        let mut output = vec![];
+-        let mut buffer = [0; 512];
+-        let mut istream = decoder.into_stream(&mut output);
+-        istream.set_buffer(&mut buffer[..]);
+-        istream.decode(&encoded[..]).status.unwrap();
+-
+-        match istream.buffer {
+-            Some(StreamBuf::Borrowed(_)) => {}
+-            None => panic!("Decoded without buffer??"),
+-            Some(StreamBuf::Owned(_)) => panic!("Unexpected buffer allocation"),
+-        }
+-    }
+-
+-    #[test]
+-    #[cfg(feature = "std")]
+-    fn into_stream_buffer_small_alloc() {
+-        struct WriteTap<W: std::io::Write>(W);
+-        const BUF_SIZE: usize = 512;
+-
+-        impl<W: std::io::Write> std::io::Write for WriteTap<W> {
+-            fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+-                assert!(buf.len() <= BUF_SIZE);
+-                self.0.write(buf)
+-            }
+-            fn flush(&mut self) -> std::io::Result<()> {
+-                self.0.flush()
+-            }
+-        }
+-
+-        let encoded = make_encoded();
+-        let mut decoder = Decoder::new(BitOrder::Msb, 8);
+-
+-        let mut output = vec![];
+-        let mut istream = decoder.into_stream(WriteTap(&mut output));
+-        istream.set_buffer_size(512);
+-        istream.decode(&encoded[..]).status.unwrap();
+-
+-        match istream.buffer {
+-            Some(StreamBuf::Owned(vec)) => assert!(vec.len() <= BUF_SIZE),
+-            Some(StreamBuf::Borrowed(_)) => panic!("Unexpected borrowed buffer, where from?"),
+-            None => panic!("Decoded without buffer??"),
+-        }
+-    }
+-
+-    #[test]
+-    #[cfg(feature = "std")]
+-    fn reset() {
+-        let encoded = make_encoded();
+-        let mut decoder = Decoder::new(BitOrder::Msb, 8);
+-        let mut reference = None;
+-
+-        for _ in 0..2 {
+-            let mut output = vec![];
+-            let mut buffer = [0; 512];
+-            let mut istream = decoder.into_stream(&mut output);
+-            istream.set_buffer(&mut buffer[..]);
+-            istream.decode_all(&encoded[..]).status.unwrap();
+-
+-            decoder.reset();
+-            if let Some(reference) = &reference {
+-                assert_eq!(output, *reference);
+-            } else {
+-                reference = Some(output);
+-            }
+-        }
+-    }
+ }
+diff --git a/src/encode.rs b/src/encode.rs
+index 492b18c..97567ea 100644
+--- a/src/encode.rs
++++ b/src/encode.rs
+@@ -1044,83 +1044,4 @@ mod tests {
+     fn invalid_code_size_high() {
+         let _ = Encoder::new(BitOrder::Msb, 14);
+     }
+-
+-    fn make_decoded() -> Vec<u8> {
+-        const FILE: &'static [u8] =
+-            include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.lock"));
+-        return Vec::from(FILE);
+-    }
+-
+-    #[test]
+-    #[cfg(feature = "std")]
+-    fn into_stream_buffer_no_alloc() {
+-        let encoded = make_decoded();
+-        let mut encoder = Encoder::new(BitOrder::Msb, 8);
+-
+-        let mut output = vec![];
+-        let mut buffer = [0; 512];
+-        let mut istream = encoder.into_stream(&mut output);
+-        istream.set_buffer(&mut buffer[..]);
+-        istream.encode(&encoded[..]).status.unwrap();
+-
+-        match istream.buffer {
+-            Some(StreamBuf::Borrowed(_)) => {}
+-            None => panic!("Decoded without buffer??"),
+-            Some(StreamBuf::Owned(_)) => panic!("Unexpected buffer allocation"),
+-        }
+-    }
+-
+-    #[test]
+-    #[cfg(feature = "std")]
+-    fn into_stream_buffer_small_alloc() {
+-        struct WriteTap<W: std::io::Write>(W);
+-        const BUF_SIZE: usize = 512;
+-
+-        impl<W: std::io::Write> std::io::Write for WriteTap<W> {
+-            fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+-                assert!(buf.len() <= BUF_SIZE);
+-                self.0.write(buf)
+-            }
+-            fn flush(&mut self) -> std::io::Result<()> {
+-                self.0.flush()
+-            }
+-        }
+-
+-        let encoded = make_decoded();
+-        let mut encoder = Encoder::new(BitOrder::Msb, 8);
+-
+-        let mut output = vec![];
+-        let mut istream = encoder.into_stream(WriteTap(&mut output));
+-        istream.set_buffer_size(512);
+-        istream.encode(&encoded[..]).status.unwrap();
+-
+-        match istream.buffer {
+-            Some(StreamBuf::Owned(vec)) => assert!(vec.len() <= BUF_SIZE),
+-            Some(StreamBuf::Borrowed(_)) => panic!("Unexpected borrowed buffer, where from?"),
+-            None => panic!("Decoded without buffer??"),
+-        }
+-    }
+-
+-    #[test]
+-    #[cfg(feature = "std")]
+-    fn reset() {
+-        let encoded = make_decoded();
+-        let mut encoder = Encoder::new(BitOrder::Msb, 8);
+-        let mut reference = None;
+-
+-        for _ in 0..2 {
+-            let mut output = vec![];
+-            let mut buffer = [0; 512];
+-            let mut istream = encoder.into_stream(&mut output);
+-            istream.set_buffer(&mut buffer[..]);
+-            istream.encode_all(&encoded[..]).status.unwrap();
+-
+-            encoder.reset();
+-            if let Some(reference) = &reference {
+-                assert_eq!(output, *reference);
+-            } else {
+-                reference = Some(output);
+-            }
+-        }
+-    }
+ }
