@@ -1,0 +1,16 @@
+Description: Make it build on Debian
+Author: Daniele Tricoli <eriol@debian.org>
+Forwarded: not-needed
+Last-Update: 2022-03-27
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/build.rs
++++ b/build.rs
+@@ -6,6 +6,7 @@
+     let target = env::var("TARGET").unwrap();
+     let target_os = target.split('-').nth(2).unwrap();
+ 
++    println!("dh-cargo:deb-built-using=info=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
+     let mut builder = cc::Build::new();
+     match target_os {
+         "linux" | "android" | "androideabi" => builder.file("c/linux.c"),
