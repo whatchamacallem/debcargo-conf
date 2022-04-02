@@ -1,0 +1,55 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -40,7 +40,7 @@
+ bench = false
+ proc-macro = true
+ [dependencies.heck]
+-version = "0.4.0"
++version = "0.3"
+ 
+ [dependencies.proc-macro-error]
+ version = "1"
+--- a/src/attrs.rs
++++ b/src/attrs.rs
+@@ -19,7 +19,7 @@
+ 
+ use std::env;
+ 
+-use heck::{ToKebabCase, ToLowerCamelCase, ToShoutySnakeCase, ToSnakeCase, ToUpperCamelCase};
++use heck::{CamelCase, KebabCase, MixedCase, ShoutySnakeCase, SnakeCase};
+ use proc_macro2::{self, Span, TokenStream};
+ use proc_macro_error::abort;
+ use quote::{quote, quote_spanned, ToTokens};
+@@ -892,7 +892,7 @@
+     fn from_lit(name: LitStr) -> Sp<Self> {
+         use self::CasingStyle::*;
+ 
+-        let normalized = name.value().to_upper_camel_case().to_lowercase();
++        let normalized = name.value().to_camel_case().to_lowercase();
+         let cs = |kind| Sp::new(kind, name.span());
+ 
+         match normalized.as_ref() {
+@@ -924,9 +924,9 @@
+             Name::Derived(ident) => {
+                 let s = ident.unraw().to_string();
+                 let s = match style {
+-                    Pascal => s.to_upper_camel_case(),
++                    Pascal => s.to_camel_case(),
+                     Kebab => s.to_kebab_case(),
+-                    Camel => s.to_lower_camel_case(),
++                    Camel => s.to_mixed_case(),
+                     ScreamingSnake => s.to_shouty_snake_case(),
+                     Snake => s.to_snake_case(),
+                     Lower => s.to_snake_case().replace('_', ""),
+@@ -946,9 +946,9 @@
+             Name::Derived(ident) => {
+                 let s = ident.unraw().to_string();
+                 let s = match style {
+-                    Pascal => s.to_upper_camel_case(),
++                    Pascal => s.to_camel_case(),
+                     Kebab => s.to_kebab_case(),
+-                    Camel => s.to_lower_camel_case(),
++                    Camel => s.to_mixed_case(),
+                     ScreamingSnake => s.to_shouty_snake_case(),
+                     Snake => s.to_snake_case(),
+                     Lower => s.to_snake_case(),
