@@ -1,0 +1,50 @@
+From b3db577a0f4f643796835abfab349cef2aae93c5 Mon Sep 17 00:00:00 2001
+From: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Date: Thu, 14 Apr 2022 17:30:40 -0700
+Subject: [PATCH] Build against the local dynamic libxxhash installation
+
+---
+ Cargo.toml | 4 +---
+ build.rs   | 9 ++-------
+ 2 files changed, 3 insertions(+), 10 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 0e67499..1970448 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -16,8 +16,6 @@
+ authors = ["Douman <douman@gmx.se>"]
+ include = [
+     "**/*.rs",
+-    "**/*.c",
+-    "**/*.h",
+     "Cargo.toml",
+     "README.md",
+ ]
+@@ -36,5 +34,5 @@
+ version = "0.2"
+ default-features = false
+ 
+-[build-dependencies.cc]
+-version = "1"
++[build-dependencies.pkg-config]
++version = "0.3"
+diff --git a/build.rs b/build.rs
+index 15ceda2..97977cd 100644
+--- a/build.rs
++++ b/build.rs
+@@ -1,9 +1,4 @@
++extern crate pkg_config;
+ fn main() {
+-    let mut cc = cc::Build::new();
+-
+-    cc.include("src/c/");
+-    cc.file("src/c/xxhash.c");
+-    cc.warnings(false);
+-
+-    cc.compile("xxhash");
++    pkg_config::Config::new().atleast_version("0.8.1").probe("libxxhash").unwrap();
+ }
+-- 
+2.35.1
+
