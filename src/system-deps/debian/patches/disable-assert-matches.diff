@@ -1,0 +1,86 @@
+Index: system-deps/src/metadata.rs
+===================================================================
+--- system-deps.orig/src/metadata.rs
++++ system-deps/src/metadata.rs
+@@ -192,7 +192,7 @@ impl MetaData {
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+-    use assert_matches::assert_matches;
++    //use assert_matches::assert_matches;
+     use std::path::PathBuf;
+ 
+     fn parse_file(dir: &str) -> Result<MetaData, crate::Error> {
+@@ -243,13 +243,13 @@ mod tests {
+         )
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn parse_feature_not_string() {
+         assert_matches!(
+             parse_file("toml-feature-not-string"),
+             Err(crate::Error::InvalidMetadata(_))
+         );
+-    }
++    }*/
+ 
+     #[test]
+     fn parse_override_name() {
+Index: system-deps/src/test.rs
+===================================================================
+--- system-deps.orig/src/test.rs
++++ system-deps/src/test.rs
+@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
+ use std::rc::Rc;
+ use std::sync::Mutex;
+ 
+-use assert_matches::assert_matches;
++//use assert_matches::assert_matches;
+ 
+ use crate::Dependencies;
+ 
+@@ -109,7 +109,7 @@ fn toml_err(path: &str) -> Error {
+     toml(path, vec![]).unwrap_err()
+ }
+ 
+-fn toml_err_invalid(path: &str, err_ends_with: &str) {
++/*fn toml_err_invalid(path: &str, err_ends_with: &str) {
+     let err = toml_err(path);
+     assert_matches!(err, Error::InvalidMetadata(_));
+ 
+@@ -119,7 +119,7 @@ fn toml_err_invalid(path: &str, err_ends
+             err_ends_with, err
+         );
+     }
+-}
++}*/
+ 
+ // Assert a PkgConfig error because requested lib version cannot be found
+ fn toml_pkg_config_err_version(
+@@ -143,10 +143,10 @@ fn toml_pkg_config_err_version(
+     }
+ }
+ 
+-#[test]
++/*#[test]
+ fn missing_file() {
+     assert_matches!(toml_err("toml-missing-file"), Error::FailToRead(_, _));
+-}
++}*/
+ 
+ #[test]
+ fn missing_key() {
+Index: system-deps/Cargo.toml
+===================================================================
+--- system-deps.orig/Cargo.toml
++++ system-deps/Cargo.toml
+@@ -48,8 +48,6 @@ default-features = false
+ 
+ [dependencies.version-compare]
+ version = "0.0.10"
+-[dev-dependencies.assert_matches]
+-version = "1.5"
+ 
+ [dev-dependencies.itertools]
+ version = "0.10"
