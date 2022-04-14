@@ -1,0 +1,64 @@
+This patch is based on the upstream commit described below,
+adapted for use in the Debian package by Peter Michael Green.
+
+commit 91220bd0f31abe5d8ae3ac35aa4913664637ec83
+Author: Sebastian Dröge <sebastian@centricular.com>
+Date:   Fri Dec 17 12:31:57 2021 +0200
+
+    glib-macros: Update to heck 0.4
+
+Index: glib-macros/src/genum_derive.rs
+===================================================================
+--- glib-macros.orig/src/genum_derive.rs
++++ glib-macros/src/genum_derive.rs
+@@ -1,6 +1,6 @@
+ // Take a look at the license at the top of the repository in the LICENSE file.
+ 
+-use heck::{CamelCase, KebabCase};
++use heck::{ToKebabCase, ToUpperCamelCase};
+ use proc_macro2::TokenStream;
+ use proc_macro_error::abort_call_site;
+ use quote::{quote, quote_spanned};
+@@ -26,7 +26,7 @@ fn gen_genum_values(
+     let mut n = 1;
+     let recurse = enum_variants.iter().map(|v| {
+         let name = &v.ident;
+-        let mut value_name = name.to_string().to_camel_case();
++        let mut value_name = name.to_string().to_upper_camel_case();
+         let mut value_nick = name.to_string().to_kebab_case();
+ 
+         let attrs = parse_item_attributes("genum", &v.attrs);
+Index: glib-macros/src/gflags_attribute.rs
+===================================================================
+--- glib-macros.orig/src/gflags_attribute.rs
++++ glib-macros/src/gflags_attribute.rs
+@@ -1,6 +1,6 @@
+ // Take a look at the license at the top of the repository in the LICENSE file.
+ 
+-use heck::{CamelCase, KebabCase};
++use heck::{ToKebabCase, ToUpperCamelCase};
+ use proc_macro2::TokenStream;
+ use proc_macro_error::abort_call_site;
+ use quote::{quote, quote_spanned};
+@@ -39,7 +39,7 @@ fn gen_gflags_values(
+     let mut n = 1;
+     let recurse = enum_variants.iter().filter(|v| { !attribute_has_skip(&v.attrs) } ).map(|v| {
+         let name = &v.ident;
+-        let mut value_name = name.to_string().to_camel_case();
++        let mut value_name = name.to_string().to_upper_camel_case();
+         let mut value_nick = name.to_string().to_kebab_case();
+ 
+         let attrs = parse_item_attributes("gflags", &v.attrs);
+Index: glib-macros/Cargo.toml
+===================================================================
+--- glib-macros.orig/Cargo.toml
++++ glib-macros/Cargo.toml
+@@ -28,7 +28,7 @@ proc-macro = true
+ version = "1"
+ 
+ [dependencies.heck]
+-version = "0.3"
++version = "0.4"
+ 
+ [dependencies.proc-macro-crate]
+ version = "1.0"
