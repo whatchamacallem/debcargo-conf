@@ -21,7 +21,7 @@ Index: image/src/codecs/png.rs
 ===================================================================
 --- image.orig/src/codecs/png.rs
 +++ image/src/codecs/png.rs
-@@ -648,7 +648,7 @@ mod tests {
+@@ -652,7 +652,7 @@ mod tests {
      use std::io::Read;
      use super::*;
  
@@ -30,7 +30,7 @@ Index: image/src/codecs/png.rs
      fn ensure_no_decoder_off_by_one() {
          let dec = PngDecoder::new(std::fs::File::open("tests/images/png/bugfixes/debug_triangle_corners_widescreen.png").unwrap())
              .expect("Unable to read PNG file (does it exist?)");
-@@ -669,9 +669,9 @@ mod tests {
+@@ -673,9 +673,9 @@ mod tests {
              .collect::<Vec<u8>>();
  
          assert_eq![6_000_000, correct_bytes.len()];
@@ -42,7 +42,7 @@ Index: image/src/codecs/png.rs
      fn underlying_error() {
          use std::error::Error;
  
-@@ -684,5 +684,5 @@ mod tests {
+@@ -688,5 +688,5 @@ mod tests {
              .unwrap()
              .downcast_ref::<png::DecodingError>()
              .expect("Caused by a png error");
@@ -73,9 +73,39 @@ Index: image/src/imageops/sample.rs
 ===================================================================
 --- image.orig/src/imageops/sample.rs
 +++ image/src/imageops/sample.rs
-@@ -887,7 +887,7 @@ mod tests {
-         b.bytes = 193 * 193 * 4 + 256 * 256 * 4;
+@@ -837,7 +837,7 @@ mod tests {
+     #[cfg(feature = "benchmarks")]
+     use test;
+ 
+-    #[bench]
++    /*#[bench]
+     #[cfg(all(feature = "benchmarks", feature = "png"))]
+     fn bench_resize(b: &mut test::Bencher) {
+         use std::path::Path;
+@@ -846,7 +846,7 @@ mod tests {
+             test::black_box(resize(&img, 200, 200, FilterType::Nearest));
+         });
+         b.bytes = 800 * 800 * 3 + 200 * 200 * 3;
+-    }
++    }*/
+ 
+     #[test]
+     fn test_issue_186() {
+@@ -854,7 +854,7 @@ mod tests {
+         let _ = resize(&img, 50, 50, FilterType::Lanczos3);
      }
+ 
+-    #[bench]
++    /*#[bench]
+     #[cfg(all(feature = "benchmarks", feature = "tiff"))]
+     fn bench_thumbnail(b: &mut test::Bencher) {
+         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/images/tiff/testsuite/mandrill.tiff");
+@@ -885,9 +885,9 @@ mod tests {
+             test::black_box(image.thumbnail(256, 256));
+         });
+         b.bytes = 193 * 193 * 4 + 256 * 256 * 4;
+-    }
++    }*/
  
 -    #[test]
 +    /*#[test]
