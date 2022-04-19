@@ -1,0 +1,34 @@
+Index: deflate/src/chained_hash_table.rs
+===================================================================
+--- deflate.orig/src/chained_hash_table.rs
++++ deflate/src/chained_hash_table.rs
+@@ -291,7 +291,7 @@ mod test {
+ 
+         let mut input = Vec::new();
+ 
+-        let mut f = File::open("tests/pg11.txt").unwrap();
++        let mut f = File::open("src/lz77.rs").unwrap();
+ 
+         f.read_to_end(&mut input).unwrap();
+ 
+Index: deflate/src/test_utils.rs
+===================================================================
+--- deflate.orig/src/test_utils.rs
++++ deflate/src/test_utils.rs
+@@ -15,8 +15,14 @@ fn get_test_file_data(name: &str) -> Vec
+ 
+ pub fn get_test_data() -> Vec<u8> {
+     use std::env;
+-    let path = env::var("TEST_FILE").unwrap_or("tests/pg11.txt".to_string());
+-    get_test_file_data(&path)
++    let mut result = Vec::new();
++    //the substitute test file is a bit small, repeat it as some tests
++    //need more data.
++    for i in 0..10 {
++        let path = env::var("TEST_FILE").unwrap_or("src/lz77.rs".to_string());
++        result.append(&mut get_test_file_data(&path));
++    }
++    result
+ }
+ 
+ /// Helper function to decompress into a `Vec<u8>`

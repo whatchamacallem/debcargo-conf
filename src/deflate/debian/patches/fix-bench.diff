@@ -1,0 +1,27 @@
+Index: deflate/Cargo.toml
+===================================================================
+--- deflate.orig/Cargo.toml
++++ deflate/Cargo.toml
+@@ -38,6 +38,9 @@ optional = true
+ [dev-dependencies.miniz_oxide]
+ version = "0.4"
+ 
++[dev-dependencies.flate2]
++version = "1.0"
++
+ [features]
+ benchmarks = []
+ gzip = ["gzip-header"]
+Index: deflate/benches/bench.rs
+===================================================================
+--- deflate.orig/benches/bench.rs
++++ deflate/benches/bench.rs
+@@ -24,7 +24,7 @@ fn load_from_file(name: &str) -> Vec<u8>
+ 
+ fn get_test_data() -> Vec<u8> {
+     use std::env;
+-    let path = env::var("TEST_FILE").unwrap_or_else(|_| "tests/pg11.txt".to_string());
++    let path = env::var("TEST_FILE").unwrap_or_else(|_| "src/lz77.rs".to_string());
+     load_from_file(&path)
+ }
+ 
