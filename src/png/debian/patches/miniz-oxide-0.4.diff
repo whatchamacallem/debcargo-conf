@@ -1,0 +1,72 @@
+This patch is based on the upstream commit described below, adapted for use in the
+Debian package by Peter Michael Green.
+
+commit 4424245d09dac4be32e9c19690fcfe3cc1fbdfcc
+Author: Sebastian Dröge <sebastian@centricular.com>
+Date:   Tue Jun 30 10:56:08 2020 +0300
+
+    Update to miniz_oxide 0.4.1
+
+Index: png/src/decoder/zlib.rs
+===================================================================
+--- png.orig/src/decoder/zlib.rs
++++ png/src/decoder/zlib.rs
+@@ -1,5 +1,4 @@
+ use super::{DecodingError, CHUNCK_BUFFER_SIZE};
+-use std::io;
+ 
+ use miniz_oxide::inflate::core::{decompress, inflate_flags, DecompressorOxide};
+ use miniz_oxide::inflate::TINFLStatus;
+@@ -67,14 +66,18 @@ impl ZlibStream {
+         self.prepare_vec_for_appending();
+ 
+         let (status, mut in_consumed, out_consumed) = {
+-            let mut cursor = io::Cursor::new(self.out_buffer.as_mut_slice());
+-            cursor.set_position(self.out_pos as u64);
+             let in_data = if self.in_buffer.is_empty() {
+                 data
+             } else {
+                 &self.in_buffer[self.in_pos..]
+             };
+-            decompress(&mut self.state, in_data, &mut cursor, BASE_FLAGS)
++            decompress(
++                &mut self.state,
++                in_data,
++                &mut self.out_buffer.as_mut_slice(),
++                self.out_pos,
++                BASE_FLAGS,
++            )
+         };
+ 
+         if !self.in_buffer.is_empty() {
+@@ -130,9 +133,13 @@ impl ZlibStream {
+                 // TODO: we may be able to avoid the indirection through the buffer here.
+                 // First append all buffered data and then create a cursor on the image_data
+                 // instead.
+-                let mut cursor = io::Cursor::new(self.out_buffer.as_mut_slice());
+-                cursor.set_position(self.out_pos as u64);
+-                decompress(&mut self.state, &tail[start..], &mut cursor, BASE_FLAGS)
++                decompress(
++                    &mut self.state,
++                    &tail[start..],
++                    &mut self.out_buffer.as_mut_slice(),
++                    self.out_pos,
++                    BASE_FLAGS,
++                )
+             };
+ 
+             start += in_consumed;
+Index: png/Cargo.toml
+===================================================================
+--- png.orig/Cargo.toml
++++ png/Cargo.toml
+@@ -36,7 +36,8 @@ version = "0.8.2"
+ optional = true
+ 
+ [dependencies.miniz_oxide]
+-version = "0.3.5"
++version = "0.4.1"
++features = ["no_extern_crate_alloc"]
+ [dev-dependencies.criterion]
+ version = "0.3.1"
+ 

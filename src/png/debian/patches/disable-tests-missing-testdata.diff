@@ -1,0 +1,74 @@
+Index: png/src/decoder/mod.rs
+===================================================================
+--- png.orig/src/decoder/mod.rs
++++ png/src/decoder/mod.rs
+@@ -94,7 +94,7 @@ impl<R: Read> Decoder<R> {
+ 
+     /// Limit resource usage
+     ///
+-    /// ```
++    /// ```no_run
+     /// use std::fs::File;
+     /// use png::{Decoder, Limits};
+     /// // This image is 32x32 pixels, so the deocder will allocate more than four bytes
+@@ -874,7 +874,7 @@ mod tests {
+         }
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn no_data_dup_on_finish() {
+         const IMG: &[u8] = include_bytes!(concat!(
+             env!("CARGO_MANIFEST_DIR"),
+@@ -894,5 +894,5 @@ mod tests {
+             .unwrap_err();
+ 
+         assert_eq!(discriminant(&normal), discriminant(&smal));
+-    }
++    }*/
+ }
+Index: png/src/encoder.rs
+===================================================================
+--- png.orig/src/encoder.rs
++++ png/src/encoder.rs
+@@ -514,7 +514,7 @@ mod tests {
+         }
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn image_palette() -> Result<()> {
+         let samples = 3;
+         for bit_depth in vec![1u8, 2, 4, 8] {
+@@ -575,7 +575,7 @@ mod tests {
+             assert_eq!(decoded_pixels, redecoded);
+         }
+         Ok(())
+-    }
++    }*/
+ 
+     #[test]
+     fn expect_error_on_wrong_image_len() -> Result<()> {
+Index: png/src/lib.rs
+===================================================================
+--- png.orig/src/lib.rs
++++ png/src/lib.rs
+@@ -6,6 +6,7 @@
+ //! `Decoder` serves as a builder for `Reader`. Calling `Decoder::read_info` reads from the `Read` until the
+ //! image data is reached.
+ //! ### Using the decoder
++//! ```no_run
+ //!     use std::fs::File;
+ //!
+ //!     // The decoder is a build for reader and can be used to set various decoding options
+@@ -19,9 +20,9 @@
+ //!     reader.next_frame(&mut buf).unwrap();
+ //!     // Inspect more details of the last read frame.
+ //!     let in_animation = reader.info().frame_control.is_some();
++//! ```
+ //! ## Encoder
+ //! ### Using the encoder
+-//! ```no_run
+ //! # #[cfg(feature = "png-encoding")] {
+ //! // For reading and opening files
+ //! use std::path::Path;
