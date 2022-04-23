@@ -1,43 +1,23 @@
-Index: addr2line/Cargo.toml
-===================================================================
 --- addr2line.orig/Cargo.toml
 +++ addr2line/Cargo.toml
-@@ -53,7 +53,6 @@ default-features = false
- 
- [dependencies.fallible-iterator]
+@@ -55,3 +55,2 @@
  version = "0.2"
 -optional = true
  default-features = false
- 
- [dependencies.gimli]
-@@ -90,7 +89,7 @@ version = "0.7"
- version = "0.3"
- 
+@@ -92,3 +91,3 @@
  [features]
 -default = ["rustc-demangle", "cpp_demangle", "std-object", "fallible-iterator" ]
 +default = ["rustc-demangle", "cpp_demangle", "std-object" ]
  std = ["gimli/std"]
- std-object = ["std", "object", "object/std", "object/compression", "gimli/endian-reader"]
- [badges.travis-ci]
-Index: addr2line/src/lib.rs
-===================================================================
 --- addr2line.orig/src/lib.rs
 +++ addr2line/src/lib.rs
-@@ -30,7 +30,7 @@ extern crate alloc;
- 
- #[cfg(feature = "cpp_demangle")]
+@@ -32,3 +32,3 @@
  extern crate cpp_demangle;
 -#[cfg(feature = "fallible-iterator")]
 +#[cfg(feature = "default")]
  pub extern crate fallible_iterator;
- pub extern crate gimli;
- #[cfg(feature = "object")]
-@@ -1265,7 +1265,7 @@ where
-     }
- }
+@@ -1267,3 +1267,3 @@
  
 -#[cfg(feature = "fallible-iterator")]
 +#[cfg(feature = "default")]
  impl<'ctx, R> fallible_iterator::FallibleIterator for FrameIter<'ctx, R>
- where
-     R: gimli::Reader + 'ctx,

@@ -1,37 +1,23 @@
-Description: make smallvec non-optional to avoid adding new feature packages.
 --- rust-addr2line-0.13.0.orig/Cargo.toml
 +++ rust-addr2line-0.13.0/Cargo.toml
-@@ -73,7 +73,6 @@ optional = true
- 
- [dependencies.smallvec]
+@@ -75,3 +75,2 @@
  version = "1"
 -optional = true
  default-features = false
- [dev-dependencies.backtrace]
- version = "0.3.13"
-@@ -91,7 +90,7 @@ version = "0.7"
- version = "0.3"
- 
+@@ -93,3 +92,3 @@
  [features]
 -default = ["rustc-demangle", "cpp_demangle", "std-object", "fallible-iterator", "smallvec"]
 +default = ["rustc-demangle", "cpp_demangle", "std-object", "fallible-iterator" ]
  std = ["gimli/std"]
- std-object = ["std", "object", "object/std", "object/compression", "gimli/endian-reader"]
- [badges.travis-ci]
 --- rust-addr2line-0.13.0.orig/src/lib.rs
 +++ rust-addr2line-0.13.0/src/lib.rs
-@@ -52,12 +52,12 @@ use core::u64;
- 
- use crate::lazy::LazyCell;
+@@ -54,3 +54,3 @@
  
 -#[cfg(feature = "smallvec")]
 +#[cfg(feature = "default")]
  mod maybe_small {
-     pub type Vec<T> = smallvec::SmallVec<[T; 16]>;
-     pub type IntoIter<T> = smallvec::IntoIter<[T; 16]>;
+@@ -59,3 +59,3 @@
  }
 -#[cfg(not(feature = "smallvec"))]
 +#[cfg(not(feature = "default"))]
  mod maybe_small {
-     pub type Vec<T> = alloc::vec::Vec<T>;
-     pub type IntoIter<T> = alloc::vec::IntoIter<T>;
