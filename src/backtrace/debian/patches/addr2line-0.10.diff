@@ -1,0 +1,90 @@
+This patch makes the gimli-symbolize feature work with the version of addr2line
+in Debian. It is based on a revert of 
+https://github.com/rust-lang/backtrace-rs/commit/af674ae60af316f825178569fcaefc4193472448
+
+diff --git a/src/symbolize/gimli.rs b/src/symbolize/gimli.rs
+index 1529a90a0..c1f4be50e 100644
+--- a/src/symbolize/gimli.rs
++++ b/src/symbolize/gimli.rs
+@@ -11,6 +11,7 @@ use crate::symbolize::ResolveWhat;
+ use crate::types::BytesOrWideString;
+ use crate::SymbolName;
+ use addr2line::gimli;
++use core::convert::TryFrom;
+ use core::mem;
+ use core::u32;
+ use findshlibs::{self, Segment, SharedLibrary};
+@@ -542,11 +542,14 @@ pub unsafe fn resolve(what: ResolveWhat, cb: &mut FnMut(&super::Symbol)) {
+             None => return,
+         };
+         if let Ok(mut frames) = cx.dwarf.find_frames(addr.0 as u64) {
+-            while let Ok(Some(frame)) = frames.next() {
++            while let Ok(Some(mut frame)) = frames.next() {
++                let function = frame.function.take();
++                let name = function.as_ref().and_then(|f| f.raw_name().ok());
++                let name = name.as_ref().map(|n| n.as_bytes());
+                 cb.call(Symbol::Frame {
+                     addr: addr.0 as *mut c_void,
+-                    location: frame.location,
+-                    name: frame.function.map(|f| f.name.slice()),
++                    frame,
++                    name,
+                 });
+             }
+         }
+@@ -602,7 +605,7 @@ pub enum Symbol<'a> {
+     /// `addr2line`'s frame internally has all the nitty gritty details.
+     Frame {
+         addr: *mut c_void,
+-        location: Option<addr2line::Location<'a>>,
++        frame: addr2line::Frame<EndianSlice<'a, Endian>>,
+         name: Option<&'a [u8]>,
+     },
+     /// Couldn't find debug information, but we found it in the symbol table of
+@@ -636,8 +639,9 @@ impl Symbol<'_> {
+     pub fn filename_raw(&self) -> Option<BytesOrWideString> {
+         match self {
+             Symbol::Dladdr(s) => return s.filename_raw(),
+-            Symbol::Frame { location, .. } => {
+-                let file = location.as_ref()?.file?;
++            Symbol::Frame { frame, .. } => {
++                let location = frame.location.as_ref()?;
++                let file = location.file.as_ref()?;
+                 Some(BytesOrWideString::Bytes(file.as_bytes()))
+             }
+             Symbol::Symtab { .. } => None,
+@@ -647,8 +651,9 @@ impl Symbol<'_> {
+     pub fn filename(&self) -> Option<&Path> {
+         match self {
+             Symbol::Dladdr(s) => return s.filename(),
+-            Symbol::Frame { location, .. } => {
+-                let file = location.as_ref()?.file?;
++            Symbol::Frame { frame, .. } => {
++                let location = frame.location.as_ref()?;
++                let file = location.file.as_ref()?;
+                 Some(Path::new(file))
+             }
+             Symbol::Symtab { .. } => None,
+@@ -658,7 +663,10 @@ impl Symbol<'_> {
+     pub fn lineno(&self) -> Option<u32> {
+         match self {
+             Symbol::Dladdr(s) => return s.lineno(),
+-            Symbol::Frame { location, .. } => location.as_ref()?.line,
++            Symbol::Frame { frame, .. } => {
++                let location = frame.location.as_ref()?;
++                location.line.and_then(|l| u32::try_from(l).ok())
++            }
+             Symbol::Symtab { .. } => None,
+         }
+     }
+--- backtrace.orig/Cargo.toml
++++ backtrace/Cargo.toml
+@@ -55,7 +55,7 @@ name = "concurrent-panics"
+ harness = false
+ required-features = ["std"]
+ [dependencies.addr2line]
+-version = "0.11.0"
++version = "0.10.0"
+ features = ["std"]
+ optional = true
+ default-features = false
