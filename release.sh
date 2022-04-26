@@ -205,6 +205,10 @@ new binaries, then you can just go ahead and directly dput the source package.
 
   cd build && dput ${DEBSRC}_${DEBVER}_source.changes && git checkout - & git merge -
 
+If you want to build and test it, run:
+
+  cd build && ./build.sh $CRATE && dput ${DEBSRC}_${DEBVER}_source.changes && git checkout - & git merge -
+
 For your reference, this source package builds $(echo "$upload_bin_packages" | wc -l) binary package(s):
 $upload_bin_packages
 eof
