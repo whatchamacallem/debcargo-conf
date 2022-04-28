@@ -266,12 +266,25 @@ fractal
 * secret-service (WIP)
 * sourceview4
 
+obfuscate
+---------
+
+* libadwaita
+
+podcasts
+--------
+
+* gstreamer-player
+* tokio-rt-multi-thread
+* reqwest-json
+
 ==============
 Eventual goals
 ==============
 
 Binary crates worth packaging (please add if you know more):
 
+- authenticator - 2FA program (GTK/libadwaita, https://gitlab.gnome.org/World/Authenticator)
 - bench - simple benchmarking
 - bingrep - Grep through binaries from various OSs and architectures.
 - brewstillery - Brewer's, vinter's and distiller's calculator (GTK).
@@ -280,12 +293,19 @@ Binary crates worth packaging (please add if you know more):
   * blocked on postgres
 - cargo-download - Download sources of a crate
 - cargo-edit - Cargo editing subcommands (add, rm, upgrade)
+- decoder - qr code reader (GTK/libadwaita, https://apps.gnome.org/app/com.belmoussaoui.Decoder/)
 - diskonaut - interactive disk usage tui tool
 - fractal - Matrix messaging client (GTK, https://wiki.gnome.org/Apps/Fractal)
+- fragements - bittorent client (GTK/libadwaita, https://apps.gnome.org/de/app/de.haeckerfelix.Fragments/)
+- health - health tracking app (GTK/libadwaita, https://apps.gnome.org/de/app/dev.Cogitri.Health/)
 - hg - Rust implement of hg
 - jql - JSON Query Language CLI tool.
 - meli - terminal mail client (https://meli.delivery/)
+- mousai - song recognition (GTK/libadwaita, https://apps.gnome.org/de/app/io.github.seadve.Mousai/)
+- obfuscate - censor private information (GTK/libadwaita, https://apps.gnome.org/de/app/com.belmoussaoui.Obfuscate/)
+- pika-backup - backup program (GTK/libadwaita, https://apps.gnome.org/de/app/org.gnome.World.PikaBackup/)
 - podcasts - Podcasts app (GTK, https://wiki.gnome.org/Apps/Podcasts)
+- popsicle - USB flasher (GTK, https://github.com/pop-os/popsicle)
 - recode_rs - CLI tool converting between the character encodings.
 - resvg - SVG renderer (in Debian; packaged separately, but doesn’t build anymore)
 - rural - User-friendly command-line HTTP tool
@@ -293,6 +313,7 @@ Binary crates worth packaging (please add if you know more):
 - rustfmt-nightly - rust coding style
 - rustup - installing and managing multiple rust toolchains
 - shortwave - Internet radio client (GTK, https://gitlab.gnome.org/World/Shortwave)
+- spot - spotify client (GTK/libadwaita, https://github.com/xou816/spot)
 - tmux-hints - Find matches (e.g. urls) and navigate them by keyboard
 - viu - Command-line image viewer
 - xsv - Command line program for manipulating CSV files
