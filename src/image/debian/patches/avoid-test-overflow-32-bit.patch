@@ -1,0 +1,26 @@
+Description: Dont run huge_files_return_error test on 32-bit to avoid overflow.
+Author: Peter Michael Green <plugwash@debian.org>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2022-04-28
+
+--- rust-image-0.23.14.orig/src/codecs/bmp/encoder.rs
++++ rust-image-0.23.14/src/codecs/bmp/encoder.rs
+@@ -294,6 +294,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(target_pointer_width = "64")]
+     fn huge_files_return_error() {
+         let mut encoded_data = Vec::new();
+         let image = vec![0u8; 3 * 40_000 * 40_000]; // 40_000x40_000 pixels, 3 bytes per pixel, allocated on the heap
