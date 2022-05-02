@@ -1,0 +1,53 @@
+This patch is based on the upstream commit described below, adapted for use in
+the Debian package by Peter Micheal Green.
+
+commit 8b78d3f0ee12e8466cacc035c1d3bd953484c84f
+Author: Jacob Pratt <jacob@jhpratt.dev>
+Date:   Sun Dec 19 03:39:49 2021 -0500
+
+    Bump itoa to 1.0
+
+Index: time/src/formatting/mod.rs
+===================================================================
+--- time.orig/src/formatting/mod.rs
++++ time/src/formatting/mod.rs
+@@ -132,7 +132,7 @@ pub(crate) fn format_number<W: io::Write
+     match padding {
+         modifier::Padding::Space => format_number_pad_space::<_, _, WIDTH>(output, value),
+         modifier::Padding::Zero => format_number_pad_zero::<_, _, WIDTH>(output, value),
+-        modifier::Padding::None => itoa::write(output, value),
++        modifier::Padding::None => write(output, itoa::Buffer::new().format(value).as_bytes()),
+     }
+ }
+ 
+@@ -151,7 +151,7 @@ pub(crate) fn format_number_pad_space<
+     for _ in 0..(WIDTH.saturating_sub(value.num_digits())) {
+         bytes += write(output, &[b' '])?;
+     }
+-    bytes += itoa::write(output, value)?;
++    bytes += write(output, itoa::Buffer::new().format(value).as_bytes())?;
+     Ok(bytes)
+ }
+ 
+@@ -170,7 +170,7 @@ pub(crate) fn format_number_pad_zero<
+     for _ in 0..(WIDTH.saturating_sub(value.num_digits())) {
+         bytes += write(output, &[b'0'])?;
+     }
+-    bytes += itoa::write(output, value)?;
++    bytes += write(output, itoa::Buffer::new().format(value).as_bytes())?;
+     Ok(bytes)
+ }
+ 
+Index: time/Cargo.toml
+===================================================================
+--- time.orig/Cargo.toml
++++ time/Cargo.toml
+@@ -34,7 +34,7 @@ debug = 0
+ bench = false
+ 
+ [dependencies.itoa]
+-version = "0.4.7"
++version = "1.0.1"
+ optional = true
+ 
+ [dependencies.quickcheck-dep]
