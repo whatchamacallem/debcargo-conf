@@ -3,6 +3,21 @@
 %:
 	dh $@ --buildsystem cargo
 
+#lto disabled on these architectures due to address space exhaustion.
+ifneq (,$(filter $(DEB_HOST_ARCH),armhf armel mipsel))
+  LTO=false
+else
+  LTO=true
+endif
+
+override_dh_auto_build:
+	sed -i 's/lto = .*/lto = $(LTO)/' Cargo.toml
+	dh_auto_build
+
+override_dh_auto_clean:
+	dh_auto_clean
+	sed -i 's/lto = .*/lto = true/' Cargo.toml
+
 override_dh_dwz:
 	# Don't do anything. fails because of the
 	# https://github.com/rust-lang/rust/issues/66118
