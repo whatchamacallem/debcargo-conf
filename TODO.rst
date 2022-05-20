@@ -285,6 +285,8 @@ Eventual goals
 Binary crates worth packaging (please add if you know more):
 
 - authenticator - 2FA program (GTK/libadwaita, https://gitlab.gnome.org/World/Authenticator)
+- amberol - simple music player (GTK/libadwaita, https://gitlab.gnome.org/World/Amberol)
+- asus-ctl - control asus laptops (https://gitlab.com/asus-linux/asusctl)
 - bench - simple benchmarking
 - bingrep - Grep through binaries from various OSs and architectures.
 - brewstillery - Brewer's, vinter's and distiller's calculator (GTK).
@@ -300,6 +302,7 @@ Binary crates worth packaging (please add if you know more):
 - health - health tracking app (GTK/libadwaita, https://apps.gnome.org/de/app/dev.Cogitri.Health/)
 - hg - Rust implement of hg
 - jql - JSON Query Language CLI tool.
+- kooha - screen recorder (GTK/libadwaita, https://github.com/SeaDve/Kooha)
 - meli - terminal mail client (https://meli.delivery/)
 - mousai - song recognition (GTK/libadwaita, https://apps.gnome.org/de/app/io.github.seadve.Mousai/)
 - obfuscate - censor private information (GTK/libadwaita, https://apps.gnome.org/de/app/com.belmoussaoui.Obfuscate/)
@@ -314,8 +317,10 @@ Binary crates worth packaging (please add if you know more):
 - rustup - installing and managing multiple rust toolchains
 - shortwave - Internet radio client (GTK, https://gitlab.gnome.org/World/Shortwave)
 - spot - spotify client (GTK/libadwaita, https://github.com/xou816/spot)
+- system-76-power - manage power profiles (https://github.com/pop-os/system76-power)
 - tmux-hints - Find matches (e.g. urls) and navigate them by keyboard
 - viu - Command-line image viewer
+- video-trimmer - Trim vidoes (GTK/libadwaita, https://gitlab.gnome.org/YaLTeR/video-trimmer)
 - xsv - Command line program for manipulating CSV files
 - zola - static site generator (https://www.getzola.org/)
 
