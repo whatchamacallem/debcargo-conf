@@ -2,6 +2,22 @@
 Sponsoring
 ==========
 
+Expectations
+============
+
+To accept a new package in the Debian archive, we need the following:
+
+1. Clean copyright file
+1. Except with very good reasons, it should generate only one Debian package
+   please use ``collapse_features = true`` in debcargo.toml to avoid that
+1. No lintian warning except ``initial-upload-closes-no-bugs`` (for libraries)
+1. autopkgtest should be green (or skipped)
+1. New binaries should have an open ITP
+1. The maintainer should be on IRC: #debian-rust on OTFC
+1. If the crate needs dependencies not available yet in Debian, document them
+   in the RFS file
+1. Patience
+
 
 Ready for upload (Request For Sponsor)
 ======================================
