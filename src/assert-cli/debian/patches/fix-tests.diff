@@ -1,0 +1,41 @@
+Index: assert-cli/src/assert.rs
+===================================================================
+--- assert-cli.orig/src/assert.rs
++++ assert-cli/src/assert.rs
+@@ -429,7 +429,7 @@ impl Assert {
+     ///
+     /// # Examples
+     ///
+-    /// ```rust,should_panic="Assert CLI failure"
++    /// ```rust,should_panic
+     /// extern crate assert_cli;
+     ///
+     /// assert_cli::Assert::command(&["echo", "42"])
+Index: assert-cli/src/diff.rs
+===================================================================
+--- assert-cli.orig/src/diff.rs
++++ assert-cli/src/diff.rs
+@@ -55,6 +55,7 @@ mod tests {
+ 
+     #[test]
+     fn basic_diff() {
++        std::env::set_var("CLICOLOR_FORCE","True");
+         let diff = Changeset::new("lol", "yay", "\n");
+         println!("{}", render(&diff).unwrap());
+         assert_eq!(
+@@ -65,6 +66,7 @@ mod tests {
+ 
+     #[test]
+     fn multiline_diff() {
++        std::env::set_var("CLICOLOR_FORCE","True");
+         let diff = Changeset::new(
+             "Lorem ipsum dolor sit amet, consectetur adipisicing elit,
+ sed do eiusmod tempor incididunt ut labore et dolore magna
+@@ -91,6 +93,7 @@ ullamco laboris nisi ut aliquip ex ea co
+ 
+     #[test]
+     fn added_first_line_diff() {
++        std::env::set_var("CLICOLOR_FORCE","True");
+         let diff = Changeset::new(
+             "Line 1\nLine 2\nLine 3",
+             "Line 0\nLine 1\nLine 2\nLine 3",
