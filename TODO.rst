@@ -276,7 +276,7 @@ Binary crates worth packaging (please add if you know more):
 - decoder - qr code reader (GTK/libadwaita, https://apps.gnome.org/app/com.belmoussaoui.Decoder/)
 - diskonaut - interactive disk usage tui tool
 - fractal - Matrix messaging client (GTK, https://wiki.gnome.org/Apps/Fractal)
-- fragements - bittorent client (GTK/libadwaita, https://apps.gnome.org/de/app/de.haeckerfelix.Fragments/)
+- fragments - bittorrent client (GTK/libadwaita, https://apps.gnome.org/de/app/de.haeckerfelix.Fragments/)
 - health - health tracking app (GTK/libadwaita, https://apps.gnome.org/de/app/dev.Cogitri.Health/)
 - hg - Rust implement of hg
 - jql - JSON Query Language CLI tool.
@@ -298,7 +298,7 @@ Binary crates worth packaging (please add if you know more):
 - system-76-power - manage power profiles (https://github.com/pop-os/system76-power)
 - tmux-hints - Find matches (e.g. urls) and navigate them by keyboard
 - viu - Command-line image viewer
-- video-trimmer - Trim vidoes (GTK/libadwaita, https://gitlab.gnome.org/YaLTeR/video-trimmer)
+- video-trimmer - Trim videos (GTK/libadwaita, https://gitlab.gnome.org/YaLTeR/video-trimmer)
 - xsv - Command line program for manipulating CSV files
 - zola - static site generator (https://www.getzola.org/)
 
