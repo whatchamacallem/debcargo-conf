@@ -4,6 +4,10 @@ for i in src/*/debian/RFS; do
 done | sort  | while read t i; do
     pkg=$(basename "$(dirname "$(dirname "$i")")")
     upstream_pkg=$(grep Upstream-Name src/$pkg/debian/copyright|awk '{print $2}')
+    if test -z $upstream_pkg; then
+        echo "Could not find upstream package name. is  src/$pkg/debian/copyright correct?"
+        exit 2
+    fi
     if test -n "$(git --no-pager branch --remotes -l origin/pending-"$pkg")"; then
         # If a pending branch exists, skip it
         continue
