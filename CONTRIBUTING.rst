@@ -16,6 +16,8 @@ To accept a new package in the Debian archive, we need the following:
 1. The maintainer should be on IRC: #debian-rust on OTFC
 1. If the crate needs dependencies not available yet in Debian, document them
    in the RFS file
+1. If you are asking for sponsoring on an existing key crate, please make sure it isn't
+   breaking a lot of things. If it does, please identify the necessary steps
 1. Patience
 
 
