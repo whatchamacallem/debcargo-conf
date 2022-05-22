@@ -1,0 +1,101 @@
+Index: hdrhistogram/Cargo.toml
+===================================================================
+--- hdrhistogram.orig/Cargo.toml
++++ hdrhistogram/Cargo.toml
+@@ -67,5 +67,3 @@ bench_private = []
+ default = ["serialization", "sync"]
+ serialization = ["flate2", "nom", "base64"]
+ sync = ["crossbeam-channel"]
+-[target."cfg(unix)".dev-dependencies.rug]
+-version = "1.2"
+Index: hdrhistogram/tests/quantile.rs
+===================================================================
+--- hdrhistogram.orig/tests/quantile.rs
++++ hdrhistogram/tests/quantile.rs
+@@ -4,7 +4,6 @@
+ use hdrhistogram::{Counter, Histogram};
+ 
+ use rand::Rng;
+-use rug::{Integer, Rational};
+ 
+ #[test]
+ fn value_at_quantile_internal_count_exceeds_bucket_type() {
+@@ -83,7 +82,7 @@ fn value_at_quantile_large_numbers() {
+     assert!(h.equivalent(100_000_000, h.value_at_quantile(0.99)));
+ }
+ 
+-#[test]
++/*#[test]
+ fn value_at_quantile_matches_quantile_iter_sequence_values() {
+     let mut h = Histogram::<u64>::new_with_bounds(1, u64::max_value(), 3).unwrap();
+ 
+@@ -135,9 +134,9 @@ fn value_at_quantile_matches_quantile_it
+     }
+ 
+     assert_eq!(0, errors);
+-}
++}*/
+ 
+-#[test]
++/*#[test]
+ fn value_at_quantile_matches_quantile_iter_random_values() {
+     let mut h = Histogram::<u64>::new_with_bounds(1, u64::max_value(), 3).unwrap();
+ 
+@@ -191,9 +190,9 @@ fn value_at_quantile_matches_quantile_it
+     }
+ 
+     assert_eq!(0, errors);
+-}
++}*/
+ 
+-#[test]
++/*#[test]
+ fn value_at_quantile_matches_quantile_at_each_value_sequence_values() {
+     let mut h = Histogram::<u64>::new_with_bounds(1, u64::max_value(), 3).unwrap();
+ 
+@@ -230,9 +229,9 @@ fn value_at_quantile_matches_quantile_at
+     }
+ 
+     assert_eq!(0, errors);
+-}
++}*/
+ 
+-#[test]
++/*#[test]
+ fn value_at_quantile_matches_quantile_at_each_value_random_values() {
+     let mut h = Histogram::<u64>::new_with_bounds(1, u64::max_value(), 3).unwrap();
+     let mut values = Vec::new();
+@@ -277,9 +276,9 @@ fn value_at_quantile_matches_quantile_at
+     }
+ 
+     assert_eq!(0, errors);
+-}
++}*/
+ 
+-#[test]
++/*#[test]
+ fn value_at_quantile_matches_random_quantile_random_values() {
+     let mut h = Histogram::<u64>::new_with_bounds(1, u64::max_value(), 3).unwrap();
+     let mut values = Vec::new();
+@@ -330,7 +329,7 @@ fn value_at_quantile_matches_random_quan
+     }
+ 
+     assert_eq!(0, errors);
+-}
++}*/
+ 
+ /// An iterator of random `u64`s where the maximum value for each random number generation is picked
+ /// from a uniform distribution of the 64 possible bit lengths for a `u64`.
+@@ -362,10 +361,10 @@ impl<'a, R: Rng + 'a> Iterator for Rando
+ }
+ 
+ /// Calculate the count at a quantile with arbitrary precision arithmetic
+-fn calculate_quantile_count(quantile: f64, count: u64) -> u64 {
++/*fn calculate_quantile_count(quantile: f64, count: u64) -> u64 {
+     let product = Rational::from_f64(quantile).unwrap() * Rational::from(count);
+     Integer::from(product.ceil().trunc_ref()).to_u64().unwrap()
+-}
++}*/
+ 
+ fn next_value_nonzero_count<C: Counter>(h: &Histogram<C>, start_value: u64) -> u64 {
+     let mut v = h.next_non_equivalent(start_value);
