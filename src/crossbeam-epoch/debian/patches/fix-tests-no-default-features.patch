@@ -1,0 +1,303 @@
+Index: crossbeam-epoch/benches/defer.rs
+===================================================================
+--- crossbeam-epoch.orig/benches/defer.rs
++++ crossbeam-epoch/benches/defer.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "std")]
+ #![feature(test)]
+ 
+ extern crate test;
+Index: crossbeam-epoch/benches/flush.rs
+===================================================================
+--- crossbeam-epoch.orig/benches/flush.rs
++++ crossbeam-epoch/benches/flush.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "std")]
+ #![feature(test)]
+ 
+ extern crate test;
+Index: crossbeam-epoch/benches/pin.rs
+===================================================================
+--- crossbeam-epoch.orig/benches/pin.rs
++++ crossbeam-epoch/benches/pin.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "std")]
+ #![feature(test)]
+ 
+ extern crate test;
+Index: crossbeam-epoch/examples/sanitize.rs
+===================================================================
+--- crossbeam-epoch.orig/examples/sanitize.rs
++++ crossbeam-epoch/examples/sanitize.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "std")]
+ use std::sync::atomic::AtomicUsize;
+ use std::sync::atomic::Ordering::{AcqRel, Acquire, Relaxed};
+ use std::sync::Arc;
+Index: crossbeam-epoch/src/atomic.rs
+===================================================================
+--- crossbeam-epoch.orig/src/atomic.rs
++++ crossbeam-epoch/src/atomic.rs
+@@ -142,7 +142,7 @@ fn decompose_tag<T: ?Sized + Pointable>(
+ /// particular, Crossbeam supports dynamically sized slices as follows.
+ ///
+ /// ```
+-/// use std::mem::MaybeUninit;
++/// use core::mem::MaybeUninit;
+ /// use crossbeam_epoch::Owned;
+ ///
+ /// let o = Owned::<[MaybeUninit<i32>]>::init(10); // allocating [i32; 10]
+@@ -1590,7 +1590,7 @@ impl<T: ?Sized + Pointable> Default for
+ #[cfg(all(test, not(crossbeam_loom)))]
+ mod tests {
+     use super::{Owned, Shared};
+-    use std::mem::MaybeUninit;
++    use core::mem::MaybeUninit;
+ 
+     #[test]
+     fn valid_tag_i8() {
+Index: crossbeam-epoch/src/collector.rs
+===================================================================
+--- crossbeam-epoch.orig/src/collector.rs
++++ crossbeam-epoch/src/collector.rs
+@@ -111,9 +111,11 @@ impl fmt::Debug for LocalHandle {
+ 
+ #[cfg(all(test, not(crossbeam_loom)))]
+ mod tests {
+-    use std::mem;
+-    use std::sync::atomic::{AtomicUsize, Ordering};
++    use core::mem;
++    use core::sync::atomic::{AtomicUsize, Ordering};
++    use alloc::vec::Vec;
+ 
++    #[cfg(feature = "std")]
+     use crossbeam_utils::thread;
+ 
+     use crate::{Collector, Owned};
+@@ -176,6 +178,7 @@ mod tests {
+         }
+     }
+ 
++    #[cfg(feature = "std")]
+     #[test]
+     fn pin_holds_advance() {
+         #[cfg(miri)]
+@@ -420,6 +423,7 @@ mod tests {
+         assert_eq!(DESTROYS.load(Ordering::Relaxed), COUNT);
+     }
+ 
++    #[cfg(feature = "std")]
+     #[test]
+     fn stress() {
+         const THREADS: usize = 8;
+Index: crossbeam-epoch/src/deferred.rs
+===================================================================
+--- crossbeam-epoch.orig/src/deferred.rs
++++ crossbeam-epoch/src/deferred.rs
+@@ -83,7 +83,8 @@ mod tests {
+     #![allow(clippy::drop_copy)]
+ 
+     use super::Deferred;
+-    use std::cell::Cell;
++    use core::cell::Cell;
++    use alloc::boxed::Box;
+ 
+     #[test]
+     fn on_stack() {
+@@ -117,6 +118,7 @@ mod tests {
+ 
+     #[test]
+     fn string() {
++        use alloc::string::ToString;
+         let a = "hello".to_string();
+         let d = Deferred::new(move || assert_eq!(a, "hello"));
+         d.call();
+Index: crossbeam-epoch/src/internal.rs
+===================================================================
+--- crossbeam-epoch.orig/src/internal.rs
++++ crossbeam-epoch/src/internal.rs
+@@ -628,7 +628,7 @@ impl IsElement<Local> for Local {
+ 
+ #[cfg(all(test, not(crossbeam_loom)))]
+ mod tests {
+-    use std::sync::atomic::{AtomicUsize, Ordering};
++    use core::sync::atomic::{AtomicUsize, Ordering};
+ 
+     use super::*;
+ 
+Index: crossbeam-epoch/src/lib.rs
+===================================================================
+--- crossbeam-epoch.orig/src/lib.rs
++++ crossbeam-epoch/src/lib.rs
+@@ -143,6 +143,11 @@ mod primitive {
+ #[cfg(not(crossbeam_no_atomic_cas))]
+ cfg_if! {
+     if #[cfg(feature = "alloc")] {
++        #[cfg(not(feature = "std"))]
++        #[macro_use]
++        extern crate alloc;
++
++        #[cfg(feature = "std")]
+         extern crate alloc;
+ 
+         mod atomic;
+Index: crossbeam-epoch/src/sync/list.rs
+===================================================================
+--- crossbeam-epoch.orig/src/sync/list.rs
++++ crossbeam-epoch/src/sync/list.rs
+@@ -299,7 +299,9 @@ impl<'g, T: 'g, C: IsElement<T>> Iterato
+ mod tests {
+     use super::*;
+     use crate::{Collector, Owned};
++    #[cfg(feature = "std")]
+     use crossbeam_utils::thread;
++    #[cfg(feature = "std")]
+     use std::sync::Barrier;
+ 
+     impl IsElement<Entry> for Entry {
+@@ -397,6 +399,7 @@ mod tests {
+     const ITERS: usize = 512;
+ 
+     /// Contends the list on insert and delete operations to make sure they can run concurrently.
++    #[cfg(feature = "std")]
+     #[test]
+     fn insert_delete_multi() {
+         let collector = Collector::new();
+@@ -439,6 +442,7 @@ mod tests {
+     }
+ 
+     /// Contends the list on iteration to make sure that it can be iterated over concurrently.
++    #[cfg(feature = "std")]
+     #[test]
+     fn iter_multi() {
+         let collector = Collector::new();
+Index: crossbeam-epoch/src/sync/queue.rs
+===================================================================
+--- crossbeam-epoch.orig/src/sync/queue.rs
++++ crossbeam-epoch/src/sync/queue.rs
+@@ -218,7 +218,9 @@ impl<T> Drop for Queue<T> {
+ #[cfg(all(test, not(crossbeam_loom)))]
+ mod test {
+     use super::*;
++    #[cfg(feature = "std")]
+     use crate::pin;
++    #[cfg(feature = "std")]
+     use crossbeam_utils::thread;
+ 
+     struct Queue<T> {
+@@ -232,11 +234,13 @@ mod test {
+             }
+         }
+ 
++        #[cfg(feature = "std")]
+         pub(crate) fn push(&self, t: T) {
+             let guard = &pin();
+             self.queue.push(t, guard);
+         }
+ 
++        #[cfg(feature = "std")]
+         pub(crate) fn is_empty(&self) -> bool {
+             let guard = &pin();
+             let head = self.queue.head.load(Acquire, guard);
+@@ -244,11 +248,13 @@ mod test {
+             h.next.load(Acquire, guard).is_null()
+         }
+ 
++        #[cfg(feature = "std")]
+         pub(crate) fn try_pop(&self) -> Option<T> {
+             let guard = &pin();
+             self.queue.try_pop(guard)
+         }
+ 
++        #[cfg(feature = "std")]
+         pub(crate) fn pop(&self) -> T {
+             loop {
+                 match self.try_pop() {
+@@ -265,6 +271,7 @@ mod test {
+     const CONC_COUNT: i64 = 1000000;
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn push_try_pop_1() {
+         let q: Queue<i64> = Queue::new();
+         assert!(q.is_empty());
+@@ -275,6 +282,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn push_try_pop_2() {
+         let q: Queue<i64> = Queue::new();
+         assert!(q.is_empty());
+@@ -287,6 +295,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn push_try_pop_many_seq() {
+         let q: Queue<i64> = Queue::new();
+         assert!(q.is_empty());
+@@ -301,6 +310,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn push_pop_1() {
+         let q: Queue<i64> = Queue::new();
+         assert!(q.is_empty());
+@@ -311,6 +321,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn push_pop_2() {
+         let q: Queue<i64> = Queue::new();
+         q.push(37);
+@@ -320,6 +331,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn push_pop_many_seq() {
+         let q: Queue<i64> = Queue::new();
+         assert!(q.is_empty());
+@@ -334,6 +346,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn push_try_pop_many_spsc() {
+         let q: Queue<i64> = Queue::new();
+         assert!(q.is_empty());
+@@ -358,6 +371,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn push_try_pop_many_spmc() {
+         fn recv(_t: i32, q: &Queue<i64>) {
+             let mut cur = -1;
+@@ -391,6 +405,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn push_try_pop_many_mpmc() {
+         enum LR {
+             Left(i64),
+@@ -437,6 +452,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn push_pop_many_spsc() {
+         let q: Queue<i64> = Queue::new();
+ 
+@@ -458,6 +474,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn is_empty_dont_pop() {
+         let q: Queue<i64> = Queue::new();
+         q.push(20);
