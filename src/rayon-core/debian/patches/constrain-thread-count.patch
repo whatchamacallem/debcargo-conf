@@ -1,0 +1,23 @@
+Index: rayon-core/tests/stack_overflow_crash.rs
+===================================================================
+--- rayon-core.orig/tests/stack_overflow_crash.rs
++++ rayon-core/tests/stack_overflow_crash.rs
+@@ -69,10 +69,15 @@ fn main() {
+         }
+     } else {
+         let stack_size_in_mb: usize = env::args().nth(1).unwrap().parse().unwrap();
+-        let pool = ThreadPoolBuilder::new()
+-            .stack_size(stack_size_in_mb * 1024 * 1024)
++        let mut poolbuilder = ThreadPoolBuilder::new()
++            .stack_size(stack_size_in_mb * 1024 * 1024);
++        #[cfg(target_pointer_width = "32")]
++        if num_cpus::get() > 8 {
++            poolbuilder = poolbuilder.num_threads(8);
++        }
++        let pool = poolbuilder
+             .build()
+-            .unwrap();
++            .expect(&format!("failed to initialise a thread pool with a stack size of {} MB",stack_size_in_mb));
+         pool.install(|| {
+             #[cfg(unix)]
+             disable_core();
