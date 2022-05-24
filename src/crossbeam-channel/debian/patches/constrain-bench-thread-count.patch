@@ -1,0 +1,128 @@
+--- rust-crossbeam-channel-0.5.4.orig/benches/crossbeam.rs
++++ rust-crossbeam-channel-0.5.4/benches/crossbeam.rs
+@@ -37,7 +37,7 @@ mod unbounded {
+ 
+     #[bench]
+     fn par_inout(b: &mut Bencher) {
+-        let threads = num_cpus::get();
++        let threads = num_cpus::get().clamp(2,8);
+         let steps = TOTAL_STEPS / threads;
+         let (s, r) = unbounded::<i32>();
+ 
+@@ -100,7 +100,7 @@ mod unbounded {
+ 
+     #[bench]
+     fn spmc(b: &mut Bencher) {
+-        let threads = num_cpus::get() - 1;
++        let threads = (num_cpus::get() - 1).clamp(2,8);
+         let steps = TOTAL_STEPS / threads;
+         let (s, r) = unbounded::<i32>();
+ 
+@@ -136,7 +136,7 @@ mod unbounded {
+ 
+     #[bench]
+     fn mpsc(b: &mut Bencher) {
+-        let threads = num_cpus::get() - 1;
++        let threads = (num_cpus::get() - 1).clamp(2,8);
+         let steps = TOTAL_STEPS / threads;
+         let (s, r) = unbounded::<i32>();
+ 
+@@ -172,7 +172,7 @@ mod unbounded {
+ 
+     #[bench]
+     fn mpmc(b: &mut Bencher) {
+-        let threads = num_cpus::get();
++        let threads = num_cpus::get().clamp(4,16);
+         let steps = TOTAL_STEPS / threads;
+         let (s, r) = unbounded::<i32>();
+ 
+@@ -248,7 +248,7 @@ mod bounded_n {
+ 
+     #[bench]
+     fn spmc(b: &mut Bencher) {
+-        let threads = num_cpus::get() - 1;
++        let threads = (num_cpus::get() - 1).clamp(2,8);
+         let steps = TOTAL_STEPS / threads;
+         let (s, r) = bounded::<i32>(steps * threads);
+ 
+@@ -284,7 +284,7 @@ mod bounded_n {
+ 
+     #[bench]
+     fn mpsc(b: &mut Bencher) {
+-        let threads = num_cpus::get() - 1;
++        let threads = (num_cpus::get() - 1).clamp(2,8);
+         let steps = TOTAL_STEPS / threads;
+         let (s, r) = bounded::<i32>(steps * threads);
+ 
+@@ -320,7 +320,7 @@ mod bounded_n {
+ 
+     #[bench]
+     fn par_inout(b: &mut Bencher) {
+-        let threads = num_cpus::get();
++        let threads = num_cpus::get().clamp(2,8);
+         let steps = TOTAL_STEPS / threads;
+         let (s, r) = bounded::<i32>(threads);
+ 
+@@ -354,7 +354,7 @@ mod bounded_n {
+ 
+     #[bench]
+     fn mpmc(b: &mut Bencher) {
+-        let threads = num_cpus::get();
++        let threads = num_cpus::get().clamp(4,16);
+         assert_eq!(threads % 2, 0);
+         let steps = TOTAL_STEPS / threads;
+         let (s, r) = bounded::<i32>(steps * threads);
+@@ -445,7 +445,7 @@ mod bounded_1 {
+ 
+     #[bench]
+     fn spmc(b: &mut Bencher) {
+-        let threads = num_cpus::get() - 1;
++        let threads = (num_cpus::get() - 1).clamp(2,8);
+         let steps = TOTAL_STEPS / threads;
+         let (s, r) = bounded::<i32>(1);
+ 
+@@ -481,7 +481,7 @@ mod bounded_1 {
+ 
+     #[bench]
+     fn mpsc(b: &mut Bencher) {
+-        let threads = num_cpus::get() - 1;
++        let threads = (num_cpus::get() - 1).clamp(2,8);
+         let steps = TOTAL_STEPS / threads;
+         let (s, r) = bounded::<i32>(1);
+ 
+@@ -517,7 +517,7 @@ mod bounded_1 {
+ 
+     #[bench]
+     fn mpmc(b: &mut Bencher) {
+-        let threads = num_cpus::get();
++        let threads = num_cpus::get().clamp(4,16);
+         let steps = TOTAL_STEPS / threads;
+         let (s, r) = bounded::<i32>(1);
+ 
+@@ -598,7 +598,7 @@ mod bounded_0 {
+ 
+     #[bench]
+     fn spmc(b: &mut Bencher) {
+-        let threads = num_cpus::get() - 1;
++        let threads = (num_cpus::get() - 1).clamp(2,8);
+         let steps = TOTAL_STEPS / threads;
+         let (s, r) = bounded::<i32>(0);
+ 
+@@ -634,7 +634,7 @@ mod bounded_0 {
+ 
+     #[bench]
+     fn mpsc(b: &mut Bencher) {
+-        let threads = num_cpus::get() - 1;
++        let threads = (num_cpus::get() - 1).clamp(2,8);
+         let steps = TOTAL_STEPS / threads;
+         let (s, r) = bounded::<i32>(0);
+ 
+@@ -670,7 +670,7 @@ mod bounded_0 {
+ 
+     #[bench]
+     fn mpmc(b: &mut Bencher) {
+-        let threads = num_cpus::get();
++        let threads = num_cpus::get().clamp(4,16);
+         let steps = TOTAL_STEPS / threads;
+         let (s, r) = bounded::<i32>(0);
+ 

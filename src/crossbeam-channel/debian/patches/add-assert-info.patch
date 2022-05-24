@@ -1,0 +1,20 @@
+--- rust-crossbeam-channel-0.5.4.orig/tests/never.rs
++++ rust-crossbeam-channel-0.5.4/tests/never.rs
+@@ -85,11 +85,13 @@ fn recv_timeout() {
+ 
+     assert!(r.recv_timeout(ms(100)).is_err());
+     let now = Instant::now();
+-    assert!(now - start >= ms(100));
+-    assert!(now - start <= ms(150));
++    let elapsed = now - start;
++    assert!(elapsed >= ms(100),"elapsed time of {:?} is smaller than minimum expected value of 100ms",elapsed);
++    assert!(elapsed <= ms(150),"elapsed time of {:?} is larger than maximum expected value of 150ms",elapsed);
+ 
+     assert!(r.recv_timeout(ms(100)).is_err());
+     let now = Instant::now();
+-    assert!(now - start >= ms(200));
+-    assert!(now - start <= ms(250));
++    let elapsed = now - start;
++    assert!(elapsed >= ms(200),"elapsed time of {:?} is smaller than minimum expected value of 200ms",elapsed);
++    assert!(elapsed <= ms(250),"elapsed time of {:?} is larger than maximum expected value of 250ms",elapsed);
+ }
