@@ -1,40 +1,12 @@
 #!/usr/bin/make -f
-include /usr/share/dpkg/architecture.mk
-include /usr/share/dpkg/buildflags.mk
-include /usr/share/rustc/architecture.mk
-export CFLAGS CXXFLAGS CPPFLAGS LDFLAGS
-export DEB_HOST_RUST_TYPE DEB_HOST_GNU_TYPE
-
-DESTDIR := $(CURDIR)/debian/systemd-zram-generator
-PKG_CONFIG := pkg-config
-SYSTEMD_UTIL_DIR := $(shell $(PKG_CONFIG) --variable=systemdutildir systemd)
-SYSTEMD_SYSTEM_UNIT_DIR := $(shell $(PKG_CONFIG) --variable=systemdsystemunitdir systemd)
-SYSTEMD_SYSTEM_GENERATOR_DIR := $(shell $(PKG_CONFIG) --variable=systemdsystemgeneratordir systemd)
-export SYSTEMD_UTIL_DIR
-
 %:
 	dh $@ --buildsystem cargo
 
-execute_after_dh_auto_install:
-	test -f $(DESTDIR)/usr/bin/zram-generator && rm -f $(DESTDIR)/usr/bin/zram-generator
-	test -d $(DESTDIR)/usr/bin && rmdir $(DESTDIR)/usr/bin
-
 override_dh_install:
-	make systemd_service man
-	mkdir -p $(DESTDIR)/etc/systemd/
-	mkdir -p $(DESTDIR)$(SYSTEMD_SYSTEM_UNIT_DIR)/
-	mkdir -p $(DESTDIR)$(SYSTEMD_SYSTEM_GENERATOR_DIR)/
-	mkdir -p $(DESTDIR)/etc/modules-load.d/
-	install -Dpm755 target/$(DEB_HOST_RUST_TYPE)/release/zram-generator -t $(DESTDIR)$(SYSTEMD_SYSTEM_GENERATOR_DIR)/
-	install -Dpm644 units/systemd-zram-setup@.service $(DESTDIR)$(SYSTEMD_SYSTEM_UNIT_DIR)/
-	install -Dpm644 debian/zram-generator.conf  $(DESTDIR)/etc/systemd/
-	install -Dpm644 debian/20-zram-generator.conf  $(DESTDIR)/etc/modules-load.d/
+	make man systemd-service
+	dh_install -O--buildsystem=cargo
 
-override_dh_dwz:
-	# Don't do anything. fails because of the
-	# https://github.com/rust-lang/rust/issues/66118
-
-override_dh_clean:
-	rm -f man/zram-generator.8 man/zram-generator.8.html man/zram-generator.conf.5 man/zram-generator.conf.5.html
-	rm -f units/systemd-zram-setup@.service
-	dh_clean
+execute_after_dh_auto_install:
+	mkdir -p debian/systemd-zram-generator/lib/systemd/system-generators
+	mv debian/systemd-zram-generator/usr/bin/zram-generator debian/systemd-zram-generator/lib/systemd/system-generators
+	rm -rf debian/systemd-zram-generator/usr/bin
