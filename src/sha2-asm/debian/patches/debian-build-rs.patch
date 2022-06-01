@@ -1,18 +1,11 @@
---- a/build.rs
-+++ b/build.rs
-@@ -1,5 +1,7 @@
- extern crate cc;
- 
-+use std::env;
-+
- fn main() {
-     let (sha256_path, sha512_path) = if cfg!(target_arch = "x86") {
-         ("src/sha256_x86.S", "src/sha512_x86.S")
-@@ -16,4 +18,7 @@
-               .flag("-c")
-               .file(sha512_path)
-               .compile("libsha512.a");
-+
+Index: sha2-asm/build.rs
+===================================================================
+--- sha2-asm.orig/build.rs
++++ sha2-asm/build.rs
+@@ -26,4 +26,6 @@ fn main() {
+             .compile("libsha512.a");
+     }
+     build256.flag("-c").file(sha256_path).compile("libsha256.a");
 +    println!("dh-cargo:deb-built-using=sha256=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
 +    println!("dh-cargo:deb-built-using=sha512=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
  }
