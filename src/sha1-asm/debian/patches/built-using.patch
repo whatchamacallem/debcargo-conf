@@ -1,13 +1,10 @@
---- a/build.rs
-+++ b/build.rs
-@@ -1,6 +1,10 @@
- extern crate cc;
- 
-+use std::env;
-+
- fn main() {
-+    println!("dh-cargo:deb-built-using=sha1=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
-+
-     let asm_path = if cfg!(target_arch = "x86") {
-         "src/x86.S"
-     } else if cfg!(target_arch = "x86_64") {
+Index: sha1-asm/build.rs
+===================================================================
+--- sha1-asm.orig/build.rs
++++ sha1-asm/build.rs
+@@ -18,4 +18,5 @@ fn main() {
+         build.flag("-march=armv8-a+crypto");
+     }
+     build.flag("-c").file(asm_path).compile("libsha1.a");
++    println!("dh-cargo:deb-built-using=sha1=0={}", std::env::var("CARGO_MANIFEST_DIR").unwrap());
+ }
