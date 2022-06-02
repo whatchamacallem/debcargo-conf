@@ -1,12 +1,11 @@
---- a/build.rs
-+++ b/build.rs
-@@ -1,6 +1,9 @@
- extern crate cc;
- 
-+use std::env;
-+
+Index: md5-asm/build.rs
+===================================================================
+--- md5-asm.orig/build.rs
++++ md5-asm/build.rs
+@@ -1,5 +1,6 @@
  fn main() {
-+    println!("dh-cargo:deb-built-using=md5=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
-     let asm_path = if cfg!(target_arch = "x86") {
+     let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
++    println!("dh-cargo:deb-built-using=md5=0={}", std::env::var("CARGO_MANIFEST_DIR").unwrap());
+ 
+     let asm_path = if target_arch == "x86" {
          "src/x86.S"
-     } else if cfg!(target_arch = "x86_64") {
