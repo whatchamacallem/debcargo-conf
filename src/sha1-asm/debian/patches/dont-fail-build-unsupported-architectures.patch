@@ -1,0 +1,43 @@
+Index: rust-sha1-asm-0.5.1/build.rs
+===================================================================
+--- rust-sha1-asm-0.5.1.orig/build.rs
++++ rust-sha1-asm-0.5.1/build.rs
+@@ -11,12 +11,14 @@ fn main() {
+     } else if target_arch == "aarch64" {
+         "src/aarch64.S"
+     } else {
+-        panic!("Unsupported target architecture");
++        ""
+     };
+     let mut build = cc::Build::new();
+     if target_arch == "aarch64" {
+         build.flag("-march=armv8-a+crypto");
+     }
+-    build.flag("-c").file(asm_path).compile("libsha1.a");
++    if asm_path != "" {
++        build.flag("-c").file(asm_path).compile("libsha1.a");
++    }
+     println!("dh-cargo:deb-built-using=sha1=0={}", std::env::var("CARGO_MANIFEST_DIR").unwrap());
+ }
+Index: rust-sha1-asm-0.5.1/src/lib.rs
+===================================================================
+--- rust-sha1-asm-0.5.1.orig/src/lib.rs
++++ rust-sha1-asm-0.5.1/src/lib.rs
+@@ -9,15 +9,15 @@
+ //! [`sha-1`]: https://crates.io/crates/sha-1
+ 
+ #![no_std]
+-#[cfg(not(any(target_arch = "x86_64", target_arch = "x86", target_arch = "aarch64")))]
+-compile_error!("crate can only be used on x86, x86_64 and AArch64 architectures");
+ 
++#[cfg(any(target_arch = "x86_64", target_arch = "x86", target_arch = "aarch64"))]
+ #[link(name = "sha1", kind = "static")]
+ extern "C" {
+     fn sha1_compress(state: &mut [u32; 5], block: &[u8; 64]);
+ }
+ 
+ /// Safe wrapper around assembly implementation of SHA-1 compression function
++#[cfg(any(target_arch = "x86_64", target_arch = "x86", target_arch = "aarch64"))]
+ #[inline]
+ pub fn compress(state: &mut [u32; 5], blocks: &[[u8; 64]]) {
+     for block in blocks {
