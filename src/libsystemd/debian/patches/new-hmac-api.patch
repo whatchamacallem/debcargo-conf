@@ -1,23 +1,32 @@
+This patch is based on the 3 upstream commits described below.
+
 From 81c0f195210df9d9a4c875cc03b84e6391b140b5 Mon Sep 17 00:00:00 2001
 From: Luca BRUNO <luca.bruno@coreos.com>
 Date: Thu, 11 Jun 2020 11:57:57 +0000
 Subject: [PATCH] id128: update to new hmac API
 
----
- src/id128.rs | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+commit 67f4c3c306783c0a0758370abe1e918c74c237f9
+Author: Zhang Jingqiang <zh_jq@outlook.com>
+Date:   Fri Dec 17 19:42:21 2021 +0800
 
---- a/src/id128.rs
-+++ b/src/id128.rs
-@@ -37,13 +37,13 @@ impl Id128 {
- 
-     /// Hash this ID with an application-specific ID.
-     pub fn app_specific(&self, app: &Self) -> Result<Self> {
--        use hmac::{Hmac, Mac};
-+        use hmac::{Hmac, Mac, NewMac};
+    update sha2 and hmac to new version
+
+commit 7c760aafee0408c6e7192bcbea1fb9ef6ed69fd9
+Author: Luca BRUNO <luca.bruno@coreos.com>
+Date:   Tue Jun 1 08:47:35 2021 +0000
+
+    id128: update to new hmac API
+
+Index: libsystemd/src/id128.rs
+===================================================================
+--- libsystemd.orig/src/id128.rs
++++ libsystemd/src/id128.rs
+@@ -40,10 +40,10 @@ impl Id128 {
+         use hmac::{Hmac, Mac};
          use sha2::Sha256;
  
-         let mut mac = Hmac::<Sha256>::new_varkey(self.uuid_v4.as_bytes())
+-        let mut mac = Hmac::<Sha256>::new_varkey(self.uuid_v4.as_bytes())
++        let mut mac = Hmac::<Sha256>::new_from_slice(self.uuid_v4.as_bytes())
              .map_err(|_| "failed to prepare HMAC")?;
 -        mac.input(app.uuid_v4.as_bytes());
 -        let mut hashed = mac.result().code();
@@ -26,14 +35,16 @@ Subject: [PATCH] id128: update to new hmac API
  
          ensure!(hashed.len() == 32, "short hash");
  
---- a/Cargo.toml
-+++ b/Cargo.toml
+Index: libsystemd/Cargo.toml
+===================================================================
+--- libsystemd.orig/Cargo.toml
++++ libsystemd/Cargo.toml
 @@ -35,7 +35,7 @@ version = "^0.12.1"
  default-features = false
  
  [dependencies.hmac]
 -version = "0.7"
-+version = "0.10"
++version = "0.12"
  
  [dependencies.libc]
  version = "0.2"
