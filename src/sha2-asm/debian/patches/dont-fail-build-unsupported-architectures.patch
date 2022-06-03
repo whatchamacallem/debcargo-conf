@@ -1,0 +1,87 @@
+Index: rust-sha2-asm-0.6.2/build.rs
+===================================================================
+--- rust-sha2-asm-0.6.2.orig/build.rs
++++ rust-sha2-asm-0.6.2/build.rs
+@@ -16,16 +16,18 @@ fn main() {
+         build256.flag("-march=armv8-a+crypto");
+         ("src/sha256_aarch64.S", "")
+     } else {
+-        panic!("Unsupported target architecture");
++        ("","")
+     };
+ 
+-    if target_arch != "aarch64" {
++    if sha512_path != "" {
+         cc::Build::new()
+             .flag("-c")
+             .file(sha512_path)
+             .compile("libsha512.a");
+     }
+-    build256.flag("-c").file(sha256_path).compile("libsha256.a");
++    if sha256_path != "" {
++        build256.flag("-c").file(sha256_path).compile("libsha256.a");
++    }
+     println!("dh-cargo:deb-built-using=sha256=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
+     println!("dh-cargo:deb-built-using=sha512=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
+ }
+Index: rust-sha2-asm-0.6.2/src/lib.rs
+===================================================================
+--- rust-sha2-asm-0.6.2.orig/src/lib.rs
++++ rust-sha2-asm-0.6.2/src/lib.rs
+@@ -10,15 +10,15 @@
+ //! [`sha2`]: https://crates.io/crates/sha2
+ 
+ #![no_std]
+-#[cfg(not(any(target_arch = "x86_64", target_arch = "x86", target_arch = "aarch64")))]
+-compile_error!("crate can only be used on x86, x86-64 and aarch64 architectures");
+ 
++#[cfg(any(target_arch = "x86_64", target_arch = "x86", target_arch = "aarch64"))]
+ #[link(name = "sha256", kind = "static")]
+ extern "C" {
+     fn sha256_compress(state: &mut [u32; 8], block: &[u8; 64]);
+ }
+ 
+ /// Safe wrapper around assembly implementation of SHA256 compression function
++#[cfg(any(target_arch = "x86_64", target_arch = "x86", target_arch = "aarch64"))]
+ #[inline]
+ pub fn compress256(state: &mut [u32; 8], blocks: &[[u8; 64]]) {
+     for block in blocks {
+@@ -26,7 +26,7 @@ pub fn compress256(state: &mut [u32; 8],
+     }
+ }
+ 
+-#[cfg(not(target_arch = "aarch64"))]
++#[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
+ #[link(name = "sha512", kind = "static")]
+ extern "C" {
+     fn sha512_compress(state: &mut [u64; 8], block: &[u8; 128]);
+@@ -35,7 +35,7 @@ extern "C" {
+ /// Safe wrapper around assembly implementation of SHA512 compression function
+ ///
+ /// This function is available only on x86 and x86-64 targets.
+-#[cfg(not(target_arch = "aarch64"))]
++#[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
+ #[inline]
+ pub fn compress512(state: &mut [u64; 8], blocks: &[[u8; 128]]) {
+     for block in blocks {
+Index: rust-sha2-asm-0.6.2/benches/lib.rs
+===================================================================
+--- rust-sha2-asm-0.6.2.orig/benches/lib.rs
++++ rust-sha2-asm-0.6.2/benches/lib.rs
+@@ -5,6 +5,7 @@ extern crate test;
+ 
+ use test::Bencher;
+ 
++#[cfg(any(target_arch = "x86_64", target_arch = "x86", target_arch = "aarch64"))]
+ #[bench]
+ fn bench_compress256(b: &mut Bencher) {
+     let mut state = Default::default();
+@@ -17,7 +18,7 @@ fn bench_compress256(b: &mut Bencher) {
+     b.bytes = data.len() as u64;
+ }
+ 
+-#[cfg(not(target_arch = "aarch64"))]
++#[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
+ #[bench]
+ fn bench_compress512(b: &mut Bencher) {
+     let mut state = Default::default();
