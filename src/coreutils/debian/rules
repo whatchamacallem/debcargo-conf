@@ -13,7 +13,7 @@ override_dh_auto_test:
 override_dh_auto_install:
 	CARGO_HOME=$(shell pwd)/debian/cargo_home DEB_CARGO_CRATE=coreutils_$(VERSION) /usr/share/cargo/bin/cargo prepare-debian debian/cargo_registry --link-from-system
 	CARGO_HOME=$(shell pwd)/debian/cargo_home DESTDIR=$(CURDIR)/debian/tmp/ make install PROFILE=release
-	for f in $(CURDIR)/debian/tmp/usr/local/bin/*; do \
+	for f in $(CURDIR)/debian/tmp/usr/bin/*; do \
 		filename=$$(basename $$f); \
 		help2man $$f > docs/rust-$$filename.1; \
 	done
