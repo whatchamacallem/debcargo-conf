@@ -1,0 +1,141 @@
+Index: lalrpop/src/grammar/free_variables/test.rs
+===================================================================
+--- lalrpop.orig/src/grammar/free_variables/test.rs
++++ lalrpop/src/grammar/free_variables/test.rs
+@@ -4,6 +4,7 @@ use crate::grammar::free_variables::Free
+ use crate::test_util::{expect_debug, normalized_grammar};
+ use crate::tls::Tls;
+ 
++#[cfg(feature = "lexer")]
+ #[test]
+ fn other_names() {
+     // Check that `Foo` does not end up in the list of free variables.
+Index: lalrpop/src/main.rs
+===================================================================
+--- lalrpop.orig/src/main.rs
++++ lalrpop/src/main.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "pico-args")]
+ extern crate lalrpop;
+ extern crate pico_args;
+ 
+Index: lalrpop/src/lexer/nfa/test.rs
+===================================================================
+--- lalrpop.orig/src/lexer/nfa/test.rs
++++ lalrpop/src/lexer/nfa/test.rs
+@@ -81,6 +81,7 @@ fn max_range() {
+     assert_eq!(interpret(&nfa, "ac"), None);
+ }
+ 
++#[cfg(feature = "lexer")]
+ #[test]
+ fn literal() {
+     let num = re::parse_regex(r#"(?i:aBCdeF)"#).unwrap();
+Index: lalrpop/src/lr1/build/test.rs
+===================================================================
+--- lalrpop.orig/src/lr1/build/test.rs
++++ lalrpop/src/lr1/build/test.rs
+@@ -217,6 +217,7 @@ fn shift_reduce_conflict1() {
+ }
+ 
+ /// One of the few grammars that IS LR(0).
++#[cfg(feature = "lexer")]
+ #[test]
+ fn lr0_expr_grammar_with_explicit_eof() {
+     let _tls = Tls::test();
+@@ -248,6 +249,7 @@ T: () = {
+ }
+ 
+ /// Without the artifical '$', grammar is not LR(0).
++#[cfg(feature = "lexer")]
+ #[test]
+ fn lr0_expr_grammar_with_implicit_eof() {
+     let _tls = Tls::test();
+@@ -278,6 +280,7 @@ T: () = {
+ /// When we moved to storing items as (lr0 -> TokenSet) pairs, a bug
+ /// in the transitive closure routine could cause us to have `(Foo,
+ /// S0)` and `(Foo, S1)` as distinct items instead of `(Foo, S0|S1)`.
++#[cfg(feature = "lexer")]
+ #[test]
+ fn issue_144() {
+     let _tls = Tls::test();
+@@ -329,6 +332,7 @@ ty: () = {
+ }
+ 
+ // Not sure if this is the right spot
++#[cfg(feature = "lexer")]
+ #[test]
+ fn match_grammar() {
+     let _tls = Tls::test();
+Index: lalrpop/src/lr1/first/test.rs
+===================================================================
+--- lalrpop.orig/src/lr1/first/test.rs
++++ lalrpop/src/lr1/first/test.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "lexer")]
+ use super::FirstSets;
+ use crate::grammar::repr::*;
+ use crate::lr1::lookahead::Token::EOF;
+Index: lalrpop/src/lr1/lane_table/test.rs
+===================================================================
+--- lalrpop.orig/src/lr1/lane_table/test.rs
++++ lalrpop/src/lr1/lane_table/test.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "lexer")]
+ use crate::grammar::repr::*;
+ use crate::lr1::build;
+ use crate::lr1::core::*;
+Index: lalrpop/src/lr1/trace/reduce/test.rs
+===================================================================
+--- lalrpop.orig/src/lr1/trace/reduce/test.rs
++++ lalrpop/src/lr1/trace/reduce/test.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "lexer")]
+ use crate::grammar::repr::*;
+ use crate::lr1::build_states;
+ use crate::lr1::core::Item;
+Index: lalrpop/src/lr1/trace/shift/test.rs
+===================================================================
+--- lalrpop.orig/src/lr1/trace/shift/test.rs
++++ lalrpop/src/lr1/trace/shift/test.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "lexer")]
+ use crate::grammar::repr::*;
+ use crate::lr1::build_states;
+ use crate::lr1::core::*;
+Index: lalrpop/src/normalize/inline/test.rs
+===================================================================
+--- lalrpop.orig/src/normalize/inline/test.rs
++++ lalrpop/src/normalize/inline/test.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "lexer")]
+ use crate::grammar::parse_tree::NonterminalString;
+ use crate::grammar::repr::Grammar;
+ use crate::normalize::{self, NormResult};
+Index: lalrpop/src/normalize/inline/graph/test.rs
+===================================================================
+--- lalrpop.orig/src/normalize/inline/graph/test.rs
++++ lalrpop/src/normalize/inline/graph/test.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "lexer")]
+ use super::inline_order;
+ use crate::grammar::repr::NonterminalString;
+ use crate::normalize::lower_helper;
+Index: lalrpop/src/normalize/token_check/test.rs
+===================================================================
+--- lalrpop.orig/src/normalize/token_check/test.rs
++++ lalrpop/src/normalize/token_check/test.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "lexer")]
+ use crate::grammar::parse_tree::Grammar;
+ use crate::lexer::dfa::interpret;
+ use crate::normalize::resolve::resolve;
+Index: lalrpop/src/normalize/tyinfer/test.rs
+===================================================================
+--- lalrpop.orig/src/normalize/tyinfer/test.rs
++++ lalrpop/src/normalize/tyinfer/test.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "lexer")]
+ use crate::grammar::parse_tree::NonterminalString;
+ use crate::grammar::repr::TypeRepr;
+ use crate::normalize::macro_expand::expand_macros;
