@@ -2,7 +2,7 @@ Index: time/src/lib.rs
 ===================================================================
 --- time.orig/src/lib.rs
 +++ time/src/lib.rs
-@@ -312,8 +312,6 @@ mod rand;
+@@ -307,8 +307,6 @@ mod rand;
  #[allow(missing_copy_implementations, missing_debug_implementations)]
  pub mod serde;
  mod sys;
@@ -24,11 +24,11 @@ Index: time/Cargo.toml
 -path = "benchmarks/main.rs"
 -harness = false
  [dependencies.itoa]
- version = "0.4.7"
+ version = "1.0.1"
  optional = true
-@@ -68,9 +64,6 @@ default-features = false
- version = "1.0.126"
- default-features = false
+@@ -75,9 +71,6 @@ default-features = false
+ [dev-dependencies.serde_json]
+ version = "1.0.68"
  
 -[dev-dependencies.serde_test]
 -version = "1.0.126"
@@ -36,16 +36,23 @@ Index: time/Cargo.toml
  [features]
  alloc = []
  default = ["std"]
-@@ -82,12 +75,5 @@ parsing = []
- quickcheck = ["quickcheck-dep", "alloc"]
+@@ -90,13 +83,13 @@ quickcheck = ["quickcheck-dep", "alloc"]
  serde-human-readable = ["serde", "formatting", "parsing"]
+ serde-well-known = ["serde/alloc", "formatting", "parsing"]
  std = ["alloc"]
 -[target."cfg(__ui_tests)".dev-dependencies.trybuild]
 -version = "=1.0.34"
- [target."cfg(any(target_os = \"linux\", unsound_local_offset))".dependencies.libc]
- version = "0.2.98"
 -[target."cfg(bench)".dev-dependencies.criterion]
 -version = "0.3.5"
--
++#[target."cfg(__ui_tests)".dev-dependencies.trybuild]
++#version = "=1.0.34"
++#[target."cfg(bench)".dev-dependencies.criterion]
++#version = "0.3.5"
+ 
 -[target."cfg(bench)".dev-dependencies.criterion-cycles-per-byte]
 -version = "0.1.2"
++#[target."cfg(bench)".dev-dependencies.criterion-cycles-per-byte]
++#version = "0.1.2"
+ [target."cfg(target_family = \"unix\")".dependencies.libc]
+ version = "0.2.98"
+ 
