@@ -6,7 +6,7 @@ export CFLAGS CXXFLAGS CPPFLAGS LDFLAGS
 export DEB_HOST_RUST_TYPE DEB_HOST_GNU_TYPE
 VERSION := $(shell dpkg-parsechangelog -S Version|sed -e "s|.*~\(.*\)-.*|\1|g")
 %:
-	dh $@ --buildsystem cargo
+	dh $@ --buildsystem cargo --with bash-completion
 
 override_dh_auto_test:
 
@@ -17,6 +17,7 @@ override_dh_auto_install:
 		filename=$$(basename $$f); \
 		help2man $$f > docs/rust-$$filename.1; \
 	done
+
 	rm -f $(CURDIR)/debian/tmp/usr/local/man/man1/arch.1.gz
 
 override_dh_missing:
