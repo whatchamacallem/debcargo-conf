@@ -1,0 +1,58 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index ec4e6d5..908e82b 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -49,11 +49,6 @@ path = "examples/internal/trytls_shim.rs"
+ name = "bench"
+ path = "examples/internal/bench.rs"
+ 
+-[[bench]]
+-name = "benchmarks"
+-path = "tests/benchmarks.rs"
+-harness = false
+-
+ [dependencies.log]
+ version = "0.4.4"
+ optional = true
+@@ -74,9 +69,6 @@ features = [
+ [dev-dependencies.base64]
+ version = "0.13.0"
+ 
+-[dev-dependencies.criterion]
+-version = "0.3.0"
+-
+ [dev-dependencies.env_logger]
+ version = "0.9.0"
+ 
+diff --git a/tests/benchmarks.rs b/tests/benchmarks.rs
+deleted file mode 100644
+index a6be7f8..0000000
+--- a/tests/benchmarks.rs
++++ /dev/null
+@@ -1,26 +0,0 @@
+-use criterion::criterion_group;
+-use criterion::criterion_main;
+-/// Microbenchmarks go here.  Larger benchmarks of (e.g..) protocol
+-/// performance go in examples/internal/bench.rs.
+-use criterion::Criterion;
+-
+-#[allow(dead_code)]
+-mod common;
+-use crate::common::*;
+-
+-use rustls::ServerConnection;
+-
+-use std::io;
+-use std::sync::Arc;
+-
+-fn bench_ewouldblock(c: &mut Criterion) {
+-    let server_config = make_server_config(KeyType::Rsa);
+-    let mut server = ServerConnection::new(Arc::new(server_config)).unwrap();
+-    let mut read_ewouldblock = FailsReads::new(io::ErrorKind::WouldBlock);
+-    c.bench_function("read_tls with EWOULDBLOCK", move |b| {
+-        b.iter(|| server.read_tls(&mut read_ewouldblock))
+-    });
+-}
+-
+-criterion_group!(benches, bench_ewouldblock);
+-criterion_main!(benches);
