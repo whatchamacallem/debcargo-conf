@@ -1,0 +1,46 @@
+Index: libmount/Cargo.toml
+===================================================================
+--- libmount.orig/Cargo.toml
++++ libmount/Cargo.toml
+@@ -31,7 +31,7 @@ version = "0.2.28"
+ version = ">= 0.23, < 0.25"
+ 
+ [dependencies.quick-error]
+-version = "1.2.0"
++version = "2.0"
+ [dev-dependencies.argparse]
+ version = "0.2.1"
+ 
+Index: libmount/src/lib.rs
+===================================================================
+--- libmount.orig/src/lib.rs
++++ libmount/src/lib.rs
+@@ -50,11 +50,11 @@ quick_error! {
+     #[derive(Debug)]
+     enum MountError {
+         Io(err: io::Error) {
+-            cause(err)
++            source(err)
+             from()
+         }
+         Remount(err: RemountError) {
+-            cause(err)
++            source(err)
+             from()
+         }
+     }
+Index: libmount/src/remount.rs
+===================================================================
+--- libmount.orig/src/remount.rs
++++ libmount/src/remount.rs
+@@ -71,9 +71,8 @@ quick_error! {
+     #[derive(Debug)]
+     pub enum RemountError {
+         Io(msg: String, err: io::Error) {
+-            cause(err)
++            source(err)
+             display("{}: {}", msg, err)
+-            description(err.description())
+             from(err: io::Error) -> (String::new(), err)
+         }
+         ParseMountInfo(err: String) {
