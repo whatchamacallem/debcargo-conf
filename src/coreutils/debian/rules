@@ -8,6 +8,10 @@ VERSION := $(shell dpkg-parsechangelog -S Version|sed -e "s|.*~\(.*\)-.*|\1|g")
 %:
 	dh $@ --buildsystem cargo --with bash-completion
 
+override_dh_auto_clean:
+	rm -f docs/*.1
+	dh_auto_clean
+
 override_dh_auto_test:
 
 override_dh_auto_install:
