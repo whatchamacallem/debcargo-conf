@@ -1,0 +1,43 @@
+This patch is based on the upstream commit described below, adapted
+for use in the Debian package by Peter Michael Green.
+
+commit d11bad1613e241e1ffa4b45b7c4b2ba86b181930
+Author: Lovecraftian Horror <LovecraftianHorror@pm.me>
+Date:   Tue Aug 25 21:41:24 2020 -0400
+
+    Update to version 2 of quick-error
+
+Index: proptest/Cargo.toml
+===================================================================
+--- proptest.orig/Cargo.toml
++++ proptest/Cargo.toml
+@@ -44,7 +44,7 @@ version = "0.2.2"
+ default-features = false
+ 
+ [dependencies.quick-error]
+-version = "1.2.1"
++version = "2.0.0"
+ optional = true
+ 
+ [dependencies.rand]
+Index: proptest/src/string.rs
+===================================================================
+--- proptest.orig/src/string.rs
++++ proptest/src/string.rs
+@@ -68,14 +68,13 @@ mod error_container {
+             /// The string passed as the regex was not syntactically valid.
+             RegexSyntax(err: ParseError) {
+                 from()
+-                    cause(err)
+-                    description(err.description())
++                    source(err)
+                     display("{}", err)
+             }
+             /// The regex was syntactically valid, but contains elements not
+             /// supported by proptest.
+             UnsupportedRegex(message: &'static str) {
+-                description(message)
++                display("{}", message)
+             }
+         }
+     }
