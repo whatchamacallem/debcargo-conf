@@ -1,0 +1,46 @@
+This patch is based on the upstream commit descrabed below, adapted for use in the
+Debian package by Peter Michael Green.
+
+commit 8e6156cd19c3acc93c661122e570aa73f5de8e4f
+Author: i509VCB <git@i509.me>
+Date:   Sun Apr 24 15:00:15 2022 -0500
+
+    update to nix 0.24.1
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -25 +25 @@
+-version = "0.22"
++version = ">= 0.24.1, < 1.0"
+--- a/src/socket.rs
++++ b/src/socket.rs
+@@ -3,0 +3 @@ 1
++use std::io::{IoSlice, IoSliceMut};
+@@ -6 +6 @@ 2
+-    sys::{socket, uio},
++    sys::socket,
+@@ -36 +36,3 @@ 3
+-        let iov = [uio::IoVec::from_slice(bytes)];
++        let flags = socket::MsgFlags::MSG_DONTWAIT | socket::MsgFlags::MSG_NOSIGNAL;
++        let iov = [IoSlice::new(bytes)];
++
+@@ -39 +41 @@ 4
+-            socket::sendmsg(self.fd, &iov, &cmsgs, socket::MsgFlags::MSG_DONTWAIT, None)?;
++            socket::sendmsg::<()>(self.fd, &iov, &cmsgs, flags, None)?;
+@@ -41 +43 @@
+-            socket::sendmsg(self.fd, &iov, &[], socket::MsgFlags::MSG_DONTWAIT, None)?;
++            socket::sendmsg::<()>(self.fd, &iov, &[], flags, None)?;
+@@ -58,3 +60,2 @@
+-        let iov = [uio::IoVec::from_mut_slice(buffer)];
+-
+-        let msg = socket::recvmsg(
++        let mut iov = [IoSliceMut::new(buffer)];
++        let msg = socket::recvmsg::<()>(
+@@ -62 +63 @@
+-            &iov[..],
++            &mut iov[..],
+@@ -64 +65,3 @@
+-            socket::MsgFlags::MSG_DONTWAIT | socket::MsgFlags::MSG_CMSG_CLOEXEC,
++            socket::MsgFlags::MSG_DONTWAIT
++                | socket::MsgFlags::MSG_CMSG_CLOEXEC
++                | socket::MsgFlags::MSG_NOSIGNAL,
