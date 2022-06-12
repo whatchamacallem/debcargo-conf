@@ -1,0 +1,28 @@
+commit eb9ea392636681bdea35a89b782edbb8010897f0
+Author: Jonah Petri <jonah@petri.us>
+Date:   Thu Feb 24 11:10:09 2022 -0500
+
+    fix build for compatibility with nix 0.24
+    
+    See https://github.com/lucab/libsystemd-rs/issues/107.
+
+diff --git a/src/activation.rs b/src/activation.rs
+index 1c751dc78..9a0dd9d3f 100644
+--- a/src/activation.rs
++++ b/src/activation.rs
+@@ -2,1 +2,0 @@
+-use nix::mqueue::mq_getattr;
+@@ -192,7 +191,12 @@ impl IsType for RawFd {
+     }
+ 
+     fn is_mq(&self) -> bool {
+-        mq_getattr(*self).is_ok()
++        // `nix` does not enable us to test if a raw fd is a mq, so we must drop to libc here.
++        // SAFETY: `mq_getattr` is specified to return -1 when passed a fd which is not a mq.
++        //         Furthermore, we ignore `attr` and rely only on the return value.
++        let mut attr = std::mem::MaybeUninit::<libc::mq_attr>::uninit();
++        let res = unsafe { libc::mq_getattr(*self, attr.as_mut_ptr()) };
++        res == 0
+     }
+ }
+ 
