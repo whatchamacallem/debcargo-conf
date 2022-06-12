@@ -2,12 +2,16 @@ Index: syntect/Cargo.toml
 ===================================================================
 --- syntect.orig/Cargo.toml
 +++ syntect/Cargo.toml
-@@ -91,8 +91,6 @@ version = "2.0"
- [dependencies.yaml-rust]
+@@ -114,9 +114,9 @@ version = "2.0"
  version = "0.4.5"
  optional = true
+ 
 -[dev-dependencies.criterion]
 -version = "0.3"
+-features = ["html_reports"]
++#[dev-dependencies.criterion]
++#version = "0.3"
++#features = ["html_reports"]
  
  [dev-dependencies.getopts]
  version = "0.2"
@@ -18,10 +22,10 @@ Index: syntect/benches/highlighting.rs
 @@ -1,4 +1,4 @@
 -use criterion::{Bencher, Criterion, criterion_group, criterion_main};
 +/*use criterion::{Bencher, Criterion, criterion_group, criterion_main};
- use syntect::parsing::{SyntaxSet, SyntaxReference, ScopeStack};
- use syntect::highlighting::{ThemeSet, Theme};
- use syntect::easy::HighlightLines;
-@@ -90,3 +90,7 @@ criterion_group! {
+ use syntect::parsing::{SyntaxSet, ScopeStack};
+ use syntect::highlighting::{ThemeSet};
+ use syntect::html::highlighted_html_for_string;
+@@ -67,3 +67,7 @@ criterion_group! {
      targets = highlighting_benchmark
  }
  criterion_main!(benches);
@@ -39,7 +43,7 @@ Index: syntect/benches/loading.rs
  use syntect::parsing::{SyntaxSet, SyntaxSetBuilder};
  use syntect::highlighting::ThemeSet;
  
-@@ -50,3 +50,8 @@ criterion_group! {
+@@ -57,3 +57,8 @@ criterion_group! {
      targets = loading_benchmark
  }
  criterion_main!(benches);
@@ -52,13 +56,12 @@ Index: syntect/benches/parsing.rs
 ===================================================================
 --- syntect.orig/benches/parsing.rs
 +++ syntect/benches/parsing.rs
-@@ -1,4 +1,4 @@
--use criterion::{Bencher, Criterion, criterion_group, criterion_main};
-+/*use criterion::{Bencher, Criterion, criterion_group, criterion_main};
- use std::fs::File;
- use std::io::Read;
+@@ -1,3 +1,4 @@
++/*
+ use criterion::{Bencher, Criterion, criterion_group, criterion_main};
  use std::time::Duration;
-@@ -57,3 +57,7 @@ criterion_group! {
+ use syntect::parsing::{ParseState, SyntaxReference, SyntaxSet};
+@@ -47,3 +48,7 @@ criterion_group! {
      targets = parsing_benchmark
  }
  criterion_main!(benches);
