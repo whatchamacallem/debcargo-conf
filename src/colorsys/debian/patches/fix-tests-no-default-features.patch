@@ -1,0 +1,114 @@
+Index: colorsys/src/converters/rgb_to_hsl.rs
+===================================================================
+--- colorsys.orig/src/converters/rgb_to_hsl.rs
++++ colorsys/src/converters/rgb_to_hsl.rs
+@@ -46,6 +46,7 @@ fn rgb_to_hsl_tst() {
+   fn a(x: ColorTuple, y: ColorTuple) -> bool {
+     let from_rgb_u = rgb_to_hsl(&Rgb::from(x));
+     let hsl_u = new_hsl_units(y.0, y.1, y.2);
++    #[cfg(feature = "std")]
+     println!("rgb {:?}\n\n", Into::<Hsl>::into(Rgb::from(x)));
+     from_rgb_u.approx_eq_clarify(&hsl_u, 0.5)
+     // Rgb::from(x).approx_eq_clarify(&Hsl::from(y), 0.5)
+Index: colorsys/src/units/iter.rs
+===================================================================
+--- colorsys.orig/src/units/iter.rs
++++ colorsys/src/units/iter.rs
+@@ -39,6 +39,8 @@ impl core::iter::Iterator for ColorUnits
+ #[cfg(test)]
+ mod test {
+   use crate::Rgb;
++  #[cfg(not(feature = "std"))]
++  use alloc::vec::Vec;
+ 
+   #[test]
+   fn color_iter_collect_test() {
+Index: colorsys/src/common/mod.rs
+===================================================================
+--- colorsys.orig/src/common/mod.rs
++++ colorsys/src/common/mod.rs
+@@ -34,5 +34,7 @@ pub(crate) fn f64_round(n: f64) -> f64 {
+ }
+ #[cfg(not(feature = "std"))]
+ pub(crate) fn f64_round(n: f64) -> f64 {
+-  f64::from(n as i32)
++  let adjustment = if n < 0.0 {-0.5} else {0.5};
++
++  f64::from((n+adjustment) as i32)
+ }
+Index: colorsys/src/hsl/tests.rs
+===================================================================
+--- colorsys.orig/src/hsl/tests.rs
++++ colorsys/src/hsl/tests.rs
+@@ -13,11 +13,11 @@ fn round_tuple(t: &ColorTuple) -> (u32,
+ fn hsl_to_rgb() {
+   let hsl = Hsl::from((126.0, 43.0, 52.0));
+   let rgb = Rgb::from(&hsl);
+-  #[cfg(feature = "std")]
++  //#[cfg(feature = "std")]
+   assert_eq!(round_tuple(&rgb.as_ref().into()), (80, 185, 90));
+ 
+-  #[cfg(not(feature = "std"))]
+-  assert_eq!(round_tuple(&rgb.as_ref().into()), (79, 185, 90));
++  /*#[cfg(not(feature = "std"))]
++  assert_eq!(round_tuple(&rgb.as_ref().into()), (79, 185, 90));*/
+ 
+   let hsl_new = Hsl::from(&rgb);
+   assert!(hsl_new.approx_eq(&hsl));
+Index: colorsys/src/rgb/tests.rs
+===================================================================
+--- colorsys.orig/src/rgb/tests.rs
++++ colorsys/src/rgb/tests.rs
+@@ -19,20 +19,20 @@ fn lighten() {
+ 
+   rgb.lighten(15.0);
+ 
+-  #[cfg(feature = "std")]
++  //#[cfg(feature = "std")]
+   assert_eq!(round_tuple(&rgb.into()), (135, 208, 142));
+-  #[cfg(not(feature = "std"))]
+-  assert_eq!(round_tuple(&rgb.into()), (134, 207, 141));
++  //#[cfg(not(feature = "std"))]
++  //assert_eq!(round_tuple(&rgb.into()), (134, 207, 141));
+ 
+   rgb2.lighten(45.0);
+-  #[cfg(feature = "std")]
++  //#[cfg(feature = "std")]
+   assert_eq!(round_tuple(&rgb2.into()), (245, 251, 245));
+-  #[cfg(not(feature = "std"))]
+-  assert_eq!(round_tuple(&rgb2.into()), (244, 250, 245));
++  //#[cfg(not(feature = "std"))]
++  //assert_eq!(round_tuple(&rgb2.into()), (244, 250, 245));
+ 
+ 
+   rgb3.lighten(-23.0);
+-  #[cfg(feature = "std")]
++  //#[cfg(feature = "std")]
+   assert_eq!(round_tuple(&rgb3.into()), (42, 107, 48));
+ 
+   rgb4.lighten(-203.0);
+Index: colorsys/src/rgb/transform.rs
+===================================================================
+--- colorsys.orig/src/rgb/transform.rs
++++ colorsys/src/rgb/transform.rs
+@@ -80,15 +80,15 @@ mod test {
+     }
+ 
+     let asserts = [
+-        #[cfg(feature = "std")]
++//        #[cfg(feature = "std")]
+       ((30.0, 108.0, 77.0), 20.0, (52, 188, 134)),
+       ((30.0, 108.0, 77.0), 90.0, (255, 255, 255)),
+-        #[cfg(feature = "std")]
++//        #[cfg(feature = "std")]
+       ((30.0, 108.0, 77.0), -20.0, (8, 28, 20)),
+-        #[cfg(feature = "std")]
++//        #[cfg(feature = "std")]
+       ((0.0, 0.0, 0.0), 50.0, (128, 128, 128)),
+-        #[cfg(not(feature = "std"))]
+-      ((0.0, 0.0, 0.0), 50.0, (127, 127, 127)),
++//        #[cfg(not(feature = "std"))]
++//      ((0.0, 0.0, 0.0), 50.0, (127, 127, 127)),
+       ((0.0, 0.0, 0.0), -50.0, (0, 0, 0)),
+       ((0.0, 0.0, 0.0), 300.5, (255, 255, 255)),
+     ];
