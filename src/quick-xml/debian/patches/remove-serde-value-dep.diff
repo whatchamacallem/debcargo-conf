@@ -1,0 +1,58 @@
+Description: Remove serde_value dev-dependency
+ The project appears dead upstream and it's only used for 1 test.  Not worth
+ preventing running other tests due to this dependency.
+Forwarded: not-needed
+---
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -42,9 +42,6 @@ version = "1"
+ version = "1.0"
+ features = ["derive"]
+ 
+-[dev-dependencies.serde-value]
+-version = "0.7"
+-
+ [features]
+ default = []
+ encoding = ["encoding_rs"]
+--- a/src/de/mod.rs
++++ b/src/de/mod.rs
+@@ -636,27 +636,6 @@ mod tests {
+         );
+     }
+ 
+-    /// Test for https://github.com/tafia/quick-xml/issues/231
+-    #[test]
+-    fn implicit_value() {
+-        use serde_value::Value;
+-
+-        let s = r#"<root>content</root>"#;
+-        let item: Value = from_str(s).unwrap();
+-
+-        assert_eq!(
+-            item,
+-            Value::Map(
+-                vec![(
+-                    Value::String("$value".into()),
+-                    Value::String("content".into())
+-                )]
+-                .into_iter()
+-                .collect()
+-            )
+-        );
+-    }
+-
+     #[test]
+     fn explicit_value() {
+         #[derive(Debug, Deserialize, PartialEq)]
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -117,8 +117,6 @@ extern crate encoding_rs;
+ extern crate memchr;
+ #[cfg(feature = "serialize")]
+ extern crate serde;
+-#[cfg(all(test, feature = "serialize"))]
+-extern crate serde_value;
+ 
+ #[cfg(feature = "serialize")]
+ pub mod de;
