@@ -1,0 +1,90 @@
+Switch to using the built-in test crate of rustc instead of rustc-test or
+tester which are not in Debian.
+
+Based on upstream commit 92305d628a3c29e564d8f9895e33b2d82de8fde1
+
+Index: idna/Cargo.toml
+===================================================================
+--- idna.orig/Cargo.toml
++++ idna/Cargo.toml
+@@ -45,8 +45,5 @@ version = "0.1.17"
+ [dev-dependencies.bencher]
+ version = "0.1"
+ 
+-[dev-dependencies.rustc-test]
+-version = "0.3"
+-
+ [dev-dependencies.serde_json]
+ version = "1.0"
+Index: idna/tests/tests.rs
+===================================================================
+--- idna.orig/tests/tests.rs
++++ idna/tests/tests.rs
+@@ -1,4 +1,5 @@
+-use rustc_test as test;
++#![feature(test)]
++extern crate test;
+ 
+ mod punycode;
+ mod uts46;
+@@ -8,12 +9,20 @@ fn main() {
+     {
+         let mut add_test = |name, run| {
+             tests.push(test::TestDescAndFn {
+-                desc: test::TestDesc::new(test::DynTestName(name)),
++                desc: test::TestDesc {
++                    name: test::DynTestName(name),
++                    ignore: false,
++                    should_panic: test::ShouldPanic::No,
++                    allow_fail: false,
++                    compile_fail: false,
++                    no_run: false,
++                    test_type: test::TestType::Unknown,
++                },
+                 testfn: run,
+             })
+         };
+         punycode::collect_tests(&mut add_test);
+         uts46::collect_tests(&mut add_test);
+     }
+-    test::test_main(&std::env::args().collect::<Vec<_>>(), tests)
++    test::test_main(&std::env::args().collect::<Vec<_>>(), tests, None)
+ }
+Index: idna/tests/punycode.rs
+===================================================================
+--- idna.orig/tests/punycode.rs
++++ idna/tests/punycode.rs
+@@ -63,9 +63,9 @@ pub fn collect_tests<F: FnMut(String, Te
+                         };
+                         add_test(
+                             test_name,
+-                            TestFn::dyn_test_fn(move || {
++                            TestFn::DynTestFn(Box::new(move || {
+                                 one_test(get_string(&o, "decoded"), get_string(&o, "encoded"))
+-                            }),
++                            })),
+                         )
+                     }
+                     _ => panic!(),
+Index: idna/tests/uts46.rs
+===================================================================
+--- idna.orig/tests/uts46.rs
++++ idna/tests/uts46.rs
+@@ -65,7 +65,7 @@ pub fn collect_tests<F: FnMut(String, Te
+         let test_name = format!("UTS #46 line {}", i + 1);
+         add_test(
+             test_name,
+-            TestFn::dyn_test_fn(move || {
++            TestFn::DynTestFn(Box::new(move || {
+                 let config = idna::Config::default()
+                     .use_std3_ascii_rules(true)
+                     .verify_dns_length(true)
+@@ -109,7 +109,7 @@ pub fn collect_tests<F: FnMut(String, Te
+                     to_ascii_t_result,
+                     |e| e.starts_with('C') || e == "V2",
+                 );
+-            }),
++            })),
+         )
+     }
+ }
