@@ -1,0 +1,124 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index c3fe58d..98dff02 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -12,6 +12,9 @@
+ //! services such as finding fonts on the system, performing nearest-font matching, and rasterizing
+ //! glyphs.
+ //!
++#![cfg_attr(
++    feature = "source",
++    doc = r##"
+ //! ## Synopsis
+ //!
+ //!     # extern crate font_kit;
+@@ -39,6 +42,8 @@
+ //!                          HintingOptions::None,
+ //!                          RasterizationOptions::GrayscaleAa)
+ //!         .unwrap();
++"##
++)]
+ //!
+ //! ## Backends
+ //!
+diff --git a/tests/tests.rs b/tests/tests.rs
+index 2de6966..17f32da 100644
+--- a/tests/tests.rs
++++ b/tests/tests.rs
+@@ -183,96 +183,6 @@ pub fn get_glyph_outline() {
+     );
+ }
+ 
+-// Right now, only FreeType can do hinting.
+-#[cfg(all(
+-    not(any(target_os = "macos", target_os = "ios", target_family = "windows")),
+-    feature = "loader-freetype-default",
+-    feature = "source"
+-))]
+-#[test]
+-pub fn get_vertically_hinted_glyph_outline() {
+-    let font = SystemSource::new()
+-        .select_best_match(&[FamilyName::SansSerif], &Properties::new())
+-        .unwrap()
+-        .load()
+-        .unwrap();
+-    let glyph = font.glyph_for_char('i').expect("No glyph for char!");
+-    let mut outline_builder = OutlineBuilder::new();
+-    font.outline(glyph, HintingOptions::Vertical(16.0), &mut outline_builder)
+-        .unwrap();
+-
+-    let outline = outline_builder.into_outline();
+-    assert_eq!(
+-        outline,
+-        Outline {
+-            contours: vec![
+-                Contour {
+-                    positions: vec![
+-                        Vector2F::new(136.0, 1316.0),
+-                        Vector2F::new(136.0, 1536.0),
+-                        Vector2F::new(316.0, 1536.0),
+-                        Vector2F::new(316.0, 1316.0),
+-                    ],
+-                    flags: vec![PointFlags::empty(); 4],
+-                },
+-                Contour {
+-                    positions: vec![
+-                        Vector2F::new(136.0, 0.0),
+-                        Vector2F::new(136.0, 1152.0),
+-                        Vector2F::new(316.0, 1152.0),
+-                        Vector2F::new(316.0, 0.0),
+-                    ],
+-                    flags: vec![PointFlags::empty(); 4],
+-                },
+-            ],
+-        }
+-    );
+-}
+-
+-#[cfg(all(
+-    feature = "source",
+-    not(any(target_os = "macos", target_os = "ios", target_family = "windows"))
+-))]
+-#[test]
+-pub fn get_vertically_hinted_glyph_outline() {
+-    let font = SystemSource::new()
+-        .select_best_match(&[FamilyName::SansSerif], &Properties::new())
+-        .unwrap()
+-        .load()
+-        .unwrap();
+-    let glyph = font.glyph_for_char('i').expect("No glyph for char!");
+-    let mut outline_builder = OutlineBuilder::new();
+-    font.outline(glyph, HintingOptions::Vertical(16.0), &mut outline_builder)
+-        .unwrap();
+-
+-    let outline = outline_builder.into_outline();
+-    assert_eq!(
+-        outline,
+-        Outline {
+-            contours: vec![
+-                Contour {
+-                    positions: vec![
+-                        Vector2F::new(256.0, 1152.0),
+-                        Vector2F::new(384.0, 1152.0),
+-                        Vector2F::new(384.0, 0.0),
+-                        Vector2F::new(256.0, 0.0),
+-                    ],
+-                    flags: vec![PointFlags::empty(); 4],
+-                },
+-                Contour {
+-                    positions: vec![
+-                        Vector2F::new(256.0, 1536.0),
+-                        Vector2F::new(384.0, 1536.0),
+-                        Vector2F::new(384.0, 1280.0),
+-                        Vector2F::new(256.0, 1280.0),
+-                    ],
+-                    flags: vec![PointFlags::empty(); 4],
+-                },
+-            ],
+-        }
+-    );
+-}
+-
+ #[cfg(all(
+     feature = "source",
+     any(target_family = "windows", target_os = "macos", target_os = "ios")
