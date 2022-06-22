@@ -20,3 +20,16 @@ Index: derive-builder/Cargo.toml
  optional = true
  
  [build-dependencies.log]
+Index: derive-builder/src/lib.rs
+===================================================================
+--- derive-builder.orig/src/lib.rs
++++ derive-builder/src/lib.rs
+@@ -590,7 +590,7 @@ static INIT_LOGGER: Once = ONCE_INIT;
+ pub fn derive(input: TokenStream) -> TokenStream {
+     #[cfg(feature = "logging")]
+     INIT_LOGGER.call_once(|| {
+-        env_logger::init().unwrap();
++        env_logger::init();
+     });
+ 
+     let ast = parse_macro_input!(input as syn::DeriveInput);
