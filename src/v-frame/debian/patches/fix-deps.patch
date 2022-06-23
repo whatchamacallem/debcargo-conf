@@ -1,0 +1,43 @@
+Description: Remove rust_hawktracer and wasm-bindgen dependency
+Author: Sebastian Ramacher
+Last-Update: 2022-06-23
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -32,19 +32,10 @@
+ [dependencies.rayon]
+ version = "1.0"
+ 
+-[dependencies.rust_hawktracer]
+-version = "0.7.0"
+-
+ [dependencies.serde]
+ version = "1.0"
+ features = ["derive"]
+ optional = true
+ 
+-[dependencies.wasm-bindgen]
+-version = "0.2.63"
+-optional = true
+-
+ [features]
+ serialize = ["serde"]
+-tracing = ["rust_hawktracer/profiling_enabled"]
+-wasm = ["wasm-bindgen"]
+--- a/src/plane.rs
++++ b/src/plane.rs
+@@ -10,7 +10,6 @@
+ use rayon::current_num_threads;
+ use rayon::iter::ParallelIterator;
+ use rayon::prelude::*;
+-use rust_hawktracer::*;
+ use std::cmp;
+ use std::marker::PhantomData;
+ use std::mem;
+@@ -559,7 +558,6 @@
+   /// Downscales the source plane by a factor of `scale`, writing the result to `in_plane` (not padded)
+   ///
+   /// `in_plane`'s width and height must be sufficient for `scale`.
+-  #[hawktracer(downscale)]
+   pub fn downscale_in_place(&self, scale: usize, in_plane: &mut Plane<T>) {
+     let src = self;
+     let box_pixels = scale * scale;
