@@ -55,3 +55,25 @@ Index: num-format/src/strings.rs
              fn from(s: $name) -> Self {
                  s.0
              }
+Index: num-format/src/error_kind.rs
+===================================================================
+--- num-format.orig/src/error_kind.rs
++++ num-format/src/error_kind.rs
+@@ -28,7 +28,7 @@ pub enum ErrorKind {
+ 
+     #[cfg(not(feature = "std"))]
+     /// Other miscellaneous error.
+-    Other(ArrayString<[u8; MAX_ERR_LEN]>),
++    Other(ArrayString<MAX_ERR_LEN>),
+ 
+     #[cfg(feature = "std")]
+     /// Failed to parse input into a valid locale.
+@@ -36,7 +36,7 @@ pub enum ErrorKind {
+ 
+     #[cfg(not(feature = "std"))]
+     /// Failed to parse input into a valid locale.
+-    ParseLocale(ArrayString<[u8; MAX_ERR_LEN]>),
++    ParseLocale(ArrayString<MAX_ERR_LEN>),
+ 
+     #[cfg(all(feature = "with-system-locale", any(unix, windows)))]
+     /// Call to C standard library or Windows API unexpectedly returned invalid data.
