@@ -1,6 +1,8 @@
---- a/src/lib.rs
-+++ b/src/lib.rs
-@@ -256,6 +256,7 @@
+Index: sysinfo/src/lib.rs
+===================================================================
+--- sysinfo.orig/src/lib.rs
++++ sysinfo/src/lib.rs
+@@ -304,6 +304,7 @@ mod test {
      }
  
      #[test]
@@ -8,9 +10,11 @@
      fn check_system_info() {
          // We don't want to test on unsupported systems.
          if System::IS_SUPPORTED {
---- a/tests/process.rs
-+++ b/tests/process.rs
-@@ -158,6 +158,7 @@
+Index: sysinfo/tests/process.rs
+===================================================================
+--- sysinfo.orig/tests/process.rs
++++ sysinfo/tests/process.rs
+@@ -157,6 +157,7 @@ fn test_process_refresh() {
  }
  
  #[test]
@@ -18,3 +22,36 @@
  fn test_process_disk_usage() {
      use std::fs;
      use std::fs::File;
+Index: sysinfo/tests/disk_list.rs
+===================================================================
+--- sysinfo.orig/tests/disk_list.rs
++++ sysinfo/tests/disk_list.rs
+@@ -1,6 +1,7 @@
+ // Take a look at the license at the top of the repository in the LICENSE file.
+ 
+ #[test]
++#[ignore = "not supported in debian build environments"]
+ fn test_disks() {
+     use sysinfo::SystemExt;
+ 
+Index: sysinfo/benches/basic.rs
+===================================================================
+--- sysinfo.orig/benches/basic.rs
++++ sysinfo/benches/basic.rs
+@@ -65,10 +65,12 @@ fn bench_refresh_disk(b: &mut test::Benc
+     let mut s = sysinfo::System::new_all();
+ 
+     let disks = s.disks_mut();
+-    let disk = &mut disks[0];
+-    b.iter(move || {
+-        disk.refresh();
+-    });
++    if !disks.is_empty() {
++        let disk = &mut disks[0];
++        b.iter(move || {
++            disk.refresh();
++        });
++    }
+ }
+ 
+ #[bench]
