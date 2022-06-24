@@ -1,0 +1,143 @@
+Index: rust-num-format-0.4.0/tests/test_non_zero.rs
+===================================================================
+--- rust-num-format-0.4.0.orig/tests/test_non_zero.rs
++++ rust-num-format-0.4.0/tests/test_non_zero.rs
+@@ -152,6 +152,8 @@ fn test_non_zero_u32() {
+ 
+ #[test]
+ fn test_non_zero_usize() {
++    #[cfg(target_pointer_width = "64")]let expected = ["18,446,744,073,709,551,615","18𠜱446𠜱744𠜱073𠜱709𠜱551𠜱615","1𠜱84𠜱46𠜱74𠜱40𠜱73𠜱70𠜱95𠜱51𠜱615","18446744073709551615","18446744073709551615"];
++    #[cfg(target_pointer_width = "32")]let expected = ["4,294,967,295","4𠜱294𠜱967𠜱295","4𠜱29𠜱49𠜱67𠜱295","4294967295","4294967295"];
+     let test_cases: &[(&str, NonZeroUsize, &CustomFormat)] = &[
+         ("1", NonZeroUsize::new(1).unwrap(), &POLICIES[0]),
+         ("1", NonZeroUsize::new(1).unwrap(), &POLICIES[1]),
+@@ -159,27 +161,27 @@ fn test_non_zero_usize() {
+         ("1", NonZeroUsize::new(1).unwrap(), &POLICIES[3]),
+         ("1", NonZeroUsize::new(1).unwrap(), &POLICIES[4]),
+         (
+-            "18,446,744,073,709,551,615",
++            expected[0],
+             NonZeroUsize::new(std::usize::MAX).unwrap(),
+             &POLICIES[0],
+         ),
+         (
+-            "18𠜱446𠜱744𠜱073𠜱709𠜱551𠜱615",
++            expected[1],
+             NonZeroUsize::new(std::usize::MAX).unwrap(),
+             &POLICIES[1],
+         ),
+         (
+-            "1𠜱84𠜱46𠜱74𠜱40𠜱73𠜱70𠜱95𠜱51𠜱615",
++            expected[2],
+             NonZeroUsize::new(std::usize::MAX).unwrap(),
+             &POLICIES[2],
+         ),
+         (
+-            "18446744073709551615",
++            expected[3],
+             NonZeroUsize::new(std::usize::MAX).unwrap(),
+             &POLICIES[3],
+         ),
+         (
+-            "18446744073709551615",
++            expected[4],
+             NonZeroUsize::new(std::usize::MAX).unwrap(),
+             &POLICIES[4],
+         ),
+Index: rust-num-format-0.4.0/tests/test_unsigned.rs
+===================================================================
+--- rust-num-format-0.4.0.orig/tests/test_unsigned.rs
++++ rust-num-format-0.4.0/tests/test_unsigned.rs
+@@ -110,25 +110,27 @@ fn test_u32() {
+ 
+ #[test]
+ fn test_usize() {
++    #[cfg(target_pointer_width = "64")]let expected = ["18,446,744,073,709,551,615","18𠜱446𠜱744𠜱073𠜱709𠜱551𠜱615","1𠜱84𠜱46𠜱74𠜱40𠜱73𠜱70𠜱95𠜱51𠜱615","18446744073709551615","18446744073709551615"];
++    #[cfg(target_pointer_width = "32")]let expected = ["4,294,967,295","4𠜱294𠜱967𠜱295","4𠜱29𠜱49𠜱67𠜱295","4294967295","4294967295"];
+     let test_cases: &[(&str, usize, &CustomFormat)] = &[
+         ("0", 0, &POLICIES[0]),
+         ("0", 0, &POLICIES[1]),
+         ("0", 0, &POLICIES[2]),
+         ("0", 0, &POLICIES[3]),
+         ("0", 0, &POLICIES[4]),
+-        ("18,446,744,073,709,551,615", std::usize::MAX, &POLICIES[0]),
++        (expected[0], std::usize::MAX, &POLICIES[0]),
+         (
+-            "18𠜱446𠜱744𠜱073𠜱709𠜱551𠜱615",
++            expected[1],
+             std::usize::MAX,
+             &POLICIES[1],
+         ),
+         (
+-            "1𠜱84𠜱46𠜱74𠜱40𠜱73𠜱70𠜱95𠜱51𠜱615",
++            expected[2],
+             std::usize::MAX,
+             &POLICIES[2],
+         ),
+-        ("18446744073709551615", std::usize::MAX, &POLICIES[3]),
+-        ("18446744073709551615", std::usize::MAX, &POLICIES[4]),
++        (expected[3], std::usize::MAX, &POLICIES[3]),
++        (expected[4], std::usize::MAX, &POLICIES[4]),
+     ];
+ 
+     for (expected, input, format) in test_cases {
+Index: rust-num-format-0.4.0/tests/test_signed.rs
+===================================================================
+--- rust-num-format-0.4.0.orig/tests/test_signed.rs
++++ rust-num-format-0.4.0/tests/test_signed.rs
+@@ -133,43 +133,45 @@ fn test_i32() {
+ 
+ #[test]
+ fn test_isize() {
++    #[cfg(target_pointer_width = "64")]let expected = ["9,223,372,036,854,775,807","9𠜱223𠜱372𠜱036𠜱854𠜱775𠜱807","92𠜱23𠜱37𠜱20𠜱36𠜱85𠜱47𠜱75𠜱807","9223372036854775807","9223372036854775807","-9,223,372,036,854,775,808","\u{200e}-\u{200e}9𠜱223𠜱372𠜱036𠜱854𠜱775𠜱808","\u{200e}-\u{200e}92𠜱23𠜱37𠜱20𠜱36𠜱85𠜱47𠜱75𠜱808","\u{200e}-\u{200e}9223372036854775808","\u{200e}-\u{200e}9223372036854775808"];
++    #[cfg(target_pointer_width = "32")]let expected = ["2,147,483,647","2𠜱147𠜱483𠜱647","2𠜱14𠜱74𠜱83𠜱647","2147483647","2147483647","-2,147,483,648","\u{200e}-\u{200e}2𠜱147𠜱483𠜱648","\u{200e}-\u{200e}2𠜱14𠜱74𠜱83𠜱648","\u{200e}-\u{200e}2147483648","\u{200e}-\u{200e}2147483648"];
+     let test_cases: &[(&str, isize, &CustomFormat)] = &[
+         ("0", 0, &POLICIES[0]),
+         ("0", 0, &POLICIES[1]),
+         ("0", 0, &POLICIES[2]),
+         ("0", 0, &POLICIES[3]),
+         ("0", 0, &POLICIES[4]),
+-        ("9,223,372,036,854,775,807", std::isize::MAX, &POLICIES[0]),
++        (expected[0], std::isize::MAX, &POLICIES[0]),
+         (
+-            "9𠜱223𠜱372𠜱036𠜱854𠜱775𠜱807",
++            expected[1],
+             std::isize::MAX,
+             &POLICIES[1],
+         ),
+         (
+-            "92𠜱23𠜱37𠜱20𠜱36𠜱85𠜱47𠜱75𠜱807",
++            expected[2],
+             std::isize::MAX,
+             &POLICIES[2],
+         ),
+-        ("9223372036854775807", std::isize::MAX, &POLICIES[3]),
+-        ("9223372036854775807", std::isize::MAX, &POLICIES[4]),
+-        ("-9,223,372,036,854,775,808", std::isize::MIN, &POLICIES[0]),
++        (expected[3], std::isize::MAX, &POLICIES[3]),
++        (expected[4], std::isize::MAX, &POLICIES[4]),
++        (expected[5], std::isize::MIN, &POLICIES[0]),
+         (
+-            "\u{200e}-\u{200e}9𠜱223𠜱372𠜱036𠜱854𠜱775𠜱808",
++            expected[6],
+             std::isize::MIN,
+             &POLICIES[1],
+         ),
+         (
+-            "\u{200e}-\u{200e}92𠜱23𠜱37𠜱20𠜱36𠜱85𠜱47𠜱75𠜱808",
++            expected[7],
+             std::isize::MIN,
+             &POLICIES[2],
+         ),
+         (
+-            "\u{200e}-\u{200e}9223372036854775808",
++            expected[8],
+             std::isize::MIN,
+             &POLICIES[3],
+         ),
+         (
+-            "\u{200e}-\u{200e}9223372036854775808",
++            expected[9],
+             std::isize::MIN,
+             &POLICIES[4],
+         ),
