@@ -2,15 +2,15 @@ Index: im-rc/Cargo.toml
 ===================================================================
 --- im-rc.orig/Cargo.toml
 +++ im-rc/Cargo.toml
-@@ -77,9 +77,6 @@ version = "0.6"
+@@ -86,9 +86,6 @@ version = "1"
  [dev-dependencies.proptest]
- version = "0.9"
+ version = "1"
  
 -[dev-dependencies.proptest-derive]
--version = "0.1"
+-version = "0.3"
 -
  [dev-dependencies.rand]
- version = ">= 0.7, < 0.9"
+ version = "0.8"
  features = ["small_rng"]
 Index: im-rc/src/tests/hashset.rs
 ===================================================================
@@ -89,7 +89,7 @@ Index: im-rc/src/tests/vector.rs
 ===================================================================
 --- im-rc.orig/src/tests/vector.rs
 +++ im-rc/src/tests/vector.rs
-@@ -6,9 +6,9 @@ use std::iter::FromIterator;
+@@ -5,9 +5,9 @@ use std::fmt::{Debug, Error, Formatter,
  use crate::Vector;
  
  use proptest::proptest;
@@ -101,7 +101,7 @@ Index: im-rc/src/tests/vector.rs
  enum Action<A> {
      PushFront(A),
      PushBack(A),
-@@ -22,7 +22,6 @@ enum Action<A> {
+@@ -21,7 +21,6 @@ enum Action<A> {
      SplitRight(usize),
  }
  
@@ -109,7 +109,7 @@ Index: im-rc/src/tests/vector.rs
  struct Actions<A>(Vec<Action<A>>)
  where
      A: Clone;
-@@ -118,7 +117,7 @@ fn cap_index(len: usize, index: usize) -
+@@ -117,7 +116,7 @@ fn cap_index(len: usize, index: usize) -
      }
  }
  
@@ -118,8 +118,8 @@ Index: im-rc/src/tests/vector.rs
      #[test]
      fn comprehensive(actions: Actions<u8>) {
          let mut vec = Vector::new();
-@@ -216,7 +215,7 @@ proptest! {
-             assert_eq!(Vector::from_iter(nat.iter().cloned()), vec);
+@@ -215,7 +214,7 @@ proptest! {
+             assert_eq!(nat.iter().cloned().collect::<Vector<_>>(), vec);
          }
      }
 -}

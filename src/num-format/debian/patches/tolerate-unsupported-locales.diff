@@ -1,0 +1,20 @@
+Index: num-format/tests/test_system_locale_unix.rs
+===================================================================
+--- num-format.orig/tests/test_system_locale_unix.rs
++++ num-format/tests/test_system_locale_unix.rs
+@@ -19,9 +19,13 @@ fn test_unix() {
+     assert!(!vec.is_empty());
+     for name in &vec {
+         println!("{}", name);
+-        let locale1 = SystemLocale::from_name(name.to_string()).unwrap();
++        let locale1 = SystemLocale::from_name(name.to_string());
+         env::set_var("LC_ALL", name);
+-        let locale2 = SystemLocale::default().unwrap();
++        let locale2 = SystemLocale::default();
+         assert_eq!(locale1, locale2);
++        match name.as_ref() {
++            "kk_KZ.rk1048" | "lzh_TW" | "zh_TW.euctw" | "unm_US" | "cmn_TW" | "nan_TW" | "hak_TW" | "ka_GE" | "tg_TJ" => {}, //locales that are known to be unsupported, either due to unsupported encodings or unsupported digit groupings.
++            _ => {locale1.unwrap();}, //most locales should be parsed successfully.
++        }
+     }
+ }
