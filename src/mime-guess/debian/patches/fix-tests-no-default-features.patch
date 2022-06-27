@@ -1,0 +1,23 @@
+Index: mime-guess/src/lib.rs
+===================================================================
+--- mime-guess.orig/src/lib.rs
++++ mime-guess/src/lib.rs
+@@ -432,7 +432,9 @@ pub fn octet_stream() -> Mime {
+ mod tests {
+     include!("mime_types.rs");
+ 
+-    use super::{expect_mime, from_ext, from_path, get_mime_extensions_str};
++    use super::{expect_mime, from_ext, from_path};
++    #[cfg(feature="rev-mappings")]
++    use super::get_mime_extensions_str;
+     #[allow(deprecated, unused_imports)]
+     use std::ascii::AsciiExt;
+ 
+@@ -527,6 +529,7 @@ mod tests {
+         }
+     }
+ 
++    #[cfg(feature="rev-mappings")]
+     #[test]
+     fn test_get_mime_extensions_str_no_panic_if_bad_mime() {
+         assert_eq!(get_mime_extensions_str(""), None);
