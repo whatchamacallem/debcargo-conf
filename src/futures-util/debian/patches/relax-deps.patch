@@ -2,8 +2,8 @@ Index: futures-util/Cargo.toml
 ===================================================================
 --- futures-util.orig/Cargo.toml
 +++ futures-util/Cargo.toml
-@@ -52,11 +52,6 @@ default-features = false
- version = "0.3.17"
+@@ -58,11 +58,6 @@ default-features = false
+ version = "0.3.21"
  default-features = false
  
 -[dependencies.futures_01]
@@ -14,39 +14,53 @@ Index: futures-util/Cargo.toml
  [dependencies.memchr]
  version = "2.2"
  optional = true
-@@ -68,7 +63,7 @@ version = "0.2.4"
- version = "0.1.0"
- 
- [dependencies.proc-macro-hack]
--version = "0.5.19"
-+version = "0.5"
- optional = true
- 
- [dependencies.proc-macro-nested]
-@@ -79,11 +74,6 @@ optional = true
+@@ -77,12 +72,6 @@ version = "0.1.0"
  version = "0.4.2"
  optional = true
  
 -[dependencies.tokio-io]
 -version = "0.1.9"
 -optional = true
+-
 -[dev-dependencies.tokio]
 -version = "0.1.11"
- [build-dependencies.autocfg]
- version = "1"
  
-@@ -92,14 +82,9 @@ alloc = ["futures-core/alloc", "futures-
- async-await = []
- async-await-macro = ["async-await", "futures-macro", "proc-macro-hack", "proc-macro-nested"]
+ [features]
+ alloc = [
+@@ -95,15 +84,10 @@ async-await-macro = [
+     "futures-macro",
+ ]
  bilock = []
 -cfg-target-has-atomic = []
- channel = ["std", "futures-channel"]
--compat = ["std", "futures_01"]
- default = ["std", "async-await", "async-await-macro"]
- io = ["std", "futures-io", "memchr"]
--io-compat = ["io", "compat", "tokio-io"]
--read-initializer = ["io", "futures-io/read-initializer", "futures-io/unstable"]
+ channel = [
+     "std",
+     "futures-channel",
+ ]
+-compat = [
+-    "std",
+-    "futures_01",
+-]
+ default = [
+     "std",
+     "async-await",
+@@ -114,11 +98,6 @@ io = [
+     "futures-io",
+     "memchr",
+ ]
+-io-compat = [
+-    "io",
+-    "compat",
+-    "tokio-io",
+-]
  sink = ["futures-sink"]
- std = ["alloc", "futures-core/std", "futures-task/std", "slab"]
--unstable = ["futures-core/unstable", "futures-task/unstable"]
+ std = [
+     "alloc",
+@@ -126,8 +105,4 @@ std = [
+     "futures-task/std",
+     "slab",
+ ]
+-unstable = [
+-    "futures-core/unstable",
+-    "futures-task/unstable",
+-]
  write-all-vectored = ["io"]
