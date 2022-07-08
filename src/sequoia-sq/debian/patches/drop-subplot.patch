@@ -1,0 +1,47 @@
+Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Description: Drop subplot-driven tests
+
+subplot is not available in debian, and it would require a lot
+of additional packaging work.  Better to just avoid it for now.
+
+This set of changes for the sake of reduced dependency subtrees
+was guided by Lars Wirzenius from upstream.
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -80,8 +80,6 @@
+ [dev-dependencies.predicates]
+ version = "2"
+ 
+-[dev-dependencies.subplotlib]
+-version = "0.1.0"
+ [build-dependencies.clap]
+ version = "2.33"
+ 
+@@ -89,9 +87,6 @@
+ version = "1.0.0"
+ default-features = false
+ 
+-[build-dependencies.subplot-build]
+-version = "0.1.0"
+-
+ [features]
+ autocrypt = ["sequoia-autocrypt"]
+ compression-bzip2 = ["buffered-reader/compression-bzip2", "sequoia-openpgp/compression-bzip2"]
+--- a/build.rs
++++ b/build.rs
+@@ -14,9 +14,6 @@ fn main() {
+     // XXX: Revisit once
+     // https://github.com/rust-lang/rust/issues/44732 is stabilized.
+ 
+-    subplot_build::codegen(Path::new("sq-subplot.md"))
+-        .expect("failed to generate code with Subplot");
+-
+     let mut sq = sq_cli::configure(
+         clap::App::new("sq").set_term_width(80),
+         cfg!(feature = "autocrypt"),
+--- a/tests/sq-subplot.rs
++++ /dev/null
+@@ -1 +0,0 @@
+-include!(concat!(env!("OUT_DIR"), "/sq-subplot.rs"));
+-- 
