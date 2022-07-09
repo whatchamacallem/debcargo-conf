@@ -1,0 +1,25 @@
+From d982ca337bee7dd37c11bbcbd43ee9e40615aa94 Mon Sep 17 00:00:00 2001
+From: Sebastian Ramacher <sebastian@ramacher.at>
+Date: Sat, 9 Jul 2022 19:17:18 +0200
+Subject: [PATCH] Gate test_no_post_match_regex behind regex feature
+
+test_no_post_match_regex requires the regex feature to be enabled.
+---
+ src/lib.rs | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/lib.rs b/src/lib.rs
+index a64ac00..313cd76 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -324,6 +324,7 @@ fn test_err_equals() {
+     assert_eq!(a, Err(parse::ScanError("internal u8".to_string())));
+ }
+ 
++#[cfg(feature = "regex")]
+ #[test]
+ fn test_no_post_match_regex() {
+     let a = scan_fmt!("74in", "{d}{/in/}", u8, String);
+-- 
+2.36.1
+
