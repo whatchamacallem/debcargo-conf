@@ -1,0 +1,502 @@
+diff --git a/src/ckms/mod.rs b/src/ckms/mod.rs
+index f207eed..9ab0918 100644
+--- a/src/ckms/mod.rs
++++ b/src/ckms/mod.rs
+@@ -301,140 +301,6 @@ mod test {
+         return data[idx];
+     }
+ 
+-    #[test]
+-    fn test_cma() {
+-        fn inner(data: Vec<f64>, err: f64) -> TestResult {
+-            if data.is_empty() {
+-                return TestResult::discard();
+-            } else if !(err >= 0.0) || !(err <= 1.0) {
+-                return TestResult::discard();
+-            }
+-
+-            let mut ckms = CKMS::<f64>::new(err);
+-            for d in &data {
+-                ckms.insert(*d);
+-            }
+-
+-            let sum: f64 = data.iter().sum();
+-            let expected_mean: f64 = sum / (data.len() as f64);
+-            let mean = ckms.cma();
+-            assert!(mean.is_some());
+-
+-            assert!((expected_mean - mean.unwrap()).abs() < err);
+-            return TestResult::passed();
+-        }
+-        QuickCheck::new().quickcheck(inner as fn(Vec<f64>, f64) -> TestResult);
+-    }
+-
+-    #[test]
+-    fn test_cma_add_assign() {
+-        fn inner(l_data: Vec<f64>, r_data: Vec<f64>, err: f64) -> TestResult {
+-            if !(err >= 0.0) || !(err <= 1.0) {
+-                return TestResult::discard();
+-            }
+-
+-            let mut l_ckms = CKMS::<f64>::new(err);
+-            for d in &l_data {
+-                l_ckms.insert(*d);
+-            }
+-            let mut r_ckms = CKMS::<f64>::new(err);
+-            for d in &r_data {
+-                r_ckms.insert(*d);
+-            }
+-
+-            let sum: f64 = l_data.iter().chain(r_data.iter()).sum();
+-            let expected_mean: f64 = sum / ((l_data.len() + r_data.len()) as f64);
+-            l_ckms += r_ckms;
+-            let mean = l_ckms.cma();
+-            if mean.is_some() {
+-                assert!((expected_mean - mean.unwrap()).abs() < err);
+-            }
+-            return TestResult::passed();
+-        }
+-        QuickCheck::new()
+-            .quickcheck(inner as fn(Vec<f64>, Vec<f64>, f64) -> TestResult);
+-    }
+-
+-    #[test]
+-    fn error_nominal_test() {
+-        fn inner(mut data: Vec<f64>, prcnt: f64) -> TestResult {
+-            data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+-            if !(prcnt >= 0.0) || !(prcnt <= 1.0) {
+-                return TestResult::discard();
+-            } else if data.len() < 1 {
+-                return TestResult::discard();
+-            }
+-            let err = 0.001;
+-
+-            let mut ckms = CKMS::<f64>::new(err);
+-            for d in &data {
+-                ckms.insert(*d);
+-            }
+-
+-            if let Some((_, v)) = ckms.query(prcnt) {
+-                debug_assert!(
+-                    (v - percentile(&data, prcnt)) < err,
+-                    "v: {} | percentile: {} | prcnt: {} | data: {:?}",
+-                    v,
+-                    percentile(&data, prcnt),
+-                    prcnt,
+-                    data
+-                );
+-                TestResult::passed()
+-            } else {
+-                TestResult::failed()
+-            }
+-        }
+-        QuickCheck::new().quickcheck(inner as fn(Vec<f64>, f64) -> TestResult);
+-    }
+-
+-    #[test]
+-    fn error_nominal_with_merge_test() {
+-        fn inner(lhs: Vec<f64>, rhs: Vec<f64>, prcnt: f64, err: f64) -> TestResult {
+-            if !(prcnt >= 0.0) || !(prcnt <= 1.0) {
+-                return TestResult::discard();
+-            } else if !(err >= 0.0) || !(err <= 1.0) {
+-                return TestResult::discard();
+-            } else if (lhs.len() + rhs.len()) < 1 {
+-                return TestResult::discard();
+-            }
+-            if lhs.is_empty() || rhs.is_empty() {
+-                return TestResult::discard();
+-            }
+-            let mut data = lhs.clone();
+-            data.append(&mut rhs.clone());
+-            data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+-
+-            let err = 0.001;
+-
+-            let mut ckms = CKMS::<f64>::new(err);
+-            for d in &lhs {
+-                ckms.insert(*d);
+-            }
+-            let mut ckms_rhs = CKMS::<f64>::new(err);
+-            for d in &rhs {
+-                ckms_rhs.insert(*d);
+-            }
+-            ckms += ckms_rhs;
+-
+-            if let Some((_, v)) = ckms.query(prcnt) {
+-                debug_assert!(
+-                    (v - percentile(&data, prcnt)) < err,
+-                    "v: {} | percentile: {} | prcnt: {} | data: {:?}",
+-                    v,
+-                    percentile(&data, prcnt),
+-                    prcnt,
+-                    data
+-                );
+-                TestResult::passed()
+-            } else {
+-                TestResult::failed()
+-            }
+-        }
+-        QuickCheck::new()
+-            .quickcheck(inner as fn(Vec<f64>, Vec<f64>, f64, f64) -> TestResult);
+-    }
+-
+     #[test]
+     fn n_invariant_test() {
+         fn n_invariant(fs: Vec<i32>) -> bool {
+@@ -472,39 +338,6 @@ mod test {
+         QuickCheck::new().quickcheck(inner as fn(Vec<i32>, Vec<i32>) -> TestResult);
+     }
+ 
+-    // prop: forany phi. (phi*n - f(phi*n, n)/2) =< r_i =< (phi*n + f(phi*n, n)/2)
+-    #[test]
+-    fn query_invariant_test() {
+-        fn query_invariant(f: f64, fs: Vec<i32>) -> TestResult {
+-            let error = 0.001;
+-            if fs.len() < 1 {
+-                return TestResult::discard();
+-            }
+-
+-            let phi = (1.0 / (1.0 + E.powf(f.abs()))) * 2.0;
+-
+-            let mut ckms = CKMS::<i32>::new(error);
+-            for f in fs {
+-                ckms.insert(f);
+-            }
+-
+-            match ckms.query(phi) {
+-                None => TestResult::passed(), /* invariant to check here? n*phi +
+-                                                * f > 1? */
+-                Some((rank, _)) => {
+-                    let nphi = phi * (ckms.n as f64);
+-                    let fdiv2 = (invariant(nphi, error) as f64) / 2.0;
+-                    TestResult::from_bool(
+-                        ((nphi - fdiv2) <= (rank as f64))
+-                            || ((rank as f64) <= (nphi + fdiv2)),
+-                    )
+-                }
+-            }
+-        }
+-        QuickCheck::new()
+-            .quickcheck(query_invariant as fn(f64, Vec<i32>) -> TestResult);
+-    }
+-
+     #[test]
+     fn insert_test() {
+         let mut ckms = CKMS::<f64>::new(0.001);
+diff --git a/src/ckms/store.rs b/src/ckms/store.rs
+index 16d5fce..614cfc7 100644
+--- a/src/ckms/store.rs
++++ b/src/ckms/store.rs
+@@ -482,29 +482,4 @@ mod test {
+         assert_eq!(10_000, store.count());
+         assert_eq!(42, store.len());
+     }
+-
+-    #[test]
+-    fn obey_inner_cap() {
+-        fn inner(data: Vec<f64>, inner_cap: usize, err: f64) -> TestResult {
+-            if data.is_empty() {
+-                return TestResult::discard();
+-            } else if inner_cap == 0 {
+-                return TestResult::discard();
+-            } else if !(err >= 0.0) || !(err <= 1.0) {
+-                return TestResult::discard();
+-            }
+-
+-            let mut store = Store::<f64>::new(inner_cap, err);
+-            for d in &data {
+-                store.insert(*d);
+-            }
+-
+-            for inner in store.data {
+-                assert!(inner.len() <= store.inner_cap);
+-            }
+-
+-            return TestResult::passed();
+-        }
+-        QuickCheck::new().quickcheck(inner as fn(Vec<f64>, usize, f64) -> TestResult);
+-    }
+ }
+diff --git a/src/histogram.rs b/src/histogram.rs
+index e83e414..213e7a0 100644
+--- a/src/histogram.rs
++++ b/src/histogram.rs
+@@ -423,278 +423,3 @@ where
+     }
+ }
+ 
+-#[cfg(test)]
+-mod test {
+-    use super::*;
+-    use quickcheck::{QuickCheck, TestResult};
+-
+-    #[test]
+-    fn test_addassign() {
+-        fn inner(mut bounds: Vec<f64>, lpyld: Vec<f64>, rpyld: Vec<f64>) -> TestResult {
+-            if bounds.is_empty() {
+-                return TestResult::discard();
+-            }
+-            bounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
+-
+-            let mut x = Histogram::new(bounds.clone()).unwrap();
+-            for i in lpyld {
+-                x.insert(i);
+-            }
+-            let mut y = Histogram::new(bounds).unwrap();
+-            for i in rpyld {
+-                y.insert(i);
+-            }
+-
+-            let mut res = x.clone();
+-            res += y.clone();
+-
+-            assert_eq!(res.count(), x.count() + y.count());
+-            if res.sum().is_some() {
+-                match (x.sum().is_some(), y.sum().is_some()) {
+-                    (true, true) => {
+-                        assert_eq!(res.sum().unwrap(), x.sum().unwrap() + y.sum().unwrap());
+-                    }
+-                    (false, true) => {
+-                        assert_eq!(res.sum().unwrap(), y.sum().unwrap());
+-                    }
+-                    (true, false) => {
+-                        assert_eq!(res.sum().unwrap(), x.sum().unwrap());
+-                    }
+-                    (false, false) => unreachable!(),
+-                }
+-            } else {
+-                assert!(x.sum().is_none());
+-                assert!(y.sum().is_none());
+-            }
+-
+-            let mut x_iter = x.iter();
+-            let mut y_iter = y.iter();
+-            for &(bound, count) in res.iter() {
+-                let next_x = x_iter.next().unwrap();
+-                let next_y = y_iter.next().unwrap();
+-
+-                assert_eq!(bound, next_x.0);
+-                assert_eq!(bound, next_y.0);
+-
+-                assert_eq!(count, next_x.1 + next_y.1)
+-            }
+-            TestResult::passed()
+-        }
+-        QuickCheck::new().quickcheck(inner as fn(Vec<f64>, Vec<f64>, Vec<f64>) -> TestResult);
+-    }
+-
+-    macro_rules! generate_tests {
+-        ($m:ident, $t:ty) => {
+-            mod $m {
+-                use super::*;
+-
+-                #[test]
+-                fn test_is_sorted() {
+-                    fn inner(mut pyld: Vec<$t>) -> TestResult {
+-                        pyld.sort_by(|a, b| a.partial_cmp(b).unwrap());
+-                        assert!(is_sorted(&pyld));
+-                        TestResult::passed()
+-                    }
+-                    QuickCheck::new().quickcheck(inner as fn(Vec<$t>) -> TestResult);
+-                }
+-
+-                #[test]
+-                fn test_insertion_count() {
+-                    fn inner(mut bounds: Vec<$t>, pyld: Vec<$t>) -> TestResult {
+-                        if bounds.is_empty() {
+-                            return TestResult::discard();
+-                        }
+-                        bounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
+-
+-                        let mut histo = Histogram::new(bounds).unwrap();
+-                        let total = pyld.len();
+-                        for i in pyld.clone() {
+-                            histo.insert(i);
+-                        }
+-
+-                        // confirm that the histogram holds the correct number of items
+-                        assert_eq!(total, histo.count());
+-
+-                        TestResult::passed()
+-                    }
+-                    QuickCheck::new().quickcheck(inner as fn(Vec<$t>, Vec<$t>) -> TestResult);
+-                }
+-
+-                #[test]
+-                fn test_insertion_sum() {
+-                    fn inner(mut bounds: Vec<$t>, pyld: Vec<$t>) -> TestResult {
+-                        if bounds.is_empty() {
+-                            return TestResult::discard();
+-                        }
+-                        bounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
+-
+-                        let mut histo = Histogram::new(bounds).unwrap();
+-                        let mut sum: $t = 0 as $t;
+-                        for i in pyld.clone() {
+-                            sum += i;
+-                            histo.insert(i);
+-                        }
+-
+-                        // confirm that the histogram holds the correct sum of items
+-                        if pyld.is_empty() {
+-                            assert_eq!(None, histo.sum());
+-                        } else {
+-                            assert_eq!(Some(sum), histo.sum());
+-                        }
+-
+-                        TestResult::passed()
+-                    }
+-                    QuickCheck::new().quickcheck(inner as fn(Vec<$t>, Vec<$t>) -> TestResult);
+-                }
+-
+-                #[test]
+-                fn test_insertion_below_count() {
+-                    fn inner(mut bounds: Vec<$t>, mut pyld: Vec<$t>) -> TestResult {
+-                        if bounds.is_empty() {
+-                            return TestResult::discard();
+-                        }
+-                        bounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
+-
+-                        let mut histo = Histogram::new(bounds.clone()).unwrap();
+-                        for i in pyld.clone() {
+-                            histo.insert(i);
+-                        }
+-
+-                        let mut bounds: Vec<Bound<$t>> =
+-                            bounds.into_iter().map(|x| Bound::Finite(x)).collect();
+-                        bounds.push(Bound::PosInf);
+-
+-                        // confirm that the histogram has correctly binned by
+-                        // asserting that for every bound the correct number of
+-                        // payload items are below that upper bound
+-                        pyld.sort_by(|a, b| a.partial_cmp(b).unwrap());
+-                        for b in bounds.iter() {
+-                            let mut below_count = 0;
+-                            for v in pyld.iter() {
+-                                match b {
+-                                    &Bound::Finite(ref bnd) => {
+-                                        if v <= bnd {
+-                                            below_count += 1;
+-                                        } else {
+-                                            break;
+-                                        }
+-                                    }
+-                                    &Bound::PosInf => {
+-                                        below_count += 1;
+-                                    }
+-                                }
+-                            }
+-                            assert_eq!(below_count, histo.total_below(*b))
+-                        }
+-
+-                        TestResult::passed()
+-                    }
+-                    QuickCheck::new().quickcheck(inner as fn(Vec<$t>, Vec<$t>) -> TestResult);
+-                }
+-
+-                #[test]
+-                fn test_insertion_above_count() {
+-                    fn inner(mut bounds: Vec<$t>, mut pyld: Vec<$t>) -> TestResult {
+-                        if bounds.is_empty() {
+-                            return TestResult::discard();
+-                        }
+-                        bounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
+-
+-                        let mut histo = Histogram::new(bounds.clone()).unwrap();
+-                        for i in pyld.clone() {
+-                            histo.insert(i);
+-                        }
+-
+-                        let mut bounds: Vec<Bound<$t>> =
+-                            bounds.into_iter().map(|x| Bound::Finite(x)).collect();
+-                        bounds.push(Bound::PosInf);
+-
+-                        // confirm that the histogram has correctly binned by
+-                        // asserting that for every bound the correct number of
+-                        // payload items are above that upper bound
+-                        pyld.sort_by(|a, b| a.partial_cmp(b).unwrap());
+-                        for b in bounds.iter() {
+-                            let mut above_count = 0;
+-                            for v in pyld.iter() {
+-                                match b {
+-                                    &Bound::Finite(ref bnd) => {
+-                                        if v > bnd {
+-                                            above_count += 1;
+-                                        }
+-                                    }
+-                                    &Bound::PosInf => {}
+-                                }
+-                            }
+-                            assert_eq!(above_count, histo.total_above(*b))
+-                        }
+-
+-                        TestResult::passed()
+-                    }
+-                    QuickCheck::new().quickcheck(inner as fn(Vec<$t>, Vec<$t>) -> TestResult);
+-                }
+-
+-               #[test]
+-               fn test_insertion_between_count() {
+-                   fn inner(mut bounds: Vec<$t>, mut pyld: Vec<$t>) -> TestResult {
+-                       if bounds.is_empty() {
+-                           return TestResult::discard();
+-                       }
+-                       bounds.sort_by(|a, b| a.partial_cmp(b).unwrap());
+-
+-                       let mut histo = Histogram::new(bounds.clone()).unwrap();
+-                       for i in pyld.clone() {
+-                           histo.insert(i);
+-                       }
+-
+-                       let mut bounds: Vec<Bound<$t>> =
+-                           bounds.into_iter().map(|x| Bound::Finite(x)).collect();
+-                       bounds.push(Bound::PosInf);
+-
+-                       // confirm that the histogram has correctly binned by
+-                       // asserting that for every (lower, upper] bound the
+-                       // correct number of payload items are recorded between
+-                       // that bound
+-                       pyld.sort_by(|a, b| a.partial_cmp(b).unwrap());
+-                       for lower_b in bounds.iter() {
+-                           for upper_b in bounds.iter() {
+-                               let mut between_count = 0;
+-                               if lower_b < upper_b {
+-                                   for v in pyld.iter() {
+-                                       match (lower_b, upper_b) {
+-                                           (&Bound::Finite(ref lw_b), &Bound::Finite(ref up_b)) => {
+-                                               if v > lw_b && v <= up_b {
+-                                                   between_count += 1;
+-                                               }
+-                                           }
+-                                           (&Bound::Finite(ref lw_b), &Bound::PosInf) => {
+-                                               if v > lw_b {
+-                                                   between_count += 1;
+-                                               }
+-                                           }
+-                                           _ => {}
+-                                       }
+-                                   }
+-                               }
+-                               assert_eq!(between_count, histo.total_between(*lower_b, *upper_b))
+-                           }
+-                       }
+-
+-                       TestResult::passed()
+-                   }
+-                   QuickCheck::new().quickcheck(inner as fn(Vec<$t>, Vec<$t>) -> TestResult);
+-               }
+-            }
+-        }
+-    }
+-    // Why no generation for u8? Please see note on Histogram.
+-    generate_tests!(u16, u16);
+-    generate_tests!(u32, u32);
+-    generate_tests!(i16, i16);
+-    generate_tests!(i32, i32);
+-    generate_tests!(f32, f32);
+-    generate_tests!(f64, f64);
+-    generate_tests!(u64, u64);
+-    generate_tests!(i64, i64);
+-    generate_tests!(usize, usize);
+-    generate_tests!(isize, isize);
+-}
