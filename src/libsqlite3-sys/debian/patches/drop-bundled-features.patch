@@ -1,0 +1,38 @@
+Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Description: Debian doesn't ship or encourage bundled/vendored mechanisms
+
+Furthermore, these additional variants create a huge Provides: line in
+debian/control, which itself can cause problems for some tooling.
+
+It would be preferable to declaratively omit these features, but until
+https://bugs.debian.org/1014613 is closed in debcargo, we can just
+patch them.
+
+We also drop in_gecko, since this is not how libsqlite3-sys is built
+on debian.
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -55,22 +55,7 @@
+     "pkg-config",
+     "vcpkg",
+ ]
+-bundled = [
+-    "cc",
+-    "bundled_bindings",
+-]
+-bundled-sqlcipher = ["bundled"]
+-bundled-sqlcipher-vendored-openssl = [
+-    "bundled-sqlcipher",
+-    "openssl-sys/vendored",
+-]
+-bundled-windows = [
+-    "cc",
+-    "bundled_bindings",
+-]
+-bundled_bindings = []
+ default = ["min_sqlite_version_3_6_8"]
+-in_gecko = []
+ min_sqlite_version_3_6_23 = [
+     "pkg-config",
+     "vcpkg",
