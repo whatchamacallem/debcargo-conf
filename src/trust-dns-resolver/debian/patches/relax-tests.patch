@@ -1,0 +1,82 @@
+--- a/src/hosts.rs
++++ b/src/hosts.rs
+@@ -182,79 +182,3 @@
+     ))
+ }
+ 
+-#[cfg(any(unix, windows))]
+-#[cfg(test)]
+-mod tests {
+-    use super::*;
+-    use std::env;
+-    use std::net::{Ipv4Addr, Ipv6Addr};
+-
+-    fn tests_dir() -> String {
+-        let server_path = env::var("TDNS_WORKSPACE_ROOT").unwrap_or_else(|_| "../..".to_owned());
+-        format! {"{}/crates/resolver/tests", server_path}
+-    }
+-
+-    #[test]
+-    fn test_read_hosts_conf() {
+-        let path = format!("{}/hosts", tests_dir());
+-        let hosts = read_hosts_conf(&path).unwrap();
+-
+-        let name = Name::from_str("localhost").unwrap();
+-        let rdatas = hosts
+-            .lookup_static_host(&Query::query(name.clone(), RecordType::A))
+-            .unwrap()
+-            .iter()
+-            .map(ToOwned::to_owned)
+-            .collect::<Vec<RData>>();
+-
+-        assert_eq!(rdatas, vec![RData::A(Ipv4Addr::new(127, 0, 0, 1))]);
+-
+-        let rdatas = hosts
+-            .lookup_static_host(&Query::query(name, RecordType::AAAA))
+-            .unwrap()
+-            .iter()
+-            .map(ToOwned::to_owned)
+-            .collect::<Vec<RData>>();
+-
+-        assert_eq!(
+-            rdatas,
+-            vec![RData::AAAA(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1))]
+-        );
+-
+-        let name = Name::from_str("broadcasthost").unwrap();
+-        let rdatas = hosts
+-            .lookup_static_host(&Query::query(name, RecordType::A))
+-            .unwrap()
+-            .iter()
+-            .map(ToOwned::to_owned)
+-            .collect::<Vec<RData>>();
+-        assert_eq!(rdatas, vec![RData::A(Ipv4Addr::new(255, 255, 255, 255))]);
+-
+-        let name = Name::from_str("example.com").unwrap();
+-        let rdatas = hosts
+-            .lookup_static_host(&Query::query(name, RecordType::A))
+-            .unwrap()
+-            .iter()
+-            .map(ToOwned::to_owned)
+-            .collect::<Vec<RData>>();
+-        assert_eq!(rdatas, vec![RData::A(Ipv4Addr::new(10, 0, 1, 102))]);
+-
+-        let name = Name::from_str("a.example.com").unwrap();
+-        let rdatas = hosts
+-            .lookup_static_host(&Query::query(name, RecordType::A))
+-            .unwrap()
+-            .iter()
+-            .map(ToOwned::to_owned)
+-            .collect::<Vec<RData>>();
+-        assert_eq!(rdatas, vec![RData::A(Ipv4Addr::new(10, 0, 1, 111))]);
+-
+-        let name = Name::from_str("b.example.com").unwrap();
+-        let rdatas = hosts
+-            .lookup_static_host(&Query::query(name, RecordType::A))
+-            .unwrap()
+-            .iter()
+-            .map(ToOwned::to_owned)
+-            .collect::<Vec<RData>>();
+-        assert_eq!(rdatas, vec![RData::A(Ipv4Addr::new(10, 0, 1, 111))]);
+-    }
+-}
