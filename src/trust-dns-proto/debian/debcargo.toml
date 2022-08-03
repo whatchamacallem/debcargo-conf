@@ -1,23 +1,35 @@
 overlay = "."
 uploaders = ["kpcyrd <git@rxv.cc>"]
 collapse_features = true
+excludes = ["benches/**"]
 
-# these tests require unavailable features
+# error[E0433]: failed to resolve: use of undeclared crate or module `tokio_rustls`
 [packages."lib+dns-over-https"]
 test_is_broken = true
 
-[packages."lib+dns-over-https-rustls"]
-test_is_broken = true
-
+# something weird with importing the tokio runtime?
+# error[E0599]: no function or associated item named `new` found for struct `Runtime` in the current scope
 [packages."lib+dns-over-native-tls"]
 test_is_broken = true
 
+# references test-data not included in crate (but elsewhere in the github repo)
 [packages."lib+dns-over-rustls"]
 test_is_broken = true
 
+# something weird with importing the tokio runtime?
+# error[E0599]: no function or associated item named `new` found for struct `Runtime` in the current scope
+[packages."lib+openssl"]
+test_is_broken = true
+
+#error[E0599]: no method named `to_vec` found for reference `&Digest` in the current scope
+#  --> tests/dnssec_presentation_format_tests.rs:53:25
 [packages."lib+dnssec"]
 test_is_broken = true
 
-[packages."lib+mdns"]
+[packages."lib+dnssec-ring"]
 test_is_broken = true
 
+# something weird with importing the tokio runtime?
+# error[E0599]: no function or associated item named `new` found for struct `Runtime` in the current scope
+[packages."lib+mdns"]
+test_is_broken = true

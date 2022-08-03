@@ -1,0 +1,171 @@
+--- a/src/https/https_client_stream.rs
++++ b/src/https/https_client_stream.rs
+@@ -511,168 +511,3 @@
+     }
+ }
+ 
+-#[cfg(test)]
+-mod tests {
+-    use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
+-    use std::str::FromStr;
+-
+-    use rustls::KeyLogFile;
+-    use tokio::net::TcpStream as TokioTcpStream;
+-    use tokio::runtime::Runtime;
+-
+-    use crate::iocompat::AsyncIoTokioAsStd;
+-    use crate::op::{Message, Query, ResponseCode};
+-    use crate::rr::{Name, RData, RecordType};
+-    use crate::xfer::{DnsRequestOptions, FirstAnswer};
+-
+-    use super::*;
+-
+-    #[test]
+-    fn test_https_google() {
+-        //env_logger::try_init().ok();
+-
+-        let google = SocketAddr::from(([8, 8, 8, 8], 443));
+-        let mut request = Message::new();
+-        let query = Query::query(Name::from_str("www.example.com.").unwrap(), RecordType::A);
+-        request.add_query(query);
+-
+-        let request = DnsRequest::new(request, DnsRequestOptions::default());
+-
+-        let mut client_config = client_config_tls12_webpki_roots();
+-        client_config.key_log = Arc::new(KeyLogFile::new());
+-
+-        let https_builder = HttpsClientStreamBuilder::with_client_config(Arc::new(client_config));
+-        let connect = https_builder
+-            .build::<AsyncIoTokioAsStd<TokioTcpStream>>(google, "dns.google".to_string());
+-
+-        // tokio runtime stuff...
+-        let runtime = Runtime::new().expect("could not start runtime");
+-        let mut https = runtime.block_on(connect).expect("https connect failed");
+-
+-        let response = runtime
+-            .block_on(https.send_message(request).first_answer())
+-            .expect("send_message failed");
+-
+-        let record = &response.answers()[0];
+-        let addr = record
+-            .data()
+-            .and_then(RData::as_a)
+-            .expect("Expected A record");
+-
+-        assert_eq!(addr, &Ipv4Addr::new(93, 184, 216, 34));
+-
+-        //
+-        // assert that the connection works for a second query
+-        let mut request = Message::new();
+-        let query = Query::query(
+-            Name::from_str("www.example.com.").unwrap(),
+-            RecordType::AAAA,
+-        );
+-        request.add_query(query);
+-        let request = DnsRequest::new(request, DnsRequestOptions::default());
+-
+-        for _ in 0..3 {
+-            let response = runtime
+-                .block_on(https.send_message(request.clone()).first_answer())
+-                .expect("send_message failed");
+-            if response.response_code() == ResponseCode::ServFail {
+-                continue;
+-            }
+-
+-            let record = &response.answers()[0];
+-            let addr = record
+-                .data()
+-                .and_then(RData::as_aaaa)
+-                .expect("invalid response, expected A record");
+-
+-            assert_eq!(
+-                addr,
+-                &Ipv6Addr::new(0x2606, 0x2800, 0x0220, 0x0001, 0x0248, 0x1893, 0x25c8, 0x1946)
+-            );
+-        }
+-    }
+-
+-    #[test]
+-    #[ignore] // cloudflare has been unreliable as a public test service.
+-    fn test_https_cloudflare() {
+-        // self::env_logger::try_init().ok();
+-
+-        let cloudflare = SocketAddr::from(([1, 1, 1, 1], 443));
+-        let mut request = Message::new();
+-        let query = Query::query(Name::from_str("www.example.com.").unwrap(), RecordType::A);
+-        request.add_query(query);
+-
+-        let request = DnsRequest::new(request, DnsRequestOptions::default());
+-
+-        let client_config = client_config_tls12_webpki_roots();
+-        let https_builder = HttpsClientStreamBuilder::with_client_config(Arc::new(client_config));
+-        let connect = https_builder.build::<AsyncIoTokioAsStd<TokioTcpStream>>(
+-            cloudflare,
+-            "cloudflare-dns.com".to_string(),
+-        );
+-
+-        // tokio runtime stuff...
+-        let runtime = Runtime::new().expect("could not start runtime");
+-        let mut https = runtime.block_on(connect).expect("https connect failed");
+-
+-        let response = runtime
+-            .block_on(https.send_message(request).first_answer())
+-            .expect("send_message failed");
+-
+-        let record = &response.answers()[0];
+-        let addr = record
+-            .data()
+-            .and_then(RData::as_a)
+-            .expect("invalid response, expected A record");
+-
+-        assert_eq!(addr, &Ipv4Addr::new(93, 184, 216, 34));
+-
+-        //
+-        // assert that the connection works for a second query
+-        let mut request = Message::new();
+-        let query = Query::query(
+-            Name::from_str("www.example.com.").unwrap(),
+-            RecordType::AAAA,
+-        );
+-        request.add_query(query);
+-        let request = DnsRequest::new(request, DnsRequestOptions::default());
+-
+-        let response = runtime
+-            .block_on(https.send_message(request).first_answer())
+-            .expect("send_message failed");
+-
+-        let record = &response.answers()[0];
+-        let addr = record
+-            .data()
+-            .and_then(RData::as_aaaa)
+-            .expect("invalid response, expected A record");
+-
+-        assert_eq!(
+-            addr,
+-            &Ipv6Addr::new(0x2606, 0x2800, 0x0220, 0x0001, 0x0248, 0x1893, 0x25c8, 0x1946)
+-        );
+-    }
+-
+-    fn client_config_tls12_webpki_roots() -> ClientConfig {
+-        use rustls::{OwnedTrustAnchor, RootCertStore};
+-        let mut root_store = RootCertStore::empty();
+-        root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.0.iter().map(|ta| {
+-            OwnedTrustAnchor::from_subject_spki_name_constraints(
+-                ta.subject,
+-                ta.spki,
+-                ta.name_constraints,
+-            )
+-        }));
+-
+-        let mut client_config = ClientConfig::builder()
+-            .with_safe_default_cipher_suites()
+-            .with_safe_default_kx_groups()
+-            .with_protocol_versions(&[&rustls::version::TLS12])
+-            .unwrap()
+-            .with_root_certificates(root_store)
+-            .with_no_client_auth();
+-
+-        client_config.alpn_protocols = vec![ALPN_H2.to_vec()];
+-        client_config
+-    }
+-}
