@@ -5,6 +5,12 @@ include /usr/share/rustc/architecture.mk
 export CFLAGS CXXFLAGS CPPFLAGS LDFLAGS
 export DEB_HOST_RUST_TYPE DEB_HOST_GNU_TYPE
 VERSION := $(shell dpkg-parsechangelog -S Version|sed -e "s|.*~\(.*\)-.*|\1|g")
+
+
+# Build a multicall binary instead of multiple binaries
+# to reduce the storage footprint
+export MULTICALL = y
+
 %:
 	dh $@ --buildsystem cargo --with bash-completion
 
@@ -16,13 +22,23 @@ override_dh_auto_test:
 
 override_dh_auto_install:
 	CARGO_HOME=$(shell pwd)/debian/cargo_home DEB_CARGO_CRATE=coreutils_$(VERSION) /usr/share/cargo/bin/cargo prepare-debian debian/cargo_registry --link-from-system
-	CARGO_HOME=$(shell pwd)/debian/cargo_home DESTDIR=$(CURDIR)/debian/tmp/ make install PROFILE=release
-	for f in $(CURDIR)/debian/tmp/usr/bin/*; do \
-		filename=$$(basename $$f); \
-		help2man $$f > docs/rust-$$filename.1; \
-	done
-
-	rm -f $(CURDIR)/debian/tmp/usr/local/man/man1/arch.1.gz
+	CARGO_HOME=$(shell pwd)/debian/cargo_home DESTDIR=$(CURDIR)/debian/tmp/ make SELINUX_ENABLED=1 PROFILE=release MULTICALL=$(MULTICALL) install
+# Create the symlink early to be able to generate the manpages
+	dh_link
 
 override_dh_missing:
 	dh_missing --fail-missing
+
+override_dh_installman:
+	cd $(CURDIR)/debian/rust-coreutils/usr/lib/cargo/bin/coreutils/; \
+	for f in *; do \
+		filename=$$(basename $$f); \
+		help2man --no-info $$f > $(CURDIR)/docs/rust-$$filename.1; \
+	done
+
+	cd $(CURDIR)/debian/tmp/usr/bin/; \
+	help2man --no-info coreutils > $(CURDIR)/docs/coreutils.1 || true
+
+# test --help returns nothing
+	rm -f $(CURDIR)/docs/rust-test.1
+	dh_installman
