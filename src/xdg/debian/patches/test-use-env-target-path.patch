@@ -4,7 +4,7 @@ Last-Update: 2020-06-05
 
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -655,10 +655,19 @@
+@@ -746,10 +746,19 @@ fn list_files_once(home: &Path, dirs: &[
  }
  
  #[cfg(test)]
@@ -25,7 +25,7 @@ Last-Update: 2020-06-05
  #[cfg(test)]
  fn iter_after<A, I, J>(mut iter: I, mut prefix: J) -> Option<I> where
      I: Iterator<Item=A> + Clone, J: Iterator<Item=A>, A: PartialEq
-@@ -678,8 +687,8 @@
+@@ -769,8 +778,8 @@ fn iter_after<A, I, J>(mut iter: I, mut
  }
  
  #[cfg(test)]
@@ -36,7 +36,7 @@ Last-Update: 2020-06-05
          .unwrap().as_path().to_owned()
  }
  
-@@ -774,24 +783,24 @@
+@@ -865,24 +874,24 @@ fn test_runtime_good() {
      perms.set_mode(0o700);
      fs::set_permissions(&test_runtime_dir, perms).unwrap();
  
@@ -67,7 +67,7 @@ Last-Update: 2020-06-05
      root.sort();
      assert_eq!(root,
                 vec![PathBuf::from("test_files/runtime-good/bar"),
-@@ -799,7 +808,7 @@
+@@ -890,7 +899,7 @@ fn test_runtime_good() {
      assert!(xd.list_runtime_files("bar").is_empty());
      assert!(xd.find_runtime_file("foo/qux").is_none());
      assert!(xd.find_runtime_file("qux/foo").is_none());
@@ -76,7 +76,7 @@ Last-Update: 2020-06-05
  }
  
  #[test]
-@@ -815,7 +824,7 @@
+@@ -906,7 +915,7 @@ fn test_lists() {
          ])).unwrap();
  
      let files = xd.list_config_files(".");
@@ -85,7 +85,7 @@ Last-Update: 2020-06-05
      files.sort();
      assert_eq!(files,
          [
-@@ -832,7 +841,7 @@
+@@ -923,7 +932,7 @@ fn test_lists() {
          ].iter().map(PathBuf::from).collect::<Vec<_>>());
  
      let files = xd.list_config_files_once(".");
@@ -94,3 +94,20 @@ Last-Update: 2020-06-05
      files.sort();
      assert_eq!(files,
          [
+@@ -938,7 +947,7 @@ fn test_lists() {
+ 
+ #[test]
+ fn test_get_file() {
+-    let cwd = env::current_dir().unwrap().to_string_lossy().into_owned();
++    let cwd = get_test_dir().to_string_lossy().into_owned();
+     let xd = BaseDirectories::with_env("", "", &*make_env(vec![
+             ("HOME", format!("{}/test_files/user", cwd)),
+             ("XDG_DATA_HOME", format!("{}/test_files/user/data", cwd)),
+@@ -948,6 +957,7 @@ fn test_get_file() {
+         ])).unwrap();
+     
+     let path = format!("{}/test_files/user/runtime/", cwd);
++    fs::create_dir_all(&path).unwrap();
+     let metadata = fs::metadata(&path).expect("Could not read metadata for runtime directory");
+     let mut perms = metadata.permissions();
+     perms.set_mode(0o700);
