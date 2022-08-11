@@ -170,11 +170,10 @@ new_bin_packages="$(echo "$diff_bin_packages" | grep '^+' | sed -e 's/^+//g')"
 rm_bin_packages="$(echo "$diff_bin_packages" | grep '^-' | sed -e 's/^-//g')"
 
 show_build_notice() {
-    CRATE_FORMAT=$(echo $CRATE|sed -e "s/_/-/g")
 cat <<eof
 The recommended way to build and upload is to run something like:
 
-  cd build && ./build.sh $CRATE $VER && dput ${DEBSRC}_${DEBVER}_${DEB_HOST_ARCH}.changes && git push origin pending-$CRATE_FORMAT && git checkout - && cd -
+  cd build && ./build.sh $CRATE $VER && dput ${DEBSRC}_${DEBVER}_${DEB_HOST_ARCH}.changes && git push origin $RELBRANCH && git checkout - && cd -
 
 eof
 }
