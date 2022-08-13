@@ -1,0 +1,38 @@
+Index: grcov/src/parser.rs
+===================================================================
+--- grcov.orig/src/parser.rs
++++ grcov/src/parser.rs
+@@ -11,7 +11,6 @@ use std::str;
+ 
+ use log::error;
+ 
+-use quick_xml::events::attributes::AttrError;
+ use quick_xml::events::{BytesStart, Event};
+ use quick_xml::Reader;
+ 
+@@ -42,12 +41,6 @@ impl From<quick_xml::Error> for ParserEr
+     }
+ }
+ 
+-impl From<AttrError> for ParserError {
+-    fn from(err: AttrError) -> ParserError {
+-        ParserError::Parse(format!("{:?}", err))
+-    }
+-}
+-
+ impl From<ParseIntError> for ParserError {
+     fn from(err: ParseIntError) -> ParserError {
+         ParserError::Parse(err.to_string())
+Index: grcov/Cargo.toml
+===================================================================
+--- grcov.orig/Cargo.toml
++++ grcov/Cargo.toml
+@@ -76,7 +76,7 @@ version = "0.10"
+ version = "1.13"
+ 
+ [dependencies.quick-xml]
+-version = "0.23"
++version = "0.22"
+ 
+ [dependencies.rayon]
+ version = "^1"
