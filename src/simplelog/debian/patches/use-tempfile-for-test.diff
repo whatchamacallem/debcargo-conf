@@ -1,0 +1,174 @@
+Avoid tests creating log files in the crate directory.
+
+for the main test this is done by using the tempfile crate to create a temporary directory.
+
+a couple of documentation examples are also marked as no-run to stop them running as doctests
+and creating log files.
+
+Index: simplelog/Cargo.toml
+===================================================================
+--- simplelog.orig/Cargo.toml
++++ simplelog/Cargo.toml
+@@ -53,6 +53,9 @@ features = [
+     "macros",
+ ]
+ 
++[dev-dependencies.tempfile]
++version = "3"
++
+ [features]
+ default = [
+     "termcolor",
+Index: simplelog/src/lib.rs
+===================================================================
+--- simplelog.orig/src/lib.rs
++++ simplelog/src/lib.rs
+@@ -101,7 +101,7 @@ mod tests {
+     #[test]
+     fn test() {
+         let mut i = 0;
+-
++	let tempdir = tempfile::tempdir().unwrap();
+         CombinedLogger::init({
+             let mut vec = Vec::new();
+             let mut conf_builder = ConfigBuilder::new();
+@@ -115,7 +115,7 @@ mod tests {
+             vec.push(WriteLogger::new(
+                 LevelFilter::Error,
+                 conf_thread_name,
+-                File::create("thread_naming.log").unwrap(),
++                File::create(tempdir.path().join("thread_naming.log")).unwrap(),
+             ) as Box<dyn SharedLogger>);
+ 
+             for elem in vec![
+@@ -148,7 +148,7 @@ mod tests {
+                 vec.push(WriteLogger::new(
+                     LevelFilter::Error,
+                     conf.clone(),
+-                    File::create(&format!("error_{}.log", i)).unwrap(),
++                    File::create(tempdir.path().join(&format!("error_{}.log", i))).unwrap(),
+                 ) as Box<dyn SharedLogger>);
+                 #[cfg(feature = "test")]
+                 vec.push(TestLogger::new(LevelFilter::Error, conf.clone()));
+@@ -167,7 +167,7 @@ mod tests {
+                 vec.push(WriteLogger::new(
+                     LevelFilter::Warn,
+                     conf.clone(),
+-                    File::create(&format!("warn_{}.log", i)).unwrap(),
++                    File::create(tempdir.path().join(&format!("warn_{}.log", i))).unwrap(),
+                 ) as Box<dyn SharedLogger>);
+                 #[cfg(feature = "test")]
+                 vec.push(TestLogger::new(LevelFilter::Warn, conf.clone()));
+@@ -186,7 +186,7 @@ mod tests {
+                 vec.push(WriteLogger::new(
+                     LevelFilter::Info,
+                     conf.clone(),
+-                    File::create(&format!("info_{}.log", i)).unwrap(),
++                    File::create(tempdir.path().join(&format!("info_{}.log", i))).unwrap(),
+                 ) as Box<dyn SharedLogger>);
+                 #[cfg(feature = "test")]
+                 vec.push(TestLogger::new(LevelFilter::Info, conf.clone()));
+@@ -205,7 +205,7 @@ mod tests {
+                 vec.push(WriteLogger::new(
+                     LevelFilter::Debug,
+                     conf.clone(),
+-                    File::create(&format!("debug_{}.log", i)).unwrap(),
++                    File::create(tempdir.path().join(&format!("debug_{}.log", i))).unwrap(),
+                 ) as Box<dyn SharedLogger>);
+                 #[cfg(feature = "test")]
+                 vec.push(TestLogger::new(LevelFilter::Debug, conf.clone()));
+@@ -224,7 +224,7 @@ mod tests {
+                 vec.push(WriteLogger::new(
+                     LevelFilter::Trace,
+                     conf.clone(),
+-                    File::create(&format!("trace_{}.log", i)).unwrap(),
++                    File::create(tempdir.path().join(&format!("trace_{}.log", i))).unwrap(),
+                 ) as Box<dyn SharedLogger>);
+                 #[cfg(feature = "test")]
+                 vec.push(TestLogger::new(LevelFilter::Trace, conf.clone()));
+@@ -241,7 +241,7 @@ mod tests {
+         trace!("Test Trace");
+ 
+         let mut thread_naming = String::new();
+-        File::open("thread_naming.log")
++        File::open(tempdir.path().join("thread_naming.log"))
+             .unwrap()
+             .read_to_string(&mut thread_naming)
+             .unwrap();
+@@ -252,27 +252,27 @@ mod tests {
+ 
+         for j in 1..i {
+             let mut error = String::new();
+-            File::open(&format!("error_{}.log", j))
++            File::open(tempdir.path().join(&format!("error_{}.log", j)))
+                 .unwrap()
+                 .read_to_string(&mut error)
+                 .unwrap();
+             let mut warn = String::new();
+-            File::open(&format!("warn_{}.log", j))
++            File::open(tempdir.path().join(&format!("warn_{}.log", j)))
+                 .unwrap()
+                 .read_to_string(&mut warn)
+                 .unwrap();
+             let mut info = String::new();
+-            File::open(&format!("info_{}.log", j))
++            File::open(tempdir.path().join(&format!("info_{}.log", j)))
+                 .unwrap()
+                 .read_to_string(&mut info)
+                 .unwrap();
+             let mut debug = String::new();
+-            File::open(&format!("debug_{}.log", j))
++            File::open(tempdir.path().join(&format!("debug_{}.log", j)))
+                 .unwrap()
+                 .read_to_string(&mut debug)
+                 .unwrap();
+             let mut trace = String::new();
+-            File::open(&format!("trace_{}.log", j))
++            File::open(tempdir.path().join(&format!("trace_{}.log", j)))
+                 .unwrap()
+                 .read_to_string(&mut trace)
+                 .unwrap();
+Index: simplelog/src/loggers/comblog.rs
+===================================================================
+--- simplelog.orig/src/loggers/comblog.rs
++++ simplelog/src/loggers/comblog.rs
+@@ -29,7 +29,7 @@ impl CombinedLogger {
+     /// Fails if another logger is already set globally.
+     ///
+     /// # Examples
+-    /// ```
++    /// ``` no-run
+     /// # extern crate simplelog;
+     /// # use simplelog::*;
+     /// # use std::fs::File;
+@@ -60,7 +60,7 @@ impl CombinedLogger {
+     /// All loggers need to implement log::Log.
+     ///
+     /// # Examples
+-    /// ```
++    /// ``` no-run
+     /// # extern crate simplelog;
+     /// # use simplelog::*;
+     /// # use std::fs::File;
+Index: simplelog/src/loggers/writelog.rs
+===================================================================
+--- simplelog.orig/src/loggers/writelog.rs
++++ simplelog/src/loggers/writelog.rs
+@@ -27,7 +27,7 @@ impl<W: Write + Send + 'static> WriteLog
+     /// Fails if another Logger was already initialized.
+     ///
+     /// # Examples
+-    /// ```
++    /// ``` no-run
+     /// # extern crate simplelog;
+     /// # use simplelog::*;
+     /// # use std::fs::File;
+@@ -48,7 +48,7 @@ impl<W: Write + Send + 'static> WriteLog
+     /// Takes the desired `Level`, `Config` and `Write` struct as arguments. They cannot be changed later on.
+     ///
+     /// # Examples
+-    /// ```
++    /// ``` no-run
+     /// # extern crate simplelog;
+     /// # use simplelog::*;
+     /// # use std::fs::File;
