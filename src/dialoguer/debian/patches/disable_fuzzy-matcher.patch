@@ -1,0 +1,77 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -42,10 +42,6 @@
+ required-features = ["editor"]
+ 
+ [[example]]
+-name = "fuzzyselect"
+-required-features = ["fuzzy-select"]
+-
+-[[example]]
+ name = "history"
+ required-features = ["history"]
+ 
+@@ -56,10 +52,6 @@
+ [dependencies.console]
+ version = "0.15.0"
+ 
+-[dependencies.fuzzy-matcher]
+-version = "0.3.7"
+-optional = true
+-
+ [dependencies.tempfile]
+ version = "3"
+ optional = true
+@@ -75,6 +67,5 @@
+     "password",
+ ]
+ editor = ["tempfile"]
+-fuzzy-select = ["fuzzy-matcher"]
+ history = []
+ password = ["zeroize"]
+--- a/examples/fuzzyselect.rs
++++ /dev/null
+@@ -1,43 +0,0 @@
+-use dialoguer::{theme::ColorfulTheme, FuzzySelect};
+-
+-fn main() {
+-    let selections = &[
+-        "Ice Cream",
+-        "Vanilla Cupcake",
+-        "Chocolate Muffin",
+-        "A Pile of sweet, sweet mustard",
+-        "Carrots",
+-        "Peas",
+-        "Pistacio",
+-        "Mustard",
+-        "Cream",
+-        "Banana",
+-        "Chocolate",
+-        "Flakes",
+-        "Corn",
+-        "Cake",
+-        "Tarte",
+-        "Cheddar",
+-        "Vanilla",
+-        "Hazelnut",
+-        "Flour",
+-        "Sugar",
+-        "Salt",
+-        "Potato",
+-        "French Fries",
+-        "Pizza",
+-        "Mousse au chocolat",
+-        "Brown sugar",
+-        "Blueberry",
+-        "Burger",
+-    ];
+-
+-    let selection = FuzzySelect::with_theme(&ColorfulTheme::default())
+-        .with_prompt("Pick your flavor")
+-        .default(0)
+-        .items(&selections[..])
+-        .interact()
+-        .unwrap();
+-
+-    println!("Enjoy your {}!", selections[selection]);
+-}
