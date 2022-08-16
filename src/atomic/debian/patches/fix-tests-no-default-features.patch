@@ -1,0 +1,52 @@
+Index: atomic/src/lib.rs
+===================================================================
+--- atomic.orig/src/lib.rs
++++ atomic/src/lib.rs
+@@ -468,6 +468,7 @@ mod tests {
+         assert_eq!(a.load(SeqCst), 30);
+     }
+ 
++    #[cfg(any(feature = "fallback",has_atomic_i64))]
+     #[test]
+     fn atomic_i64() {
+         let a = Atomic::new(0i64);
+@@ -491,6 +492,7 @@ mod tests {
+         assert_eq!(a.load(SeqCst), 30);
+     }
+ 
++    #[cfg(any(feature = "fallback",has_atomic_i128))]
+     #[test]
+     fn atomic_i128() {
+         let a = Atomic::new(0i128);
+@@ -590,6 +592,7 @@ mod tests {
+         assert_eq!(a.load(SeqCst), 30);
+     }
+ 
++    #[cfg(any(feature = "fallback",has_atomic_u64))]
+     #[test]
+     fn atomic_u64() {
+         let a = Atomic::new(0u64);
+@@ -613,6 +616,7 @@ mod tests {
+         assert_eq!(a.load(SeqCst), 30);
+     }
+ 
++    #[cfg(any(feature = "fallback",has_atomic_u128))]
+     #[test]
+     fn atomic_u128() {
+         let a = Atomic::new(0u128);
+@@ -652,6 +656,7 @@ mod tests {
+         assert_eq!(a.load(SeqCst), 30);
+     }
+ 
++    #[cfg(feature = "fallback")]
+     #[test]
+     fn atomic_foo() {
+         let a = Atomic::default();
+@@ -671,6 +676,7 @@ mod tests {
+         assert_eq!(a.load(SeqCst), Foo(3, 3));
+     }
+ 
++    #[cfg(feature = "fallback")]
+     #[test]
+     fn atomic_bar() {
+         let a = Atomic::default();
