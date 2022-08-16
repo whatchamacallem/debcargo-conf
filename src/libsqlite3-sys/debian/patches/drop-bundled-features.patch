@@ -1,5 +1,5 @@
 Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-Description: Debian doesn't ship or encourage bundled/vendored mechanisms
+Description: Debian doesn't ship or encourage bundled/vendored mechanisms or Windows
 
 Furthermore, these additional variants create a huge Provides: line in
 debian/control, which itself can cause problems for some tooling.
@@ -10,6 +10,8 @@ patch them.
 
 We also drop in_gecko, since this is not how libsqlite3-sys is built
 on debian.
+
+And, we drop winsqlite3, since we are not building for Windows.
 
 --- a/Cargo.toml
 +++ b/Cargo.toml
@@ -36,3 +38,9 @@ on debian.
  min_sqlite_version_3_6_23 = [
      "pkg-config",
      "vcpkg",
+@@ -95,5 +80,4 @@
+ sqlcipher = []
+ unlock_notify = []
+ wasm32-wasi-vfs = []
+-winsqlite3 = ["min_sqlite_version_3_7_16"]
+ with-asan = []
