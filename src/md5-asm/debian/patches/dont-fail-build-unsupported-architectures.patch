@@ -1,0 +1,57 @@
+Index: rust-md5-asm-0.5.0/build.rs
+===================================================================
+--- rust-md5-asm-0.5.0.orig/build.rs
++++ rust-md5-asm-0.5.0/build.rs
+@@ -9,10 +9,13 @@ fn main() {
+     } else if target_arch == "x86_64" {
+         "src/x64.S"
+     } else {
+-        panic!("Unsupported target architecture");
++        ""
+     };
+-    cc::Build::new()
+-        .flag("-c")
+-        .file(asm_path)
+-        .compile("libmd5.a");
++
++    if asm_path != "" {
++        cc::Build::new()
++            .flag("-c")
++            .file(asm_path)
++            .compile("libmd5.a");
++    }
+ }
+Index: rust-md5-asm-0.5.0/src/lib.rs
+===================================================================
+--- rust-md5-asm-0.5.0.orig/src/lib.rs
++++ rust-md5-asm-0.5.0/src/lib.rs
+@@ -9,15 +9,14 @@
+ //! [`md5`]: https://crates.io/crates/md5
+ 
+ #![no_std]
+-#[cfg(not(any(target_arch = "x86_64", target_arch = "x86")))]
+-compile_error!("crate can only be used on x86 and x86-64 architectures");
+-
++#[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
+ #[link(name = "md5", kind = "static")]
+ extern "C" {
+     fn md5_compress(state: &mut [u32; 4], block: &[u8; 64]);
+ }
+ 
+ /// Safe wrapper around assembly implementation of MD5 compression function
++#[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
+ #[inline]
+ pub fn compress(state: &mut [u32; 4], blocks: &[[u8; 64]]) {
+     for block in blocks {
+Index: rust-md5-asm-0.5.0/benches/lib.rs
+===================================================================
+--- rust-md5-asm-0.5.0.orig/benches/lib.rs
++++ rust-md5-asm-0.5.0/benches/lib.rs
+@@ -5,6 +5,7 @@ extern crate test;
+ 
+ use test::Bencher;
+ 
++#[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
+ #[bench]
+ fn bench_compress(b: &mut Bencher) {
+     let mut state = Default::default();
