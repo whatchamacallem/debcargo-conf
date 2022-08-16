@@ -1,0 +1,15 @@
+Description: Tell dh-cargo that source does not need to be inclued
+Author: Sebastian Ramacher <sramacher@debian.org>
+Last-Update: 2022-08-16
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/build.rs
++++ b/build.rs
+@@ -341,6 +341,7 @@
+       println!("cargo:rustc-cfg={}", "asm_neon");
+       build_asm_files()
+     }
++    println!("dh-cargo:deb-built-using=rav1easm=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
+   }
+ 
+   if os == "windows" && cfg!(feature = "decode_test") {

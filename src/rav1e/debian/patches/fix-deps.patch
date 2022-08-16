@@ -1,0 +1,402 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -90,7 +90,7 @@
+ default-features = false
+ 
+ [dependencies.console]
+-version = "0.14"
++version = "0.15"
+ optional = true
+ 
+ [dependencies.crossbeam]
+@@ -139,9 +139,6 @@
+ [dependencies.rayon]
+ version = "1.0"
+ 
+-[dependencies.rust_hawktracer]
+-version = "0.7.0"
+-
+ [dependencies.scan_fmt]
+ version = "0.2.3"
+ optional = true
+@@ -165,10 +162,6 @@
+ [dependencies.v_frame]
+ version = "0.2.5"
+ 
+-[dependencies.wasm-bindgen]
+-version = "0.2.63"
+-optional = true
+-
+ [dependencies.y4m]
+ version = "0.7"
+ optional = true
+@@ -229,25 +222,10 @@
+ scenechange = []
+ serialize = ["serde", "toml", "v_frame/serialize", "arrayvec/serde"]
+ signal_support = ["signal-hook"]
+-tracing = ["rust_hawktracer/profiling_enabled"]
+ unstable = []
+-wasm = ["wasm-bindgen"]
+ [target."cfg(any(decode_test, decode_test_dav1d))".dependencies.system-deps]
+-version = "~3.1.2"
+-[target."cfg(fuzzing)".dependencies.arbitrary]
+-version = "0.4"
+-
+-[target."cfg(fuzzing)".dependencies.interpolate_name]
+-version = "0.2.2"
++version = "3.2"
+ 
+-[target."cfg(fuzzing)".dependencies.libfuzzer-sys]
+-version = "0.3"
+-
+-[target."cfg(fuzzing)".dependencies.rand]
+-version = "0.8"
+-
+-[target."cfg(fuzzing)".dependencies.rand_chacha]
+-version = "0.3"
+ [target."cfg(unix)".dependencies.signal-hook]
+ version = "0.3"
+ optional = true
+--- a/src/activity.rs
++++ b/src/activity.rs
+@@ -12,7 +12,6 @@
+ use crate::tiling::*;
+ use crate::util::*;
+ use itertools::izip;
+-use rust_hawktracer::*;
+ 
+ #[derive(Debug, Default, Clone)]
+ pub struct ActivityMask {
+@@ -20,7 +19,6 @@
+ }
+ 
+ impl ActivityMask {
+-  #[hawktracer(activity_mask_from_plane)]
+   pub fn from_plane<T: Pixel>(luma_plane: &Plane<T>) -> ActivityMask {
+     let PlaneConfig { width, height, .. } = luma_plane.cfg;
+ 
+@@ -55,7 +53,6 @@
+     ActivityMask { variances: variances.into_boxed_slice() }
+   }
+ 
+-  #[hawktracer(activity_mask_fill_scales)]
+   pub fn fill_scales(
+     &self, bit_depth: usize, activity_scales: &mut Box<[DistortionScale]>,
+   ) {
+--- a/src/api/internal.rs
++++ b/src/api/internal.rs
+@@ -27,7 +27,6 @@
+ use crate::tiling::Area;
+ use crate::util::Pixel;
+ use arrayvec::ArrayVec;
+-use rust_hawktracer::*;
+ use std::cmp;
+ use std::collections::{BTreeMap, BTreeSet};
+ use std::env;
+@@ -312,7 +311,6 @@
+     }
+   }
+ 
+-  #[hawktracer(send_frame)]
+   pub fn send_frame(
+     &mut self, mut frame: Option<Arc<Frame<T>>>,
+     params: Option<FrameParameters>,
+@@ -591,7 +589,6 @@
+   /// `rec_buffer` and `lookahead_rec_buffer` on the `FrameInvariants`. This
+   /// function must be called after every new `FrameInvariants` is initially
+   /// computed.
+-  #[hawktracer(compute_lookahead_motion_vectors)]
+   fn compute_lookahead_motion_vectors(&mut self, output_frameno: u64) {
+     let qps = {
+       let frame_data = self.frame_data.get(&output_frameno).unwrap();
+@@ -752,7 +749,6 @@
+ 
+   /// Computes lookahead intra cost approximations and fills in
+   /// `lookahead_intra_costs` on the `FrameInvariants`.
+-  #[hawktracer(compute_lookahead_intra_costs)]
+   fn compute_lookahead_intra_costs(&mut self, output_frameno: u64) {
+     let frame_data = self.frame_data.get(&output_frameno).unwrap();
+     let fi = &frame_data.fi;
+@@ -774,7 +770,6 @@
+     );
+   }
+ 
+-  #[hawktracer(compute_keyframe_placement)]
+   pub fn compute_keyframe_placement(
+     &mut self, lookahead_frames: &[Arc<Frame<T>>],
+   ) {
+@@ -791,7 +786,6 @@
+     self.next_lookahead_frame += 1;
+   }
+ 
+-  #[hawktracer(compute_frame_invariants)]
+   pub fn compute_frame_invariants(&mut self) {
+     while self.set_frame_properties(self.next_lookahead_output_frameno).is_ok()
+     {
+@@ -804,7 +798,6 @@
+     }
+   }
+ 
+-  #[hawktracer(update_block_importances)]
+   fn update_block_importances(
+     fi: &FrameInvariants<T>, me_stats: &crate::me::FrameMEStats,
+     frame: &Frame<T>, reference_frame: &Frame<T>, bit_depth: usize,
+@@ -963,7 +956,6 @@
+   }
+ 
+   /// Computes the block importances for the current output frame.
+-  #[hawktracer(compute_block_importances)]
+   fn compute_block_importances(&mut self) {
+     // SEF don't need block importances.
+     if self.frame_data[&self.output_frameno].fi.show_existing_frame {
+@@ -1296,7 +1288,6 @@
+     }
+   }
+ 
+-  #[hawktracer(receive_packet)]
+   pub fn receive_packet(&mut self) -> Result<Packet<T>, EncoderStatus> {
+     if self.done_processing() {
+       return Err(EncoderStatus::LimitReached);
+--- a/src/api/lookahead.rs
++++ b/src/api/lookahead.rs
+@@ -14,7 +14,6 @@
+ use crate::tiling::{Area, TileRect};
+ use crate::transform::TxSize;
+ use crate::{Frame, Pixel};
+-use rust_hawktracer::*;
+ use std::sync::Arc;
+ use v_frame::pixel::CastFromPrimitive;
+ 
+@@ -24,7 +23,6 @@
+ pub(crate) const IMP_BLOCK_AREA_IN_MV_UNITS: i64 =
+   IMP_BLOCK_SIZE_IN_MV_UNITS * IMP_BLOCK_SIZE_IN_MV_UNITS;
+ 
+-#[hawktracer(estimate_intra_costs)]
+ pub(crate) fn estimate_intra_costs<T: Pixel>(
+   frame: &Frame<T>, bit_depth: usize, cpu_feature_level: CpuFeatureLevel,
+ ) -> Box<[u32]> {
+@@ -116,7 +114,6 @@
+   intra_costs.into_boxed_slice()
+ }
+ 
+-#[hawktracer(estimate_importance_block_difference)]
+ pub(crate) fn estimate_importance_block_difference<T: Pixel>(
+   frame: Arc<Frame<T>>, ref_frame: Arc<Frame<T>>,
+ ) -> Box<[u32]> {
+@@ -174,7 +171,6 @@
+   inter_costs.into_boxed_slice()
+ }
+ 
+-#[hawktracer(estimate_inter_costs)]
+ pub(crate) fn estimate_inter_costs<T: Pixel>(
+   frame: Arc<Frame<T>>, ref_frame: Arc<Frame<T>>, bit_depth: usize,
+   mut config: EncoderConfig, sequence: Arc<Sequence>,
+@@ -236,7 +232,6 @@
+   inter_costs.into_boxed_slice()
+ }
+ 
+-#[hawktracer(compute_motion_vectors)]
+ pub(crate) fn compute_motion_vectors<T: Pixel>(
+   fi: &mut FrameInvariants<T>, fs: &mut FrameState<T>, inter_cfg: &InterConfig,
+ ) {
+--- a/src/bin/muxer/ivf.rs
++++ b/src/bin/muxer/ivf.rs
+@@ -12,7 +12,6 @@
+ use crate::error::*;
+ use ivf::*;
+ use rav1e::prelude::*;
+-use rust_hawktracer::*;
+ use std::fs;
+ use std::fs::File;
+ use std::io;
+@@ -37,7 +36,6 @@
+     );
+   }
+ 
+-  #[hawktracer(write_frame)]
+   fn write_frame(&mut self, pts: u64, data: &[u8], _frame_type: FrameType) {
+     write_ivf_frame(&mut self.output, pts, data);
+   }
+--- a/src/bin/stats.rs
++++ b/src/bin/stats.rs
+@@ -12,7 +12,6 @@
+ use rav1e::prelude::Rational;
+ use rav1e::prelude::*;
+ use rav1e::{Packet, Pixel};
+-use rust_hawktracer::*;
+ use std::fmt;
+ use std::time::Instant;
+ 
+@@ -30,7 +29,6 @@
+   pub enc_stats: EncoderStats,
+ }
+ 
+-#[hawktracer(build_frame_summary)]
+ pub fn build_frame_summary<T: Pixel>(
+   packets: Packet<T>, bit_depth: usize, chroma_sampling: ChromaSampling,
+   metrics_cli: MetricsEnabled,
+@@ -742,7 +740,6 @@
+   All,
+ }
+ 
+-#[hawktracer(calculate_frame_metrics)]
+ pub fn calculate_frame_metrics<T: Pixel>(
+   frame1: &Frame<T>, frame2: &Frame<T>, bit_depth: usize, cs: ChromaSampling,
+   metrics: MetricsEnabled,
+--- a/src/cdef.rs
++++ b/src/cdef.rs
+@@ -13,7 +13,6 @@
+ use crate::frame::*;
+ use crate::tiling::*;
+ use crate::util::{clamp, msb, CastFromPrimitive, Pixel};
+-use rust_hawktracer::*;
+ 
+ use crate::cpu_features::CpuFeatureLevel;
+ use std::cmp;
+@@ -586,7 +585,6 @@
+ //   tile boundary), the filtering process ignores input pixels that
+ //   don't exist.
+ 
+-#[hawktracer(cdef_filter_tile)]
+ pub fn cdef_filter_tile<T: Pixel>(
+   fi: &FrameInvariants<T>, input: &Frame<T>, tb: &TileBlocks,
+   output: &mut TileMut<'_, T>,
+--- a/src/deblock.rs
++++ b/src/deblock.rs
+@@ -17,7 +17,6 @@
+ use crate::tiling::*;
+ use crate::util::{clamp, ILog, Pixel};
+ use crate::DeblockState;
+-use rust_hawktracer::*;
+ use std::cmp;
+ 
+ use crate::rayon::iter::*;
+@@ -1313,7 +1312,6 @@
+ }
+ 
+ // Deblocks all edges, vertical and horizontal, in a single plane
+-#[hawktracer(deblock_plane)]
+ pub fn deblock_plane<T: Pixel>(
+   deblock: &DeblockState, p: &mut PlaneRegionMut<T>, pli: usize,
+   blocks: &TileBlocks, crop_w: usize, crop_h: usize, bd: usize,
+@@ -1563,7 +1561,6 @@
+ }
+ 
+ // Deblocks all edges in all planes of a frame
+-#[hawktracer(deblock_filter_frame)]
+ pub fn deblock_filter_frame<T: Pixel>(
+   deblock: &DeblockState, tile: &mut TileMut<T>, blocks: &TileBlocks,
+   crop_w: usize, crop_h: usize, bd: usize, planes: usize,
+@@ -1641,7 +1638,6 @@
+   level
+ }
+ 
+-#[hawktracer(deblock_filter_optimize)]
+ pub fn deblock_filter_optimize<T: Pixel, U: Pixel>(
+   fi: &FrameInvariants<T>, rec: &Tile<U>, input: &Tile<U>,
+   blocks: &TileBlocks, crop_w: usize, crop_h: usize,
+--- a/src/encoder.rs
++++ b/src/encoder.rs
+@@ -48,7 +48,6 @@
+ use std::{fmt, io, mem};
+ 
+ use crate::rayon::iter::*;
+-use rust_hawktracer::*;
+ 
+ #[allow(dead_code)]
+ #[derive(Debug, Clone, PartialEq)]
+@@ -2949,7 +2948,6 @@
+   cdf.unwrap_or_else(|| CDFContext::new(fi.base_q_idx))
+ }
+ 
+-#[hawktracer(encode_tile_group)]
+ fn encode_tile_group<T: Pixel>(
+   fi: &FrameInvariants<T>, fs: &mut FrameState<T>, inter_cfg: &InterConfig,
+ ) -> Vec<u8> {
+@@ -3181,7 +3179,6 @@
+   }
+ }
+ 
+-#[hawktracer(encode_tile)]
+ fn encode_tile<'a, T: Pixel>(
+   fi: &FrameInvariants<T>, ts: &mut TileStateMut<'_, T>,
+   fc: &'a mut CDFContext, blocks: &'a mut TileBlocksMut<'a>,
+--- a/src/lrf.rs
++++ b/src/lrf.rs
+@@ -23,7 +23,6 @@
+ };
+ use crate::tiling::{Area, PlaneRegion, PlaneRegionMut, Rect};
+ use crate::util::{clamp, CastFromPrimitive, ILog, Pixel};
+-use rust_hawktracer::*;
+ 
+ use crate::api::SGRComplexityLevel;
+ use std::cmp;
+@@ -1461,7 +1460,6 @@
+     }
+   }
+ 
+-  #[hawktracer(lrf_filter_frame)]
+   pub fn lrf_filter_frame<T: Pixel>(
+     &mut self, out: &mut Frame<T>, pre_cdef: &Frame<T>,
+     fi: &FrameInvariants<T>,
+--- a/src/me.rs
++++ b/src/me.rs
+@@ -29,8 +29,6 @@
+ use std::ops::{Index, IndexMut};
+ use std::sync::Arc;
+ 
+-use rust_hawktracer::*;
+-
+ #[derive(Debug, Copy, Clone, Default)]
+ pub struct MEStats {
+   pub mv: MotionVector,
+@@ -98,7 +96,6 @@
+   CORNER { right: bool, bottom: bool },
+ }
+ 
+-#[hawktracer(estimate_tile_motion)]
+ pub fn estimate_tile_motion<T: Pixel>(
+   fi: &FrameInvariants<T>, ts: &mut TileStateMut<'_, T>,
+   inter_cfg: &InterConfig,
+--- a/src/scenechange/mod.rs
++++ b/src/scenechange/mod.rs
+@@ -14,7 +14,6 @@
+ use crate::frame::*;
+ use crate::sad_row;
+ use crate::util::Pixel;
+-use rust_hawktracer::*;
+ use std::sync::Arc;
+ use std::{cmp, u64};
+ 
+@@ -123,7 +122,6 @@
+   /// to the second frame in `frame_set`.
+   ///
+   /// This will gracefully handle the first frame in the video as well.
+-  #[hawktracer(analyze_next_frame)]
+   pub fn analyze_next_frame(
+     &mut self, frame_set: &[Arc<Frame<T>>], input_frameno: u64,
+     previous_keyframe: u64,
+@@ -345,7 +343,6 @@
+ 
+   /// The fast algorithm detects fast cuts using a raw difference
+   /// in pixel values between the scaled frames.
+-  #[hawktracer(fast_scenecut)]
+   fn fast_scenecut(
+     &mut self, frame1: Arc<Frame<T>>, frame2: Arc<Frame<T>>,
+   ) -> ScenecutResult {
+@@ -424,7 +421,6 @@
+   /// We gather both intra and inter costs for the frames,
+   /// as well as an importance-block-based difference,
+   /// and use all three metrics.
+-  #[hawktracer(cost_scenecut)]
+   fn cost_scenecut(
+     &self, frame1: Arc<Frame<T>>, frame2: Arc<Frame<T>>,
+   ) -> ScenecutResult {
+@@ -487,7 +483,6 @@
+   }
+ 
+   /// Calculates the average sum of absolute difference (SAD) per pixel between 2 planes
+-  #[hawktracer(delta_in_planes)]
+   fn delta_in_planes(&self, plane1: &Plane<T>, plane2: &Plane<T>) -> f64 {
+     let mut delta = 0;
+ 
