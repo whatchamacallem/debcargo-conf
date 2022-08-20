@@ -65,16 +65,17 @@
  
  [dev-dependencies.rand]
  version = "0.8"
-@@ -210,7 +196,7 @@
+@@ -209,9 +195,6 @@
+ [build-dependencies.rustc_version]
  version = "0.4"
  
- [build-dependencies.vergen]
+-[build-dependencies.vergen]
 -version = "3"
-+version = "6"
- 
+-
  [features]
  asm = ["nasm-rs", "cc", "regex"]
-@@ -229,25 +215,10 @@
+ bench = []
+@@ -229,25 +212,10 @@
  scenechange = []
  serialize = ["serde", "toml", "v_frame/serialize", "arrayvec/serde"]
  signal_support = ["signal-hook"]
@@ -444,3 +445,47 @@
    fn delta_in_planes(&self, plane1: &Plane<T>, plane2: &Plane<T>) -> f64 {
      let mut delta = 0;
  
+--- a/build.rs
++++ b/build.rs
+@@ -347,8 +347,5 @@
+     panic!("Unsupported feature on this platform!");
+   }
+ 
+-  vergen::generate_cargo_keys(vergen::ConstantsFlags::all())
+-    .expect("Unable to generate the cargo keys!");
+-
+   println!("cargo:rustc-env=PROFILE={}", env::var("PROFILE").unwrap());
+ }
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -377,7 +377,7 @@
+   /// e.g. `g743d464`
+   ///
+   pub fn hash() -> String {
+-    env!("VERGEN_SHA_SHORT").to_string()
++    "<not available>".to_string()
+   }
+ 
+   /// Version information with the information
+@@ -386,7 +386,7 @@
+   /// e.g. `0.1.0 (v0.1.0-1-g743d464)`
+   ///
+   pub fn full() -> String {
+-    let semver = env!("VERGEN_SEMVER_LIGHTWEIGHT");
++    let semver = "v0.5.1";
+     format!("{} ({})", short(), semver)
+   }
+ }
+--- a/src/capi.rs
++++ b/src/capi.rs
+@@ -391,8 +391,8 @@
+ pub unsafe extern fn rav1e_version_full() -> *const c_char {
+   concat!(
+     env!("CARGO_PKG_VERSION"),
+-    " (",
+-    env!("VERGEN_SEMVER_LIGHTWEIGHT"),
++    " (v",
++    env!("CARGO_PKG_VERSION"),
+     ")\0"
+   )
+   .as_ptr() as *const c_char
