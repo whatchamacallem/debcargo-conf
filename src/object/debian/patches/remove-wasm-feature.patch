@@ -2,26 +2,37 @@ Index: object/Cargo.toml
 ===================================================================
 --- object.orig/Cargo.toml
 +++ object/Cargo.toml
-@@ -60,9 +60,6 @@ optional = true
- version = "1.1"
- optional = true
+@@ -68,9 +68,6 @@ optional = true
+ version = "2.4.1"
+ default-features = false
  
 -[dependencies.wasmparser]
 -version = "0.57"
 -optional = true
- [dev-dependencies.memmap]
- version = "0.7"
  
-@@ -75,11 +72,10 @@ default = ["read", "compression"]
+ [features]
+ all = [
+@@ -78,7 +75,6 @@ all = [
+     "write",
+     "std",
+     "compression",
+-    "wasm",
+ ]
+ archive = []
+ cargo-all = []
+@@ -101,7 +97,6 @@ doc = [
+     "elf",
+     "macho",
+     "pe",
+-    "wasm",
+ ]
  elf = []
  macho = []
- pe = ["coff"]
--read = ["read_core", "coff", "elf", "macho", "pe", "wasm", "unaligned"]
-+read = ["read_core", "coff", "elf", "macho", "pe", "unaligned"]
- read_core = []
- rustc-dep-of-std = ["core", "compiler_builtins", "alloc"]
- std = []
+@@ -124,7 +119,6 @@ rustc-dep-of-std = [
+ ]
+ std = ["memchr/std"]
  unaligned = []
 -wasm = ["wasmparser"]
- write = ["write_core", "coff", "elf", "macho"]
- write_core = ["crc32fast", "indexmap", "std"]
+ write = [
+     "write_std",
+     "coff",
