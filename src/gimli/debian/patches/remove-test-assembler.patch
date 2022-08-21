@@ -1,0 +1,1150 @@
+Index: gimli/Cargo.toml
+===================================================================
+--- gimli.orig/Cargo.toml
++++ gimli/Cargo.toml
+@@ -100,9 +100,6 @@ version = "1.0"
+ [dev-dependencies.regex]
+ version = "1"
+ 
+-[dev-dependencies.test-assembler]
+-version = "0.1.3"
+-
+ [dev-dependencies.typed-arena]
+ version = "2"
+ 
+Index: gimli/src/read/abbrev.rs
+===================================================================
+--- gimli.orig/src/read/abbrev.rs
++++ gimli/src/read/abbrev.rs
+@@ -540,10 +540,10 @@ pub mod tests {
+     use crate::constants;
+     use crate::endianity::LittleEndian;
+     use crate::read::{EndianSlice, Error};
+-    use crate::test_util::GimliSectionMethods;
++    //use crate::test_util::GimliSectionMethods;
+     #[cfg(target_pointer_width = "32")]
+     use core::u32;
+-    use test_assembler::Section;
++    //use test_assembler::Section;
+ 
+     pub trait AbbrevSectionMethods {
+         fn abbrev(self, code: u64, tag: constants::DwTag, children: constants::DwChildren) -> Self;
+@@ -553,7 +553,7 @@ pub mod tests {
+         fn abbrev_attr_null(self) -> Self;
+     }
+ 
+-    impl AbbrevSectionMethods for Section {
++    /*impl AbbrevSectionMethods for Section {
+         fn abbrev(self, code: u64, tag: constants::DwTag, children: constants::DwChildren) -> Self {
+             self.uleb(code).uleb(tag.0.into()).D8(children.0)
+         }
+@@ -575,9 +575,9 @@ pub mod tests {
+         fn abbrev_attr_null(self) -> Self {
+             self.D8(0).D8(0)
+         }
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_debug_abbrev_ok() {
+         let extra_start = [1, 2, 3, 4];
+         let expected_rest = [5, 6, 7, 8];
+@@ -634,7 +634,7 @@ pub mod tests {
+             .expect("Should parse abbreviations");
+         assert_eq!(abbrevs.get(1), Some(&abbrev1));
+         assert_eq!(abbrevs.get(2), Some(&abbrev2));
+-    }
++    }*/
+ 
+     #[test]
+     fn test_abbreviations_insert() {
+@@ -731,7 +731,7 @@ pub mod tests {
+         assert_abbrev(&abbrevs, wrap_code);
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_abbreviations_ok() {
+         let expected_rest = [1, 2, 3, 4];
+         #[rustfmt::skip]
+@@ -808,7 +808,7 @@ pub mod tests {
+             Err(Error::DuplicateAbbreviationCode) => {}
+             otherwise => panic!("Unexpected result: {:?}", otherwise),
+         };
+-    }
++    }*/
+ 
+     #[test]
+     fn test_parse_abbreviation_tag_ok() {
+@@ -843,7 +843,7 @@ pub mod tests {
+         };
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_abbreviation_ok() {
+         let expected_rest = [0x01, 0x02, 0x03, 0x04];
+         let buf = Section::new()
+@@ -929,7 +929,7 @@ pub mod tests {
+         let abbrev = Abbreviation::parse(rest).expect("Should parse null abbreviation");
+         assert!(abbrev.is_none());
+         assert_eq!(*rest, EndianSlice::new(&expected_rest, LittleEndian));
+-    }
++    }*/
+ 
+     #[test]
+     fn test_parse_attribute_form_ok() {
+Index: gimli/src/read/addr.rs
+===================================================================
+--- gimli.orig/src/read/addr.rs
++++ gimli/src/read/addr.rs
+@@ -84,11 +84,11 @@ impl<R> From<R> for DebugAddr<R> {
+ mod tests {
+     use super::*;
+     use crate::read::EndianSlice;
+-    use crate::test_util::GimliSectionMethods;
++    //use crate::test_util::GimliSectionMethods;
+     use crate::{Format, LittleEndian};
+-    use test_assembler::{Endian, Label, LabelMaker, Section};
++    //use test_assembler::{Endian, Label, LabelMaker, Section};
+ 
+-    #[test]
++    /*#[test]
+     fn test_get_address() {
+         for format in vec![Format::Dwarf32, Format::Dwarf64] {
+             for address_size in vec![4, 8] {
+@@ -124,5 +124,5 @@ mod tests {
+                 );
+             }
+         }
+-    }
++    }*/
+ }
+Index: gimli/src/read/cfi.rs
+===================================================================
+--- gimli.orig/src/read/cfi.rs
++++ gimli/src/read/cfi.rs
+@@ -3505,16 +3505,16 @@ mod tests {
+     use crate::read::{
+         EndianSlice, Error, Expression, Pointer, ReaderOffsetId, Result, Section as ReadSection,
+     };
+-    use crate::test_util::GimliSectionMethods;
++    //use crate::test_util::GimliSectionMethods;
+     use alloc::boxed::Box;
+     use alloc::vec::Vec;
+     use core::marker::PhantomData;
+     use core::mem;
+     use core::u64;
+-    use test_assembler::{Endian, Label, LabelMaker, LabelOrNum, Section, ToLabelOrNum};
++    //use test_assembler::{Endian, Label, LabelMaker, LabelOrNum, Section, ToLabelOrNum};
+ 
+     // Ensure each test tries to read the same section kind that it wrote.
+-    #[derive(Clone, Copy)]
++    /*#[derive(Clone, Copy)]
+     struct SectionKind<Section>(PhantomData<Section>);
+ 
+     impl<T> SectionKind<T> {
+@@ -3551,7 +3551,7 @@ mod tests {
+ 
+     fn eh_frame_le<'a>() -> SectionKind<EhFrame<EndianSlice<'a, LittleEndian>>> {
+         SectionKind(PhantomData)
+-    }
++    }*/
+ 
+     fn parse_fde<Section, O, F, R>(
+         section: Section,
+@@ -3574,7 +3574,7 @@ mod tests {
+ 
+     // Mixin methods for `Section` to help define binary test data.
+ 
+-    trait CfiSectionMethods: GimliSectionMethods {
++    /*trait CfiSectionMethods: GimliSectionMethods {
+         fn cie<'aug, 'input, E, T>(
+             self,
+             _kind: SectionKind<T>,
+@@ -3596,9 +3596,9 @@ mod tests {
+             T: UnwindSection<EndianSlice<'input, E>>,
+             T::Offset: UnwindOffset,
+             L: ToLabelOrNum<'a, u64>;
+-    }
++    }*/
+ 
+-    impl CfiSectionMethods for Section {
++    /*impl CfiSectionMethods for Section {
+         fn cie<'aug, 'input, E, T>(
+             self,
+             _kind: SectionKind<T>,
+@@ -3744,7 +3744,7 @@ mod tests {
+ 
+             section
+         }
+-    }
++    }*/
+ 
+     trait ResultExt {
+         fn map_eof(self, input: &[u8]) -> Self;
+@@ -3762,7 +3762,7 @@ mod tests {
+         }
+     }
+ 
+-    #[allow(clippy::type_complexity)]
++    /*#[allow(clippy::type_complexity)]
+     #[allow(clippy::needless_pass_by_value)]
+     fn assert_parse_cie<'input, E>(
+         kind: SectionKind<DebugFrame<EndianSlice<'input, E>>>,
+@@ -3856,9 +3856,9 @@ mod tests {
+         let kind = debug_frame_le();
+         let section = Section::with_endian(kind.endian()).cie(kind, None, &mut cie);
+         assert_parse_cie(kind, section, 4, Err(Error::UnknownVersion(99)));
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_cie_unknown_augmentation() {
+         let length = Label::new();
+         let start = Label::new();
+@@ -3894,9 +3894,9 @@ mod tests {
+         length.set_const(expected_length);
+ 
+         assert_parse_cie(kind, section, 8, Err(Error::UnknownAugmentation));
+-    }
++    }*/
+ 
+-    fn test_parse_cie(format: Format, version: u8, address_size: u8) {
++    /*fn test_parse_cie(format: Format, version: u8, address_size: u8) {
+         let expected_rest = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+         let expected_instrs: Vec<_> = (0..4).map(|_| constants::DW_CFA_nop.0).collect();
+ 
+@@ -3983,9 +3983,9 @@ mod tests {
+             .map_eof(&contents),
+             Err(Error::UnexpectedEof(ReaderOffsetId(4)))
+         );
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_fde_incomplete_length_32() {
+         let kind = debug_frame_le();
+         let section = Section::with_endian(kind.endian()).L16(5);
+@@ -4027,9 +4027,9 @@ mod tests {
+             parse_fde(debug_frame, rest, UnwindSection::cie_from_offset).map_eof(&section),
+             Err(Error::UnexpectedEof(ReaderOffsetId(4)))
+         );
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_fde_32_ok() {
+         let expected_rest = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+         let cie_offset = 0xbad0_bad1;
+@@ -4178,9 +4178,9 @@ mod tests {
+ 
+         assert_eq!(parse_fde(debug_frame, rest, get_cie), Ok(fde));
+         assert_eq!(*rest, EndianSlice::new(&expected_rest, LittleEndian));
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_cfi_entry_on_cie_32_ok() {
+         let expected_rest = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+         let expected_instrs: Vec<_> = (0..4).map(|_| constants::DW_CFA_nop.0).collect();
+@@ -4274,7 +4274,7 @@ mod tests {
+             }
+             otherwise => panic!("Unexpected result: {:#?}", otherwise),
+         }
+-    }
++    }*/
+ 
+     #[test]
+     fn test_cfi_entries_iter() {
+@@ -4314,7 +4314,7 @@ mod tests {
+             initial_instructions: EndianSlice::new(&expected_instrs2, BigEndian),
+         };
+ 
+-        let cie1_location = Label::new();
++        /*let cie1_location = Label::new();
+         let cie2_location = Label::new();
+ 
+         // Write the CIEs first so that their length gets set before we clone
+@@ -4400,10 +4400,10 @@ mod tests {
+             otherwise => panic!("Unexpected result: {:#?}", otherwise),
+         }
+ 
+-        assert_eq!(entries.next(), Ok(None));
++        assert_eq!(entries.next(), Ok(None));*/
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_cie_from_offset() {
+         let filler = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+         let instrs: Vec<_> = (0..5).map(|_| constants::DW_CFA_nop.0).collect();
+@@ -4440,7 +4440,7 @@ mod tests {
+         let bases = Default::default();
+ 
+         assert_eq!(debug_frame.cie_from_offset(&bases, cie_offset), Ok(cie));
+-    }
++    }*/
+ 
+     fn parse_cfi_instruction<R: Reader + Default>(
+         input: &mut R,
+@@ -4455,7 +4455,7 @@ mod tests {
+         CallFrameInstruction::parse(input, None, parameters)
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_cfi_instruction_advance_loc() {
+         let expected_rest = [1, 2, 3, 4];
+         let expected_delta = 42;
+@@ -4819,9 +4819,9 @@ mod tests {
+             })
+         );
+         assert_eq!(*input, EndianSlice::new(&expected_rest, LittleEndian));
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_cfi_instruction_def_cfa_expression() {
+         let expected_rest = [1, 2, 3, 4];
+         let expected_expr = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+@@ -4882,9 +4882,9 @@ mod tests {
+             })
+         );
+         assert_eq!(*input, EndianSlice::new(&expected_rest, LittleEndian));
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_cfi_instruction_offset_extended_sf() {
+         let expected_rest = [1, 2, 3, 4];
+         let expected_reg = 7;
+@@ -5022,9 +5022,9 @@ mod tests {
+             })
+         );
+         assert_eq!(*input, EndianSlice::new(&expected_rest, LittleEndian));
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_cfi_instruction_unknown_instruction() {
+         let expected_rest = [1, 2, 3, 4];
+         let unknown_instr = constants::DwCfa(0b0011_1111);
+@@ -5037,9 +5037,9 @@ mod tests {
+             parse_cfi_instruction(input, 8),
+             Err(Error::UnknownCallFrameInstruction(unknown_instr))
+         );
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_call_frame_instruction_iter_ok() {
+         let expected_reg = 50;
+         let expected_expr = [2, 2, 1, 1, 5, 5];
+@@ -5090,9 +5090,9 @@ mod tests {
+         );
+ 
+         assert_eq!(iter.next(), Ok(None));
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_call_frame_instruction_iter_err() {
+         // DW_CFA_advance_loc1 without an operand.
+         let section = Section::with_endian(Endian::Big).D8(constants::DW_CFA_advance_loc1.0);
+@@ -5116,7 +5116,7 @@ mod tests {
+             Err(Error::UnexpectedEof(ReaderOffsetId(1)))
+         );
+         assert_eq!(iter.next(), Ok(None));
+-    }
++    }*/
+ 
+     #[allow(clippy::needless_pass_by_value)]
+     fn assert_eval<'a, I>(
+@@ -5596,7 +5596,7 @@ mod tests {
+         assert_eval(ctx, expected, cie, None, instructions);
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_unwind_table_cie_no_rule() {
+         #[allow(clippy::identity_op)]
+         let initial_instructions = Section::with_endian(Endian::Little)
+@@ -5914,9 +5914,9 @@ mod tests {
+         // All done!
+         assert_eq!(Ok(None), table.next_row());
+         assert_eq!(Ok(None), table.next_row());
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_unwind_info_for_address_ok() {
+         let instrs1 = Section::with_endian(Endian::Big)
+             // The CFA is -12 from register 4.
+@@ -6038,7 +6038,7 @@ mod tests {
+                 registers: [(Register(0), RegisterRule::Offset(-16))].iter().collect(),
+             }
+         );
+-    }
++    }*/
+ 
+     #[test]
+     fn test_unwind_info_for_address_not_found() {
+@@ -6064,7 +6064,7 @@ mod tests {
+         assert_eq!(result.unwrap_err(), Error::UnknownVersion(42));
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_eh_frame_hdr_omit_ehptr() {
+         let section = Section::with_endian(Endian::Little)
+             .L8(1)
+@@ -6217,9 +6217,9 @@ mod tests {
+         assert_eq!(table.lookup(20, &bases), Ok(Pointer::Direct(2)));
+         assert_eq!(table.lookup(21, &bases), Ok(Pointer::Direct(2)));
+         assert_eq!(table.lookup(100_000, &bases), Ok(Pointer::Direct(2)));
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_eh_frame_fde_for_address_good() {
+         // First, setup eh_frame
+         // Write the CIE first so that its length gets set before we clone it
+@@ -6360,9 +6360,9 @@ mod tests {
+             table.fde_for_address(&eh_frame, &bases, 100_000, f),
+             Err(Error::NoUnwindInfoForAddress)
+         );
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_eh_frame_stops_at_zero_length() {
+         let section = Section::with_endian(Endian::Little).L32(0);
+         let section = section.get_contents().unwrap();
+@@ -6378,9 +6378,9 @@ mod tests {
+             EhFrame::new(&section, LittleEndian).cie_from_offset(&bases, EhFrameOffset(0)),
+             Err(Error::NoEntryAtGivenOffset)
+         );
+-    }
++    }*/
+ 
+-    fn resolve_cie_offset(buf: &[u8], cie_offset: usize) -> Result<usize> {
++    /*fn resolve_cie_offset(buf: &[u8], cie_offset: usize) -> Result<usize> {
+         let mut fde = FrameDescriptionEntry {
+             offset: 0,
+             length: 0,
+@@ -6438,9 +6438,9 @@ mod tests {
+             resolve_cie_offset(&buf, ::core::usize::MAX),
+             Err(Error::OffsetOutOfBounds)
+         );
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_eh_frame_fde_ok() {
+         let mut cie = make_test_cie();
+         cie.format = Format::Dwarf32;
+@@ -6493,9 +6493,9 @@ mod tests {
+             otherwise => panic!("Unexpected result {:?}", otherwise),
+         }
+         assert!(offset.is_some());
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_eh_frame_fde_out_of_bounds() {
+         let mut cie = make_test_cie();
+         cie.version = 1;
+@@ -6531,7 +6531,7 @@ mod tests {
+             UnwindSection::cie_from_offset,
+         );
+         assert_eq!(result, Err(Error::OffsetOutOfBounds));
+-    }
++    }*/
+ 
+     #[test]
+     fn test_augmentation_parse_not_z_augmentation() {
+@@ -6563,7 +6563,7 @@ mod tests {
+         );
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_augmentation_parse_unknown_part_of_z_augmentation() {
+         // The 'Z' character is not defined by the z-style augmentation.
+         let bases = Default::default();
+@@ -6724,9 +6724,9 @@ mod tests {
+             Ok(augmentation)
+         );
+         assert_eq!(*input, EndianSlice::new(&rest, LittleEndian));
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_eh_frame_fde_no_augmentation() {
+         let instrs = [1, 2, 3, 4];
+         let cie_offset = 1;
+@@ -6887,9 +6887,9 @@ mod tests {
+         let result = parse_fde(section, input, |_, _, _| Ok(cie.clone()));
+         assert_eq!(result, Ok(fde));
+         assert_eq!(*input, EndianSlice::new(&rest, LittleEndian));
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_eh_frame_cie_personality_function_relative_bad_context() {
+         let instrs = [1, 2, 3, 4];
+ 
+@@ -6939,7 +6939,7 @@ mod tests {
+         let bases = BaseAddresses::default();
+         let mut iter = section.entries(&bases);
+         assert_eq!(iter.next(), Err(Error::FuncRelativePointerInBadContext));
+-    }
++    }*/
+ 
+     #[test]
+     fn register_rule_map_eq() {
+@@ -7071,7 +7071,7 @@ mod tests {
+         );
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_encoded_pointer_absptr() {
+         let encoding = constants::DW_EH_PE_absptr;
+         let expected_rest = [1, 2, 3, 4];
+@@ -7166,9 +7166,9 @@ mod tests {
+             Ok(Pointer::Direct(0x11))
+         );
+         assert_eq!(rest, EndianSlice::new(&expected_rest, LittleEndian));
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_encoded_pointer_textrel_undefined() {
+         let encoding = constants::DW_EH_PE_textrel;
+ 
+@@ -7212,9 +7212,9 @@ mod tests {
+             Ok(Pointer::Direct(0x11))
+         );
+         assert_eq!(rest, EndianSlice::new(&expected_rest, LittleEndian));
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_encoded_pointer_datarel_undefined() {
+         let encoding = constants::DW_EH_PE_datarel;
+ 
+@@ -7233,9 +7233,9 @@ mod tests {
+             parse_encoded_pointer(encoding, &parameters, &mut rest),
+             Err(Error::DataRelativePointerButDataBaseIsUndefined)
+         );
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_encoded_pointer_funcrel() {
+         let encoding = constants::DW_EH_PE_funcrel;
+         let expected_rest = [1, 2, 3, 4];
+@@ -7490,9 +7490,9 @@ mod tests {
+             Ok(Pointer::Direct(expected as u64))
+         );
+         assert_eq!(rest, EndianSlice::new(&expected_rest, LittleEndian));
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_encoded_pointer_omit() {
+         let encoding = constants::DW_EH_PE_omit;
+ 
+@@ -7581,5 +7581,5 @@ mod tests {
+             Ok(Pointer::Indirect(0x1234_5678))
+         );
+         assert_eq!(rest, EndianSlice::new(&expected_rest, LittleEndian));
+-    }
++    }*/
+ }
+Index: gimli/src/read/index.rs
+===================================================================
+--- gimli.orig/src/read/index.rs
++++ gimli/src/read/index.rs
+@@ -311,7 +311,7 @@ pub struct UnitIndexSection {
+ mod tests {
+     use super::*;
+     use crate::endianity::BigEndian;
+-    use test_assembler::{Endian, Section};
++    //use test_assembler::{Endian, Section};
+ 
+     #[test]
+     fn test_empty() {
+@@ -320,7 +320,7 @@ mod tests {
+         assert!(index.find(0).is_none());
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_version_2() {
+         #[rustfmt::skip]
+         let section = Section::with_endian(Endian::Big)
+@@ -531,5 +531,5 @@ mod tests {
+         let tu_index = DebugTuIndex::new(&buf, BigEndian);
+         let index = tu_index.index().unwrap();
+         assert_eq!(index.version, 5);
+-    }
++    }*/
+ }
+Index: gimli/src/read/line.rs
+===================================================================
+--- gimli.orig/src/read/line.rs
++++ gimli/src/read/line.rs
+@@ -1886,10 +1886,10 @@ mod tests {
+     use crate::constants;
+     use crate::endianity::LittleEndian;
+     use crate::read::{EndianSlice, Error};
+-    use crate::test_util::GimliSectionMethods;
++    //use crate::test_util::GimliSectionMethods;
+     use core::u64;
+     use core::u8;
+-    use test_assembler::{Endian, Label, LabelMaker, Section};
++    //use test_assembler::{Endian, Label, LabelMaker, Section};
+ 
+     #[test]
+     fn test_parse_debug_line_32_ok() {
+@@ -2915,7 +2915,7 @@ mod tests {
+             },
+         ];
+ 
+-        for format in vec![Format::Dwarf32, Format::Dwarf64] {
++        /*for format in vec![Format::Dwarf32, Format::Dwarf64] {
+             let length = Label::new();
+             let header_length = Label::new();
+             let start = Label::new();
+@@ -3025,6 +3025,6 @@ mod tests {
+             );
+             assert_eq!(header.file_names(), expected_file_names);
+             assert_eq!(header.file(0), Some(&expected_file_names[0]));
+-        }
++        }*/
+     }
+ }
+Index: gimli/src/read/loclists.rs
+===================================================================
+--- gimli.orig/src/read/loclists.rs
++++ gimli/src/read/loclists.rs
+@@ -638,10 +638,10 @@ mod tests {
+     use crate::common::Format;
+     use crate::endianity::LittleEndian;
+     use crate::read::{EndianSlice, Range};
+-    use crate::test_util::GimliSectionMethods;
+-    use test_assembler::{Endian, Label, LabelMaker, Section};
++    //use crate::test_util::GimliSectionMethods;
++    //use test_assembler::{Endian, Label, LabelMaker, Section};
+ 
+-    #[test]
++    /*#[test]
+     fn test_loclists_32() {
+         let encoding = Encoding {
+             format: Format::Dwarf32,
+@@ -1461,7 +1461,7 @@ mod tests {
+                 Ok(LocationListsOffset(base.0 + 1019))
+             );
+         }
+-    }
++    }*/
+ 
+     #[test]
+     fn test_loclists_gnu_v4_split_dwarf() {
+Index: gimli/src/read/mod.rs
+===================================================================
+--- gimli.orig/src/read/mod.rs
++++ gimli/src/read/mod.rs
+@@ -676,9 +676,9 @@ mod tests {
+     use super::*;
+     use crate::common::Format;
+     use crate::endianity::LittleEndian;
+-    use test_assembler::{Endian, Section};
++    //use test_assembler::{Endian, Section};
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_initial_length_32_ok() {
+         let section = Section::with_endian(Endian::Little).L32(0x7856_3412);
+         let buf = section.get_contents().unwrap();
+@@ -817,5 +817,5 @@ mod tests {
+             Err(Error::UnsupportedOffset) => assert!(true),
+             otherwise => panic!("Unexpected result: {:?}", otherwise),
+         };
+-    }
++    }*/
+ }
+Index: gimli/src/read/op.rs
+===================================================================
+--- gimli.orig/src/read/op.rs
++++ gimli/src/read/op.rs
+@@ -1994,9 +1994,9 @@ mod tests {
+     use crate::endianity::LittleEndian;
+     use crate::leb128;
+     use crate::read::{EndianSlice, Error, Result, UnitOffset};
+-    use crate::test_util::GimliSectionMethods;
++    //use crate::test_util::GimliSectionMethods;
+     use core::usize;
+-    use test_assembler::{Endian, Section};
++    //use test_assembler::{Endian, Section};
+ 
+     fn encoding4() -> Encoding {
+         Encoding {
+@@ -2066,7 +2066,7 @@ mod tests {
+         }
+     }
+ 
+-    fn check_op_parse<F>(
++    /*fn check_op_parse<F>(
+         input: F,
+         expect: &Operation<EndianSlice<LittleEndian>>,
+         encoding: Encoding,
+@@ -2080,9 +2080,9 @@ mod tests {
+             check_op_parse_eof(&input[..i], encoding);
+         }
+         check_op_parse_simple(&input, expect, encoding);
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_op_parse_onebyte() {
+         // Doesn't matter for this test.
+         let encoding = encoding4();
+@@ -2210,9 +2210,9 @@ mod tests {
+             let (opcode, ref result) = *item;
+             check_op_parse(|s| s.D8(opcode.0), result, encoding);
+         }
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_op_parse_twobyte() {
+         // Doesn't matter for this test.
+         let encoding = encoding4();
+@@ -2493,7 +2493,7 @@ mod tests {
+                 ));
+             }
+ 
+-            for item in inputs.iter() {
++            /*for item in inputs.iter() {
+                 let (op, ref expect) = *item;
+                 let input = Section::with_endian(Endian::Little)
+                     .D8(op.0)
+@@ -2501,7 +2501,7 @@ mod tests {
+                     .get_contents()
+                     .unwrap();
+                 check_op_parse_simple(&input, expect, encoding);
+-            }
++            }*/
+         }
+     }
+ 
+@@ -2538,7 +2538,7 @@ mod tests {
+         }
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_op_parse_bit_piece() {
+         // Doesn't matter for this test.
+         let encoding = encoding4();
+@@ -2563,7 +2563,7 @@ mod tests {
+                 );
+             }
+         }
+-    }
++    }*/
+ 
+     #[test]
+     fn test_op_parse_implicit_value() {
+@@ -2677,9 +2677,9 @@ mod tests {
+             },
+             encoding,
+         );
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_op_convert() {
+         // Doesn't matter for this test.
+         let encoding = encoding4();
+@@ -2813,7 +2813,7 @@ mod tests {
+             &Operation::WasmGlobal { index: 1000 },
+             encoding,
+         );
+-    }
++    }*/
+ 
+     enum AssemblerEntry {
+         Op(constants::DwOp),
+Index: gimli/src/read/rnglists.rs
+===================================================================
+--- gimli.orig/src/read/rnglists.rs
++++ gimli/src/read/rnglists.rs
+@@ -605,10 +605,10 @@ mod tests {
+     use super::*;
+     use crate::common::Format;
+     use crate::endianity::LittleEndian;
+-    use crate::test_util::GimliSectionMethods;
+-    use test_assembler::{Endian, Label, LabelMaker, Section};
++    //use crate::test_util::GimliSectionMethods;
++    //use test_assembler::{Endian, Label, LabelMaker, Section};
+ 
+-    #[test]
++    /*#[test]
+     fn test_rnglists_32() {
+         let encoding = Encoding {
+             format: Format::Dwarf32,
+@@ -991,7 +991,7 @@ mod tests {
+             )
+             .unwrap();
+         assert_eq!(ranges.next(), Ok(None));
+-    }
++    }*/
+ 
+     #[test]
+     fn test_raw_range() {
+@@ -1025,7 +1025,7 @@ mod tests {
+         assert!(range.is_base_address(8));
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_ranges_32() {
+         let start = Label::new();
+         let first = Label::new();
+@@ -1350,5 +1350,5 @@ mod tests {
+                 Ok(RangeListsOffset(base.0 + 1019))
+             );
+         }
+-    }
++    }*/
+ }
+Index: gimli/src/read/str.rs
+===================================================================
+--- gimli.orig/src/read/str.rs
++++ gimli/src/read/str.rs
+@@ -280,11 +280,11 @@ impl<R> From<R> for DebugLineStr<R> {
+ #[cfg(all(test,feature = "read"))]
+ mod tests {
+     use super::*;
+-    use crate::test_util::GimliSectionMethods;
++    //use crate::test_util::GimliSectionMethods;
+     use crate::LittleEndian;
+-    use test_assembler::{Endian, Label, LabelMaker, Section};
++    //use test_assembler::{Endian, Label, LabelMaker, Section};
+ 
+-    #[test]
++    /*#[test]
+     fn test_get_str_offset() {
+         for format in vec![Format::Dwarf32, Format::Dwarf64] {
+             let zero = Label::new();
+@@ -317,5 +317,5 @@ mod tests {
+                 Ok(DebugStrOffset(1019))
+             );
+         }
+-    }
++    }*/
+ }
+Index: gimli/src/read/unit.rs
+===================================================================
+--- gimli.orig/src/read/unit.rs
++++ gimli/src/read/unit.rs
+@@ -3223,14 +3223,14 @@ mod tests {
+     use crate::read::{
+         Abbreviation, AttributeSpecification, DebugAbbrev, EndianSlice, Error, Result,
+     };
+-    use crate::test_util::GimliSectionMethods;
++    //use crate::test_util::GimliSectionMethods;
+     use alloc::vec::Vec;
+     use core::cell::Cell;
+-    use test_assembler::{Endian, Label, LabelMaker, Section};
++    //use test_assembler::{Endian, Label, LabelMaker, Section};
+ 
+     // Mixin methods for `Section` to help define binary test data.
+ 
+-    trait UnitSectionMethods {
++    /*trait UnitSectionMethods {
+         fn unit<'input, E>(self, unit: &mut UnitHeader<EndianSlice<'input, E>>) -> Self
+         where
+             E: Endianity;
+@@ -3335,7 +3335,7 @@ mod tests {
+                 Format::Dwarf64 => self.L64(offset as u64),
+             }
+         }
+-    }
++    }*/
+ 
+     /// Ensure that `UnitHeader<R>` is covariant wrt R.
+     #[test]
+@@ -3348,7 +3348,7 @@ mod tests {
+         }
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_debug_abbrev_offset_32() {
+         let section = Section::with_endian(Endian::Little).L32(0x0403_0201);
+         let buf = section.get_contents().unwrap();
+@@ -3358,7 +3358,7 @@ mod tests {
+             Ok(val) => assert_eq!(val, DebugAbbrevOffset(0x0403_0201)),
+             otherwise => panic!("Unexpected result: {:?}", otherwise),
+         };
+-    }
++    }*/
+ 
+     #[test]
+     fn test_parse_debug_abbrev_offset_32_incomplete() {
+@@ -3371,7 +3371,7 @@ mod tests {
+         };
+     }
+ 
+-    #[test]
++    /*#[test]
+     #[cfg(target_pointer_width = "64")]
+     fn test_parse_debug_abbrev_offset_64() {
+         let section = Section::with_endian(Endian::Little).L64(0x0807_0605_0403_0201);
+@@ -3382,7 +3382,7 @@ mod tests {
+             Ok(val) => assert_eq!(val, DebugAbbrevOffset(0x0807_0605_0403_0201)),
+             otherwise => panic!("Unexpected result: {:?}", otherwise),
+         };
+-    }
++    }*/
+ 
+     #[test]
+     fn test_parse_debug_abbrev_offset_64_incomplete() {
+@@ -3395,7 +3395,7 @@ mod tests {
+         };
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_debug_info_offset_32() {
+         let section = Section::with_endian(Endian::Little).L32(0x0403_0201);
+         let buf = section.get_contents().unwrap();
+@@ -3405,7 +3405,7 @@ mod tests {
+             Ok(val) => assert_eq!(val, DebugInfoOffset(0x0403_0201)),
+             otherwise => panic!("Unexpected result: {:?}", otherwise),
+         };
+-    }
++    }*/
+ 
+     #[test]
+     fn test_parse_debug_info_offset_32_incomplete() {
+@@ -3418,7 +3418,7 @@ mod tests {
+         };
+     }
+ 
+-    #[test]
++    /*#[test]
+     #[cfg(target_pointer_width = "64")]
+     fn test_parse_debug_info_offset_64() {
+         let section = Section::with_endian(Endian::Little).L64(0x0807_0605_0403_0201);
+@@ -3429,7 +3429,7 @@ mod tests {
+             Ok(val) => assert_eq!(val, DebugInfoOffset(0x0807_0605_0403_0201)),
+             otherwise => panic!("Unexpected result: {:?}", otherwise),
+         };
+-    }
++    }*/
+ 
+     #[test]
+     fn test_parse_debug_info_offset_64_incomplete() {
+@@ -3442,7 +3442,7 @@ mod tests {
+         };
+     }
+ 
+-    #[test]
++    /*#[test]
+     #[cfg(target_pointer_width = "64")]
+     fn test_units() {
+         let expected_rest = &[1, 2, 3, 4, 5, 6, 7, 8, 9];
+@@ -3481,7 +3481,7 @@ mod tests {
+         assert_eq!(units.next(), Ok(Some(unit64)));
+         assert_eq!(units.next(), Ok(Some(unit32)));
+         assert_eq!(units.next(), Ok(None));
+-    }
++    }*/
+ 
+     #[test]
+     fn test_unit_version_unknown_version() {
+@@ -3513,7 +3513,7 @@ mod tests {
+         };
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_unit_header_32_ok() {
+         let expected_rest = &[1, 2, 3, 4, 5, 6, 7, 8, 9];
+         let encoding = Encoding {
+@@ -3540,9 +3540,9 @@ mod tests {
+             Ok(expected_unit)
+         );
+         assert_eq!(*rest, EndianSlice::new(expected_rest, LittleEndian));
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     #[cfg(target_pointer_width = "64")]
+     fn test_parse_unit_header_64_ok() {
+         let expected_rest = &[1, 2, 3, 4, 5, 6, 7, 8, 9];
+@@ -3806,7 +3806,7 @@ mod tests {
+             Ok(expected_unit)
+         );
+         assert_eq!(*rest, EndianSlice::new(expected_rest, LittleEndian));
+-    }
++    }*/
+ 
+     #[test]
+     fn test_parse_type_offset_32_ok() {
+@@ -3849,7 +3849,7 @@ mod tests {
+         };
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_parse_type_unit_header_32_ok() {
+         let expected_rest = &[1, 2, 3, 4, 5, 6, 7, 8, 9];
+         let encoding = Encoding {
+@@ -4209,7 +4209,7 @@ mod tests {
+             assert_eq!(attribute.raw_value(), expect_raw);
+             assert_eq!(attribute.value(), expect_value);
+         }
+-    }
++    }*/
+ 
+     #[test]
+     fn test_attribute_udata_sdata_value() {
+@@ -5158,7 +5158,7 @@ mod tests {
+         }
+     }
+ 
+-    fn entries_cursor_tests_abbrev_buf() -> Vec<u8> {
++    /*fn entries_cursor_tests_abbrev_buf() -> Vec<u8> {
+         #[rustfmt::skip]
+         let section = Section::with_endian(Endian::Little)
+             .abbrev(1, DW_TAG_subprogram, DW_CHILDREN_yes)
+@@ -5266,9 +5266,9 @@ mod tests {
+ 
+         assert!(cursor.next_entry().is_err());
+         assert!(cursor.next_entry().is_err());
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_cursor_next_entry() {
+         let info_buf = &entries_cursor_tests_debug_info_buf();
+         let debug_info = DebugInfo::new(info_buf, LittleEndian);
+@@ -5452,9 +5452,9 @@ mod tests {
+             .expect("Should parse next sibling")
+             .is_none());
+         assert!(cursor.current().is_none());
+-    }
++    }*/
+ 
+-    fn entries_cursor_sibling_abbrev_buf() -> Vec<u8> {
++    /*fn entries_cursor_sibling_abbrev_buf() -> Vec<u8> {
+         #[rustfmt::skip]
+         let section = Section::with_endian(Endian::Little)
+             .abbrev(1, DW_TAG_subprogram, DW_CHILDREN_yes)
+@@ -5517,7 +5517,7 @@ mod tests {
+         sibling009_ref.set_const(offset);
+ 
+         section.get_contents().unwrap()
+-    }
++    }*/
+ 
+     fn test_cursor_next_sibling_with_ptr(cursor: &mut EntriesCursor<EndianSlice<LittleEndian>>) {
+         assert_next_dfs(cursor, "001", 0);
+@@ -5542,7 +5542,7 @@ mod tests {
+         assert!(cursor.current().is_none());
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_debug_info_next_sibling_with_ptr() {
+         let encoding = Encoding {
+             format: Format::Dwarf32,
+@@ -5580,9 +5580,9 @@ mod tests {
+ 
+         let mut cursor = unit.entries(&abbrevs);
+         test_cursor_next_sibling_with_ptr(&mut cursor);
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_debug_types_next_sibling_with_ptr() {
+         let encoding = Encoding {
+             format: Format::Dwarf32,
+@@ -5706,9 +5706,9 @@ mod tests {
+             .unwrap();
+         let entry2 = UnitOffset(header_size + (&entry2 - &start) as usize);
+         (section, entry2)
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_entries_tree() {
+         fn assert_entry<'input, 'abbrev, 'unit, 'tree, Endian>(
+             node: Result<
+@@ -6073,7 +6073,7 @@ mod tests {
+             UnitOffset(length - 1).to_debug_types_offset(&unit),
+             Some(DebugTypesOffset(offset + length - 1))
+         );
+-    }
++    }*/
+ 
+     #[test]
+     fn test_length_including_self() {
+Index: gimli/src/test_util.rs
+===================================================================
+--- gimli.orig/src/test_util.rs
++++ gimli/src/test_util.rs
+@@ -1,9 +1,9 @@
+ #![allow(missing_docs)]
+ 
+ use crate::Format;
+-use test_assembler::{Label, Section};
++//use test_assembler::{Label, Section};
+ 
+-pub trait GimliSectionMethods {
++/*pub trait GimliSectionMethods {
+     fn sleb(self, val: i64) -> Self;
+     fn uleb(self, val: u64) -> Self;
+     fn initial_length(self, format: Format, length: &Label, start: &Label) -> Self;
+@@ -50,4 +50,4 @@ impl GimliSectionMethods for Section {
+             _ => panic!("unsupported word size"),
+         }
+     }
+-}
++}*/

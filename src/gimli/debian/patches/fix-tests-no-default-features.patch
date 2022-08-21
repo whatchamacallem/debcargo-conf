@@ -1,0 +1,104 @@
+Index: gimli/benches/bench.rs
+===================================================================
+--- gimli.orig/benches/bench.rs
++++ gimli/benches/bench.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "read")]
+ #![feature(test)]
+ 
+ extern crate test;
+@@ -88,6 +89,7 @@ fn bench_parsing_debug_info(b: &mut test
+     b.iter(|| impl_bench_parsing_debug_info(debug_info, debug_abbrev));
+ }
+ 
++#[cfg(all(feature = "endian-reader",feature = "std"))]
+ #[bench]
+ fn bench_parsing_debug_info_with_endian_rc_slice(b: &mut test::Bencher) {
+     let debug_info = read_section("debug_info");
+@@ -573,7 +575,7 @@ fn bench_evaluating_debug_loc_expression
+ }
+ 
+ // See comment above `test_parse_self_eh_frame`.
+-#[cfg(target_pointer_width = "64")]
++#[cfg(all(target_pointer_width = "64",feature = "fallible-iterator"))]
+ mod cfi {
+     use super::*;
+     use fallible_iterator::FallibleIterator;
+Index: gimli/src/read/cfi.rs
+===================================================================
+--- gimli.orig/src/read/cfi.rs
++++ gimli/src/read/cfi.rs
+@@ -3495,7 +3495,7 @@ fn parse_encoded_pointer<R: Reader>(
+     Ok(Pointer::new(encoding, base.wrapping_add(offset)))
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test,feature = "read"))]
+ mod tests {
+     use super::*;
+     use super::{parse_cfi_entry, AugmentationData, RegisterRuleMap, UnwindContext};
+Index: gimli/src/read/value.rs
+===================================================================
+--- gimli.orig/src/read/value.rs
++++ gimli/src/read/value.rs
+@@ -904,7 +904,7 @@ impl Value {
+     }
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test,feature = "read"))]
+ mod tests {
+     use super::*;
+     use crate::common::{DebugAbbrevOffset, DebugInfoOffset, Encoding, Format};
+Index: gimli/src/read/addr.rs
+===================================================================
+--- gimli.orig/src/read/addr.rs
++++ gimli/src/read/addr.rs
+@@ -80,7 +80,7 @@ impl<R> From<R> for DebugAddr<R> {
+     }
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test,feature = "read"))]
+ mod tests {
+     use super::*;
+     use crate::read::EndianSlice;
+Index: gimli/src/read/loclists.rs
+===================================================================
+--- gimli.orig/src/read/loclists.rs
++++ gimli/src/read/loclists.rs
+@@ -632,7 +632,7 @@ pub struct LocationListEntry<R: Reader>
+     pub data: Expression<R>,
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test,feature = "read"))]
+ mod tests {
+     use super::*;
+     use crate::common::Format;
+Index: gimli/src/read/rnglists.rs
+===================================================================
+--- gimli.orig/src/read/rnglists.rs
++++ gimli/src/read/rnglists.rs
+@@ -600,7 +600,7 @@ impl Range {
+     }
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test,feature = "read"))]
+ mod tests {
+     use super::*;
+     use crate::common::Format;
+Index: gimli/src/read/str.rs
+===================================================================
+--- gimli.orig/src/read/str.rs
++++ gimli/src/read/str.rs
+@@ -277,7 +277,7 @@ impl<R> From<R> for DebugLineStr<R> {
+     }
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test,feature = "read"))]
+ mod tests {
+     use super::*;
+     use crate::test_util::GimliSectionMethods;
