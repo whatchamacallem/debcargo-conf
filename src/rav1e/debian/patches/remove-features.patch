@@ -1,0 +1,49 @@
+Description: Remove some unused features
+ The unstable, channel-api, quick_test and check_asm features are unused.
+Author: Sebastian Ramacher <sramacher@debian.org>
+Last-Update: 2022-08-21
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -45,11 +45,6 @@
+ bench = false
+ required-features = ["binaries"]
+ 
+-[[bin]]
+-name = "rav1e-ch"
+-bench = false
+-required-features = ["binaries", "channel-api", "unstable"]
+-
+ [dependencies.aom-sys]
+ version = "0.3.0"
+ optional = true
+@@ -89,10 +84,6 @@
+ version = "0.15"
+ optional = true
+ 
+-[dependencies.crossbeam]
+-version = "0.8"
+-optional = true
+-
+ [dependencies.dav1d-sys]
+ version = "0.5"
+ optional = true
+@@ -200,19 +191,15 @@
+ bench = []
+ binaries = ["ivf", "y4m", "clap", "scan_fmt", "fern", "console", "av-metrics"]
+ capi = []
+-channel-api = ["crossbeam"]
+-check_asm = []
+ decode_test = ["aom-sys"]
+ decode_test_dav1d = ["dav1d-sys"]
+ default = ["binaries", "asm", "signal_support"]
+ desync_finder = ["backtrace"]
+ dump_ivf = ["ivf"]
+ dump_lookahead_data = ["byteorder", "image"]
+-quick_test = []
+ scenechange = []
+ serialize = ["serde", "toml", "v_frame/serialize", "arrayvec/serde"]
+ signal_support = ["signal-hook"]
+-unstable = []
+ [target."cfg(any(decode_test, decode_test_dav1d))".dependencies.system-deps]
+ version = "3.2"
+ 
