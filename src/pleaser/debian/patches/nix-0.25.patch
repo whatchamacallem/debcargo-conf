@@ -1,0 +1,33 @@
+Index: pleaser/src/lib.rs
+===================================================================
+--- pleaser.orig/src/lib.rs
++++ pleaser/src/lib.rs
+@@ -454,12 +454,10 @@ pub fn common_opt_arguments(
+         std::process::exit(0);
+     }
+ 
+-    let mut buf = [0u8; 64];
+-    ro.hostname = gethostname(&mut buf)
++    ro.hostname = gethostname()
+         .expect("Failed getting hostname")
+-        .to_str()
+-        .expect("Hostname wasn't valid UTF-8")
+-        .to_string();
++        .into_string()
++        .expect("Hostname wasn't valid UTF-8");
+ }
+ 
+ /// read an ini file and traverse includes
+Index: pleaser/Cargo.toml
+===================================================================
+--- pleaser.orig/Cargo.toml
++++ pleaser/Cargo.toml
+@@ -32,7 +32,7 @@ version = "0.2"
+ version = "0.2"
+ 
+ [dependencies.nix]
+-version = ">= 0.23"
++version = ">= 0.25"
+ 
+ [dependencies.pam]
+ version = "0.7"
