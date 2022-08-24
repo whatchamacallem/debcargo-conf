@@ -1,0 +1,60 @@
+diff -ur python3-dll-a.old/src/lib.rs python3-dll-a/src/lib.rs
+--- python3-dll-a.old/src/lib.rs	2022-08-24 11:22:52.000000000 +0100
++++ python3-dll-a/src/lib.rs	2022-08-24 13:58:24.030345891 +0100
+@@ -454,15 +454,14 @@
+ 
+ #[cfg(test)]
+ mod tests {
+-    use std::path::PathBuf;
+-
+     use super::*;
+ 
+     #[cfg(unix)]
++    #[ignore]
+     #[test]
+     fn generate() {
+         // FIXME: Use "target/<arch>" dirs for temporary files.
+-        let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
++        let mut dir = std::env::temp_dir();
+         dir.push("target");
+         dir.push("x86_64-pc-windows-gnu");
+         dir.push("python3-dll");
+@@ -480,9 +479,10 @@
+     }
+ 
+     #[cfg(unix)]
++    #[ignore]
+     #[test]
+     fn generate_gnu32() {
+-        let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
++        let mut dir = std::env::temp_dir();
+         dir.push("target");
+         dir.push("i686-pc-windows-gnu");
+         dir.push("python3-dll");
+@@ -492,7 +492,7 @@
+ 
+     #[test]
+     fn generate_msvc() {
+-        let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
++        let mut dir = std::env::temp_dir();
+         dir.push("target");
+         dir.push("x86_64-pc-windows-msvc");
+         dir.push("python3-dll");
+@@ -511,7 +511,7 @@
+ 
+     #[test]
+     fn generate_msvc32() {
+-        let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
++        let mut dir = std::env::temp_dir();
+         dir.push("target");
+         dir.push("i686-pc-windows-msvc");
+         dir.push("python3-dll");
+@@ -521,7 +521,7 @@
+ 
+     #[test]
+     fn generate_msvc_arm64() {
+-        let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
++        let mut dir = std::env::temp_dir();
+         dir.push("target");
+         dir.push("aarch64-pc-windows-msvc");
+         dir.push("python3-dll");
