@@ -1,0 +1,23 @@
+Description: Use CARGO_TARGET_TMPDIR or CARGO_TARGET_DIR for generated test files
+ CARGO_MANIFEST_DIR/target is unwritable in autopkgtests, so it should only be
+ used as a last resort.
+Forwarded: no
+---
+--- a/src/tests/helpers/dirs.rs
++++ b/src/tests/helpers/dirs.rs
+@@ -4,7 +4,14 @@ lazy_static! {
+     static ref HEADER_DIR: PathBuf = ROOT_DIR.join("lib").join("include");
+     static ref GRAMMARS_DIR: PathBuf = ROOT_DIR.join("test").join("fixtures").join("grammars");
+     static ref SCRATCH_DIR: PathBuf = {
+-        let result = ROOT_DIR.join("target").join("scratch");
++        let base = if let Some(tmpdir) = option_env!("CARGO_TARGET_TMPDIR") {
++            PathBuf::from(tmpdir)
++        } else if let Some(targetdir) = option_env!("CARGO_TARGET_DIR") {
++            PathBuf::from(targetdir)
++        } else {
++            ROOT_DIR.join("target")
++        };
++        let result = base.join("scratch");
+         fs::create_dir_all(&result).unwrap();
+         result
+     };
