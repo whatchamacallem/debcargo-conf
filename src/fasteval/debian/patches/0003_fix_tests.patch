@@ -1,0 +1,103 @@
+Description: fix tests
+ - Recent versions changes `Debug` implementations to use scientific notation on
+ numbers that are large or small enough, which breaks the tests.
+ - Fix pointer size mismatch in tests
+Author: Eric Long <i@hack3r.moe>
+Last-Update: 2022-08-21
+--- a/tests/parse.rs
++++ b/tests/parse.rs
+@@ -79,51 +79,51 @@
+ 
+     Parser::new().parse("12.34u", &mut slab.ps).unwrap();
+     assert_eq!(format!("{:?}",&slab),
+-"Slab{ exprs:{ 0:Expression { first: EConstant(0.00001234), pairs: [] } }, vals:{}, instrs:{} }");
++"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-5), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+     Parser::new().parse("12.34µ", &mut slab.ps).unwrap();
+     assert_eq!(format!("{:?}",&slab),
+-"Slab{ exprs:{ 0:Expression { first: EConstant(0.00001234), pairs: [] } }, vals:{}, instrs:{} }");
++"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-5), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+     Parser::new().parse("12.34n", &mut slab.ps).unwrap();
+     assert_eq!(format!("{:?}",&slab),
+-"Slab{ exprs:{ 0:Expression { first: EConstant(0.00000001234), pairs: [] } }, vals:{}, instrs:{} }");
++"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-8), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+     Parser::new().parse("12.34p", &mut slab.ps).unwrap();
+     assert_eq!(format!("{:?}",&slab),
+-"Slab{ exprs:{ 0:Expression { first: EConstant(0.00000000001234), pairs: [] } }, vals:{}, instrs:{} }");
++"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-11), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+     Parser::new().parse("12.34e56", &mut slab.ps).unwrap();
+     assert_eq!(format!("{:?}",&slab),
+-"Slab{ exprs:{ 0:Expression { first: EConstant(1234000000000000000000000000000000000000000000000000000000.0), pairs: [] } }, vals:{}, instrs:{} }");
++"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e57), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+     Parser::new().parse("12.34e+56", &mut slab.ps).unwrap();
+     assert_eq!(format!("{:?}",&slab),
+-"Slab{ exprs:{ 0:Expression { first: EConstant(1234000000000000000000000000000000000000000000000000000000.0), pairs: [] } }, vals:{}, instrs:{} }");
++"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e57), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+     Parser::new().parse("12.34E56", &mut slab.ps).unwrap();
+     assert_eq!(format!("{:?}",&slab),
+-"Slab{ exprs:{ 0:Expression { first: EConstant(1234000000000000000000000000000000000000000000000000000000.0), pairs: [] } }, vals:{}, instrs:{} }");
++"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e57), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+     Parser::new().parse("12.34E+56", &mut slab.ps).unwrap();
+     assert_eq!(format!("{:?}",&slab),
+-"Slab{ exprs:{ 0:Expression { first: EConstant(1234000000000000000000000000000000000000000000000000000000.0), pairs: [] } }, vals:{}, instrs:{} }");
++"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e57), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+     Parser::new().parse("12.34e-56", &mut slab.ps).unwrap();
+     assert_eq!(format!("{:?}",&slab),
+-"Slab{ exprs:{ 0:Expression { first: EConstant(0.0000000000000000000000000000000000000000000000000000001234), pairs: [] } }, vals:{}, instrs:{} }");
++"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-55), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+     Parser::new().parse("12.34E-56", &mut slab.ps).unwrap();
+     assert_eq!(format!("{:?}",&slab),
+-"Slab{ exprs:{ 0:Expression { first: EConstant(0.0000000000000000000000000000000000000000000000000000001234), pairs: [] } }, vals:{}, instrs:{} }");
++"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-55), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+     Parser::new().parse("+12.34E-56", &mut slab.ps).unwrap();
+     assert_eq!(format!("{:?}",&slab),
+-"Slab{ exprs:{ 0:Expression { first: EConstant(0.0000000000000000000000000000000000000000000000000000001234), pairs: [] } }, vals:{}, instrs:{} }");
++"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-55), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+     Parser::new().parse("-12.34E-56", &mut slab.ps).unwrap();
+     assert_eq!(format!("{:?}",&slab),
+-"Slab{ exprs:{ 0:Expression { first: EConstant(-0.0000000000000000000000000000000000000000000000000000001234), pairs: [] } }, vals:{}, instrs:{} }");
++"Slab{ exprs:{ 0:Expression { first: EConstant(-1.234e-55), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+     Parser::new().parse("-x", &mut slab.ps).unwrap();
+     assert_eq!(format!("{:?}",&slab),
+@@ -201,8 +201,11 @@
+         slab.ps.add_unsafe_var("ub".to_string(), &ub);
+     }
+ 
++    let pointer_len = format!("{:?}", &() as *const ()).len() - 2;
++    let pointer_mask = "?".repeat(pointer_len);
++
+     Parser::new().parse("ua + ub + 5", &mut slab.ps).unwrap();
+     assert_eq!(replace_addrs(format!("{:?}",&slab)),
+-"Slab{ exprs:{ 0:Expression { first: EStdFunc(EUnsafeVar { name: \"ua\", ptr: 0x???????????? }), pairs: [ExprPair(EAdd, EStdFunc(EUnsafeVar { name: \"ub\", ptr: 0x???????????? })), ExprPair(EAdd, EConstant(5.0))] } }, vals:{}, instrs:{} }");
++format!("Slab{{ exprs:{{ 0:Expression {{ first: EStdFunc(EUnsafeVar {{ name: \"ua\", ptr: 0x{} }}), pairs: [ExprPair(EAdd, EStdFunc(EUnsafeVar {{ name: \"ub\", ptr: 0x{} }})), ExprPair(EAdd, EConstant(5.0))] }} }}, vals:{{}}, instrs:{{}} }}", pointer_mask, pointer_mask));
+ }
+ 
+--- a/tests/compile.rs
++++ b/tests/compile.rs
+@@ -385,10 +385,12 @@
+     // IUnsafeVar
+     #[cfg(feature="unsafe-vars")]
+     {
++        let pointer_len = format!("{:?}", &() as *const ()).len() - 2;
++        let pointer_mask = "?".repeat(pointer_len);
+         unsafe_comp_chk("x", "CompileSlab{ instrs:{} }", 1.0);
+-        unsafe_comp_chk("x + y", "CompileSlab{ instrs:{ 0:IUnsafeVar { name: \"x\", ptr: 0x???????????? }, 1:IUnsafeVar { name: \"y\", ptr: 0x???????????? } } }", 3.0);
+-        unsafe_comp_chk("x() + y", "CompileSlab{ instrs:{ 0:IUnsafeVar { name: \"x\", ptr: 0x???????????? }, 1:IUnsafeVar { name: \"y\", ptr: 0x???????????? } } }", 3.0);
+-        unsafe_comp_chk("x(x,y,z) + y", "CompileSlab{ instrs:{ 0:IUnsafeVar { name: \"x\", ptr: 0x???????????? }, 1:IUnsafeVar { name: \"y\", ptr: 0x???????????? } } }", 3.0);
++        unsafe_comp_chk("x + y", &format!("CompileSlab{{ instrs:{{ 0:IUnsafeVar {{ name: \"x\", ptr: 0x{} }}, 1:IUnsafeVar {{ name: \"y\", ptr: 0x{} }} }} }}", pointer_mask, pointer_mask), 3.0);
++        unsafe_comp_chk("x() + y", &format!("CompileSlab{{ instrs:{{ 0:IUnsafeVar {{ name: \"x\", ptr: 0x{} }}, 1:IUnsafeVar {{ name: \"y\", ptr: 0x{} }} }} }}", pointer_mask, pointer_mask), 3.0);
++        unsafe_comp_chk("x(x,y,z) + y", &format!("CompileSlab{{ instrs:{{ 0:IUnsafeVar {{ name: \"x\", ptr: 0x{} }}, 1:IUnsafeVar {{ name: \"y\", ptr: 0x{} }} }} }}", pointer_mask, pointer_mask), 3.0);
+     }
+ 
+     // IFunc
