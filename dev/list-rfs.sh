@@ -28,6 +28,14 @@ done | sort  | while read t i; do
     if test `grep urgency $(dirname "$i")/changelog|wc -l` -eq 1; then
         # If there is only one item in the changelog, mark the package as NEW
         echo -e "\e[31mNEW package\e[0m"
+    else
+        # It isn't NEW but I want to know if this is a new upstream release or not
+        LAST_TWO=$(dpkg-parsechangelog -c 2 -l $(dirname "$i")/changelog|grep urgency)
+        LAST=$(echo "$LAST_TWO"|head -1|cut -d\( -f2|cut -d\) -f1|cut -d- -f1)
+        SECOND=$(echo "$LAST_TWO"|tail -1|cut -d\( -f2|cut -d\) -f1|cut -d- -f1)
+        if test $LAST == $SECOND; then
+            echo -e "\e[31mNot a new release\e[0m"
+        fi
     fi
     # trim the content
     content=$(xargs '-d\n' echo -n < "$i")
