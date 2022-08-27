@@ -36,7 +36,9 @@ done | sort  | while read t i; do
         LAST=$(echo $LAST_FULL|cut -d- -f1)
         SECOND=$(echo $SECOND_FULL|cut -d- -f1)
         if test $LAST == $SECOND; then
-            echo -e "\e[31mNot a new release ($SECOND_FULL => $LAST_FULL) \e[0m"
+            echo -e "\e[36mSame release ($SECOND_FULL => $LAST_FULL) \e[0m"
+        else
+            echo -e "\e[33mNew upstream release ($SECOND_FULL => $LAST_FULL) \e[0m"
         fi
     fi
     # trim the content
