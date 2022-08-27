@@ -31,10 +31,12 @@ done | sort  | while read t i; do
     else
         # It isn't NEW but I want to know if this is a new upstream release or not
         LAST_TWO=$(dpkg-parsechangelog -c 2 -l $(dirname "$i")/changelog|grep urgency)
-        LAST=$(echo "$LAST_TWO"|head -1|cut -d\( -f2|cut -d\) -f1|cut -d- -f1)
-        SECOND=$(echo "$LAST_TWO"|tail -1|cut -d\( -f2|cut -d\) -f1|cut -d- -f1)
+        LAST_FULL=$(echo "$LAST_TWO"|head -1|cut -d\( -f2|cut -d\) -f1)
+        SECOND_FULL=$(echo "$LAST_TWO"|tail -1|cut -d\( -f2|cut -d\) -f1)
+        LAST=$(echo $LAST_FULL|cut -d- -f1)
+        SECOND=$(echo $SECOND_FULL|cut -d- -f1)
         if test $LAST == $SECOND; then
-            echo -e "\e[31mNot a new release\e[0m"
+            echo -e "\e[31mNot a new release ($SECOND_FULL => $LAST_FULL) \e[0m"
         fi
     fi
     # trim the content
