@@ -104,7 +104,11 @@ A, then you can run something like::
 
 The extra arguments after ``./build.sh B <args>`` is extra deb files to pass to
 sbuild to use as dependencies. In this case, ``librust-A*.deb`` should have
-been built by the previous step.
+been built by the previous step. Alternatively, use the environment variable
+``EXTRA_DEBS``, like so: ::
+
+  $ EXTRA_DEBS=librust-A*.deb ./build.sh B
+  $ EXTRA_DEBS=librust-A.deb,librust-B.deb ./build.sh C
 
 After everything is built successfully, you can ``dput`` all of them and then
 push all the ``pending-*`` branches as normal.
