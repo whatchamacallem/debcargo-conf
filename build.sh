@@ -16,8 +16,6 @@
 #     Build using another schroot than debcargo-unstable-amd64-sbuild
 # SBUILD_OPTS=
 #     will pass to sbuild; for example SBUILD_OPTS=--arch=i386
-# EXTRA_DEBS
-#     Include extra dependency debs, e.g. EXTRA_DEBS=librust*.deb.
 set -e
 
 SCRIPTDIR="$(dirname $(readlink -f "$0"))"
@@ -101,12 +99,8 @@ if shouldbuild "$SRCNAME.dsc" "$PKGNAME/debian/changelog" ]; then
 	fi
 fi
 
-# allow tab, comma, space as separators
-IFS='	, ' read -r -a EXTRA_DEBS <<< "$EXTRA_DEBS"
-if [ ${#EXTRA_DEBS[@] -eq 0 ]; then
-	EXTRA_DEBS=( "$@" )
-fi
-if [ ${#EXTRA_DEBS[@] -ne 0 ]; then
+EXTRA_DEBS=( "$@" )
+if [ -n "$*" -a -z "$IGNORE_MISSING_BUILD_DEPS" ]; then
 	IGNORE_MISSING_BUILD_DEPS=1
 	echo >&2 "Given non-empty extra debs; defaulting IGNORE_MISSING_BUILD_DEPS=1"
 fi
