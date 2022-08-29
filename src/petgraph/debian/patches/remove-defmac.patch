@@ -1,8 +1,17 @@
-only in patch2:
-Index: petgraph/tests/quickcheck.rs
-===================================================================
---- petgraph.orig/tests/quickcheck.rs
-+++ petgraph/tests/quickcheck.rs
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -71,9 +71,6 @@
+ [dev-dependencies.bincode]
+ version = "1.3.3"
+ 
+-[dev-dependencies.defmac]
+-version = "0.2.1"
+-
+ [dev-dependencies.itertools]
+ version = "0.10.1"
+ default-features = false
+--- a/tests/quickcheck.rs
++++ b/tests/quickcheck.rs
 @@ -3,8 +3,8 @@
  extern crate quickcheck;
  extern crate petgraph;
@@ -14,86 +23,7 @@ Index: petgraph/tests/quickcheck.rs
  
  extern crate itertools;
  extern crate odds;
-@@ -499,21 +499,21 @@ quickcheck! {
-     }
- }
- 
--quickcheck! {
-+/*quickcheck! {
-     fn kosaraju_scc_is_topo_sort(g: Graph<(), ()>) -> bool {
-         let tsccs = kosaraju_scc(&g);
-         let firsts = vec(tsccs.iter().rev().map(|v| v[0]));
-         subset_is_topo_order(&g, &firsts)
-     }
--}
-+}*/
- 
--quickcheck! {
-+/*quickcheck! {
-     fn tarjan_scc_is_topo_sort(g: Graph<(), ()>) -> bool {
-         let tsccs = tarjan_scc(&g);
-         let firsts = vec(tsccs.iter().rev().map(|v| v[0]));
-         subset_is_topo_order(&g, &firsts)
-     }
--}
-+}*/
- 
- quickcheck! {
-     // Reversed edges gives the same sccs (when sorted)
-@@ -621,7 +621,7 @@ impl<N: Default + Clone + Send + 'static
-     }
- }
- 
--fn is_topo_order<N>(gr: &Graph<N, (), Directed>, order: &[NodeIndex]) -> bool {
-+/*fn is_topo_order<N>(gr: &Graph<N, (), Directed>, order: &[NodeIndex]) -> bool {
-     if gr.node_count() != order.len() {
-         println!(
-             "Graph ({}) and count ({}) had different amount of nodes.",
-@@ -642,9 +642,9 @@ fn is_topo_order<N>(gr: &Graph<N, (), Di
-         }
-     }
-     true
--}
-+}*/
- 
--fn subset_is_topo_order<N>(gr: &Graph<N, (), Directed>, order: &[NodeIndex]) -> bool {
-+/*fn subset_is_topo_order<N>(gr: &Graph<N, (), Directed>, order: &[NodeIndex]) -> bool {
-     if gr.node_count() < order.len() {
-         println!(
-             "Graph (len={}) had less nodes than order (len={})",
-@@ -675,18 +675,18 @@ fn subset_is_topo_order<N>(gr: &Graph<N,
-         }
-     }
-     true
--}
-+}*/
- 
--#[test]
-+/*#[test]
- fn full_topo() {
-     fn prop(DAG(gr): DAG<()>) -> bool {
-         let order = toposort(&gr, None).unwrap();
-         is_topo_order(&gr, &order)
-     }
-     quickcheck::quickcheck(prop as fn(_) -> bool);
--}
-+}*/
- 
--#[test]
-+/*#[test]
- fn full_topo_generic() {
-     fn prop_generic(DAG(mut gr): DAG<usize>) -> bool {
-         assert!(!is_cyclic_directed(&gr));
-@@ -724,7 +724,7 @@ fn full_topo_generic() {
-         true
-     }
-     quickcheck::quickcheck(prop_generic as fn(_) -> bool);
--}
-+}*/
- 
- quickcheck! {
-     // checks that the distances computed by dijkstra satisfy the triangle
-@@ -840,16 +840,16 @@ quickcheck! {
+@@ -938,16 +938,16 @@
      }
  }
  
@@ -113,69 +43,65 @@ Index: petgraph/tests/quickcheck.rs
          let sgr = StableGraph::from(gr1.clone());
          let gr2 = Graph::from(sgr);
  
-@@ -864,7 +864,7 @@ quickcheck! {
-         assert!(nodes_eq!(gr1, gr2));
-         assert!(edgew_eq!(gr1, gr2));
-         assert!(edges_eq!(gr1, gr2));
+@@ -962,7 +962,7 @@
+         assert!(nodes_eq!(&gr1, &gr2));
+         assert!(edgew_eq!(&gr1, &gr2));
+         assert!(edges_eq!(&gr1, &gr2));
 -    }
 +    }*/
  
      fn test_graph_from_stable_graph(gr1: StableDiGraph<usize, usize>) -> () {
          let mut gr1 = gr1;
-@@ -900,7 +900,7 @@ quickcheck! {
+@@ -998,7 +998,7 @@
          );
      }
  
 -    fn stable_di_graph_map_id(gr1: StableDiGraph<usize, usize>) -> () {
 +    /*fn stable_di_graph_map_id(gr1: StableDiGraph<usize, usize>) -> () {
          let gr2 = gr1.map(|_, &nw| nw, |_, &ew| ew);
-         assert!(nodes_eq!(gr1, gr2));
-         assert!(edgew_eq!(gr1, gr2));
-@@ -926,7 +926,7 @@ quickcheck! {
-         assert!(nodes_eq!(gr1, gr2));
-         assert!(edgew_eq!(gr1, gr2));
-         assert!(edges_eq!(gr1, gr2));
+         assert!(nodes_eq!(&gr1, &gr2));
+         assert!(edgew_eq!(&gr1, &gr2));
+@@ -1024,7 +1024,7 @@
+         assert!(nodes_eq!(&gr1, &gr2));
+         assert!(edgew_eq!(&gr1, &gr2));
+         assert!(edges_eq!(&gr1, &gr2));
 -    }
 +    }*/
  
      fn stable_di_graph_filter_map_remove(gr1: Small<StableDiGraph<i32, i32>>,
                                           nodes: Vec<usize>,
-Index: petgraph/tests/stable_graph.rs
-===================================================================
---- petgraph.orig/tests/stable_graph.rs
-+++ petgraph/tests/stable_graph.rs
+--- a/tests/stable_graph.rs
++++ b/tests/stable_graph.rs
 @@ -2,8 +2,8 @@
  
  extern crate itertools;
  extern crate petgraph;
 -#[macro_use]
 -extern crate defmac;
-+//#[macro_use]
-+//extern crate defmac;
++/*#[macro_use]
++extern crate defmac;*/
  
  use itertools::assert_equal;
  use petgraph::algo::{kosaraju_scc, min_spanning_tree, tarjan_scc};
-@@ -151,16 +151,16 @@ where
+@@ -171,7 +171,7 @@
      gr
  }
  
 -defmac!(edges ref gr, x => gr.edges(x).map(|r| (r.target(), *r.weight())));
-+//defmac!(edges ref gr, x => gr.edges(x).map(|r| (r.target(), *r.weight())));
++/*defmac!(edges ref gr, x => gr.edges(x).map(|r| (r.target(), *r.weight())));
  
--#[test]
-+/*#[test]
+ #[test]
  fn test_edges_directed() {
-     let gr = make_graph::<Directed>();
-     let x = n(9);
-     assert_equal(edges!(gr, x), vec![(x, 16), (x, 14), (n(1), 13)]);
-     assert_equal(edges!(gr, n(0)), vec![(n(3), 1)]);
-     assert_equal(edges!(gr, n(4)), vec![]);
+@@ -180,7 +180,7 @@
+     assert_equal(edges!(&gr, x), vec![(x, 16), (x, 14), (n(1), 13)]);
+     assert_equal(edges!(&gr, n(0)), vec![(n(3), 1)]);
+     assert_equal(edges!(&gr, n(4)), vec![]);
 -}
 +}*/
  
  #[test]
  fn test_edge_references() {
-@@ -168,7 +168,7 @@ fn test_edge_references() {
+@@ -188,7 +188,7 @@
      assert_eq!(gr.edge_count(), gr.edge_references().count());
  }
  
@@ -184,68 +110,12 @@ Index: petgraph/tests/stable_graph.rs
  fn test_edges_undirected() {
      let gr = make_graph::<Undirected>();
      let x = n(9);
-@@ -178,7 +178,7 @@ fn test_edges_undirected() {
+@@ -198,7 +198,7 @@
      );
-     assert_equal(edges!(gr, n(0)), vec![(n(3), 1)]);
-     assert_equal(edges!(gr, n(4)), vec![]);
+     assert_equal(edges!(&gr, n(0)), vec![(n(3), 1)]);
+     assert_equal(edges!(&gr, n(4)), vec![]);
 -}
 +}*/
  
  #[test]
  fn test_edge_iterators_directed() {
-@@ -312,13 +312,13 @@ fn dot() {
-     );
- }
- 
--defmac!(iter_eq a, b => a.eq(b));
-+/*defmac!(iter_eq a, b => a.eq(b));
- defmac!(nodes_eq ref a, ref b => a.node_references().eq(b.node_references()));
- defmac!(edgew_eq ref a, ref b => a.edge_references().eq(b.edge_references()));
- defmac!(edges_eq ref a, ref b =>
-         iter_eq!(
-             a.edge_references().map(|e| (e.source(), e.target())),
--            b.edge_references().map(|e| (e.source(), e.target()))));
-+            b.edge_references().map(|e| (e.source(), e.target()))));*/
- 
- #[test]
- fn from() {
-@@ -333,9 +333,9 @@ fn from() {
- 
-     let gr2 = Graph::from(gr1.clone());
-     let gr3 = StableGraph::from(gr2);
--    assert!(nodes_eq!(gr1, gr3));
-+    /*assert!(nodes_eq!(gr1, gr3));
-     assert!(edgew_eq!(gr1, gr3));
--    assert!(edges_eq!(gr1, gr3));
-+    assert!(edges_eq!(gr1, gr3));*/
- 
-     gr1.remove_node(b);
- 
-@@ -348,12 +348,12 @@ fn from() {
-     ans.add_edge(a, a, 10);
-     ans.add_edge(a, c, 40);
- 
--    assert!(nodes_eq!(gr4, ans));
-+    /*assert!(nodes_eq!(gr4, ans));
-     assert!(edges_eq!(gr4, ans));
- 
-     assert!(nodes_eq!(gr5, ans));
-     assert!(edgew_eq!(gr5, ans));
--    assert!(edges_eq!(gr5, ans));
-+    assert!(edges_eq!(gr5, ans));*/
- }
- 
- use petgraph::data::FromElements;
-Index: petgraph/Cargo.toml
-===================================================================
---- petgraph.orig/Cargo.toml
-+++ petgraph/Cargo.toml
-@@ -53,8 +53,6 @@ optional = true
- [dependencies.serde_derive]
- version = "1.0"
- optional = true
--[dev-dependencies.defmac]
--version = "0.1"
- 
- [dev-dependencies.itertools]
- version = "0.8"
