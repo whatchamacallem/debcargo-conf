@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_auto_configure:
+	chmod +x *sh_tealdeer
+	mv bash_tealdeer tldr
+	mv fish_tealdeer tldr.fish
+	dh_auto_configure
+
+override_dh_installman:
+	help2man \
+		--name tldr \
+		--no-info \
+		debian/tealdeer/usr/bin/tldr > debian/tldr.1
+	dh_installman -O--buildsystem=cargo
