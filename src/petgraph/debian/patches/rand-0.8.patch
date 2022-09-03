@@ -1,6 +1,8 @@
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -71,7 +71,10 @@
+Index: petgraph/Cargo.toml
+===================================================================
+--- petgraph.orig/Cargo.toml
++++ petgraph/Cargo.toml
+@@ -72,7 +72,10 @@ version = "0.10.1"
  default-features = false
  
  [dev-dependencies.rand]
@@ -12,9 +14,11 @@
  
  [features]
  all = [
---- a/tests/unionfind.rs
-+++ b/tests/unionfind.rs
-@@ -2,7 +2,8 @@
+Index: petgraph/tests/unionfind.rs
+===================================================================
+--- petgraph.orig/tests/unionfind.rs
++++ petgraph/tests/unionfind.rs
+@@ -2,7 +2,8 @@ extern crate petgraph;
  extern crate rand;
  
  use petgraph::unionfind::UnionFind;
@@ -24,7 +28,7 @@
  use std::collections::HashSet;
  
  #[test]
-@@ -67,8 +68,8 @@
+@@ -67,8 +68,8 @@ fn uf_rand() {
      let mut rng = ChaChaRng::from_rng(thread_rng()).unwrap();
      let mut u = UnionFind::new(n);
      for _ in 0..100 {
@@ -35,3 +39,27 @@
          let ar = u.find(a);
          let br = u.find(b);
          assert_eq!(ar != br, u.union(a, b));
+Index: petgraph/benches/serialize.rs
+===================================================================
+--- petgraph.orig/benches/serialize.rs
++++ petgraph/benches/serialize.rs
+@@ -21,8 +21,8 @@ mod serialize {
+ 
+         let mut rng = rand::thread_rng();
+         g.extend_with_edges((0..NUM_EDGES).map(|_| {
+-            let first = rng.gen_range(0, NUM_NODES + NUM_HOLES);
+-            let second = rng.gen_range(0, NUM_NODES + NUM_HOLES - 1);
++            let first = rng.gen_range(0.. NUM_NODES + NUM_HOLES);
++            let second = rng.gen_range(0.. NUM_NODES + NUM_HOLES - 1);
+             let second = second + (second >= first) as usize;
+             let weight: u32 = rng.gen();
+             (indices[first], indices[second], weight)
+@@ -30,7 +30,7 @@ mod serialize {
+ 
+         // Remove nodes to make the structure a bit more interesting
+         while g.node_count() > NUM_NODES {
+-            let idx = rng.gen_range(0, indices.len());
++            let idx = rng.gen_range(0.. indices.len());
+             g.remove_node(indices[idx]);
+         }
+ 
