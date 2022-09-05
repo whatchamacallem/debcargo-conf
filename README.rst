@@ -34,6 +34,17 @@ and follow its instructions. To save time, you can first copy anything relevant
 from ``src/<rust-crate-name>`` to ``src/<rust-crate-name>-<old-version>``, then
 adapt it as needed.
 
+You will need excellent reasons to do this. It should be done only for core crates
+used by many other crates or programs for which the upgrade path is complex.
+For example, if the API significantly changed and requires a lot of work.
+
+Instead, please consider:
+* Downgrading or upgrading the dependency.
+* If it doesn't exist, open an issue on the upstream issue tracker to
+  encourage them to upgrade.
+* If possible/relevant, disable a feature if it uses it.
+* Wait until upstream upgraded.
+
 To prepare a release
 --------------------
 
