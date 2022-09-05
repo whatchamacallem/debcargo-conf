@@ -283,7 +283,7 @@ Don't file ITPs for library crates, but do file them for binary crates.
 Generally we'll be uploading a dozen crates or so at once. Submitting ITPs for
 these is unnecessary since we're the only ones uploading and there is no chance
 of conflict. It would only be spam for the bug tracker. Please instead
-co-ordinate uploads on the ``#debian-rust`` IRC channel.
+coordinate uploads on the ``#debian-rust`` IRC channel.
 
 Testing
 -------

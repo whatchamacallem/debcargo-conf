@@ -202,7 +202,7 @@ tokio/futures/hyper with async/await
 * tokio-uds (merged into tokio)
 * tokio-udp (merged into tokio)
 
-*incompatible rdeps with no futher rdeps, dead upstream, to be removed*
+*incompatible rdeps with no further rdeps, dead upstream, to be removed*
 
 * pcap (replaced by pcap-sys)
 * bufstream: https://github.com/alexcrichton/bufstream/issues/13
