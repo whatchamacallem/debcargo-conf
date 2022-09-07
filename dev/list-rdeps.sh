@@ -127,7 +127,7 @@ list_rdeps() {
 			queue+=("$src") # subprocess, var doesn't write to parent
 		fi
 		if [ "$ver" != "$(src_version "$src")" ]; then continue; fi
-		local rustdeps="$(printf "%s" "$deps" | tr ',' '\n' | egrep -wo "librust-${pkg}(\+|-[0-9])\S*-dev[^,]*" | tr '\n' '\t' | sed -e 's/\t/, /g')"
+		local rustdeps="$(printf "%s" "$deps" | tr ',' '\n' | grep -E -wo "librust-${pkg}(\+|-[0-9])\S*-dev[^,]*" | tr '\n' '\t' | sed -e 's/\t/, /g')"
 		local stat="$(installability "$rdep" "$ver")"
 		printf "%s %-48s %-16s depends on     %s\n" "$stat" "$rdep" "$ver" "$rustdeps"
 	done
