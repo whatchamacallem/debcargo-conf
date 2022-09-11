@@ -1,0 +1,108 @@
+Index: pkg-config/src/lib.rs
+===================================================================
+--- pkg-config.orig/src/lib.rs
++++ pkg-config/src/lib.rs
+@@ -12,13 +12,6 @@
+ //! * `FOO_NO_PKG_CONFIG` - if set, this will disable running `pkg-config` when
+ //!   probing for the library named `foo`.
+ //!
+-//! * `PKG_CONFIG_ALLOW_CROSS` - The `pkg-config` command usually doesn't
+-//!   support cross-compilation, and this crate prevents it from selecting
+-//!   incompatible versions of libraries.
+-//!   Setting `PKG_CONFIG_ALLOW_CROSS=1` disables this protection, which is
+-//!   likely to cause linking errors, unless `pkg-config` has been configured
+-//!   to use appropriate sysroot and search paths for the target platform.
+-//!
+ //! There are also a number of environment variables which can configure how a
+ //! library is linked to (dynamically vs statically). These variables control
+ //! whether the `--static` flag is passed. Note that this behavior can be
+@@ -111,11 +104,8 @@ pub enum Error {
+     /// Contains the name of the responsible environment variable.
+     EnvNoPkgConfig(String),
+ 
+-    /// Detected cross compilation without a custom sysroot.
+-    ///
+-    /// Ignore the error with `PKG_CONFIG_ALLOW_CROSS=1`,
+-    /// which may let `pkg-config` select libraries
+-    /// for the host's architecture instead of the target's.
++    /// Cross compilation detected. Kept for compatibility;
++    /// the Debian package never emits this.
+     CrossCompilation,
+ 
+     /// Failed to run `pkg-config`.
+@@ -155,14 +145,6 @@ impl fmt::Display for Error {
+     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+         match *self {
+             Error::EnvNoPkgConfig(ref name) => write!(f, "Aborted because {} is set", name),
+-            Error::CrossCompilation => f.write_str(
+-                "pkg-config has not been configured to support cross-compilation.\n\
+-                \n\
+-                Install a sysroot for the target platform and configure it via\n\
+-                PKG_CONFIG_SYSROOT_DIR and PKG_CONFIG_PATH, or install a\n\
+-                cross-compiling wrapper for pkg-config and set it via\n\
+-                PKG_CONFIG environment variable.",
+-            ),
+             Error::Command {
+                 ref command,
+                 ref cause,
+@@ -219,7 +201,7 @@ impl fmt::Display for Error {
+                 )?;
+                 format_output(output, f)
+             }
+-            Error::__Nonexhaustive => panic!(),
++            Error::CrossCompilation | Error::__Nonexhaustive => panic!(),
+         }
+     }
+ }
+@@ -411,6 +393,8 @@ impl Config {
+         if host == target {
+             return true;
+         }
++        // always enable PKG_CONFIG_ALLOW_CROSS override in Debian
++        return true;
+ 
+         // pkg-config may not be aware of cross-compilation, and require
+         // a wrapper script that sets up platform-specific prefixes.
+Index: pkg-config/tests/test.rs
+===================================================================
+--- pkg-config.orig/tests/test.rs
++++ pkg-config/tests/test.rs
+@@ -34,7 +34,6 @@ fn find(name: &str) -> Result<pkg_config
+     pkg_config::probe_library(name)
+ }
+ 
+-#[test]
+ fn cross_disabled() {
+     let _g = LOCK.lock();
+     reset();
+@@ -46,7 +45,6 @@ fn cross_disabled() {
+     }
+ }
+ 
+-#[test]
+ fn cross_enabled() {
+     let _g = LOCK.lock();
+     reset();
+@@ -66,7 +64,6 @@ fn cross_enabled_if_customized() {
+     find("foo").unwrap();
+ }
+ 
+-#[test]
+ fn cross_disabled_if_customized() {
+     let _g = LOCK.lock();
+     reset();
+@@ -74,10 +71,10 @@ fn cross_disabled_if_customized() {
+     env::set_var("HOST", "bar");
+     env::set_var("PKG_CONFIG_ALLOW_CROSS", "0");
+     env::set_var("PKG_CONFIG_SYSROOT_DIR", "/tmp/cross-test");
+-    match find("foo") {
+-        Err(Error::CrossCompilation) => {}
+-        _ => panic!("expected CrossCompilation failure"),
+-    }
++//    match find("foo") {
++//        Err(Error::CrossCompilation) => {}
++//        _ => panic!("expected CrossCompilation failure"),
++//    }
+ }
+ 
+ #[test]
