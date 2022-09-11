@@ -1,0 +1,51 @@
+From e6f4ff12ea9f163ff9580489ed0f527b2a73e484 Mon Sep 17 00:00:00 2001
+From: Kornel <kornel@geekhood.net>
+Date: Wed, 13 Jan 2021 15:15:00 +0000
+Subject: [PATCH] Update quick-error (#26)
+
+---
+ Cargo.toml     | 2 +-
+ src/grammar.rs | 2 +-
+ src/ip.rs      | 5 +----
+ 3 files changed, 3 insertions(+), 6 deletions(-)
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -31,7 +31,7 @@
+ optional = true
+ 
+ [dependencies.quick-error]
+-version = "1.0.0"
++version = "2.0.0"
+ 
+ [features]
+ system = ["hostname"]
+--- a/src/grammar.rs
++++ b/src/grammar.rs
+@@ -10,7 +10,7 @@
+         /// Error that may be returned when the string to parse contains invalid UTF-8 sequences
+         InvalidUtf8(line: usize, err: Utf8Error) {
+             display("bad unicode at line {}: {}", line, err)
+-            cause(err)
++            source(err)
+         }
+         /// Error returned a value for a given directive is invalid.
+         /// This can also happen when the value is missing, if the directive requires a value.
+--- a/src/ip.rs
++++ b/src/ip.rs
+@@ -119,14 +119,11 @@
+ 
+ impl fmt::Display for AddrParseError {
+     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+-        fmt.write_str(self.description())
++        fmt.write_str("invalid IP address syntax")
+     }
+ }
+ 
+ impl Error for AddrParseError {
+-    fn description(&self) -> &str {
+-        "invalid IP address syntax"
+-    }
+ }
+ 
+ impl From<::std::net::AddrParseError> for AddrParseError {
