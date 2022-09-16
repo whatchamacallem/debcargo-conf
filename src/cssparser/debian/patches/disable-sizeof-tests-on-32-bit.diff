@@ -1,0 +1,15 @@
+The tests in size_of_tests make assumptions about pointer size and hence only pass on 64-bit architectures.
+
+Index: cssparser/src/lib.rs
+===================================================================
+--- cssparser.orig/src/lib.rs
++++ cssparser/src/lib.rs
+@@ -110,7 +110,7 @@ mod parser;
+ mod serializer;
+ mod unicode_range;
+ 
+-#[cfg(test)]
++#[cfg(all(test,target_pointer_width = "64"))]
+ mod size_of_tests;
+ #[cfg(test)]
+ mod tests;
