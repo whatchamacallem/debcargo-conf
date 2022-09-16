@@ -26,4 +26,6 @@ execute_after_dh_auto_build:
 execute_after_dh_auto_install:
 	CARGO_HOME=debian/cargo_home \
 		/usr/share/cargo/bin/cargo cinstall $(CARGO_C_FLAGS)
-	rm -f debian/tmp/usr/share/cargo/registry/rav1e-*/Cargo.lock
+
+execute_after_dh_install:
+	find debian -name Cargo.lock -delete
