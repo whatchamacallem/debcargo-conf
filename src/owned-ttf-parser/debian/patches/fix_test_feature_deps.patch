@@ -1,0 +1,16 @@
+Description: ensure tests only run if needed feature is present
+Author: Marc Dequènes (Duck) <Duck@DuckCorp.org>
+Forwarded: no
+Last-Update: 2022-09-19
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/tests/face_mut.rs
++++ b/tests/face_mut.rs
+@@ -3,6 +3,7 @@
+ 
+ const VFONT: &[u8] = include_bytes!("../fonts/Cantarell-VF.otf");
+ 
++#[cfg(feature = "variable-fonts")]
+ #[test]
+ fn set_variation() {
+     let mut face = OwnedFace::from_vec(VFONT.to_vec(), 0).unwrap();
