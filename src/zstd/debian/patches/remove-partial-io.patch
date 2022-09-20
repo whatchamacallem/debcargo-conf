@@ -1,0 +1,70 @@
+Description: Remove partial-io as it's archived upstream
+Last-Update: 2022-09-02
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -53,9 +53,6 @@
+ [dev-dependencies.humansize]
+ version = "1.0"
+ 
+-[dev-dependencies.partial-io]
+-version = "0.5"
+-
+ [dev-dependencies.walkdir]
+ version = "2.2"
+ 
+--- a/src/stream/write/tests.rs
++++ b/src/stream/write/tests.rs
+@@ -1,8 +1,6 @@
+ use std::io::{Cursor, Write};
+ use std::iter;
+ 
+-use partial_io::{PartialOp, PartialWrite};
+-
+ use crate::stream::decode_all;
+ use crate::stream::write::{Decoder, Encoder};
+ 
+@@ -26,6 +24,7 @@
+     assert_eq!(input, &decoded[..]);
+ }
+ 
++/*
+ /// Test that flush after a partial write works successfully without
+ /// corrupting the frame. This test is in this module because it checks
+ /// internal implementation details.
+@@ -69,4 +68,4 @@
+     }
+ 
+     z
+-}
++}*/
+--- a/src/stream/tests.rs
++++ b/src/stream/tests.rs
+@@ -1,8 +1,6 @@
+ use super::{copy_encode, decode_all, encode_all};
+ use super::{Decoder, Encoder};
+ 
+-use partial_io::{PartialOp, PartialWrite};
+-
+ use std::io;
+ use std::iter;
+ 
+@@ -55,7 +53,7 @@
+ }
+ 
+ #[test]
+-fn test_try_finish() {
++/*fn test_try_finish() {
+     use std::io::Write;
+     let mut z = setup_try_finish();
+ 
+@@ -139,7 +137,7 @@
+         &input,
+         "WouldBlock errors should not corrupt stream"
+     );
+-}
++}*/
+ 
+ #[test]
+ fn test_invalid_frame() {

@@ -1,8 +1,6 @@
 only in patch2:
-Index: zstd-sys/zstd.h
-===================================================================
---- zstd-sys.orig/zstd.h
-+++ zstd-sys/zstd.h
+--- a/zstd.h
++++ b/zstd.h
 @@ -1,16 +1,2 @@
 -#ifdef PKG_CONFIG
 -
@@ -20,11 +18,9 @@ Index: zstd-sys/zstd.h
 -/* This file is used to generate bindings for both headers.
 - * Check update_bindings.sh to see how to use it.
 - * Or use the `bindgen` feature, which will create the bindings automatically. */
-Index: zstd-sys/Cargo.toml
-===================================================================
---- zstd-sys.orig/Cargo.toml
-+++ zstd-sys/Cargo.toml
-@@ -52,15 +52,9 @@ version = "0.2.45"
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -52,15 +52,9 @@
  
  [build-dependencies.bindgen]
  version = "0.59"
@@ -40,11 +36,9 @@ Index: zstd-sys/Cargo.toml
  
  [features]
  debug = []
-Index: zstd-sys/build.rs
-===================================================================
---- zstd-sys.orig/build.rs
-+++ zstd-sys/build.rs
-@@ -2,7 +2,6 @@ use std::ffi::OsStr;
+--- a/build.rs
++++ b/build.rs
+@@ -2,7 +2,6 @@
  use std::path::{Path, PathBuf};
  use std::{env, fs};
  
@@ -52,7 +46,7 @@ Index: zstd-sys/build.rs
  fn generate_bindings(defs: Vec<&str>, headerpaths: Vec<PathBuf>) {
      let bindings = bindgen::Builder::default()
          .header("zstd.h");
-@@ -36,10 +35,6 @@ fn generate_bindings(defs: Vec<&str>, he
+@@ -36,10 +35,6 @@
          .expect("Could not write bindings");
  }
  
@@ -63,7 +57,7 @@ Index: zstd-sys/build.rs
  fn pkg_config() -> (Vec<&'static str>, Vec<PathBuf>) {
      let library = pkg_config::Config::new()
          .statik(true)
-@@ -49,146 +44,6 @@ fn pkg_config() -> (Vec<&'static str>, V
+@@ -49,146 +44,6 @@
      (vec!["PKG_CONFIG"], library.include_paths)
  }
  
@@ -210,7 +204,7 @@ Index: zstd-sys/build.rs
  fn main() {
      let target_arch =
          std::env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
-@@ -199,21 +54,7 @@ fn main() {
+@@ -199,21 +54,7 @@
      }
  
      // println!("cargo:rustc-link-lib=zstd");
@@ -233,11 +227,9 @@ Index: zstd-sys/build.rs
  
      let includes: Vec<_> = headerpaths
          .iter()
-Index: zstd-sys/src/lib.rs
-===================================================================
---- zstd-sys.orig/src/lib.rs
-+++ zstd-sys/src/lib.rs
-@@ -13,70 +13,5 @@ extern crate std;
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -13,70 +13,5 @@
  mod wasm_shim;
  
  // If running bindgen, we'll end up with the correct bindings anyway.
@@ -308,9 +300,7 @@ Index: zstd-sys/src/lib.rs
 -    not(feature = "bindgen")
 -))]
 -include!("bindings_zdict_std_experimental.rs");
-Index: zstd-sys/update_bindings.sh
-===================================================================
---- zstd-sys.orig/update_bindings.sh
+--- a/update_bindings.sh
 +++ /dev/null
 @@ -1,28 +0,0 @@
 -#!/bin/sh
@@ -341,9 +331,7 @@ Index: zstd-sys/update_bindings.sh
 -        run_bindgen zdict.h --blocklist-type wchar_t $NO_STD_ARG -- -Izstd/lib $EXPERIMENTAL_ARG > src/bindings_zdict${SUFFIX}.rs
 -    done
 -done
-Index: zstd-sys/update_zstd.sh
-===================================================================
---- zstd-sys.orig/update_zstd.sh
+--- a/update_zstd.sh
 +++ /dev/null
 @@ -1,59 +0,0 @@
 -#!/bin/bash
@@ -404,4 +392,24 @@ Index: zstd-sys/update_zstd.sh
 -else
 -    echo "Already using zstd $TAG"
 -fi
+-
+--- a/zdict.h
++++ b/zdict.h
+@@ -1,17 +1,2 @@
+-#ifdef PKG_CONFIG
+-
+ /* Just use installed headers */
+ #include <zdict.h>
+-// Don't use experimental features like zstdmt
+-
+-#else // #ifdef PKG_CONFIG
+-
+-#include "zstd/lib/zdict.h"
+-
+-#endif // #ifdef PKG_CONFIG
+-
+-
+-/* This file is used to generate bindings for both headers.
+- * Check update_bindings.sh to see how to use it.
+- * Or use the `bindgen` feature, which will create the bindings automatically. */
 -
