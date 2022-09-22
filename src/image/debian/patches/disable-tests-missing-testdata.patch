@@ -2,13 +2,12 @@ Index: image/src/codecs/bmp/decoder.rs
 ===================================================================
 --- image.orig/src/codecs/bmp/decoder.rs
 +++ image/src/codecs/bmp/decoder.rs
-@@ -1493,12 +1493,12 @@ mod test {
-         }
+@@ -1572,13 +1572,13 @@ mod test {
      }
  
--    #[test]
-+    /*#[test]
-     fn read_rect() {
+     #[test]
+-    fn read_rect() {
++    /*fn read_rect() {
          let f = std::fs::File::open("tests/images/bmp/images/Core_8_Bit.bmp").unwrap();
          let mut decoder = super::BmpDecoder::new(f).unwrap();
  
@@ -16,21 +15,23 @@ Index: image/src/codecs/bmp/decoder.rs
          decoder.read_rect(0, 0, 8, 8, &mut *buf).unwrap();
 -    }
 +    }*/
- }
+ 
+     #[test]
+     fn read_rle_too_short() {
 Index: image/src/codecs/png.rs
 ===================================================================
 --- image.orig/src/codecs/png.rs
 +++ image/src/codecs/png.rs
-@@ -652,7 +652,7 @@ mod tests {
-     use std::io::Read;
-     use super::*;
+@@ -711,7 +711,7 @@ mod tests {
+ 
+     use std::io::{Cursor, Read};
  
 -    #[test]
 +    /*#[test]
      fn ensure_no_decoder_off_by_one() {
-         let dec = PngDecoder::new(std::fs::File::open("tests/images/png/bugfixes/debug_triangle_corners_widescreen.png").unwrap())
-             .expect("Unable to read PNG file (does it exist?)");
-@@ -673,9 +673,9 @@ mod tests {
+         let dec = PngDecoder::new(
+             std::fs::File::open("tests/images/png/bugfixes/debug_triangle_corners_widescreen.png")
+@@ -735,9 +735,9 @@ mod tests {
              .collect::<Vec<u8>>();
  
          assert_eq![6_000_000, correct_bytes.len()];
@@ -42,18 +43,19 @@ Index: image/src/codecs/png.rs
      fn underlying_error() {
          use std::error::Error;
  
-@@ -688,5 +688,5 @@ mod tests {
-             .unwrap()
+@@ -753,6 +753,7 @@ mod tests {
              .downcast_ref::<png::DecodingError>()
              .expect("Caused by a png error");
--    }
-+    }*/
- }
+     }
++    */
+ 
+     #[test]
+     fn encode_bad_color_type() {
 Index: image/src/dynimage.rs
 ===================================================================
 --- image.orig/src/dynimage.rs
 +++ image/src/dynimage.rs
-@@ -1341,7 +1341,7 @@ mod test {
+@@ -1242,7 +1242,7 @@ mod test {
          assert!(super::load_from_memory(b"").is_err());
      }
  
@@ -62,18 +64,19 @@ Index: image/src/dynimage.rs
      #[test]
      fn image_dimensions() {
          let im_path = "./tests/images/jpg/progressive/cat.jpg";
-@@ -1355,5 +1355,5 @@ mod test {
-         let im_path = "./tests/images/png/16bpc/basn6a16.png";
+@@ -1257,6 +1257,7 @@ mod test {
          let image = super::open(im_path).unwrap();
          assert_eq!(image.color(), super::color::ColorType::Rgba16);
--    }
-+    }*/
- }
+     }
++    */
+ 
+     fn test_grayscale(mut img: super::DynamicImage, alpha_discarded: bool) {
+         use crate::image::{GenericImage, GenericImageView};
 Index: image/src/imageops/sample.rs
 ===================================================================
 --- image.orig/src/imageops/sample.rs
 +++ image/src/imageops/sample.rs
-@@ -837,7 +837,7 @@ mod tests {
+@@ -864,7 +864,7 @@ mod tests {
      #[cfg(feature = "benchmarks")]
      use test;
  
@@ -82,7 +85,7 @@ Index: image/src/imageops/sample.rs
      #[cfg(all(feature = "benchmarks", feature = "png"))]
      fn bench_resize(b: &mut test::Bencher) {
          use std::path::Path;
-@@ -846,7 +846,7 @@ mod tests {
+@@ -873,7 +873,7 @@ mod tests {
              test::black_box(resize(&img, 200, 200, FilterType::Nearest));
          });
          b.bytes = 800 * 800 * 3 + 200 * 200 * 3;
@@ -91,7 +94,7 @@ Index: image/src/imageops/sample.rs
  
      #[test]
      fn test_issue_186() {
-@@ -854,7 +854,7 @@ mod tests {
+@@ -881,7 +881,7 @@ mod tests {
          let _ = resize(&img, 50, 50, FilterType::Lanczos3);
      }
  
@@ -99,8 +102,8 @@ Index: image/src/imageops/sample.rs
 +    /*#[bench]
      #[cfg(all(feature = "benchmarks", feature = "tiff"))]
      fn bench_thumbnail(b: &mut test::Bencher) {
-         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/images/tiff/testsuite/mandrill.tiff");
-@@ -885,9 +885,9 @@ mod tests {
+         let path = concat!(
+@@ -921,9 +921,9 @@ mod tests {
              test::black_box(image.thumbnail(256, 256));
          });
          b.bytes = 193 * 193 * 4 + 256 * 256 * 4;
@@ -112,10 +115,11 @@ Index: image/src/imageops/sample.rs
      #[cfg(feature = "png")]
      fn resize_transparent_image() {
          use super::FilterType::{CatmullRom, Gaussian, Lanczos3, Nearest, Triangle};
-@@ -916,5 +916,5 @@ mod tests {
-         for filter in filters {
-             assert_resize(rgba8, filter.clone());
+@@ -955,6 +955,7 @@ mod tests {
+             assert_resize(rgba8, *filter);
          }
--    }
-+    }*/
- }
+     }
++    */
+ 
+     #[test]
+     fn bug_1600() {
