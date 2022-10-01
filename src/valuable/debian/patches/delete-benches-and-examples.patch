@@ -1,0 +1,352 @@
+diff --git a/benches/structable.rs b/benches/structable.rs
+deleted file mode 100644
+index 3d00cd7..0000000
+--- a/benches/structable.rs
++++ /dev/null
+@@ -1,128 +0,0 @@
+-use valuable::*;
+-
+-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+-
+-#[derive(Default)]
+-struct HelloWorld {
+-    one: usize,
+-    two: usize,
+-    three: usize,
+-    four: usize,
+-    five: usize,
+-    six: usize,
+-}
+-
+-static FIELDS: &[NamedField<'static>] = &[
+-    NamedField::new("one"),
+-    NamedField::new("two"),
+-    NamedField::new("three"),
+-    NamedField::new("four"),
+-    NamedField::new("five"),
+-    NamedField::new("six"),
+-];
+-
+-impl Structable for HelloWorld {
+-    fn definition(&self) -> StructDef<'_> {
+-        StructDef::new_static("HelloWorld", Fields::Named(FIELDS))
+-    }
+-}
+-
+-impl Valuable for HelloWorld {
+-    fn as_value(&self) -> Value<'_> {
+-        Value::Structable(self)
+-    }
+-
+-    fn visit(&self, v: &mut dyn Visit) {
+-        v.visit_named_fields(&NamedValues::new(
+-            FIELDS,
+-            &[
+-                Value::Usize(self.one),
+-                Value::Usize(self.two),
+-                Value::Usize(self.three),
+-                Value::Usize(self.four),
+-                Value::Usize(self.five),
+-                Value::Usize(self.six),
+-            ],
+-        ));
+-    }
+-}
+-
+-fn criterion_benchmark(c: &mut Criterion) {
+-    const NUM: usize = 50;
+-
+-    let hello_world = black_box(HelloWorld::default());
+-    let structable = &hello_world as &dyn Structable;
+-    let f = match structable.definition() {
+-        StructDef::Static {
+-            fields: Fields::Named(fields),
+-            ..
+-        } => &fields[5],
+-        _ => unreachable!(),
+-    };
+-
+-    struct Sum(usize, &'static NamedField<'static>);
+-
+-    impl Visit for Sum {
+-        fn visit_named_fields(&mut self, record: &NamedValues<'_>) {
+-            self.0 += match record.get(self.1) {
+-                Some(Value::Usize(v)) => v,
+-                _ => return,
+-            }
+-        }
+-
+-        fn visit_value(&mut self, _: Value<'_>) {
+-            unimplemented!()
+-        }
+-    }
+-
+-    c.bench_function("struct", |b| {
+-        b.iter(|| {
+-            let mut num = 0;
+-            for _ in 0..NUM {
+-                let hello_world = black_box(HelloWorld::default());
+-                num += hello_world.six;
+-            }
+-
+-            black_box(num);
+-        })
+-    });
+-
+-    c.bench_function("valuable", |b| {
+-        b.iter(|| {
+-            let mut v = Sum(black_box(0), f);
+-
+-            for _ in 0..NUM {
+-                v.visit_named_fields(&NamedValues::new(
+-                    FIELDS,
+-                    &[
+-                        Value::Usize(0),
+-                        Value::Usize(0),
+-                        Value::Usize(0),
+-                        Value::Usize(0),
+-                        Value::Usize(0),
+-                        Value::Usize(0),
+-                    ],
+-                ));
+-                /*
+-                v.visit_struct(&Record::new(
+-                    &definition,
+-                    &[
+-                        Value::Usize(hello_world.one),
+-                        Value::Usize(hello_world.two),
+-                        Value::Usize(hello_world.three),
+-                        Value::Usize(hello_world.four),
+-                        Value::Usize(hello_world.five),
+-                        Value::Usize(hello_world.six),
+-                    ]
+-                ));
+-                */
+-                // hello_world.visit(&mut v);
+-            }
+-
+-            black_box(v.0);
+-        })
+-    });
+-}
+-
+-criterion_group!(benches, criterion_benchmark);
+-criterion_main!(benches);
+diff --git a/examples/derive.rs b/examples/derive.rs
+deleted file mode 100644
+index b67aaf3..0000000
+--- a/examples/derive.rs
++++ /dev/null
+@@ -1,26 +0,0 @@
+-use valuable::Valuable;
+-
+-use std::collections::HashMap;
+-
+-// `Debug` not implemented for struct, the debug implementation is going via
+-// valuable.
+-#[derive(Valuable)]
+-struct Person {
+-    name: String,
+-    age: u8,
+-    phones: Vec<String>,
+-    favorites: HashMap<String, String>,
+-}
+-
+-fn main() {
+-    let mut p = Person {
+-        name: "John Doe".to_string(),
+-        age: 42,
+-        phones: vec!["876-5309".to_string()],
+-        favorites: HashMap::new(),
+-    };
+-
+-    p.favorites.insert("color".to_string(), "blue".to_string());
+-
+-    println!("{:#?}", p.as_value());
+-}
+diff --git a/examples/hello_world.rs b/examples/hello_world.rs
+deleted file mode 100644
+index 7c3d173..0000000
+--- a/examples/hello_world.rs
++++ /dev/null
+@@ -1,68 +0,0 @@
+-use valuable::*;
+-
+-struct HelloWorld {
+-    hello: &'static str,
+-    world: World,
+-}
+-
+-struct World {
+-    answer: usize,
+-}
+-
+-static HELLO_WORLD_FIELDS: &[NamedField<'static>] =
+-    &[NamedField::new("hello"), NamedField::new("world")];
+-
+-impl Structable for HelloWorld {
+-    fn definition(&self) -> StructDef<'_> {
+-        StructDef::new_static("HelloWorld", Fields::Named(HELLO_WORLD_FIELDS))
+-    }
+-}
+-
+-impl Valuable for HelloWorld {
+-    fn as_value(&self) -> Value<'_> {
+-        Value::Structable(self)
+-    }
+-
+-    fn visit(&self, v: &mut dyn Visit) {
+-        v.visit_named_fields(&NamedValues::new(
+-            HELLO_WORLD_FIELDS,
+-            &[Value::String(self.hello), Value::Structable(&self.world)],
+-        ));
+-    }
+-}
+-
+-static WORLD_FIELDS: &[NamedField<'static>] = &[NamedField::new("answer")];
+-
+-impl Valuable for World {
+-    fn as_value(&self) -> Value<'_> {
+-        Value::Structable(self)
+-    }
+-
+-    fn visit(&self, v: &mut dyn Visit) {
+-        v.visit_named_fields(&NamedValues::new(
+-            WORLD_FIELDS,
+-            &[Value::Usize(self.answer)],
+-        ));
+-    }
+-}
+-
+-impl Structable for World {
+-    fn definition(&self) -> StructDef<'_> {
+-        StructDef::new_static("World", Fields::Named(WORLD_FIELDS))
+-    }
+-}
+-
+-fn main() {
+-    let hello_world = HelloWorld {
+-        hello: "wut",
+-        world: World { answer: 42 },
+-    };
+-
+-    let value = Value::Structable(&hello_world);
+-    println!("{:#?}", value);
+-
+-    let slice = &[1, 2, 3][..];
+-
+-    let value = &slice as &dyn Valuable;
+-    println!("{:?}", value);
+-}
+diff --git a/examples/print.rs b/examples/print.rs
+deleted file mode 100644
+index b6998d3..0000000
+--- a/examples/print.rs
++++ /dev/null
+@@ -1,106 +0,0 @@
+-use valuable::{NamedValues, Valuable, Value, Visit};
+-
+-struct Print(String);
+-
+-impl Print {
+-    fn indent(&self) -> Print {
+-        Print(format!("{}    ", self.0))
+-    }
+-}
+-
+-impl Visit for Print {
+-    fn visit_value(&mut self, value: Value<'_>) {
+-        match value {
+-            Value::Structable(v) => {
+-                let def = v.definition();
+-                // Print the struct name
+-                println!("{}{}:", self.0, def.name());
+-
+-                // Visit fields
+-                let mut visit = self.indent();
+-                v.visit(&mut visit);
+-            }
+-            Value::Enumerable(v) => {
+-                let def = v.definition();
+-                let variant = v.variant();
+-                // Print the enum name
+-                println!("{}{}::{}:", self.0, def.name(), variant.name());
+-
+-                // Visit fields
+-                let mut visit = self.indent();
+-                v.visit(&mut visit);
+-            }
+-            Value::Listable(v) => {
+-                println!("{}", self.0);
+-
+-                // Visit fields
+-                let mut visit = self.indent();
+-                v.visit(&mut visit);
+-            }
+-            Value::Mappable(v) => {
+-                println!("{}", self.0);
+-
+-                // Visit fields
+-                let mut visit = self.indent();
+-                v.visit(&mut visit);
+-            }
+-            // Primitive or unknown type, just render Debug
+-            v => println!("{:?}", v),
+-        }
+-    }
+-
+-    fn visit_named_fields(&mut self, named_values: &NamedValues<'_>) {
+-        for (field, value) in named_values {
+-            print!("{}- {}: ", self.0, field.name());
+-            value.visit(self);
+-        }
+-    }
+-
+-    fn visit_unnamed_fields(&mut self, values: &[Value<'_>]) {
+-        for value in values {
+-            print!("{}- ", self.0);
+-            value.visit(self);
+-        }
+-    }
+-
+-    fn visit_entry(&mut self, key: Value<'_>, value: Value<'_>) {
+-        print!("{}- {:?}: ", self.0, key);
+-        value.visit(self);
+-    }
+-}
+-
+-#[derive(Valuable)]
+-struct Person {
+-    name: String,
+-    age: u32,
+-    addresses: Vec<Address>,
+-}
+-
+-#[derive(Valuable)]
+-struct Address {
+-    street: String,
+-    city: String,
+-    zip: String,
+-}
+-
+-fn main() {
+-    let person = Person {
+-        name: "Angela Ashton".to_string(),
+-        age: 31,
+-        addresses: vec![
+-            Address {
+-                street: "123 1st Ave".to_string(),
+-                city: "Townsville".to_string(),
+-                zip: "12345".to_string(),
+-            },
+-            Address {
+-                street: "555 Main St.".to_string(),
+-                city: "New Old Town".to_string(),
+-                zip: "55555".to_string(),
+-            },
+-        ],
+-    };
+-
+-    let mut print = Print("".to_string());
+-    valuable::visit(&person, &mut print);
+-}
