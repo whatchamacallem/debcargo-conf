@@ -1,0 +1,191 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index 9c300f4..9703d98 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -28,131 +28,8 @@
+ //! }
+ //! ```
+ //!
+-//! # StructOpt Example
+ //!
+-//! ```
+-//! use log::*;
+-//! use structopt::StructOpt;
+-//!
+-//! /// A StructOpt example
+-//! #[derive(StructOpt, Debug)]
+-//! #[structopt()]
+-//! struct Opt {
+-//!     /// Silence all output
+-//!     #[structopt(short = "q", long = "quiet")]
+-//!     quiet: bool,
+-//!     /// Verbose mode (-v, -vv, -vvv, etc)
+-//!     #[structopt(short = "v", long = "verbose", parse(from_occurrences))]
+-//!     verbose: usize,
+-//!     /// Timestamp (sec, ms, ns, none)
+-//!     #[structopt(short = "t", long = "timestamp")]
+-//!     ts: Option<stderrlog::Timestamp>,
+-//! }
+-//!
+-//! fn main() {
+-//!     let opt = Opt::from_args();
+-//!
+-//!     stderrlog::new()
+-//!         .module(module_path!())
+-//!         .quiet(opt.quiet)
+-//!         .verbosity(opt.verbose)
+-//!         .timestamp(opt.ts.unwrap_or(stderrlog::Timestamp::Off))
+-//!         .init()
+-//!         .unwrap();
+-//!     trace!("trace message");
+-//!     debug!("debug message");
+-//!     info!("info message");
+-//!     warn!("warn message");
+-//!     error!("error message");
+-//! }
+-//! ```
+-//!
+-//! ## docopt Example
+-//!
+-//! ```rust
+-//! use log::*;
+-//! use docopt::Docopt;
+-//! use serde::Deserialize;
+-//!
+-//! const USAGE: &'static str = "
+-//! Usage: program [-q] [-v...]
+-//! ";
+-//!
+-//! #[derive(Debug, Deserialize)]
+-//! struct Args {
+-//!     flag_q: bool,
+-//!     flag_v: usize,
+-//! }
+ //!
+-//! fn main() {
+-//!     let args: Args = Docopt::new(USAGE)
+-//!                             .and_then(|d| d.deserialize())
+-//!                             .unwrap_or_else(|e| e.exit());
+-//!
+-//!     stderrlog::new()
+-//!             .module(module_path!())
+-//!             .quiet(args.flag_q)
+-//!             .timestamp(stderrlog::Timestamp::Second)
+-//!             .verbosity(args.flag_v)
+-//!             .init()
+-//!             .unwrap();
+-//!     trace!("trace message");
+-//!     debug!("debug message");
+-//!     info!("info message");
+-//!     warn!("warn message");
+-//!     error!("error message");
+-//!
+-//!     // ...
+-//! }
+-//! ```
+-//!
+-//! # clap Example
+-//!
+-//! ```
+-//! use clap::{Arg, App, crate_version};
+-//! use log::*;
+-//! use std::str::FromStr;
+-//!
+-//! fn main() {
+-//!     let m = App::new("stderrlog example")
+-//!         .version(crate_version!())
+-//!         .arg(Arg::with_name("verbosity")
+-//!              .short('v')
+-//!              .takes_value(true)
+-//!              .multiple(true)
+-//!              .help("Increase message verbosity"))
+-//!         .arg(Arg::with_name("quiet")
+-//!              .short('q')
+-//!              .help("Silence all output"))
+-//!         .arg(Arg::with_name("timestamp")
+-//!              .short('t')
+-//!              .help("prepend log lines with a timestamp")
+-//!              .takes_value(true)
+-//!              .possible_values(&["none", "sec", "ms", "ns"]))
+-//!         .get_matches();
+-//!
+-//!     let verbose = m.occurrences_of("verbosity") as usize;
+-//!     let quiet = m.is_present("quiet");
+-//!     let ts = m.value_of("timestamp").map(|v| {
+-//!         stderrlog::Timestamp::from_str(v).unwrap_or_else(|_| {
+-//!             clap::Error::raw(clap::ErrorKind::InvalidValue, "invalid value for 'timestamp'").exit()
+-//!         })
+-//!     }).unwrap_or(stderrlog::Timestamp::Off);
+-//!
+-//!     stderrlog::new()
+-//!         .module(module_path!())
+-//!         .quiet(quiet)
+-//!         .verbosity(verbose)
+-//!         .timestamp(ts)
+-//!         .init()
+-//!         .unwrap();
+-//!     trace!("trace message");
+-//!     debug!("debug message");
+-//!     info!("info message");
+-//!     warn!("warn message");
+-//!     error!("error message");
+-//! }
+-//! ```
+ //!
+ //! ### `log` Compatibility
+ //!
+diff --git a/tests/debug_level.rs b/tests/debug_level.rs
+index 0b2b030..afdf319 100644
+--- a/tests/debug_level.rs
++++ b/tests/debug_level.rs
+@@ -1,5 +1,6 @@
+ use log::*;
+ 
++#[cfg(feature = "timestamps")]
+ #[test]
+ fn debug_level() {
+     stderrlog::new()
+diff --git a/tests/debug_level_log.rs b/tests/debug_level_log.rs
+index 0b038dd..77d33e3 100644
+--- a/tests/debug_level_log.rs
++++ b/tests/debug_level_log.rs
+@@ -1,5 +1,6 @@
+ use log::*;
+ 
++#[cfg(feature = "timestamps")]
+ #[test]
+ fn debug_level_log() {
+     stderrlog::new()
+diff --git a/tests/error_level.rs b/tests/error_level.rs
+index a27e8fe..2ade11f 100644
+--- a/tests/error_level.rs
++++ b/tests/error_level.rs
+@@ -1,5 +1,6 @@
+ use log::*;
+ 
++#[cfg(feature = "timestamps")]
+ #[test]
+ fn error_level() {
+     stderrlog::new()
+diff --git a/tests/info_level.rs b/tests/info_level.rs
+index 9dd6f61..c3d908b 100644
+--- a/tests/info_level.rs
++++ b/tests/info_level.rs
+@@ -1,5 +1,6 @@
+ use log::*;
+ 
++#[cfg(feature = "timestamps")]
+ #[test]
+ fn info_level() {
+     stderrlog::new()
+diff --git a/tests/quiet_trace_level.rs b/tests/quiet_trace_level.rs
+index 6e24c90..e85e2fe 100644
+--- a/tests/quiet_trace_level.rs
++++ b/tests/quiet_trace_level.rs
+@@ -1,5 +1,6 @@
+ use log::*;
+ 
++#[cfg(feature = "timestamps")]
+ #[test]
+ fn quiet_trace_level() {
+     stderrlog::new()
