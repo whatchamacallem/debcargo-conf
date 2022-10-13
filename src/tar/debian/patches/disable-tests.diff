@@ -4,8 +4,10 @@ Description: Disable tests that rely on test tarballs
  tests than none of the tests.
 Author: Peter Michael Green <plugwash@debian.org>
 
---- rust-tar-0.4.37.orig/tests/all.rs
-+++ rust-tar-0.4.37/tests/all.rs
+Index: tar/tests/all.rs
+===================================================================
+--- tar.orig/tests/all.rs
++++ tar/tests/all.rs
 @@ -33,7 +33,7 @@ mod header;
  
  /// test that we can concatenate the simple.tar archive and extract the same entries twice when we
@@ -60,7 +62,7 @@ Author: Peter Michael Green <plugwash@debian.org>
  
  #[test]
  fn writing_files() {
-@@ -203,7 +203,7 @@ fn large_filename() {
+@@ -221,7 +221,7 @@ fn reading_entries_common<R: Read>(mut e
      assert!(entries.next().is_none());
  }
  
@@ -69,267 +71,50 @@ Author: Peter Michael Green <plugwash@debian.org>
  fn reading_entries() {
      let rdr = Cursor::new(tar!("reading_files.tar"));
      let mut ar = Archive::new(rdr);
-@@ -223,7 +223,7 @@ fn reading_entries() {
-     t!(b.read_to_string(&mut s));
-     assert_eq!(s, "b\nb\nb\nb\nb\nb\nb\nb\nb\nb\nb\n");
-     assert!(entries.next().is_none());
--}
-+}*/
+@@ -234,6 +234,7 @@ fn reading_entries_with_seek() {
+     let mut ar = Archive::new(rdr);
+     reading_entries_common(t!(ar.entries_with_seek()));
+ }
++*/
+ 
+ struct LoggingReader<R> {
+     inner: R,
+@@ -264,6 +265,7 @@ impl<T: Seek> Seek for LoggingReader<T>
+     }
+ }
+ 
++/*
+ #[test]
+ fn skipping_entries_with_seek() {
+     let mut reader = LoggingReader::new(Cursor::new(tar!("reading_files.tar")));
+@@ -281,6 +283,7 @@ fn skipping_entries_with_seek() {
+     assert!(files == files_seekable);
+     assert!(seekable_reader.read_bytes < reader.read_bytes);
+ }
++*/
  
  fn check_dirtree(td: &TempDir) {
      let dir_a = td.path().join("a");
-@@ -234,16 +234,16 @@ fn check_dirtree(td: &TempDir) {
+@@ -291,6 +294,7 @@ fn check_dirtree(td: &TempDir) {
      assert!(fs::metadata(&file_c).map(|m| m.is_file()).unwrap_or(false));
  }
  
--#[test]
-+/*#[test]
++/*
+ #[test]
  fn extracting_directories() {
      let td = t!(TempBuilder::new().prefix("tar-rs").tempdir());
-     let rdr = Cursor::new(tar!("directory.tar"));
-     let mut ar = Archive::new(rdr);
-     t!(ar.unpack(td.path()));
-     check_dirtree(&td);
--}
-+}*/
- 
--#[test]
-+/*#[test]
- fn extracting_duplicate_file_fail() {
-     let td = t!(TempBuilder::new().prefix("tar-rs").tempdir());
-     let path_present = td.path().join("a");
-@@ -263,9 +263,9 @@ fn extracting_duplicate_file_fail() {
-         "unpack() should have returned an error of kind {:?}, returned Ok",
-         std::io::ErrorKind::AlreadyExists
-     )
--}
-+}*/
- 
--#[test]
-+/*#[test]
- fn extracting_duplicate_file_succeed() {
-     let td = t!(TempBuilder::new().prefix("tar-rs").tempdir());
-     let path_present = td.path().join("a");
-@@ -275,9 +275,9 @@ fn extracting_duplicate_file_succeed() {
-     let mut ar = Archive::new(rdr);
-     ar.set_overwrite(true);
-     t!(ar.unpack(td.path()));
--}
-+}*/
- 
--#[test]
-+/*#[test]
- #[cfg(unix)]
- fn extracting_duplicate_link_fail() {
-     let td = t!(TempBuilder::new().prefix("tar-rs").tempdir());
-@@ -298,9 +298,9 @@ fn extracting_duplicate_link_fail() {
-         "unpack() should have returned an error of kind {:?}, returned Ok",
-         std::io::ErrorKind::AlreadyExists
-     )
--}
-+}*/
- 
--#[test]
-+/*#[test]
- #[cfg(unix)]
- fn extracting_duplicate_link_succeed() {
-     let td = t!(TempBuilder::new().prefix("tar-rs").tempdir());
-@@ -311,9 +311,9 @@ fn extracting_duplicate_link_succeed() {
-     let mut ar = Archive::new(rdr);
-     ar.set_overwrite(true);
-     t!(ar.unpack(td.path()));
--}
-+}*/
- 
--#[test]
-+/*#[test]
- #[cfg(all(unix, feature = "xattr"))]
- fn xattrs() {
-     // If /tmp is a tmpfs, xattr will fail
-@@ -326,9 +326,9 @@ fn xattrs() {
- 
-     let val = xattr::get(td.path().join("a/b"), "user.pax.flags").unwrap();
-     assert_eq!(val.unwrap(), "epm".as_bytes());
--}
-+}*/
- 
--#[test]
-+/*#[test]
- #[cfg(all(unix, feature = "xattr"))]
- fn no_xattrs() {
-     // If /tmp is a tmpfs, xattr will fail
-@@ -343,7 +343,7 @@ fn no_xattrs() {
-         xattr::get(td.path().join("a/b"), "user.pax.flags").unwrap(),
-         None
-     );
--}
-+}*/
- 
- #[test]
- fn writing_and_extracting_directories() {
-@@ -436,7 +436,7 @@ fn append_dir_all_does_not_work_on_non_d
-     assert!(result.is_err());
- }
- 
--#[test]
-+/*#[test]
- fn extracting_duplicate_dirs() {
-     let td = t!(TempBuilder::new().prefix("tar-rs").tempdir());
-     let rdr = Cursor::new(tar!("duplicate_dirs.tar"));
-@@ -445,7 +445,7 @@ fn extracting_duplicate_dirs() {
- 
-     let some_dir = td.path().join("some_dir");
-     assert!(fs::metadata(&some_dir).map(|m| m.is_dir()).unwrap_or(false));
--}
-+}*/
- 
- #[test]
- fn unpack_old_style_bsd_dir() {
-@@ -584,7 +584,7 @@ fn extracting_malicious_tarball() {
-         .unwrap_or(false));
- }
- 
--#[test]
-+/*#[test]
- fn octal_spaces() {
-     let rdr = Cursor::new(tar!("spaces.tar"));
-     let mut ar = Archive::new(rdr);
-@@ -596,7 +596,7 @@ fn octal_spaces() {
-     assert_eq!(entry.header().size().unwrap(), 2);
-     assert_eq!(entry.header().mtime().unwrap(), 0o12440016664);
-     assert_eq!(entry.header().cksum().unwrap(), 0o4253);
--}
-+}*/
- 
- #[test]
- fn extracting_malformed_tar_null_blocks() {
-@@ -621,15 +621,15 @@ fn extracting_malformed_tar_null_blocks(
-     assert!(ar.unpack(td.path()).is_ok());
- }
- 
--#[test]
-+/*#[test]
- fn empty_filename() {
-     let td = t!(TempBuilder::new().prefix("tar-rs").tempdir());
-     let rdr = Cursor::new(tar!("empty_filename.tar"));
-     let mut ar = Archive::new(rdr);
-     assert!(ar.unpack(td.path()).is_ok());
--}
-+}*/
- 
--#[test]
-+/*#[test]
- fn file_times() {
-     let td = t!(TempBuilder::new().prefix("tar-rs").tempdir());
-     let rdr = Cursor::new(tar!("file_times.tar"));
-@@ -643,7 +643,7 @@ fn file_times() {
-     assert_eq!(mtime.nanoseconds(), 0);
-     assert_eq!(atime.unix_seconds(), 1000000000);
-     assert_eq!(atime.nanoseconds(), 0);
--}
-+}*/
- 
- #[test]
- fn zero_file_times() {
-@@ -713,7 +713,7 @@ fn nul_bytes_in_path() {
-     assert!(err.to_string().contains("contains a nul byte"));
- }
- 
--#[test]
-+/*#[test]
- fn links() {
-     let mut ar = Archive::new(Cursor::new(tar!("link.tar")));
-     let mut entries = t!(ar.entries());
-@@ -724,9 +724,9 @@ fn links() {
-     );
-     let other = t!(entries.next().unwrap());
-     assert!(t!(other.header().link_name()).is_none());
--}
-+}*/
- 
--#[test]
-+/*#[test]
- #[cfg(unix)] // making symlinks on windows is hard
- fn unpack_links() {
-     let td = t!(TempBuilder::new().prefix("tar-rs").tempdir());
-@@ -740,9 +740,9 @@ fn unpack_links() {
-         Path::new("file")
-     );
-     t!(File::open(td.path().join("lnk")));
--}
-+}*/
- 
--#[test]
-+/*#[test]
- fn pax_size() {
-     let mut ar = Archive::new(tar!("pax_size.tar"));
-     let mut entries = t!(ar.entries());
-@@ -760,9 +760,9 @@ fn pax_size() {
- 
-     assert_eq!(entry.header().size().unwrap(), 0);
-     assert_eq!(entry.size(), 4);
--}
-+}*/
- 
--#[test]
-+/*#[test]
- fn pax_simple() {
-     let mut ar = Archive::new(tar!("pax.tar"));
-     let mut entries = t!(ar.entries());
-@@ -780,18 +780,18 @@ fn pax_simple() {
-     assert_eq!(second.value(), Ok("1453251915.24892486"));
-     assert_eq!(third.key(), Ok("ctime"));
-     assert_eq!(third.value(), Ok("1453146164.953123768"));
--}
-+}*/
- 
--#[test]
-+/*#[test]
- fn pax_path() {
-     let mut ar = Archive::new(tar!("pax2.tar"));
-     let mut entries = t!(ar.entries());
- 
-     let first = t!(entries.next().unwrap());
-     assert!(first.path().unwrap().ends_with("aaaaaaaaaaaaaaa"));
--}
-+}*/
- 
--#[test]
-+/*#[test]
- fn pax_linkpath() {
-     let mut ar = Archive::new(tar!("pax2.tar"));
-     let mut links = t!(ar.entries()).skip(3).take(2);
-@@ -805,7 +805,7 @@ fn pax_linkpath() {
-     let link_name = long_hardlink.link_name().unwrap().unwrap();
-     assert!(link_name.to_str().unwrap().len() > 99);
-     assert!(link_name.ends_with("ccccccccccccccc"));
--}
-+}*/
- 
- #[test]
- fn long_name_trailing_nul() {
-@@ -880,7 +880,7 @@ fn encoded_long_name_has_trailing_nul()
-     assert!(header_name.starts_with(b"././@LongLink\x00"));
- }
- 
--#[test]
-+/*#[test]
- fn reading_sparse() {
-     let rdr = Cursor::new(tar!("sparse.tar"));
-     let mut ar = Archive::new(rdr);
-@@ -928,9 +928,9 @@ fn reading_sparse() {
+@@ -1028,8 +1032,9 @@ fn reading_sparse() {
      assert!(s[0x2fa0 + 6..0x4000].chars().all(|x| x == '\u{0}'));
  
      assert!(entries.next().is_none());
 -}
 +}*/
  
--#[test]
-+/*#[test]
++/*
+ #[test]
  fn extract_sparse() {
      let rdr = Cursor::new(tar!("sparse.tar"));
-     let mut ar = Archive::new(rdr);
-@@ -969,9 +969,9 @@ fn extract_sparse() {
+@@ -1069,9 +1074,9 @@ fn extract_sparse() {
      assert!(s[0x1000 + 6..0x2fa0].chars().all(|x| x == '\u{0}'));
      assert_eq!(&s[0x2fa0..0x2fa0 + 6], "world\n");
      assert!(s[0x2fa0 + 6..0x4000].chars().all(|x| x == '\u{0}'));
@@ -341,7 +126,7 @@ Author: Peter Michael Green <plugwash@debian.org>
  fn sparse_with_trailing() {
      let rdr = Cursor::new(tar!("sparse-1.tar"));
      let mut ar = Archive::new(rdr);
-@@ -983,7 +983,7 @@ fn sparse_with_trailing() {
+@@ -1083,7 +1088,7 @@ fn sparse_with_trailing() {
      assert_eq!(&s[..0xc], "0MB through\n");
      assert!(s[0xc..0x100_000].chars().all(|x| x == '\u{0}'));
      assert_eq!(&s[0x100_000..], "1MB through\n");
@@ -350,7 +135,7 @@ Author: Peter Michael Green <plugwash@debian.org>
  
  #[test]
  fn path_separators() {
-@@ -1153,15 +1153,15 @@ fn tar_directory_containing_symlink_to_d
+@@ -1253,15 +1258,15 @@ fn tar_directory_containing_symlink_to_d
      ar.finish().unwrap();
  }
  
@@ -369,7 +154,7 @@ Author: Peter Michael Green <plugwash@debian.org>
  fn unpack_path_larger_than_windows_max_path() {
      let dir_name = "iamaprettylongnameandtobepreciseiam91characterslongwhichsomethinkisreallylongandothersdonot";
      // 183 character directory name
-@@ -1172,7 +1172,7 @@ fn unpack_path_larger_than_windows_max_p
+@@ -1272,7 +1277,7 @@ fn unpack_path_larger_than_windows_max_p
      let mut ar = Archive::new(rdr);
      // should unpack path greater than windows MAX_PATH length of 260 characters
      assert!(ar.unpack(td.path()).is_ok());
