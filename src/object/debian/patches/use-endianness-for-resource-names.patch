@@ -1,0 +1,68 @@
+This patch is based on the upstream commit described below, with changes to
+files that are not included in the crates.io release removed.
+
+commit 7521d394a4c4b111a815a9270b6a5a44669e4486
+Author: Philip Craig <philipjcraig@gmail.com>
+Date:   Mon Aug 22 16:18:55 2022 +1000
+
+    read/pe: use endianness for resource names
+
+diff --git a/README.md b/README.md
+index 19268a953..193a5a7c1 100644
+--- a/README.md
++++ b/README.md
+@@ -39,7 +39,7 @@ See [`crates/examples`](crates/examples) for more examples.
+ Changes to MSRV are considered breaking changes. We are conservative about changing the MSRV,
+ but sometimes are required to due to dependencies. The MSRV is:
+ 
+-  * 1.42.0 for the `read` feature and its dependencies.
++  * 1.52.0 for the `read` feature and its dependencies.
+   * 1.56.1 for the `write` feature and its dependencies.
+ 
+ ## License
+diff --git a/src/read/pe/resource.rs b/src/read/pe/resource.rs
+index bfbb609f5..cb5d5a5e8 100644
+--- a/src/read/pe/resource.rs
++++ b/src/read/pe/resource.rs
+@@ -1,7 +1,8 @@
+ use alloc::string::String;
++use core::char;
+ 
+ use crate::read::{ReadError, ReadRef, Result};
+-use crate::{pe, LittleEndian as LE, U16};
++use crate::{pe, LittleEndian as LE, U16Bytes};
+ 
+ /// The `.rsrc` section of a PE file.
+ #[derive(Debug, Clone, Copy)]
+@@ -143,20 +144,26 @@ pub struct ResourceName {
+ impl ResourceName {
+     /// Converts to a `String`.
+     pub fn to_string_lossy(&self, directory: ResourceDirectory) -> Result<String> {
+-        let d = self.data(directory)?;
+-        Ok(String::from_utf16_lossy(d))
++        let d = self.data(directory)?.iter().map(|c| c.get(LE));
++
++        Ok(char::decode_utf16(d)
++            .map(|r| r.unwrap_or(char::REPLACEMENT_CHARACTER))
++            .collect::<String>())
+     }
+ 
+     /// Returns the string unicode buffer.
+-    pub fn data<'data>(&self, directory: ResourceDirectory<'data>) -> Result<&'data [u16]> {
++    pub fn data<'data>(
++        &self,
++        directory: ResourceDirectory<'data>,
++    ) -> Result<&'data [U16Bytes<LE>]> {
+         let mut offset = u64::from(self.offset);
+         let len = directory
+             .data
+-            .read::<U16<LE>>(&mut offset)
++            .read::<U16Bytes<LE>>(&mut offset)
+             .read_error("Invalid resource name offset")?;
+         directory
+             .data
+-            .read_slice::<u16>(&mut offset, len.get(LE).into())
++            .read_slice::<U16Bytes<LE>>(&mut offset, len.get(LE).into())
+             .read_error("Invalid resource name length")
+     }
+ }
