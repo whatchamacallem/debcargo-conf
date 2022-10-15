@@ -1,17 +1,5 @@
-From b2a207a004ae1e773edc13af65790c8adeb0bddd Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?Alexander=20Kj=C3=A4ll?= <alexander.kjall@gmail.com>
-Date: Mon, 14 Mar 2022 18:47:09 +0100
-Subject: [PATCH 1/2] delete pinentry binary
-
----
- Cargo.toml          |  3 ---
- src/bin/pinentry.rs | 18 ------------------
- tests/common/mod.rs |  2 +-
- 3 files changed, 1 insertion(+), 22 deletions(-)
- delete mode 100644 src/bin/pinentry.rs
-
 diff --git a/Cargo.toml b/Cargo.toml
-index 59f3bca..50f1a57 100644
+index 6411d59..61d3ad3 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -22,9 +22,6 @@ categories = ["api-bindings"]
@@ -49,10 +37,10 @@ index 94cdffb..0000000
 -    }
 -}
 diff --git a/tests/common/mod.rs b/tests/common/mod.rs
-index 96578e2..a4b4907 100644
+index de27c4c..0c42470 100644
 --- a/tests/common/mod.rs
 +++ b/tests/common/mod.rs
-@@ -68,7 +68,7 @@ fn import_key(key: &[u8]) {
+@@ -66,7 +66,7 @@ fn import_key(key: &[u8]) {
  fn setup_agent(dir: &Path) {
      env::set_var("GNUPGHOME", dir);
      env::set_var("GPG_AGENT_INFO", "");
@@ -61,6 +49,431 @@ index 96578e2..a4b4907 100644
      if !pinentry.exists() {
          panic!("Unable to find pinentry program");
      }
--- 
-2.35.1
-
+diff --git a/tests/context.rs b/tests/context.rs
+deleted file mode 100644
+index 4d18b72..0000000
+--- a/tests/context.rs
++++ /dev/null
+@@ -1,21 +0,0 @@
+-use gpgme::{require_gpgme_ver, Context, Error, PinentryMode};
+-
+-#[macro_use]
+-mod common;
+-
+-test_case! {
+-    #[requires((1, 4))]
+-    test_pinentry_mode(test) {
+-        let mode = PinentryMode::Loopback;
+-        let mut ctx = test.create_context();
+-        match ctx.set_pinentry_mode(mode) {
+-            Ok(()) => {
+-                // NOTE: UFCS form used here as regression test for
+-                // issue #17.
+-                assert_eq!(mode, Context::pinentry_mode(&ctx));
+-            }
+-            Err(e) if e.code() == Error::NOT_SUPPORTED.code() => (),
+-            e @ Err(_) => e.unwrap(),
+-        }
+-    }
+-}
+diff --git a/tests/create_key.rs b/tests/create_key.rs
+deleted file mode 100644
+index 6b94886..0000000
+--- a/tests/create_key.rs
++++ /dev/null
+@@ -1,79 +0,0 @@
+-use std::time::{Duration, SystemTime};
+-
+-use gpgme::CreateKeyFlags;
+-
+-use self::common::passphrase_cb;
+-
+-#[macro_use]
+-mod common;
+-
+-test_case! {
+-    #[requires((1, 7))]
+-    test_create_key(test) {
+-        let mut ctx = test.create_context().set_passphrase_provider(passphrase_cb);
+-        if !ctx.engine_info().check_version("2.1.13") {
+-            return;
+-        }
+-
+-        let expiration = Duration::from_secs(3600);
+-        let res = ctx.create_key_with_flags("test user <test@example.com>",
+-            "future-default", expiration, CreateKeyFlags::CERT).unwrap();
+-        let creation = SystemTime::now();
+-
+-        let fpr = res.fingerprint_raw().unwrap();
+-        assert!(res.has_primary_key());
+-        let mut key = ctx.get_key(fpr).unwrap();
+-        assert!(!key.is_bad());
+-        assert!(key.can_certify());
+-        assert!(!key.can_sign());
+-        assert!(!key.can_encrypt());
+-        assert!(!key.can_authenticate());
+-
+-        let primary = key.primary_key().unwrap();
+-        assert!(!primary.is_bad());
+-        assert!(primary.can_certify());
+-        assert!(!primary.can_sign());
+-        assert!(!primary.can_encrypt());
+-        assert!(!primary.can_authenticate());
+-        assert!(primary.expiration_time().unwrap().duration_since(creation).unwrap() <= expiration);
+-
+-        assert_eq!(key.subkeys().count(), 1);
+-        assert_eq!(key.user_ids().count(), 1);
+-        let uid = key.user_ids().nth(0).unwrap();
+-        assert!(!uid.is_bad());
+-        assert_eq!(uid.name(), Ok("test user"));
+-        assert_eq!(uid.email(), Ok("test@example.com"));
+-        assert_eq!(uid.id(), Ok("test user <test@example.com>"));
+-
+-        let res = ctx.create_subkey_with_flags(&key, "future-default", expiration,
+-            CreateKeyFlags::AUTH).unwrap();
+-        let creation = SystemTime::now();
+-        assert!(res.has_sub_key());
+-        key.update().unwrap();
+-        assert!(key.can_authenticate());
+-        assert_eq!(key.subkeys().count(), 2);
+-
+-        let sub = key.subkeys().find(|k| k.fingerprint_raw() == res.fingerprint_raw()).unwrap();
+-        assert!(!sub.is_bad());
+-        assert!(!sub.can_certify());
+-        assert!(!sub.can_sign());
+-        assert!(!sub.can_encrypt());
+-        assert!(sub.can_authenticate());
+-        assert!(sub.expiration_time().unwrap().duration_since(creation).unwrap() <= expiration);
+-
+-        let res = ctx.create_subkey_with_flags(&key, "future-default", expiration,
+-            CreateKeyFlags::ENCR | CreateKeyFlags::NOEXPIRE).unwrap();
+-        assert!(res.has_sub_key());
+-        key.update().unwrap();
+-        assert!(key.can_authenticate());
+-        assert_eq!(key.subkeys().count(), 3);
+-
+-        let sub = key.subkeys().find(|k| k.fingerprint_raw() == res.fingerprint_raw()).unwrap();
+-        assert!(!sub.is_bad());
+-        assert!(!sub.can_certify());
+-        assert!(!sub.can_sign());
+-        assert!(sub.can_encrypt());
+-        assert!(!sub.can_authenticate());
+-        assert_eq!(sub.expiration_time(), None);
+-    }
+-}
+diff --git a/tests/edit.rs b/tests/edit.rs
+deleted file mode 100644
+index 23d0758..0000000
+--- a/tests/edit.rs
++++ /dev/null
+@@ -1,92 +0,0 @@
+-#![allow(deprecated)]
+-use gpgme;
+-
+-use std::io::prelude::*;
+-
+-use gpgme::{
+-    edit::{self, EditInteractionStatus, Editor},
+-    Error, Result,
+-};
+-
+-use self::common::passphrase_cb;
+-
+-#[macro_use]
+-mod common;
+-
+-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+-enum TestEditorState {
+-    Start,
+-    Fingerprint,
+-    Expire,
+-    Valid,
+-    Uid,
+-    Primary,
+-    Quit,
+-    Save,
+-}
+-
+-impl Default for TestEditorState {
+-    fn default() -> Self {
+-        TestEditorState::Start
+-    }
+-}
+-
+-struct TestEditor;
+-
+-impl Editor for TestEditor {
+-    type State = TestEditorState;
+-
+-    fn next_state(
+-        state: Result<Self::State>, status: EditInteractionStatus<'_>, need_response: bool,
+-    ) -> Result<Self::State> {
+-        use self::TestEditorState as State;
+-
+-        println!("[-- Code: {:?}, {:?} --]", status.code, status.args());
+-        if !need_response {
+-            return state;
+-        }
+-
+-        if status.args() == Ok(edit::PROMPT) {
+-            match state {
+-                Ok(State::Start) => Ok(State::Fingerprint),
+-                Ok(State::Fingerprint) => Ok(State::Expire),
+-                Ok(State::Valid) => Ok(State::Uid),
+-                Ok(State::Uid) => Ok(State::Primary),
+-                Ok(State::Quit) => state,
+-                Ok(State::Primary) | Err(_) => Ok(State::Quit),
+-                _ => Err(Error::GENERAL),
+-            }
+-        } else if (status.args() == Ok(edit::KEY_VALID)) && (state == Ok(State::Expire)) {
+-            Ok(State::Valid)
+-        } else if (status.args() == Ok(edit::CONFIRM_SAVE)) && (state == Ok(State::Quit)) {
+-            Ok(State::Save)
+-        } else {
+-            state.and(Err(Error::GENERAL))
+-        }
+-    }
+-
+-    fn action<W: Write>(&self, state: Self::State, mut out: W) -> Result<()> {
+-        use self::TestEditorState as State;
+-
+-        match state {
+-            State::Fingerprint => out.write_all(b"fpr")?,
+-            State::Expire => out.write_all(b"expire")?,
+-            State::Valid => out.write_all(b"0")?,
+-            State::Uid => out.write_all(b"1")?,
+-            State::Primary => out.write_all(b"primary")?,
+-            State::Quit => write!(out, "{}", edit::QUIT)?,
+-            State::Save => write!(out, "{}", edit::YES)?,
+-            _ => return Err(Error::GENERAL),
+-        }
+-        Ok(())
+-    }
+-}
+-
+-test_case! {
+-    test_edit(test) {
+-        test.create_context().with_passphrase_provider(passphrase_cb, |ctx| {
+-            let key = ctx.find_keys(Some("Alpha")).unwrap().next().unwrap().unwrap();
+-            ctx.edit_key_with(&key, TestEditor, &mut Vec::new()).unwrap();
+-        });
+-    }
+-}
+diff --git a/tests/encrypt_simple.rs b/tests/encrypt_simple.rs
+deleted file mode 100644
+index 3fa90c9..0000000
+--- a/tests/encrypt_simple.rs
++++ /dev/null
+@@ -1,33 +0,0 @@
+-use gpgme;
+-
+-use self::common::passphrase_cb;
+-
+-#[macro_use]
+-mod common;
+-
+-test_case! {
+-    test_simple_encrypt_decrypt(test) {
+-        let mut ctx = test.create_context();
+-
+-        let key = ctx.find_keys(Some("alfa@example.net")).unwrap().nth(0).unwrap().unwrap();
+-
+-        ctx.set_armor(true);
+-        ctx.set_text_mode(true);
+-
+-        let mut ciphertext = Vec::new();
+-        ctx.encrypt_with_flags(Some(&key), "Hello World", &mut ciphertext, gpgme::EncryptFlags::ALWAYS_TRUST).unwrap();
+-        assert!(ciphertext.starts_with(b"-----BEGIN PGP MESSAGE-----"));
+-        drop(ctx);
+-
+-        let mut plaintext = Vec::new();
+-        test.create_context().with_passphrase_provider(passphrase_cb, |ctx| {
+-            ctx.decrypt(&ciphertext, &mut plaintext).unwrap();
+-        });
+-        assert_eq!(plaintext, b"Hello World");
+-
+-        let mut plaintext = Vec::new();
+-        let mut ctx = test.create_context().set_passphrase_provider(passphrase_cb);
+-        ctx.decrypt(&ciphertext, &mut plaintext).unwrap();
+-        assert_eq!(plaintext, b"Hello World");
+-    }
+-}
+diff --git a/tests/encrypt_symmetric.rs b/tests/encrypt_symmetric.rs
+deleted file mode 100644
+index f9b49a2..0000000
+--- a/tests/encrypt_symmetric.rs
++++ /dev/null
+@@ -1,28 +0,0 @@
+-use self::common::passphrase_cb;
+-
+-#[macro_use]
+-mod common;
+-
+-test_case! {
+-    test_symmetric_encrypt_decrypt(test) {
+-        let mut ciphertext = Vec::new();
+-        test.create_context().with_passphrase_provider(passphrase_cb, |ctx| {
+-            ctx.set_armor(true);
+-            ctx.set_text_mode(true);
+-
+-            ctx.encrypt_symmetric("Hello World", &mut ciphertext).unwrap();
+-        });
+-        assert!(ciphertext.starts_with(b"-----BEGIN PGP MESSAGE-----"));
+-
+-        let mut plaintext = Vec::new();
+-        test.create_context().with_passphrase_provider(passphrase_cb, |ctx| {
+-            ctx.decrypt(&ciphertext, &mut plaintext).unwrap();
+-        });
+-        assert_eq!(plaintext, b"Hello World");
+-
+-        let mut plaintext = Vec::new();
+-        let mut ctx = test.create_context().set_passphrase_provider(passphrase_cb);
+-        ctx.decrypt(&ciphertext, &mut plaintext).unwrap();
+-        assert_eq!(plaintext, b"Hello World");
+-    }
+-}
+diff --git a/tests/export.rs b/tests/export.rs
+deleted file mode 100644
+index db7b0eb..0000000
+--- a/tests/export.rs
++++ /dev/null
+@@ -1,39 +0,0 @@
+-use gpgme::{CreateKeyFlags, ExportMode};
+-
+-use self::common::passphrase_cb;
+-
+-#[macro_use]
+-mod common;
+-
+-test_case! {
+-    test_export(test) {
+-        let mut ctx = test.create_context().set_passphrase_provider(passphrase_cb);
+-        ctx.set_offline(true);
+-        ctx.set_armor(true);
+-
+-        let key = ctx.find_keys(Some("alfa@example.net")).unwrap().nth(0).unwrap().unwrap();
+-
+-        let mut data = Vec::new();
+-        ctx.export(key.fingerprint_raw(), ExportMode::empty(), &mut data).unwrap();
+-        assert!(!data.is_empty());
+-    }
+-
+-    #[requires((1, 7))]
+-    test_export_secret(test) {
+-        let mut ctx = test.create_context();
+-        ctx.set_offline(true);
+-        ctx.set_armor(true);
+-
+-        let res = match ctx.create_key_with_flags("test user <test@example.com>",
+-            "future-default", Default::default(), CreateKeyFlags::NOPASSWD) {
+-            Ok(r) => r,
+-            Err(e) if e.code() == gpgme::Error::NOT_SUPPORTED.code() => return,
+-            Err(e) => panic!("error: {:?}", e),
+-        };
+-        let fpr = res.fingerprint_raw().unwrap();
+-
+-        let mut data = Vec::new();
+-        ctx.export(Some(fpr), ExportMode::SECRET, &mut data).unwrap();
+-        assert!(!data.is_empty());
+-    }
+-}
+diff --git a/tests/keylist.rs b/tests/keylist.rs
+deleted file mode 100644
+index ee3b6aa..0000000
+--- a/tests/keylist.rs
++++ /dev/null
+@@ -1,20 +0,0 @@
+-use gpgme;
+-
+-#[macro_use]
+-mod common;
+-
+-test_case! {
+-    test_key_list(test) {
+-        let mut ctx = test.create_context();
+-        let keys: Vec<_> = ctx.find_keys(Some("alfa@example.net")).unwrap()
+-                                        .collect::<Result<_, _>>().unwrap();
+-        assert_eq!(keys.len(), 1, "incorrect number of keys");
+-
+-        let key = &keys[0];
+-        assert_eq!(key.id(), Ok("2D727CC768697734"));
+-        assert_eq!(key.subkeys().count(), 2);
+-        let subkeys: Vec<_> = key.subkeys().collect();
+-        assert_eq!(subkeys[0].algorithm(), gpgme::KeyAlgorithm::Dsa);
+-        assert_eq!(subkeys[1].algorithm(), gpgme::KeyAlgorithm::ElgamalEncrypt);
+-    }
+-}
+diff --git a/tests/keysign.rs b/tests/keysign.rs
+deleted file mode 100644
+index 5f44f17..0000000
+--- a/tests/keysign.rs
++++ /dev/null
+@@ -1,34 +0,0 @@
+-use gpgme::KeyListMode;
+-
+-use self::common::passphrase_cb;
+-
+-#[macro_use]
+-mod common;
+-
+-test_case! {
+-    #[requires((1, 7))]
+-    test_sign_key(test) {
+-        let mut ctx = test.create_context();
+-        if !ctx.engine_info().check_version("2.1.12") {
+-            return;
+-        }
+-
+-        ctx.add_key_list_mode(KeyListMode::SIGS).unwrap();
+-        let signer = ctx.find_secret_keys(Some("alfa@example.net")).unwrap().nth(0).unwrap().unwrap();
+-        ctx.add_signer(&signer).unwrap();
+-
+-        let mut key = ctx.find_keys(Some("bravo@example.net")).unwrap().nth(0).unwrap().unwrap();
+-        assert!(!key.user_ids().nth(0).unwrap().signatures().any(|s| {
+-            signer.id_raw() == s.signer_key_id_raw()
+-        }));
+-
+-        ctx.with_passphrase_provider(passphrase_cb, |ctx| {
+-            ctx.sign_key(&key, None::<String>, Default::default()).unwrap();
+-        });
+-
+-        key.update().unwrap();
+-        assert!(key.user_ids().nth(0).unwrap().signatures().any(|s| {
+-            signer.id_raw() == s.signer_key_id_raw()
+-        }));
+-    }
+-}
+diff --git a/tests/verify.rs b/tests/verify.rs
+deleted file mode 100644
+index efd2d93..0000000
+--- a/tests/verify.rs
++++ /dev/null
+@@ -1,28 +0,0 @@
+-#[macro_use]
+-mod common;
+-
+-const TEST_MSG1: &'static [u8] = b"-----BEGIN PGP MESSAGE-----\n\
+-                                   \n\
+-                                   owGbwMvMwCSoW1RzPCOz3IRxjXQSR0lqcYleSUWJTZOvjVdpcYmCu1+oQmaJIleH\n\
+-                                   GwuDIBMDGysTSIqBi1MApi+nlGGuwDeHao53HBr+FoVGP3xX+kvuu9fCMJvl6IOf\n\
+-                                   y1kvP4y+8D5a11ang0udywsA\n\
+-                                   =Crq6\n\
+-                                   -----END PGP MESSAGE-----\n";
+-
+-test_case! {
+-    test_signature_key(test) {
+-        let mut output = Vec::new();
+-        let mut ctx = test.create_context();
+-        let result = ctx.verify_opaque(TEST_MSG1, &mut output).unwrap();
+-        assert_eq!(result.signatures().count(), 1);
+-
+-        let sig = result.signatures().nth(0).unwrap();
+-        let key = ctx.get_key(sig.fingerprint_raw().unwrap()).unwrap();
+-        for subkey in key.subkeys() {
+-            if subkey.fingerprint_raw() == sig.fingerprint_raw() {
+-                return;
+-            }
+-        }
+-        panic!();
+-    }
+-}
