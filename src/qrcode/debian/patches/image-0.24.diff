@@ -1,0 +1,72 @@
+This patch is based on changes extraced from a pull request by Mihail Malo
+(qm3ster) https://github.com/rust-lang/flate2-rs/issues/274 by 
+
+The patch was adapted for use in the Debian package by Peter Michael Green.
+A bunch of extranous formatting/lint changes were removed and the
+Cargo.toml changes were adpated.
+
+Index: qrcode/Cargo.toml
+===================================================================
+--- qrcode.orig/Cargo.toml
++++ qrcode/Cargo.toml
+@@ -37,11 +37,11 @@ required-features = ["svg"]
+ version = "1"
+ 
+ [dependencies.image]
+-version = "0.23"
++version = "0.24.1"
+ optional = true
+ default-features = false
+ [dev-dependencies.image]
+-version = "0.23"
++version = "0.24.1"
+ 
+ [features]
+ default = ["image", "svg"]
+Index: qrcode/src/lib.rs
+===================================================================
+--- qrcode.orig/src/lib.rs
++++ qrcode/src/lib.rs
+@@ -325,7 +325,7 @@ mod image_tests {
+     fn test_annex_i_qr_as_image() {
+         let code = QrCode::new(b"01234567").unwrap();
+         let image = code.render::<Luma<u8>>().build();
+-        let expected = load_from_memory(include_bytes!("test_annex_i_qr_as_image.png")).unwrap().to_luma();
++        let expected = load_from_memory(include_bytes!("test_annex_i_qr_as_image.png")).unwrap().to_luma8();
+         assert_eq!(image.dimensions(), expected.dimensions());
+         assert_eq!(image.into_raw(), expected.into_raw());
+     }
+@@ -339,7 +339,7 @@ mod image_tests {
+             .dark_color(Rgb([128, 0, 0]))
+             .light_color(Rgb([255, 255, 128]))
+             .build();
+-        let expected = load_from_memory(include_bytes!("test_annex_i_micro_qr_as_image.png")).unwrap().to_rgb();
++        let expected = load_from_memory(include_bytes!("test_annex_i_micro_qr_as_image.png")).unwrap().to_rgb8();
+         assert_eq!(image.dimensions(), expected.dimensions());
+         assert_eq!(image.into_raw(), expected.into_raw());
+     }
+Index: qrcode/src/render/image.rs
+===================================================================
+--- qrcode.orig/src/render/image.rs
++++ qrcode/src/render/image.rs
+@@ -1,4 +1,4 @@
+-#![cfg(feature="image")]
++#![cfg(feature = "image")]
+ 
+ use crate::render::{Canvas, Pixel};
+ use crate::types::Color;
+@@ -7,8 +7,12 @@ use image::{ImageBuffer, Luma, LumaA, Pi
+ 
+ macro_rules! impl_pixel_for_image_pixel {
+     ($p:ident<$s:ident>: $c:pat => $d:expr) => {
+-        impl<$s: Primitive + 'static> Pixel for $p<$s> {
+-            type Image = ImageBuffer<Self, Vec<S>>;
++        impl<$s> Pixel for $p<$s>
++        where
++            $s: Primitive + 'static,
++            Self: ImagePixel,
++        {
++            type Image = ImageBuffer<Self, Vec<<Self as ImagePixel>::Subpixel>>;
+             type Canvas = (Self, Self::Image);
+ 
+             fn default_color(color: Color) -> Self {
