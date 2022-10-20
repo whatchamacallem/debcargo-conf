@@ -1,0 +1,999 @@
+From 1bd34c13c6b2691cbc68f7f31d4de4c54d30c4c9 Mon Sep 17 00:00:00 2001
+From: James McCoy <jamessan@jamessan.com>
+Date: Wed, 19 Oct 2022 12:41:46 -0400
+Subject: [PATCH 1/3] ci: Run tests against no-std-float feature
+
+---
+ .github/workflows/main.yml | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/.github/workflows/main.yml b/.github/workflows/main.yml
+index 3a29952..0f1ec25 100644
+--- a/.github/workflows/main.yml
++++ b/.github/workflows/main.yml
+@@ -23,8 +23,8 @@ jobs:
+         toolchain: ${{ matrix.rust }}
+         override: true
+ 
+-    - name: Build with minimal features (no_std)
+-      run: cargo build --verbose --no-default-features --features no-std-float
++    - name: Run tests with minimal features (no_std)
++      run: cargo test --verbose --no-default-features --features no-std-float
+ 
+     - name: Run tests without SIMD
+       run: cargo test --verbose --no-default-features --features png-format
+@@ -67,8 +67,8 @@ jobs:
+         curl https://wasmtime.dev/install.sh -sSf | bash
+         echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
+ 
+-    - name: Build with minimal features (no_std)
+-      run: cargo build --target wasm32-wasi --verbose --no-default-features --features no-std-float
++    - name: Run tests with minimal features (no_std)
++      run: cargo test --target wasm32-wasi --verbose --no-default-features --features no-std-float
+ 
+     - name: Run tests without SIMD
+       run: cargo test --target wasm32-wasi --verbose --no-default-features --features png-format
+@@ -94,8 +94,8 @@ jobs:
+     - name: Install cross
+       run: cargo install cross
+ 
+-    - name: Build with minimal features (no_std)
+-      run: cross build --target aarch64-unknown-linux-gnu --verbose --no-default-features --features no-std-float
++    - name: Run tests with minimal features (no_std)
++      run: cross test --target aarch64-unknown-linux-gnu --verbose --no-default-features --features no-std-float
+ 
+     - name: Run tests without SIMD
+       run: cross test --target aarch64-unknown-linux-gnu --verbose --no-default-features --features png-format
+
+From 5ba656d3df31e5a296dc02f2b2a44a3a1c415957 Mon Sep 17 00:00:00 2001
+From: James McCoy <jamessan@jamessan.com>
+Date: Wed, 19 Oct 2022 12:42:40 -0400
+Subject: [PATCH 2/3] Annotate all tests which require png-format feature
+
+This allows running tests against just the no-std-float feature, so
+there's more coverage than just building the code.
+---
+ tests/integration/clip.rs      |  9 +++++++++
+ tests/integration/dash.rs      |  7 +++++++
+ tests/integration/fill.rs      | 29 +++++++++++++++++++++++++++++
+ tests/integration/gradients.rs | 17 +++++++++++++++++
+ tests/integration/hairline.rs  | 28 ++++++++++++++++++++++++++++
+ tests/integration/pattern.rs   | 10 ++++++++++
+ tests/integration/pixmap.rs    |  5 +++++
+ tests/integration/png.rs       |  4 ++++
+ 8 files changed, 109 insertions(+)
+
+diff --git a/tests/integration/clip.rs b/tests/integration/clip.rs
+index fdc7a2c..d6b2a8b 100644
+--- a/tests/integration/clip.rs
++++ b/tests/integration/clip.rs
+@@ -1,6 +1,7 @@
+ use tiny_skia::*;
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn rect() {
+     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
+     let mut clip_mask = ClipMask::new();
+@@ -18,6 +19,7 @@ fn rect() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn rect_aa() {
+     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.5, 10.0, 80.0, 80.5).unwrap());
+     let mut clip_mask = ClipMask::new();
+@@ -35,6 +37,7 @@ fn rect_aa() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn rect_ts() {
+     let mut pixmap = Pixmap::new(100, 100).unwrap();
+ 
+@@ -55,6 +58,7 @@ fn rect_ts() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn circle_bottom_right_aa() {
+     let mut pixmap = Pixmap::new(100, 100).unwrap();
+ 
+@@ -73,6 +77,7 @@ fn circle_bottom_right_aa() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn stroke() {
+     let mut pixmap = Pixmap::new(100, 100).unwrap();
+ 
+@@ -95,6 +100,7 @@ fn stroke() {
+ 
+ // Make sure we're clipping only source and not source and destination
+ #[test]
++#[cfg(feature = "png-format")]
+ fn skip_dest() {
+     let mut pixmap = Pixmap::new(100, 100).unwrap();
+ 
+@@ -129,6 +135,7 @@ fn skip_dest() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn intersect_aa() {
+     let circle1 = PathBuilder::from_circle(75.0, 75.0, 50.0).unwrap();
+     let circle2 = PathBuilder::from_circle(125.0, 125.0, 50.0).unwrap();
+@@ -153,6 +160,7 @@ fn intersect_aa() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn ignore_memset() {
+     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
+ 
+@@ -175,6 +183,7 @@ fn ignore_memset() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn ignore_source() {
+     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
+ 
+diff --git a/tests/integration/dash.rs b/tests/integration/dash.rs
+index b07dd2d..54da62d 100644
+--- a/tests/integration/dash.rs
++++ b/tests/integration/dash.rs
+@@ -1,6 +1,7 @@
+ use tiny_skia::*;
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn line() {
+     let mut pb = PathBuilder::new();
+     pb.move_to(10.0, 20.0);
+@@ -22,6 +23,7 @@ fn line() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn quad() {
+     let mut pb = PathBuilder::new();
+     pb.move_to(10.0, 20.0);
+@@ -43,6 +45,7 @@ fn quad() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn cubic() {
+     let mut pb = PathBuilder::new();
+     pb.move_to(10.0, 20.0);
+@@ -64,6 +67,7 @@ fn cubic() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn hairline() {
+     let mut pb = PathBuilder::new();
+     pb.move_to(10.0, 20.0);
+@@ -86,6 +90,7 @@ fn hairline() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn complex() {
+     let mut pb = PathBuilder::new();
+     pb.move_to(28.7, 23.9);
+@@ -114,6 +119,7 @@ fn complex() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn multi_subpaths() {
+     let mut pb = PathBuilder::new();
+     pb.move_to(49.0, 76.0);
+@@ -143,6 +149,7 @@ fn multi_subpaths() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn closed() {
+     let mut pb = PathBuilder::new();
+     pb.move_to(22.0, 22.0);
+diff --git a/tests/integration/fill.rs b/tests/integration/fill.rs
+index 31d8e26..fb4bbf2 100644
+--- a/tests/integration/fill.rs
++++ b/tests/integration/fill.rs
+@@ -1,6 +1,7 @@
+ use tiny_skia::*;
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn horizontal_line() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -18,6 +19,7 @@ fn horizontal_line() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn vertical_line() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -35,6 +37,7 @@ fn vertical_line() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn single_line() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -52,6 +55,7 @@ fn single_line() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn int_rect() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -66,6 +70,7 @@ fn int_rect() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn float_rect() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -80,6 +85,7 @@ fn float_rect() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn int_rect_aa() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -95,6 +101,7 @@ fn int_rect_aa() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn float_rect_aa() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -110,6 +117,7 @@ fn float_rect_aa() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn float_rect_aa_highp() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -182,6 +190,7 @@ fn tiny_float_rect_aa() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn float_rect_clip_top_left_aa() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -197,6 +206,7 @@ fn float_rect_clip_top_left_aa() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn float_rect_clip_top_right_aa() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -212,6 +222,7 @@ fn float_rect_clip_top_right_aa() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn float_rect_clip_bottom_right_aa() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -227,6 +238,7 @@ fn float_rect_clip_bottom_right_aa() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn int_rect_with_ts_clip_right() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -241,6 +253,7 @@ fn int_rect_with_ts_clip_right() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn open_polygon() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -262,6 +275,7 @@ fn open_polygon() {
+ 
+ // Must be the same a open.
+ #[test]
++#[cfg(feature = "png-format")]
+ fn closed_polygon() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -283,6 +297,7 @@ fn closed_polygon() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn winding_star() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -303,6 +318,7 @@ fn winding_star() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn even_odd_star() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -323,6 +339,7 @@ fn even_odd_star() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn quad_curve() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -340,6 +357,7 @@ fn quad_curve() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn cubic_curve() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -357,6 +375,7 @@ fn cubic_curve() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn memset2d() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque to trigger memset2d.
+@@ -372,6 +391,7 @@ fn memset2d() {
+ 
+ // Make sure we do not write past pixmap memory.
+ #[test]
++#[cfg(feature = "png-format")]
+ fn memset2d_out_of_bounds() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque to trigger memset2d.
+@@ -388,6 +408,7 @@ fn memset2d_out_of_bounds() {
+ // Not sure how to properly test anti-aliasing,
+ // so for now simply check that it actually applied.
+ #[test]
++#[cfg(feature = "png-format")]
+ fn fill_aa() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -424,6 +445,7 @@ fn overflow_in_walk_edges_1() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clip_line_1() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -444,6 +466,7 @@ fn clip_line_1() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clip_line_2() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -465,6 +488,7 @@ fn clip_line_2() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clip_quad() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -482,6 +506,7 @@ fn clip_quad() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clip_cubic_1() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -500,6 +525,7 @@ fn clip_cubic_1() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clip_cubic_2() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+@@ -534,6 +560,7 @@ fn aa_endless_loop() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clear_aa() {
+     // Make sure that Clear with AA doesn't fallback to memset.
+     let mut paint = Paint::default();
+@@ -573,6 +600,7 @@ fn line_curve() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn vertical_lines_merging_bug() {
+     // This path must not trigger edge_builder::combine_vertical,
+     // otherwise AlphaRuns::add will crash later.
+@@ -597,6 +625,7 @@ fn vertical_lines_merging_bug() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn fill_rect() {
+     let mut paint = Paint::default();
+     paint.set_color_rgba8(50, 127, 150, 200);
+diff --git a/tests/integration/gradients.rs b/tests/integration/gradients.rs
+index 4c095e2..e539814 100644
+--- a/tests/integration/gradients.rs
++++ b/tests/integration/gradients.rs
+@@ -1,6 +1,7 @@
+ use tiny_skia::*;
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn two_stops_linear_pad_lq() {
+     let mut paint = Paint::default();
+     paint.shader = LinearGradient::new(
+@@ -24,6 +25,7 @@ fn two_stops_linear_pad_lq() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn two_stops_linear_repeat_lq() {
+     let mut paint = Paint::default();
+     paint.shader = LinearGradient::new(
+@@ -47,6 +49,7 @@ fn two_stops_linear_repeat_lq() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn two_stops_linear_reflect_lq() {
+     let mut paint = Paint::default();
+     paint.shader = LinearGradient::new(
+@@ -70,6 +73,7 @@ fn two_stops_linear_reflect_lq() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn three_stops_evenly_spaced_lq() {
+     let mut paint = Paint::default();
+     paint.shader = LinearGradient::new(
+@@ -95,6 +99,7 @@ fn three_stops_evenly_spaced_lq() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn two_stops_unevenly_spaced_lq() {
+     let mut paint = Paint::default();
+     paint.shader = LinearGradient::new(
+@@ -119,6 +124,7 @@ fn two_stops_unevenly_spaced_lq() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn two_stops_linear_pad_hq() {
+     let mut paint = Paint::default();
+     paint.force_hq_pipeline = true;
+@@ -143,6 +149,7 @@ fn two_stops_linear_pad_hq() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn two_stops_linear_repeat_hq() {
+     let mut paint = Paint::default();
+     paint.force_hq_pipeline = true;
+@@ -167,6 +174,7 @@ fn two_stops_linear_repeat_hq() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn two_stops_linear_reflect_hq() {
+     let mut paint = Paint::default();
+     paint.force_hq_pipeline = true;
+@@ -191,6 +199,7 @@ fn two_stops_linear_reflect_hq() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn three_stops_evenly_spaced_hq() {
+     let mut paint = Paint::default();
+     paint.force_hq_pipeline = true;
+@@ -217,6 +226,7 @@ fn three_stops_evenly_spaced_hq() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn two_stops_unevenly_spaced_hq() {
+     let mut paint = Paint::default();
+     paint.force_hq_pipeline = true;
+@@ -245,6 +255,7 @@ fn two_stops_unevenly_spaced_hq() {
+ // Therefore we do not have a lq/hq split.
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn well_behaved_radial() {
+     let mut paint = Paint::default();
+     paint.shader = RadialGradient::new(
+@@ -269,6 +280,7 @@ fn well_behaved_radial() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn focal_on_circle_radial() {
+     let mut paint = Paint::default();
+     paint.shader = RadialGradient::new(
+@@ -293,6 +305,7 @@ fn focal_on_circle_radial() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn conical_greater_radial() {
+     let mut paint = Paint::default();
+     paint.shader = RadialGradient::new(
+@@ -317,6 +330,7 @@ fn conical_greater_radial() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn simple_radial_lq() {
+     let mut paint = Paint::default();
+     paint.shader = RadialGradient::new(
+@@ -341,6 +355,7 @@ fn simple_radial_lq() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn simple_radial_hq() {
+     let mut paint = Paint::default();
+     paint.force_hq_pipeline = true;
+@@ -366,6 +381,7 @@ fn simple_radial_hq() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn simple_radial_with_ts_hq() {
+     let mut paint = Paint::default();
+     paint.force_hq_pipeline = true;
+@@ -393,6 +409,7 @@ fn simple_radial_with_ts_hq() {
+ // Gradient doesn't add the Premultiply stage when all stops are opaque.
+ // But it checks colors only on creation, so we have to recheck them after calling `apply_opacity`.
+ #[test]
++#[cfg(feature = "png-format")]
+ fn global_opacity() {
+     let mut paint = Paint::default();
+     paint.shader = RadialGradient::new(
+diff --git a/tests/integration/hairline.rs b/tests/integration/hairline.rs
+index c5828f4..85e039d 100644
+--- a/tests/integration/hairline.rs
++++ b/tests/integration/hairline.rs
+@@ -21,66 +21,77 @@ fn draw_line(x0: f32, y0: f32, x1: f32, y1: f32, anti_alias: bool, width: f32, l
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn hline_05() {
+     let expected = Pixmap::load_png("tests/images/hairline/hline-05.png").unwrap();
+     assert_eq!(draw_line(10.0, 10.0, 90.0, 10.0, false, 0.5, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn hline_05_aa() {
+     let expected = Pixmap::load_png("tests/images/hairline/hline-05-aa.png").unwrap();
+     assert_eq!(draw_line(10.0, 10.0, 90.0, 10.0, true, 0.5, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn hline_05_aa_round() {
+     let expected = Pixmap::load_png("tests/images/hairline/hline-05-aa-round.png").unwrap();
+     assert_eq!(draw_line(10.0, 10.0, 90.0, 10.0, true, 0.5, LineCap::Round), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn vline_05() {
+     let expected = Pixmap::load_png("tests/images/hairline/vline-05.png").unwrap();
+     assert_eq!(draw_line(10.0, 10.0, 10.0, 90.0, false, 0.5, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn vline_05_aa() {
+     let expected = Pixmap::load_png("tests/images/hairline/vline-05-aa.png").unwrap();
+     assert_eq!(draw_line(10.0, 10.0, 10.0, 90.0, true, 0.5, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn vline_05_aa_round() {
+     let expected = Pixmap::load_png("tests/images/hairline/vline-05-aa-round.png").unwrap();
+     assert_eq!(draw_line(10.0, 10.0, 10.0, 90.0, true, 0.5, LineCap::Round), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn horish_05_aa() {
+     let expected = Pixmap::load_png("tests/images/hairline/horish-05-aa.png").unwrap();
+     assert_eq!(draw_line(10.0, 10.0, 90.0, 70.0, true, 0.5, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn vertish_05_aa() {
+     let expected = Pixmap::load_png("tests/images/hairline/vertish-05-aa.png").unwrap();
+     assert_eq!(draw_line(10.0, 10.0, 70.0, 90.0, true, 0.5, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clip_line_05_aa() {
+     let expected = Pixmap::load_png("tests/images/hairline/clip-line-05-aa.png").unwrap();
+     assert_eq!(draw_line(-10.0, 10.0, 110.0, 70.0, true, 0.5, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clip_line_00() {
+     let expected = Pixmap::load_png("tests/images/hairline/clip-line-00.png").unwrap();
+     assert_eq!(draw_line(-10.0, 10.0, 110.0, 70.0, false, 0.0, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clip_line_00_v2() {
+     let mut pixmap = Pixmap::new(512, 512).unwrap();
+ 
+@@ -102,24 +113,28 @@ fn clip_line_00_v2() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clip_hline_top_aa() {
+     let expected = Pixmap::load_png("tests/images/hairline/clip-hline-top-aa.png").unwrap();
+     assert_eq!(draw_line(-1.0, 0.0, 101.0, 0.0, true, 1.0, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clip_hline_bottom_aa() {
+     let expected = Pixmap::load_png("tests/images/hairline/clip-hline-bottom-aa.png").unwrap();
+     assert_eq!(draw_line(-1.0, 100.0, 101.0, 100.0, true, 1.0, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clip_vline_left_aa() {
+     let expected = Pixmap::load_png("tests/images/hairline/clip-vline-left-aa.png").unwrap();
+     assert_eq!(draw_line(0.0, -1.0, 0.0, 101.0, true, 1.0, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clip_vline_right_aa() {
+     let expected = Pixmap::load_png("tests/images/hairline/clip-vline-right-aa.png").unwrap();
+     assert_eq!(draw_line(100.0, -1.0, 100.0, 101.0, true, 1.0, LineCap::Butt), expected);
+@@ -146,18 +161,21 @@ fn draw_quad(anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn quad_width_05_aa() {
+     let expected = Pixmap::load_png("tests/images/hairline/quad-width-05-aa.png").unwrap();
+     assert_eq!(draw_quad(true, 0.5, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn quad_width_05_aa_round() {
+     let expected = Pixmap::load_png("tests/images/hairline/quad-width-05-aa-round.png").unwrap();
+     assert_eq!(draw_quad(true, 0.5, LineCap::Round), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn quad_width_00() {
+     let expected = Pixmap::load_png("tests/images/hairline/quad-width-00.png").unwrap();
+     assert_eq!(draw_quad(false, 0.0, LineCap::Butt), expected);
+@@ -184,42 +202,49 @@ fn draw_cubic(points: &[f32; 8], anti_alias: bool, width: f32, line_cap: LineCap
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn cubic_width_10_aa() {
+     let expected = Pixmap::load_png("tests/images/hairline/cubic-width-10-aa.png").unwrap();
+     assert_eq!(draw_cubic(&[25.0, 80.0, 55.0, 25.0, 155.0, 75.0, 175.0, 20.0], true, 1.0, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn cubic_width_05_aa() {
+     let expected = Pixmap::load_png("tests/images/hairline/cubic-width-05-aa.png").unwrap();
+     assert_eq!(draw_cubic(&[25.0, 80.0, 55.0, 25.0, 155.0, 75.0, 175.0, 20.0], true, 0.5, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn cubic_width_00_aa() {
+     let expected = Pixmap::load_png("tests/images/hairline/cubic-width-00-aa.png").unwrap();
+     assert_eq!(draw_cubic(&[25.0, 80.0, 55.0, 25.0, 155.0, 75.0, 175.0, 20.0], true, 0.0, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn cubic_width_00() {
+     let expected = Pixmap::load_png("tests/images/hairline/cubic-width-00.png").unwrap();
+     assert_eq!(draw_cubic(&[25.0, 80.0, 55.0, 25.0, 155.0, 75.0, 175.0, 20.0], false, 0.0, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn cubic_width_05_aa_round() {
+     let expected = Pixmap::load_png("tests/images/hairline/cubic-width-05-aa-round.png").unwrap();
+     assert_eq!(draw_cubic(&[25.0, 80.0, 55.0, 25.0, 155.0, 75.0, 175.0, 20.0], true, 0.5, LineCap::Round), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn cubic_width_00_round() {
+     let expected = Pixmap::load_png("tests/images/hairline/cubic-width-00-round.png").unwrap();
+     assert_eq!(draw_cubic(&[25.0, 80.0, 55.0, 25.0, 155.0, 75.0, 175.0, 20.0], false, 0.0, LineCap::Round), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn chop_cubic_01() {
+     let expected = Pixmap::load_png("tests/images/hairline/chop-cubic-01.png").unwrap();
+     // This curve will invoke `path_geometry::chop_cubic_at_max_curvature` branch of `hair_cubic`.
+@@ -227,18 +252,21 @@ fn chop_cubic_01() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clip_cubic_05_aa() {
+     let expected = Pixmap::load_png("tests/images/hairline/clip-cubic-05-aa.png").unwrap();
+     assert_eq!(draw_cubic(&[-25.0, 80.0, 55.0, 25.0, 155.0, 75.0, 175.0, 20.0], true, 0.5, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clip_cubic_00() {
+     let expected = Pixmap::load_png("tests/images/hairline/clip-cubic-00.png").unwrap();
+     assert_eq!(draw_cubic(&[-25.0, 80.0, 55.0, 25.0, 155.0, 75.0, 175.0, 20.0], false, 0.0, LineCap::Butt), expected);
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clipped_circle_aa() {
+     let mut pixmap = Pixmap::new(100, 100).unwrap();
+ 
+diff --git a/tests/integration/pattern.rs b/tests/integration/pattern.rs
+index a9578f2..1d5dcef 100644
+--- a/tests/integration/pattern.rs
++++ b/tests/integration/pattern.rs
+@@ -18,6 +18,7 @@ fn crate_triangle() -> Pixmap {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn pad_nearest() {
+     let triangle = crate_triangle();
+ 
+@@ -40,6 +41,7 @@ fn pad_nearest() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn repeat_nearest() {
+     let triangle = crate_triangle();
+ 
+@@ -62,6 +64,7 @@ fn repeat_nearest() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn reflect_nearest() {
+     let triangle = crate_triangle();
+ 
+@@ -86,6 +89,7 @@ fn reflect_nearest() {
+ // We have to test tile mode for bilinear/bicubic separately,
+ // because they're using a different algorithm from nearest.
+ #[test]
++#[cfg(feature = "png-format")]
+ fn pad_bicubic() {
+     let triangle = crate_triangle();
+ 
+@@ -109,6 +113,7 @@ fn pad_bicubic() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn repeat_bicubic() {
+     let triangle = crate_triangle();
+ 
+@@ -132,6 +137,7 @@ fn repeat_bicubic() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn reflect_bicubic() {
+     let triangle = crate_triangle();
+ 
+@@ -155,6 +161,7 @@ fn reflect_bicubic() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn filter_nearest_no_ts() {
+     let triangle = crate_triangle();
+ 
+@@ -177,6 +184,7 @@ fn filter_nearest_no_ts() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn filter_nearest() {
+     let triangle = crate_triangle();
+ 
+@@ -199,6 +207,7 @@ fn filter_nearest() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn filter_bilinear() {
+     let triangle = crate_triangle();
+ 
+@@ -221,6 +230,7 @@ fn filter_bilinear() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn filter_bicubic() {
+     let triangle = crate_triangle();
+ 
+diff --git a/tests/integration/pixmap.rs b/tests/integration/pixmap.rs
+index a561587..f9e6f04 100644
+--- a/tests/integration/pixmap.rs
++++ b/tests/integration/pixmap.rs
+@@ -1,6 +1,7 @@
+ use tiny_skia::*;
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clone_rect_1() {
+     let mut pixmap = Pixmap::new(200, 200).unwrap();
+ 
+@@ -22,6 +23,7 @@ fn clone_rect_1() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn clone_rect_2() {
+     let mut pixmap = Pixmap::new(200, 200).unwrap();
+ 
+@@ -73,6 +75,7 @@ fn fill() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn draw_pixmap() {
+     // Tests that painting algorithm will switch `Bicubic`/`Bilinear` to `Nearest`.
+     // Otherwise we will get a blurry image.
+@@ -100,6 +103,7 @@ fn draw_pixmap() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn draw_pixmap_ts() {
+     let triangle = {
+         let mut paint = Paint::default();
+@@ -135,6 +139,7 @@ fn draw_pixmap_ts() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn draw_pixmap_opacity() {
+     let triangle = {
+         let mut paint = Paint::default();
+diff --git a/tests/integration/png.rs b/tests/integration/png.rs
+index d7761b8..dd94f93 100644
+--- a/tests/integration/png.rs
++++ b/tests/integration/png.rs
+@@ -1,6 +1,7 @@
+ use tiny_skia::*;
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn decode_grayscale() {
+     let pixmap = Pixmap::load_png("tests/images/pngs/grayscale.png").unwrap();
+     assert_eq!(pixmap.pixel(10, 10).unwrap(), ColorU8::from_rgba(255, 255, 255, 255).premultiply());
+@@ -8,6 +9,7 @@ fn decode_grayscale() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn decode_grayscale_alpha() {
+     let pixmap = Pixmap::load_png("tests/images/pngs/grayscale-alpha.png").unwrap();
+     assert_eq!(pixmap.pixel(10, 10).unwrap(), ColorU8::from_rgba(0, 0, 0, 0).premultiply());
+@@ -15,6 +17,7 @@ fn decode_grayscale_alpha() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn decode_rgb() {
+     let pixmap = Pixmap::load_png("tests/images/pngs/rgb.png").unwrap();
+     assert_eq!(pixmap.pixel(10, 10).unwrap(), ColorU8::from_rgba(255, 255, 255, 255).premultiply());
+@@ -22,6 +25,7 @@ fn decode_rgb() {
+ }
+ 
+ #[test]
++#[cfg(feature = "png-format")]
+ fn decode_rgba() {
+     let pixmap = Pixmap::load_png("tests/images/pngs/rgba.png").unwrap();
+     assert_eq!(pixmap.pixel(10, 10).unwrap(), ColorU8::from_rgba(0, 0, 0, 0).premultiply());
+
+From 4357fa8898679f899c4488f8bba46d28b0885bed Mon Sep 17 00:00:00 2001
+From: James McCoy <jamessan@jamessan.com>
+Date: Wed, 19 Oct 2022 19:17:06 -0400
+Subject: [PATCH 3/3] Declare required-features for examples
+
+To enable running "cargo test" against the no-std-float feature,
+examples which use the png-format feature need to declare that
+requirement.
+---
+ Cargo.toml | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index ea8fec7..1800bb8 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -61,3 +61,35 @@ simd = []
+ ]
+ simd = []
+ std = ["tiny-skia-path/std"]
++
++[[example]]
++name = "clip_path"
++required-features = ["png-format"]
++
++[[example]]
++name = "fill"
++required-features = ["png-format"]
++
++[[example]]
++name = "hairline"
++required-features = ["png-format"]
++
++[[example]]
++name = "image_on_image"
++required-features = ["png-format"]
++
++[[example]]
++name = "large_image"
++required-features = ["png-format"]
++
++[[example]]
++name = "linear_gradient"
++required-features = ["png-format"]
++
++[[example]]
++name = "pattern"
++required-features = ["png-format"]
++
++[[example]]
++name = "stroke"
++required-features = ["png-format"]
