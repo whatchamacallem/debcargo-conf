@@ -1,0 +1,28 @@
+Index: sval/Cargo.toml
+===================================================================
+--- sval.orig/Cargo.toml
++++ sval/Cargo.toml
+@@ -42,7 +42,7 @@ default-features = false
+ version = "1.0.0-alpha.5"
+ optional = true
+ [dev-dependencies.quickcheck]
+-version = "0.9"
++version = "1"
+ 
+ [dev-dependencies.wasm-bindgen]
+ version = "0.2"
+Index: sval/src/stream/stack.rs
+===================================================================
+--- sval.orig/src/stream/stack.rs
++++ sval/src/stream/stack.rs
+@@ -772,8 +772,8 @@ mod tests {
+         }
+ 
+         impl Arbitrary for Command {
+-            fn arbitrary<G: Gen>(g: &mut G) -> Command {
+-                match g.next_u32() % 9 {
++            fn arbitrary(g: &mut Gen) -> Command {
++                match g.choose(&[0,1,2,3,4,5,6,7,8]).unwrap() {
+                     0 => Command::Primitive,
+                     1 => Command::MapBegin,
+                     2 => Command::MapKey,
