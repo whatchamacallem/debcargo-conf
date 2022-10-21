@@ -1,0 +1,64 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index ccab0d9..6056323 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -26,9 +26,6 @@ keywords = [
+ license = "MIT"
+ repository = "https://github.com/oconnor663/os_pipe.rs"
+ 
+-[package.metadata.docs.rs]
+-features = ["io_safety"]
+-
+ [features]
+ io_safety = []
+ 
+diff --git a/src/unix.rs b/src/unix.rs
+index f01f3ee..c66f2c2 100644
+--- a/src/unix.rs
++++ b/src/unix.rs
+@@ -90,45 +90,3 @@ impl FromRawFd for PipeWriter {
+         PipeWriter(File::from_raw_fd(fd))
+     }
+ }
+-
+-#[cfg(feature = "io_safety")]
+-impl From<PipeReader> for OwnedFd {
+-    fn from(pr: PipeReader) -> Self {
+-        pr.0.into()
+-    }
+-}
+-
+-#[cfg(feature = "io_safety")]
+-impl AsFd for PipeReader {
+-    fn as_fd(&self) -> BorrowedFd<'_> {
+-        self.0.as_fd()
+-    }
+-}
+-
+-#[cfg(feature = "io_safety")]
+-impl From<OwnedFd> for PipeReader {
+-    fn from(fd: OwnedFd) -> Self {
+-        PipeReader(fd.into())
+-    }
+-}
+-
+-#[cfg(feature = "io_safety")]
+-impl From<PipeWriter> for OwnedFd {
+-    fn from(pw: PipeWriter) -> Self {
+-        pw.0.into()
+-    }
+-}
+-
+-#[cfg(feature = "io_safety")]
+-impl AsFd for PipeWriter {
+-    fn as_fd(&self) -> BorrowedFd<'_> {
+-        self.0.as_fd()
+-    }
+-}
+-
+-#[cfg(feature = "io_safety")]
+-impl From<OwnedFd> for PipeWriter {
+-    fn from(fd: OwnedFd) -> Self {
+-        PipeWriter(fd.into())
+-    }
+-}
