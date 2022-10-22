@@ -1,0 +1,78 @@
+Index: arc-swap/Cargo.toml
+===================================================================
+--- arc-swap.orig/Cargo.toml
++++ arc-swap/Cargo.toml
+@@ -27,6 +27,7 @@ categories = [
+ ]
+ license = "Apache-2.0/MIT"
+ repository = "https://github.com/vorner/arc-swap"
++autotests = false
+ 
+ [package.metadata.docs.rs]
+ all-features = true
+@@ -51,9 +52,6 @@ version = "1"
+ features = ["rc"]
+ optional = true
+ 
+-[dev-dependencies.adaptive-barrier]
+-version = "~1"
+-
+ [dev-dependencies.criterion]
+ version = "~0.3"
+ 
+@@ -94,3 +92,6 @@ status = "actively-developed"
+ 
+ [badges.travis-ci]
+ repository = "vorner/arc-swap"
++
++[[test]]
++name = "random"
+Index: arc-swap/src/lib.rs
+===================================================================
+--- arc-swap.orig/src/lib.rs
++++ arc-swap/src/lib.rs
+@@ -802,7 +802,7 @@ macro_rules! t {
+             use std::panic;
+             use std::sync::atomic::{self, AtomicUsize};
+ 
+-            use adaptive_barrier::{Barrier, PanicMode};
++            //use adaptive_barrier::{Barrier, PanicMode};
+             use crossbeam_utils::thread;
+ 
+             use super::*;
+@@ -876,7 +876,7 @@ macro_rules! t {
+             /// always increasing in each serie.
+             ///
+             /// For performance, we try to reuse the threads here.
+-            #[test]
++            /*#[test]
+             fn multi_writers() {
+                 let first_value = Arc::new((0, 0));
+                 let shared = As::from(Arc::clone(&first_value));
+@@ -937,7 +937,7 @@ macro_rules! t {
+                     drop(barrier);
+                 })
+                 .unwrap();
+-            }
++            }*/
+ 
+             #[test]
+             fn load_null() {
+@@ -981,7 +981,7 @@ macro_rules! t {
+             /// * Thread 1 loads a value.
+             /// * Thread 2 replaces the shared value. The original value is not destroyed.
+             /// * Thread 1 drops the guard. The value is destroyed and this is observable in both threads.
+-            #[test]
++            /*#[test]
+             fn guard_drop_in_thread() {
+                 for _ in 0..ITERATIONS {
+                     let cnt = Arc::new(AtomicUsize::new(0));
+@@ -1026,7 +1026,7 @@ macro_rules! t {
+                     })
+                     .unwrap();
+                 }
+-            }
++            }*/
+ 
+             /// Check dropping a lease in a different thread than it was created doesn't cause any
+             /// problems.
