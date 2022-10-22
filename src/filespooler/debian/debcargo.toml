@@ -1,3 +1,55 @@
 overlay = "."
 uploaders = ["John Goerzen <jgoerzen@complete.org>"]
 bin = true
+
+[packages.bin]
+description = """
+Filespooler is a Unix-style tool that facilitates local or remote command
+execution, complete with stdin capture, with easy integration with various
+tools.  Here's a brief Filespooler feature list:
+
+- It can easily use tools such as S3, Dropbox, Syncthing, NNCP, ssh, UUCP, USB
+  drives, CDs, etc. as transport.
+
+  - Translation: you can use basically anything that is a filesystem as a
+    transport
+
+- It can use arbitrary decoder command pipelines (eg, zcat, stdcat, gpg, age,
+  etc) to pre-process stored packets.
+
+- It can send and receive packets by pipes.
+
+- Its storage format is simple on-disk files with locking.
+
+- It supports one-to-one and one-to-many configurations.
+
+- Locking is unnecessary when writing new jobs to the queue, and many arbitrary
+  tools (eg, Syncthing, Dropbox, etc) can safely write directly to the queue
+  without any assistance.
+
+- Queue processing is strictly ordered based on the order on the creation
+  machine, even if job files are delivered out of order to the destination.
+
+- stdin can be piped into the job creation tool, and piped to a later executor
+  at process time on a remote machine.
+
+- The file format is lightweight; less than 100 bytes overhead unless large
+  extra parameters are given.
+
+- The queue format is lightweight; having 1000 different queues on a Raspberry
+  Pi would be easy.
+
+- Processing is stream-based throughout; arbitrarily-large packets are fine and
+  sizes in the TB range are no problem.
+
+- The Filespooler command, fspl, is extremely lightweight, consuming less than
+  10MB of RAM on x86_64.
+
+- Filespooler has extensive documentation.
+
+Filespooler consists of a command-line tool (fspl) for interacting with queues.
+It also consists of a Rust library that is used by fspl.  main.rs for fspl is
+just a few lines long.
+"""
+
+section = "utils"
