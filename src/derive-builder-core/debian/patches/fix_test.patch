@@ -1,0 +1,20 @@
+Author: Andrey Kutejko <andy128k@gmail.com>
+Origin: https://github.com/colin-kiegel/rust-derive-builder/pull/205/
+Description: Fix a test faillure following a change on the syn crate.
+ Original patch modified by Peter Michael Green to work with both
+ versions 1.0.12 and 1.0.76 of the syn crate. Unfortunately this means
+ that the match string is rather short, which may lead to false positives.
+
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/block.rs
++++ b/src/block.rs
+@@ -67,7 +67,7 @@ mod test {
+     use super::*;
+ 
+     #[test]
+-    #[should_panic(expected = r#"LexError"#)]
++    #[should_panic(expected = r#"ex"#)]
+     fn block_invalid_token_trees() {
+         Block::from_str("let x = 2; { x+1").unwrap();
+     }
