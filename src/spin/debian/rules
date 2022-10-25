@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_auto_test:
+ifeq ($(DEB_HOST_ARCH),mipsel)
+	echo tests are disabled on mips64el as thread spawning sometimes fails there.
+else
+	dh_auto_test -- test --all
+endif
