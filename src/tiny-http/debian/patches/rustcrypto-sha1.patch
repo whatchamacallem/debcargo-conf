@@ -1,0 +1,35 @@
+Index: tiny-http/Cargo.toml
+===================================================================
+--- tiny-http.orig/Cargo.toml
++++ tiny-http/Cargo.toml
+@@ -66,7 +66,7 @@ version = ">=0.1, <0.3"
+ version = "0.3"
+ 
+ [dev-dependencies.sha1]
+-version = "0.6.0"
++version = "0.10.0"
+ 
+ [features]
+ default = []
+Index: tiny-http/examples/websockets.rs
+===================================================================
+--- tiny-http.orig/examples/websockets.rs
++++ tiny-http/examples/websockets.rs
+@@ -41,7 +41,7 @@ fn home_page(port: u16) -> tiny_http::Re
+ /// Turns a Sec-WebSocket-Key into a Sec-WebSocket-Accept.
+ /// Feel free to copy-paste this function, but please use a better error handling.
+ fn convert_key(input: &str) -> String {
+-    use sha1::Sha1;
++    use sha1::{Digest, Sha1};
+ 
+     let mut input = input.to_string().into_bytes();
+     let mut bytes = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+@@ -52,7 +52,7 @@ fn convert_key(input: &str) -> String {
+     let mut sha1 = Sha1::new();
+     sha1.update(&input);
+ 
+-    sha1.digest().bytes().to_base64(Config {
++    sha1.finalize().as_slice().to_base64(Config {
+         char_set: Standard,
+         pad: true,
+         line_length: None,
