@@ -1,0 +1,207 @@
+.TH BROTLI-RS 1
+.SH NAME
+brotli\-rs \- A brotli compressor and decompressor.
+.SH SYNOPSIS
+\fBbrotli\-rs\fR [FLAGS]
+.SH DESCRIPTION
+A brotli compressor and decompressor that with an interface avoiding the rust stdlib.
+This makes it suitable for embedded devices and kernels. It is designed with a pluggable allocator so that
+the standard lib's allocator may be employed. All included code is safe.
+.SH FLAGS
+.TP
+\fB\-catable\fR, \fB\-\-catable\fR
+Enable concatable mode, so that the generated data can be added to block generated with \-\-apendable
+
+.TP
+\fB\-nothreadpool\fR, \fB\-\-nothreadpool\fR
+Disables the work thread pool
+
+.TP
+\fB\-appendable\fR, \fB\-\-appendable\fR
+Enables apendable mode, so that the datastream can be extended with more data from the \-\-catable mode
+
+.TP
+\fB\-magic\fR, \fB\-\-magic\fR
+Enables magic number as the first bytes, so that a brotli compressed stream can be easily detected
+
+.TP
+\fB\-customdictionary=[FILE]\fR
+Reads a custom dictionare from file
+
+.TP
+\fB\-\-dump\-dictionary\fR
+Prints the dictionary used
+
+.TP
+\fB\-utf8\fR
+Forces the utf8 context mode in the compression
+
+.TP
+\fB\-msb\fR
+Forces the msb context mode in the compression
+
+.TP
+\fB\-lsb\fR
+Forces the lsb context mode in the compression
+
+.TP
+\fB\-signed\fR
+Forces the signed context mode in the compression
+
+.TP
+\fB\-efficient\fR
+favor cpu efficiency over low latency
+
+.TP
+\fB\-lowlatency\fR
+favor cpu low latency over efficiency
+
+.TP
+\fB\-i\fR
+display the intermediate representation of metablocks
+
+.TP
+\fB\-0\fR, \fB\-q0\fR
+Sets quality = 0
+
+.TP
+\fB\-1\fR, \fB\-q1\fR
+Sets quality = 1
+
+.TP
+\fB\-2\fR, \fB\-q2\fR
+Sets quality = 2
+
+.TP
+\fB\-3\fR, \fB\-q3\fR
+Sets quality = 3
+
+.TP
+\fB\-4\fR, \fB\-q4\fR
+Sets quality = 4
+
+.TP
+\fB\-5\fR, \fB\-q5\fR
+Sets quality = 5
+
+.TP
+\fB\-6\fR, \fB\-q6\fR
+Sets quality = 6
+
+.TP
+\fB\-7\fR, \fB\-q7\fR
+Sets quality = 7
+
+.TP
+\fB\-8\fR, \fB\-q8\fR
+Sets quality = 8
+
+.TP
+\fB\-9\fR, \fB\-q9\fR
+Sets quality = 9
+
+.TP
+\fB\-10\fR, \fB\-q10\fR
+Sets quality = 10
+
+.TP
+\fB\-11\fR, \fB\-q11\fR
+Sets quality = 11
+
+.TP
+\fB\-9.5\fR, \fB\-q9.5\fR
+Sets quality = 10
+
+.TP
+\fB\-9.5x\fR, \fB\-q9.5x\fR
+Sets quality = 11
+
+.TP
+\fB\-q9.5y\fR
+Sets quality = 12
+
+.TP
+\fB\-l[NUMBER]\fR
+Sets the input block size
+
+.TP
+\fB\-j[NUMBER]\fR
+Sets maximum size of the threadpool
+
+.TP
+\fB\-bytescore=[NUMBER]\fR
+Sets the literal_byte_score value of the hasher, default 0
+
+.TP
+\fB\-w[NUMBER]\fR
+Sets the lgwin value, default 22
+
+.TP
+\fB\-validate\fR, \fB\-\-validate\fR
+Enables validation
+
+.TP
+\fB\-bs[NUMBER]\fR
+Sets the buffer size
+
+.TP
+\fB\-findprior\fR
+Enables prior bitmask detection
+
+.TP
+\fB\-findspeed=[NUMBER]\fR
+Sets cdf adaptation detection to [NUMBER]
+
+.TP
+\fB\-basicstride\fR
+Sets stride
+
+.TP
+\fB\-stride\fR
+Sets stride
+
+.TP
+\fB\-advstride\fR
+Sets stride
+
+.TP
+\fB\-speed=[NUMBER]\fR
+Sets speed
+
+.TP
+\fB\-avoiddistanceprefixsearch\fR
+Avoids distance prefix search
+
+.TP
+\fB\-b[NUMBER]\fR
+Does benchmark
+
+.TP
+\fB\-c\fR
+Enables compression mode
+
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Prints the help text
+.SH EXIT STATUS
+.TP
+\fB0\fR
+Successful program execution.
+
+.TP
+\fB1\fR
+Unsuccessful program execution.
+
+.TP
+\fB101\fR
+The program panicked.
+.SH EXAMPLES
+.TP
+compresses the content of /tmp/input and writes it to /tmp/output
+\fB$ brotli\-rs \-c /tmp/input /tmp/output\fR
+
+.SH AUTHOR
+.P
+.RS 2
+.nf
+Daniel Reiter Horn <danielrh@dropbox.com>

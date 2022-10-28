@@ -1,0 +1,46 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 2a842a6..3bf3c35 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -48,7 +48,7 @@ version = "0.3"
+ optional = true
+ 
+ [dependencies.sha2]
+-version = "~0.8"
++version = "~0.10"
+ optional = true
+ 
+ [features]
+diff --git a/src/bin/validate.rs b/src/bin/validate.rs
+index 0ea54e8..23ca1e5 100644
+--- a/src/bin/validate.rs
++++ b/src/bin/validate.rs
+@@ -82,7 +82,7 @@ impl<'a, InputType:Read+'a> Read for ShaReader<'a, InputType> {
+         match self.reader.read(data) {
+             Err(e) => Err(e),
+             Ok(size) => {
+-                self.checksum.input(&data[..size]);
++                self.checksum.update(&data[..size]);
+                 Ok(size)
+             },
+         }
+@@ -99,8 +99,8 @@ fn make_sha_reader<InputType:Read>(r:&mut InputType) -> ShaReader<InputType> {
+ #[cfg(feature="validation")]
+ fn sha_ok<InputType:Read>(writer: &mut ShaWriter, reader: &mut ShaReader<InputType>) -> bool {
+     core::mem::replace(&mut writer.0,
+-                       Checksum::default()).result() == core::mem::replace(&mut reader.checksum,
+-                                                                           Checksum::default()).result()
++                       Checksum::default()).finalize() == core::mem::replace(&mut reader.checksum,
++                                                                           Checksum::default()).finalize()
+ }
+ #[cfg(feature="validation")]
+ #[derive(Default)]
+@@ -108,7 +108,7 @@ struct ShaWriter(Checksum);
+ #[cfg(feature="validation")]
+ impl Write for ShaWriter {
+     fn write(&mut self, data:&[u8]) -> Result<usize, io::Error> {
+-        self.0.input(data);
++        self.0.update(data);
+         Ok(data.len())
+     }
+     fn flush(&mut self) -> Result<(), io::Error> {
