@@ -1,0 +1,572 @@
+diff --git a/src/assert.rs b/src/assert.rs
+index 75d7832..84a83cc 100644
+--- a/src/assert.rs
++++ b/src/assert.rs
+@@ -6,23 +6,6 @@ pub fn assert_is_unpin_stream<S: Stream + Unpin>(_: &mut S) {}
+ /// Assert that the next poll to the provided stream will return
+ /// [`Poll::Pending`](futures_core::task::Poll::Pending).
+ ///
+-/// # Examples
+-///
+-/// ```
+-/// use futures::stream;
+-/// use futures_test::future::FutureTestExt;
+-/// use futures_test::{
+-///     assert_stream_pending, assert_stream_next, assert_stream_done,
+-/// };
+-/// use futures::pin_mut;
+-///
+-/// let stream = stream::once((async { 5 }).pending_once());
+-/// pin_mut!(stream);
+-///
+-/// assert_stream_pending!(stream);
+-/// assert_stream_next!(stream, 5);
+-/// assert_stream_done!(stream);
+-/// ```
+ #[macro_export]
+ macro_rules! assert_stream_pending {
+     ($stream:expr) => {{
+@@ -40,23 +23,6 @@ macro_rules! assert_stream_pending {
+ /// Assert that the next poll to the provided stream will return
+ /// [`Poll::Ready`](futures_core::task::Poll::Ready) with the provided item.
+ ///
+-/// # Examples
+-///
+-/// ```
+-/// use futures::stream;
+-/// use futures_test::future::FutureTestExt;
+-/// use futures_test::{
+-///     assert_stream_pending, assert_stream_next, assert_stream_done,
+-/// };
+-/// use futures::pin_mut;
+-///
+-/// let stream = stream::once((async { 5 }).pending_once());
+-/// pin_mut!(stream);
+-///
+-/// assert_stream_pending!(stream);
+-/// assert_stream_next!(stream, 5);
+-/// assert_stream_done!(stream);
+-/// ```
+ #[macro_export]
+ macro_rules! assert_stream_next {
+     ($stream:expr, $item:expr) => {{
+@@ -84,23 +50,6 @@ macro_rules! assert_stream_next {
+ /// [`Poll::Ready`](futures_core::task::Poll::Ready) signalling the
+ /// completion of the stream.
+ ///
+-/// # Examples
+-///
+-/// ```
+-/// use futures::stream;
+-/// use futures_test::future::FutureTestExt;
+-/// use futures_test::{
+-///     assert_stream_pending, assert_stream_next, assert_stream_done,
+-/// };
+-/// use futures::pin_mut;
+-///
+-/// let stream = stream::once((async { 5 }).pending_once());
+-/// pin_mut!(stream);
+-///
+-/// assert_stream_pending!(stream);
+-/// assert_stream_next!(stream, 5);
+-/// assert_stream_done!(stream);
+-/// ```
+ #[macro_export]
+ macro_rules! assert_stream_done {
+     ($stream:expr) => {{
+diff --git a/src/future/mod.rs b/src/future/mod.rs
+index 0f52f62..ef5deb8 100644
+--- a/src/future/mod.rs
++++ b/src/future/mod.rs
+@@ -29,23 +29,6 @@ pub trait FutureTestExt: Future {
+     /// Introduces one [`Poll::Pending`](futures_core::task::Poll::Pending)
+     /// before polling the given future.
+     ///
+-    /// # Examples
+-    ///
+-    /// ```
+-    /// use futures::task::Poll;
+-    /// use futures::future::FutureExt;
+-    /// use futures_test::task::noop_context;
+-    /// use futures_test::future::FutureTestExt;
+-    /// use futures::pin_mut;
+-    ///
+-    /// let future = (async { 5 }).pending_once();
+-    /// pin_mut!(future);
+-    ///
+-    /// let mut cx = noop_context();
+-    ///
+-    /// assert_eq!(future.poll_unpin(&mut cx), Poll::Pending);
+-    /// assert_eq!(future.poll_unpin(&mut cx), Poll::Ready(5));
+-    /// ```
+     fn pending_once(self) -> PendingOnce<Self>
+     where
+         Self: Sized,
+@@ -55,21 +38,6 @@ pub trait FutureTestExt: Future {
+ 
+     /// Runs this future on a dedicated executor running in a background thread.
+     ///
+-    /// # Examples
+-    ///
+-    /// ```
+-    /// # futures::executor::block_on(async {
+-    /// use futures::channel::oneshot;
+-    /// use futures_test::future::FutureTestExt;
+-    ///
+-    /// let (tx, rx) = oneshot::channel::<i32>();
+-    ///
+-    /// (async { tx.send(5).unwrap() }).run_in_background();
+-    ///
+-    /// assert_eq!(rx.await, Ok(5));
+-    /// # });
+-    /// # std::thread::sleep(std::time::Duration::from_millis(500)); // wait for background threads closed: https://github.com/rust-lang/miri/issues/1371
+-    /// ```
+     fn run_in_background(self)
+     where
+         Self: Sized + Send + 'static,
+@@ -81,23 +49,6 @@ pub trait FutureTestExt: Future {
+     /// Introduces an extra [`Poll::Pending`](futures_core::task::Poll::Pending)
+     /// in between each call to poll.
+     ///
+-    /// # Examples
+-    ///
+-    /// ```
+-    /// use futures::task::Poll;
+-    /// use futures::future::{self, Future};
+-    /// use futures_test::task::noop_context;
+-    /// use futures_test::future::FutureTestExt;
+-    /// use futures::pin_mut;
+-    ///
+-    /// let future = future::ready(1).interleave_pending();
+-    /// pin_mut!(future);
+-    ///
+-    /// let mut cx = noop_context();
+-    ///
+-    /// assert_eq!(future.as_mut().poll(&mut cx), Poll::Pending);
+-    /// assert_eq!(future.as_mut().poll(&mut cx), Poll::Ready(1));
+-    /// ```
+     fn interleave_pending(self) -> InterleavePending<Self>
+     where
+         Self: Sized,
+diff --git a/src/io/read/mod.rs b/src/io/read/mod.rs
+index cb5f1d3..33628ea 100644
+--- a/src/io/read/mod.rs
++++ b/src/io/read/mod.rs
+@@ -26,61 +26,10 @@ pub trait AsyncReadTestExt: AsyncRead {
+     /// Introduces an extra [`Poll::Pending`](futures_core::task::Poll::Pending)
+     /// in between each read of the reader.
+     ///
+-    /// # Examples
+-    ///
+-    /// ```
+-    /// use futures::task::Poll;
+-    /// use futures::io::{AsyncRead, Cursor};
+-    /// use futures_test::task::noop_context;
+-    /// use futures_test::io::AsyncReadTestExt;
+-    /// use futures::pin_mut;
+-    ///
+-    /// let reader = Cursor::new(&[1, 2, 3]).interleave_pending();
+-    /// pin_mut!(reader);
+-    ///
+-    /// let mut cx = noop_context();
+-    ///
+-    /// let mut buf = [0, 0];
+-    ///
+-    /// assert_eq!(reader.as_mut().poll_read(&mut cx, &mut buf[..])?, Poll::Pending);
+-    /// assert_eq!(reader.as_mut().poll_read(&mut cx, &mut buf[..])?, Poll::Ready(2));
+-    /// assert_eq!(buf, [1, 2]);
+-    /// assert_eq!(reader.as_mut().poll_read(&mut cx, &mut buf[..])?, Poll::Pending);
+-    /// assert_eq!(reader.as_mut().poll_read(&mut cx, &mut buf[..])?, Poll::Ready(1));
+-    /// assert_eq!(buf, [3, 2]);
+-    /// assert_eq!(reader.as_mut().poll_read(&mut cx, &mut buf[..])?, Poll::Pending);
+-    /// assert_eq!(reader.as_mut().poll_read(&mut cx, &mut buf[..])?, Poll::Ready(0));
+-    ///
+-    /// # Ok::<(), std::io::Error>(())
+-    /// ```
+-    ///
+     /// ## `AsyncBufRead`
+     ///
+     /// The returned reader will also implement `AsyncBufRead` if the underlying reader does.
+     ///
+-    /// ```
+-    /// use futures::task::Poll;
+-    /// use futures::io::{AsyncBufRead, Cursor};
+-    /// use futures_test::task::noop_context;
+-    /// use futures_test::io::AsyncReadTestExt;
+-    /// use futures::pin_mut;
+-    ///
+-    /// let reader = Cursor::new(&[1, 2, 3]).interleave_pending();
+-    /// pin_mut!(reader);
+-    ///
+-    /// let mut cx = noop_context();
+-    ///
+-    /// assert_eq!(reader.as_mut().poll_fill_buf(&mut cx)?, Poll::Pending);
+-    /// assert_eq!(reader.as_mut().poll_fill_buf(&mut cx)?, Poll::Ready(&[1, 2, 3][..]));
+-    /// reader.as_mut().consume(2);
+-    /// assert_eq!(reader.as_mut().poll_fill_buf(&mut cx)?, Poll::Pending);
+-    /// assert_eq!(reader.as_mut().poll_fill_buf(&mut cx)?, Poll::Ready(&[3][..]));
+-    /// reader.as_mut().consume(1);
+-    /// assert_eq!(reader.as_mut().poll_fill_buf(&mut cx)?, Poll::Pending);
+-    /// assert_eq!(reader.as_mut().poll_fill_buf(&mut cx)?, Poll::Ready(&[][..]));
+-    ///
+-    /// # Ok::<(), std::io::Error>(())
+-    /// ```
+     fn interleave_pending(self) -> InterleavePending<Self>
+     where
+         Self: Sized,
+@@ -90,31 +39,6 @@ pub trait AsyncReadTestExt: AsyncRead {
+ 
+     /// Limit the number of bytes allowed to be read on each call to `poll_read`.
+     ///
+-    /// # Examples
+-    ///
+-    /// ```
+-    /// use futures::task::Poll;
+-    /// use futures::io::{AsyncRead, Cursor};
+-    /// use futures_test::task::noop_context;
+-    /// use futures_test::io::AsyncReadTestExt;
+-    /// use futures::pin_mut;
+-    ///
+-    /// let reader = Cursor::new(&[1, 2, 3, 4, 5]).limited(2);
+-    /// pin_mut!(reader);
+-    ///
+-    /// let mut cx = noop_context();
+-    ///
+-    /// let mut buf = [0; 10];
+-    ///
+-    /// assert_eq!(reader.as_mut().poll_read(&mut cx, &mut buf)?, Poll::Ready(2));
+-    /// assert_eq!(&buf[..2], &[1, 2]);
+-    /// assert_eq!(reader.as_mut().poll_read(&mut cx, &mut buf)?, Poll::Ready(2));
+-    /// assert_eq!(&buf[..2], &[3, 4]);
+-    /// assert_eq!(reader.as_mut().poll_read(&mut cx, &mut buf)?, Poll::Ready(1));
+-    /// assert_eq!(&buf[..1], &[5]);
+-    ///
+-    /// # Ok::<(), std::io::Error>(())
+-    /// ```
+     fn limited(self, limit: usize) -> Limited<Self>
+     where
+         Self: Sized,
+diff --git a/src/io/write/mod.rs b/src/io/write/mod.rs
+index 01ca4b2..402bacb 100644
+--- a/src/io/write/mod.rs
++++ b/src/io/write/mod.rs
+@@ -27,37 +27,6 @@ pub trait AsyncWriteTestExt: AsyncWrite {
+     /// Introduces an extra [`Poll::Pending`](futures_core::task::Poll::Pending)
+     /// in between each operation on the writer.
+     ///
+-    /// # Examples
+-    ///
+-    /// ```
+-    /// use futures::task::Poll;
+-    /// use futures::io::{AsyncWrite, Cursor};
+-    /// use futures_test::task::noop_context;
+-    /// use futures_test::io::AsyncWriteTestExt;
+-    /// use futures::pin_mut;
+-    ///
+-    /// let writer = Cursor::new(vec![0u8; 4].into_boxed_slice()).interleave_pending_write();
+-    /// pin_mut!(writer);
+-    ///
+-    /// let mut cx = noop_context();
+-    ///
+-    /// assert_eq!(writer.as_mut().poll_write(&mut cx, &[1, 2])?, Poll::Pending);
+-    /// assert_eq!(writer.as_mut().poll_write(&mut cx, &[1, 2])?, Poll::Ready(2));
+-    /// assert_eq!(&writer.get_ref().get_ref()[..], [1, 2, 0, 0]);
+-    /// assert_eq!(writer.as_mut().poll_write(&mut cx, &[3, 4])?, Poll::Pending);
+-    /// assert_eq!(writer.as_mut().poll_write(&mut cx, &[3, 4])?, Poll::Ready(2));
+-    /// assert_eq!(&writer.get_ref().get_ref()[..], [1, 2, 3, 4]);
+-    /// assert_eq!(writer.as_mut().poll_write(&mut cx, &[5, 6])?, Poll::Pending);
+-    /// assert_eq!(writer.as_mut().poll_write(&mut cx, &[5, 6])?, Poll::Ready(0));
+-    ///
+-    /// assert_eq!(writer.as_mut().poll_flush(&mut cx)?, Poll::Pending);
+-    /// assert_eq!(writer.as_mut().poll_flush(&mut cx)?, Poll::Ready(()));
+-    ///
+-    /// assert_eq!(writer.as_mut().poll_close(&mut cx)?, Poll::Pending);
+-    /// assert_eq!(writer.as_mut().poll_close(&mut cx)?, Poll::Ready(()));
+-    ///
+-    /// # Ok::<(), std::io::Error>(())
+-    /// ```
+     fn interleave_pending_write(self) -> InterleavePending<Self>
+     where
+         Self: Sized,
+@@ -67,30 +36,6 @@ pub trait AsyncWriteTestExt: AsyncWrite {
+ 
+     /// Limit the number of bytes allowed to be written on each call to `poll_write`.
+     ///
+-    /// # Examples
+-    ///
+-    /// ```
+-    /// use futures::task::Poll;
+-    /// use futures::io::{AsyncWrite, Cursor};
+-    /// use futures_test::task::noop_context;
+-    /// use futures_test::io::AsyncWriteTestExt;
+-    /// use futures::pin_mut;
+-    ///
+-    /// let writer = Cursor::new(vec![0u8; 4].into_boxed_slice()).limited_write(2);
+-    /// pin_mut!(writer);
+-    ///
+-    /// let mut cx = noop_context();
+-    ///
+-    /// assert_eq!(writer.as_mut().poll_write(&mut cx, &[1, 2])?, Poll::Ready(2));
+-    /// assert_eq!(&writer.get_ref().get_ref()[..], [1, 2, 0, 0]);
+-    /// assert_eq!(writer.as_mut().poll_write(&mut cx, &[3])?, Poll::Ready(1));
+-    /// assert_eq!(&writer.get_ref().get_ref()[..], [1, 2, 3, 0]);
+-    /// assert_eq!(writer.as_mut().poll_write(&mut cx, &[4, 5])?, Poll::Ready(1));
+-    /// assert_eq!(&writer.get_ref().get_ref()[..], [1, 2, 3, 4]);
+-    /// assert_eq!(writer.as_mut().poll_write(&mut cx, &[5])?, Poll::Ready(0));
+-    ///
+-    /// # Ok::<(), std::io::Error>(())
+-    /// ```
+     fn limited_write(self, limit: usize) -> Limited<Self>
+     where
+         Self: Sized,
+@@ -100,36 +45,6 @@ pub trait AsyncWriteTestExt: AsyncWrite {
+ 
+     /// Track whether this stream has been closed and errors if it is used after closing.
+     ///
+-    /// # Examples
+-    ///
+-    /// ```
+-    /// # futures::executor::block_on(async {
+-    /// use futures::io::{AsyncWriteExt, Cursor};
+-    /// use futures_test::io::AsyncWriteTestExt;
+-    ///
+-    /// let mut writer = Cursor::new(vec![0u8; 4]).track_closed();
+-    ///
+-    /// writer.write_all(&[1, 2]).await?;
+-    /// assert!(!writer.is_closed());
+-    /// writer.close().await?;
+-    /// assert!(writer.is_closed());
+-    ///
+-    /// # Ok::<(), std::io::Error>(()) })?;
+-    /// # Ok::<(), std::io::Error>(())
+-    /// ```
+-    ///
+-    /// ```
+-    /// # futures::executor::block_on(async {
+-    /// use futures::io::{AsyncWriteExt, Cursor};
+-    /// use futures_test::io::AsyncWriteTestExt;
+-    ///
+-    /// let mut writer = Cursor::new(vec![0u8; 4]).track_closed();
+-    ///
+-    /// writer.close().await?;
+-    /// assert!(writer.write_all(&[1, 2]).await.is_err());
+-    /// # Ok::<(), std::io::Error>(()) })?;
+-    /// # Ok::<(), std::io::Error>(())
+-    /// ```
+     fn track_closed(self) -> TrackClosed<Self>
+     where
+         Self: Sized,
+diff --git a/src/sink/mod.rs b/src/sink/mod.rs
+index eb5a6ef..04c2fe4 100644
+--- a/src/sink/mod.rs
++++ b/src/sink/mod.rs
+@@ -34,43 +34,12 @@ pub trait SinkTestExt<Item>: Sink<Item> {
+ 
+     /// Track whether this sink has been closed and panics if it is used after closing.
+     ///
+-    /// # Examples
+-    ///
+-    /// ```
+-    /// # futures::executor::block_on(async {
+-    /// use futures::sink::{SinkExt, drain};
+-    /// use futures_test::sink::SinkTestExt;
+-    ///
+-    /// let mut sink = drain::<i32>().track_closed();
+-    ///
+-    /// sink.send(1).await?;
+-    /// assert!(!sink.is_closed());
+-    /// sink.close().await?;
+-    /// assert!(sink.is_closed());
+-    ///
+-    /// # Ok::<(), std::convert::Infallible>(()) })?;
+-    /// # Ok::<(), std::convert::Infallible>(())
+-    /// ```
+-    ///
+     /// Note: Unlike [`AsyncWriteTestExt::track_closed`] when
+     /// used as a sink the adaptor will panic if closed too early as there's no easy way to
+     /// integrate as an error.
+     ///
+     /// [`AsyncWriteTestExt::track_closed`]: crate::io::AsyncWriteTestExt::track_closed
+     ///
+-    /// ```
+-    /// # futures::executor::block_on(async {
+-    /// use std::panic::AssertUnwindSafe;
+-    /// use futures::{sink::{SinkExt, drain}, future::FutureExt};
+-    /// use futures_test::sink::SinkTestExt;
+-    ///
+-    /// let mut sink = drain::<i32>().track_closed();
+-    ///
+-    /// sink.close().await?;
+-    /// assert!(AssertUnwindSafe(sink.send(1)).catch_unwind().await.is_err());
+-    /// # Ok::<(), std::convert::Infallible>(()) })?;
+-    /// # Ok::<(), std::convert::Infallible>(())
+-    /// ```
+     fn track_closed(self) -> TrackClosed<Self>
+     where
+         Self: Sized,
+diff --git a/src/stream/mod.rs b/src/stream/mod.rs
+index 9151a21..ad792c4 100644
+--- a/src/stream/mod.rs
++++ b/src/stream/mod.rs
+@@ -25,27 +25,6 @@ pub trait StreamTestExt: Stream {
+     /// Introduces an extra [`Poll::Pending`](futures_core::task::Poll::Pending)
+     /// in between each item of the stream.
+     ///
+-    /// # Examples
+-    ///
+-    /// ```
+-    /// use futures::task::Poll;
+-    /// use futures::stream::{self, Stream};
+-    /// use futures_test::task::noop_context;
+-    /// use futures_test::stream::StreamTestExt;
+-    /// use futures::pin_mut;
+-    ///
+-    /// let stream = stream::iter(vec![1, 2]).interleave_pending();
+-    /// pin_mut!(stream);
+-    ///
+-    /// let mut cx = noop_context();
+-    ///
+-    /// assert_eq!(stream.as_mut().poll_next(&mut cx), Poll::Pending);
+-    /// assert_eq!(stream.as_mut().poll_next(&mut cx), Poll::Ready(Some(1)));
+-    /// assert_eq!(stream.as_mut().poll_next(&mut cx), Poll::Pending);
+-    /// assert_eq!(stream.as_mut().poll_next(&mut cx), Poll::Ready(Some(2)));
+-    /// assert_eq!(stream.as_mut().poll_next(&mut cx), Poll::Pending);
+-    /// assert_eq!(stream.as_mut().poll_next(&mut cx), Poll::Ready(None));
+-    /// ```
+     fn interleave_pending(self) -> InterleavePending<Self>
+     where
+         Self: Sized,
+diff --git a/src/task/context.rs b/src/task/context.rs
+index b2b0dfe..e9460b9 100644
+--- a/src/task/context.rs
++++ b/src/task/context.rs
+@@ -4,14 +4,6 @@ use futures_core::task::Context;
+ /// Create a new [`Context`](core::task::Context) where the
+ /// [waker](core::task::Context::waker) will panic if used.
+ ///
+-/// # Examples
+-///
+-/// ```should_panic
+-/// use futures_test::task::panic_context;
+-///
+-/// let cx = panic_context();
+-/// cx.waker().wake_by_ref(); // Will panic
+-/// ```
+ pub fn panic_context() -> Context<'static> {
+     Context::from_waker(panic_waker_ref())
+ }
+@@ -19,19 +11,6 @@ pub fn panic_context() -> Context<'static> {
+ /// Create a new [`Context`](core::task::Context) where the
+ /// [waker](core::task::Context::waker) will ignore any uses.
+ ///
+-/// # Examples
+-///
+-/// ```
+-/// use futures::future::Future;
+-/// use futures::task::Poll;
+-/// use futures_test::task::noop_context;
+-/// use futures::pin_mut;
+-///
+-/// let future = async { 5 };
+-/// pin_mut!(future);
+-///
+-/// assert_eq!(future.poll(&mut noop_context()), Poll::Ready(5));
+-/// ```
+ pub fn noop_context() -> Context<'static> {
+     Context::from_waker(noop_waker_ref())
+ }
+diff --git a/src/task/noop_spawner.rs b/src/task/noop_spawner.rs
+index 8967f91..1b0e783 100644
+--- a/src/task/noop_spawner.rs
++++ b/src/task/noop_spawner.rs
+@@ -3,15 +3,6 @@ use futures_task::{FutureObj, Spawn, SpawnError};
+ /// An implementation of [`Spawn`](futures_task::Spawn) that
+ /// discards spawned futures when used.
+ ///
+-/// # Examples
+-///
+-/// ```
+-/// use futures::task::SpawnExt;
+-/// use futures_test::task::NoopSpawner;
+-///
+-/// let spawner = NoopSpawner::new();
+-/// spawner.spawn(async { }).unwrap();
+-/// ```
+ #[derive(Debug)]
+ pub struct NoopSpawner {
+     _reserved: (),
+@@ -38,15 +29,6 @@ impl Default for NoopSpawner {
+ 
+ /// Get a reference to a singleton instance of [`NoopSpawner`].
+ ///
+-/// # Examples
+-///
+-/// ```
+-/// use futures::task::SpawnExt;
+-/// use futures_test::task::noop_spawner_mut;
+-///
+-/// let spawner = noop_spawner_mut();
+-/// spawner.spawn(async { }).unwrap();
+-/// ```
+ pub fn noop_spawner_mut() -> &'static mut NoopSpawner {
+     Box::leak(Box::new(NoopSpawner::new()))
+ }
+diff --git a/src/task/panic_spawner.rs b/src/task/panic_spawner.rs
+index e29463d..497cf1b 100644
+--- a/src/task/panic_spawner.rs
++++ b/src/task/panic_spawner.rs
+@@ -3,16 +3,6 @@ use futures_task::{FutureObj, Spawn, SpawnError};
+ /// An implementation of [`Spawn`](futures_task::Spawn) that panics
+ /// when used.
+ ///
+-/// # Examples
+-///
+-/// ```should_panic
+-/// use futures::task::SpawnExt;
+-/// use futures_test::task::PanicSpawner;
+-///
+-/// let spawn = PanicSpawner::new();
+-/// spawn.spawn(async { })?; // Will panic
+-/// # Ok::<(), Box<dyn std::error::Error>>(())
+-/// ```
+ #[derive(Debug)]
+ pub struct PanicSpawner {
+     _reserved: (),
+@@ -39,16 +29,6 @@ impl Default for PanicSpawner {
+ 
+ /// Get a reference to a singleton instance of [`PanicSpawner`].
+ ///
+-/// # Examples
+-///
+-/// ```should_panic
+-/// use futures::task::SpawnExt;
+-/// use futures_test::task::panic_spawner_mut;
+-///
+-/// let spawner = panic_spawner_mut();
+-/// spawner.spawn(async { })?; // Will panic
+-/// # Ok::<(), Box<dyn std::error::Error>>(())
+-/// ```
+ pub fn panic_spawner_mut() -> &'static mut PanicSpawner {
+     Box::leak(Box::new(PanicSpawner::new()))
+ }
+diff --git a/src/task/record_spawner.rs b/src/task/record_spawner.rs
+index 59539fa..ab782d8 100644
+--- a/src/task/record_spawner.rs
++++ b/src/task/record_spawner.rs
+@@ -4,16 +4,6 @@ use std::cell::{Ref, RefCell};
+ /// An implementation of [`Spawn`](futures_task::Spawn) that records
+ /// any [`Future`](futures_core::future::Future)s spawned on it.
+ ///
+-/// # Examples
+-///
+-/// ```
+-/// use futures::task::SpawnExt;
+-/// use futures_test::task::RecordSpawner;
+-///
+-/// let recorder = RecordSpawner::new();
+-/// recorder.spawn(async { }).unwrap();
+-/// assert_eq!(recorder.spawned().len(), 1);
+-/// ```
+ #[derive(Debug, Default)]
+ pub struct RecordSpawner {
+     spawned: RefCell<Vec<FutureObj<'static, ()>>>,

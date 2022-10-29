@@ -1,0 +1,97 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 2d68327..d9be782 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -28,14 +28,17 @@ all-features = true
+ [dependencies.futures-core]
+ version = "0.3"
+ default-features = false
++features = ["std"]
+ 
+ [dependencies.futures-executor]
+ version = "0.3"
+ default-features = false
++features = ["std"]
+ 
+ [dependencies.futures-io]
+ version = "0.3"
+ default-features = false
++features = ["std"]
+ 
+ [dependencies.futures-macro]
+ version = "0.3"
+@@ -48,10 +51,12 @@ default-features = false
+ [dependencies.futures-task]
+ version = "0.3"
+ default-features = false
++features = ["std"]
+ 
+ [dependencies.futures-util]
+ version = "0.3"
+ default-features = false
++features = ["std", "io"]
+ 
+ [dependencies.pin-project]
+ version = "1"
+@@ -62,13 +67,3 @@ default-features = false
+ 
+ [dev-dependencies]
+ 
+-[features]
+-default = ["std"]
+-std = [
+-    "futures-core/std",
+-    "futures-task/std",
+-    "futures-io/std",
+-    "futures-util/std",
+-    "futures-util/io",
+-    "futures-executor/std",
+-]
+diff --git a/src/lib.rs b/src/lib.rs
+index dda7a45..7b6ce9b 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -14,14 +14,8 @@
+     )
+ ))]
+ 
+-#[cfg(not(feature = "std"))]
+-compile_error!(
+-    "`futures-test` must have the `std` feature activated, this is a default-active feature"
+-);
+-
+ // Not public API.
+ #[doc(hidden)]
+-#[cfg(feature = "std")]
+ pub mod __private {
+     pub use futures_core::{future, stream, task};
+     pub use futures_executor::block_on;
+@@ -37,22 +31,16 @@ pub mod __private {
+ }
+ 
+ #[macro_use]
+-#[cfg(feature = "std")]
+ mod assert;
+ 
+-#[cfg(feature = "std")]
+ pub mod task;
+ 
+-#[cfg(feature = "std")]
+ pub mod future;
+ 
+-#[cfg(feature = "std")]
+ pub mod stream;
+ 
+-#[cfg(feature = "std")]
+ pub mod sink;
+ 
+-#[cfg(feature = "std")]
+ pub mod io;
+ 
+ mod assert_unmoved;
+@@ -81,5 +69,4 @@ mod track_closed;
+ ///     })
+ /// }
+ /// ```
+-#[cfg(feature = "std")]
+ pub use futures_macro::test_internal as test;
