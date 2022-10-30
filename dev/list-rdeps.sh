@@ -22,19 +22,19 @@ grep_sources_entry() {
 	grep '^deb[^#]*://[^#[:space:]]*[[:space:]]*'"$@"
 }
 
-if ! grep_sources_entry "$ARCHIVE" -qR /etc/apt/sources.list /etc/apt/sources.list.d/ || \
-   ! grep_sources_entry "$ARCHIVT" -qR /etc/apt/sources.list /etc/apt/sources.list.d/; then
-	cat <<-eof
-To make this script work, you will need Debian Testing *AND* Debian Unstable
-in your sources.list. If you want your system to prefer Debian Testing, be
-sure to also add these lines to your /etc/apt/apt.conf:
+# if ! grep_sources_entry "$ARCHIVE" -qR /etc/apt/sources.list /etc/apt/sources.list.d/ || \
+#    ! grep_sources_entry "$ARCHIVT" -qR /etc/apt/sources.list /etc/apt/sources.list.d/; then
+#   cat <<-eof
+# To make this script work, you will need Debian Testing *AND* Debian Unstable
+# in your sources.list. If you want your system to prefer Debian Testing, be
+# sure to also add these lines to your /etc/apt/apt.conf:
 
-APT::Default-Release "$ARCHIVT";
+# APT::Default-Release "$ARCHIVT";
 
-After these changes, make sure to re-run \`apt-get update\`.
-eof
-	exit 1
-fi
+# After these changes, make sure to re-run \`apt-get update\`.
+# eof
+#   exit 1
+# fi
 
 if [ $(($(date +%s) - $(stat -c %Y /var/cache/apt/pkgcache.bin))) -gt 7200 ]; then
 	read -p "APT cache is a bit old, update? [Y/n] " x
