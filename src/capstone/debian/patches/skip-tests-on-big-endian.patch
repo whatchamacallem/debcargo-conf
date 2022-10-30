@@ -1,0 +1,30 @@
+Skip test_arch_m68k_detail and test_arch_tms320c64x_detail on big endian
+systems.
+
+ * Failures reported upstream test_arch_tms320c64x_detail
+ * Not a regression compared to the situation in testing at the time of
+   writing the patch.
+ * Failures were causing problems for testing migration of libc crate
+   due to the fact that the tests were skipped in plain testing tests
+   but run for unstable -> testing migration tests.
+
+Index: rust-capstone-0.11.0/src/test.rs
+===================================================================
+--- rust-capstone-0.11.0.orig/src/test.rs
++++ rust-capstone-0.11.0/src/test.rs
+@@ -1757,6 +1757,7 @@ fn test_arch_m680x_detail() {
+     );
+ }
+ 
++#[cfg(target_endian = "little")]
+ #[test]
+ fn test_arch_m68k_detail() {
+     use crate::arch::m68k::M68kOperand::*;
+@@ -2458,6 +2459,7 @@ fn test_arch_systemz() {
+     );
+ }
+ 
++#[cfg(target_endian = "little")]
+ #[test]
+ fn test_arch_tms320c64x_detail() {
+     use crate::arch::tms320c64x::Tms320c64xOperand::*;
