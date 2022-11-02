@@ -1,0 +1,43 @@
+From 32ef31d63307b2e6de342a18a8efcee2829ca335 Mon Sep 17 00:00:00 2001
+From: Arnaud Ferraris <arnaud.ferraris@collabora.com>
+Date: Wed, 2 Nov 2022 13:14:15 +0100
+Subject: [PATCH] tests: util: fix tests
+
+---
+ tests/util/mod.rs | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/tests/util/mod.rs b/tests/util/mod.rs
+index f225cb9..cb476d9 100644
+--- a/tests/util/mod.rs
++++ b/tests/util/mod.rs
+@@ -33,7 +33,7 @@ pub fn setup() -> MutexGuard<'static, ()> {
+ }
+ 
+ pub fn attach_file(loop_dev: &str, backing_file: &str, offset: u64, sizelimit: u64) {
+-    if !Command::new("losetup")
++    if !Command::new("/sbin/losetup")
+         .args(&[
+             loop_dev,
+             backing_file,
+@@ -52,7 +52,7 @@ pub fn attach_file(loop_dev: &str, backing_file: &str, offset: u64, sizelimit: u
+ 
+ pub fn detach_all() {
+     std::thread::sleep(std::time::Duration::from_millis(10));
+-    if !Command::new("losetup")
++    if !Command::new("/sbin/losetup")
+         .args(&["-D"])
+         .status()
+         .expect("failed to cleanup existing loop devices")
+@@ -64,7 +64,7 @@ pub fn detach_all() {
+ }
+ 
+ pub fn list_device(dev_file: Option<&str>) -> Vec<LoopDeviceOutput> {
+-    let mut output = Command::new("losetup");
++    let mut output = Command::new("/sbin/losetup");
+     output.args(&["-J", "-l"]);
+     if let Some(dev_file) = dev_file {
+         output.arg(dev_file);
+-- 
+2.35.1
+

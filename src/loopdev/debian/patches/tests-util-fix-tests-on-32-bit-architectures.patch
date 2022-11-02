@@ -1,0 +1,37 @@
+From e584c0d989839cb403b514482a63d8b525e79a5c Mon Sep 17 00:00:00 2001
+From: Arnaud Ferraris <arnaud.ferraris@collabora.com>
+Date: Wed, 2 Nov 2022 13:56:24 +0100
+Subject: [PATCH] tests: util: fix tests on 32-bit architectures
+
+The last `fallocate()` argument is an integer the size of the
+architecture bus width (32 or 64-bit). However, an `i64` is used by
+default here, causing the build to fail on 32-bit architectures. This
+patch fixes that by adding a type conversion in the function call.
+---
+ tests/util/mod.rs | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/tests/util/mod.rs b/tests/util/mod.rs
+index f225cb9..ef3fb47 100644
+--- a/tests/util/mod.rs
++++ b/tests/util/mod.rs
+@@ -1,6 +1,7 @@
+ use libc::fallocate;
+ use serde::{Deserialize, Deserializer};
+ use std::{
++    convert::TryInto,
+     io,
+     os::unix::io::AsRawFd,
+     process::Command,
+@@ -17,7 +18,7 @@ lazy_static! {
+ 
+ pub fn create_backing_file(size: i64) -> TempPath {
+     let file = NamedTempFile::new().expect("should be able to create a temp file");
+-    if unsafe { fallocate(file.as_raw_fd(), 0, 0, size) } < 0 {
++    if unsafe { fallocate(file.as_raw_fd(), 0, 0, size.try_into().unwrap()) } < 0 {
+         panic!(
+             "should be able to allocate the tenp file: {}",
+             io::Error::last_os_error()
+-- 
+2.35.1
+
