@@ -27,16 +27,15 @@ override_dh_auto_install:
 override_dh_missing:
 	dh_missing --fail-missing
 
-override_dh_installman:
+execute_before_dh_installman:
 	cd $(CURDIR)/debian/rust-coreutils/usr/lib/cargo/bin/coreutils/; \
 	for f in *; do \
 		filename=$$(basename $$f); \
 		help2man --no-info $$f > $(CURDIR)/docs/rust-$$filename.1; \
 	done
-
+	
 	cd $(CURDIR)/debian/tmp/usr/bin/; \
 	help2man --no-info coreutils > $(CURDIR)/docs/coreutils.1 || true
-
-# test --help returns nothing
+	
+	# test --help returns nothing
 	rm -f $(CURDIR)/docs/rust-test.1
-	dh_installman
