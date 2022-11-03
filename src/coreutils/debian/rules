@@ -16,11 +16,11 @@ export MULTICALL = y
 
 override_dh_auto_test:
 	# for now, don't fail the build if tests are failing
-	CARGO_HOME=$(shell pwd)/debian/cargo_home make PROFILE=release MULTICALL=$(MULTICALL) test||true
+	CARGO_HOME=$(CURDIR)/debian/cargo_home make PROFILE=release MULTICALL=$(MULTICALL) test||true
 
 override_dh_auto_install:
-	CARGO_HOME=$(shell pwd)/debian/cargo_home DEB_CARGO_CRATE=coreutils_$(VERSION) /usr/share/cargo/bin/cargo prepare-debian debian/cargo_registry --link-from-system
-	CARGO_HOME=$(shell pwd)/debian/cargo_home DESTDIR=$(CURDIR)/debian/tmp/ make SELINUX_ENABLED=1 PROFILE=release MULTICALL=$(MULTICALL) install
+	CARGO_HOME=$(CURDIR)/debian/cargo_home DEB_CARGO_CRATE=coreutils_$(VERSION) /usr/share/cargo/bin/cargo prepare-debian debian/cargo_registry --link-from-system
+	CARGO_HOME=$(CURDIR)/debian/cargo_home DESTDIR=$(CURDIR)/debian/tmp/ make SELINUX_ENABLED=1 PROFILE=release MULTICALL=$(MULTICALL) install
 # Create the symlink early to be able to generate the manpages
 	dh_link
 
