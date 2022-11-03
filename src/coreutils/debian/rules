@@ -14,10 +14,6 @@ export MULTICALL = y
 %:
 	dh $@ --buildsystem cargo --with bash-completion
 
-override_dh_auto_clean:
-	rm -f docs/*.1
-	dh_auto_clean
-
 override_dh_auto_test:
 	# for now, don't fail the build if tests are failing
 	CARGO_HOME=$(shell pwd)/debian/cargo_home make PROFILE=release MULTICALL=$(MULTICALL) test||true
