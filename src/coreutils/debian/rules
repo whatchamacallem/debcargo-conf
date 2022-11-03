@@ -19,6 +19,8 @@ override_dh_auto_clean:
 	dh_auto_clean
 
 override_dh_auto_test:
+	# for now, don't fail the build if tests are failing
+	CARGO_HOME=$(shell pwd)/debian/cargo_home make PROFILE=release MULTICALL=$(MULTICALL) test||true
 
 override_dh_auto_install:
 	CARGO_HOME=$(shell pwd)/debian/cargo_home DEB_CARGO_CRATE=coreutils_$(VERSION) /usr/share/cargo/bin/cargo prepare-debian debian/cargo_registry --link-from-system
