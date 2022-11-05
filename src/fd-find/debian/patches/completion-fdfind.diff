@@ -1,12 +1,26 @@
-Index: fd-find/build.rs
+Index: fd-find/src/cli.rs
 ===================================================================
---- fd-find.orig/build.rs
-+++ fd-find/build.rs
-@@ -28,6 +28,6 @@ fn main() {
-     let mut app = build_app();
-     // NOTE: zsh completions are hand written in contrib/completion/_fd
-     for shell in [Bash, PowerShell, Fish, Elvish] {
--        generate_to(shell, &mut app, "fd", &outdir).unwrap();
-+        generate_to(shell, &mut app, "fdfind", &outdir).unwrap();
-     }
- }
+--- fd-find.orig/src/cli.rs
++++ fd-find/src/cli.rs
+@@ -83,7 +83,7 @@ impl clap::Args for Negations {
+ 
+ #[derive(Parser)]
+ #[command(
+-    name = "fd",
++    name = "fdfind",
+     version,
+     about = "A program to find entries in your filesystem",
+     after_long_help = "Bugs can be reported on GitHub: https://github.com/sharkdp/fd/issues",
+Index: fd-find/src/main.rs
+===================================================================
+--- fd-find.orig/src/main.rs
++++ fd-find/src/main.rs
+@@ -93,7 +93,7 @@ fn run() -> Result<ExitCode> {
+ #[cold]
+ fn print_completions(shell: clap_complete::Shell) -> Result<ExitCode> {
+     // The program name is the first argument.
+-    let program_name = env::args().next().unwrap_or_else(|| "fd".to_string());
++    let program_name = env::args().next().unwrap_or_else(|| "fdfind".to_string());
+     let mut cmd = Opts::command();
+     cmd.build();
+     clap_complete::generate(shell, &mut cmd, &program_name, &mut std::io::stdout());
