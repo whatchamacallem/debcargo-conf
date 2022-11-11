@@ -1,0 +1,27 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 9b4d2e9..6b16939 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -23,7 +23,7 @@ repository = "https://github.com/killercup/roff-rs"
+ 
+ [dependencies]
+ [dev-dependencies.duct]
+-version = "0.10.0"
++version = "0.13"
+ 
+ [dev-dependencies.pretty_assertions]
+-version = "0.5.1"
++version = "1"
+diff --git a/tests/demo.rs b/tests/demo.rs
+index 62ef9e2..f2bac35 100644
+--- a/tests/demo.rs
++++ b/tests/demo.rs
+@@ -4,7 +4,7 @@ extern crate duct;
+ 
+ fn roff_to_ascii(input: &str) -> String {
+     duct::cmd("troff", &["-a", "-mman"])
+-        .input(input)
++        .stdin_bytes(input)
+         .stdout_capture()
+         .read()
+         .unwrap()
