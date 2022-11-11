@@ -1,68 +1,88 @@
---- rust-crossbeam-channel-0.5.4.orig/benches/crossbeam.rs
-+++ rust-crossbeam-channel-0.5.4/benches/crossbeam.rs
+Index: crossbeam-channel/benches/crossbeam.rs
+===================================================================
+--- crossbeam-channel.orig/benches/crossbeam.rs
++++ crossbeam-channel/benches/crossbeam.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  #![feature(test)]
  
  extern crate test;
---- rust-crossbeam-channel-0.5.4.orig/examples/fibonacci.rs
-+++ rust-crossbeam-channel-0.5.4/examples/fibonacci.rs
+Index: crossbeam-channel/examples/fibonacci.rs
+===================================================================
+--- crossbeam-channel.orig/examples/fibonacci.rs
++++ crossbeam-channel/examples/fibonacci.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  //! An asynchronous fibonacci sequence generator.
  
  use std::thread;
---- rust-crossbeam-channel-0.5.4.orig/examples/matching.rs
-+++ rust-crossbeam-channel-0.5.4/examples/matching.rs
+Index: crossbeam-channel/examples/matching.rs
+===================================================================
+--- crossbeam-channel.orig/examples/matching.rs
++++ crossbeam-channel/examples/matching.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  //! Using `select!` to send and receive on the same channel at the same time.
  //!
  //! This example is based on the following program in Go.
---- rust-crossbeam-channel-0.5.4.orig/examples/stopwatch.rs
-+++ rust-crossbeam-channel-0.5.4/examples/stopwatch.rs
+Index: crossbeam-channel/examples/stopwatch.rs
+===================================================================
+--- crossbeam-channel.orig/examples/stopwatch.rs
++++ crossbeam-channel/examples/stopwatch.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  //! Prints the elapsed time every 1 second and quits on Ctrl+C.
  
  #[cfg(windows)] // signal_hook::iterator does not work on windows
---- rust-crossbeam-channel-0.5.4.orig/tests/after.rs
-+++ rust-crossbeam-channel-0.5.4/tests/after.rs
+Index: crossbeam-channel/tests/after.rs
+===================================================================
+--- crossbeam-channel.orig/tests/after.rs
++++ crossbeam-channel/tests/after.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  //! Tests for the after channel flavor.
  
  #![cfg(not(miri))] // TODO: many assertions failed due to Miri is slow
---- rust-crossbeam-channel-0.5.4.orig/tests/array.rs
-+++ rust-crossbeam-channel-0.5.4/tests/array.rs
+Index: crossbeam-channel/tests/array.rs
+===================================================================
+--- crossbeam-channel.orig/tests/array.rs
++++ crossbeam-channel/tests/array.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  //! Tests for the array channel flavor.
  
  use std::any::Any;
---- rust-crossbeam-channel-0.5.4.orig/tests/golang.rs
-+++ rust-crossbeam-channel-0.5.4/tests/golang.rs
+Index: crossbeam-channel/tests/golang.rs
+===================================================================
+--- crossbeam-channel.orig/tests/golang.rs
++++ crossbeam-channel/tests/golang.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  //! Tests copied from Go and manually rewritten in Rust.
  //!
  //! Source:
---- rust-crossbeam-channel-0.5.4.orig/tests/iter.rs
-+++ rust-crossbeam-channel-0.5.4/tests/iter.rs
+Index: crossbeam-channel/tests/iter.rs
+===================================================================
+--- crossbeam-channel.orig/tests/iter.rs
++++ crossbeam-channel/tests/iter.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  //! Tests for iteration over receivers.
  
  use crossbeam_channel::unbounded;
---- rust-crossbeam-channel-0.5.4.orig/tests/list.rs
-+++ rust-crossbeam-channel-0.5.4/tests/list.rs
+Index: crossbeam-channel/tests/list.rs
+===================================================================
+--- crossbeam-channel.orig/tests/list.rs
++++ crossbeam-channel/tests/list.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  //! Tests for the list channel flavor.
  
  use std::any::Any;
---- rust-crossbeam-channel-0.5.4.orig/tests/mpsc.rs
-+++ rust-crossbeam-channel-0.5.4/tests/mpsc.rs
+Index: crossbeam-channel/tests/mpsc.rs
+===================================================================
+--- crossbeam-channel.orig/tests/mpsc.rs
++++ crossbeam-channel/tests/mpsc.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  //! Tests copied from `std::sync::mpsc`.
@@ -257,15 +277,17 @@
      fn smoke_shared_port_gone() {
          let (tx, rx) = channel::<i32>();
 @@ -1707,6 +1734,7 @@ mod sync_channel_tests {
- }
- 
- // Source: https://github.com/rust-lang/rust/blob/master/src/libstd/sync/mpsc/select.rs
-+#[cfg(feature = "std")]
  mod select_tests {
      use super::*;
  
---- rust-crossbeam-channel-0.5.4.orig/tests/never.rs
-+++ rust-crossbeam-channel-0.5.4/tests/never.rs
++#[cfg(feature = "std")]
+     use std::thread;
+ 
+     #[test]
+Index: crossbeam-channel/tests/never.rs
+===================================================================
+--- crossbeam-channel.orig/tests/never.rs
++++ crossbeam-channel/tests/never.rs
 @@ -1,5 +1,5 @@
  //! Tests for the never channel flavor.
 -
@@ -273,52 +295,66 @@
  use std::thread;
  use std::time::{Duration, Instant};
  
---- rust-crossbeam-channel-0.5.4.orig/tests/ready.rs
-+++ rust-crossbeam-channel-0.5.4/tests/ready.rs
+Index: crossbeam-channel/tests/ready.rs
+===================================================================
+--- crossbeam-channel.orig/tests/ready.rs
++++ crossbeam-channel/tests/ready.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  //! Tests for channel readiness using the `Select` struct.
  
  #![allow(clippy::drop_copy)]
---- rust-crossbeam-channel-0.5.4.orig/tests/same_channel.rs
-+++ rust-crossbeam-channel-0.5.4/tests/same_channel.rs
+Index: crossbeam-channel/tests/same_channel.rs
+===================================================================
+--- crossbeam-channel.orig/tests/same_channel.rs
++++ crossbeam-channel/tests/same_channel.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  use std::time::Duration;
  
  use crossbeam_channel::{after, bounded, never, tick, unbounded};
---- rust-crossbeam-channel-0.5.4.orig/tests/select.rs
-+++ rust-crossbeam-channel-0.5.4/tests/select.rs
+Index: crossbeam-channel/tests/select.rs
+===================================================================
+--- crossbeam-channel.orig/tests/select.rs
++++ crossbeam-channel/tests/select.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  //! Tests for channel selection using the `Select` struct.
  
  #![allow(clippy::drop_copy)]
---- rust-crossbeam-channel-0.5.4.orig/tests/select_macro.rs
-+++ rust-crossbeam-channel-0.5.4/tests/select_macro.rs
+Index: crossbeam-channel/tests/select_macro.rs
+===================================================================
+--- crossbeam-channel.orig/tests/select_macro.rs
++++ crossbeam-channel/tests/select_macro.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  //! Tests for the `select!` macro.
  
  #![forbid(unsafe_code)] // select! is safe.
---- rust-crossbeam-channel-0.5.4.orig/tests/thread_locals.rs
-+++ rust-crossbeam-channel-0.5.4/tests/thread_locals.rs
+Index: crossbeam-channel/tests/thread_locals.rs
+===================================================================
+--- crossbeam-channel.orig/tests/thread_locals.rs
++++ crossbeam-channel/tests/thread_locals.rs
 @@ -1,5 +1,5 @@
  //! Tests that make sure accessing thread-locals while exiting the thread doesn't cause panics.
 -
 +#![cfg(feature = "std")]
- #![cfg(not(miri))] // error: abnormal termination: the evaluated program aborted execution
+ #![cfg(not(miri))] // Miri detects that this test is buggy: the destructor of `FOO` uses `std::thread::current()`!
  
  use std::thread;
---- rust-crossbeam-channel-0.5.4.orig/tests/tick.rs
-+++ rust-crossbeam-channel-0.5.4/tests/tick.rs
+Index: crossbeam-channel/tests/tick.rs
+===================================================================
+--- crossbeam-channel.orig/tests/tick.rs
++++ crossbeam-channel/tests/tick.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  //! Tests for the tick channel flavor.
  
  #![cfg(not(miri))] // TODO: many assertions failed due to Miri is slow
---- rust-crossbeam-channel-0.5.4.orig/tests/zero.rs
-+++ rust-crossbeam-channel-0.5.4/tests/zero.rs
+Index: crossbeam-channel/tests/zero.rs
+===================================================================
+--- crossbeam-channel.orig/tests/zero.rs
++++ crossbeam-channel/tests/zero.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "std")]
  //! Tests for the zero channel flavor.
