@@ -1,0 +1,70 @@
+Description: Disable hedge feature with failed to build dep hdrhistogram
+ hdrhistogram fails to build on i386, blocking itself and tower from migrating
+ to testing
+Bug: https://github.com/HdrHistogram/HdrHistogram_rust/issues/111
+Bug-Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1014034
+Last-Update: 2022-11-13
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -61,10 +61,10 @@
+ optional = true
+ default-features = false
+ 
+-[dependencies.hdrhistogram]
+-version = "7.0"
+-optional = true
+-default-features = false
++#[dependencies.hdrhistogram]
++#version = "7.0"
++#optional = true
++#default-features = false
+ 
+ [dependencies.indexmap]
+ version = "1.0.2"
+@@ -116,9 +116,9 @@
+ [dev-dependencies.futures]
+ version = "0.3"
+ 
+-[dev-dependencies.hdrhistogram]
+-version = "7.0"
+-default-features = false
++#[dev-dependencies.hdrhistogram]
++#version = "7.0"
++#default-features = false
+ 
+ [dev-dependencies.http]
+ version = "0.2"
+@@ -186,7 +186,7 @@
+     "buffer",
+     "discover",
+     "filter",
+-    "hedge",
++#    "hedge",
+     "limit",
+     "load",
+     "load-shed",
+@@ -199,14 +199,14 @@
+     "timeout",
+     "util",
+ ]
+-hedge = [
+-    "util",
+-    "filter",
+-    "futures-util",
+-    "hdrhistogram",
+-    "tokio/time",
+-    "tracing",
+-]
++#hedge = [
++#    "util",
++#    "filter",
++#    "futures-util",
++#    "hdrhistogram",
++#    "tokio/time",
++#    "tracing",
++#]
+ limit = [
+     "__common",
+     "tokio/time",
