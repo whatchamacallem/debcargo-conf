@@ -5,8 +5,8 @@ Index: uuid/src/sha1.rs
 @@ -1,6 +1,6 @@
  #[cfg(feature = "v5")]
  pub(crate) fn hash(ns: &[u8], src: &[u8]) -> [u8; 16] {
--    use private_sha1_smol::Sha1;
-+    use private_sha1::{Digest,Sha1};
+-    use sha1_smol::Sha1;
++    use sha1::{Digest,Sha1};
  
      let mut hasher = Sha1::new();
  
@@ -23,27 +23,14 @@ Index: uuid/Cargo.toml
 ===================================================================
 --- uuid.orig/Cargo.toml
 +++ uuid/Cargo.toml
-@@ -84,11 +84,11 @@ version = "0.8"
- optional = true
- package = "rand"
- 
--[dependencies.private_sha1_smol]
+@@ -84,5 +84,5 @@ version = "0.8"
+-[dependencies.sha1_smol]
 -version = "1"
-+[dependencies.private_sha1]
++[dependencies.sha1]
 +version = "0.10"
  optional = true
  default-features = false
 -package = "sha1_smol"
 +package = "sha1"
- 
- [dependencies.private_uuid-macro-internal]
- version = "1.1.2"
-@@ -139,7 +139,7 @@ js = [
- macro-diagnostics = ["private_uuid-macro-internal"]
- md5 = ["private_md-5"]
- rng = ["private_getrandom"]
--sha1 = ["private_sha1_smol"]
-+sha1 = ["private_sha1"]
- std = []
- v1 = ["private_atomic"]
- v3 = ["md5"]
+@@ -139,1 +139,0 @@ js = [
+-sha1 = ["sha1_smol"]
