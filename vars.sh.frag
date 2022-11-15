@@ -43,6 +43,7 @@ case $dcver in
 2.0.*|2.1.*|2.2.*|2.3.*)	abort 1 "unsupported debcargo version $dcver. try reinstalling with \`cargo install debcargo --force\`";;
 2.4.*)	true;;
 2.5.*)	true;;
+2.6.*)	true;;
 *)	abort 1 "unsupported debcargo version: $dcver";;
 esac
 
