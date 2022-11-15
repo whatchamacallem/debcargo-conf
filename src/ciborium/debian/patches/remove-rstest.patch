@@ -1,0 +1,99 @@
+Description: Remove rstest and disable dependent tests
+ Packaging it would bring quite a few crates in and slow down the effort,
+ so it's removed for now.
+Last-Update: 2022-11-15
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/tests/error.rs
++++ b/tests/error.rs
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: Apache-2.0
+ 
+ use ciborium::{de::from_reader, de::Error, value::Value};
+-use rstest::rstest;
++/*use rstest::rstest;
+ 
+ #[rstest(bytes, error,
+     // Invalid value
+@@ -44,4 +44,4 @@
+     };
+ 
+     assert_eq!(correct, actual);
+-}
++}*/
+--- a/tests/codec.rs
++++ b/tests/codec.rs
+@@ -9,7 +9,7 @@
+ use ciborium::value::Value;
+ use ciborium::{cbor, de::from_reader, ser::into_writer};
+ 
+-use rstest::rstest;
++//use rstest::rstest;
+ use serde::{Deserialize, Serialize};
+ 
+ macro_rules! val {
+@@ -36,7 +36,7 @@
+ 
+ // Keep the first "case" aligned to a line number ending in 1 for ease in finding tests.
+ #[allow(clippy::excessive_precision)]
+-#[rstest(input, value, bytes, alternate, equality,
++/*#[rstest(input, value, bytes, alternate, equality,
+ 
+     case(0u8,   val!(0u8),   "00", false, same),
+     case(0u16,  val!(0u16),  "00", false, same),
+@@ -274,7 +274,7 @@
+     case(Enum::Newtype(45), cbor!({"Newtype" => 45}).unwrap(), "a1674e657774797065182d", false, same), // Not In RFC
+     case(Enum::Tuple(56, 67), cbor!({"Tuple" => [56, 67]}).unwrap(), "a1655475706c658218381843", false, same), // Not In RFC
+     case(Enum::Struct { first: 78, second: 89 }, cbor!({ "Struct" => { "first" => 78, "second" => 89 }}).unwrap(), "a166537472756374a2656669727374184e667365636f6e641859", false, same), // Not In RFC
+-)]
++)]*/
+ fn codec<'de, T: Serialize + Clone, V: Debug + PartialEq + Deserialize<'de>, F: Fn(T) -> V>(
+     input: T,
+     value: Value,
+--- a/tests/macro.rs
++++ b/tests/macro.rs
+@@ -7,7 +7,7 @@
+     value::{Integer, Value, Value::Null},
+ };
+ 
+-use rstest::rstest;
++/*use rstest::rstest;
+ use serde_bytes::Bytes;
+ 
+ macro_rules! map {
+@@ -355,4 +355,4 @@
+ )]
+ fn test(answer: Value, question: Value) {
+     assert_eq!(answer, question);
+-}
++}*/
+--- a/tests/tag.rs
++++ b/tests/tag.rs
+@@ -3,7 +3,7 @@
+ extern crate alloc;
+ 
+ use ciborium::{de::from_reader, ser::into_writer, tag::*, value::Value};
+-use rstest::rstest;
++/*use rstest::rstest;
+ use serde::{Deserialize, Serialize};
+ 
+ use core::fmt::Debug;
+@@ -54,4 +54,4 @@
+         Err(e) if success => Err(e).unwrap(),
+         Err(..) => (),
+     }
+-}
++}*/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -38,8 +38,8 @@
+ [dev-dependencies.rand]
+ version = "0.8"
+ 
+-[dev-dependencies.rstest]
+-version = "0.11"
++#[dev-dependencies.rstest]
++#version = "0.11"
+ 
+ [dev-dependencies.serde_bytes]
+ version = "0.11"
