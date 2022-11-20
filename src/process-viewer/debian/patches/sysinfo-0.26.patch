@@ -1,0 +1,178 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 6bfb00b46a544d34454b31eea572dfcc5ee3f39f
+Author: Guillaume Gomez <guillaume1.gomez@gmail.com>
+Date:   Mon Aug 29 13:39:45 2022 +0200
+
+    Update sysinfo version to 0.26
+
+Index: process-viewer/src/display_procs.rs
+===================================================================
+--- process-viewer.orig/src/display_procs.rs
++++ process-viewer/src/display_procs.rs
+@@ -89,7 +89,7 @@ impl Procs {
+                     pro.cmd(),
+                     exe,
+                     pro.cpu_usage(),
+-                    pro.memory() * 1_000,
++                    pro.memory(),
+                 );
+             }
+         }
+Index: process-viewer/src/display_sysinfo.rs
+===================================================================
+--- process-viewer.orig/src/display_sysinfo.rs
++++ process-viewer/src/display_sysinfo.rs
+@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
+ use crate::graph::Graph;
+ use crate::notebook::NoteBook;
+ use crate::settings::Settings;
+-use crate::utils::{connect_graph, format_number, RotateVec};
++use crate::utils::{connect_graph, format_number, graph_label_units, RotateVec};
+ 
+ pub fn create_header(
+     label_text: &str,
+@@ -101,37 +101,7 @@ impl DisplaySysInfo {
+         let sys = sys.lock().expect("failed to lock in DisplaySysInfo::new");
+         // RAM
+         let mut ram_usage_history = Graph::new(Some(sys.total_memory() as f64), true);
+-        ram_usage_history.set_label_callbacks(Some(Box::new(|v| {
+-            if v < 100_000. {
+-                [
+-                    v.to_string(),
+-                    format!("{}", v / 2.),
+-                    "0".to_string(),
+-                    "kB".to_string(),
+-                ]
+-            } else if v < 10_000_000. {
+-                [
+-                    format!("{:.1}", v / 1_000f64),
+-                    format!("{:.1}", v / 2_000f64),
+-                    "0".to_string(),
+-                    "MB".to_string(),
+-                ]
+-            } else if v < 10_000_000_000. {
+-                [
+-                    format!("{:.1}", v / 1_000_000f64),
+-                    format!("{:.1}", v / 2_000_000f64),
+-                    "0".to_string(),
+-                    "GB".to_string(),
+-                ]
+-            } else {
+-                [
+-                    format!("{:.1}", v / 1_000_000_000f64),
+-                    format!("{:.1}", v / 2_000_000_000f64),
+-                    "0".to_string(),
+-                    "TB".to_string(),
+-                ]
+-            }
+-        })));
++        ram_usage_history.set_label_callbacks(Some(Box::new(graph_label_units)));
+         ram_usage_history.set_labels_width(70);
+ 
+         // TEMPERATURE
+@@ -345,8 +315,8 @@ impl DisplaySysInfo {
+         let disp = |total, used| {
+             format!(
+                 "{} / {}",
+-                format_number(used * 1_000),
+-                format_number(total * 1_000) // We need to multiply to get the "right" unit.
++                format_number(used),
++                format_number(total) // We need to multiply to get the "right" unit.
+             )
+         };
+ 
+Index: process-viewer/src/main.rs
+===================================================================
+--- process-viewer.orig/src/main.rs
++++ process-viewer/src/main.rs
+@@ -68,7 +68,7 @@ fn update_window(list: &gtk::ListStore,
+             if let Some(p) = entries.get(&(pid)) {
+                 let disk_usage = p.disk_usage();
+                 let disk_usage = disk_usage.written_bytes + disk_usage.read_bytes;
+-                let memory = p.memory() * 1_000;
++                let memory = p.memory();
+                 list.set(
+                     &iter,
+                     &[
+@@ -103,7 +103,7 @@ fn update_window(list: &gtk::ListStore,
+                 pro.cmd(),
+                 pro.name(),
+                 pro.cpu_usage(),
+-                pro.memory() * 1_000,
++                pro.memory(),
+             );
+         }
+     }
+Index: process-viewer/src/process_dialog.rs
+===================================================================
+--- process-viewer.orig/src/process_dialog.rs
++++ process-viewer/src/process_dialog.rs
+@@ -51,7 +51,7 @@ impl ProcDialog {
+         }
+         self.working_directory
+             .set_text(&process.cwd().display().to_string());
+-        let memory = process.memory() * 1_000; // It returns in kB so we have to convert it to B
++        let memory = process.memory();
+         let memory_s = format_number(memory);
+         self.memory_usage.set_text(&memory_s);
+         if memory > *self.memory_peak.borrow() {
+@@ -195,7 +195,7 @@ pub fn create_process_dialog(process: &s
+ 
+     create_and_add_new_label(&labels, "name", process.name());
+     create_and_add_new_label(&labels, "pid", &process.pid().to_string());
+-    let memory_peak = process.memory() * 1_000;
++    let memory_peak = process.memory();
+     let memory_usage =
+         create_and_add_new_label(&labels, "memory usage", &format_number(memory_peak));
+     let memory_peak_label =
+Index: process-viewer/src/settings.rs
+===================================================================
+--- process-viewer.orig/src/settings.rs
++++ process-viewer/src/settings.rs
+@@ -150,7 +150,7 @@ pub fn build_spin(label: &str, grid: &gt
+     refresh_label.set_halign(gtk::Align::Start);
+     refresh_entry.set_hexpand(true);
+ 
+-    refresh_entry.set_value(f64::from(refresh) / 1000.);
++    refresh_entry.set_value(f64::from(refresh) / 1_000.);
+ 
+     grid.attach(&refresh_label, 0, top, 1, 1);
+     grid.attach(&refresh_entry, 1, top, 3, 1);
+@@ -204,19 +204,19 @@ pub fn show_settings_dialog(
+     // Whenever something is changing we directly save the configuration file with the new values.
+     refresh_procs.connect_value_changed(glib::clone!(@weak settings, @weak rfs => move |entry| {
+         let mut settings = settings.borrow_mut();
+-        settings.refresh_processes_rate = (entry.value() * 1000.) as u32;
++        settings.refresh_processes_rate = (entry.value() * 1_000.) as _;
+         *rfs.borrow().process_refresh_timeout.lock().expect("failed to lock process_refresh_timeout") = settings.refresh_processes_rate;
+         settings.save();
+     }));
+     refresh_network.connect_value_changed(glib::clone!(@weak settings, @weak rfs => move |entry| {
+         let mut settings = settings.borrow_mut();
+-        settings.refresh_network_rate = (entry.value() * 1000.) as u32;
++        settings.refresh_network_rate = (entry.value() * 1_000.) as _;
+         *rfs.borrow().network_refresh_timeout.lock().expect("failed to lock network_refresh_timeout") = settings.refresh_network_rate;
+         settings.save();
+     }));
+     refresh_sys.connect_value_changed(glib::clone!(@weak settings, @weak rfs => move |entry| {
+         let mut settings = settings.borrow_mut();
+-        settings.refresh_system_rate = (entry.value() * 1000.) as u32;
++        settings.refresh_system_rate = (entry.value() * 1_000.) as _;
+         *rfs.borrow().system_refresh_timeout.lock().expect("failed to lock system_refresh_timeout") = settings.refresh_system_rate;
+         settings.save();
+     }));
+Index: process-viewer/Cargo.toml
+===================================================================
+--- process-viewer.orig/Cargo.toml
++++ process-viewer/Cargo.toml
+@@ -33,7 +33,7 @@ version = "1.0"
+ version = "1.0"
+ 
+ [dependencies.sysinfo]
+-version = "0.25.1"
++version = "0.26"
+ 
+ [dependencies.toml]
+ version = "0.5"
