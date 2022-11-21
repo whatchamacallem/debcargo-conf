@@ -7,7 +7,7 @@ import yaml
 
 print("parsing excuses.yaml...", file=sys.stderr)
 with open("excuses.yaml") as fp:
-    y = yaml.load(fp)
+    y = yaml.load(fp, Loader=yaml.Loader)
 
 excuses = {}
 for e in y["sources"]:
