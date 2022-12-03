@@ -1,0 +1,95 @@
+Description: attempt to fix non-deterministic stack overflows in expr_grammer1
+ The expr_grammer1 test would sometimes fail with a stack overflow causin the
+ autopkgtest to fail. This happened occasionally on several architectures and
+ frequently on s390x
+ 
+ This patch takes two approaches to allieviate the situation, firstly it uses
+ a larger stack size for the test. Secondly it attempts to make the test
+ deterministic by replacing thread_rng with a rng that has a fixed seed.
+Author: Peter Michael Green <plugwash@debian.org>
+Bug-Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1025341
+
+Index: lalrpop/src/generate.rs
+===================================================================
+--- lalrpop.orig/src/generate.rs
++++ lalrpop/src/generate.rs
+@@ -10,10 +10,10 @@ pub enum ParseTree {
+     Terminal(TerminalString),
+ }
+ 
+-pub fn random_parse_tree(grammar: &Grammar, symbol: NonterminalString) -> ParseTree {
++pub fn random_parse_tree(grammar: &Grammar, symbol: NonterminalString, rng: &mut dyn rand::RngCore) -> ParseTree {
+     let mut gen = Generator {
+         grammar,
+-        rng: rand::thread_rng(),
++        rng: rng,
+         depth: 0,
+     };
+     loop {
+@@ -28,7 +28,7 @@ pub fn random_parse_tree(grammar: &Gramm
+ 
+ struct Generator<'grammar> {
+     grammar: &'grammar Grammar,
+-    rng: rand::rngs::ThreadRng,
++    rng: &'grammar mut dyn rand::RngCore,
+     depth: u32,
+ }
+ 
+Index: lalrpop/src/lr1/build/test.rs
+===================================================================
+--- lalrpop.orig/src/lr1/build/test.rs
++++ lalrpop/src/lr1/build/test.rs
+@@ -9,6 +9,7 @@ use crate::lr1::tls::Lr1Tls;
+ use string_cache::DefaultAtom as Atom;
+ use crate::test_util::{compare, expect_debug, normalized_grammar};
+ use crate::tls::Tls;
++use rand::SeedableRng;
+ 
+ use super::{build_lr0_states, build_lr1_states, use_lane_table, LR};
+ 
+@@ -18,9 +19,9 @@ fn nt(t: &str) -> NonterminalString {
+ 
+ const ITERATIONS: usize = 22;
+ 
+-fn random_test<'g>(grammar: &Grammar, states: &'g [LR1State<'g>], start_symbol: NonterminalString) {
++fn random_test<'g>(grammar: &Grammar, states: &'g [LR1State<'g>], start_symbol: NonterminalString, rng: &mut dyn rand::RngCore) {
+     for i in 0..ITERATIONS {
+-        let input_tree = generate::random_parse_tree(grammar, start_symbol.clone());
++        let input_tree = generate::random_parse_tree(grammar, start_symbol.clone(),rng);
+         let output_tree = interpret(&states, input_tree.terminals()).unwrap();
+ 
+         println!("test {}", i);
+@@ -110,6 +111,7 @@ C: Option<u32> = {
+ 
+ #[test]
+ fn expr_grammar1() {
++  std::thread::Builder::new().name("lr1::build::test::expr_grammar1 (custom stack)".to_string()).stack_size(10*1024*1024).spawn(||{
+     let _tls = Tls::test();
+ 
+     let grammar = normalized_grammar(
+@@ -164,8 +166,9 @@ grammar;
+         r#"[S: [E: [E: [T: "(", [E: [E: [T: "N"]], "-", [T: "N"]], ")"]], "-", [T: "N"]]]"#
+     );
+ 
+-    // run some random tests
+-    random_test(&grammar, &states, nt("S"));
++    // run some "random" tests
++    random_test(&grammar, &states, nt("S"),&mut rand_chacha::ChaCha20Rng::from_seed(*b"lr1::build::test::expr_grammar1!"));
++  }).unwrap().join().unwrap();
+ }
+ 
+ #[test]
+Index: lalrpop/Cargo.toml
+===================================================================
+--- lalrpop.orig/Cargo.toml
++++ lalrpop/Cargo.toml
+@@ -98,6 +98,9 @@ default_features = false
+ [dev-dependencies.rand]
+ version = "0.8"
+ 
++[dev-dependencies.rand_chacha]
++version = "0.3.1"
++
+ [features]
+ default = [
+     "lexer",
