@@ -3,9 +3,9 @@ Author: Sebastian Ramacher
 Last-Update: 2022-06-23
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -32,19 +32,10 @@
- [dependencies.rayon]
- version = "1.0"
+@@ -34,19 +34,10 @@
+ [dependencies.num-traits]
+ version = "0.2"
  
 -[dependencies.rust_hawktracer]
 -version = "0.7.0"
@@ -25,19 +25,19 @@ Last-Update: 2022-06-23
 -wasm = ["wasm-bindgen"]
 --- a/src/plane.rs
 +++ b/src/plane.rs
-@@ -10,7 +10,6 @@
- use rayon::current_num_threads;
- use rayon::iter::ParallelIterator;
- use rayon::prelude::*;
+@@ -8,7 +8,6 @@
+ // PATENTS file, you can obtain it at www.aomedia.org/license/patent.
+ 
+ use debug_unreachable::debug_unreachable;
 -use rust_hawktracer::*;
- use std::cmp;
  use std::marker::PhantomData;
  use std::mem;
-@@ -559,7 +558,6 @@
-   /// Downscales the source plane by a factor of `scale`, writing the result to `in_plane` (not padded)
-   ///
-   /// `in_plane`'s width and height must be sufficient for `scale`.
--  #[hawktracer(downscale)]
-   pub fn downscale_in_place(&self, scale: usize, in_plane: &mut Plane<T>) {
-     let src = self;
-     let box_pixels = scale * scale;
+ use std::ops::{Index, IndexMut, Range};
+@@ -602,7 +601,6 @@
+     /// Downscales the source plane by a factor of `scale`, writing the result to `in_plane` (not padded)
+     ///
+     /// `in_plane`'s width and height must be sufficient for `scale`.
+-    #[hawktracer(downscale_in_place)]
+     pub fn downscale_in_place<const SCALE: usize>(&self, in_plane: &mut Plane<T>) {
+         // SAFETY: Bounds checks have been removed for performance reasons
+         unsafe {
