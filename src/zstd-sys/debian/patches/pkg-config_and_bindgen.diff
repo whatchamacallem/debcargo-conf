@@ -20,11 +20,12 @@ only in patch2:
 - * Or use the `bindgen` feature, which will create the bindings automatically. */
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -52,15 +52,9 @@
- 
- [build-dependencies.bindgen]
- version = "0.59"
+@@ -56,16 +56,9 @@
+     "runtime",
+     "which-rustfmt",
+ ]
 -optional = true
+-default-features = false
 -
 -[build-dependencies.cc]
 -version = "1.0.45"
@@ -44,9 +45,9 @@ only in patch2:
  
 -#[cfg(feature = "bindgen")]
  fn generate_bindings(defs: Vec<&str>, headerpaths: Vec<PathBuf>) {
-     let bindings = bindgen::Builder::default()
-         .header("zstd.h");
-@@ -36,10 +35,6 @@
+     let bindings = bindgen::Builder::default().header("zstd.h");
+     #[cfg(feature = "zdict_builder")]
+@@ -35,10 +34,6 @@
          .expect("Could not write bindings");
  }
  
@@ -57,154 +58,23 @@ only in patch2:
  fn pkg_config() -> (Vec<&'static str>, Vec<PathBuf>) {
      let library = pkg_config::Config::new()
          .statik(true)
-@@ -49,146 +44,6 @@
+@@ -48,6 +43,7 @@
      (vec!["PKG_CONFIG"], library.include_paths)
  }
  
--#[cfg(not(feature = "pkg-config"))]
--fn pkg_config() -> (Vec<&'static str>, Vec<PathBuf>) {
--    unimplemented!()
--}
--
--#[cfg(not(feature = "legacy"))]
--fn set_legacy(_config: &mut cc::Build) {}
--
--#[cfg(feature = "legacy")]
--fn set_legacy(config: &mut cc::Build) {
--    config.define("ZSTD_LEGACY_SUPPORT", Some("1"));
--    config.include("zstd/lib/legacy");
--}
--
--#[cfg(feature = "zstdmt")]
--fn set_pthread(config: &mut cc::Build) {
--    config.flag("-pthread");
--}
--
--#[cfg(not(feature = "zstdmt"))]
--fn set_pthread(_config: &mut cc::Build) {}
--
--#[cfg(feature = "zstdmt")]
--fn enable_threading(config: &mut cc::Build) {
--    config.define("ZSTD_MULTITHREAD", Some(""));
--}
--
--#[cfg(not(feature = "zstdmt"))]
--fn enable_threading(_config: &mut cc::Build) {}
--
--fn compile_zstd() {
--    let mut config = cc::Build::new();
--
--    // Search the following directories for C files to add to the compilation.
--    for dir in &[
--        "zstd/lib/common",
--        "zstd/lib/compress",
--        "zstd/lib/decompress",
--        #[cfg(feature = "zdict_builder")]
--        "zstd/lib/dictBuilder",
--        #[cfg(feature = "legacy")]
--        "zstd/lib/legacy",
--    ] {
--        for entry in fs::read_dir(dir).unwrap() {
--            let path = entry.unwrap().path();
--            // Skip xxhash*.c files: since we are using the "PRIVATE API"
--            // mode, it will be inlined in the headers.
--            if path
--                .file_name()
--                .and_then(|p| p.to_str())
--                .map_or(false, |p| p.contains("xxhash"))
--            {
--                continue;
--            }
--            if path.extension() == Some(OsStr::new("c")) {
--                config.file(path);
--            }
--        }
--    }
--
--    // Either include ASM files, or disable ASM entirely.
--    // Also disable it on windows, apparently it doesn't do well with these .S files at the moment.
--    if cfg!(any(target_os = "windows", feature = "no_asm")) {
--        config.define("ZSTD_DISABLE_ASM", Some(""));
--    } else {
--        config.file("zstd/lib/decompress/huf_decompress_amd64.S");
--    }
--
--    let is_wasm_unknown_unknown = env::var("TARGET").ok() == Some("wasm32-unknown-unknown".into());
--
--    if is_wasm_unknown_unknown {
--        println!("cargo:rerun-if-changed=wasm-shim/stdlib.h");
--        println!("cargo:rerun-if-changed=wasm-shim/string.h");
--
--        config.include("wasm-shim/");
--        config.define("XXH_STATIC_ASSERT", Some("0"));
--    }
--
--    // Some extra parameters
--    config.opt_level(3);
--    config.include("zstd/lib/");
--    config.include("zstd/lib/common");
--    config.warnings(false);
--
--    config.define("ZSTD_LIB_DEPRECATED", Some("0"));
--
--    #[cfg(feature = "thin")]
--    {
--        config.define("HUF_FORCE_DECOMPRESS_X1", Some("1"));
--        config.define("ZSTD_FORCE_DECOMPRESS_SEQUENCES_SHORT", Some("1"));
--        config.define("ZSTD_NO_INLINE ", Some("1"));
--        config.flag_if_supported("-flto=thin");
--        config.flag_if_supported("-Oz");
--    }
--
--    // Hide symbols from resulting library,
--    // so we can be used with another zstd-linking lib.
--    // See https://github.com/gyscos/zstd-rs/issues/58
--    config.flag("-fvisibility=hidden");
--    config.define("XXH_PRIVATE_API", Some(""));
--    config.define("ZSTDLIB_VISIBILITY", Some(""));
--    #[cfg(feature = "zdict_builder")]
--    config.define("ZDICTLIB_VISIBILITY", Some(""));
--    config.define("ZSTDERRORLIB_VISIBILITY", Some(""));
--
--    // https://github.com/facebook/zstd/blob/d69d08ed6c83563b57d98132e1e3f2487880781e/lib/common/debug.h#L60
--    /* recommended values for DEBUGLEVEL :
--     * 0 : release mode, no debug, all run-time checks disabled
--     * 1 : enables assert() only, no display
--     * 2 : reserved, for currently active debug path
--     * 3 : events once per object lifetime (CCtx, CDict, etc.)
--     * 4 : events once per frame
--     * 5 : events once per block
--     * 6 : events once per sequence (verbose)
--     * 7+: events at every position (*very* verbose)
--     */
--    #[cfg(feature = "debug")]
--    if !is_wasm_unknown_unknown {
--        config.define("DEBUGLEVEL", Some("5"));
--    }
--
--    set_pthread(&mut config);
--    set_legacy(&mut config);
--    enable_threading(&mut config);
--
--    // Compile!
--    config.compile("libzstd.a");
--
--    let src = env::current_dir().unwrap().join("zstd").join("lib");
--    let dst = PathBuf::from(env::var_os("OUT_DIR").unwrap());
--    let include = dst.join("include");
--    fs::create_dir_all(&include).unwrap();
--    fs::copy(src.join("zstd.h"), include.join("zstd.h")).unwrap();
--    fs::copy(src.join("zstd_errors.h"), include.join("zstd_errors.h"))
--        .unwrap();
--    #[cfg(feature = "zdict_builder")]
--    fs::copy(src.join("zdict.h"), include.join("zdict.h")).unwrap();
--    println!("cargo:root={}", dst.display());
--}
--
++/*
+ #[cfg(not(feature = "pkg-config"))]
+ fn pkg_config() -> (Vec<&'static str>, Vec<PathBuf>) {
+     unimplemented!()
+@@ -199,6 +195,7 @@
+     println!("cargo:root={}", dst.display());
+ }
+ 
++*/
  fn main() {
      let target_arch =
          std::env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
-@@ -199,21 +54,7 @@
+@@ -209,21 +206,7 @@
      }
  
      // println!("cargo:rustc-link-lib=zstd");
@@ -229,170 +99,22 @@ only in patch2:
          .iter()
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -13,70 +13,5 @@
+@@ -13,9 +13,9 @@
  mod wasm_shim;
  
  // If running bindgen, we'll end up with the correct bindings anyway.
 -#[cfg(feature = "bindgen")]
  include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
  
--// The bindings used depend on a few feature flags.
--
--// No-std (libc-based)
--#[cfg(all(
--    not(feature = "std"),
--    not(feature = "experimental"),
--    not(feature = "bindgen")
--))]
--include!("bindings_zstd.rs");
--
--#[cfg(all(
--    not(feature = "std"),
--    not(feature = "experimental"),
--    feature = "zdict_builder",
--    not(feature = "bindgen")
--))]
--include!("bindings_zdict.rs");
--
--#[cfg(all(
--    not(feature = "std"),
--    feature = "experimental",
--    not(feature = "bindgen")
--))]
--include!("bindings_zstd_experimental.rs");
--
--#[cfg(all(
--    not(feature = "std"),
--    feature = "experimental",
--    feature = "zdict_builder",
--    not(feature = "bindgen")
--))]
--include!("bindings_zdict_experimental.rs");
--
--// Std-based (no libc)
--#[cfg(all(
--    feature = "std",
--    not(feature = "experimental"),
--    not(feature = "bindgen")
--))]
--include!("bindings_zstd_std.rs");
--
--// Std-based (no libc)
--#[cfg(all(
--    feature = "std",
--    not(feature = "experimental"),
--    feature = "zdict_builder",
--    not(feature = "bindgen")
--))]
--include!("bindings_zdict_std.rs");
--
--#[cfg(all(
--    feature = "std",
--    feature = "experimental",
--    not(feature = "bindgen")
--))]
--include!("bindings_zstd_std_experimental.rs");
--
--#[cfg(all(
--    feature = "std",
--    feature = "experimental",
--    feature = "zdict_builder",
--    not(feature = "bindgen")
--))]
--include!("bindings_zdict_std_experimental.rs");
---- a/update_bindings.sh
-+++ /dev/null
-@@ -1,28 +0,0 @@
--#!/bin/sh
--bindgen="bindgen --no-layout-tests --blacklist-type=max_align_t --size_t-is-usize --rustified-enum=.* --use-core"
--no_std="--ctypes-prefix libc"
--experimental="-DZSTD_STATIC_LINKING_ONLY -DZDICT_STATIC_LINKING_ONLY"
--
--run_bindgen()
--{
--        echo "/*
--This file is auto-generated from the public API of the zstd library.
--It is released under the same BSD license.
--
--$(cat zstd/LICENSE)
--*/"
--
--    $bindgen $@
--}
--
--for NO_STD_ARG in "$no_std" ""; do
--    for EXPERIMENTAL_ARG in "$experimental" ""; do
--        if [ -z "$NO_STD_ARG" ]; then STD="_std"; else STD=""; fi
--        if [ -z "$EXPERIMENTAL_ARG" ]; then EXPERIMENTAL=""; else EXPERIMENTAL="_experimental"; fi
--        SUFFIX=${STD}${EXPERIMENTAL}
--        filename=src/bindings${STD}${EXPERIMENTAL}.rs
--
--        run_bindgen zstd.h --allowlist-type "ZSTD_.*" --allowlist-function "ZSTD_.*" --allowlist-var "ZSTD_.*" $NO_STD_ARG -- -Izstd/lib $EXPERIMENTAL_ARG > src/bindings_zstd${SUFFIX}.rs
--        run_bindgen zdict.h --blocklist-type wchar_t $NO_STD_ARG -- -Izstd/lib $EXPERIMENTAL_ARG > src/bindings_zdict${SUFFIX}.rs
--    done
--done
---- a/update_zstd.sh
-+++ /dev/null
-@@ -1,59 +0,0 @@
--#!/bin/bash
--set -e
--set -o pipefail
--
--cd zstd
--CURRENT=$(git describe --tags)
--git fetch -q
--TAG=$(git tag -l | grep '^v' | sort | tail -n 1)
--
--if [ $CURRENT != $TAG ]
--then
--    git checkout $TAG
--    cd ..
--    git add zstd
--    ./update_bindings.sh
--    git add src/bindings*.rs
--
--    # Note: You'll need a forked version of cargo-dump that supports metadata
--    # For instance https://github.com/gyscos/cargo-dump
--    METADATA="zstd.${TAG/v/}"
--    cargo bump patch --build $METADATA
--    ZSTD_SYS_VERSION=$(cargo read-manifest | jq -r .version | cut -d+ -f1)
--    git add Cargo.toml
--    cd ..
--    cargo add zstd-sys --path ./zstd-sys --vers "=${ZSTD_SYS_VERSION}" --no-default-features
--    cargo bump patch --build $METADATA
--    ZSTD_SAFE_VERSION=$(cargo read-manifest | jq -r .version | cut -d+ -f1)
--    git add Cargo.toml
--    cd ..
--    cargo add zstd-safe --path ./zstd-safe --vers "=${ZSTD_SAFE_VERSION}" --no-default-features
--    cargo bump patch --build $METADATA
--    ZSTD_RS_VERSION=$(cargo read-manifest | jq -r .version | cut -d+ -f1)
--    git add Cargo.toml
--
--    cargo check
--
--    git commit -m "Update zstd to $TAG"
--
--    # Publish?
--    read -p "Publish to crates.io? " -n 1 -r
--    echo
--    if [[ $REPLY =~ ^[Yy]$ ]]
--    then
--        cd zstd-safe/zstd-sys
--        # Need to wait so that the index refreshes.
--        cargo publish && sleep 5
--        cd ..
--        cargo publish && sleep 5
--        cd ..
--        cargo publish
--        git tag $ZSTD_RS_VERSION
--    else
--        echo "Would have published $ZSTD_RS_VERSION"
--    fi
--
--else
--    echo "Already using zstd $TAG"
--fi
--
++/*
+ // The bindings used depend on a few feature flags.
+ 
+ // No-std (libc-based)
+@@ -80,3 +80,4 @@
+     not(feature = "bindgen")
+ ))]
+ include!("bindings_zdict_std_experimental.rs");
++*/
 --- a/zdict.h
 +++ b/zdict.h
 @@ -1,17 +1,2 @@
