@@ -1,0 +1,29 @@
+nix 0.22 deprecated as_errno and made it into a no-op
+nix 0.26 removed it.
+
+Index: libmount/Cargo.toml
+===================================================================
+--- libmount.orig/Cargo.toml
++++ libmount/Cargo.toml
+@@ -28,7 +28,7 @@ path = "src/lib.rs"
+ version = "0.2.28"
+ 
+ [dependencies.nix]
+-version = "0.14"
++version = ">= 0.22, < 1.0"
+ 
+ [dependencies.quick-error]
+ version = "2.0"
+Index: libmount/src/lib.rs
+===================================================================
+--- libmount.orig/src/lib.rs
++++ libmount/src/lib.rs
+@@ -85,7 +85,7 @@ impl OSError {
+     fn from_nix(err: nix::Error, explain: Box<Explainable>) -> OSError {
+         OSError(
+             MountError::Io(
+-                err.as_errno().map_or_else(|| io::Error::new(io::ErrorKind::Other, err), io::Error::from),
++                io::Error::from(err),
+             ),
+             explain,
+         )
