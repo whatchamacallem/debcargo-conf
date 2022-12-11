@@ -1,0 +1,133 @@
+From bbe256488cf65263ec46babf96f9cd8f33f93ea3 Mon Sep 17 00:00:00 2001
+From: James McCoy <jamessan@jamessan.com>
+Date: Sat, 10 Dec 2022 11:56:00 -0500
+Subject: [PATCH] Add -T short form for --title
+
+Debian-based distributions provide a standard interface to launch a
+terminal via the x-terminal-emulator name.  In order for a terminal
+emualtor to satisfy that interface, it must
+
+* Be VT100 compatiable
+* Support the "-e <command> <args>" CLI option
+* Support the "-T <title>" CLI option
+
+Adjust the short form of --title accordingly, providing -t as an alias
+to avoid breaking any existing usage.
+---
+ src/cli.rs                       | 2 +-
+ extra/alacritty.man              | 2 +-
+ extra/completions/_alacritty     | 4 ++--
+ extra/completions/alacritty.bash | 8 ++++----
+ extra/completions/alacritty.fish | 4 ++--
+ 5 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/src/cli.rs b/src/cli.rs
+index d03d2f84a8..3870703660 100644
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -238,7 +238,7 @@ impl From<TerminalOptions> for PtyConfig {
+ #[derive(Serialize, Deserialize, Args, Default, Debug, Clone, PartialEq, Eq)]
+ pub struct WindowIdentity {
+     /// Defines the window title [default: Alacritty].
+-    #[clap(short, long)]
++    #[clap(short = 'T', short_alias('t'), long)]
+     pub title: Option<String>,
+ 
+     /// Defines window class/app_id on X11/Wayland [default: Alacritty].
+diff --git a/extra/alacritty.man b/extra/alacritty.man
+index 09503a9339..cbc8e2fb05 100644
+--- a/extra/alacritty.man
++++ b/extra/alacritty.man
+@@ -62,7 +62,7 @@ Override configuration file options [example: cursor.style=Beam]
+ \fB\-\-socket\fR <socket>
+ Path for IPC socket creation
+ .TP
+-\fB\-t\fR, \fB\-\-title\fR <title>
++\fB\-T\fR, \fB\-\-title\fR <title>
+ Defines the window title [default: Alacritty]
+ .TP
+ \fB\-\-working\-directory\fR <working\-directory>
+diff --git a/extra/completions/_alacritty b/extra/completions/_alacritty
+index 19eb9a0ecf..b9ae3518c1 100644
+--- a/extra/completions/_alacritty
++++ b/extra/completions/_alacritty
+@@ -23,7 +23,7 @@ _alacritty() {
+ '--working-directory=[Start the shell in the specified working directory]:WORKING_DIRECTORY:_files' \
+ '*-e+[Command and args to execute (must be last argument)]:COMMAND: ' \
+ '*--command=[Command and args to execute (must be last argument)]:COMMAND: ' \
+-'-t+[Defines the window title \[default: Alacritty\]]:TITLE: ' \
++'-T+[Defines the window title \[default: Alacritty\]]:TITLE: ' \
+ '--title=[Defines the window title \[default: Alacritty\]]:TITLE: ' \
+ '--class=[Defines window class/app_id on X11/Wayland \[default: Alacritty\]]:instance> | <instance>,<general: ' \
+ '-h[Print help information]' \
+@@ -65,7 +65,7 @@ _arguments "${_arguments_options[@]}" \
+ '--working-directory=[Start the shell in the specified working directory]:WORKING_DIRECTORY:_files' \
+ '*-e+[Command and args to execute (must be last argument)]:COMMAND: ' \
+ '*--command=[Command and args to execute (must be last argument)]:COMMAND: ' \
+-'-t+[Defines the window title \[default: Alacritty\]]:TITLE: ' \
++'-T+[Defines the window title \[default: Alacritty\]]:TITLE: ' \
+ '--title=[Defines the window title \[default: Alacritty\]]:TITLE: ' \
+ '--class=[Defines window class/app_id on X11/Wayland \[default: Alacritty\]]:instance> | <instance>,<general: ' \
+ '--hold[Remain open after child process exit]' \
+diff --git a/extra/completions/alacritty.bash b/extra/completions/alacritty.bash
+index 5cca646653..60025f5f6e 100644
+--- a/extra/completions/alacritty.bash
++++ b/extra/completions/alacritty.bash
+@@ -31,7 +31,7 @@ _alacritty() {
+ 
+     case "${cmd}" in
+         alacritty)
+-            opts="-h -V -q -v -o -e -t --help --version --print-events --ref-test --embed --config-file --socket --option --working-directory --hold --command --title --class msg help"
++            opts="-h -V -q -v -o -e -T --help --version --print-events --ref-test --embed --config-file --socket --option --working-directory --hold --command --title --class msg help"
+             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
+                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                 return 0
+@@ -73,7 +73,7 @@ _alacritty() {
+                     COMPREPLY=($(compgen -f "${cur}"))
+                     return 0
+                     ;;
+-                -t)
++                -T)
+                     COMPREPLY=($(compgen -f "${cur}"))
+                     return 0
+                     ;;
+@@ -147,7 +147,7 @@ _alacritty() {
+             return 0
+             ;;
+         alacritty__msg__create__window)
+-            opts="-e -t -h --working-directory --hold --command --title --class --help"
++            opts="-e -T -h --working-directory --hold --command --title --class --help"
+             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                 return 0
+@@ -169,7 +169,7 @@ _alacritty() {
+                     COMPREPLY=($(compgen -f "${cur}"))
+                     return 0
+                     ;;
+-                -t)
++                -T)
+                     COMPREPLY=($(compgen -f "${cur}"))
+                     return 0
+                     ;;
+diff --git a/extra/completions/alacritty.fish b/extra/completions/alacritty.fish
+index fdc24ab2e4..2ff7c1f1fa 100644
+--- a/extra/completions/alacritty.fish
++++ b/extra/completions/alacritty.fish
+@@ -4,7 +4,7 @@ complete -c alacritty -n "__fish_use_subcommand" -l socket -d 'Path for IPC sock
+ complete -c alacritty -n "__fish_use_subcommand" -s o -l option -d 'Override configuration file options [example: cursor.style=Beam]' -r
+ complete -c alacritty -n "__fish_use_subcommand" -l working-directory -d 'Start the shell in the specified working directory' -r -F
+ complete -c alacritty -n "__fish_use_subcommand" -s e -l command -d 'Command and args to execute (must be last argument)' -r
+-complete -c alacritty -n "__fish_use_subcommand" -s t -l title -d 'Defines the window title [default: Alacritty]' -r
++complete -c alacritty -n "__fish_use_subcommand" -s T -l title -d 'Defines the window title [default: Alacritty]' -r
+ complete -c alacritty -n "__fish_use_subcommand" -l class -d 'Defines window class/app_id on X11/Wayland [default: Alacritty]' -r
+ complete -c alacritty -n "__fish_use_subcommand" -s h -l help -d 'Print help information'
+ complete -c alacritty -n "__fish_use_subcommand" -s V -l version -d 'Print version information'
+@@ -22,7 +22,7 @@ complete -c alacritty -n "__fish_seen_subcommand_from msg; and not __fish_seen_s
+ complete -c alacritty -n "__fish_seen_subcommand_from msg; and not __fish_seen_subcommand_from create-window; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
+ complete -c alacritty -n "__fish_seen_subcommand_from msg; and __fish_seen_subcommand_from create-window" -l working-directory -d 'Start the shell in the specified working directory' -r -F
+ complete -c alacritty -n "__fish_seen_subcommand_from msg; and __fish_seen_subcommand_from create-window" -s e -l command -d 'Command and args to execute (must be last argument)' -r
+-complete -c alacritty -n "__fish_seen_subcommand_from msg; and __fish_seen_subcommand_from create-window" -s t -l title -d 'Defines the window title [default: Alacritty]' -r
++complete -c alacritty -n "__fish_seen_subcommand_from msg; and __fish_seen_subcommand_from create-window" -s T -l title -d 'Defines the window title [default: Alacritty]' -r
+ complete -c alacritty -n "__fish_seen_subcommand_from msg; and __fish_seen_subcommand_from create-window" -l class -d 'Defines window class/app_id on X11/Wayland [default: Alacritty]' -r
+ complete -c alacritty -n "__fish_seen_subcommand_from msg; and __fish_seen_subcommand_from create-window" -l hold -d 'Remain open after child process exit'
+ complete -c alacritty -n "__fish_seen_subcommand_from msg; and __fish_seen_subcommand_from create-window" -s h -l help -d 'Print help information'
