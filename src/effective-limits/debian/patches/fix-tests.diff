@@ -1,0 +1,34 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index f7fda6f..4074b58 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -406,29 +406,4 @@ mod tests {
+         Ok(limit)
+     }
+ 
+-    #[cfg(any(
+-        windows,
+-        target_os = "macos",
+-        target_os = "linux",
+-        target_os = "freebsd",
+-        target_os = "illumos",
+-        target_os = "solaris",
+-    ))]
+-    #[test]
+-    fn test_no_ulimit() -> Result<()> {
+-        // This test depends on the dev environment being run uncontained.
+-        let info = sys_info::mem_info()?;
+-        let total_ram = info.total * 1024;
+-        let limit = read_test_process(None)?;
+-        assert_eq!(total_ram, limit);
+-        Ok(())
+-    }
+-
+-    #[test]
+-    fn test_ulimit() -> Result<()> {
+-        // Page size rounding
+-        let limit = read_test_process(Some(99_999_744))?;
+-        assert_eq!(99_999_744, limit);
+-        Ok(())
+-    }
+ }
