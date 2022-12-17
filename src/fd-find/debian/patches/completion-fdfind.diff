@@ -2,7 +2,7 @@ Index: fd-find/src/cli.rs
 ===================================================================
 --- fd-find.orig/src/cli.rs
 +++ fd-find/src/cli.rs
-@@ -83,7 +83,7 @@ impl clap::Args for Negations {
+@@ -19,7 +19,7 @@ use crate::filter::SizeFilter;
  
  #[derive(Parser)]
  #[command(
@@ -15,12 +15,12 @@ Index: fd-find/src/main.rs
 ===================================================================
 --- fd-find.orig/src/main.rs
 +++ fd-find/src/main.rs
-@@ -93,7 +93,7 @@ fn run() -> Result<ExitCode> {
- #[cold]
- fn print_completions(shell: clap_complete::Shell) -> Result<ExitCode> {
-     // The program name is the first argument.
--    let program_name = env::args().next().unwrap_or_else(|| "fd".to_string());
-+    let program_name = env::args().next().unwrap_or_else(|| "fdfind".to_string());
+@@ -115,7 +115,7 @@ fn print_completions(shell: clap_complet
+         .map(Path::new)
+         .and_then(|path| path.file_stem())
+         .and_then(|file| file.to_str())
+-        .unwrap_or("fd");
++        .unwrap_or("fdfind");
      let mut cmd = Opts::command();
      cmd.build();
-     clap_complete::generate(shell, &mut cmd, &program_name, &mut std::io::stdout());
+     clap_complete::generate(shell, &mut cmd, program_name, &mut std::io::stdout());
