@@ -1,7 +1,9 @@
---- a/src/hosts.rs
-+++ b/src/hosts.rs
-@@ -182,79 +182,3 @@
-     ))
+Index: trust-dns-resolver/src/hosts.rs
+===================================================================
+--- trust-dns-resolver.orig/src/hosts.rs
++++ trust-dns-resolver/src/hosts.rs
+@@ -180,79 +180,3 @@ pub(crate) fn read_hosts_conf<P: AsRef<P
+     Hosts::default().read_hosts_conf(file)
  }
  
 -#[cfg(any(unix, windows))]
@@ -80,3 +82,31 @@
 -        assert_eq!(rdatas, vec![RData::A(Ipv4Addr::new(10, 0, 1, 111))]);
 -    }
 -}
+Index: trust-dns-resolver/src/system_conf/unix.rs
+===================================================================
+--- trust-dns-resolver.orig/src/system_conf/unix.rs
++++ trust-dns-resolver/src/system_conf/unix.rs
+@@ -146,11 +146,6 @@ mod tests {
+         ]
+     }
+ 
+-    fn tests_dir() -> String {
+-        let server_path = env::var("TDNS_WORKSPACE_ROOT").unwrap_or_else(|_| "../..".to_owned());
+-        format!("{}/crates/resolver/tests", server_path)
+-    }
+-
+     #[test]
+     #[allow(clippy::redundant_clone)]
+     fn test_name_server() {
+@@ -189,11 +184,4 @@ mod tests {
+         assert_eq!(cfg, parsed.0);
+         assert_eq!(ResolverOpts::default(), parsed.1);
+     }
+-
+-    #[test]
+-    fn test_read_resolv_conf() {
+-        read_resolv_conf(format!("{}/resolv.conf-simple", tests_dir())).expect("simple failed");
+-        read_resolv_conf(format!("{}/resolv.conf-macos", tests_dir())).expect("macos failed");
+-        read_resolv_conf(format!("{}/resolv.conf-linux", tests_dir())).expect("linux failed");
+-    }
+ }
