@@ -88,7 +88,7 @@ Forwarded: not-needed
  fn test_feature_corpus_files() {
      let test_grammars_dir = fixtures_dir().join("test_grammars");
  
-@@ -408,6 +421,7 @@ fn get_parser(session: &mut Option<util:
+@@ -425,6 +438,7 @@ fn get_parser(session: &mut Option<util:
      parser
  }
  
@@ -98,7 +98,7 @@ Forwarded: not-needed
          test: TestEntry,
 --- a/src/tests/highlight_test.rs
 +++ b/src/tests/highlight_test.rs
-@@ -57,6 +57,7 @@ lazy_static! {
+@@ -58,6 +58,7 @@ lazy_static! {
  }
  
  #[test]
@@ -106,7 +106,7 @@ Forwarded: not-needed
  fn test_highlighting_javascript() {
      let source = "const a = function(b) { return b + c; }";
      assert_eq!(
-@@ -90,6 +91,7 @@ fn test_highlighting_javascript() {
+@@ -91,6 +92,7 @@ fn test_highlighting_javascript() {
  }
  
  #[test]
@@ -114,7 +114,7 @@ Forwarded: not-needed
  fn test_highlighting_injected_html_in_javascript() {
      let source = vec!["const s = html `<div>${a < b}</div>`;"].join("\n");
  
-@@ -125,6 +127,7 @@ fn test_highlighting_injected_html_in_ja
+@@ -126,6 +128,7 @@ fn test_highlighting_injected_html_in_ja
  }
  
  #[test]
@@ -122,7 +122,7 @@ Forwarded: not-needed
  fn test_highlighting_injected_javascript_in_html_mini() {
      let source = "<script>const x = new Thing();</script>";
  
-@@ -154,6 +157,7 @@ fn test_highlighting_injected_javascript
+@@ -155,6 +158,7 @@ fn test_highlighting_injected_javascript
  }
  
  #[test]
@@ -130,7 +130,7 @@ Forwarded: not-needed
  fn test_highlighting_injected_javascript_in_html() {
      let source = vec![
          "<body>",
-@@ -209,6 +213,7 @@ fn test_highlighting_injected_javascript
+@@ -210,6 +214,7 @@ fn test_highlighting_injected_javascript
  }
  
  #[test]
@@ -138,7 +138,7 @@ Forwarded: not-needed
  fn test_highlighting_multiline_nodes_to_html() {
      let source = vec![
          "const SOMETHING = `",
-@@ -233,6 +238,7 @@ fn test_highlighting_multiline_nodes_to_
+@@ -234,6 +239,7 @@ fn test_highlighting_multiline_nodes_to_
  }
  
  #[test]
@@ -146,7 +146,7 @@ Forwarded: not-needed
  fn test_highlighting_with_local_variable_tracking() {
      let source = vec![
          "module.exports = function a(b) {",
-@@ -293,6 +299,7 @@ fn test_highlighting_with_local_variable
+@@ -294,6 +300,7 @@ fn test_highlighting_with_local_variable
  }
  
  #[test]
@@ -154,7 +154,7 @@ Forwarded: not-needed
  fn test_highlighting_empty_lines() {
      let source = vec![
          "class A {",
-@@ -324,6 +331,7 @@ fn test_highlighting_empty_lines() {
+@@ -325,6 +332,7 @@ fn test_highlighting_empty_lines() {
  }
  
  #[test]
@@ -162,7 +162,7 @@ Forwarded: not-needed
  fn test_highlighting_carriage_returns() {
      let source = "a = \"a\rb\"\r\nb\r";
  
-@@ -337,6 +345,7 @@ fn test_highlighting_carriage_returns()
+@@ -338,6 +346,7 @@ fn test_highlighting_carriage_returns()
  }
  
  #[test]
@@ -170,7 +170,7 @@ Forwarded: not-needed
  fn test_highlighting_ejs_with_html_and_javascript() {
      let source = vec!["<div><% foo() %></div><script> bar() </script>"].join("\n");
  
-@@ -372,6 +381,7 @@ fn test_highlighting_ejs_with_html_and_j
+@@ -373,6 +382,7 @@ fn test_highlighting_ejs_with_html_and_j
  }
  
  #[test]
@@ -178,7 +178,7 @@ Forwarded: not-needed
  fn test_highlighting_javascript_with_jsdoc() {
      // Regression test: the middle comment has no highlights. This should not prevent
      // later injections from highlighting properly.
-@@ -402,6 +412,7 @@ fn test_highlighting_javascript_with_jsd
+@@ -403,6 +413,7 @@ fn test_highlighting_javascript_with_jsd
  }
  
  #[test]
@@ -186,7 +186,7 @@ Forwarded: not-needed
  fn test_highlighting_with_content_children_included() {
      let source = vec!["assert!(", "    a.b.c() < D::e::<F>()", ");"].join("\n");
  
-@@ -441,6 +452,7 @@ fn test_highlighting_with_content_childr
+@@ -442,6 +453,7 @@ fn test_highlighting_with_content_childr
  }
  
  #[test]
@@ -194,7 +194,7 @@ Forwarded: not-needed
  fn test_highlighting_cancellation() {
      // An HTML document with a large injected JavaScript document:
      let mut source = "<script>\n".to_string();
-@@ -480,6 +492,7 @@ fn test_highlighting_cancellation() {
+@@ -481,6 +493,7 @@ fn test_highlighting_cancellation() {
  }
  
  #[test]
@@ -281,10 +281,18 @@ Forwarded: not-needed
  
  #[test]
 +#[ignore="Fixtures aren't in the crate"]
+ fn test_root_node_with_offset() {
+     let mut parser = Parser::new();
+     parser.set_language(get_language("javascript")).unwrap();
+@@ -558,6 +568,7 @@ fn test_root_node_with_offset() {
+ }
+ 
+ #[test]
++#[ignore="Fixtures aren't in the crate"]
  fn test_node_is_extra() {
      let mut parser = Parser::new();
      parser.set_language(get_language("javascript")).unwrap();
-@@ -545,6 +555,7 @@ fn test_node_is_extra() {
+@@ -573,6 +584,7 @@ fn test_node_is_extra() {
  }
  
  #[test]
@@ -292,7 +300,7 @@ Forwarded: not-needed
  fn test_node_sexp() {
      let mut parser = Parser::new();
      parser.set_language(get_language("javascript")).unwrap();
-@@ -721,6 +732,7 @@ fn test_node_field_calls_in_language_wit
+@@ -749,6 +761,7 @@ fn test_node_field_calls_in_language_wit
  }
  
  #[test]
@@ -300,7 +308,7 @@ Forwarded: not-needed
  fn test_node_is_named_but_aliased_as_anonymous() {
      let (parser_name, parser_code) = generate_parser_for_grammar(
          &fs::read_to_string(
-@@ -752,6 +764,7 @@ fn test_node_is_named_but_aliased_as_ano
+@@ -780,6 +793,7 @@ fn test_node_is_named_but_aliased_as_ano
  }
  
  #[test]
@@ -863,10 +871,18 @@ Forwarded: not-needed
  
  #[test]
 +#[ignore="Fixtures aren't in the crate"]
+ fn test_query_sibling_patterns_dont_match_children_of_an_error() {
+     allocations::record(|| {
+         let language = get_language("rust");
+@@ -1748,6 +1787,7 @@ fn test_query_sibling_patterns_dont_matc
+ }
+ 
+ #[test]
++#[ignore="Fixtures aren't in the crate"]
  fn test_query_matches_with_alternatives_and_too_many_permutations_to_track() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -1727,6 +1766,7 @@ fn test_query_matches_with_alternatives_
+@@ -1787,6 +1827,7 @@ fn test_query_matches_with_alternatives_
  }
  
  #[test]
@@ -874,7 +890,7 @@ Forwarded: not-needed
  fn test_query_matches_with_anonymous_tokens() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -1755,6 +1795,7 @@ fn test_query_matches_with_anonymous_tok
+@@ -1815,6 +1856,7 @@ fn test_query_matches_with_anonymous_tok
  }
  
  #[test]
@@ -882,7 +898,7 @@ Forwarded: not-needed
  fn test_query_matches_with_supertypes() {
      allocations::record(|| {
          let language = get_language("python");
-@@ -1797,6 +1838,7 @@ fn test_query_matches_with_supertypes()
+@@ -1857,6 +1899,7 @@ fn test_query_matches_with_supertypes()
  }
  
  #[test]
@@ -890,7 +906,7 @@ Forwarded: not-needed
  fn test_query_matches_within_byte_range() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -1855,6 +1897,7 @@ fn test_query_matches_within_byte_range(
+@@ -1915,6 +1958,7 @@ fn test_query_matches_within_byte_range(
  }
  
  #[test]
@@ -898,7 +914,7 @@ Forwarded: not-needed
  fn test_query_matches_within_point_range() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -1910,6 +1953,7 @@ fn test_query_matches_within_point_range
+@@ -1970,6 +2014,7 @@ fn test_query_matches_within_point_range
  }
  
  #[test]
@@ -906,7 +922,7 @@ Forwarded: not-needed
  fn test_query_captures_within_byte_range() {
      allocations::record(|| {
          let language = get_language("c");
-@@ -1949,6 +1993,7 @@ fn test_query_captures_within_byte_range
+@@ -2009,6 +2054,7 @@ fn test_query_captures_within_byte_range
  }
  
  #[test]
@@ -914,7 +930,15 @@ Forwarded: not-needed
  fn test_query_matches_with_unrooted_patterns_intersecting_byte_range() {
      allocations::record(|| {
          let language = get_language("rust");
-@@ -2003,6 +2048,7 @@ fn test_query_matches_with_unrooted_patt
+@@ -2063,6 +2109,7 @@ fn test_query_matches_with_unrooted_patt
+ }
+ 
+ #[test]
++#[ignore="Fixtures aren't in the crate"]
+ fn test_query_matches_with_wildcard_at_root_intersecting_byte_range() {
+     allocations::record(|| {
+         let language = get_language("python");
+@@ -2125,6 +2172,7 @@ fn test_query_matches_with_wildcard_at_r
  }
  
  #[test]
@@ -922,7 +946,7 @@ Forwarded: not-needed
  fn test_query_captures_within_byte_range_assigned_after_iterating() {
      allocations::record(|| {
          let language = get_language("rust");
-@@ -2089,6 +2135,7 @@ fn test_query_captures_within_byte_range
+@@ -2211,6 +2259,7 @@ fn test_query_captures_within_byte_range
  }
  
  #[test]
@@ -930,7 +954,7 @@ Forwarded: not-needed
  fn test_query_matches_different_queries_same_cursor() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -2150,6 +2197,7 @@ fn test_query_matches_different_queries_
+@@ -2272,6 +2321,7 @@ fn test_query_matches_different_queries_
  }
  
  #[test]
@@ -938,7 +962,7 @@ Forwarded: not-needed
  fn test_query_matches_with_multiple_captures_on_a_node() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -2203,6 +2251,7 @@ fn test_query_matches_with_multiple_capt
+@@ -2325,6 +2375,7 @@ fn test_query_matches_with_multiple_capt
  }
  
  #[test]
@@ -946,7 +970,7 @@ Forwarded: not-needed
  fn test_query_matches_with_captured_wildcard_at_root() {
      allocations::record(|| {
          let language = get_language("python");
-@@ -2290,6 +2339,7 @@ fn test_query_matches_with_captured_wild
+@@ -2412,6 +2463,7 @@ fn test_query_matches_with_captured_wild
  }
  
  #[test]
@@ -954,7 +978,7 @@ Forwarded: not-needed
  fn test_query_matches_with_no_captures() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -2320,6 +2370,7 @@ fn test_query_matches_with_no_captures()
+@@ -2442,6 +2494,7 @@ fn test_query_matches_with_no_captures()
  }
  
  #[test]
@@ -962,7 +986,7 @@ Forwarded: not-needed
  fn test_query_matches_with_repeated_fields() {
      allocations::record(|| {
          let language = get_language("c");
-@@ -2347,6 +2398,7 @@ fn test_query_matches_with_repeated_fiel
+@@ -2469,6 +2522,7 @@ fn test_query_matches_with_repeated_fiel
  }
  
  #[test]
@@ -970,7 +994,7 @@ Forwarded: not-needed
  fn test_query_matches_with_deeply_nested_patterns_with_fields() {
      allocations::record(|| {
          let language = get_language("python");
-@@ -2435,6 +2487,7 @@ fn test_query_matches_with_deeply_nested
+@@ -2557,6 +2611,7 @@ fn test_query_matches_with_deeply_nested
  }
  
  #[test]
@@ -978,7 +1002,7 @@ Forwarded: not-needed
  fn test_query_matches_with_indefinite_step_containing_no_captures() {
      allocations::record(|| {
          // This pattern depends on the field declarations within the
-@@ -2485,6 +2538,7 @@ fn test_query_matches_with_indefinite_st
+@@ -2607,6 +2662,7 @@ fn test_query_matches_with_indefinite_st
  }
  
  #[test]
@@ -986,7 +1010,7 @@ Forwarded: not-needed
  fn test_query_captures_basic() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -2560,6 +2614,7 @@ fn test_query_captures_basic() {
+@@ -2682,6 +2738,7 @@ fn test_query_captures_basic() {
  }
  
  #[test]
@@ -994,7 +1018,7 @@ Forwarded: not-needed
  fn test_query_captures_with_text_conditions() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -2615,6 +2670,7 @@ fn test_query_captures_with_text_conditi
+@@ -2737,6 +2794,7 @@ fn test_query_captures_with_text_conditi
  }
  
  #[test]
@@ -1002,7 +1026,7 @@ Forwarded: not-needed
  fn test_query_captures_with_predicates() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -2663,6 +2719,7 @@ fn test_query_captures_with_predicates()
+@@ -2785,6 +2843,7 @@ fn test_query_captures_with_predicates()
  }
  
  #[test]
@@ -1010,7 +1034,7 @@ Forwarded: not-needed
  fn test_query_captures_with_quoted_predicate_args() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -2710,6 +2767,7 @@ fn test_query_captures_with_quoted_predi
+@@ -2832,6 +2891,7 @@ fn test_query_captures_with_quoted_predi
  }
  
  #[test]
@@ -1018,7 +1042,7 @@ Forwarded: not-needed
  fn test_query_captures_with_duplicates() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -2743,6 +2801,7 @@ fn test_query_captures_with_duplicates()
+@@ -2865,6 +2925,7 @@ fn test_query_captures_with_duplicates()
  }
  
  #[test]
@@ -1026,7 +1050,7 @@ Forwarded: not-needed
  fn test_query_captures_with_many_nested_results_without_fields() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -2806,6 +2865,7 @@ fn test_query_captures_with_many_nested_
+@@ -2928,6 +2989,7 @@ fn test_query_captures_with_many_nested_
  }
  
  #[test]
@@ -1034,7 +1058,7 @@ Forwarded: not-needed
  fn test_query_captures_with_many_nested_results_with_fields() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -2873,6 +2933,7 @@ fn test_query_captures_with_many_nested_
+@@ -2995,6 +3057,7 @@ fn test_query_captures_with_many_nested_
  }
  
  #[test]
@@ -1042,7 +1066,7 @@ Forwarded: not-needed
  fn test_query_captures_with_too_many_nested_results() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -2965,6 +3026,7 @@ fn test_query_captures_with_too_many_nes
+@@ -3087,6 +3150,7 @@ fn test_query_captures_with_too_many_nes
  }
  
  #[test]
@@ -1050,7 +1074,7 @@ Forwarded: not-needed
  fn test_query_captures_with_definite_pattern_containing_many_nested_matches() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -3013,6 +3075,7 @@ fn test_query_captures_with_definite_pat
+@@ -3135,6 +3199,7 @@ fn test_query_captures_with_definite_pat
  }
  
  #[test]
@@ -1058,7 +1082,7 @@ Forwarded: not-needed
  fn test_query_captures_ordered_by_both_start_and_end_positions() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -3053,6 +3116,7 @@ fn test_query_captures_ordered_by_both_s
+@@ -3175,6 +3240,7 @@ fn test_query_captures_ordered_by_both_s
  }
  
  #[test]
@@ -1066,7 +1090,7 @@ Forwarded: not-needed
  fn test_query_captures_with_matches_removed() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -3092,6 +3156,7 @@ fn test_query_captures_with_matches_remo
+@@ -3214,6 +3280,7 @@ fn test_query_captures_with_matches_remo
  }
  
  #[test]
@@ -1074,7 +1098,7 @@ Forwarded: not-needed
  fn test_query_captures_with_matches_removed_before_they_finish() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -3139,6 +3204,7 @@ fn test_query_captures_with_matches_remo
+@@ -3261,6 +3328,7 @@ fn test_query_captures_with_matches_remo
  }
  
  #[test]
@@ -1082,7 +1106,7 @@ Forwarded: not-needed
  fn test_query_captures_and_matches_iterators_are_fused() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -3182,6 +3248,7 @@ fn test_query_captures_and_matches_itera
+@@ -3304,6 +3372,7 @@ fn test_query_captures_and_matches_itera
  }
  
  #[test]
@@ -1090,7 +1114,7 @@ Forwarded: not-needed
  fn test_query_text_callback_returns_chunks() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -3255,6 +3322,7 @@ fn test_query_text_callback_returns_chun
+@@ -3377,6 +3446,7 @@ fn test_query_text_callback_returns_chun
  }
  
  #[test]
@@ -1098,7 +1122,7 @@ Forwarded: not-needed
  fn test_query_start_byte_for_pattern() {
      let language = get_language("javascript");
  
-@@ -3296,6 +3364,7 @@ fn test_query_start_byte_for_pattern() {
+@@ -3418,6 +3488,7 @@ fn test_query_start_byte_for_pattern() {
  }
  
  #[test]
@@ -1106,7 +1130,7 @@ Forwarded: not-needed
  fn test_query_capture_names() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -3328,6 +3397,7 @@ fn test_query_capture_names() {
+@@ -3450,6 +3521,7 @@ fn test_query_capture_names() {
  }
  
  #[test]
@@ -1114,7 +1138,7 @@ Forwarded: not-needed
  fn test_query_lifetime_is_separate_from_nodes_lifetime() {
      allocations::record(|| {
          let query = r#"(call_expression) @call"#;
-@@ -3384,6 +3454,7 @@ fn test_query_lifetime_is_separate_from_
+@@ -3506,6 +3578,7 @@ fn test_query_lifetime_is_separate_from_
  }
  
  #[test]
@@ -1122,7 +1146,7 @@ Forwarded: not-needed
  fn test_query_with_no_patterns() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -3394,6 +3465,7 @@ fn test_query_with_no_patterns() {
+@@ -3516,6 +3589,7 @@ fn test_query_with_no_patterns() {
  }
  
  #[test]
@@ -1130,7 +1154,7 @@ Forwarded: not-needed
  fn test_query_comments() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -3423,6 +3495,7 @@ fn test_query_comments() {
+@@ -3545,6 +3619,7 @@ fn test_query_comments() {
  }
  
  #[test]
@@ -1138,7 +1162,7 @@ Forwarded: not-needed
  fn test_query_disable_pattern() {
      allocations::record(|| {
          let language = get_language("javascript");
-@@ -3462,6 +3535,7 @@ fn test_query_disable_pattern() {
+@@ -3584,6 +3659,7 @@ fn test_query_disable_pattern() {
  }
  
  #[test]
@@ -1146,7 +1170,7 @@ Forwarded: not-needed
  fn test_query_alternative_predicate_prefix() {
      allocations::record(|| {
          let language = get_language("c");
-@@ -3495,6 +3569,7 @@ fn test_query_alternative_predicate_pref
+@@ -3617,6 +3693,7 @@ fn test_query_alternative_predicate_pref
  }
  
  #[test]
@@ -1154,7 +1178,7 @@ Forwarded: not-needed
  fn test_query_random() {
      use pretty_assertions::assert_eq;
  
-@@ -3554,6 +3629,7 @@ fn test_query_random() {
+@@ -3676,6 +3753,7 @@ fn test_query_random() {
  }
  
  #[test]
@@ -1162,7 +1186,15 @@ Forwarded: not-needed
  fn test_query_is_pattern_guaranteed_at_step() {
      struct Row {
          language: Language,
-@@ -3858,6 +3934,7 @@ fn test_query_is_pattern_guaranteed_at_s
+@@ -3980,6 +4058,7 @@ fn test_query_is_pattern_guaranteed_at_s
+ }
+ 
+ #[test]
++#[ignore="Fixtures aren't in the crate"]
+ fn test_query_is_pattern_rooted() {
+     struct Row {
+         description: &'static str,
+@@ -4071,6 +4150,7 @@ fn test_query_is_pattern_rooted() {
  }
  
  #[test]
@@ -1266,7 +1298,7 @@ Forwarded: not-needed
  fn test_tree_edit() {
      let mut parser = Parser::new();
      parser.set_language(get_language("javascript")).unwrap();
-@@ -190,6 +191,7 @@ fn test_tree_edit() {
+@@ -233,6 +234,7 @@ fn test_tree_edit() {
  }
  
  #[test]
@@ -1274,7 +1306,7 @@ Forwarded: not-needed
  fn test_tree_cursor() {
      let mut parser = Parser::new();
      parser.set_language(get_language("rust")).unwrap();
-@@ -226,6 +228,7 @@ fn test_tree_cursor() {
+@@ -269,6 +271,7 @@ fn test_tree_cursor() {
  }
  
  #[test]
@@ -1282,7 +1314,7 @@ Forwarded: not-needed
  fn test_tree_cursor_fields() {
      let mut parser = Parser::new();
      parser.set_language(get_language("javascript")).unwrap();
-@@ -263,6 +266,7 @@ fn test_tree_cursor_fields() {
+@@ -306,6 +309,7 @@ fn test_tree_cursor_fields() {
  }
  
  #[test]
@@ -1290,7 +1322,7 @@ Forwarded: not-needed
  fn test_tree_cursor_child_for_point() {
      let mut parser = Parser::new();
      parser.set_language(get_language("javascript")).unwrap();
-@@ -370,6 +374,7 @@ fn test_tree_cursor_child_for_point() {
+@@ -413,6 +417,7 @@ fn test_tree_cursor_child_for_point() {
  }
  
  #[test]
@@ -1298,7 +1330,7 @@ Forwarded: not-needed
  fn test_tree_node_equality() {
      let mut parser = Parser::new();
      parser.set_language(get_language("rust")).unwrap();
-@@ -382,6 +387,7 @@ fn test_tree_node_equality() {
+@@ -425,6 +430,7 @@ fn test_tree_node_equality() {
  }
  
  #[test]
