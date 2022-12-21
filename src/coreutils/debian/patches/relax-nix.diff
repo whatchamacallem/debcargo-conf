@@ -1,0 +1,176 @@
+Index: rust-coreutils-0.0.16/Cargo.toml
+===================================================================
+--- rust-coreutils-0.0.16.orig/Cargo.toml
++++ rust-coreutils-0.0.16/Cargo.toml
+@@ -406,7 +406,7 @@ procfs = { version = "0.14", default-fea
+ rlimit = "0.8.3"
+ 
+ [target.'cfg(unix)'.dev-dependencies]
+-nix = { version = "0.25", default-features = false, features = ["process", "signal", "user"] }
++nix = { version = "0", default-features = false, features = ["process", "signal", "user"] }
+ rust-users = { version="0", package="users" }
+ 
+ [build-dependencies]
+Index: rust-coreutils-0.0.16/src/uu/cat/Cargo.toml
+===================================================================
+--- rust-coreutils-0.0.16.orig/src/uu/cat/Cargo.toml
++++ rust-coreutils-0.0.16/src/uu/cat/Cargo.toml
+@@ -21,7 +21,7 @@ atty = "0.2"
+ uucore = { version=">=0.0.16", package="uucore", path="../../uucore", features=["fs", "pipes"] }
+ 
+ [target.'cfg(unix)'.dependencies]
+-nix = { version = "0.25", default-features = false }
++nix = { version = "0", default-features = false }
+ 
+ [[bin]]
+ name = "cat"
+Index: rust-coreutils-0.0.16/src/uu/kill/Cargo.toml
+===================================================================
+--- rust-coreutils-0.0.16.orig/src/uu/kill/Cargo.toml
++++ rust-coreutils-0.0.16/src/uu/kill/Cargo.toml
+@@ -16,7 +16,7 @@ path = "src/kill.rs"
+ 
+ [dependencies]
+ clap = { version = "3.2", features = ["wrap_help", "cargo"] }
+-nix = { version = "0.25", features = ["signal"] }
++nix = { version = "0", features = ["signal"] }
+ uucore = { version=">=0.0.16", package="uucore", path="../../uucore", features=["signals"] }
+ 
+ [[bin]]
+Index: rust-coreutils-0.0.16/src/uu/more/Cargo.toml
+===================================================================
+--- rust-coreutils-0.0.16.orig/src/uu/more/Cargo.toml
++++ rust-coreutils-0.0.16/src/uu/more/Cargo.toml
+@@ -17,13 +17,13 @@ path = "src/more.rs"
+ [dependencies]
+ clap = { version = "3.2", features = ["wrap_help", "cargo"] }
+ uucore = { version=">=0.0.16", package="uucore", path="../../uucore" }
+-crossterm = "0.25"
++crossterm = "0"
+ atty = "0.2"
+ unicode-width = "0.1.7"
+ unicode-segmentation = "1"
+ 
+ [target.'cfg(all(unix, not(target_os = "fuchsia")))'.dependencies]
+-nix = { version = "0.25", default-features = false }
++nix = { version = "0", default-features = false }
+ 
+ [[bin]]
+ name = "more"
+Index: rust-coreutils-0.0.16/src/uu/nice/Cargo.toml
+===================================================================
+--- rust-coreutils-0.0.16.orig/src/uu/nice/Cargo.toml
++++ rust-coreutils-0.0.16/src/uu/nice/Cargo.toml
+@@ -17,7 +17,7 @@ path = "src/nice.rs"
+ [dependencies]
+ clap = { version = "3.2", features = ["wrap_help", "cargo"] }
+ libc = "0.2.132"
+-nix = { version = "0.25", default-features = false }
++nix = { version = "0", default-features = false }
+ uucore = { version=">=0.0.16", package="uucore", path="../../uucore" }
+ 
+ [[bin]]
+Index: rust-coreutils-0.0.16/src/uu/stty/Cargo.toml
+===================================================================
+--- rust-coreutils-0.0.16.orig/src/uu/stty/Cargo.toml
++++ rust-coreutils-0.0.16/src/uu/stty/Cargo.toml
+@@ -17,7 +17,7 @@ path = "src/stty.rs"
+ [dependencies]
+ clap = { version = "3.1", features = ["wrap_help", "cargo"] }
+ uucore = { version=">=0.0.16", package="uucore", path="../../uucore" }
+-nix = { version="0.25", features = ["term"] }
++nix = { version="0", features = ["term"] }
+ 
+ [[bin]]
+ name = "stty"
+Index: rust-coreutils-0.0.16/src/uu/sync/Cargo.toml
+===================================================================
+--- rust-coreutils-0.0.16.orig/src/uu/sync/Cargo.toml
++++ rust-coreutils-0.0.16/src/uu/sync/Cargo.toml
+@@ -20,7 +20,7 @@ libc = "0.2.132"
+ uucore = { version=">=0.0.16", package="uucore", path="../../uucore", features=["wide"] }
+ 
+ [target.'cfg(any(target_os = "linux", target_os = "android"))'.dependencies]
+-nix = "0.25"
++nix = "0"
+ 
+ [target.'cfg(target_os = "windows")'.dependencies]
+ winapi = { version = "0.3", features = ["errhandlingapi", "fileapi", "handleapi", "std", "winbase", "winerror"] }
+Index: rust-coreutils-0.0.16/src/uu/tail/Cargo.toml
+===================================================================
+--- rust-coreutils-0.0.16.orig/src/uu/tail/Cargo.toml
++++ rust-coreutils-0.0.16/src/uu/tail/Cargo.toml
+@@ -29,7 +29,7 @@ winapi = { version="0.3", features=["fil
+ winapi-util = { version="0.1.5" }
+ 
+ [target.'cfg(unix)'.dependencies]
+-nix = { version = "0.25", features = ["fs"] }
++nix = { version = "0", features = ["fs"] }
+ 
+ [[bin]]
+ name = "tail"
+Index: rust-coreutils-0.0.16/src/uu/timeout/Cargo.toml
+===================================================================
+--- rust-coreutils-0.0.16.orig/src/uu/timeout/Cargo.toml
++++ rust-coreutils-0.0.16/src/uu/timeout/Cargo.toml
+@@ -17,7 +17,7 @@ path = "src/timeout.rs"
+ [dependencies]
+ clap = { version = "3.2", features = ["wrap_help", "cargo"] }
+ libc = "0.2.132"
+-nix = { version = "0.25", default-features = false, features = ["signal"] }
++nix = { version = "0", default-features = false, features = ["signal"] }
+ uucore = { version=">=0.0.16", package="uucore", path="../../uucore", features=["process", "signals"] }
+ 
+ [[bin]]
+Index: rust-coreutils-0.0.16/src/uu/tty/Cargo.toml
+===================================================================
+--- rust-coreutils-0.0.16.orig/src/uu/tty/Cargo.toml
++++ rust-coreutils-0.0.16/src/uu/tty/Cargo.toml
+@@ -16,7 +16,7 @@ path = "src/tty.rs"
+ 
+ [dependencies]
+ clap = { version = "3.2", features = ["wrap_help", "cargo"] }
+-nix = "0.25"
++nix = "0"
+ atty = "0.2"
+ uucore = { version=">=0.0.16", package="uucore", path="../../uucore", features=["fs"] }
+ 
+Index: rust-coreutils-0.0.16/src/uu/wc/Cargo.toml
+===================================================================
+--- rust-coreutils-0.0.16.orig/src/uu/wc/Cargo.toml
++++ rust-coreutils-0.0.16/src/uu/wc/Cargo.toml
+@@ -22,7 +22,7 @@ utf-8 = "0.7.6"
+ unicode-width = "0.1.8"
+ 
+ [target.'cfg(unix)'.dependencies]
+-nix = { version = "0.25", default-features = false }
++nix = { version = "0", default-features = false }
+ libc = "0.2"
+ 
+ [[bin]]
+Index: rust-coreutils-0.0.16/src/uu/yes/Cargo.toml
+===================================================================
+--- rust-coreutils-0.0.16.orig/src/uu/yes/Cargo.toml
++++ rust-coreutils-0.0.16/src/uu/yes/Cargo.toml
+@@ -20,7 +20,7 @@ libc = "0.2.132"
+ uucore = { version=">=0.0.16", package="uucore", path="../../uucore", features=["pipes"] }
+ 
+ [target.'cfg(any(target_os = "linux", target_os = "android"))'.dependencies]
+-nix = { version = "0.25", default-features = false }
++nix = { version = "0", default-features = false }
+ 
+ [[bin]]
+ name = "yes"
+Index: rust-coreutils-0.0.16/src/uucore/Cargo.toml
+===================================================================
+--- rust-coreutils-0.0.16.orig/src/uucore/Cargo.toml
++++ rust-coreutils-0.0.16/src/uucore/Cargo.toml
+@@ -38,7 +38,7 @@ os_display = "0.1.3"
+ 
+ [target.'cfg(unix)'.dependencies]
+ walkdir = { version="2.3.2", optional=true }
+-nix = { version = "0.25", optional = true, default-features = false, features = ["fs", "uio", "zerocopy"] }
++nix = { version = "0", optional = true, default-features = false, features = ["fs", "uio", "zerocopy"] }
+ 
+ [dev-dependencies]
+ clap = "3.2"
