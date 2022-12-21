@@ -1,6 +1,8 @@
---- a/tests/config_tests.rs
-+++ b/tests/config_tests.rs
-@@ -22,88 +22,6 @@
+Index: trust-dns-server/tests/config_tests.rs
+===================================================================
+--- trust-dns-server.orig/tests/config_tests.rs
++++ trust-dns-server/tests/config_tests.rs
+@@ -22,88 +22,6 @@ use trust_dns_server::authority::ZoneTyp
  use trust_dns_server::config::*;
  
  #[test]
@@ -17,10 +19,10 @@
 -    let config: Config = Config::read_config(&path).unwrap();
 -
 -    assert_eq!(config.get_listen_port(), 53);
--    assert_eq!(config.get_listen_addrs_ipv4(), Vec::<Ipv4Addr>::new());
--    assert_eq!(config.get_listen_addrs_ipv6(), Vec::<Ipv6Addr>::new());
+-    assert_eq!(config.get_listen_addrs_ipv4(), Ok(Vec::<Ipv4Addr>::new()));
+-    assert_eq!(config.get_listen_addrs_ipv6(), Ok(Vec::<Ipv6Addr>::new()));
 -    assert_eq!(config.get_tcp_request_timeout(), Duration::from_secs(5));
--    assert_eq!(config.get_log_level(), log::Level::Info);
+-    assert_eq!(config.get_log_level(), tracing::Level::INFO);
 -    assert_eq!(config.get_directory(), Path::new("/var/named"));
 -    assert_eq!(
 -        config.get_zones(),
@@ -89,7 +91,7 @@
  fn test_parse_toml() {
      let config: Config = "listen_port = 2053".parse().unwrap();
      assert_eq!(config.get_listen_port(), 2053);
-@@ -236,39 +154,3 @@
+@@ -236,39 +154,3 @@ tls_listen_port = 8853
          Path::new("path/to/some.pkcs12")
      );
  }
@@ -129,9 +131,11 @@
 -define_test_config!(ring_dnssec);
 -#[cfg(feature = "trust-dns-resolver")]
 -define_test_config!(example_forwarder);
---- a/tests/authority_battery/basic.rs
-+++ b/tests/authority_battery/basic.rs
-@@ -714,50 +714,3 @@
+Index: trust-dns-server/tests/authority_battery/basic.rs
+===================================================================
+--- trust-dns-server.orig/tests/authority_battery/basic.rs
++++ trust-dns-server/tests/authority_battery/basic.rs
+@@ -714,50 +714,3 @@ pub fn test_invalid_lookup<A: Authority<
          _ => panic!("invalid error enum variant"),
      }
  }
@@ -182,9 +186,11 @@
 -        }
 -    };
 -}
---- a/tests/authority_battery/dnssec.rs
-+++ b/tests/authority_battery/dnssec.rs
-@@ -368,122 +368,3 @@
+Index: trust-dns-server/tests/authority_battery/dnssec.rs
+===================================================================
+--- trust-dns-server.orig/tests/authority_battery/dnssec.rs
++++ trust-dns-server/tests/authority_battery/dnssec.rs
+@@ -368,122 +368,3 @@ pub fn verify(records: &[Record], rrsig_
              .is_ok())));
  }
  
@@ -307,9 +313,11 @@
 -        }
 -    };
 -}
---- a/tests/authority_battery/dynamic_update.rs
-+++ b/tests/authority_battery/dynamic_update.rs
-@@ -775,137 +775,3 @@
+Index: trust-dns-server/tests/authority_battery/dynamic_update.rs
+===================================================================
+--- trust-dns-server.orig/tests/authority_battery/dynamic_update.rs
++++ trust-dns-server/tests/authority_battery/dynamic_update.rs
+@@ -775,137 +775,3 @@ pub fn test_delete_all<A: Authority<Look
      }
  }
  
@@ -447,9 +455,11 @@
 -        }
 -    };
 -}
---- a/tests/store_file_tests.rs
-+++ b/tests/store_file_tests.rs
-@@ -22,29 +22,3 @@
+Index: trust-dns-server/tests/store_file_tests.rs
+===================================================================
+--- trust-dns-server.orig/tests/store_file_tests.rs
++++ trust-dns-server/tests/store_file_tests.rs
+@@ -22,29 +22,3 @@ fn file(master_file_path: &str, _module:
      )
      .expect("failed to load file")
  }
