@@ -1,0 +1,55 @@
+Index: rust-nix-0.26.1/test/sys/test_socket.rs
+===================================================================
+--- rust-nix-0.26.1.orig/test/sys/test_socket.rs
++++ rust-nix-0.26.1/test/sys/test_socket.rs
+@@ -890,8 +890,14 @@ pub fn test_af_alg_cipher() {
+         SockType::SeqPacket,
+         SockFlag::empty(),
+         None,
+-    )
+-    .expect("socket failed");
++    );
++    // don't fail the tests on systems that don't support this functionality
++    if let Err(e) = sock {
++        if e == nix::errno::Errno::EAFNOSUPPORT {
++            return;
++        }
++    }
++    let sock = sock.expect("socket failed");
+ 
+     let sockaddr = AlgAddr::new(alg_type, alg_name);
+     bind(sock, &sockaddr).expect("bind failed");
+@@ -986,8 +992,14 @@ pub fn test_af_alg_aead() {
+         SockType::SeqPacket,
+         SockFlag::empty(),
+         None,
+-    )
+-    .expect("socket failed");
++    );
++    // don't fail the tests on systems that don't support this functionality
++    if let Err(e) = sock {
++        if e == nix::errno::Errno::EAFNOSUPPORT {
++            return;
++        }
++    }
++    let sock = sock.expect("socket failed");
+ 
+     let sockaddr = AlgAddr::new(alg_type, alg_name);
+     bind(sock, &sockaddr).expect("bind failed");
+@@ -2190,8 +2202,14 @@ pub fn test_vsock() {
+         SockType::Stream,
+         SockFlag::empty(),
+         None,
+-    )
+-    .expect("socket failed");
++    );
++    // don't fail the tests on systems that don't support this functionality
++    if let Err(e) = s1 {
++        if e == nix::errno::Errno::EAFNOSUPPORT {
++            return;
++        }
++    }
++    let s1 = s1.expect("socket failed");
+ 
+     // VMADDR_CID_HYPERVISOR is reserved, so we expect an EADDRNOTAVAIL error.
+     let sockaddr_hv = VsockAddr::new(libc::VMADDR_CID_HYPERVISOR, port);
