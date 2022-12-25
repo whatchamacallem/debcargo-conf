@@ -10,7 +10,8 @@ Remove old libraries
 
 Should file a RM request to ftpmasters for these old crates:
 
-(no old crates, yay!)
+svgdom. Deprecated upstream and doesn't build against newer roxmltree/xmlparser
+Ping andrewsh about it, see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1006988 and https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1026853.
 
 
 Unblocking testing migrations
@@ -46,6 +47,7 @@ rustfmt-nightly
 bat update
 ----------
 
+syntect is in debian 
 Needs syntect => onig => onig-sys => bindgen 0.55 (for librust-bindgen-0.51+runtime-dev)
 Disabling syntect in bat causes:
 error[E0433]: failed to resolve: use of undeclared type or module `syntect`
@@ -72,9 +74,7 @@ see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629
 
 [ ] alga
 [ ] c_vec
-[ ] criterion
-[ ] criterion-plot
-[ ] criterion-stats
+[x] criterion
 [ ] downcast-rs
 [ ] handlebars
 [ ] itertools-num
@@ -88,24 +88,26 @@ see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629
 [ ] syn-0.11.11
 [ ] synom
 [ ] unicode-xid-0.0.4
+[ ] clap v4
+[ ] GTK related packages
 
 
 bench
 -----
-* criterion
-  * criteron-plot
 
-rustup
+* packageable
+
+rustup (#1026333)
 ------
 
 * rustup (not available as a crate)
- * git-testament
-   * git-testament-derive
- * markdown
-   * pipeline
- * retry
- * xz2
-
+ * git-testament (needs patch for tempdir)
+ * zstd
+ * xz2 (lzma-sys update (merged))
+ * download (private crate) (needs patched out reqwest features)
+ * effective-limits (NEW) 
+ 
+ 
 tokio/futures/hyper with async/await
 ------------------------------------
 
@@ -230,31 +232,86 @@ tokio/futures/hyper with async/await
 * tokio-tls (after tokio)
 * tokio-util (after tokio, bytes, futures-core, futures-sink, pin-project-lite)
 
-fractal
+fractal (#900928)
 -------
 
 * gspell
    * gspell-sys
 * gstreamer-editing-services
 * gstreamer-player
-* html2pango
-* letter-avatar
-* loggerv
-* mdl
-* secret-service (WIP)
+* matrix-sdk (WIP)
+* comrak
 * sourceview4
+* ashpd crates
 
 obfuscate
 ---------
 
 * libadwaita
 
-podcasts
+podcasts (#965044)
 --------
 
 * gstreamer-player
-* tokio-rt-multi-thread
-* reqwest-json
+* mpris-player (broken)
+
+gping (#975495)
+-------
+
+* shadow-rs (merged) (blocked by const-format)
+
+lfs (#1006367)
+-------
+
+* argh
+ * argh-derive
+* termimad
+ * coloor
+ * minimad (merged)
+
+cargo debstatus (#1026852)
+------
+
+* postgres (merged)
+ * tokio-postgres (NEW)
+
+bottom
+-------
+
+* no missing deps, waiting on upstream to drop heim
+
+macchina
+------
+* ansi-to-tui (merged)
+* color-to-tui (merged)
+ * simdutf8 (NEW)
+* libmacchina
+ * sqlite
+  * sqlite-sys (merged)
+   * sqlite-src (merged)
+   
+shortwave (#951166)
+-------
+
+* libadwaita
+* mdns (merged)
+* libshumate
+* asnyc-std-resolver (needs dns-resolvers' system-config feature)
+* mpris-player ( deprecated, fails to build against newer dbus)
+
+popsicle (#1007982)
+------
+
+* dbus-udisks (needs dbus-update (merged))
+* srmv
+ * genawaiter (merged)
+* sys-mount (needs rustc 1.65)
+* pwd (upstream license issues :( )
+* iso9660 (broken)
+* i18n-embed-fl
+ * i18n-embed
+  * i18n-embed-impl
+   * i18-embed-config (NEW)
 
 ==============
 Eventual goals
@@ -262,45 +319,50 @@ Eventual goals
 
 Binary crates worth packaging (please add if you know more):
 
-- authenticator - 2FA program (GTK/libadwaita, https://gitlab.gnome.org/World/Authenticator)
-- amberol - simple music player (GTK/libadwaita, https://gitlab.gnome.org/World/Amberol)
+
 - asus-ctl - control asus laptops (https://gitlab.com/asus-linux/asusctl)
 - bench - simple benchmarking
 - bingrep - Grep through binaries from various OSs and architectures.
-- brewstillery - Brewer's, vinter's and distiller's calculator (GTK).
+- bottom - Cross-platform monitoring tool (https://github.com/ClementTsang/bottom)
 - cargo-deb - Create Debian packages from Cargo projects
 - cargo-debstatus - Print the status of crate’s dependencies in Debian
-  * blocked on postgres
 - cargo-download - Download sources of a crate
 - cargo-edit - Cargo editing subcommands (add, rm, upgrade)
-- decoder - qr code reader (GTK/libadwaita, https://apps.gnome.org/app/com.belmoussaoui.Decoder/)
 - diskonaut - interactive disk usage tui tool
-- fractal - Matrix messaging client (GTK, https://wiki.gnome.org/Apps/Fractal)
-- fragments - bittorrent client (GTK/libadwaita, https://apps.gnome.org/de/app/de.haeckerfelix.Fragments/)
-- health - health tracking app (GTK/libadwaita, https://apps.gnome.org/de/app/dev.Cogitri.Health/)
 - hg - Rust implement of hg
 - jql - JSON Query Language CLI tool.
-- kooha - screen recorder (GTK/libadwaita, https://github.com/SeaDve/Kooha)
+- macchina - fetch CLI tool (https://github.com/Macchina-CLI/macchina)
 - meli - terminal mail client (https://meli.delivery/)
-- mousai - song recognition (GTK/libadwaita, https://apps.gnome.org/de/app/io.github.seadve.Mousai/)
-- obfuscate - censor private information (GTK/libadwaita, https://apps.gnome.org/de/app/com.belmoussaoui.Obfuscate/)
-- pika-backup - backup program (GTK/libadwaita, https://apps.gnome.org/de/app/org.gnome.World.PikaBackup/)
-- podcasts - Podcasts app (GTK, https://wiki.gnome.org/Apps/Podcasts)
-- popsicle - USB flasher (GTK, https://github.com/pop-os/popsicle)
 - recode_rs - CLI tool converting between the character encodings.
 - resvg - SVG renderer (in Debian; packaged separately, but doesn’t build anymore)
 - rural - User-friendly command-line HTTP tool
 - rust-analyzer - modular rust compiler frontend with LSP
 - rustfmt-nightly - rust coding style
 - rustup - installing and managing multiple rust toolchains
+- tmux-hints - Find matches (e.g. urls) and navigate them by keyboard
+- viu - Command-line image viewer
+- xsv - Command line program for manipulating CSV files
+- zola - static site generator (https://www.getzola.org/)
+
+GUI GTK-based programs:
+
+- authenticator - 2FA program (GTK/libadwaita, https://gitlab.gnome.org/World/Authenticator)
+- amberol - simple music player (GTK/libadwaita, https://gitlab.gnome.org/World/Amberol)
+- brewstillery - Brewer's, vinter's and distiller's calculator (GTK).
+- decoder - qr code reader (GTK/libadwaita, https://apps.gnome.org/app/com.belmoussaoui.Decoder/)
+- fractal - Matrix messaging client (GTK, https://wiki.gnome.org/Apps/Fractal)
+- fragments - bittorrent client (GTK/libadwaita, https://apps.gnome.org/de/app/de.haeckerfelix.Fragments/)
+- health - health tracking app (GTK/libadwaita, https://apps.gnome.org/de/app/dev.Cogitri.Health/)
+- kooha - screen recorder (GTK/libadwaita, https://github.com/SeaDve/Kooha)
+- mousai - song recognition (GTK/libadwaita, https://apps.gnome.org/de/app/io.github.seadve.Mousai/)
+- obfuscate - censor private information (GTK/libadwaita, https://apps.gnome.org/de/app/com.belmoussaoui.Obfuscate/)
+- pika-backup - backup program (GTK/libadwaita, https://apps.gnome.org/de/app/org.gnome.World.PikaBackup/)
+- podcasts - Podcasts app (GTK, https://wiki.gnome.org/Apps/Podcasts)
+- popsicle - USB flasher (GTK, https://github.com/pop-os/popsicle)
 - shortwave - Internet radio client (GTK, https://gitlab.gnome.org/World/Shortwave)
 - spot - spotify client (GTK/libadwaita, https://github.com/xou816/spot)
 - system-76-power - manage power profiles (https://github.com/pop-os/system76-power)
-- tmux-hints - Find matches (e.g. urls) and navigate them by keyboard
-- viu - Command-line image viewer
 - video-trimmer - Trim videos (GTK/libadwaita, https://gitlab.gnome.org/YaLTeR/video-trimmer)
-- xsv - Command line program for manipulating CSV files
-- zola - static site generator (https://www.getzola.org/)
 
 To see lists of interesting binary crates, you can run something like::
 
@@ -332,9 +394,13 @@ Current output (on 2020-01-17), minus stuff already in Debian, is:
   varlink-cli
   varlink_generator
 
+koji-client seems to be not available in testing/unstable (2022-12-25).
+
 Sccache is also helpful for reducing the build-time of things like firefox and thunderbird
 
 - sccache https://github.com/mozilla/sccache
+
+In debian :)
 
 There are also more binaries here:
 
