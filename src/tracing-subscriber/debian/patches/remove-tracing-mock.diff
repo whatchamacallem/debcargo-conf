@@ -1,0 +1,543 @@
+Index: tracing-subscriber/tests/cached_layer_filters_dont_break_other_layers.rs
+===================================================================
+--- tracing-subscriber.orig/tests/cached_layer_filters_dont_break_other_layers.rs
++++ tracing-subscriber/tests/cached_layer_filters_dont_break_other_layers.rs
+@@ -4,7 +4,7 @@ use self::support::*;
+ use tracing::Level;
+ use tracing_subscriber::{filter::LevelFilter, prelude::*};
+ 
+-#[test]
++/*#[test]
+ fn layer_filters() {
+     let (unfiltered, unfiltered_handle) = unfiltered("unfiltered");
+     let (filtered, filtered_handle) = filtered("filtered");
+@@ -88,7 +88,7 @@ fn mixed_layered() {
+     unfiltered2_handle.assert_finished();
+     filtered1_handle.assert_finished();
+     filtered2_handle.assert_finished();
+-}
++}*/
+ 
+ fn events() {
+     tracing::trace!("hello trace");
+@@ -102,7 +102,7 @@ fn filter() -> LevelFilter {
+     LevelFilter::INFO
+ }
+ 
+-fn unfiltered(name: &str) -> (ExpectLayer, subscriber::MockHandle) {
++/*fn unfiltered(name: &str) -> (ExpectLayer, subscriber::MockHandle) {
+     layer::named(name)
+         .event(event::mock().at_level(Level::TRACE))
+         .event(event::mock().at_level(Level::DEBUG))
+@@ -120,4 +120,4 @@ fn filtered(name: &str) -> (ExpectLayer,
+         .event(event::mock().at_level(Level::ERROR))
+         .done()
+         .run_with_handle()
+-}
++}*/
+Index: tracing-subscriber/tests/field_filter.rs
+===================================================================
+--- tracing-subscriber.orig/tests/field_filter.rs
++++ tracing-subscriber/tests/field_filter.rs
+@@ -1,10 +1,10 @@
+ #![cfg(feature = "env-filter")]
+ 
+ use tracing::{self, subscriber::with_default, Level};
+-use tracing_mock::*;
++//use tracing_mock::*;
+ use tracing_subscriber::{filter::EnvFilter, prelude::*};
+ 
+-#[test]
++/*#[test]
+ #[cfg_attr(not(flaky_tests), ignore)]
+ fn field_filter_events() {
+     let filter: EnvFilter = "[{thing}]=debug".parse().expect("filter should parse");
+@@ -112,4 +112,4 @@ fn record_after_created() {
+     });
+ 
+     finished.assert_finished();
+-}
++}*/
+Index: tracing-subscriber/tests/filter_log.rs
+===================================================================
+--- tracing-subscriber.orig/tests/filter_log.rs
++++ tracing-subscriber/tests/filter_log.rs
+@@ -1,7 +1,7 @@
+ #![cfg(all(feature = "env-filter", feature = "tracing-log"))]
+ 
+ use tracing::{self, Level};
+-use tracing_mock::*;
++//use tracing_mock::*;
+ use tracing_subscriber::{filter::EnvFilter, prelude::*};
+ 
+ mod my_module {
+@@ -30,7 +30,7 @@ mod my_module {
+     }
+ }
+ 
+-#[test]
++/*#[test]
+ fn log_is_enabled() {
+     let filter: EnvFilter = "filter_log::my_module=info"
+         .parse()
+@@ -60,4 +60,4 @@ fn log_is_enabled() {
+     );
+ 
+     finished.assert_finished();
+-}
++}*/
+Index: tracing-subscriber/tests/hinted_layer_filters_dont_break_other_layers.rs
+===================================================================
+--- tracing-subscriber.orig/tests/hinted_layer_filters_dont_break_other_layers.rs
++++ tracing-subscriber/tests/hinted_layer_filters_dont_break_other_layers.rs
+@@ -4,7 +4,7 @@ use self::support::*;
+ use tracing::{Level, Metadata, Subscriber};
+ use tracing_subscriber::{filter::DynFilterFn, layer::Context, prelude::*};
+ 
+-#[test]
++/*#[test]
+ fn layer_filters() {
+     let (unfiltered, unfiltered_handle) = unfiltered("unfiltered");
+     let (filtered, filtered_handle) = filtered("filtered");
+@@ -108,9 +108,9 @@ fn filter<S>() -> DynFilterFn<S> {
+         }) as fn(&Metadata<'_>, &Context<'_, S>) -> bool,
+     )
+     .with_max_level_hint(Level::INFO)
+-}
++}*/
+ 
+-fn unfiltered(name: &str) -> (ExpectLayer, subscriber::MockHandle) {
++/*fn unfiltered(name: &str) -> (ExpectLayer, subscriber::MockHandle) {
+     layer::named(name)
+         .event(event::mock().at_level(Level::TRACE))
+         .event(event::mock().at_level(Level::DEBUG))
+@@ -128,4 +128,4 @@ fn filtered(name: &str) -> (ExpectLayer,
+         .event(event::mock().at_level(Level::ERROR))
+         .done()
+         .run_with_handle()
+-}
++}*/
+Index: tracing-subscriber/tests/layer_filter_interests_are_cached.rs
+===================================================================
+--- tracing-subscriber.orig/tests/layer_filter_interests_are_cached.rs
++++ tracing-subscriber/tests/layer_filter_interests_are_cached.rs
+@@ -9,7 +9,7 @@ use std::{
+ use tracing::{Level, Subscriber};
+ use tracing_subscriber::{filter, prelude::*};
+ 
+-#[test]
++/*#[test]
+ fn layer_filter_interests_are_cached() {
+     let seen = Arc::new(Mutex::new(HashMap::new()));
+     let seen2 = seen.clone();
+@@ -66,4 +66,4 @@ fn layer_filter_interests_are_cached() {
+     }
+ 
+     handle.assert_finished();
+-}
++}*/
+Index: tracing-subscriber/tests/multiple_layer_filter_interests_cached.rs
+===================================================================
+--- tracing-subscriber.orig/tests/multiple_layer_filter_interests_cached.rs
++++ tracing-subscriber/tests/multiple_layer_filter_interests_cached.rs
+@@ -9,7 +9,7 @@ use std::{
+ use tracing::{Level, Subscriber};
+ use tracing_subscriber::{filter, prelude::*};
+ 
+-#[test]
++/*#[test]
+ fn multiple_layer_filter_interests_are_cached() {
+     // This layer will return Interest::always for INFO and lower.
+     let seen_info = Arc::new(Mutex::new(HashMap::new()));
+@@ -128,4 +128,4 @@ fn multiple_layer_filter_interests_are_c
+ 
+     info_handle.assert_finished();
+     warn_handle.assert_finished();
+-}
++}*/
+Index: tracing-subscriber/tests/same_len_filters.rs
+===================================================================
+--- tracing-subscriber.orig/tests/same_len_filters.rs
++++ tracing-subscriber/tests/same_len_filters.rs
+@@ -3,10 +3,10 @@
+ #![cfg(feature = "env-filter")]
+ 
+ use tracing::{self, subscriber::with_default, Level};
+-use tracing_mock::*;
++//use tracing_mock::*;
+ use tracing_subscriber::{filter::EnvFilter, prelude::*};
+ 
+-#[test]
++/*#[test]
+ fn same_length_targets() {
+     let filter: EnvFilter = "foo=trace,bar=trace".parse().expect("filter should parse");
+     let (subscriber, finished) = subscriber::mock()
+@@ -78,4 +78,4 @@ fn same_num_fields_and_name_len() {
+     });
+ 
+     finished.assert_finished();
+-}
++}*/
+Index: tracing-subscriber/tests/support.rs
+===================================================================
+--- tracing-subscriber.orig/tests/support.rs
++++ tracing-subscriber/tests/support.rs
+@@ -1,15 +1,15 @@
+ #![allow(missing_docs, dead_code)]
+-pub use tracing_mock::{event, field, span, subscriber};
++//pub use tracing_mock::{event, field, span, subscriber};
+ 
+ use tracing_core::{
+     span::{Attributes, Id, Record},
+     Event, Subscriber,
+ };
+-use tracing_mock::{
++/*use tracing_mock::{
+     event::MockEvent,
+     span::{MockSpan, NewSpan},
+     subscriber::{Expect, MockHandle},
+-};
++};*/
+ use tracing_subscriber::{
+     layer::{Context, Layer},
+     registry::{LookupSpan, SpanRef},
+@@ -21,7 +21,7 @@ use std::{
+     sync::{Arc, Mutex},
+ };
+ 
+-pub mod layer {
++/*pub mod layer {
+     use super::ExpectLayerBuilder;
+ 
+     pub fn mock() -> ExpectLayerBuilder {
+@@ -404,4 +404,4 @@ impl fmt::Debug for ExpectLayer {
+ 
+         s.finish()
+     }
+-}
++}*/
+Index: tracing-subscriber/tests/unhinted_layer_filters_dont_break_other_layers.rs
+===================================================================
+--- tracing-subscriber.orig/tests/unhinted_layer_filters_dont_break_other_layers.rs
++++ tracing-subscriber/tests/unhinted_layer_filters_dont_break_other_layers.rs
+@@ -4,7 +4,7 @@ use self::support::*;
+ use tracing::Level;
+ use tracing_subscriber::{filter::DynFilterFn, prelude::*};
+ 
+-#[test]
++/*#[test]
+ fn layer_filters() {
+     let (unfiltered, unfiltered_handle) = unfiltered("unfiltered");
+     let (filtered, filtered_handle) = filtered("filtered");
+@@ -88,7 +88,7 @@ fn mixed_layered() {
+     unfiltered2_handle.assert_finished();
+     filtered1_handle.assert_finished();
+     filtered2_handle.assert_finished();
+-}
++}*/
+ 
+ fn events() {
+     tracing::trace!("hello trace");
+@@ -102,7 +102,7 @@ fn filter<S>() -> DynFilterFn<S> {
+     DynFilterFn::new(|metadata, _| metadata.level() <= &Level::INFO)
+ }
+ 
+-fn unfiltered(name: &str) -> (ExpectLayer, subscriber::MockHandle) {
++/*fn unfiltered(name: &str) -> (ExpectLayer, subscriber::MockHandle) {
+     layer::named(name)
+         .event(event::mock().at_level(Level::TRACE))
+         .event(event::mock().at_level(Level::DEBUG))
+@@ -120,4 +120,4 @@ fn filtered(name: &str) -> (ExpectLayer,
+         .event(event::mock().at_level(Level::ERROR))
+         .done()
+         .run_with_handle()
+-}
++}*/
+Index: tracing-subscriber/tests/utils.rs
+===================================================================
+--- tracing-subscriber.orig/tests/utils.rs
++++ tracing-subscriber/tests/utils.rs
+@@ -1,9 +1,9 @@
+ #![cfg(feature = "std")]
+ 
+-use tracing_mock::*;
++//use tracing_mock::*;
+ use tracing_subscriber::prelude::*;
+ 
+-#[test]
++/*#[test]
+ fn init_ext_works() {
+     let (subscriber, finished) = subscriber::mock()
+         .event(
+@@ -17,7 +17,7 @@ fn init_ext_works() {
+     let _guard = subscriber.set_default();
+     tracing::info!(target: "init_works", "it worked!");
+     finished.assert_finished();
+-}
++}*/
+ 
+ #[test]
+ #[cfg(feature = "fmt")]
+Index: tracing-subscriber/tests/vec_subscriber_filter_interests_cached.rs
+===================================================================
+--- tracing-subscriber.orig/tests/vec_subscriber_filter_interests_cached.rs
++++ tracing-subscriber/tests/vec_subscriber_filter_interests_cached.rs
+@@ -9,7 +9,7 @@ use std::{
+ use tracing::{Level, Subscriber};
+ use tracing_subscriber::{filter, prelude::*};
+ 
+-#[test]
++/*#[test]
+ fn vec_layer_filter_interests_are_cached() {
+     let mk_filtered = |level: Level, subscriber: ExpectLayer| {
+         let seen = Arc::new(Mutex::new(HashMap::new()));
+@@ -114,4 +114,4 @@ fn vec_layer_filter_interests_are_cached
+ 
+     info_handle.assert_finished();
+     warn_handle.assert_finished();
+-}
++}*/
+Index: tracing-subscriber/tests/env_filter/main.rs
+===================================================================
+--- tracing-subscriber.orig/tests/env_filter/main.rs
++++ tracing-subscriber/tests/env_filter/main.rs
+@@ -12,7 +12,7 @@ use tracing_subscriber::{
+     prelude::*,
+ };
+ 
+-#[test]
++/*#[test]
+ fn level_filter_event() {
+     let filter: EnvFilter = "info".parse().expect("filter should parse");
+     let (subscriber, finished) = subscriber::mock()
+@@ -128,9 +128,9 @@ fn level_filter_event_with_target_and_sp
+     });
+ 
+     handle.assert_finished();
+-}
++}*/
+ 
+-#[test]
++/*#[test]
+ fn not_order_dependent() {
+     // this test reproduces tokio-rs/tracing#623
+ 
+@@ -182,9 +182,9 @@ fn add_directive_enables_event() {
+     });
+ 
+     finished.assert_finished();
+-}
++}*/
+ 
+-#[test]
++/*#[test]
+ fn span_name_filter_is_dynamic() {
+     let filter: EnvFilter = "info,[cool_span]=debug"
+         .parse()
+@@ -228,7 +228,7 @@ fn span_name_filter_is_dynamic() {
+     });
+ 
+     finished.assert_finished();
+-}
++}*/
+ 
+ #[test]
+ fn method_name_resolution() {
+@@ -244,7 +244,7 @@ fn method_name_resolution() {
+ mod per_layer_filter {
+     use super::*;
+ 
+-    #[test]
++    /*#[test]
+     fn level_filter_event() {
+         let filter: EnvFilter = "info".parse().expect("filter should parse");
+         let (layer, handle) = layer::mock()
+@@ -543,5 +543,5 @@ mod per_layer_filter {
+ 
+         handle1.assert_finished();
+         handle2.assert_finished();
+-    }
++    }*/
+ }
+Index: tracing-subscriber/tests/env_filter/per_layer.rs
+===================================================================
+--- tracing-subscriber.orig/tests/env_filter/per_layer.rs
++++ tracing-subscriber/tests/env_filter/per_layer.rs
+@@ -3,7 +3,7 @@
+ #![cfg(feature = "registry")]
+ use super::*;
+ 
+-#[test]
++/*#[test]
+ fn level_filter_event() {
+     let filter: EnvFilter = "info".parse().expect("filter should parse");
+     let (layer, handle) = layer::mock()
+@@ -302,4 +302,4 @@ fn multiple_dynamic_filters() {
+ 
+     handle1.assert_finished();
+     handle2.assert_finished();
+-}
++}*/
+Index: tracing-subscriber/tests/layer_filters/boxed.rs
+===================================================================
+--- tracing-subscriber.orig/tests/layer_filters/boxed.rs
++++ tracing-subscriber/tests/layer_filters/boxed.rs
+@@ -1,9 +1,9 @@
+ use super::*;
+ use tracing_subscriber::{filter, prelude::*, Layer};
+ 
+-fn layer() -> (ExpectLayer, subscriber::MockHandle) {
++/*fn layer() -> (ExpectLayer, subscriber::MockHandle) {
+     layer::mock().done().run_with_handle()
+-}
++}*/
+ 
+ fn filter<S>() -> filter::DynFilterFn<S> {
+     // Use dynamic filter fn to disable interest caching and max-level hints,
+@@ -11,6 +11,7 @@ fn filter<S>() -> filter::DynFilterFn<S>
+     filter::dynamic_filter_fn(|_, _| false)
+ }
+ 
++/*
+ /// reproduces https://github.com/tokio-rs/tracing/issues/1563#issuecomment-921363629
+ #[test]
+ fn box_works() {
+@@ -39,4 +40,4 @@ fn dyn_box_works() {
+     }
+ 
+     handle.assert_finished();
+-}
++}*/
+Index: tracing-subscriber/tests/layer_filters/filter_scopes.rs
+===================================================================
+--- tracing-subscriber.orig/tests/layer_filters/filter_scopes.rs
++++ tracing-subscriber/tests/layer_filters/filter_scopes.rs
+@@ -1,6 +1,6 @@
+ use super::*;
+ 
+-#[test]
++/*#[test]
+ fn filters_span_scopes() {
+     let (debug_layer, debug_handle) = layer::named("debug")
+         .enter(span::mock().at_level(Level::DEBUG))
+@@ -128,4 +128,4 @@ fn filters_interleaved_span_scopes() {
+     a_handle.assert_finished();
+     b_handle.assert_finished();
+     all_handle.assert_finished();
+-}
++}*/
+Index: tracing-subscriber/tests/layer_filters/main.rs
+===================================================================
+--- tracing-subscriber.orig/tests/layer_filters/main.rs
++++ tracing-subscriber/tests/layer_filters/main.rs
+@@ -13,7 +13,7 @@ mod vec;
+ use tracing::{level_filters::LevelFilter, Level};
+ use tracing_subscriber::{filter, prelude::*, Layer};
+ 
+-#[test]
++/*#[test]
+ fn basic_layer_filters() {
+     let (trace_layer, trace_handle) = layer::named("trace")
+         .event(event::mock().at_level(Level::TRACE))
+@@ -187,4 +187,4 @@ fn filter_fn() {
+     foo_handle.assert_finished();
+     bar_handle.assert_finished();
+     all_handle.assert_finished();
+-}
++}*/
+Index: tracing-subscriber/tests/layer_filters/per_event.rs
+===================================================================
+--- tracing-subscriber.orig/tests/layer_filters/per_event.rs
++++ tracing-subscriber/tests/layer_filters/per_event.rs
+@@ -39,7 +39,7 @@ impl<S> Filter<S> for FilterEvent {
+     }
+ }
+ 
+-#[test]
++/*#[test]
+ fn per_subscriber_event_field_filtering() {
+     let (expect, handle) = layer::mock()
+         .event(event::mock().at_level(Level::TRACE))
+@@ -58,4 +58,4 @@ fn per_subscriber_event_field_filtering(
+     tracing::error!("hello error");
+ 
+     handle.assert_finished();
+-}
++}*/
+Index: tracing-subscriber/tests/layer_filters/targets.rs
+===================================================================
+--- tracing-subscriber.orig/tests/layer_filters/targets.rs
++++ tracing-subscriber/tests/layer_filters/targets.rs
+@@ -32,7 +32,7 @@ fn log_events() {
+     inner::logs();
+ }
+ 
+-#[test]
++/*#[test]
+ fn inner_layer_short_circuits() {
+     // This test ensures that when a global filter short-circuits `Interest`
+     // evaluation, we aren't left with a "dirty" per-layer filter state.
+@@ -56,4 +56,4 @@ fn inner_layer_short_circuits() {
+     tracing::info!(target: "magic_target", "hello world");
+ 
+     handle.assert_finished();
+-}
++}*/
+Index: tracing-subscriber/tests/layer_filters/trees.rs
+===================================================================
+--- tracing-subscriber.orig/tests/layer_filters/trees.rs
++++ tracing-subscriber/tests/layer_filters/trees.rs
+@@ -1,6 +1,6 @@
+ use super::*;
+ 
+-#[test]
++/*#[test]
+ fn basic_trees() {
+     let (with_target, with_target_handle) = layer::named("info_with_target")
+         .event(event::mock().at_level(Level::INFO).with_target("my_target"))
+@@ -143,4 +143,4 @@ fn filter_span_scopes() {
+     info_handle.assert_finished();
+     a_handle.assert_finished();
+     b_handle.assert_finished();
+-}
++}*/
+Index: tracing-subscriber/tests/layer_filters/vec.rs
+===================================================================
+--- tracing-subscriber.orig/tests/layer_filters/vec.rs
++++ tracing-subscriber/tests/layer_filters/vec.rs
+@@ -1,7 +1,7 @@
+ use super::*;
+ use tracing::Subscriber;
+ 
+-#[test]
++/*#[test]
+ fn with_filters_unboxed() {
+     let (trace_layer, trace_handle) = layer::named("trace")
+         .event(event::mock().at_level(Level::TRACE))
+@@ -73,9 +73,9 @@ fn with_filters_boxed() {
+     unfiltered_handle.assert_finished();
+     debug_handle.assert_finished();
+     target_handle.assert_finished();
+-}
++}*/
+ 
+-#[test]
++/*#[test]
+ fn mixed_max_level_hint() {
+     let unfiltered = layer::named("unfiltered").run().boxed();
+     let info = layer::named("info")
+@@ -110,11 +110,11 @@ fn all_filtered_max_level_hint() {
+     let subscriber = tracing_subscriber::registry().with(vec![warn, info, debug]);
+ 
+     assert_eq!(subscriber.max_level_hint(), Some(LevelFilter::DEBUG));
+-}
++}*/
+ 
+-#[test]
++/*#[test]
+ fn empty_vec() {
+     // Just a None means everything is off
+     let subscriber = tracing_subscriber::registry().with(Vec::<ExpectLayer>::new());
+     assert_eq!(subscriber.max_level_hint(), Some(LevelFilter::OFF));
+-}
++}*/

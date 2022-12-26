@@ -1,0 +1,35 @@
+Index: tracing-subscriber/src/fmt/format/mod.rs
+===================================================================
+--- tracing-subscriber.orig/src/fmt/format/mod.rs
++++ tracing-subscriber/src/fmt/format/mod.rs
+@@ -1818,7 +1818,7 @@ pub(super) mod test {
+         let _default = set_default(&subscriber.into());
+         tracing::info!("hello");
+         let res = make_writer.get_string();
+-        assert!(expected.is_match(&res));
++        assert!(expected.is_match(&res),"string {:?} did not match pattern {:?}",res,expected);
+     }
+ 
+     #[test]
+@@ -2149,8 +2149,7 @@ pub(super) mod test {
+ 
+     /// Returns the test's module path.
+     fn current_path() -> String {
+-        Path::new("tracing-subscriber")
+-            .join("src")
++        Path::new("src")
+             .join("fmt")
+             .join("format")
+             .join("mod.rs")
+--- tracing-subscriber.orig/src/fmt/format/json.rs
++++ tracing-subscriber/src/fmt/format/json.rs
+@@ -578,8 +578,7 @@ mod test {
+ 
+     #[test]
+     fn json_filename() {
+-        let current_path = Path::new("tracing-subscriber")
+-            .join("src")
++        let current_path = Path::new("src")
+             .join("fmt")
+             .join("format")
+             .join("json.rs")
