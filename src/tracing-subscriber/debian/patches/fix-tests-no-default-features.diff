@@ -25,3 +25,226 @@ Index: tracing-subscriber/Cargo.toml
  
  [dependencies.matchers]
  version = "0.1.0"
+Index: tracing-subscriber/src/fmt/fmt_layer.rs
+===================================================================
+--- tracing-subscriber.orig/src/fmt/fmt_layer.rs
++++ tracing-subscriber/src/fmt/fmt_layer.rs
+@@ -1242,6 +1242,7 @@ mod test {
+         re.replace_all(s.as_str(), "timing").to_string()
+     }
+ 
++    #[cfg(feature = "ansi")]
+     #[test]
+     fn format_error_print_to_stderr() {
+         struct AlwaysError;
+@@ -1270,6 +1271,7 @@ mod test {
+         assert!(actual.as_str().starts_with(expected), "\nactual = {}\nshould start with expected = {}\n", actual, expected);
+     }
+ 
++    #[cfg(feature = "ansi")]
+     #[test]
+     fn format_error_ignore_if_log_internal_errors_is_false() {
+         struct AlwaysError;
+@@ -1296,6 +1298,7 @@ mod test {
+         assert_eq!("", actual.as_str());
+     }
+ 
++    #[cfg(feature = "ansi")]
+     #[test]
+     fn synthesize_span_none() {
+         let make_writer = MockMakeWriter::default();
+@@ -1315,6 +1318,7 @@ mod test {
+         assert_eq!("", actual.as_str());
+     }
+ 
++    #[cfg(feature = "ansi")]
+     #[test]
+     fn synthesize_span_active() {
+         let make_writer = MockMakeWriter::default();
+@@ -1338,6 +1342,7 @@ mod test {
+         );
+     }
+ 
++    #[cfg(feature = "ansi")]
+     #[test]
+     fn synthesize_span_close() {
+         let make_writer = MockMakeWriter::default();
+@@ -1360,6 +1365,7 @@ mod test {
+         );
+     }
+ 
++    #[cfg(feature = "ansi")]
+     #[test]
+     fn synthesize_span_close_no_timing() {
+         let make_writer = MockMakeWriter::default();
+@@ -1383,6 +1389,7 @@ mod test {
+         );
+     }
+ 
++    #[cfg(feature = "ansi")]
+     #[test]
+     fn synthesize_span_full() {
+         let make_writer = MockMakeWriter::default();
+@@ -1408,6 +1415,7 @@ mod test {
+         );
+     }
+ 
++    #[cfg(feature = "ansi")]
+     #[test]
+     fn make_writer_based_on_meta() {
+         struct MakeByTarget {
+Index: tracing-subscriber/src/fmt/format/mod.rs
+===================================================================
+--- tracing-subscriber.orig/src/fmt/format/mod.rs
++++ tracing-subscriber/src/fmt/format/mod.rs
+@@ -1751,6 +1751,7 @@ pub(super) mod test {
+         assert_info_hello(subscriber, make_writer, "hello\n")
+     }
+ 
++    #[cfg(feature = "ansi")]
+     fn test_ansi<T>(
+         is_ansi: bool,
+         expected: &str,
+@@ -1773,13 +1774,14 @@ pub(super) mod test {
+         builder: crate::fmt::SubscriberBuilder<DefaultFields, Format<T>>,
+     ) where
+         Format<T, MockTime>: FormatEvent<crate::Registry, DefaultFields>,
+-        T: Send + Sync,
++        T: Send + Sync + 'static,
+     {
+         let make_writer = MockMakeWriter::default();
+-        let subscriber = builder.with_writer(make_writer).with_timer(MockTime);
++        let subscriber = builder.with_writer(make_writer.clone()).with_timer(MockTime);
+         run_test(subscriber, make_writer, expected)
+     }
+ 
++    #[cfg(feature = "ansi")]
+     fn test_without_level<T>(
+         expected: &str,
+         builder: crate::fmt::SubscriberBuilder<DefaultFields, Format<T>>,
+@@ -1796,6 +1798,7 @@ pub(super) mod test {
+         run_test(subscriber, make_writer, expected);
+     }
+ 
++    #[cfg(feature = "ansi")]
+     #[test]
+     fn with_line_number_and_file_name() {
+         let make_writer = MockMakeWriter::default();
+@@ -1821,6 +1824,7 @@ pub(super) mod test {
+         assert!(expected.is_match(&res),"string {:?} did not match pattern {:?}",res,expected);
+     }
+ 
++    #[cfg(feature = "ansi")]
+     #[test]
+     fn with_line_number() {
+         let make_writer = MockMakeWriter::default();
+@@ -1840,6 +1844,7 @@ pub(super) mod test {
+         assert!(expected.is_match(&res));
+     }
+ 
++    #[cfg(feature = "ansi")]
+     #[test]
+     fn with_filename() {
+         let make_writer = MockMakeWriter::default();
+@@ -1856,6 +1861,7 @@ pub(super) mod test {
+         assert_info_hello(subscriber, make_writer, expected);
+     }
+ 
++    #[cfg(feature = "ansi")]
+     #[test]
+     fn with_thread_ids() {
+         let make_writer = MockMakeWriter::default();
+@@ -1870,6 +1876,7 @@ pub(super) mod test {
+         assert_info_hello_ignore_numeric(subscriber, make_writer, expected);
+     }
+ 
++    #[cfg(feature = "ansi")]
+     #[test]
+     fn pretty_default() {
+         let make_writer = MockMakeWriter::default();
+@@ -1914,6 +1921,7 @@ pub(super) mod test {
+         assert_eq!(expected, result_cleaned)
+     }
+ 
++    #[cfg(feature = "ansi")]
+     fn test_overridden_parents<T>(
+         expected: &str,
+         builder: crate::fmt::SubscriberBuilder<DefaultFields, Format<T>>,
+@@ -1937,6 +1945,7 @@ pub(super) mod test {
+         assert_eq!(expected, make_writer.get_string());
+     }
+ 
++    #[cfg(feature = "ansi")]
+     fn test_overridden_parents_in_scope<T>(
+         expected1: &str,
+         expected2: &str,
+@@ -1976,6 +1985,7 @@ pub(super) mod test {
+     mod default {
+         use super::*;
+ 
++        #[cfg(feature = "ansi")]
+         #[test]
+         fn with_thread_ids() {
+             let make_writer = MockMakeWriter::default();
+@@ -2011,18 +2021,21 @@ pub(super) mod test {
+             test_without_ansi(expected, crate::fmt::Subscriber::builder())
+         }
+ 
++        #[cfg(feature = "ansi")]
+         #[test]
+         fn without_level() {
+             let expected = "fake time tracing_subscriber::fmt::format::test: hello\n";
+             test_without_level(expected, crate::fmt::Subscriber::builder())
+         }
+ 
++        #[cfg(feature = "ansi")]
+         #[test]
+         fn overridden_parents() {
+             let expected = "fake time span1{span=1}:span2{span=2}: tracing_subscriber::fmt::format::test: hello\n";
+             test_overridden_parents(expected, crate::fmt::Subscriber::builder())
+         }
+ 
++        #[cfg(feature = "ansi")]
+         #[test]
+         fn overridden_parents_in_scope() {
+             test_overridden_parents_in_scope(
+@@ -2057,18 +2070,21 @@ pub(super) mod test {
+             test_without_ansi(expected, crate::fmt::Subscriber::builder().compact())
+         }
+ 
++        #[cfg(feature = "ansi")]
+         #[test]
+         fn without_level() {
+             let expected = "fake time tracing_subscriber::fmt::format::test: hello\n";
+             test_without_level(expected, crate::fmt::Subscriber::builder().compact());
+         }
+ 
++        #[cfg(feature = "ansi")]
+         #[test]
+         fn overridden_parents() {
+             let expected = "fake time span1:span2: tracing_subscriber::fmt::format::test: hello span=1 span=2\n";
+             test_overridden_parents(expected, crate::fmt::Subscriber::builder().compact())
+         }
+ 
++        #[cfg(feature = "ansi")]
+         #[test]
+         fn overridden_parents_in_scope() {
+             test_overridden_parents_in_scope(
+@@ -2082,6 +2098,7 @@ pub(super) mod test {
+     mod pretty {
+         use super::*;
+ 
++        #[cfg(feature = "ansi")]
+         #[test]
+         fn pretty_default() {
+             let make_writer = MockMakeWriter::default();
+Index: tracing-subscriber/tests/env_filter/main.rs
+===================================================================
+--- tracing-subscriber.orig/tests/env_filter/main.rs
++++ tracing-subscriber/tests/env_filter/main.rs
+@@ -1,4 +1,4 @@
+-#![cfg(feature = "env-filter")]
++#![cfg(all(feature = "env-filter", feature = "registry"))]
+ 
+ #[path = "../support.rs"]
+ mod support;
