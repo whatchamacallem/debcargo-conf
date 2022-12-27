@@ -1,0 +1,64 @@
+Workaround floating point issue in tests on armel
+
+Specifically powi seems to have issues with extreme values on armel, as does
+floating point division underflowing to zero before it really should. The
+implementation used here, however appears to work correctly.
+
+See https://github.com/rust-num/num-rational/issues/111
+
+Index: rust-num-rational-0.4.1/src/lib.rs
+===================================================================
+--- rust-num-rational-0.4.1.orig/src/lib.rs
++++ rust-num-rational-0.4.1/src/lib.rs
+@@ -3068,6 +3068,24 @@ mod test {
+         assert_eq!(Ratio::<i32>::new_raw(0, 0).to_f64(), None);
+     }
+ 
++    // powi in the standard library seems to have problems with very
++    // small values on arm softfloat, use our own implementation instead.
++    fn naive_powi(mut a : f64, b : i32) -> f64 {
++
++        let mut res = 1.0;
++        let negative = b < 0;
++
++        let b = b.abs();
++        for i in 0..b {
++            res *= a;
++        }
++        if negative {
++             res = 2.0/res;
++             res = res * 0.5;
++        }
++        return res;
++    }
++
+     #[test]
+     fn test_ldexp() {
+         use core::f64::{INFINITY, MAX_EXP, MIN_EXP, NAN, NEG_INFINITY};
+@@ -3078,19 +3096,19 @@ mod test {
+ 
+         // Cases where ldexp is equivalent to multiplying by 2^exp because there's no over- or
+         // underflow.
+-        assert_eq!(ldexp(3.5, 5), 3.5 * 2f64.powi(5));
+-        assert_eq!(ldexp(1.0, MAX_EXP - 1), 2f64.powi(MAX_EXP - 1));
+-        assert_eq!(ldexp(2.77, MIN_EXP + 3), 2.77 * 2f64.powi(MIN_EXP + 3));
++        assert_eq!(ldexp(3.5, 5), 3.5 * naive_powi(2.0,5));
++        assert_eq!(ldexp(1.0, MAX_EXP - 1), naive_powi(2.0,MAX_EXP - 1));
++        assert_eq!(ldexp(2.77, MIN_EXP + 3), 2.77 * naive_powi(2.0,MIN_EXP + 3));
+ 
+         // Case where initial value is subnormal
+-        assert_eq!(ldexp(5e-324, 4), 5e-324 * 2f64.powi(4));
+-        assert_eq!(ldexp(5e-324, 200), 5e-324 * 2f64.powi(200));
++        assert_eq!(ldexp(5e-324, 4), 5e-324 * naive_powi(2.0,4));
++        assert_eq!(ldexp(5e-324, 200), 5e-324 * naive_powi(2.0,200));
+ 
+         // Near underflow (2^exp is too small to represent, but not x*2^exp)
+-        assert_eq!(ldexp(4.0, MIN_EXP - 3), 2f64.powi(MIN_EXP - 1));
++        assert_eq!(ldexp(4.0, MIN_EXP - 3), naive_powi(2.0,MIN_EXP - 1));
+ 
+         // Near overflow
+-        assert_eq!(ldexp(0.125, MAX_EXP + 3), 2f64.powi(MAX_EXP));
++        assert_eq!(ldexp(0.125, MAX_EXP + 3), naive_powi(2.0,MAX_EXP));
+ 
+         // Overflow and underflow cases
+         assert_eq!(ldexp(1.0, MIN_EXP - 54), 0.0);
