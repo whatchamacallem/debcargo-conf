@@ -11,7 +11,8 @@ Remove old libraries
 Should file a RM request to ftpmasters for these old crates:
 
 svgdom. Deprecated upstream and doesn't build against newer roxmltree/xmlparser
-Ping andrewsh about it, see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1006988 and https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1026853.
+
+Done: #1027141
 
 
 Unblocking testing migrations
