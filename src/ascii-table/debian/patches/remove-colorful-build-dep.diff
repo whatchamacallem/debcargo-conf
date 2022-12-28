@@ -1,0 +1,40 @@
+Description: Removing color_codes feature and colorful dev-dependency
+ Licensing situation with colorful is not clear, which
+ block the publishing of ascii_table. colorful is only
+ used as a helper in some tests, that only
+ work if color_codes feature is enabled.
+ Currently this feature is not used in packages
+ in Debian.
+Author: Igor Petruk <ipetruk@google.com>
+Last-Update: 2022-12-23
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: ascii-table/Cargo.toml
+===================================================================
+--- ascii-table.orig/Cargo.toml
++++ ascii-table/Cargo.toml
+@@ -23,13 +23,6 @@ categories = ["command-line-interface"]
+ license = "MIT"
+ repository = "https://gitlab.com/d5b4b2/ascii-table"
+ resolver = "2"
+-[dependencies.lazy_static]
+-version = "1"
+-optional = true
+-
+-[dependencies.regex]
+-version = "1"
+-optional = true
+ 
+ [dependencies.termion]
+ version = "1"
+@@ -38,10 +31,7 @@ optional = true
+ [dependencies.unicode-width]
+ version = "0.1"
+ optional = true
+-[dev-dependencies.colorful]
+-version = "0.2"
+ 
+ [features]
+ auto_table_width = ["termion"]
+-color_codes = ["lazy_static", "regex"]
+ wide_characters = ["unicode-width"]
