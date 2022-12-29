@@ -10,9 +10,7 @@ Remove old libraries
 
 Should file a RM request to ftpmasters for these old crates:
 
-svgdom. Deprecated upstream and doesn't build against newer roxmltree/xmlparser
-
-Done: #1027141
+No old crates, yay !
 
 
 Unblocking testing migrations
