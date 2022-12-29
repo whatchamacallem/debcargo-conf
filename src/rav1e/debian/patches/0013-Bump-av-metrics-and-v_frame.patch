@@ -1,0 +1,340 @@
+From: Sebastian Ramacher <sramacher@debian.org>
+Date: Thu, 29 Dec 2022 11:35:24 +0100
+Subject: Bump av-metrics and v_frame
+
+Based on b5c76736440250409b173b07f99aa94e60ec47e2
+---
+ Cargo.toml             |   4 +-
+ src/scenechange/mod.rs | 215 ++++++++++++++++++++++++++++++-------------------
+ 2 files changed, 132 insertions(+), 87 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 63b7659..063f26b 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -56,7 +56,7 @@ version = "0.3"
+ version = "0.7"
+ 
+ [dependencies.av-metrics]
+-version = "0.8.1"
++version = "0.9"
+ optional = true
+ default-features = false
+ 
+@@ -133,7 +133,7 @@ version = "0.5"
+ optional = true
+ 
+ [dependencies.v_frame]
+-version = "0.2.5"
++version = "0.3"
+ 
+ [dependencies.y4m]
+ version = "0.7"
+diff --git a/src/scenechange/mod.rs b/src/scenechange/mod.rs
+index 126329d..fa08668 100644
+--- a/src/scenechange/mod.rs
++++ b/src/scenechange/mod.rs
+@@ -16,6 +16,7 @@ use crate::sad_row;
+ use crate::util::Pixel;
+ use std::sync::Arc;
+ use std::{cmp, u64};
++use std::hint::unreachable_unchecked;
+ 
+ // The fast implementation is based on a Python implementation at
+ // https://pyscenedetect.readthedocs.io/en/latest/reference/detection-methods/.
+@@ -30,17 +31,47 @@ use std::{cmp, u64};
+ const FAST_THRESHOLD: f64 = 18.0;
+ const IMP_BLOCK_DIFF_THRESHOLD: f64 = 7.0;
+ 
++/// Fast integer division where divisor is a nonzero power of 2
++#[inline(always)]
++unsafe fn fast_idiv(n: usize, d: usize) -> usize {
++  debug_assert!(d.is_power_of_two());
++
++  // Remove branch on bsf instruction on x86 (which is used when compiling without tzcnt enabled)
++  if d == 0 {
++    unreachable_unchecked();
++  }
++
++  n >> d.trailing_zeros()
++}
++
++struct ScaleFunction<T: Pixel> {
++  downscale_in_place:
++    fn(/* &self: */ &Plane<T>, /* in_plane: */ &mut Plane<T>),
++  downscale: fn(/* &self: */ &Plane<T>) -> Plane<T>,
++  factor: usize,
++}
++
++impl<T: Pixel> ScaleFunction<T> {
++  fn from_scale<const SCALE: usize>() -> Self {
++    Self {
++      downscale: Plane::downscale::<SCALE>,
++      downscale_in_place: Plane::downscale_in_place::<SCALE>,
++      factor: SCALE,
++    }
++  }
++}
++
+ /// Runs keyframe detection on frames from the lookahead queue.
+ pub struct SceneChangeDetector<T: Pixel> {
+   /// Minimum average difference between YUV deltas that will trigger a scene change.
+   threshold: f64,
+   /// Fast scene cut detection mode, uses simple SAD instead of encoder cost estimates.
+   speed_mode: SceneDetectionSpeed,
+-  /// scaling factor for fast scene detection
+-  scale_factor: usize,
++  /// Downscaling function for fast scene detection
++  scale_func: Option<ScaleFunction<T>>,
+   /// Frame buffer for scaled frames
+   downscaled_frame_buffer: Option<(
+-    Box<[Plane<T>; 2]>,
++    [Plane<T>; 2],
+     // `true` if the data is valid and initialized, or `false`
+     // if it should be assumed that the data is uninitialized.
+     bool,
+@@ -49,7 +80,7 @@ pub struct SceneChangeDetector<T: Pixel> {
+   ///
+   /// Useful for not copying data into the downscaled frame buffer
+   /// when using a downscale factor of 1.
+-  frame_ref_buffer: Option<Box<[Arc<Frame<T>>; 2]>>,
++  frame_ref_buffer: Option<[Arc<Frame<T>>; 2]>,
+   /// Deque offset for current
+   lookahead_offset: usize,
+   /// Start deque offset based on lookahead
+@@ -78,8 +109,8 @@ impl<T: Pixel> SceneChangeDetector<T> {
+       encoder_config.speed_settings.fast_scene_detection
+     };
+ 
+-    // Scale factor for fast and medium scene detection
+-    let scale_factor = detect_scale_factor(&sequence, speed_mode);
++    // Downscaling function for fast scene detection
++    let scale_func = detect_scale_factor(&sequence, speed_mode);
+ 
+     // Set lookahead offset to 5 if normal lookahead available
+     let lookahead_offset = if lookahead_distance >= 5 { 5 } else { 0 };
+@@ -87,20 +118,26 @@ impl<T: Pixel> SceneChangeDetector<T> {
+ 
+     let score_deque = Vec::with_capacity(5 + lookahead_distance);
+ 
+-    // Pixel count for fast scenedetect
++    // Downscaling factor for fast scenedetect (is currently always a power of 2)
++    let factor = scale_func.as_ref().map(|x| x.factor).unwrap_or(1);
++
+     let pixels = if speed_mode == SceneDetectionSpeed::Fast {
+-      (sequence.max_frame_height as usize / scale_factor)
+-        * (sequence.max_frame_width as usize / scale_factor)
+-    } else {
+-      1
+-    };
++      // SAFETY: factor should always be a power of 2 and not 0 because of
++      // the output of detect_scale_factor.
++      unsafe {
++        fast_idiv(sequence.max_frame_height as usize, factor)
++          * fast_idiv(sequence.max_frame_width as usize, factor)
++      }
++     } else {
++       1
++     };
+ 
+     let threshold = FAST_THRESHOLD * (bit_depth as f64) / 8.0;
+ 
+     Self {
+       threshold,
+       speed_mode,
+-      scale_factor,
++      scale_func,
+       downscaled_frame_buffer: None,
+       frame_ref_buffer: None,
+       lookahead_offset,
+@@ -346,61 +383,43 @@ impl<T: Pixel> SceneChangeDetector<T> {
+   fn fast_scenecut(
+     &mut self, frame1: Arc<Frame<T>>, frame2: Arc<Frame<T>>,
+   ) -> ScenecutResult {
+-    if self.scale_factor == 1 {
+-      if let Some(frame_buffer) = self.frame_ref_buffer.as_deref_mut() {
+-        frame_buffer.swap(0, 1);
+-        frame_buffer[1] = frame2;
+-      } else {
+-        self.frame_ref_buffer = Some(Box::new([frame1, frame2]));
+-      }
+-
+-      if let Some(frame_buffer) = self.frame_ref_buffer.as_deref() {
+-        let delta = self.delta_in_planes(
+-          &frame_buffer[0].planes[0],
+-          &frame_buffer[1].planes[0],
+-        );
+-
+-        ScenecutResult {
+-          threshold: self.threshold as f64,
+-          inter_cost: delta as f64,
+-          imp_block_cost: delta as f64,
+-          backward_adjusted_cost: delta as f64,
+-          forward_adjusted_cost: delta as f64,
+-        }
+-      } else {
+-        unreachable!()
+-      }
+-    } else {
++    if let Some(scale_func) = &self.scale_func {
+       // downscale both frames for faster comparison
+       if let Some((frame_buffer, is_initialized)) =
+         &mut self.downscaled_frame_buffer
+       {
+-        let frame_buffer = &mut **frame_buffer;
++        let frame_buffer = &mut *frame_buffer;
+         if *is_initialized {
+           frame_buffer.swap(0, 1);
+-          frame2.planes[0]
+-            .downscale_in_place(self.scale_factor, &mut frame_buffer[1]);
++          (scale_func.downscale_in_place)(
++            &frame2.planes[0],
++            &mut frame_buffer[1],
++          );
+         } else {
+           // both frames are in an irrelevant and invalid state, so we have to reinitialize
+           // them, but we can reuse their allocations
+-          frame1.planes[0]
+-            .downscale_in_place(self.scale_factor, &mut frame_buffer[0]);
+-          frame2.planes[0]
+-            .downscale_in_place(self.scale_factor, &mut frame_buffer[1]);
++          (scale_func.downscale_in_place)(
++            &frame1.planes[0],
++            &mut frame_buffer[0],
++          );
++          (scale_func.downscale_in_place)(
++            &frame2.planes[0],
++            &mut frame_buffer[1],
++          );
+           *is_initialized = true;
+         }
+       } else {
+         self.downscaled_frame_buffer = Some((
+-          Box::new([
+-            frame1.planes[0].downscale(self.scale_factor),
+-            frame2.planes[0].downscale(self.scale_factor),
+-          ]),
++          [
++            (scale_func.downscale)(&frame1.planes[0]),
++            (scale_func.downscale)(&frame2.planes[0]),
++          ],
+           true, // the frame buffer is initialized and in a valid state
+         ));
+       }
+ 
+       if let Some((frame_buffer, _)) = &self.downscaled_frame_buffer {
+-        let frame_buffer = &**frame_buffer;
++        let frame_buffer = &*frame_buffer;
+         let delta = self.delta_in_planes(&frame_buffer[0], &frame_buffer[1]);
+ 
+         ScenecutResult {
+@@ -411,7 +430,35 @@ impl<T: Pixel> SceneChangeDetector<T> {
+           backward_adjusted_cost: delta as f64,
+         }
+       } else {
+-        unreachable!()
++        // SAFETY: `downscaled_frame_buffer` is always initialized to `Some(..)` with a valid state
++        // before this if/else block is reached.
++        unreachable!();
++      }
++    } else {
++      if let Some(frame_buffer) = &mut self.frame_ref_buffer {
++        frame_buffer.swap(0, 1);
++        frame_buffer[1] = frame2;
++      } else {
++        self.frame_ref_buffer = Some([frame1, frame2]);
++      }
++
++      if let Some(frame_buffer) = &self.frame_ref_buffer {
++        let delta = self.delta_in_planes(
++          &frame_buffer[0].planes[0],
++          &frame_buffer[1].planes[0],
++        );
++
++        ScenecutResult {
++          threshold: self.threshold as f64,
++          inter_cost: delta as f64,
++          imp_block_cost: delta as f64,
++          backward_adjusted_cost: delta as f64,
++          forward_adjusted_cost: delta as f64,
++        }
++      } else {
++        // SAFETY: `frame_ref_buffer` is always initialized to `Some(..)` at the start
++        // of this code block if it was `None`.
++        unreachable!();
+       }
+     }
+   }
+@@ -498,40 +545,38 @@ impl<T: Pixel> SceneChangeDetector<T> {
+ }
+ 
+ /// Scaling factor for frame in scene detection
+-fn detect_scale_factor(
+-  sequence: &Arc<Sequence>, speed_mode: SceneDetectionSpeed,
+-) -> usize {
+-  let small_edge =
+-    cmp::min(sequence.max_frame_height, sequence.max_frame_width) as usize;
+-  let scale_factor;
+-  if speed_mode == SceneDetectionSpeed::Fast {
+-    scale_factor = match small_edge {
+-      0..=240 => 1,
+-      241..=480 => 2,
+-      481..=720 => 4,
+-      721..=1080 => 8,
+-      1081..=1600 => 16,
+-      1601..=usize::MAX => 32,
+-      _ => 1,
+-    } as usize
+-  } else {
+-    scale_factor = match small_edge {
+-      0..=1600 => 1,
+-      1601..=2160 => 2,
+-      2161..=usize::MAX => 4,
+-      _ => 1,
+-    } as usize
+-  };
+-
+-  debug!(
+-    "Scene detection scale factor {}, [{},{}] -> [{},{}]",
+-    scale_factor,
+-    sequence.max_frame_width,
+-    sequence.max_frame_height,
+-    sequence.max_frame_width as usize / scale_factor,
+-    sequence.max_frame_height as usize / scale_factor
+-  );
+-  scale_factor
++fn detect_scale_factor<T: Pixel>(
++   sequence: &Arc<Sequence>, speed_mode: SceneDetectionSpeed,
++) -> Option<ScaleFunction<T>> {
++   let small_edge =
++     cmp::min(sequence.max_frame_height, sequence.max_frame_width) as usize;
++  let scale_func = if speed_mode == SceneDetectionSpeed::Fast {
++     match small_edge {
++      0..=240 => None,
++      241..=480 => Some(ScaleFunction::from_scale::<2>()),
++      481..=720 => Some(ScaleFunction::from_scale::<4>()),
++      721..=1080 => Some(ScaleFunction::from_scale::<8>()),
++      1081..=1600 => Some(ScaleFunction::from_scale::<16>()),
++      1601..=usize::MAX => Some(ScaleFunction::from_scale::<32>()),
++      _ => None,
++     }
++   } else {
++    None
++   };
++
++  if let Some(scale_factor) = scale_func.as_ref().map(|x| x.factor) {
++     debug!(
++       "Scene detection scale factor {}, [{},{}] -> [{},{}]",
++       scale_factor,
++       sequence.max_frame_width,
++       sequence.max_frame_height,
++      // SAFETY: We ensure that scale_factor is set based on nonzero powers of 2.
++      unsafe { fast_idiv(sequence.max_frame_width as usize, scale_factor) },
++      unsafe { fast_idiv(sequence.max_frame_height as usize, scale_factor) }
++     );
++   }
++
++  scale_func
+ }
+ 
+ #[derive(Debug, Clone, Copy)]

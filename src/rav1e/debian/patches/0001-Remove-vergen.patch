@@ -1,0 +1,75 @@
+From: Sebastian Ramacher <sramacher@debian.org>
+Date: Thu, 29 Dec 2022 11:36:05 +0100
+Subject: Remove vergen
+
+---
+ Cargo.toml  | 3 ---
+ build.rs    | 3 ---
+ src/capi.rs | 4 ++--
+ src/lib.rs  | 4 ++--
+ 4 files changed, 4 insertions(+), 10 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 047b5ab..4306a16 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -209,9 +209,6 @@ optional = true
+ [build-dependencies.rustc_version]
+ version = "0.4"
+ 
+-[build-dependencies.vergen]
+-version = "3"
+-
+ [features]
+ asm = ["nasm-rs", "cc", "regex"]
+ bench = []
+diff --git a/build.rs b/build.rs
+index 6f653a5..fe8b16e 100644
+--- a/build.rs
++++ b/build.rs
+@@ -347,8 +347,5 @@ fn main() {
+     panic!("Unsupported feature on this platform!");
+   }
+ 
+-  vergen::generate_cargo_keys(vergen::ConstantsFlags::all())
+-    .expect("Unable to generate the cargo keys!");
+-
+   println!("cargo:rustc-env=PROFILE={}", env::var("PROFILE").unwrap());
+ }
+diff --git a/src/capi.rs b/src/capi.rs
+index a779c3d..2615d4e 100644
+--- a/src/capi.rs
++++ b/src/capi.rs
+@@ -391,8 +391,8 @@ pub unsafe extern fn rav1e_version_short() -> *const c_char {
+ pub unsafe extern fn rav1e_version_full() -> *const c_char {
+   concat!(
+     env!("CARGO_PKG_VERSION"),
+-    " (",
+-    env!("VERGEN_SEMVER_LIGHTWEIGHT"),
++    " (v",
++    env!("CARGO_PKG_VERSION"),
+     ")\0"
+   )
+   .as_ptr() as *const c_char
+diff --git a/src/lib.rs b/src/lib.rs
+index 4006c9a..cce898f 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -377,7 +377,7 @@ pub mod version {
+   /// e.g. `g743d464`
+   ///
+   pub fn hash() -> String {
+-    env!("VERGEN_SHA_SHORT").to_string()
++    "<not available>".to_string()
+   }
+ 
+   /// Version information with the information
+@@ -386,7 +386,7 @@ pub mod version {
+   /// e.g. `0.1.0 (v0.1.0-1-g743d464)`
+   ///
+   pub fn full() -> String {
+-    let semver = env!("VERGEN_SEMVER_LIGHTWEIGHT");
++    let semver = "v0.5.1";
+     format!("{} ({})", short(), semver)
+   }
+ }
