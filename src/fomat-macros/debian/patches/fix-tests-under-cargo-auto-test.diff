@@ -1,0 +1,77 @@
+Description: Fix running tests via cargo_auto_test.
+ There are a few issues with running the tests under cargo_auto_test.
+
+ cargo_auto_test sets CARGO_TARGET_DIR, this has a couple of
+ implications, Firstly trying to reverse-engineer the crate root
+ directory doesn't work. We use the CARGO_MANIFEST_DIR envvar instead.
+
+ Secondly CARGO_TARGET_DIR needs to be unset before building the
+ pint executable, otherwise it will end up in cargo_auto_test's
+ target directory rather than the target directory for our test crate.
+
+ Finally the Debian cargo wrapper always passess --target, we need to
+ account for this when looking for the location of the "pint" executable.
+Author: Peter Michael Green <plugwash@debian.org>
+
+--- rust-fomat-macros-0.3.1.orig/tests/capturing.rs
++++ rust-fomat-macros-0.3.1/tests/capturing.rs
+@@ -2,6 +2,8 @@ extern crate tempfile;
+ extern crate tar;
+ 
+ use std::path::Path;
++use std::path::PathBuf;
++
+ 
+ const FILES: &'static [(&'static str, &'static str)] = &[
+     ("Cargo.toml", r#"
+@@ -72,7 +74,7 @@ fn unpack_files(directory: &Path, replac
+ fn capturing() {
+     use std::process::Command;
+     use std::env;
+-    use std::str::from_utf8;
++        use std::str::from_utf8;
+ 
+     let rootdir = {
+         let mut rootdir = env::current_exe().unwrap();
+@@ -85,10 +87,11 @@ fn capturing() {
+ 
+     let pintdir = tempfile::Builder::new().prefix("fomat-macros-capturing-test").tempdir()
+         .expect("Can't create tempdir");
+-    unpack_files(pintdir.as_ref(), rootdir.to_str().unwrap());
++    unpack_files(pintdir.as_ref(), /*rootdir.to_str().unwrap()*/&env::var("CARGO_MANIFEST_DIR").unwrap());
+ 
+     assert!(
+         Command::new("cargo").arg("build")
++            .env_remove("CARGO_TARGET_DIR")
+             .current_dir(&pintdir)
+             .status().unwrap().success()
+     );
+@@ -96,7 +99,27 @@ fn capturing() {
+     let expected_stdout = "stdout1stdout2\n";
+     let expected_stderr = "stderr1stderr2\nstderr1stderr2\n";
+ 
+-    let output = Command::new("target/debug/pint")
++    /*use std::io::stdout;
++    use std::io::Write;
++    let output = Command::new("find")
++        .current_dir(&pintdir)
++        .output().unwrap();
++    stdout().write_all(&output.stdout);
++
++    for (key, value) in env::vars() {
++        println!("{key}: {value}");
++    }*/
++
++    let pintexe;
++    if pintdir.as_ref().join("target/debug/pint").exists() {
++        pintexe = PathBuf::from("target/debug/pint");
++    } else if pintdir.as_ref().join("target").join(env::var("DEB_TARGET_RUST_TYPE").unwrap_or("___envar_not_found___".to_string())).join("debug/pint").exists() {
++        pintexe = Path::new("target").join(env::var("DEB_TARGET_RUST_TYPE").unwrap()).join("debug/pint");
++    } else {
++        panic!("can't find pint exuctable");
++    }
++
++    let output = Command::new(pintexe)
+         .current_dir(&pintdir)
+         .output().unwrap();
+     assert!(output.status.success());
