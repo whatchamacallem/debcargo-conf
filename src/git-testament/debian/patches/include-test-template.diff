@@ -1,0 +1,48 @@
+diff --git a/test-template/Cargo.toml b/test-template/Cargo.toml
+new file mode 100644
+index 0000000..6bb0e11
+--- /dev/null
++++ b/test-template/Cargo.toml
+@@ -0,0 +1,13 @@
++[package]
++name = "test2"
++version = "1.0.0"
++authors = ["Daniel Silverstone <dsilvers@digital-scurf.org>"]
++edition = "2018"
++
++[workspace]
++
++[features]
++default = ["alloc"]
++alloc = ["git-testament/alloc"]
++
++[dependencies]
+diff --git a/test-template/src/main.rs b/test-template/src/main.rs
+new file mode 100644
+index 0000000..f2efd9e
+--- /dev/null
++++ b/test-template/src/main.rs
+@@ -0,0 +1,23 @@
++#[cfg(feature = "alloc")]
++use git_testament::{git_testament, render_testament};
++
++#[cfg(feature = "alloc")]
++git_testament!(TESTAMENT);
++
++use git_testament::git_testament_macros;
++
++git_testament_macros!(version, "trusted");
++
++#[cfg(feature = "alloc")]
++fn main() {
++    assert_eq!(
++        format!("{}", render_testament!(TESTAMENT, "trusted")),
++        version_testament!()
++    );
++    println!("{}", render_testament!(TESTAMENT, "trusted"));
++}
++
++#[cfg(not(feature = "alloc"))]
++fn main() {
++    println!("{}", concat!("", version_testament!()));
++}
