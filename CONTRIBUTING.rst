@@ -13,7 +13,7 @@ To accept a new package in the Debian archive, we need the following:
 1. No lintian warning except ``initial-upload-closes-no-bugs`` (for libraries)
 1. autopkgtest should be green (or skipped)
 1. New binaries should have an open ITP
-1. The maintainer should be on IRC: #debian-rust on OTFC
+1. The maintainer should be on IRC: #debian-rust on OFTC
 1. If the crate needs dependencies not available yet in Debian, document them
    in the RFS file
 1. If you are asking for sponsoring on an existing key crate, please make sure it isn't
