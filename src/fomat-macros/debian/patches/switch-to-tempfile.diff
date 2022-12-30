@@ -1,0 +1,31 @@
+Index: fomat-macros/Cargo.toml
+===================================================================
+--- fomat-macros.orig/Cargo.toml
++++ fomat-macros/Cargo.toml
+@@ -23,5 +23,5 @@ repository = "https://github.com/krdln/f
+ [dev-dependencies.tar]
+ version = "0.4.9"
+ 
+-[dev-dependencies.tempdir]
+-version = "0.3.5"
++[dev-dependencies.tempfile]
++version = "3.3.0"
+Index: fomat-macros/tests/capturing.rs
+===================================================================
+--- fomat-macros.orig/tests/capturing.rs
++++ fomat-macros/tests/capturing.rs
+@@ -1,4 +1,4 @@
+-extern crate tempdir;
++extern crate tempfile;
+ extern crate tar;
+ 
+ use std::path::Path;
+@@ -83,7 +83,7 @@ fn capturing() {
+         rootdir
+     };
+ 
+-    let pintdir = tempdir::TempDir::new("fomat-macros-capturing-test")
++    let pintdir = tempfile::Builder::new().prefix("fomat-macros-capturing-test").tempdir()
+         .expect("Can't create tempdir");
+     unpack_files(pintdir.as_ref(), rootdir.to_str().unwrap());
+ 
