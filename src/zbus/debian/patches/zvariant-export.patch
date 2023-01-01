@@ -1,0 +1,27 @@
+From 2a232177386ec0be0741149e0497e2dc516e7693 Mon Sep 17 00:00:00 2001
+From: Daniel De Graaf <code@danieldg.net>
+Date: Fri, 30 Jul 2021 18:09:33 -0400
+Subject: [PATCH] zb: Add public exports of dependent crates
+
+Many of the structures in zbus use types declared in zvariant,
+so publicly re-export it in zbus so that users of the
+library don't need to add extra crates to their Cargo.toml.
+
+Co-authored-by: Luca BRUNO <luca.bruno@coreos.com>
+---
+ zbus/src/lib.rs | 2 ++
+ 1 file changed, 2 insertions(+)
+
+Index: zbus/src/lib.rs
+===================================================================
+--- zbus.orig/src/lib.rs
++++ zbus/src/lib.rs
+@@ -196,6 +196,8 @@ pub mod export {
+     pub use zvariant;
+ }
+ 
++pub use zvariant;
++
+ #[cfg(test)]
+ mod tests {
+     use std::{
