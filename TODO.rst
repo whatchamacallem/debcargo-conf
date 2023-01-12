@@ -108,127 +108,14 @@ rustup (#1026333)
 tokio/futures/hyper with async/await
 ------------------------------------
 
-*dependency tree*
-
-* futures 0.3.4
-   * futures-executor 0.3.4
-   * futures-util 0.3.4
-      * futures-task 0.3.4
-      * futures-channel 0.3.4
-         * futures-core 0.3.4
-         * future-sink 0.3.4
-      * futures-io 0.3.4
-      * futures-macro 0.3.4
-      * pin-utils 0.1.0-alpha.4
-      * proc-macro-nested 0.1.3
-
-* tokio-macros 0.2.3
-
-* tokio 0.2.10
-   * bytes 0.5.3 (outdated)
-   * futures-core 0.3.4 (see above)
-   * pin-project-lite 0.1.1
-   * tokio-macros 0.2.3
-
-* tokio-tls 0.3.0
-   * tokio 0.2.10 (+ subset of dependencies)
-
-* tokio-util 0.2.0
-   * tokio 0.2.10 (+ subset of dependencies)
-   * futures-sink 0.3.4 (see above)
-
-* hyper 0.13.1
-   * futures-* 0.3.4 (see above)
-   * h2 0.2.1
-      * futures-* 0.3.4 (see above)
-      * http 0.2.0
-         * bytes 0.5.3 (needed for tokio anyway)
-      * tokio 0.2.10 (see above)
-      * tokio-util 0.2.0 (see above)
-   * http-body 0.3.4
-      * http 0.2.0 (+ deps)
-   * pin-project 0.4.7
-      * pin-project-internal 0.4.7
-   * tokio 0.2.10 (see above)
-   * tower-service 0.3.0
-   * want 0.3.0
-   * mio 0.6.21
-   * iovec 0.1.4
-
-*rdeps outside of tokio/futures/hyper*
-
-* bcder (recently packaged, not yet compatible with bytes 0.5)
-* bufstream (dead upstream, no rdeps)
-* bzip2 (no upstream support yet, no rdeps for future/tokio features)
-* flate2 (no upstream support (yet), no rdeps for future/tokio features)
-* gstreamer-* (new upstream version is compatible, updated, no non-gstreamer rdeps, needs glib update, which triggers:
-   * atk
-   * cairo-rs
-   * gdk
-   * gdk-pixbuf
-   * gio
-   * gtk
-   * pangocairo
-   * pango
-   * and their respective sys crates
-* mio-extras (no rdeps, compatible)
-* mio-named-pipes (no rdeps except tokio-process, compatible)
-* mio-uds (rdeps: signal-hook, tokio-uds, tokio-signal)
-* pcap (no rdeps, can be dropped)
-* reqwest (updated, needs updated hyper-tls, new wasm-bindgen-futures, updated web-sys/js-sys/webasm)
-* signal-hook (updated version not yet released, single rdep "tokio-signal" got merged into tokio and only uses signal-hook-registry now -> patched to remove dependency)
-* string (relaxed dep on bytes)
-* want (updated)
-
 *old crates to be removed*
 
 * futures-cpupool (no rdeps outside of futures/tokio/hyper, merged into futures-executor)
-* tokio-async-await (merged into tokio-macros)
-* tokio-buf (dropped upstream, rdeps no longer need it after updating)
-* tokio-codec (merged into tokio-util)
-* tokio-core (only 1 rdep: pcap, can be dropped after pcap was dropped, merged into tokio)
-* tokio-current-thread (merged into tokio)
-* tokio-executor (merged into tokio)
-* tokio-fs (merged into tokio)
-* tokio-io (merged into tokio, see above for rdeps bufstream, bzip2, flate2)
-* tokio-process (merged into tokio)
-* tokio-reactor (renamed to tokio-net, merged into tokio, see above for rdep signal-hook)
-* tokio-signal (merged into tokio)
-* tokio-sync (merged into tokio)
 * tokio-tcp (merged into tokio)
-* tokio-threadpool (merged into tokio)
-* tokio-timer (merged into tokio)
-* tokio-uds (merged into tokio)
-* tokio-udp (merged into tokio)
 
 *incompatible rdeps with no further rdeps, dead upstream, to be removed*
 
-* pcap (replaced by pcap-sys)
 * bufstream: https://github.com/alexcrichton/bufstream/issues/13
-
-*NEW, installable as-is*
-
-* pin-utils (NEW)
-* proc-macro-nested (NEW)
-* futures-sink
-* futures-task
-* futures-io
-* futures-macro
-* tokio-macros
-* pin-project-lite
-* tower-service (NEW)
-* pin-project-internal + pin-project
-* paste-impl (NEW) + paste
-* webasm-bindgen-futures
-
-*NEW, with dependency within transition*
-
-* futures-channel (after futures-core/futures-sink)
-* futures-util (after futures-channel, proc-macro-nested, pin-utils)
-* futures-executor (after futures-core, futures-task, futures-util)
-* tokio-tls (after tokio)
-* tokio-util (after tokio, bytes, futures-core, futures-sink, pin-project-lite)
-
 
 clap v2 dependency list 
 -----------------------
