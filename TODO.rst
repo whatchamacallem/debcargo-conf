@@ -33,6 +33,8 @@ Use ``dev/list-remaining-deps.sh`` to help you figure out what's missing.
 rustfmt-nightly
 ---------------
 
+note: (stable) rustfmt is shipped as part of src:rustc nowadays..
+
 * rustc-ap-syntax
   * rustc-ap-rustc_data_structures (prepared)
     * rustc-ap-graphviz (needs nightly)
