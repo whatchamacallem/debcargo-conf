@@ -87,7 +87,7 @@ see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629
 [ ] syn-0.11.11
 [ ] synom
 [ ] unicode-xid-0.0.4
-[ ] clap v4
+[x] clap v4
 [ ] GTK related packages
 
 
@@ -100,11 +100,9 @@ rustup (#1026333)
 ------
 
 * rustup (not available as a crate)
- * git-testament (needs patch for tempdir)
- * zstd
- * xz2 (lzma-sys update (merged))
- * download (private crate) (needs patched out reqwest features)
- * effective-limits (NEW) 
+ * git-testament (NEW)
+ * xz2 (NEW)
+ * download (private crate) (needs patched out reqwest features) 
  
  
 tokio/futures/hyper with async/await
@@ -231,6 +229,51 @@ tokio/futures/hyper with async/await
 * tokio-tls (after tokio)
 * tokio-util (after tokio, bytes, futures-core, futures-sink, pin-project-lite)
 
+
+clap v2 dependency list 
+-----------------------
+structopt used clap v2
+dotenv is unmaintained and superseded by dotenvy which uses clap v3; 
+hexyl uses clapv4
+sniffglue, git-absorb, sha1collision, gcov, libslirp and cargo-binutils depend on structopt
+rav1e uses also clap4
+
+
+GTK stack dependency tree
+-------------------------
+
+* ???
+ * gobject-sys
+  * glib-sys
+    * system-deps
+
+cxx depedency tree
+-----------------
+
+* cxx (level 2)
+ * cxx-build (level 1)
+ * cxx-gen (level 1)
+ * cxxbridge-macros (level 1)
+ * cxxbridge-flags (level 1)
+ * link-cplusplus (level 1)
+
+matrix-sdk dependency tree
+--------------------------
+
+* matrix-sdk
+ * ruma
+  * ruma-appservice-api
+  * ruma-state-res
+  * ruma-signatures
+  * ruma-push-gateway-api
+  * ruma-identity-service-api
+  * ruma-federation-api
+  * ruma-client
+  * ruma-client-api
+  * ruma-common
+   * ruma-macros
+   * ruma-identifiers-valiadation
+
 fractal (#900928)
 -------
 
@@ -257,7 +300,7 @@ podcasts (#965044)
 gping (#975495)
 -------
 
-* shadow-rs (merged) (blocked by const-format)
+* Ready for upload
 
 lfs (#1006367)
 -------
@@ -272,18 +315,17 @@ cargo debstatus (#1026852)
 ------
 
 * postgres (merged)
- * tokio-postgres (NEW)
 
 bottom
 -------
 
 * no missing deps, waiting on upstream to drop heim
+* TODO: file ITP
 
 macchina
 ------
 * ansi-to-tui (merged)
 * color-to-tui (merged)
- * simdutf8 (NEW)
 * libmacchina
  * sqlite
   * sqlite-sys (merged)
@@ -295,13 +337,13 @@ shortwave (#951166)
 * libadwaita
 * mdns (merged)
 * libshumate
-* asnyc-std-resolver (needs dns-resolvers' system-config feature)
+* asnyc-std-resolver (NEW)
 * mpris-player ( deprecated, fails to build against newer dbus)
 
 popsicle (#1007982)
 ------
 
-* dbus-udisks (needs dbus-update (merged))
+* dbus-udisks (NEW)
 * srmv
  * genawaiter (merged)
 * sys-mount (needs rustc 1.65)
@@ -309,8 +351,7 @@ popsicle (#1007982)
 * iso9660 (broken)
 * i18n-embed-fl
  * i18n-embed
-  * i18n-embed-impl
-   * i18-embed-config (NEW)
+  * i18n-embed-impl (NEW)
 
 ==============
 Eventual goals
