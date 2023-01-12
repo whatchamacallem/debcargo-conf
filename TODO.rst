@@ -110,18 +110,7 @@ rustup (#1026333)
 * rustup (not available as a crate)
  * download (private crate) (needs patched out reqwest features) 
   * async-compression (merged)
- 
-tokio/futures/hyper with async/await
-------------------------------------
 
-*old crates to be removed*
-
-* futures-cpupool (no rdeps outside of futures/tokio/hyper, merged into futures-executor)
-* tokio-tcp (merged into tokio)
-
-*incompatible rdeps with no further rdeps, dead upstream, to be removed*
-
-* bufstream: https://github.com/alexcrichton/bufstream/issues/13
 
 clap v2 dependency list 
 -----------------------
