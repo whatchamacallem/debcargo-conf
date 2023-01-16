@@ -1,0 +1,225 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index f01a335..5f5edf5 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -42,24 +42,6 @@ rustdoc-args = [
+     "docsrs",
+ ]
+ 
+-[[example]]
+-name = "zlib_tokio_02_write"
+-required-features = [
+-    "zlib",
+-    "tokio-02",
+-]
+-
+-[[example]]
+-name = "zstd_gzip"
+-required-features = [
+-    "zstd",
+-    "gzip",
+-    "tokio-02",
+-]
+-
+-[[test]]
+-name = "brotli"
+-required-features = ["brotli"]
+ 
+ [[test]]
+ name = "bzip2"
+@@ -89,89 +71,63 @@ required-features = ["zlib"]
+ name = "zstd"
+ required-features = ["zstd"]
+ 
+-[dependencies.brotli]
+-version = "3.3.0"
+-features = ["std"]
+-optional = true
+-default-features = false
+-
+-[dependencies.bytes-05]
+-version = "0.5.0"
++[dependencies.bytes]
++version = "1.2.1"
+ optional = true
+ package = "bytes"
+ 
+ [dependencies.bzip2]
+-version = "0.4.1"
++version = "0.4.3"
+ optional = true
+ 
+ [dependencies.flate2]
+-version = "1.0.11"
++version = "1.0.25"
+ optional = true
+ 
+ [dependencies.futures-core]
+-version = "0.3.0"
++version = "0.3.21"
+ default-features = false
+ 
+ [dependencies.futures-io]
+-version = "0.3.0"
++version = "0.3.21"
+ features = ["std"]
+ optional = true
+ default-features = false
+ 
+ [dependencies.libzstd]
+-version = "0.11.1"
++version = "0.12.1"
+ optional = true
+ default-features = false
+ package = "zstd"
+ 
+ [dependencies.memchr]
+-version = "2.2.1"
++version = "2.5.0"
+ 
+ [dependencies.pin-project-lite]
+-version = "0.2.0"
++version = "0.2.9"
+ 
+ [dependencies.tokio]
+-version = "1.0.0"
+-optional = true
+-default-features = false
+-
+-[dependencies.tokio-02]
+-version = "0.2.21"
++version = "1.23.0"
+ optional = true
+ default-features = false
+-package = "tokio"
+-
+-[dependencies.tokio-03]
+-version = "0.3.0"
+-optional = true
+-default-features = false
+-package = "tokio"
+ 
+ [dependencies.xz2]
+-version = "0.1.6"
++version = "0.1.7"
+ optional = true
+ 
+ [dependencies.zstd-safe]
+-version = "5.0.1"
++version = "6.0.1"
+ optional = true
+ default-features = false
+ 
+ [dev-dependencies.bytes]
+-version = "1.0.0"
+-
+-[dev-dependencies.bytes-05]
+-version = "0.5.0"
+-package = "bytes"
+-
+-[dev-dependencies.bytes-06]
+-version = "0.6.0"
+-package = "bytes"
++version = "1.2.1"
+ 
+ [dev-dependencies.futures]
+-version = "0.3.5"
++version = "0.3.21"
+ 
+ [dev-dependencies.futures-test]
+-version = "0.3.5"
++version = "0.3.25"
+ 
+ [dev-dependencies.ntest]
+ version = "0.8.1"
+@@ -179,60 +135,26 @@ version = "0.8.1"
+ [dev-dependencies.proptest]
+ version = "1.0.0"
+ 
+-[dev-dependencies.proptest-derive]
+-version = "0.3.0"
+-
+ [dev-dependencies.rand]
+ version = "0.8.5"
+ 
+ [dev-dependencies.tokio]
+ version = "1.0.0"
+-features = ["io-util"]
+-default-features = false
+-
+-[dev-dependencies.tokio-02]
+-version = "0.2.21"
+ features = [
+     "io-util",
+-    "stream",
+     "macros",
+     "io-std",
+ ]
+ default-features = false
+ package = "tokio"
+ 
+-[dev-dependencies.tokio-03]
+-version = "0.3.0"
+-features = [
+-    "io-util",
+-    "stream",
+-]
+-default-features = false
+-package = "tokio"
+-
+-[dev-dependencies.tokio-util-03]
+-version = "0.3.0"
+-features = ["codec"]
++[dev-dependencies.tokio-util]
++version = "0.7.0"
++features = ["codec",
++"io",]
+ default-features = false
+ package = "tokio-util"
+ 
+-[dev-dependencies.tokio-util-04]
+-version = "0.4.0"
+-features = ["io"]
+-default-features = false
+-package = "tokio-util"
+-
+-[dev-dependencies.tokio-util-05]
+-version = "0.5.0"
+-features = ["io"]
+-default-features = false
+-package = "tokio-util"
+-
+-[dev-dependencies.tokio-util-06]
+-version = "0.6.0"
+-features = ["io"]
+-default-features = false
+-package = "tokio-util"
+ 
+ [features]
+ all = [
+@@ -240,7 +162,6 @@ all = [
+     "all-algorithms",
+ ]
+ all-algorithms = [
+-    "brotli",
+     "bzip2",
+     "deflate",
+     "gzip",
+@@ -252,8 +173,6 @@ all-algorithms = [
+ all-implementations = [
+     "futures-io",
+     "stream",
+-    "tokio-02",
+-    "tokio-03",
+     "tokio",
+ ]
+ default = []
+@@ -262,7 +181,7 @@ futures-bufread = ["futures-io"]
+ futures-write = ["futures-io"]
+ gzip = ["flate2"]
+ lzma = ["xz2"]
+-stream = ["bytes-05"]
++stream = ["bytes"]
+ xz = ["xz2"]
+ zlib = ["flate2"]
+ zstd = [
