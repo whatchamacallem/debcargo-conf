@@ -1,6 +1,6 @@
 # Scope of this document
 
-This documenta aims to document some nice "hacks" and tricks to employ when packaging crates.
+This document aims to document some nice "hacks" and tricks to employ when packaging crates.
 
 
 ## Patching crates
@@ -45,9 +45,13 @@ Sometimes debcargo marks files as suspicious, most of the time those are tests w
 Some crates depend on a crate with an alpha/beta version strings. debcargo will emit an error if that is the case. To allow those deps, pass the following:
 `allow_prerelease_deps = true`. Do this only if you are sure this will work !
 
-### Marking feature test as broken / collapsing features
 
-If a crate has features, `collapse_features = true` **should** be set in `debcargo.toml`. This is strongling recommended. See issue #17 in the debcargo repo for the reasoning. 
+### Collapsing features
+If a crate has features, `collapse_features = true` **should** be set in `debcargo.toml`. This is strongly recommended. See issue #17 in the debcargo repo for the reasoning.
+
+
+### Marking feature tests as broken 
+
 Let's assume  you are building a package and get the following output at the end: 
 
 ```
@@ -97,7 +101,7 @@ If that's the case you need to write a patch that skips those faulty tests (on t
 
 | Debian arch name | rust arch name (target_arch) |
 |-------------------------------------------------|
-| Arches autopkgtest runs on (needed for testing migration) |
+| Arches autopkgtest runs on (needed for testing migration) | |
 |-----------------------------------------------------------|
 | amd64            | x86-64         |
 | i386             | x86 |
@@ -107,12 +111,12 @@ If that's the case you need to write a patch that skips those faulty tests (on t
 | ppc64el | powerpc64 |
 | s390x | powerpc64? |
 |----------------------------------------------------------|
-| Other official arches¹ |
+| Other official arches¹ | |
 |----------------------------------------------------------|
 | mipsel | mips? |
 | mips64el | mips64 |
 |----------------------------------------------------------|
-| Unoffical ports with rustc/cargo (not really relevant) |
+| Unoffical ports with rustc/cargo (not really relevant) | |
 |----------------------------------------------------------|
 |  powerpc 	| powerpc? |
 | ppc64 	| powerpc? |
@@ -135,8 +139,7 @@ Only the first seven are really relevant, I included the rest for completeness's
 If you encounter a test failure e.g. on `armel`, add this macro before the `#[test]` macro:  
  ` #[cfg(not(target_arch = "arm"))] `.  
  Then generate a patch with the changes and include it in the usual way. Also notify upstream that this arch is broken and send them your patch.
- Footnotes: [1] 
+ Footnotes: [1] https://wiki.debian.org/SupportedArchitectures
             [2] sh4 has only one test failure for cargo
- s
  
  
