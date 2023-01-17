@@ -56,7 +56,7 @@ error[E0433]: failed to resolve: use of undeclared type or module `syntect`
 bingrep
 -------
 
-* hexplay
+* hexplay (merged)
 * metagoblin
 
 tokei
@@ -69,7 +69,7 @@ which needs ucd-trie
 librsvg
 -------
 
-see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629
+see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629  
 
 [ ] alga
 [ ] c_vec
@@ -96,14 +96,18 @@ bench
 
 * packageable
 
+cargo-deb
+----------------
+
+* should be packagable
+
+
 rustup (#1026333)
 ------
 
 * rustup (not available as a crate)
- * git-testament (NEW)
- * xz2 (NEW)
  * download (private crate) (needs patched out reqwest features) 
- 
+  * async-compression (merged)
  
 tokio/futures/hyper with async/await
 ------------------------------------
@@ -187,7 +191,7 @@ podcasts (#965044)
 gping (#975495)
 -------
 
-* Ready for upload
+* needs an update
 
 lfs (#1006367)
 -------
@@ -224,21 +228,19 @@ shortwave (#951166)
 * libadwaita
 * mdns (merged)
 * libshumate
-* asnyc-std-resolver (NEW)
 * mpris-player ( deprecated, fails to build against newer dbus)
 
 popsicle (#1007982)
 ------
 
-* dbus-udisks (NEW)
 * srmv
  * genawaiter (merged)
 * sys-mount (needs rustc 1.65)
-* pwd (upstream license issues :( )
+* pwd (upstream license issues :(  )
 * iso9660 (broken)
 * i18n-embed-fl
  * i18n-embed
-  * i18n-embed-impl (NEW)
+
 
 ==============
 Eventual goals
