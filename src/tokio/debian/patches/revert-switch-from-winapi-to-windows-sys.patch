@@ -216,7 +216,7 @@ Index: tokio/src/net/windows/named_pipe.rs
 ===================================================================
 --- tokio.orig/src/net/windows/named_pipe.rs
 +++ tokio/src/net/windows/named_pipe.rs
-@@ -20,18 +20,21 @@ cfg_io_util! {
+@@ -20,18 +20,21 @@ cfg_io_util! { 1
  #[cfg(not(docsrs))]
  mod doc {
      pub(super) use crate::os::windows::ffi::OsStrExt;
@@ -244,7 +244,7 @@ Index: tokio/src/net/windows/named_pipe.rs
      pub(super) mod mio_windows {
          pub type NamedPipe = crate::doc::NotDefinedHere;
      }
-@@ -98,6 +101,7 @@ use self::doc::*;
+@@ -98,6 +101,7 @@ use self::doc::*; 2
  /// # Ok(()) }
  /// ```
  ///
@@ -252,7 +252,7 @@ Index: tokio/src/net/windows/named_pipe.rs
  /// [Windows named pipe]: https://docs.microsoft.com/en-us/windows/win32/ipc/named-pipes
  #[derive(Debug)]
  pub struct NamedPipeServer {
-@@ -205,7 +209,7 @@ impl NamedPipeServer {
+@@ -205,7 +209,7 @@ impl NamedPipeServer { 3
      /// ```
      /// use tokio::io::AsyncWriteExt;
      /// use tokio::net::windows::named_pipe::{ClientOptions, ServerOptions};
@@ -261,7 +261,7 @@ Index: tokio/src/net/windows/named_pipe.rs
      ///
      /// const PIPE_NAME: &str = r"\\.\pipe\tokio-named-pipe-disconnect";
      ///
-@@ -225,7 +229,7 @@ impl NamedPipeServer {
+@@ -225,7 +229,7 @@ impl NamedPipeServer { 4
      /// // Write fails with an OS-specific error after client has been
      /// // disconnected.
      /// let e = client.write(b"ping").await.unwrap_err();
@@ -270,7 +270,7 @@ Index: tokio/src/net/windows/named_pipe.rs
      /// # Ok(()) }
      /// ```
      pub fn disconnect(&self) -> io::Result<()> {
-@@ -912,7 +916,7 @@ impl AsRawHandle for NamedPipeServer {
+@@ -912,7 +916,7 @@ impl AsRawHandle for NamedPipeServer { 5
  /// use std::time::Duration;
  /// use tokio::net::windows::named_pipe::ClientOptions;
  /// use tokio::time;
@@ -279,7 +279,7 @@ Index: tokio/src/net/windows/named_pipe.rs
  ///
  /// const PIPE_NAME: &str = r"\\.\pipe\named-pipe-idiomatic-client";
  ///
-@@ -920,7 +924,7 @@ impl AsRawHandle for NamedPipeServer {
+@@ -920,7 +924,7 @@ impl AsRawHandle for NamedPipeServer { 6
  /// let client = loop {
  ///     match ClientOptions::new().open(PIPE_NAME) {
  ///         Ok(client) => break client,
@@ -288,7 +288,7 @@ Index: tokio/src/net/windows/named_pipe.rs
  ///         Err(e) => return Err(e),
  ///     }
  ///
-@@ -931,7 +935,7 @@ impl AsRawHandle for NamedPipeServer {
+@@ -931,7 +935,7 @@ impl AsRawHandle for NamedPipeServer { 7
  /// # Ok(()) }
  /// ```
  ///
@@ -297,7 +297,7 @@ Index: tokio/src/net/windows/named_pipe.rs
  /// [Windows named pipe]: https://docs.microsoft.com/en-us/windows/win32/ipc/named-pipes
  #[derive(Debug)]
  pub struct NamedPipeClient {
-@@ -1665,12 +1669,12 @@ macro_rules! bool_flag {
+@@ -1665,12 +1669,12 @@ macro_rules! bool_flag { 8
  /// See [`ServerOptions::create`].
  #[derive(Debug, Clone)]
  pub struct ServerOptions {
@@ -316,7 +316,7 @@ Index: tokio/src/net/windows/named_pipe.rs
  }
  
  impl ServerOptions {
-@@ -1687,9 +1691,9 @@ impl ServerOptions {
+@@ -1687,9 +1691,9 @@ impl ServerOptions { 9
      /// ```
      pub fn new() -> ServerOptions {
          ServerOptions {
@@ -329,17 +329,9 @@ Index: tokio/src/net/windows/named_pipe.rs
              out_buffer_size: 65536,
              in_buffer_size: 65536,
              default_timeout: 0,
-@@ -1706,8 +1710,8 @@ impl ServerOptions {
-     /// [`dwPipeMode`]: https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea
-     pub fn pipe_mode(&mut self, pipe_mode: PipeMode) -> &mut Self {
-         self.pipe_mode = match pipe_mode {
--            PipeMode::Byte => windows_sys::PIPE_TYPE_BYTE,
--            PipeMode::Message => windows_sys::PIPE_TYPE_MESSAGE,
-+            PipeMode::Byte => winbase::PIPE_TYPE_BYTE,
-+            PipeMode::Message => winbase::PIPE_TYPE_MESSAGE,
-         };
- 
-         self
+@@ -1706,1 +1710,1 @@ impl ServerOptions { 10
+-        bool_flag!(self.pipe_mode, is_msg, windows_sys::PIPE_TYPE_MESSAGE);
++        bool_flag!(self.pipe_mode, is_msg, winbase::PIPE_TYPE_MESSAGE);
 @@ -1805,7 +1809,7 @@ impl ServerOptions {
      /// # Ok(()) }
      /// ```
