@@ -2,14 +2,53 @@
 
 This document aims to document some nice "hacks" and tricks to employ when packaging crates.
 
+## Getting an overview of missing crates
+
+A nice tool to generate a graphical overview of a rust projects' dependency tree is `cargo debstatus`. Install it like that:
+`cargo install cargo-debstatus`. Then download either a release or clone the git project and `cd` into there. Run `cargo debstatus` to get a nice graph about dependencies and reverse dependencies.
 
 ## Patching crates
-TODO
+If a crate needs a) a newer dependency or b) an older dependency than the one in the archive you need to patch the crate. This is relatively common. You can also use this to patch out features in Cargo.toml or make changes to the source code. 
+
+Since the source is pulled from crates.io and not from github/lab, patching requires downloading the source from there. There are two ways to achieve this:
+
+1) Install `cargo-download`: `cargo install cargo-download`  
+1.1) Download the source: `cargo download foocrate version > foocrate.tar.gz`  
+1.2) Extract the crate: `tar -xf foocrate.tar.gz`  
+1.3) `cd foocrate-version && git init && git add . && git commit -m "d"`  
+1.4) Edit e.g. Cargo.toml to relax the dependencies: Instead of version 0.4 of a crate bump it to 0.5 ( if that is the corresponding debian version) or down to 0.3 (if that is the debian version)  
+1.5) Generate a patch with your changes: `git diff -p >> relax-deps.diff`  
+1.6) `cp relax-deps.diff debcargo-conf/src/foocrate/debian`  
+1.7) `cd debcargo-conf/src/foocrate/debian && mkdir patches`  
+1.8) `mv relax-deps.diff patches/ && cd patches && echo relax-deps.diff >> series`  
+1.9) `cd ../../../../`  
+1.10) run `./update.sh foocrate` again. The patch should get applied and allow you to build against an older/newer dependency / with features disabled.  
+1.11) Document your patches in d/changelog  
+2) `wget http://crates.io/api/v1/crates/foocrate/version/download -O foocrate-version.tar.gz`  
+Then follow 1.1)
+
+capitol did a nice writeup which can be read here:
+https://blog.hackeriet.no/packaging-rust-part-II/
 
 
-## Skipping tests
 
-TODO
+
+## Skipping tests / special d/rules overrides
+
+Sometimes you get broken tests that can't be excluded or patched away. For instance if a test would require direct access to the RAM which isn't possible with `sbuild`. Then it is reasonable to skip those in `d/rules`.
+
+1) `cd src/foocrate/debian && touch rules`
+2) `cd ../../../ && ./update.sh foocrate`. This will generate a `rules.debcargo.hint` file you can use as template, similar to d/copyright
+3) `cd src/foocrate/debian && cp rules.debcargo.hint rules`
+4) use your favorite editor to edit the rules file to your needs. For skipping tests you can do the following:
+
+```
+override_dh_auto_test:
+	dh_auto_test -- test -- --skip tests::broken_test --skip tests::second_broken_test
+```
+
+if those are the broken tests. Then `cd` in the top-level directory and run `./update.sh` again. You might also need to skip the same tests in the autopkgtest runner. To do that, create a `tests/control` file in the `debian/` folder. 
+
 
 ## Packaging binary crates
 
@@ -91,6 +130,8 @@ Examples: tokio-postgres, ...
 
 Sometime you need to combine some tricks to run at least some tests: Exclude a faulty test, patch dependencies away and mark tests as broken.
 
+### More resources
+For a full documentation of all keywords available in `debcargo.toml` refer to debcargo.toml.example in the debcargo repo.
 
 
 ## Arch-specific failures
@@ -100,9 +141,8 @@ If that's the case you need to write a patch that skips those faulty tests (on t
 
 
 | Debian arch name | rust arch name (target_arch) |
-|-------------------------------------------------|
+|----------------------|---------------------------|
 | Arches autopkgtest runs on (needed for testing migration) | |
-|-----------------------------------------------------------|
 | amd64            | x86-64         |
 | i386             | x86 |
 | arm64            | aarch64        |
@@ -110,14 +150,10 @@ If that's the case you need to write a patch that skips those faulty tests (on t
 | armhf            | arm |
 | ppc64el | powerpc64 |
 | s390x | powerpc64? |
-|----------------------------------------------------------|
-| Other official arches¹ | |
-|----------------------------------------------------------|
+| **Other official arches¹** | |
 | mipsel | mips? |
 | mips64el | mips64 |
-|----------------------------------------------------------|
-| Unoffical ports with rustc/cargo (not really relevant) | |
-|----------------------------------------------------------|
+| **Unoffical ports with rustc/cargo (not really relevant)** | |
 |  powerpc 	| powerpc? |
 | ppc64 	| powerpc? |
 | riscv64 | riscv64 |
@@ -138,8 +174,8 @@ Arches without rustc/cargo:
 Only the first seven are really relevant, I included the rest for completeness's sake. 
 If you encounter a test failure e.g. on `armel`, add this macro before the `#[test]` macro:  
  ` #[cfg(not(target_arch = "arm"))] `.  
- Then generate a patch with the changes and include it in the usual way. Also notify upstream that this arch is broken and send them your patch.
- Footnotes: [1] https://wiki.debian.org/SupportedArchitectures
+ Then generate a patch with the changes and include it in the usual way. Also notify upstream that this arch is broken and send them your patch.  
+Footnotes:  [1] https://wiki.debian.org/SupportedArchitectures
             [2] sh4 has only one test failure for cargo
  
  
