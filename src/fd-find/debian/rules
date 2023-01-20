@@ -8,11 +8,12 @@ override_dh_auto_install:
 	DEB_CARGO_INSTALL_PREFIX=/usr/lib/cargo dh_auto_install
 
 override_dh_install:
+	find target
 	dh_install
-	set -e; for i in debian/fd-find/usr/share/bash-completion/completions/*.bash; do mv "$$i" "$${i%.bash}"; done
-	mkdir -p debian/fd-find/usr/share/zsh/vendor-completions
-	cp contrib/completion/_fd debian/fd-find/usr/share/zsh/vendor-completions
-	cd debian/fd-find/usr/share/zsh/vendor-completions && ln -s _fd _fdfind && cd -
+#	set -e; for i in debian/fd-find/usr/share/bash-completion/completions/*.bash; do mv "$$i" "$${i%.bash}"; done
+#	mkdir -p debian/fd-find/usr/share/zsh/vendor-completions
+#	cp contrib/completion/_fd debian/fd-find/usr/share/zsh/vendor-completions
+#	cd debian/fd-find/usr/share/zsh/vendor-completions && ln -s _fd _fdfind && cd -
 	dh_missing
 
 override_dh_dwz:
