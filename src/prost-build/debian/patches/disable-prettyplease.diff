@@ -1,0 +1,33 @@
+Description: Remove dependency on prettyplease
+ The functionality provided by prettyplease is purely cosmetic and is not used
+ by any package in Debian. Remove it to avoid packaging an additional dependency
+ which is not needed at the moment.
+Author: Emanuele Rocca <ema@debian.org>
+Last-Update: 2023-01-20
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: prost-build/Cargo.toml
+===================================================================
+--- prost-build.orig/Cargo.toml
++++ prost-build/Cargo.toml
+@@ -51,10 +51,6 @@ default-features = false
+ version = "0.6"
+ default-features = false
+ 
+-[dependencies.prettyplease]
+-version = "0.1"
+-optional = true
+-
+ [dependencies.prost]
+ version = "0.11.6"
+ default-features = false
+@@ -100,8 +96,7 @@ cleanup-markdown = [
+     "pulldown-cmark",
+     "pulldown-cmark-to-cmark",
+ ]
+-default = ["format"]
++default = ["syn"]
+ format = [
+-    "prettyplease",
+     "syn",
+ ]
