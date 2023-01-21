@@ -5,7 +5,6 @@
 # DEBCARGO
 #     Path to debcargo. Set this to use your custom version, e.g. from git.
 set -e
-set -v
 
 abort() { local x=$1; shift; for i in "$@"; do echo >&2 "$0: abort: $i"; done; exit "$x"; }
 
