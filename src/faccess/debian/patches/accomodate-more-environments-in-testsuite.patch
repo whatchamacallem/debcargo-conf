@@ -1,0 +1,62 @@
+Index: faccess/src/lib.rs
+===================================================================
+--- faccess.orig/src/lib.rs
++++ faccess/src/lib.rs
+@@ -510,10 +510,26 @@ impl PathExt for Path {
+ 
+ #[test]
+ fn amazing_test_suite() {
+-    let cargotoml = Path::new("Cargo.toml");
++    let mut cargotoml = Path::new("Cargo.toml");
+ 
+     assert!(cargotoml.access(AccessMode::EXISTS).is_ok());
+     assert!(cargotoml.access(AccessMode::READ).is_ok());
++
++    let tempdir; //declared outside the if so it isn't dropped prematurely
++    let cargotomlnew; //declared outside the if so it isn't dropped prematurely
++    let writable = cargotoml
++        .access(AccessMode::READ | AccessMode::WRITE)
++        .is_ok();
++    if !writable {
++        use tempfile::TempDir;
++        use std::fs::copy;
++        tempdir = TempDir::new().unwrap();
++        cargotomlnew = tempdir.path().join("cargo.toml");
++        copy(cargotoml,&cargotomlnew);
++        cargotoml = &cargotomlnew;
++    }
++
++
+     assert!(cargotoml
+         .access(AccessMode::READ | AccessMode::WRITE)
+         .is_ok());
+@@ -530,11 +546,13 @@ fn amazing_test_suite() {
+ 
+         let sh = Path::new("/bin/sh");
+         assert!(sh.readable());
+-        assert!(!sh.writable());
++        use libc::geteuid;
++        let is_root = unsafe { geteuid() } == 0;
++        assert!(sh.writable() == is_root);
+         assert!(sh.executable());
+ 
+         assert!(sh.access(AccessMode::READ | AccessMode::EXECUTE).is_ok());
+-        assert!(sh.access(AccessMode::READ | AccessMode::WRITE).is_err());
++        assert!(sh.access(AccessMode::READ | AccessMode::WRITE).is_ok() == is_root);
+     }
+ 
+     #[cfg(windows)]
+Index: faccess/Cargo.toml
+===================================================================
+--- faccess.orig/Cargo.toml
++++ faccess/Cargo.toml
+@@ -33,6 +33,9 @@ targets = []
+ [dependencies.bitflags]
+ version = "1.2.1"
+ 
++[dev-dependencies.tempfile]
++version = "3"
++
+ [target."cfg(unix)".dependencies.libc]
+ version = "~0.2.68"
+ 
