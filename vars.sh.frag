@@ -5,6 +5,7 @@
 # DEBCARGO
 #     Path to debcargo. Set this to use your custom version, e.g. from git.
 set -e
+set -v
 
 abort() { local x=$1; shift; for i in "$@"; do echo >&2 "$0: abort: $i"; done; exit "$x"; }
 
@@ -81,7 +82,19 @@ fi
 
 run_debcargo() {
 	rm -rf "$BUILDDIR" "$(dirname "$BUILDDIR")/rust-${PKGNAME}_${REALVER:-$VER}"*.orig.tar.*
+	set +e
 	$DEBCARGO package --config "$PKGCFG" --directory "$BUILDDIR" "$@" "$CRATE" "${REALVER:-$VER}"
+	if [ $? -ne 0 ]; then
+		echo "Command failed. If the patches failed to apply, to rebase them, run":
+		echo "cd $BUILDDIR"
+		echo "rm -rf .pc"
+		echo "ln -s $PKGDIR/debian/patches"
+		echo "quilt push -a"
+		echo "$EDITOR <file>"
+		echo "quilt refresh"
+		exit 1
+	fi
+	set -e
 }
 
 shouldbuild() {
