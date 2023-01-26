@@ -1,9 +1,10 @@
 Description: Remove dependency on prettyplease
  The functionality provided by prettyplease is purely cosmetic and is not used
- by any package in Debian. Remove it to avoid packaging an additional dependency
- which is not needed at the moment.
+ by any package in Debian. Remove it to avoid packaging an additional
+ dependency which is not needed at the moment. Also drop the 'format' feature,
+ which depends on it.
 Author: Emanuele Rocca <ema@debian.org>
-Last-Update: 2023-01-20
+Last-Update: 2023-01-26
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 Index: prost-build/Cargo.toml
@@ -21,13 +22,25 @@ Index: prost-build/Cargo.toml
  [dependencies.prost]
  version = "0.11.6"
  default-features = false
-@@ -100,8 +96,7 @@ cleanup-markdown = [
+@@ -100,8 +96,4 @@ cleanup-markdown = [
      "pulldown-cmark",
      "pulldown-cmark-to-cmark",
  ]
 -default = ["format"]
-+default = ["syn"]
- format = [
+-format = [
 -    "prettyplease",
-     "syn",
- ]
+-    "syn",
+-]
++default = ["syn"]
+Index: prost-build/src/lib.rs
+===================================================================
+--- prost-build.orig/src/lib.rs
++++ prost-build/src/lib.rs
+@@ -1517,6 +1517,7 @@ mod tests {
+         assert_eq!(state.finalized, 3);
+     }
+ 
++    #[cfg(feature = "format")]
+     #[test]
+     fn test_generate_message_attributes() {
+         let _ = env_logger::try_init();
