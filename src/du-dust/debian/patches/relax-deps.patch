@@ -1,0 +1,260 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 3e7b6c9..402b0bb 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -236,6 +236,27 @@ version = "1.8.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "90e5c1c8368803113bf0c9584fc495a58b86dc8a29edbf8fe877d21d9507e797"
+ 
++[[package]]
++name = "errno"
++version = "0.2.8"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "f639046355ee4f37944e44f60642c6f3a7efa3cf6b78c78a0d989a8ce6c396a1"
++dependencies = [
++ "errno-dragonfly",
++ "libc",
++ "winapi",
++]
++
++[[package]]
++name = "errno-dragonfly"
++version = "0.1.2"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "aa68f1b12764fab894d2755d2518754e71b4fd80ecfb822714a1206c2aab39bf"
++dependencies = [
++ "cc",
++ "libc",
++]
++
+ [[package]]
+ name = "fastrand"
+ version = "1.8.0"
+@@ -290,6 +311,16 @@ dependencies = [
+  "cfg-if",
+ ]
+ 
++[[package]]
++name = "io-lifetimes"
++version = "1.0.4"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "e7d6c6f8c91b4b9ed43484ad1a938e393caf35960fce7f82a040497207bd8e9e"
++dependencies = [
++ "libc",
++ "windows-sys",
++]
++
+ [[package]]
+ name = "itertools"
+ version = "0.10.3"
+@@ -307,9 +338,15 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
+ 
+ [[package]]
+ name = "libc"
+-version = "0.2.132"
++version = "0.2.139"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "8371e4e5341c3a96db127eb2465ac681ced4c433e01dd0e938adbef26ba93ba5"
++checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
++
++[[package]]
++name = "linux-raw-sys"
++version = "0.1.4"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "f051f77a7c8e6957c0696eac88f26b0117e54f52d3fc682ab19397a8812846a4"
+ 
+ [[package]]
+ name = "lscolors"
+@@ -337,9 +374,9 @@ dependencies = [
+ 
+ [[package]]
+ name = "ntapi"
+-version = "0.3.7"
++version = "0.4.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "c28774a7fd2fbb4f0babd8237ce554b73af68021b5f695a3cebd6c59bac0980f"
++checksum = "bc51db7b362b205941f71232e56c625156eb9a929f8cf74a428fd5bc094a4afc"
+ dependencies = [
+  "winapi",
+ ]
+@@ -487,6 +524,20 @@ dependencies = [
+  "winapi",
+ ]
+ 
++[[package]]
++name = "rustix"
++version = "0.36.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "d4fdebc4b395b7fbb9ab11e462e20ed9051e7b16e42d24042c776eca0ac81b03"
++dependencies = [
++ "bitflags",
++ "errno",
++ "io-lifetimes",
++ "libc",
++ "linux-raw-sys",
++ "windows-sys",
++]
++
+ [[package]]
+ name = "scopeguard"
+ version = "1.1.0"
+@@ -542,14 +593,12 @@ dependencies = [
+ 
+ [[package]]
+ name = "sysinfo"
+-version = "0.15.9"
++version = "0.26.9"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "de94457a09609f33fec5e7fceaf907488967c6c7c75d64da6a7ce6ffdb8b5abd"
++checksum = "5c18a6156d1f27a9592ee18c1a846ca8dd5c258b7179fc193ae87c74ebb666f5"
+ dependencies = [
+- "cc",
+  "cfg-if",
+  "core-foundation-sys",
+- "doc-comment",
+  "libc",
+  "ntapi",
+  "once_cell",
+@@ -582,12 +631,12 @@ dependencies = [
+ 
+ [[package]]
+ name = "terminal_size"
+-version = "0.1.17"
++version = "0.2.3"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "633c1a546cee861a1a6d0dc69ebeca693bf4296661ba7852b9d21d159e0506df"
++checksum = "cb20089a8ba2b69debd491f8d2d023761cbf196e999218c591fa1e7e15a21907"
+ dependencies = [
+- "libc",
+- "winapi",
++ "rustix",
++ "windows-sys",
+ ]
+ 
+ [[package]]
+@@ -694,3 +743,60 @@ name = "winapi-x86_64-pc-windows-gnu"
+ version = "0.4.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
++
++[[package]]
++name = "windows-sys"
++version = "0.42.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "5a3e1820f08b8513f676f7ab6c1f99ff312fb97b553d30ff4dd86f9f15728aa7"
++dependencies = [
++ "windows_aarch64_gnullvm",
++ "windows_aarch64_msvc",
++ "windows_i686_gnu",
++ "windows_i686_msvc",
++ "windows_x86_64_gnu",
++ "windows_x86_64_gnullvm",
++ "windows_x86_64_msvc",
++]
++
++[[package]]
++name = "windows_aarch64_gnullvm"
++version = "0.42.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "8c9864e83243fdec7fc9c5444389dcbbfd258f745e7853198f365e3c4968a608"
++
++[[package]]
++name = "windows_aarch64_msvc"
++version = "0.42.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "4c8b1b673ffc16c47a9ff48570a9d85e25d265735c503681332589af6253c6c7"
++
++[[package]]
++name = "windows_i686_gnu"
++version = "0.42.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "de3887528ad530ba7bdbb1faa8275ec7a1155a45ffa57c37993960277145d640"
++
++[[package]]
++name = "windows_i686_msvc"
++version = "0.42.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "bf4d1122317eddd6ff351aa852118a2418ad4214e6613a50e0191f7004372605"
++
++[[package]]
++name = "windows_x86_64_gnu"
++version = "0.42.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "c1040f221285e17ebccbc2591ffdc2d44ee1f9186324dd3e84e99ac68d699c45"
++
++[[package]]
++name = "windows_x86_64_gnullvm"
++version = "0.42.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "628bfdf232daa22b0d64fdb62b09fcc36bb01f05a3939e20ab73aaf9470d0463"
++
++[[package]]
++name = "windows_x86_64_msvc"
++version = "0.42.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "447660ad36a13288b1db4d4248e857b510e8c3a225c822ba4fb748c0aafecffd"
+diff --git a/Cargo.toml b/Cargo.toml
+index 52d0ec6..15d6570 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -74,7 +74,7 @@ path = "tests/tests.rs"
+ version = "0.12"
+ 
+ [dependencies.clap]
+-version = "3.2.17"
++version = "3"
+ 
+ [dependencies.config-file]
+ version = "0.2"
+@@ -83,7 +83,7 @@ version = "0.2"
+ version = "4"
+ 
+ [dependencies.lscolors]
+-version = "0.7"
++version = "0.13"
+ 
+ [dependencies.rayon]
+ version = "1"
+@@ -99,10 +99,10 @@ features = ["derive"]
+ version = "0.2"
+ 
+ [dependencies.sysinfo]
+-version = "0.15"
++version = "0.26"
+ 
+ [dependencies.terminal_size]
+-version = "0.1"
++version = "0.2"
+ 
+ [dependencies.thousands]
+ version = "0.2"
+@@ -114,13 +114,13 @@ version = "0.1"
+ version = "1"
+ 
+ [dev-dependencies.tempfile]
+-version = "=3"
++version = "3"
+ 
+ [build-dependencies.clap]
+-version = "3.2.17"
++version = "3"
+ 
+ [build-dependencies.clap_complete]
+-version = "3.2.4"
++version = "3"
+ 
+ [target."cfg(windows)".dependencies.winapi-util]
+ version = "0.1"
+diff --git a/src/main.rs b/src/main.rs
+index 942a414..9f3cf5e 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -194,7 +194,7 @@ fn init_rayon() -> Result<(), ThreadPoolBuildError> {
+     let large_stack = usize::pow(1024, 3);
+     // Warning: Creating System is slow, takes ~ 100ms
+     let s = System::new();
+-    let available = s.get_available_memory() * 1024;
++    let available = s.available_memory() * 1024;
+ 
+     if available > large_stack.try_into().unwrap() {
+         // Larger stack size to handle cases with lots of nested directories

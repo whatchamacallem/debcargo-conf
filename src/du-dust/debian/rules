@@ -1,0 +1,14 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/pkg-info.mk
+
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_install:
+	mkdir -p debian/du-dust/usr/share/fish/completions/ debian/du-dust/usr/share/zsh/vendor-completions/ debian/du-dust/usr/share/bash-completion/completions/
+	cp -f debian/completions/dust.fish debian/du-dust/usr/share/fish/completions/dust.fish
+	cp -f debian/completions/_dust debian/du-dust/usr/share/zsh/vendor-completions/_dust
+	cp -f debian/completions/dust.bash debian/du-dust/usr/share/bash-completion/completions/dust
+	dh_install
+
