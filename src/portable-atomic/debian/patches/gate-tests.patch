@@ -1,20 +1,46 @@
-diff --git a/src/tests/mod.rs b/src/tests/mod.rs
-index 42c5486..4ae4fa4 100644
---- a/src/tests/mod.rs
-+++ b/src/tests/mod.rs
-@@ -38,6 +38,7 @@ test_atomic_int_pub!(u64);
-     ),
-     cfg(not(qemu))
+--- rust-portable-atomic-0.3.15.orig/src/tests/mod.rs
++++ rust-portable-atomic-0.3.15/src/tests/mod.rs
+@@ -27,3 +27,5 @@
+ test_atomic_int_pub!(u32);
++#[cfg(any(fallback,target_has_atomic = "64"))]
+ test_atomic_int_pub!(i64);
++#[cfg(any(fallback,target_has_atomic = "64"))]
+ test_atomic_int_pub!(u64);
+@@ -40,2 +42,3 @@
  )]
 +#[cfg(feature = "fallback")]
  test_atomic_int_pub!(i128);
- #[cfg_attr(
-     all(
-@@ -49,6 +50,7 @@ test_atomic_int_pub!(i128);
-     ),
-     cfg(not(qemu))
+@@ -51,2 +54,3 @@
  )]
 +#[cfg(feature = "fallback")]
  test_atomic_int_pub!(u128);
- #[cfg(qemu)]
- #[cfg(target_arch = "powerpc64")]
+@@ -69,3 +73,3 @@
+ test_atomic_float_pub!(f32);
+-#[cfg(feature = "float")]
++#[cfg(all(feature = "float",any(fallback,target_has_atomic = "64")))]
+ test_atomic_float_pub!(f64);
+@@ -84,3 +88,5 @@
+     fn _atomic_u32_ffi_safety(_: AtomicU32);
++    #[cfg(any(fallback,target_has_atomic = "64"))]
+     fn _atomic_i64_ffi_safety(_: AtomicI64);
++    #[cfg(any(fallback,target_has_atomic = "64"))]
+     fn _atomic_u64_ffi_safety(_: AtomicU64);
+@@ -93,3 +99,3 @@
+     fn _atomic_f32_ffi_safety(_: AtomicF32);
+-    #[cfg(feature = "float")]
++    #[cfg(all(feature = "float",any(fallback,target_has_atomic = "64")))]
+     fn _atomic_f64_ffi_safety(_: AtomicF64);
+only in patch2:
+--- rust-portable-atomic-0.3.15.orig/src/tests/serde.rs
++++ rust-portable-atomic-0.3.15/src/tests/serde.rs
+@@ -40,3 +40,5 @@
+     t!(AtomicU32, u32, U32);
++    #[cfg(any(fallback,target_has_atomic = "64"))]
+     t!(AtomicI64, i64, I64);
++    #[cfg(any(fallback,target_has_atomic = "64"))]
+     t!(AtomicU64, u64, U64);
+@@ -47,3 +49,3 @@
+     t!(AtomicF32, f32, F32);
+-    #[cfg(feature = "float")]
++    #[cfg(all(feature = "float",any(fallback,target_has_atomic = "64")))]
+     t!(AtomicF64, f64, F64);
