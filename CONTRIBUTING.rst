@@ -9,7 +9,7 @@ To accept a new package in the Debian archive, we need the following:
 
 1. Clean copyright file
 1. Except with very good reasons, it should generate only one Debian package
-   please use ``collapse_features = true`` in debcargo.toml to avoid that
+   please use ``collapse_features = true`` in debcargo.toml to ensure that
 1. No lintian warning except ``initial-upload-closes-no-bugs`` (for libraries)
 1. autopkgtest should be green (or skipped)
 1. New binaries should have an open ITP
