@@ -8,7 +8,7 @@ Author: Arnaud Ferraris <aferraris@debian.org>
 Last-Update: 2023-01-31
 --- a/tests/compile.rs
 +++ b/tests/compile.rs
-@@ -349,25 +349,28 @@
+@@ -340,25 +340,28 @@
      comp_chk("3 > 2 > 1", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0);
  
      // IAND:
@@ -56,7 +56,7 @@ Last-Update: 2023-01-31
  
      // IVar
      comp_chk("x", IVar("x".to_string()), "CompileSlab{ instrs:{} }", 1.0);
-@@ -447,12 +450,15 @@
+@@ -436,12 +439,15 @@
      comp_chk("min(y7)", IVar("y7".to_string()), "CompileSlab{ instrs:{} }", 2.7);
      comp_chk("min(4.7, y7, 3.7)", IFuncMin(InstructionI(0), IC::C(3.7)), "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", 2.7);
      comp_chk("min(3.7, y7, 4.7)", IFuncMin(InstructionI(0), IC::C(3.7)), "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", 2.7);
@@ -78,7 +78,7 @@ Last-Update: 2023-01-31
  
      // IFuncMax
      comp_chk("max(2.7)", IConst(2.7), "CompileSlab{ instrs:{} }", 2.7);
-@@ -461,12 +467,15 @@
+@@ -450,12 +456,15 @@
      comp_chk("max(y7)", IVar("y7".to_string()), "CompileSlab{ instrs:{} }", 2.7);
      comp_chk("max(0.7, y7, 1.7)", IFuncMax(InstructionI(0), IC::C(1.7)), "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", 2.7);
      comp_chk("max(1.7, y7, 0.7)", IFuncMax(InstructionI(0), IC::C(1.7)), "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", 2.7);
@@ -164,7 +164,7 @@ Last-Update: 2023-01-31
  #[test]
 --- a/tests/parse.rs
 +++ b/tests/parse.rs
-@@ -129,34 +129,35 @@
+@@ -132,34 +132,35 @@
      assert_eq!(format!("{:?}",&slab),
  "Slab{ exprs:{ 0:Expression { first: EUnaryOp(ENeg(ValueI(0))), pairs: [] } }, vals:{ 0:EStdFunc(EVar(\"x\")) }, instrs:{} }");
  
@@ -216,8 +216,8 @@ Last-Update: 2023-01-31
      assert_eq!(Parser::new().parse("12.34e56K", &mut slab.ps), Err(Error::UnparsedTokensRemaining("K".to_string())));
  
  }
-@@ -208,4 +209,3 @@
+@@ -196,4 +197,3 @@
      assert_eq!(replace_addrs(format!("{:?}",&slab)),
- format!("Slab{{ exprs:{{ 0:Expression {{ first: EStdFunc(EUnsafeVar {{ name: \"ua\", ptr: 0x{} }}), pairs: [ExprPair(EAdd, EStdFunc(EUnsafeVar {{ name: \"ub\", ptr: 0x{} }})), ExprPair(EAdd, EConstant(5.0))] }} }}, vals:{{}}, instrs:{{}} }}", pointer_mask, pointer_mask));
+ format!("Slab{{ exprs:{{ 0:Expression {{ first: EStdFunc(EUnsafeVar {{ name: \"ua\", ptr: 0x{} }}), pairs: [ExprPair(EAdd, EStdFunc(EUnsafeVar {{ name: \"ub\", ptr: 0x{} }})), ExprPair(EAdd, EConstant(5.0))] }} }}, vals:{{}}, instrs:{{}} }}", POINTER_MASK, POINTER_MASK));
  }
 -

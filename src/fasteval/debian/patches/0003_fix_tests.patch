@@ -6,7 +6,16 @@ Author: Eric Long <i@hack3r.moe>
 Last-Update: 2022-08-21
 --- a/tests/parse.rs
 +++ b/tests/parse.rs
-@@ -79,51 +79,51 @@
+@@ -1,5 +1,8 @@
+ use fasteval::{Error, Slab, Parser};
+ 
++#[cfg(feature="unsafe-vars")]
++const POINTER_MASK: &str = "????????";
++
+ #[test]
+ fn basics() {
+     let mut slab = Slab::new();
+@@ -79,51 +82,51 @@
  
      Parser::new().parse("12.34u", &mut slab.ps).unwrap();
      assert_eq!(format!("{:?}",&slab),
@@ -70,34 +79,108 @@ Last-Update: 2022-08-21
  
      Parser::new().parse("-x", &mut slab.ps).unwrap();
      assert_eq!(format!("{:?}",&slab),
-@@ -201,8 +201,11 @@
-         slab.ps.add_unsafe_var("ub".to_string(), &ub);
+@@ -167,27 +170,15 @@
+     fn replace_addrs(mut s:String) -> String {
+         let mut start=0;
+         loop {
+-            match s[start..].find(" 0x") {
+-                None => break,
+-                Some(i) => {
+-                    let v = unsafe { s.as_mut_vec() };
+-
+-                    start = start+i+3;
+-                    loop {
+-                        match v.get(start) {
+-                            None => break,
+-                            Some(&b) => {
+-                                if (b'0'<=b && b<=b'9') || (b'a'<=b && b<=b'f') {
+-                                    v[start]=b'?';
+-                                    start+=1;
+-                                } else {
+-                                    break;
+-                                }
+-                            }
+-                        }
+-                    }
++            if let Some(i) = s[start..].find(" 0x") {
++                start = start+i+3;
++                if let Some(j) = s[start..].find(' ') {
++                    let end = start+j;
++                    s.replace_range(start..end, POINTER_MASK);
+                 }
+-            };
++            } else {
++                break;
++            }
+         }
+         s
      }
+@@ -203,6 +194,6 @@
  
-+    let pointer_len = format!("{:?}", &() as *const ()).len() - 2;
-+    let pointer_mask = "?".repeat(pointer_len);
-+
      Parser::new().parse("ua + ub + 5", &mut slab.ps).unwrap();
      assert_eq!(replace_addrs(format!("{:?}",&slab)),
 -"Slab{ exprs:{ 0:Expression { first: EStdFunc(EUnsafeVar { name: \"ua\", ptr: 0x???????????? }), pairs: [ExprPair(EAdd, EStdFunc(EUnsafeVar { name: \"ub\", ptr: 0x???????????? })), ExprPair(EAdd, EConstant(5.0))] } }, vals:{}, instrs:{} }");
-+format!("Slab{{ exprs:{{ 0:Expression {{ first: EStdFunc(EUnsafeVar {{ name: \"ua\", ptr: 0x{} }}), pairs: [ExprPair(EAdd, EStdFunc(EUnsafeVar {{ name: \"ub\", ptr: 0x{} }})), ExprPair(EAdd, EConstant(5.0))] }} }}, vals:{{}}, instrs:{{}} }}", pointer_mask, pointer_mask));
++format!("Slab{{ exprs:{{ 0:Expression {{ first: EStdFunc(EUnsafeVar {{ name: \"ua\", ptr: 0x{} }}), pairs: [ExprPair(EAdd, EStdFunc(EUnsafeVar {{ name: \"ub\", ptr: 0x{} }})), ExprPair(EAdd, EConstant(5.0))] }} }}, vals:{{}}, instrs:{{}} }}", POINTER_MASK, POINTER_MASK));
  }
  
 --- a/tests/compile.rs
 +++ b/tests/compile.rs
-@@ -385,10 +385,12 @@
-     // IUnsafeVar
+@@ -7,6 +7,9 @@
+ #[cfg(feature="eval-builtin")]
+ use fasteval::compiler::Instruction::IEvalFunc;
+ 
++#[cfg(feature="unsafe-vars")]
++const POINTER_MASK: &str = "????????";
++
+ #[test]
+ fn slab_overflow() {
+     let mut slab = Slab::with_capacity(2);
+@@ -86,27 +89,15 @@
+     fn replace_addrs(mut s:String) -> String {
+         let mut start=0;
+         loop {
+-            match s[start..].find(" 0x") {
+-                None => break,
+-                Some(i) => {
+-                    let v = unsafe { s.as_mut_vec() };
+-
+-                    start = start+i+3;
+-                    loop {
+-                        match v.get(start) {
+-                            None => break,
+-                            Some(&b) => {
+-                                if (b'0'<=b && b<=b'9') || (b'a'<=b && b<=b'f') {
+-                                    v[start]=b'?';
+-                                    start+=1;
+-                                } else {
+-                                    break;
+-                                }
+-                            }
+-                        }
+-                    }
++            if let Some(i) = s[start..].find(" 0x") {
++                start = start+i+3;
++                if let Some(j) = s[start..].find(' ') {
++                    let end = start+j;
++                    s.replace_range(start..end, POINTER_MASK);
+                 }
+-            };
++            } else {
++                break;
++            }
+         }
+         s
+     }
+@@ -386,9 +377,9 @@
      #[cfg(feature="unsafe-vars")]
      {
-+        let pointer_len = format!("{:?}", &() as *const ()).len() - 2;
-+        let pointer_mask = "?".repeat(pointer_len);
          unsafe_comp_chk("x", "CompileSlab{ instrs:{} }", 1.0);
 -        unsafe_comp_chk("x + y", "CompileSlab{ instrs:{ 0:IUnsafeVar { name: \"x\", ptr: 0x???????????? }, 1:IUnsafeVar { name: \"y\", ptr: 0x???????????? } } }", 3.0);
 -        unsafe_comp_chk("x() + y", "CompileSlab{ instrs:{ 0:IUnsafeVar { name: \"x\", ptr: 0x???????????? }, 1:IUnsafeVar { name: \"y\", ptr: 0x???????????? } } }", 3.0);
 -        unsafe_comp_chk("x(x,y,z) + y", "CompileSlab{ instrs:{ 0:IUnsafeVar { name: \"x\", ptr: 0x???????????? }, 1:IUnsafeVar { name: \"y\", ptr: 0x???????????? } } }", 3.0);
-+        unsafe_comp_chk("x + y", &format!("CompileSlab{{ instrs:{{ 0:IUnsafeVar {{ name: \"x\", ptr: 0x{} }}, 1:IUnsafeVar {{ name: \"y\", ptr: 0x{} }} }} }}", pointer_mask, pointer_mask), 3.0);
-+        unsafe_comp_chk("x() + y", &format!("CompileSlab{{ instrs:{{ 0:IUnsafeVar {{ name: \"x\", ptr: 0x{} }}, 1:IUnsafeVar {{ name: \"y\", ptr: 0x{} }} }} }}", pointer_mask, pointer_mask), 3.0);
-+        unsafe_comp_chk("x(x,y,z) + y", &format!("CompileSlab{{ instrs:{{ 0:IUnsafeVar {{ name: \"x\", ptr: 0x{} }}, 1:IUnsafeVar {{ name: \"y\", ptr: 0x{} }} }} }}", pointer_mask, pointer_mask), 3.0);
++        unsafe_comp_chk("x + y", &format!("CompileSlab{{ instrs:{{ 0:IUnsafeVar {{ name: \"x\", ptr: 0x{} }}, 1:IUnsafeVar {{ name: \"y\", ptr: 0x{} }} }} }}", POINTER_MASK, POINTER_MASK), 3.0);
++        unsafe_comp_chk("x() + y", &format!("CompileSlab{{ instrs:{{ 0:IUnsafeVar {{ name: \"x\", ptr: 0x{} }}, 1:IUnsafeVar {{ name: \"y\", ptr: 0x{} }} }} }}", POINTER_MASK, POINTER_MASK), 3.0);
++        unsafe_comp_chk("x(x,y,z) + y", &format!("CompileSlab{{ instrs:{{ 0:IUnsafeVar {{ name: \"x\", ptr: 0x{} }}, 1:IUnsafeVar {{ name: \"y\", ptr: 0x{} }} }} }}", POINTER_MASK, POINTER_MASK), 3.0);
      }
  
      // IFunc
