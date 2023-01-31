@@ -1,0 +1,223 @@
+Description: guard alpha-keywords tests
+ The use of the "and", "or", "NaN" and "inf" keywords is only possible
+ when the "alpha-keywords" feature is enabled, causing autopkgtests
+ to fail when this feature is disabled.
+ This patch ensures all tests making use of those keywords are properly
+ guarded by a `#[cfg(feature="alpha-keywords")]` compilation directive.
+Author: Arnaud Ferraris <aferraris@debian.org>
+Last-Update: 2023-01-31
+--- a/tests/compile.rs
++++ b/tests/compile.rs
+@@ -349,25 +349,28 @@
+     comp_chk("3 > 2 > 1", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0);
+ 
+     // IAND:
+-    comp_chk("2 and 3", IConst(3.0), "CompileSlab{ instrs:{} }", 3.0); comp_chk("2 && 3", IConst(3.0), "CompileSlab{ instrs:{} }", 3.0);
+-    comp_chk("2 and 3 and 4", IConst(4.0), "CompileSlab{ instrs:{} }", 4.0); comp_chk("2 && 3 && 4", IConst(4.0), "CompileSlab{ instrs:{} }", 4.0);
+-    comp_chk("0 and 1 and 2", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0); comp_chk("0 && 1 && 2", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0);
+-    comp_chk("1 and 0 and 2", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0); comp_chk("1 && 0 && 2", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0);
+-    comp_chk("1 and 2 and 0", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0); comp_chk("1 && 2 && 0", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0);
+-    comp_chk("x and 2", IAND(InstructionI(0), IC::C(2.0)), "CompileSlab{ instrs:{ 0:IVar(\"x\") } }", 2.0);
+-    comp_chk("0 and x", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0);
+-    comp_chk("w and x", IAND(InstructionI(0), IC::I(InstructionI(1))), "CompileSlab{ instrs:{ 0:IVar(\"w\"), 1:IVar(\"x\") } }", 0.0);
+-
+-    // IOR:
+-    comp_chk("2 or 3", IConst(2.0), "CompileSlab{ instrs:{} }", 2.0); comp_chk("2 || 3", IConst(2.0), "CompileSlab{ instrs:{} }", 2.0);
+-    comp_chk("2 or 3 or 4", IConst(2.0), "CompileSlab{ instrs:{} }", 2.0); comp_chk("2 || 3 || 4", IConst(2.0), "CompileSlab{ instrs:{} }", 2.0);
+-    comp_chk("0 or 1 or 2", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0); comp_chk("0 || 1 || 2", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0);
+-    comp_chk("1 or 0 or 2", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0); comp_chk("1 || 0 || 2", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0);
+-    comp_chk("1 or 2 or 0", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0); comp_chk("1 || 2 || 0", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0);
+-    comp_chk("x or 2", IOR(InstructionI(0), IC::C(2.0)), "CompileSlab{ instrs:{ 0:IVar(\"x\") } }", 1.0);
+-    comp_chk("0 or x", IVar("x".to_string()), "CompileSlab{ instrs:{} }", 1.0);
+-    comp_chk("w or x", IOR(InstructionI(0), IC::I(InstructionI(1))), "CompileSlab{ instrs:{ 0:IVar(\"w\"), 1:IVar(\"x\") } }", 1.0);
+-    comp_chk("x or w", IOR(InstructionI(0), IC::I(InstructionI(1))), "CompileSlab{ instrs:{ 0:IVar(\"x\"), 1:IVar(\"w\") } }", 1.0);
++    #[cfg(feature="alpha-keywords")]
++    {
++        comp_chk("2 and 3", IConst(3.0), "CompileSlab{ instrs:{} }", 3.0); comp_chk("2 && 3", IConst(3.0), "CompileSlab{ instrs:{} }", 3.0);
++        comp_chk("2 and 3 and 4", IConst(4.0), "CompileSlab{ instrs:{} }", 4.0); comp_chk("2 && 3 && 4", IConst(4.0), "CompileSlab{ instrs:{} }", 4.0);
++        comp_chk("0 and 1 and 2", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0); comp_chk("0 && 1 && 2", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0);
++        comp_chk("1 and 0 and 2", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0); comp_chk("1 && 0 && 2", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0);
++        comp_chk("1 and 2 and 0", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0); comp_chk("1 && 2 && 0", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0);
++        comp_chk("x and 2", IAND(InstructionI(0), IC::C(2.0)), "CompileSlab{ instrs:{ 0:IVar(\"x\") } }", 2.0);
++        comp_chk("0 and x", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0);
++        comp_chk("w and x", IAND(InstructionI(0), IC::I(InstructionI(1))), "CompileSlab{ instrs:{ 0:IVar(\"w\"), 1:IVar(\"x\") } }", 0.0);
++
++        // IOR:
++        comp_chk("2 or 3", IConst(2.0), "CompileSlab{ instrs:{} }", 2.0); comp_chk("2 || 3", IConst(2.0), "CompileSlab{ instrs:{} }", 2.0);
++        comp_chk("2 or 3 or 4", IConst(2.0), "CompileSlab{ instrs:{} }", 2.0); comp_chk("2 || 3 || 4", IConst(2.0), "CompileSlab{ instrs:{} }", 2.0);
++        comp_chk("0 or 1 or 2", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0); comp_chk("0 || 1 || 2", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0);
++        comp_chk("1 or 0 or 2", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0); comp_chk("1 || 0 || 2", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0);
++        comp_chk("1 or 2 or 0", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0); comp_chk("1 || 2 || 0", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0);
++        comp_chk("x or 2", IOR(InstructionI(0), IC::C(2.0)), "CompileSlab{ instrs:{ 0:IVar(\"x\") } }", 1.0);
++        comp_chk("0 or x", IVar("x".to_string()), "CompileSlab{ instrs:{} }", 1.0);
++        comp_chk("w or x", IOR(InstructionI(0), IC::I(InstructionI(1))), "CompileSlab{ instrs:{ 0:IVar(\"w\"), 1:IVar(\"x\") } }", 1.0);
++        comp_chk("x or w", IOR(InstructionI(0), IC::I(InstructionI(1))), "CompileSlab{ instrs:{ 0:IVar(\"x\"), 1:IVar(\"w\") } }", 1.0);
++    }
+ 
+     // IVar
+     comp_chk("x", IVar("x".to_string()), "CompileSlab{ instrs:{} }", 1.0);
+@@ -447,12 +450,15 @@
+     comp_chk("min(y7)", IVar("y7".to_string()), "CompileSlab{ instrs:{} }", 2.7);
+     comp_chk("min(4.7, y7, 3.7)", IFuncMin(InstructionI(0), IC::C(3.7)), "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", 2.7);
+     comp_chk("min(3.7, y7, 4.7)", IFuncMin(InstructionI(0), IC::C(3.7)), "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", 2.7);
+-    comp_chk_str("min(NaN, y7, 4.7)", "IFuncMin(InstructionI(0), C(NaN))", "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", std::f64::NAN);
+-    comp_chk_str("min(NaN, 4.7)", "IConst(NaN)", "CompileSlab{ instrs:{} }", std::f64::NAN);
+-    comp_chk_str("min(inf, y7, 4.7)", "IFuncMin(InstructionI(0), C(4.7))", "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", 2.7);
+-    comp_chk_str("min(inf, 4.7)", "IConst(4.7)", "CompileSlab{ instrs:{} }", 4.7);
+-    comp_chk_str("min(-inf, y7, 4.7)", "IFuncMin(InstructionI(0), C(-inf))", "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", std::f64::NEG_INFINITY);
+-    comp_chk_str("min(-inf, 4.7)", "IConst(-inf)", "CompileSlab{ instrs:{} }", std::f64::NEG_INFINITY);
++    #[cfg(feature="alpha-keywords")]
++    {
++        comp_chk_str("min(NaN, y7, 4.7)", "IFuncMin(InstructionI(0), C(NaN))", "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", std::f64::NAN);
++        comp_chk_str("min(NaN, 4.7)", "IConst(NaN)", "CompileSlab{ instrs:{} }", std::f64::NAN);
++        comp_chk_str("min(inf, y7, 4.7)", "IFuncMin(InstructionI(0), C(4.7))", "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", 2.7);
++        comp_chk_str("min(inf, 4.7)", "IConst(4.7)", "CompileSlab{ instrs:{} }", 4.7);
++        comp_chk_str("min(-inf, y7, 4.7)", "IFuncMin(InstructionI(0), C(-inf))", "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", std::f64::NEG_INFINITY);
++        comp_chk_str("min(-inf, 4.7)", "IConst(-inf)", "CompileSlab{ instrs:{} }", std::f64::NEG_INFINITY);
++    }
+ 
+     // IFuncMax
+     comp_chk("max(2.7)", IConst(2.7), "CompileSlab{ instrs:{} }", 2.7);
+@@ -461,12 +467,15 @@
+     comp_chk("max(y7)", IVar("y7".to_string()), "CompileSlab{ instrs:{} }", 2.7);
+     comp_chk("max(0.7, y7, 1.7)", IFuncMax(InstructionI(0), IC::C(1.7)), "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", 2.7);
+     comp_chk("max(1.7, y7, 0.7)", IFuncMax(InstructionI(0), IC::C(1.7)), "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", 2.7);
+-    comp_chk_str("max(NaN, y7, 0.7)", "IFuncMax(InstructionI(0), C(NaN))", "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", std::f64::NAN);
+-    comp_chk_str("max(NaN, 0.7)", "IConst(NaN)", "CompileSlab{ instrs:{} }", std::f64::NAN);
+-    comp_chk_str("max(inf, y7, 4.7)", "IFuncMax(InstructionI(0), C(inf))", "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", std::f64::INFINITY);
+-    comp_chk_str("max(inf, 4.7)", "IConst(inf)", "CompileSlab{ instrs:{} }", std::f64::INFINITY);
+-    comp_chk_str("max(-inf, y7, 4.7)", "IFuncMax(InstructionI(0), C(4.7))", "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", 4.7);
+-    comp_chk_str("max(-inf, 4.7)", "IConst(4.7)", "CompileSlab{ instrs:{} }", 4.7);
++    #[cfg(feature="alpha-keywords")]
++    {
++        comp_chk_str("max(NaN, y7, 0.7)", "IFuncMax(InstructionI(0), C(NaN))", "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", std::f64::NAN);
++        comp_chk_str("max(NaN, 0.7)", "IConst(NaN)", "CompileSlab{ instrs:{} }", std::f64::NAN);
++        comp_chk_str("max(inf, y7, 4.7)", "IFuncMax(InstructionI(0), C(inf))", "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", std::f64::INFINITY);
++        comp_chk_str("max(inf, 4.7)", "IConst(inf)", "CompileSlab{ instrs:{} }", std::f64::INFINITY);
++        comp_chk_str("max(-inf, y7, 4.7)", "IFuncMax(InstructionI(0), C(4.7))", "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }", 4.7);
++        comp_chk_str("max(-inf, 4.7)", "IConst(4.7)", "CompileSlab{ instrs:{} }", 4.7);
++    }
+ 
+     // IFuncSin
+     comp_chk("sin(0)", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0);
+--- a/tests/eval.rs
++++ b/tests/eval.rs
+@@ -64,12 +64,14 @@
+     assert_eq!(
+         Parser::new().parse("33.33 % 3", &mut slab.ps).unwrap().from(&slab.ps).eval(&slab, &mut ns),
+         Ok(0.3299999999999983));
++    #[cfg(feature="alpha-keywords")]
+     assert_eq!(
+         Parser::new().parse("1 and 2", &mut slab.ps).unwrap().from(&slab.ps).eval(&slab, &mut ns),
+         Ok(2.0));
+     assert_eq!(
+         Parser::new().parse("1 && 2", &mut slab.ps).unwrap().from(&slab.ps).eval(&slab, &mut ns),
+         Ok(2.0));
++    #[cfg(feature="alpha-keywords")]
+     assert_eq!(
+         Parser::new().parse("2 or 0", &mut slab.ps).unwrap().from(&slab.ps).eval(&slab, &mut ns),
+         Ok(2.0));
+--- a/tests/from_go.rs
++++ b/tests/from_go.rs
+@@ -254,23 +254,26 @@
+     assert_eq!(do_eval("3>=2^2"), 0.0);
+     assert_eq!(do_eval("3>2"), 1.0);
+     assert_eq!(do_eval("3>2^2"), 0.0);
+-    assert_eq!(do_eval("1 or 1"), 1.0); assert_eq!(do_eval("1 || 1"), 1.0);
+-    assert_eq!(do_eval("1 or 0"), 1.0); assert_eq!(do_eval("1 || 0"), 1.0);
+-    assert_eq!(do_eval("0 or 1"), 1.0); assert_eq!(do_eval("0 || 1"), 1.0);
+-    assert_eq!(do_eval("0 or 0"), 0.0); assert_eq!(do_eval("0 || 0"), 0.0);
+-    assert_eq!(do_eval("0 and 0"), 0.0); assert_eq!(do_eval("0 && 0"), 0.0);
+-    assert_eq!(do_eval("0 and 1"), 0.0); assert_eq!(do_eval("0 && 1"), 0.0);
+-    assert_eq!(do_eval("1 and 0"), 0.0); assert_eq!(do_eval("1 && 0"), 0.0);
+-    assert_eq!(do_eval("1 and 1"), 1.0); assert_eq!(do_eval("1 && 1"), 1.0);
+-    assert_eq!(do_eval("(2k*1k==2M and 3/2<2 or 0^2) and !(1-1)"), 1.0); assert_eq!(do_eval("(2k*1k==2M && 3/2<2 || 0^2) && !(1-1)"), 1.0);
++    #[cfg(feature="alpha-keywords")]
++    {
++        assert_eq!(do_eval("1 or 1"), 1.0); assert_eq!(do_eval("1 || 1"), 1.0);
++        assert_eq!(do_eval("1 or 0"), 1.0); assert_eq!(do_eval("1 || 0"), 1.0);
++        assert_eq!(do_eval("0 or 1"), 1.0); assert_eq!(do_eval("0 || 1"), 1.0);
++        assert_eq!(do_eval("0 or 0"), 0.0); assert_eq!(do_eval("0 || 0"), 0.0);
++        assert_eq!(do_eval("0 and 0"), 0.0); assert_eq!(do_eval("0 && 0"), 0.0);
++        assert_eq!(do_eval("0 and 1"), 0.0); assert_eq!(do_eval("0 && 1"), 0.0);
++        assert_eq!(do_eval("1 and 0"), 0.0); assert_eq!(do_eval("1 && 0"), 0.0);
++        assert_eq!(do_eval("1 and 1"), 1.0); assert_eq!(do_eval("1 && 1"), 1.0);
++        assert_eq!(do_eval("(2k*1k==2M and 3/2<2 or 0^2) and !(1-1)"), 1.0); assert_eq!(do_eval("(2k*1k==2M && 3/2<2 || 0^2) && !(1-1)"), 1.0);
+ 
+-    // Ternary ability:
+-    assert_eq!(do_eval("2 and 3"), 3.0); assert_eq!(do_eval("2 && 3"), 3.0);
+-    assert_eq!(do_eval("2 or 3"), 2.0); assert_eq!(do_eval("2 || 3"), 2.0);
+-    assert_eq!(do_eval("2 and 3 or 4"), 3.0); assert_eq!(do_eval("2 && 3 || 4"), 3.0);
+-    assert_eq!(do_eval("0 and 3 or 4"), 4.0); assert_eq!(do_eval("0 && 3 || 4"), 4.0);
+-    assert_eq!(do_eval("2 and 0 or 4"), 4.0); assert_eq!(do_eval("2 && 0 || 4"), 4.0);
+-    assert_eq!(do_eval("0 and 3 or 0 and 5 or 6"), 6.0); assert_eq!(do_eval("0 && 3 || 0 && 5 || 6"), 6.0);
++        // Ternary ability:
++        assert_eq!(do_eval("2 and 3"), 3.0); assert_eq!(do_eval("2 && 3"), 3.0);
++        assert_eq!(do_eval("2 or 3"), 2.0); assert_eq!(do_eval("2 || 3"), 2.0);
++        assert_eq!(do_eval("2 and 3 or 4"), 3.0); assert_eq!(do_eval("2 && 3 || 4"), 3.0);
++        assert_eq!(do_eval("0 and 3 or 4"), 4.0); assert_eq!(do_eval("0 && 3 || 4"), 4.0);
++        assert_eq!(do_eval("2 and 0 or 4"), 4.0); assert_eq!(do_eval("2 && 0 || 4"), 4.0);
++        assert_eq!(do_eval("0 and 3 or 0 and 5 or 6"), 6.0); assert_eq!(do_eval("0 && 3 || 0 && 5 || 6"), 6.0);
++    }
+ }
+ 
+ #[test]
+--- a/tests/parse.rs
++++ b/tests/parse.rs
+@@ -129,34 +129,35 @@
+     assert_eq!(format!("{:?}",&slab),
+ "Slab{ exprs:{ 0:Expression { first: EUnaryOp(ENeg(ValueI(0))), pairs: [] } }, vals:{ 0:EStdFunc(EVar(\"x\")) }, instrs:{} }");
+ 
+-    Parser::new().parse("NaN", &mut slab.ps).unwrap();
+-    assert_eq!(format!("{:?}",&slab),
++    #[cfg(feature="alpha-keywords")]
++    {
++        Parser::new().parse("NaN", &mut slab.ps).unwrap();
++        assert_eq!(format!("{:?}",&slab),
+ "Slab{ exprs:{ 0:Expression { first: EConstant(NaN), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+-    Parser::new().parse("+NaN", &mut slab.ps).unwrap();
+-    assert_eq!(format!("{:?}",&slab),
++        Parser::new().parse("+NaN", &mut slab.ps).unwrap();
++        assert_eq!(format!("{:?}",&slab),
+ "Slab{ exprs:{ 0:Expression { first: EConstant(NaN), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+-    Parser::new().parse("-NaN", &mut slab.ps).unwrap();
+-    assert_eq!(format!("{:?}",&slab),
++        Parser::new().parse("-NaN", &mut slab.ps).unwrap();
++        assert_eq!(format!("{:?}",&slab),
+ "Slab{ exprs:{ 0:Expression { first: EConstant(NaN), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+-    Parser::new().parse("inf", &mut slab.ps).unwrap();
+-    assert_eq!(format!("{:?}",&slab),
++        Parser::new().parse("inf", &mut slab.ps).unwrap();
++        assert_eq!(format!("{:?}",&slab),
+ "Slab{ exprs:{ 0:Expression { first: EConstant(inf), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+-    Parser::new().parse("+inf", &mut slab.ps).unwrap();
+-    assert_eq!(format!("{:?}",&slab),
++        Parser::new().parse("+inf", &mut slab.ps).unwrap();
++        assert_eq!(format!("{:?}",&slab),
+ "Slab{ exprs:{ 0:Expression { first: EConstant(inf), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+-    Parser::new().parse("-inf", &mut slab.ps).unwrap();
+-    assert_eq!(format!("{:?}",&slab),
++        Parser::new().parse("-inf", &mut slab.ps).unwrap();
++        assert_eq!(format!("{:?}",&slab),
+ "Slab{ exprs:{ 0:Expression { first: EConstant(-inf), pairs: [] } }, vals:{}, instrs:{} }");
+ 
+-
+-
+-    assert_eq!(Parser::new().parse("-infK", &mut slab.ps), Err(Error::UnparsedTokensRemaining("K".to_string())));
+-    assert_eq!(Parser::new().parse("NaNK", &mut slab.ps), Err(Error::UnparsedTokensRemaining("K".to_string())));
++        assert_eq!(Parser::new().parse("-infK", &mut slab.ps), Err(Error::UnparsedTokensRemaining("K".to_string())));
++        assert_eq!(Parser::new().parse("NaNK", &mut slab.ps), Err(Error::UnparsedTokensRemaining("K".to_string())));
++    }
+     assert_eq!(Parser::new().parse("12.34e56K", &mut slab.ps), Err(Error::UnparsedTokensRemaining("K".to_string())));
+ 
+ }
+@@ -208,4 +209,3 @@
+     assert_eq!(replace_addrs(format!("{:?}",&slab)),
+ format!("Slab{{ exprs:{{ 0:Expression {{ first: EStdFunc(EUnsafeVar {{ name: \"ua\", ptr: 0x{} }}), pairs: [ExprPair(EAdd, EStdFunc(EUnsafeVar {{ name: \"ub\", ptr: 0x{} }})), ExprPair(EAdd, EConstant(5.0))] }} }}, vals:{{}}, instrs:{{}} }}", pointer_mask, pointer_mask));
+ }
+-
