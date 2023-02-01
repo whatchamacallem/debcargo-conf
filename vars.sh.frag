@@ -70,6 +70,7 @@ PKGDIR_REL="src/$PKGNAME"
 PKGDIR="$PWD/$PKGDIR_REL"
 BUILDDIR="$PWD/build/$PKGNAME"
 PKGCFG="$PKGDIR/debian/debcargo.toml"
+UPLOADER="${DEBFULLNAME:-$NAME} <${DEBEMAIL:-$EMAIL}>"
 
 mkdir -p "$(dirname $BUILDDIR)"
 ln -srf "$PWD/build.sh" "$PWD/build/build.sh"
