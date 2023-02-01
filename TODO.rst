@@ -58,7 +58,7 @@ error[E0433]: failed to resolve: use of undeclared type or module `syntect`
 bingrep
 -------
 
-* hexplay (merged)
+* hexplay (new)
 * metagoblin
 
 tokei
@@ -124,10 +124,69 @@ rav1e uses also clap4
 GTK stack dependency tree
 -------------------------
 
-* ???
- * gobject-sys
-  * glib-sys
-    * system-deps
+Since every gtk-rs release is versioned and a lot of crates are affected updating it is a lot of work and only be done if neccessary.
+I made this convienient dependency tree to illustrate how to update. You should start at the top and update all sys-crates first.
+Then update the regular crates, also from top to bottom. For convinience pass the debs along like this: `./build.sh gstreamer-sys *.deb`.
+
+sys crate overview
+
+```
+glib-sys
+ |
+ |-----------------------|----------------------------------------------------------------------|-----------------------|-----------------|
+gobject-sys		cairo-sys-rs								|		graphene-sys		gdk4-wayland-sys
+ |				|-----------------------------------------------|		|			
+ |										|		|		
+ |-------------------|------------------------|---------------------|		|		|
+gio-sys		atk-sys			   gstreamer-sys	pango-sys	|		|
+ |		  |---------------------|	|			|-------|---------------|
+ |					|	|				|
+ |					|	|			pangocairo-sys
+ |-----------------------|		|	|
+ gdk-pixbuf-sys		gdk-sys		|	|
+ | 			 |		|	|
+ |			 |--------------|	|
+ |		gdkx11-sys 	     gtk-sys	|
+ gdk4-sys			   	|	|
+ |---------gdk4-x11-sys	 		|	|
+gsk4-sys			|-------|	gstreamer-base-sys
+ |			libhandy-sys			|----------------------|
+gtk4-sys					gstreamer-audio-sys	gstreamer-video-sys
+ |-----------------------|				|			|
+libadwaita-sys		libshumate-sys		gstreamer-pbutils-sys	gstreamer-player-sys
+
+```
+
+Non-sys crate overview
+```
+gtk3-macros
+glib -> glib-macros, glib-sys, gobject-sys, gio-sys
+
+gio -> glib, gio-sys
+atk -> glib, atk-sys
+graphene-rs -> glib, graphene-sys
+cairo-rs -> freetype-rs, cairo-rs-sys, glib
+
+pangocairo -> glib, cairo-rs, pango, pangocairo-sys
+pango -> glib, gio, pango-sys
+gdk-pixbuf -> gio, glib,  gdk-pixbuf-sys
+
+gdk -> gdk-pixbuf, gio, glib, cairo-rs, pango, gdk-sys
+gtk -> gtk3-macros, pango, gdk, gdk-pixbuf, cairo-rs, atk
+gdk-x11 -> glib, gio, gdk, x11, gdkx11-sys
+libhandy -> gdk, glib, gio, pango, gdk-pixbuf, gtk
+
+gdk4 -> cairo-rs, gio, glib, pango, gdk-pixbuf, gdk4-sys
+gdk4-x11 -> gdk4
+gsk -> gdk4
+gdk4-x11 -> gdk4
+gdk4-wayland -> gdk4
+gtk4 -> cairo-rs, gdk4, gdk-pixbuf, gtk4-sys, gtk4-macros, graphene-rs
+
+gstreamer -> ?
+
+
+``` 
 
 cxx depedency tree
 -----------------
@@ -187,8 +246,6 @@ gping (#975495)
 lfs (#1006367)
 -------
 
-* argh
- * argh-derive
 * termimad
  * coloor
  * minimad (merged)
