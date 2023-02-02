@@ -1,0 +1,175 @@
+Description: fix compilation with libmbedtls-dev
+Author: Emanuele Rocca <ema@debian.org>
+Last-Update: 2023-01-26
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: psa-crypto-sys/src/c/shim.h
+===================================================================
+--- psa-crypto-sys.orig/src/c/shim.h
++++ psa-crypto-sys/src/c/shim.h
+@@ -1,7 +1,7 @@
+ // Copyright 2020 Contributors to the Parsec project.
+ // SPDX-License-Identifier: Apache-2.0
+ 
+-#include "mbedtls/build_info.h"
++#include "mbedtls/config.h"
+ 
+ #include <psa/crypto.h>
+ #include <psa/crypto_se_driver.h>
+Index: psa-crypto-sys/build.rs
+===================================================================
+--- psa-crypto-sys.orig/build.rs
++++ psa-crypto-sys/build.rs
+@@ -4,7 +4,6 @@
+ #![deny(
+     nonstandard_style,
+     const_err,
+-    dead_code,
+     improper_ctypes,
+     non_shorthand_field_patterns,
+     no_mangle_generic_items,
+@@ -13,7 +12,6 @@
+     patterns_in_fns_without_body,
+     private_in_public,
+     unconditional_recursion,
+-    unused,
+     unused_allocation,
+     unused_comparisons,
+     unused_parens,
+@@ -54,31 +52,6 @@ mod common {
+         println!("cargo:rerun-if-changed=src/c/shim.c");
+         println!("cargo:rerun-if-changed=src/c/shim.h");
+ 
+-        let out_dir = env::var("OUT_DIR").unwrap();
+-
+-        //  Check for Mbed TLS sources
+-        if !Path::new(&mbedtls_config).exists() {
+-            return Err(Error::new(
+-                ErrorKind::Other,
+-                "MbedTLS config.py is missing. Have you run 'git submodule update --init'?",
+-            ));
+-        }
+-
+-        // Configure the MbedTLS build for making Mbed Crypto
+-        if !::std::process::Command::new(mbedtls_config)
+-            .arg("--write")
+-            .arg(&(out_dir + "/config.h"))
+-            .arg("crypto")
+-            .status()
+-            .map_err(|_| Error::new(ErrorKind::Other, "configuring mbedtls failed"))?
+-            .success()
+-        {
+-            return Err(Error::new(
+-                ErrorKind::Other,
+-                "config.py returned an error status",
+-            ));
+-        }
+-
+         Ok(())
+     }
+ 
+@@ -91,7 +64,7 @@ mod common {
+ 
+         let shim_bindings = bindgen::Builder::default()
+             .clang_arg(format!("-I{}", out_dir))
+-            .clang_arg("-DMBEDTLS_CONFIG_FILE=<config.h>")
++            .clang_arg("-DMBEDTLS_CONFIG_FILE=<mbedtls/config.h>")
+             .clang_arg(format!("-I{}", mbed_include_dir))
+             .rustfmt_bindings(true)
+             .header("src/c/shim.h")
+@@ -117,7 +90,7 @@ mod common {
+         // Compile and package the shim library
+         cc::Build::new()
+             .include(&out_dir)
+-            .define("MBEDTLS_CONFIG_FILE", "<config.h>")
++            .define("MBEDTLS_CONFIG_FILE", "<mbedtls/config.h>")
+             .include(include_dir)
+             .file("./src/c/shim.c")
+             .warnings(true)
+@@ -128,6 +101,9 @@ mod common {
+ 
+         // Also link shim library
+         println!("cargo:rustc-link-search=native={}", out_dir);
++        println!("cargo:rustc-link-lib=dylib=mbedtls");
++        println!("cargo:rustc-link-lib=dylib=mbedx509");
++        println!("cargo:rustc-link-lib=dylib=mbedcrypto");
+         println!("cargo:rustc-link-lib=static=shim");
+ 
+         Ok(())
+@@ -142,16 +118,10 @@ mod interface {
+ 
+     // Build script when the interface feature is on and not the operations one
+     pub fn script_interface() -> Result<()> {
+-        if let Ok(include_dir) = env::var("MBEDTLS_INCLUDE_DIR") {
+-            common::configure_mbed_crypto()?;
+-            common::generate_mbed_crypto_bindings(include_dir.clone())?;
+-            common::compile_shim_library(include_dir)
+-        } else {
+-            Err(Error::new(
+-                ErrorKind::Other,
+-                "interface feature necessitates MBEDTLS_INCLUDE_DIR environment variable",
+-            ))
+-        }
++        let include_dir = "/usr/include/mbedtls".to_string();
++        common::configure_mbed_crypto()?;
++        common::generate_mbed_crypto_bindings(include_dir.clone())?;
++        common::compile_shim_library(include_dir)
+     }
+ }
+ 
+@@ -196,7 +166,10 @@ mod operations {
+ 
+         // Request rustc to link the Mbed Crypto library
+         println!("cargo:rustc-link-search=native={}", lib_path,);
++        println!("cargo:rustc-link-lib={}=mbedtls", link_type);
++        println!("cargo:rustc-link-lib={}=mbedx509", link_type);
+         println!("cargo:rustc-link-lib={}=mbedcrypto", link_type);
++        println!("dh-cargo:deb-built-using=shim=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
+     }
+ 
+     // Build script when the operations feature is on
+@@ -204,33 +177,22 @@ mod operations {
+         let lib;
+         let statically;
+         let include;
++        let mut lib_dir = "/usr/lib/".to_string();
+ 
+-        if env::var("MBEDTLS_LIB_DIR").is_err() ^ env::var("MBEDTLS_INCLUDE_DIR").is_err() {
+-            return Err(Error::new(
+-                ErrorKind::Other,
+-                "both environment variables MBEDTLS_LIB_DIR and MBEDTLS_INCLUDE_DIR need to be set for operations feature",
+-            ));
++        if let Ok(deb_arch) = env::var("DEB_HOST_MULTIARCH") {
++            lib_dir = lib_dir + &deb_arch;
++        } else {
++             return Err(Error::new(
++                 ErrorKind::Other,
++                 "DEB_HOST_MULTIARCH must be set",
++             ));
+         }
+ 
+         common::configure_mbed_crypto()?;
+ 
+-        if let (Ok(lib_dir), Ok(include_dir)) =
+-            (env::var("MBEDTLS_LIB_DIR"), env::var("MBEDTLS_INCLUDE_DIR"))
+-        {
+-            lib = lib_dir;
+-            include = include_dir;
+-            statically = cfg!(feature = "static") || env::var("MBEDCRYPTO_STATIC").is_ok();
+-        } else {
+-            println!("Did not find environment variables, building MbedTLS!");
+-            let mut mbed_lib_dir = compile_mbed_crypto()?;
+-            let mut mbed_include_dir = mbed_lib_dir.clone();
+-            mbed_lib_dir.push("lib");
+-            mbed_include_dir.push("include");
+-
+-            lib = mbed_lib_dir.to_str().unwrap().to_owned();
+-            include = mbed_include_dir.to_str().unwrap().to_owned();
+-            statically = true;
+-        }
++        lib = lib_dir;
++        include = "/usr/include/mbedtls".to_string();
++        statically = false;
+ 
+         // Linking to PSA Crypto library is only needed for the operations.
+         link_to_lib(lib, statically);
