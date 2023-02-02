@@ -1,27 +1,35 @@
 Description: Remove unavailable features
- As we use Debian packaged libzstd instead of building the bundled,
- such features are not enabled at build time and unavailable.
-Last-Update: 2022-09-07
+ As we use Debian packaged libzstd not the bundled, some features are
+ not (can not be) enabled at build time and unavailable.
+ .
+ - debug, fat-lto, no_asm, thin, thin-lto: removed in zstd-sys thus zstd-safe
+ - pkg-config, legacy: no-op in zstd-sys thus zstd-safe
+ - bindgen: non-existent in zstd-sys, removed in zstd-safe
+ - wasm: no-op in original code
+Last-Update: 2023-02-02
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -60,21 +60,15 @@
+@@ -60,8 +60,6 @@
+ 
  [features]
  arrays = ["zstd-safe/arrays"]
- bindgen = ["zstd-safe/bindgen"]
+-bindgen = ["zstd-safe/bindgen"]
 -debug = ["zstd-safe/debug"]
  default = [
--    "legacy",
+     "legacy",
      "arrays",
-     "zdict_builder",
+@@ -69,15 +67,10 @@
  ]
  doc-cfg = []
  experimental = ["zstd-safe/experimental"]
--legacy = ["zstd-safe/legacy"]
+-fat-lto = ["zstd-safe/fat-lto"]
+ legacy = ["zstd-safe/legacy"]
 -no_asm = ["zstd-safe/no_asm"]
  pkg-config = ["zstd-safe/pkg-config"]
 -thin = ["zstd-safe/thin"]
+-thin-lto = ["zstd-safe/thin-lto"]
  wasm = []
  zdict_builder = ["zstd-safe/zdict_builder"]
 -zstdmt = ["zstd-safe/zstdmt"]
