@@ -1,25 +1,33 @@
 Description: Remove unavailable features
- As we use Debian packaged libzstd instead of building the bundled,
- such features are not enabled at build time and unavailable.
-Last-Update: 2022-09-07
+ As we use Debian packaged libzstd not the bundled, some features are
+ not (can not be) enabled at build time and unavailable.
+ .
+ - debug, fat-lto, no_asm, thin, thin-lto: only useful with bundled zstd
+ - zstdmt: unavailable, Debian package doesn't enable multithread
+ - legacy: no-op, Debian package has it on
+ - pkg-config: no-op, always use
+Last-Update: 2023-02-02
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -62,16 +62,10 @@
+@@ -62,19 +62,13 @@
  version = "0.3"
  
  [features]
 -debug = []
  default = [
--    "legacy",
+     "legacy",
      "zdict_builder",
  ]
  experimental = []
--legacy = []
+-fat-lto = []
+ legacy = []
 -no_asm = []
  non-cargo = []
+ pkg-config = []
  std = []
 -thin = []
+-thin-lto = []
  zdict_builder = []
 -zstdmt = []

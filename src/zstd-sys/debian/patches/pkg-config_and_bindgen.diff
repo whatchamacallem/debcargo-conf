@@ -1,4 +1,7 @@
-only in patch2:
+Description: Use Debian packaged zstd
+Last-Update: 2023-02-02
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/zstd.h
 +++ b/zstd.h
 @@ -1,16 +1,2 @@
@@ -20,7 +23,7 @@ only in patch2:
 - * Or use the `bindgen` feature, which will create the bindings automatically. */
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -57,16 +57,9 @@
+@@ -57,12 +57,6 @@
      "runtime",
      "which-rustfmt",
  ]
@@ -33,67 +36,77 @@ only in patch2:
  
  [build-dependencies.pkg-config]
  version = "0.3"
--optional = true
- 
- [features]
- debug = []
 --- a/build.rs
 +++ b/build.rs
 @@ -2,7 +2,6 @@
  use std::path::{Path, PathBuf};
- use std::{env, fs};
+ use std::{env, fmt, fs};
  
 -#[cfg(feature = "bindgen")]
  fn generate_bindings(defs: Vec<&str>, headerpaths: Vec<PathBuf>) {
      let bindings = bindgen::Builder::default().header("zstd.h");
      #[cfg(feature = "zdict_builder")]
-@@ -35,10 +34,6 @@
+@@ -35,9 +34,6 @@
          .expect("Could not write bindings");
  }
  
 -#[cfg(not(feature = "bindgen"))]
 -fn generate_bindings(_: Vec<&str>, _: Vec<PathBuf>) {}
 -
--#[cfg(feature = "pkg-config")]
  fn pkg_config() -> (Vec<&'static str>, Vec<PathBuf>) {
      let library = pkg_config::Config::new()
          .statik(true)
-@@ -48,6 +43,7 @@
+@@ -47,7 +43,7 @@
      (vec!["PKG_CONFIG"], library.include_paths)
  }
  
-+/*
- #[cfg(not(feature = "pkg-config"))]
- fn pkg_config() -> (Vec<&'static str>, Vec<PathBuf>) {
-     unimplemented!()
-@@ -216,6 +212,7 @@
-     println!("cargo:root={}", dst.display());
- }
+-#[cfg(not(feature = "legacy"))]
++/*#[cfg(not(feature = "legacy"))]
+ fn set_legacy(_config: &mut cc::Build) {}
  
-+*/
- fn main() {
-     let target_arch =
-         std::env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
-@@ -226,21 +223,7 @@
+ #[cfg(feature = "legacy")]
+@@ -83,9 +79,9 @@
+     if let Some(flag) = option {
+         config.flag(flag);
+     }
+-}
++}*/
+ 
+-fn compile_zstd() {
++/*fn compile_zstd() {
+     let mut config = cc::Build::new();
+ 
+     // Search the following directories for C files to add to the compilation.
+@@ -232,7 +228,7 @@
+     #[cfg(feature = "zdict_builder")]
+     fs::copy(src.join("zdict.h"), include.join("zdict.h")).unwrap();
+     cargo_print(&format_args!("root={}", dst.display()));
+-}
++}*/
+ 
+ /// Print a line for cargo.
+ ///
+@@ -255,11 +251,11 @@
      }
  
      // println!("cargo:rustc-link-lib=zstd");
--    let (defs, headerpaths) = if cfg!(feature = "pkg-config") {
--        pkg_config()
+-    let (defs, headerpaths) = if cfg!(feature = "pkg-config")
++    let (defs, headerpaths) = /*if cfg!(feature = "pkg-config")
+         || env::var_os("ZSTD_SYS_USE_PKG_CONFIG").is_some()
+-    {
++    {*/
+         pkg_config()
 -    } else {
--        if !Path::new("zstd/lib").exists() {
--            panic!("Folder 'zstd/lib' does not exists. Maybe you forgot to clone the 'zstd' submodule?");
--        }
--
--        let manifest_dir = PathBuf::from(
--            env::var("CARGO_MANIFEST_DIR")
--                .expect("Manifest dir is always set by cargo"),
--        );
--
--        compile_zstd();
--        (vec![], vec![manifest_dir.join("zstd/lib")])
++    /*} else {
+         if !Path::new("zstd/lib").exists() {
+             panic!("Folder 'zstd/lib' does not exists. Maybe you forgot to clone the 'zstd' submodule?");
+         }
+@@ -271,7 +267,7 @@
+ 
+         compile_zstd();
+         (vec![], vec![manifest_dir.join("zstd/lib")])
 -    };
-+    let (defs, headerpaths) = pkg_config();
++    }*/;
  
      let includes: Vec<_> = headerpaths
          .iter()
