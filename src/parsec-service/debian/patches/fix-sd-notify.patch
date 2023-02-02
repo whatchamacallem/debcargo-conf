@@ -1,0 +1,26 @@
+Index: parsec-service/src/front/domain_socket.rs
+===================================================================
+--- parsec-service.orig/src/front/domain_socket.rs
++++ parsec-service/src/front/domain_socket.rs
+@@ -38,7 +38,7 @@ impl DomainSocketListener {
+     pub fn new(timeout: Duration, socket_path: PathBuf) -> Result<Self> {
+         // If Parsec was service activated or not started under systemd, this
+         // will return `0`. `1` will be returned in case Parsec is socket activated.
+-        let listener = match sd_notify::listen_fds()? {
++        let listener = match sd_notify::listen_fds()?.count() {
+             0 => {
+                 if socket_path.exists() {
+                     let meta = fs::metadata(&socket_path)?;
+@@ -72,10 +72,10 @@ impl DomainSocketListener {
+             1 => {
+                 // No need to set the socket as non-blocking, parsec.service
+                 // already requests that.
+-                let nfd = sd_notify::SD_LISTEN_FDS_START;
++                let nfd = sd_notify::listen_fds().unwrap().next();
+                 // Safe as listen_fds gives us the information that one file descriptor was
+                 // received and its value starts from SD_LISTEN_FDS_START.
+-                unsafe { UnixListener::from_raw_fd(nfd.try_into()?) }
++                unsafe { UnixListener::from_raw_fd(nfd.unwrap()) }
+                 // Expect the socket created by systemd to be 666 on permissions.
+             }
+             n => {
