@@ -58,7 +58,6 @@ error[E0433]: failed to resolve: use of undeclared type or module `syntect`
 bingrep
 -------
 
-* hexplay (new)
 * metagoblin
 
 tokei
@@ -264,7 +263,6 @@ bottom
 
 macchina
 ------
-* ansi-to-tui (merged)
 * color-to-tui (merged)
 * libmacchina
  * sqlite
