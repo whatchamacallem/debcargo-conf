@@ -1,0 +1,92 @@
+Revert switch to test with pkcs8 keys, which relies on new test-cert-gen.
+This patch is based on reverting upstream commits 
+2a720f6c360489c60a34e1bcfba7d50497a8ba33 and 
+01337348b5edcd4ab3cc156e5186e5bdc1a5a8d2
+
+Index: native-tls/src/test.rs
+===================================================================
+--- native-tls.orig/src/test.rs
++++ native-tls/src/test.rs
+@@ -348,7 +348,7 @@ fn import_same_identity_multiple_times()
+     ));
+ 
+     let cert = keys.server.cert_and_key.cert.to_pem().into_bytes();
+-    let key = rsa_to_pkcs8(&keys.server.cert_and_key.key.to_pem_incorrect()).into_bytes();
++    let key = key_to_pem(keys.server.cert_and_key.key.get_der()).into_bytes();
+     let _ = p!(Identity::from_pkcs8(&cert, &key));
+     let _ = p!(Identity::from_pkcs8(&cert, &key));
+ }
+@@ -357,7 +357,7 @@ fn import_same_identity_multiple_times()
+ fn from_pkcs8_rejects_rsa_key() {
+     let keys = test_cert_gen::keys();
+     let cert = keys.server.cert_and_key.cert.to_pem().into_bytes();
+-    let rsa_key = keys.server.cert_and_key.key.to_pem_incorrect();
++    let rsa_key = key_to_pem(keys.server.cert_and_key.key.get_der());
+     assert!(Identity::from_pkcs8(&cert, rsa_key.as_bytes()).is_err());
+     let pkcs8_key = rsa_to_pkcs8(&rsa_key);
+     assert!(Identity::from_pkcs8(&cert, pkcs8_key.as_bytes()).is_ok());
+@@ -436,7 +436,7 @@ fn alpn_google_none() {
+ fn server_pkcs8() {
+     let keys = test_cert_gen::keys();
+     let cert = keys.server.cert_and_key.cert.to_pem().into_bytes();
+-    let key = rsa_to_pkcs8(&keys.server.cert_and_key.key.to_pem_incorrect()).into_bytes();
++    let key = key_to_pem(keys.server.cert_and_key.key.get_der()).into_bytes();
+ 
+     let ident = Identity::from_pkcs8(&cert, &key).unwrap();
+     let ident2 = ident.clone();
+@@ -483,7 +483,7 @@ fn server_pkcs8() {
+ fn two_servers() {
+     let keys1 = test_cert_gen::gen_keys();
+     let cert = keys1.server.cert_and_key.cert.to_pem().into_bytes();
+-    let key = rsa_to_pkcs8(&keys1.server.cert_and_key.key.to_pem_incorrect()).into_bytes();
++    let key = key_to_pem(keys1.server.cert_and_key.key.get_der()).into_bytes();
+     let identity = p!(Identity::from_pkcs8(&cert, &key));
+     let builder = TlsAcceptor::builder(identity);
+     let builder = p!(builder.build());
+@@ -504,7 +504,7 @@ fn two_servers() {
+ 
+     let keys2 = test_cert_gen::gen_keys();
+     let cert = keys2.server.cert_and_key.cert.to_pem().into_bytes();
+-    let key = rsa_to_pkcs8(&keys2.server.cert_and_key.key.to_pem_incorrect()).into_bytes();
++    let key = key_to_pem(keys2.server.cert_and_key.key.get_der()).into_bytes();
+     let identity = p!(Identity::from_pkcs8(&cert, &key));
+     let builder = TlsAcceptor::builder(identity);
+     let builder = p!(builder.build());
+@@ -553,18 +553,9 @@ fn two_servers() {
+     p!(j2.join());
+ }
+ 
+-fn rsa_to_pkcs8(pem: &str) -> String {
+-    let mut child = Command::new("openssl")
+-        .arg("pkcs8")
+-        .arg("-topk8")
+-        .arg("-nocrypt")
+-        .stdin(Stdio::piped())
+-        .stdout(Stdio::piped())
+-        .spawn()
+-        .unwrap();
+-    {
+-        let child_stdin = child.stdin.as_mut().unwrap();
+-        child_stdin.write_all(pem.as_bytes()).unwrap();
+-    }
+-    String::from_utf8(child.wait_with_output().unwrap().stdout).unwrap()
++fn key_to_pem(der: &[u8]) -> String {
++    pem::encode(&pem::Pem {
++        tag: "RSA PRIVATE KEY".to_owned(),
++        contents: der.to_owned(),
++    })
+ }
+Index: native-tls/Cargo.toml
+===================================================================
+--- native-tls.orig/Cargo.toml
++++ native-tls/Cargo.toml
+@@ -25,6 +25,9 @@ rustdoc-args = [
+     "docsrs",
+ ]
+ 
++[dev-dependencies.pem]
++version = "1.0"
++
+ [dev-dependencies.tempfile]
+ version = "3.0"
+ 

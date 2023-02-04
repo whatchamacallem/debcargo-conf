@@ -1,0 +1,215 @@
+Revert upstream update of test-cert-gen from 0.1 to 0.7, we patch out the
+use of test-cert-gen in a later patch, but this is needed so that said patch
+has the correct baseline to work with.
+
+This patch is based on a revert of upstream commits
+7493a48efe60b05d2caa7995e865da291059f06b and
+f5e5e6d6be8b66e16da4efcb2c614f835dfd2849, adapted for use in the Debian package
+by Peter Michael Green.
+
+Index: native-tls/src/test.rs
+===================================================================
+--- native-tls.orig/src/test.rs
++++ native-tls/src/test.rs
+@@ -56,8 +56,8 @@ fn server_no_root_certs() {
+     let keys = test_cert_gen::keys();
+ 
+     let identity = p!(Identity::from_pkcs12(
+-        &keys.server.cert_and_key_pkcs12.pkcs12.0,
+-        &keys.server.cert_and_key_pkcs12.password
++        &keys.server.pkcs12,
++        &keys.server.pkcs12_password
+     ));
+     let builder = p!(TlsAcceptor::new(identity));
+ 
+@@ -75,7 +75,7 @@ fn server_no_root_certs() {
+         p!(socket.write_all(b"world"));
+     });
+ 
+-    let root_ca = Certificate::from_der(keys.client.ca.get_der()).unwrap();
++    let root_ca = Certificate::from_der(&keys.client.cert_der).unwrap();
+ 
+     let socket = p!(TcpStream::connect(("localhost", port)));
+     let builder = p!(TlsConnector::builder()
+@@ -97,8 +97,8 @@ fn server() {
+     let keys = test_cert_gen::keys();
+ 
+     let identity = p!(Identity::from_pkcs12(
+-        &keys.server.cert_and_key_pkcs12.pkcs12.0,
+-        &keys.server.cert_and_key_pkcs12.password
++        &keys.server.pkcs12,
++        &keys.server.pkcs12_password
+     ));
+     let builder = p!(TlsAcceptor::new(identity));
+ 
+@@ -116,7 +116,7 @@ fn server() {
+         p!(socket.write_all(b"world"));
+     });
+ 
+-    let root_ca = Certificate::from_der(keys.client.ca.get_der()).unwrap();
++    let root_ca = Certificate::from_der(&keys.client.cert_der).unwrap();
+ 
+     let socket = p!(TcpStream::connect(("localhost", port)));
+     let builder = p!(TlsConnector::builder()
+@@ -138,7 +138,7 @@ fn certificate_from_pem() {
+     let keys = test_cert_gen::keys();
+ 
+     let der_path = dir.path().join("cert.der");
+-    fs::write(&der_path, &keys.client.ca.get_der()).unwrap();
++    fs::write(&der_path, &keys.client.cert_der).unwrap();
+     let output = Command::new("openssl")
+         .arg("x509")
+         .arg("-in")
+@@ -152,7 +152,7 @@ fn certificate_from_pem() {
+     assert!(output.status.success());
+ 
+     let cert = Certificate::from_pem(&output.stdout).unwrap();
+-    assert_eq!(cert.to_der().unwrap(), keys.client.ca.get_der());
++    assert_eq!(cert.to_der().unwrap(), keys.client.cert_der);
+ }
+ 
+ #[test]
+@@ -160,8 +160,8 @@ fn peer_certificate() {
+     let keys = test_cert_gen::keys();
+ 
+     let identity = p!(Identity::from_pkcs12(
+-        &keys.server.cert_and_key_pkcs12.pkcs12.0,
+-        &keys.server.cert_and_key_pkcs12.password
++        &keys.server.pkcs12,
++        &keys.server.pkcs12_password
+     ));
+     let builder = p!(TlsAcceptor::new(identity));
+ 
+@@ -174,7 +174,7 @@ fn peer_certificate() {
+         assert!(socket.peer_certificate().unwrap().is_none());
+     });
+ 
+-    let root_ca = Certificate::from_der(keys.client.ca.get_der()).unwrap();
++    let root_ca = Certificate::from_der(&keys.client.cert_der).unwrap();
+ 
+     let socket = p!(TcpStream::connect(("localhost", port)));
+     let builder = p!(TlsConnector::builder()
+@@ -183,10 +183,7 @@ fn peer_certificate() {
+     let socket = p!(builder.connect("localhost", socket));
+ 
+     let cert = socket.peer_certificate().unwrap().unwrap();
+-    assert_eq!(
+-        cert.to_der().unwrap(),
+-        keys.server.cert_and_key.cert.get_der()
+-    );
++    assert_eq!(cert.to_der().unwrap(), keys.client.cert_der);
+ 
+     p!(j.join());
+ }
+@@ -196,8 +193,8 @@ fn server_tls11_only() {
+     let keys = test_cert_gen::keys();
+ 
+     let identity = p!(Identity::from_pkcs12(
+-        &keys.server.cert_and_key_pkcs12.pkcs12.0,
+-        &keys.server.cert_and_key_pkcs12.password
++        &keys.server.pkcs12,
++        &keys.server.pkcs12_password
+     ));
+     let builder = p!(TlsAcceptor::builder(identity)
+         .min_protocol_version(Some(Protocol::Tlsv12))
+@@ -218,7 +215,7 @@ fn server_tls11_only() {
+         p!(socket.write_all(b"world"));
+     });
+ 
+-    let root_ca = Certificate::from_der(keys.client.ca.get_der()).unwrap();
++    let root_ca = Certificate::from_der(&keys.client.cert_der).unwrap();
+ 
+     let socket = p!(TcpStream::connect(("localhost", port)));
+     let builder = p!(TlsConnector::builder()
+@@ -241,8 +238,8 @@ fn server_no_shared_protocol() {
+     let keys = test_cert_gen::keys();
+ 
+     let identity = p!(Identity::from_pkcs12(
+-        &keys.server.cert_and_key_pkcs12.pkcs12.0,
+-        &keys.server.cert_and_key_pkcs12.password
++        &keys.server.pkcs12,
++        &keys.server.pkcs12_password
+     ));
+     let builder = p!(TlsAcceptor::builder(identity)
+         .min_protocol_version(Some(Protocol::Tlsv12))
+@@ -256,7 +253,7 @@ fn server_no_shared_protocol() {
+         assert!(builder.accept(socket).is_err());
+     });
+ 
+-    let root_ca = Certificate::from_der(keys.client.ca.get_der()).unwrap();
++    let root_ca = Certificate::from_der(&keys.client.cert_der).unwrap();
+ 
+     let socket = p!(TcpStream::connect(("localhost", port)));
+     let builder = p!(TlsConnector::builder()
+@@ -274,8 +271,8 @@ fn server_untrusted() {
+     let keys = test_cert_gen::keys();
+ 
+     let identity = p!(Identity::from_pkcs12(
+-        &keys.server.cert_and_key_pkcs12.pkcs12.0,
+-        &keys.server.cert_and_key_pkcs12.password
++        &keys.server.pkcs12,
++        &keys.server.pkcs12_password
+     ));
+     let builder = p!(TlsAcceptor::new(identity));
+ 
+@@ -301,8 +298,8 @@ fn server_untrusted_unverified() {
+     let keys = test_cert_gen::keys();
+ 
+     let identity = p!(Identity::from_pkcs12(
+-        &keys.server.cert_and_key_pkcs12.pkcs12.0,
+-        &keys.server.cert_and_key_pkcs12.password
++        &keys.server.pkcs12,
++        &keys.server.pkcs12_password
+     ));
+     let builder = p!(TlsAcceptor::new(identity));
+ 
+@@ -339,12 +336,12 @@ fn import_same_identity_multiple_times()
+     let keys = test_cert_gen::keys();
+ 
+     let _ = p!(Identity::from_pkcs12(
+-        &keys.server.cert_and_key_pkcs12.pkcs12.0,
+-        &keys.server.cert_and_key_pkcs12.password
++        &keys.server.pkcs12,
++        &keys.server.pkcs12_password
+     ));
+     let _ = p!(Identity::from_pkcs12(
+-        &keys.server.cert_and_key_pkcs12.pkcs12.0,
+-        &keys.server.cert_and_key_pkcs12.password
++        &keys.server.pkcs12,
++        &keys.server.pkcs12_password
+     ));
+ 
+     let p8buf = include_bytes!("../test/chain.pem");
+@@ -368,8 +365,8 @@ fn shutdown() {
+     let keys = test_cert_gen::keys();
+ 
+     let identity = p!(Identity::from_pkcs12(
+-        &keys.server.cert_and_key_pkcs12.pkcs12.0,
+-        &keys.server.cert_and_key_pkcs12.password
++        &keys.server.pkcs12,
++        &keys.server.pkcs12_password
+     ));
+     let builder = p!(TlsAcceptor::new(identity));
+ 
+@@ -388,7 +385,7 @@ fn shutdown() {
+         p!(socket.shutdown());
+     });
+ 
+-    let root_ca = Certificate::from_der(keys.client.ca.get_der()).unwrap();
++    let root_ca = Certificate::from_der(&keys.client.cert_der).unwrap();
+ 
+     let socket = p!(TcpStream::connect(("localhost", port)));
+     let builder = p!(TlsConnector::builder()
+Index: native-tls/Cargo.toml
+===================================================================
+--- native-tls.orig/Cargo.toml
++++ native-tls/Cargo.toml
+@@ -32,7 +32,7 @@ version = "1.0"
+ version = "3.0"
+ 
+ [dev-dependencies.test-cert-gen]
+-version = "0.7"
++version = "0.1"
+ 
+ [features]
+ alpn = []

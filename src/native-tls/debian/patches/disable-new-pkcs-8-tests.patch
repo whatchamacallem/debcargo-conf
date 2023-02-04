@@ -1,0 +1,43 @@
+Disable newly added tests for pkcs8, as these tests never had any static
+test data to use.
+
+Index: native-tls/src/test.rs
+===================================================================
+--- native-tls.orig/src/test.rs
++++ native-tls/src/test.rs
+@@ -353,7 +353,7 @@ fn import_same_identity_multiple_times()
+     let _ = p!(Identity::from_pkcs8(&cert, &key));
+ }
+ 
+-#[test]
++/*#[test]
+ fn from_pkcs8_rejects_rsa_key() {
+     let keys = test_cert_gen::keys();
+     let cert = keys.server.cert_and_key.cert.to_pem().into_bytes();
+@@ -361,7 +361,7 @@ fn from_pkcs8_rejects_rsa_key() {
+     assert!(Identity::from_pkcs8(&cert, rsa_key.as_bytes()).is_err());
+     let pkcs8_key = rsa_to_pkcs8(&rsa_key);
+     assert!(Identity::from_pkcs8(&cert, pkcs8_key.as_bytes()).is_ok());
+-}
++}*/
+ 
+ #[test]
+ fn shutdown() {
+@@ -432,7 +432,7 @@ fn alpn_google_none() {
+     assert_eq!(alpn, None);
+ }
+ 
+-#[test]
++/*#[test]
+ fn server_pkcs8() {
+     let keys = test_cert_gen::keys();
+     let cert = keys.server.cert_and_key.cert.to_pem().into_bytes();
+@@ -477,7 +477,7 @@ fn server_pkcs8() {
+     assert_eq!(buf, b"world");
+ 
+     p!(j.join());
+-}
++}*/
+ 
+ #[test]
+ fn two_servers() {

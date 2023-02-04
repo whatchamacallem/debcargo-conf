@@ -1,0 +1,360 @@
+Revert "update tests to use test_cert_gen"
+
+This patch is based on a revert of upstream commit eb7fef5b26dbb6249e52b06247b0525267e3231e
+
+Index: native-tls/src/test.rs
+===================================================================
+--- native-tls.orig/src/test.rs
++++ native-tls/src/test.rs
+@@ -347,10 +347,10 @@ fn import_same_identity_multiple_times()
+         &keys.server.cert_and_key_pkcs12.password
+     ));
+ 
+-    let cert = keys.server.cert_and_key.cert.to_pem().into_bytes();
+-    let key = key_to_pem(keys.server.cert_and_key.key.get_der()).into_bytes();
+-    let _ = p!(Identity::from_pkcs8(&cert, &key));
+-    let _ = p!(Identity::from_pkcs8(&cert, &key));
++    let p8buf = include_bytes!("../test/chain.pem");
++    let key = include_bytes!("../test/key.pem");
++    let _ = p!(Identity::from_pkcs8(p8buf, key));
++    let _ = p!(Identity::from_pkcs8(p8buf, key));
+ }
+ 
+ /*#[test]
+@@ -434,11 +434,10 @@ fn alpn_google_none() {
+ 
+ /*#[test]
+ fn server_pkcs8() {
+-    let keys = test_cert_gen::keys();
+-    let cert = keys.server.cert_and_key.cert.to_pem().into_bytes();
+-    let key = key_to_pem(keys.server.cert_and_key.key.get_der()).into_bytes();
++    let key = include_bytes!("../test/key.pem");
++    let cert = include_bytes!("../test/cert.pem");
+ 
+-    let ident = Identity::from_pkcs8(&cert, &key).unwrap();
++    let ident = Identity::from_pkcs8(cert, key).unwrap();
+     let ident2 = ident.clone();
+     let builder = p!(TlsAcceptor::new(ident));
+ 
+@@ -456,7 +455,8 @@ fn server_pkcs8() {
+         p!(socket.write_all(b"world"));
+     });
+ 
+-    let root_ca = Certificate::from_der(keys.client.ca.get_der()).unwrap();
++    let root_ca = include_bytes!("../test/root-ca.der");
++    let root_ca = Certificate::from_der(root_ca).unwrap();
+ 
+     let socket = p!(TcpStream::connect(("localhost", port)));
+     let mut builder = TlsConnector::builder();
+@@ -469,7 +469,7 @@ fn server_pkcs8() {
+ 
+     builder.add_root_certificate(root_ca);
+     let builder = p!(builder.build());
+-    let mut socket = p!(builder.connect("localhost", socket));
++    let mut socket = p!(builder.connect("foobar.com", socket));
+ 
+     p!(socket.write_all(b"hello"));
+     let mut buf = vec![];
+@@ -481,10 +481,9 @@ fn server_pkcs8() {
+ 
+ #[test]
+ fn two_servers() {
+-    let keys1 = test_cert_gen::gen_keys();
+-    let cert = keys1.server.cert_and_key.cert.to_pem().into_bytes();
+-    let key = key_to_pem(keys1.server.cert_and_key.key.get_der()).into_bytes();
+-    let identity = p!(Identity::from_pkcs8(&cert, &key));
++    let key = include_bytes!("../test/key.pem");
++    let cert = include_bytes!("../test/cert.pem");
++    let identity = p!(Identity::from_pkcs8(cert, key));
+     let builder = TlsAcceptor::builder(identity);
+     let builder = p!(builder.build());
+ 
+@@ -502,10 +501,9 @@ fn two_servers() {
+         p!(socket.write_all(b"world"));
+     });
+ 
+-    let keys2 = test_cert_gen::gen_keys();
+-    let cert = keys2.server.cert_and_key.cert.to_pem().into_bytes();
+-    let key = key_to_pem(keys2.server.cert_and_key.key.get_der()).into_bytes();
+-    let identity = p!(Identity::from_pkcs8(&cert, &key));
++    let key = include_bytes!("../test/key2.pem");
++    let cert = include_bytes!("../test/cert2.pem");
++    let identity = p!(Identity::from_pkcs8(cert, key));
+     let builder = TlsAcceptor::builder(identity);
+     let builder = p!(builder.build());
+ 
+@@ -523,26 +521,28 @@ fn two_servers() {
+         p!(socket.write_all(b"world"));
+     });
+ 
+-    let root_ca = Certificate::from_der(keys1.client.ca.get_der()).unwrap();
++    let root_ca = include_bytes!("../test/root-ca.pem");
++    let root_ca = p!(Certificate::from_pem(root_ca));
+ 
+     let socket = p!(TcpStream::connect(("localhost", port)));
+     let mut builder = TlsConnector::builder();
+     builder.add_root_certificate(root_ca);
+     let builder = p!(builder.build());
+-    let mut socket = p!(builder.connect("localhost", socket));
++    let mut socket = p!(builder.connect("foobar.com", socket));
+ 
+     p!(socket.write_all(b"hello"));
+     let mut buf = vec![];
+     p!(socket.read_to_end(&mut buf));
+     assert_eq!(buf, b"world");
+ 
+-    let root_ca = Certificate::from_der(keys2.client.ca.get_der()).unwrap();
++    let root_ca = include_bytes!("../test/cert2.pem");
++    let root_ca = p!(Certificate::from_pem(root_ca));
+ 
+     let socket = p!(TcpStream::connect(("localhost", port2)));
+     let mut builder = TlsConnector::builder();
+     builder.add_root_certificate(root_ca);
+     let builder = p!(builder.build());
+-    let mut socket = p!(builder.connect("localhost", socket));
++    let mut socket = p!(builder.connect("foobar.com", socket));
+ 
+     p!(socket.write_all(b"hello"));
+     let mut buf = vec![];
+@@ -552,10 +552,3 @@ fn two_servers() {
+     p!(j.join());
+     p!(j2.join());
+ }
+-
+-fn key_to_pem(der: &[u8]) -> String {
+-    pem::encode(&pem::Pem {
+-        tag: "RSA PRIVATE KEY".to_owned(),
+-        contents: der.to_owned(),
+-    })
+-}
+Index: native-tls/test/cert.pem
+===================================================================
+--- /dev/null
++++ native-tls/test/cert.pem
+@@ -0,0 +1,20 @@
++-----BEGIN CERTIFICATE-----
++MIIDGzCCAgMCCQCHcfe97pgvpTANBgkqhkiG9w0BAQsFADBFMQswCQYDVQQGEwJB
++VTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0
++cyBQdHkgTHRkMB4XDTE2MDgxNDE3MDAwM1oXDTI2MDgxMjE3MDAwM1owWjELMAkG
++A1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoMGEludGVybmV0
++IFdpZGdpdHMgUHR5IEx0ZDETMBEGA1UEAwwKZm9vYmFyLmNvbTCCASIwDQYJKoZI
++hvcNAQEBBQADggEPADCCAQoCggEBAKj0JYxEsxejUIX+I5GH0Hg2G0kX/y1H0+Ub
++3mw2/Ja5BD/yN96/7zMSumXF8uS3SkmpyiJkbyD01TSRTqjlP7/VCBlyUIChlpLQ
++mrGaijZiT/VCyPXqmcwFzXS5IOTpX1olJfW8rA41U1LCIcDUyFf6LtZ/v8rSeKr6
++TuE6SGV4WRaBm1SrjWBeHVV866CRrtSS1ieT2asFsAyOZqWhk2fakwwBDFWDhOGI
++ubfO+5aq9cBJbNRlzsgB3UZs3gC0O6GzbnZ6oT0TiJMeTsXXjABLUlaq/rrqFF4Y
++euZkkbHTFBMz288PUc3m3ZTcpN+E7+ZOUBRZXKD20K07NugqCzUCAwEAATANBgkq
++hkiG9w0BAQsFAAOCAQEASvYHuIl5C0NHBELPpVHNuLbQsDQNKVj3a54+9q1JkiMM
++6taEJYfw7K1Xjm4RoiFSHpQBh+PWZS3hToToL2Zx8JfMR5MuAirdPAy1Sia/J/qE
++wQdJccqmvuLkLTSlsGbEJ/LUUgOAgrgHOZM5lUgIhCneA0/dWJ3PsN0zvn69/faY
++oo1iiolWiIHWWBUSdr3jM2AJaVAsTmLh00cKaDNk37JB940xConBGSl98JPrNrf9
++dUAiT0iIBngDBdHnn/yTj+InVEFyZSKrNtiDSObFHxPcxGteHNrCPJdP1e+GqkHp
++HJMRZVCQpSMzvHlofHSNgzWV1MX5h1CP4SGZdBDTfA==
++-----END CERTIFICATE-----
++
+Index: native-tls/test/cert2.pem
+===================================================================
+--- /dev/null
++++ native-tls/test/cert2.pem
+@@ -0,0 +1,32 @@
++-----BEGIN CERTIFICATE-----
++MIIFijCCA3KgAwIBAgIJAOFl3cFizu8kMA0GCSqGSIb3DQEBCwUAMFoxCzAJBgNV
++BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
++aWRnaXRzIFB0eSBMdGQxEzARBgNVBAMMCmZvb2Jhci5jb20wHhcNMTcwNjI0MTYw
++NzEwWhcNMjcwNjIyMTYwNzEwWjBaMQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29t
++ZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMRMwEQYD
++VQQDDApmb29iYXIuY29tMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA
++2TfYpOOpb1HigFQOHq756Hr/wE2YvTGRRmFOuI/7TEzZnG4TcYGqbS8UTNIvxaeU
++GtQdRLFV6QWtIQhArHOU22D0EWxj88MYE7O3h5csZOUKfI0s4IRA/u3VP2mfk/VT
++AbikUJH370tTpxltcpMoOgOWkxraF6LDCnSSGALU6MN23OySUjadd4jtv5BmqdQL
++t5+VDOsgEK8Gq0Kvw4noyADPAWRj/7L/OyJ2nk9Krlof/FYb+c7lK27LUqEM3yjZ
++nARO+zCFj0cWqd0uYY3Uz+My73CLLu8NeHtl0Qv9a23jtol76j7wUXjrIR5VBs0o
++hhP1/zcOfuXu2NYzHa6gbefJqnUtqMgnibimQyMZaLxoVOryJKkEHj/D/U3OgbkW
++3q4sWZ2xGp6FlVU8smgPcq5KMQ/BQzPcGciVYKbHl+H6TUgSdABga8yMxURK058t
++TZnv/GaSKEVjM8VNLuiZAlmRtzBbd5cbRMIb/8SV6m5xwK4jQ0pdDtKbY8I0poku
++YbT/B8Rs/x50LgCk/sEjWCEdoxZ/KY4nuYpGzs5B79LZn4ofmHRG1IfiQBPxuR4S
++ChW5V+HaICXsL2oKhxIhpDQjtownj9PF85ew6IODNzk/oHDZgFCJwHK23Acr+kTt
++AsI/Oht3W0eG34DHS2UPuVc1jGE5TaNK3F/AN8ICANUCAwEAAaNTMFEwHQYDVR0O
++BBYEFNlnR/6xSAyj2shdqYPPRbOpFj9AMB8GA1UdIwQYMBaAFNlnR/6xSAyj2shd
++qYPPRbOpFj9AMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggIBAAd/
++RYi40if/HiOLjVWeu4ETpZLut6p4NnFY2ueRF7O3cNSH3ugQ0Ucc4S8rDrTGHryz
++jTVHC1p0783u7VkOiJNFKT+y5RmGVSRLnXfbWY4Vwpz5Dqz6sZtZlVO22VqhfT0K
++Cwzbu6Mgr/rhPow3tCWUDzDVoKPnJCFmDwHWcXlDCjnuU/0DdgO+q3anj1x3Zt7x
++1cXG+2O2PO8474A1ESujTYduCnQRzEOeud4beGhLeW6wcuq2tNRwbxQzBdCzb4/f
++INSDsqk6lpimpokxVh9Q8yUSbORvPyXMLb0F2I670CBfsQ27U/+xqBPU7rmz63vL
++J70fee+QQQ9KF9O1LWeIaPkRyKzU0kovwLTsTVXV6xQUeH1PLdgAkhh5KTnWReUq
++n7Iu8EGIHNRQFGp/qgo7bww+g2aWiqyCquCCe5zyt13j5Ev9naRJzROna39BocsG
++t2/NHSNMJ6ru4mPunPrP25J5V2qT7sN9RrKEPaANAV3dWuUOhvlrHQBVXKACckTJ
++K+mKXP0pXrnLhQc6RP4ep8JuDY7qlRnJwr3+WxeTb52wcjmz0RusdbiEeBhgMcnF
++ZDpZmLeTTPH/50TVvRTXgYGFmlgzVEqqGwpJsnEISuhgI/x58FqiXFCEaz9zr+xi
++QWt2BCQJnE0G1UV9msEybRE4toiCHdOpojJjHFi8
++-----END CERTIFICATE-----
+Index: native-tls/test/chain.pem
+===================================================================
+--- /dev/null
++++ native-tls/test/chain.pem
+@@ -0,0 +1,48 @@
++Bag Attributes
++    friendlyName: foobar.com
++    localKeyID: 59 17 2D 93 13 E8 44 59 BC FF 27 F9 67 E7 9E 6E 92 17 E5 84
++subject=/C=AU/ST=Some-State/O=Internet Widgits Pty Ltd/CN=foobar.com
++issuer=/C=AU/ST=Some-State/O=Internet Widgits Pty Ltd
++-----BEGIN CERTIFICATE-----
++MIIDGzCCAgMCCQCHcfe97pgvpTANBgkqhkiG9w0BAQsFADBFMQswCQYDVQQGEwJB
++VTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0
++cyBQdHkgTHRkMB4XDTE2MDgxNDE3MDAwM1oXDTI2MDgxMjE3MDAwM1owWjELMAkG
++A1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoMGEludGVybmV0
++IFdpZGdpdHMgUHR5IEx0ZDETMBEGA1UEAwwKZm9vYmFyLmNvbTCCASIwDQYJKoZI
++hvcNAQEBBQADggEPADCCAQoCggEBAKj0JYxEsxejUIX+I5GH0Hg2G0kX/y1H0+Ub
++3mw2/Ja5BD/yN96/7zMSumXF8uS3SkmpyiJkbyD01TSRTqjlP7/VCBlyUIChlpLQ
++mrGaijZiT/VCyPXqmcwFzXS5IOTpX1olJfW8rA41U1LCIcDUyFf6LtZ/v8rSeKr6
++TuE6SGV4WRaBm1SrjWBeHVV866CRrtSS1ieT2asFsAyOZqWhk2fakwwBDFWDhOGI
++ubfO+5aq9cBJbNRlzsgB3UZs3gC0O6GzbnZ6oT0TiJMeTsXXjABLUlaq/rrqFF4Y
++euZkkbHTFBMz288PUc3m3ZTcpN+E7+ZOUBRZXKD20K07NugqCzUCAwEAATANBgkq
++hkiG9w0BAQsFAAOCAQEASvYHuIl5C0NHBELPpVHNuLbQsDQNKVj3a54+9q1JkiMM
++6taEJYfw7K1Xjm4RoiFSHpQBh+PWZS3hToToL2Zx8JfMR5MuAirdPAy1Sia/J/qE
++wQdJccqmvuLkLTSlsGbEJ/LUUgOAgrgHOZM5lUgIhCneA0/dWJ3PsN0zvn69/faY
++oo1iiolWiIHWWBUSdr3jM2AJaVAsTmLh00cKaDNk37JB940xConBGSl98JPrNrf9
++dUAiT0iIBngDBdHnn/yTj+InVEFyZSKrNtiDSObFHxPcxGteHNrCPJdP1e+GqkHp
++HJMRZVCQpSMzvHlofHSNgzWV1MX5h1CP4SGZdBDTfA==
++-----END CERTIFICATE-----
++Bag Attributes: <No Attributes>
++subject=/C=AU/ST=Some-State/O=Internet Widgits Pty Ltd
++issuer=/C=AU/ST=Some-State/O=Internet Widgits Pty Ltd
++-----BEGIN CERTIFICATE-----
++MIIDXTCCAkWgAwIBAgIJAOIvDiVb18eVMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
++BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
++aWRnaXRzIFB0eSBMdGQwHhcNMTYwODE0MTY1NjExWhcNMjYwODEyMTY1NjExWjBF
++MQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50
++ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
++CgKCAQEArVHWFn52Lbl1l59exduZntVSZyDYpzDND+S2LUcO6fRBWhV/1Kzox+2G
++ZptbuMGmfI3iAnb0CFT4uC3kBkQQlXonGATSVyaFTFR+jq/lc0SP+9Bd7SBXieIV
++eIXlY1TvlwIvj3Ntw9zX+scTA4SXxH6M0rKv9gTOub2vCMSHeF16X8DQr4XsZuQr
++7Cp7j1I4aqOJyap5JTl5ijmG8cnu0n+8UcRlBzy99dLWJG0AfI3VRJdWpGTNVZ92
++aFff3RpK3F/WI2gp3qV1ynRAKuvmncGC3LDvYfcc2dgsc1N6Ffq8GIrkgRob6eBc
++klDHp1d023Lwre+VaVDSo1//Y72UFwIDAQABo1AwTjAdBgNVHQ4EFgQUbNOlA6sN
++XyzJjYqciKeId7g3/ZowHwYDVR0jBBgwFoAUbNOlA6sNXyzJjYqciKeId7g3/Zow
++DAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAVVaR5QWLZIRR4Dw6TSBn
++BQiLpBSXN6oAxdDw6n4PtwW6CzydaA+creiK6LfwEsiifUfQe9f+T+TBSpdIYtMv
++Z2H2tjlFX8VrjUFvPrvn5c28CuLI0foBgY8XGSkR2YMYzWw2jPEq3Th/KM5Catn3
++AFm3bGKWMtGPR4v+90chEN0jzaAmJYRrVUh9vea27bOCn31Nse6XXQPmSI6Gyncy
++OAPUsvPClF3IjeL1tmBotWqSGn1cYxLo+Lwjk22A9h6vjcNQRyZF2VLVvtwYrNU3
++mwJ6GCLsLHpwW/yjyvn8iEltnJvByM/eeRnfXV6WDObyiZsE/n6DxIRJodQzFqy9
++GA==
++-----END CERTIFICATE-----
+Index: native-tls/test/key.pem
+===================================================================
+--- /dev/null
++++ native-tls/test/key.pem
+@@ -0,0 +1,28 @@
++-----BEGIN PRIVATE KEY-----
++MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCo9CWMRLMXo1CF
++/iORh9B4NhtJF/8tR9PlG95sNvyWuQQ/8jfev+8zErplxfLkt0pJqcoiZG8g9NU0
++kU6o5T+/1QgZclCAoZaS0Jqxmoo2Yk/1Qsj16pnMBc10uSDk6V9aJSX1vKwONVNS
++wiHA1MhX+i7Wf7/K0niq+k7hOkhleFkWgZtUq41gXh1VfOugka7UktYnk9mrBbAM
++jmaloZNn2pMMAQxVg4ThiLm3zvuWqvXASWzUZc7IAd1GbN4AtDuhs252eqE9E4iT
++Hk7F14wAS1JWqv666hReGHrmZJGx0xQTM9vPD1HN5t2U3KTfhO/mTlAUWVyg9tCt
++OzboKgs1AgMBAAECggEBAKLj6IOJBKXolczpzb8UkyAjAkGBektcseV07gelJ/fk
++3z0LuWPv5p12E/HlXB24vU2x/ikUbbP3eMsawRzDEahQqmNmPEkYAYUAy/Qpi9GN
++DYvn3LqDec4jVgeQKS+p9H2DzUpTogp8zR2//yzbuWBg2+F//xh7vU0S0RQCziPM
++x7RSBgbhxSfChfEJbS2sDnzfh0jRQmoY95iFv7puet1FJtzdZ4fgCd1RqmC2lFM5
++H0eZtN/Cz19lieVs0b996DErdEBqClVZO00eYbRozCDaBzRU3ybB/dMrGJxhkkXm
++wb3kWMtziH9qOYsostuHIFu8eKFLloKxFnq2R4DGxOECgYEA2KUIZISOeGJSBcLJ
++JAUK2gvgXPNo4HHWIwOA9xeN3ZJlsnPlffXQNnm6t1st1V2gfMm9I2n0m/F0y2B/
++n/XGSa8bghfPA9l0c2h58lkL3JQJR/paa8ycTz+YZPrznEyN7Qa0RrJXUvZv9lQL
++Hc3+FHcSHgMqDV2f2bHAEu9YGi0CgYEAx6VEIPNvrHFgjo/jk1RTuk+m0xEWQsZL
++Cs+izQMr2TaeJn8LG+93AvFuYn0J0nT3WuStLPrUg8i4IhSS6lf1tId5ivIZPm4r
++YwMyblBJXhnHbk7Uqodjfw/3s6V2HAu++B7hTdyVr9DFuST9uv4m8bkPV8rfX1jE
++I2rAPVWvgikCgYB+wNAQP547wQrMZBLbCDg5KwmyWJfb+b6X7czexOEz6humNTjo
++YZHYzY/5B1fhpk3ntQD8X1nGg5caBvOk21+QbOtjShrM3cXMYCw5JvBRtitX+Zo9
++yBEMLOE0877ki8XeEDYZxu5gk98d+D4oygUGZEQtWxyXhVepPt5qNa8OYQKBgQDH
++RVgZI6KFlqzv3wMh3PutbS9wYQ+9GrtwUQuIYe/0YSW9+vSVr5E0qNKrD28sV39F
++hBauXLady0yvB6YUrjMbPFW+sCMuQzyfGWPO4+g3OrfqjFiM1ZIkE0YEU9Tt7XNx
++qTDtTI1D7bhNMnTnniI1B6ge0und+3XafAThs5L48QKBgQCTTpfqMt8kU3tcI9sf
++0MK03y7kA76d5uw0pZbWFy7KI4qnzWutCzb+FMPWWsoFtLJLPZy//u/ZCUVFVa4d
++0Y/ASNQIESVPXFLAltlLo4MSmsg1vCBsbviEEaPeEjvMrgki93pYtd/aOSgkYC1T
++mEq154s5rmqh+h+XRIf7Au0SLw==
++-----END PRIVATE KEY-----
+Index: native-tls/test/key2.pem
+===================================================================
+--- /dev/null
++++ native-tls/test/key2.pem
+@@ -0,0 +1,52 @@
++-----BEGIN PRIVATE KEY-----
++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
++QYXuzBi7LlSFYIOmdDy+5XZ6N4hTXtE=
++-----END PRIVATE KEY-----
+Index: native-tls/test/root-ca.pem
+===================================================================
+--- /dev/null
++++ native-tls/test/root-ca.pem
+@@ -0,0 +1,21 @@
++-----BEGIN CERTIFICATE-----
++MIIDXTCCAkWgAwIBAgIJAOIvDiVb18eVMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
++BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
++aWRnaXRzIFB0eSBMdGQwHhcNMTYwODE0MTY1NjExWhcNMjYwODEyMTY1NjExWjBF
++MQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50
++ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
++CgKCAQEArVHWFn52Lbl1l59exduZntVSZyDYpzDND+S2LUcO6fRBWhV/1Kzox+2G
++ZptbuMGmfI3iAnb0CFT4uC3kBkQQlXonGATSVyaFTFR+jq/lc0SP+9Bd7SBXieIV
++eIXlY1TvlwIvj3Ntw9zX+scTA4SXxH6M0rKv9gTOub2vCMSHeF16X8DQr4XsZuQr
++7Cp7j1I4aqOJyap5JTl5ijmG8cnu0n+8UcRlBzy99dLWJG0AfI3VRJdWpGTNVZ92
++aFff3RpK3F/WI2gp3qV1ynRAKuvmncGC3LDvYfcc2dgsc1N6Ffq8GIrkgRob6eBc
++klDHp1d023Lwre+VaVDSo1//Y72UFwIDAQABo1AwTjAdBgNVHQ4EFgQUbNOlA6sN
++XyzJjYqciKeId7g3/ZowHwYDVR0jBBgwFoAUbNOlA6sNXyzJjYqciKeId7g3/Zow
++DAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAVVaR5QWLZIRR4Dw6TSBn
++BQiLpBSXN6oAxdDw6n4PtwW6CzydaA+creiK6LfwEsiifUfQe9f+T+TBSpdIYtMv
++Z2H2tjlFX8VrjUFvPrvn5c28CuLI0foBgY8XGSkR2YMYzWw2jPEq3Th/KM5Catn3
++AFm3bGKWMtGPR4v+90chEN0jzaAmJYRrVUh9vea27bOCn31Nse6XXQPmSI6Gyncy
++OAPUsvPClF3IjeL1tmBotWqSGn1cYxLo+Lwjk22A9h6vjcNQRyZF2VLVvtwYrNU3
++mwJ6GCLsLHpwW/yjyvn8iEltnJvByM/eeRnfXV6WDObyiZsE/n6DxIRJodQzFqy9
++GA==
++-----END CERTIFICATE-----

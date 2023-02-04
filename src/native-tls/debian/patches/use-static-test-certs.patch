@@ -4,12 +4,18 @@ static test certs, it is mostly a revert of upstream commit
 d808f9a203219d123e900ef4993adf9c210ec8fd but with some adjustments
 for use in the Debian package.
 
-only in patch2:
+Adjustments include.
+
+1. Changing files from binary to base64, so they can be included in a
+   patch.
+2. Re-encrypting the p12 file with more modern cryptography so it will
+   work with the version of openssl in bookworm.
+
 Index: native-tls/src/lib.rs
 ===================================================================
 --- native-tls.orig/src/lib.rs
 +++ native-tls/src/lib.rs
-@@ -101,6 +101,11 @@
+@@ -102,6 +102,11 @@
  #[cfg(any(target_os = "macos", target_os = "ios"))]
  extern crate lazy_static;
  
@@ -108,18 +114,6 @@ Index: native-tls/src/test.rs
 -fn certificate_from_pem() {
 -    let dir = tempfile::tempdir().unwrap();
 -    let keys = test_cert_gen::keys();
--
--    let der_path = dir.path().join("cert.der");
--    fs::write(&der_path, &keys.client.cert_der).unwrap();
--    let output = Command::new("openssl")
--        .arg("x509")
--        .arg("-in")
--        .arg(der_path)
--        .arg("-inform")
--        .arg("der")
--        .stderr(Stdio::piped())
--        .output()
--        .unwrap();
 +#[cfg(not(target_os = "ios"))]
 +fn server_pem() {
 +    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
@@ -132,20 +126,31 @@ Index: native-tls/src/test.rs
 +    let j = thread::spawn(move || {
 +        let socket = p!(listener.accept()).0;
 +        let mut socket = p!(builder.accept(socket));
- 
--    assert!(output.status.success());
++
 +        let mut buf = [0; 5];
 +        p!(socket.read_exact(&mut buf));
 +        assert_eq!(&buf, b"hello");
  
--    let cert = Certificate::from_pem(&output.stdout).unwrap();
--    assert_eq!(cert.to_der().unwrap(), keys.client.cert_der);
+-    let der_path = dir.path().join("cert.der");
+-    fs::write(&der_path, &keys.client.cert_der).unwrap();
+-    let output = Command::new("openssl")
+-        .arg("x509")
+-        .arg("-in")
+-        .arg(der_path)
+-        .arg("-inform")
+-        .arg("der")
+-        .stderr(Stdio::piped())
+-        .output()
+-        .unwrap();
 +        p!(socket.write_all(b"world"));
 +    });
-+
+ 
+-    assert!(output.status.success());
 +    let root_ca = include_bytes!("../test/root-ca.pem");
 +    let root_ca = Certificate::from_pem(root_ca).unwrap();
-+
+ 
+-    let cert = Certificate::from_pem(&output.stdout).unwrap();
+-    assert_eq!(cert.to_der().unwrap(), keys.client.cert_der);
 +    let socket = p!(TcpStream::connect(("localhost", port)));
 +    let builder = p!(TlsConnector::builder()
 +        .add_root_certificate(root_ca)
@@ -207,8 +212,8 @@ Index: native-tls/src/test.rs
 +    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
 +    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
      let builder = p!(TlsAcceptor::builder(identity)
-         .min_protocol_version(Some(Protocol::Tlsv11))
-         .max_protocol_version(Some(Protocol::Tlsv11))
+         .min_protocol_version(Some(Protocol::Tlsv12))
+         .max_protocol_version(Some(Protocol::Tlsv12))
 @@ -215,7 +219,8 @@ fn server_tls11_only() {
          p!(socket.write_all(b"world"));
      });
@@ -220,8 +225,8 @@ Index: native-tls/src/test.rs
      let socket = p!(TcpStream::connect(("localhost", port)));
      let builder = p!(TlsConnector::builder()
 @@ -223,7 +228,7 @@ fn server_tls11_only() {
-         .min_protocol_version(Some(Protocol::Tlsv11))
-         .max_protocol_version(Some(Protocol::Tlsv11))
+         .min_protocol_version(Some(Protocol::Tlsv12))
+         .max_protocol_version(Some(Protocol::Tlsv12))
          .build());
 -    let mut socket = p!(builder.connect("localhost", socket));
 +    let mut socket = p!(builder.connect("foobar.com", socket));
@@ -308,7 +313,7 @@ Index: native-tls/src/test.rs
  
      p!(socket.write_all(b"hello"));
      let mut buf = vec![];
-@@ -333,26 +327,15 @@ fn server_untrusted_unverified() {
+@@ -333,16 +327,9 @@ fn server_untrusted_unverified() {
  
  #[test]
  fn import_same_identity_multiple_times() {
@@ -325,7 +330,10 @@ Index: native-tls/src/test.rs
 +    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
 +    let _ = p!(Identity::from_pkcs12(buf, "mypass"));
 +    let _ = p!(Identity::from_pkcs12(buf, "mypass"));
- }
+ 
+     let p8buf = include_bytes!("../test/chain.pem");
+     let key = include_bytes!("../test/key.pem");
+@@ -362,12 +349,8 @@ fn from_pkcs8_rejects_rsa_key() {
  
  #[test]
  fn shutdown() {
@@ -340,7 +348,7 @@ Index: native-tls/src/test.rs
      let builder = p!(TlsAcceptor::new(identity));
  
      let listener = p!(TcpListener::bind("0.0.0.0:0"));
-@@ -370,19 +353,66 @@ fn shutdown() {
+@@ -385,19 +368,66 @@ fn shutdown() {
          p!(socket.shutdown());
      });
  
@@ -409,65 +417,14 @@ Index: native-tls/src/test.rs
  
  #[test]
  #[cfg(feature = "alpn")]
-Index: native-tls/test/cert.pem
-===================================================================
---- /dev/null
-+++ native-tls/test/cert.pem
-@@ -0,0 +1,20 @@
-+-----BEGIN CERTIFICATE-----
-+MIIDGzCCAgMCCQCHcfe97pgvpTANBgkqhkiG9w0BAQsFADBFMQswCQYDVQQGEwJB
-+VTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0
-+cyBQdHkgTHRkMB4XDTE2MDgxNDE3MDAwM1oXDTI2MDgxMjE3MDAwM1owWjELMAkG
-+A1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoMGEludGVybmV0
-+IFdpZGdpdHMgUHR5IEx0ZDETMBEGA1UEAwwKZm9vYmFyLmNvbTCCASIwDQYJKoZI
-+hvcNAQEBBQADggEPADCCAQoCggEBAKj0JYxEsxejUIX+I5GH0Hg2G0kX/y1H0+Ub
-+3mw2/Ja5BD/yN96/7zMSumXF8uS3SkmpyiJkbyD01TSRTqjlP7/VCBlyUIChlpLQ
-+mrGaijZiT/VCyPXqmcwFzXS5IOTpX1olJfW8rA41U1LCIcDUyFf6LtZ/v8rSeKr6
-+TuE6SGV4WRaBm1SrjWBeHVV866CRrtSS1ieT2asFsAyOZqWhk2fakwwBDFWDhOGI
-+ubfO+5aq9cBJbNRlzsgB3UZs3gC0O6GzbnZ6oT0TiJMeTsXXjABLUlaq/rrqFF4Y
-+euZkkbHTFBMz288PUc3m3ZTcpN+E7+ZOUBRZXKD20K07NugqCzUCAwEAATANBgkq
-+hkiG9w0BAQsFAAOCAQEASvYHuIl5C0NHBELPpVHNuLbQsDQNKVj3a54+9q1JkiMM
-+6taEJYfw7K1Xjm4RoiFSHpQBh+PWZS3hToToL2Zx8JfMR5MuAirdPAy1Sia/J/qE
-+wQdJccqmvuLkLTSlsGbEJ/LUUgOAgrgHOZM5lUgIhCneA0/dWJ3PsN0zvn69/faY
-+oo1iiolWiIHWWBUSdr3jM2AJaVAsTmLh00cKaDNk37JB940xConBGSl98JPrNrf9
-+dUAiT0iIBngDBdHnn/yTj+InVEFyZSKrNtiDSObFHxPcxGteHNrCPJdP1e+GqkHp
-+HJMRZVCQpSMzvHlofHSNgzWV1MX5h1CP4SGZdBDTfA==
-+-----END CERTIFICATE-----
-+
-Index: native-tls/test/root-ca.pem
-===================================================================
---- /dev/null
-+++ native-tls/test/root-ca.pem
-@@ -0,0 +1,21 @@
-+-----BEGIN CERTIFICATE-----
-+MIIDXTCCAkWgAwIBAgIJAOIvDiVb18eVMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
-+BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
-+aWRnaXRzIFB0eSBMdGQwHhcNMTYwODE0MTY1NjExWhcNMjYwODEyMTY1NjExWjBF
-+MQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50
-+ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
-+CgKCAQEArVHWFn52Lbl1l59exduZntVSZyDYpzDND+S2LUcO6fRBWhV/1Kzox+2G
-+ZptbuMGmfI3iAnb0CFT4uC3kBkQQlXonGATSVyaFTFR+jq/lc0SP+9Bd7SBXieIV
-+eIXlY1TvlwIvj3Ntw9zX+scTA4SXxH6M0rKv9gTOub2vCMSHeF16X8DQr4XsZuQr
-+7Cp7j1I4aqOJyap5JTl5ijmG8cnu0n+8UcRlBzy99dLWJG0AfI3VRJdWpGTNVZ92
-+aFff3RpK3F/WI2gp3qV1ynRAKuvmncGC3LDvYfcc2dgsc1N6Ffq8GIrkgRob6eBc
-+klDHp1d023Lwre+VaVDSo1//Y72UFwIDAQABo1AwTjAdBgNVHQ4EFgQUbNOlA6sN
-+XyzJjYqciKeId7g3/ZowHwYDVR0jBBgwFoAUbNOlA6sNXyzJjYqciKeId7g3/Zow
-+DAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAVVaR5QWLZIRR4Dw6TSBn
-+BQiLpBSXN6oAxdDw6n4PtwW6CzydaA+creiK6LfwEsiifUfQe9f+T+TBSpdIYtMv
-+Z2H2tjlFX8VrjUFvPrvn5c28CuLI0foBgY8XGSkR2YMYzWw2jPEq3Th/KM5Catn3
-+AFm3bGKWMtGPR4v+90chEN0jzaAmJYRrVUh9vea27bOCn31Nse6XXQPmSI6Gyncy
-+OAPUsvPClF3IjeL1tmBotWqSGn1cYxLo+Lwjk22A9h6vjcNQRyZF2VLVvtwYrNU3
-+mwJ6GCLsLHpwW/yjyvn8iEltnJvByM/eeRnfXV6WDObyiZsE/n6DxIRJodQzFqy9
-+GA==
-+-----END CERTIFICATE-----
 Index: native-tls/Cargo.toml
 ===================================================================
 --- native-tls.orig/Cargo.toml
 +++ native-tls/Cargo.toml
-@@ -21,11 +21,11 @@ repository = "https://github.com/sfackle
- [package.metadata.docs.rs]
- features = ["alpn"]
- rustdoc-args = ["--cfg", "docsrs"]
+@@ -28,11 +28,11 @@ rustdoc-args = [
+ [dev-dependencies.pem]
+ version = "1.0"
+ 
 -[dev-dependencies.tempfile]
 -version = "3.0"
 +[dev-dependencies.hex]
@@ -484,75 +441,65 @@ Index: native-tls/test/identity.p12.base64
 ===================================================================
 --- /dev/null
 +++ native-tls/test/identity.p12.base64
-@@ -0,0 +1,71 @@
-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
-+1AtaiynBj4rxwVojBAhG1bOCIgVvyAICCAA=
+@@ -0,0 +1,61 @@
++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
