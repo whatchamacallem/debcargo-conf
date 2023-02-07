@@ -15,10 +15,10 @@ install.
 
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -36,28 +36,12 @@
- [[bench]]
+@@ -54,28 +54,12 @@
  name = "run_benchmarks"
  harness = false
+ 
 -[dependencies.aes]
 -version = "0.6.0"
 -optional = true
@@ -27,7 +27,7 @@ install.
  version = "1.0.18"
  
  [dependencies.base64]
- version = ">=0.12"
+ version = ">=0.12, <0.20"
  
 -[dependencies.block-modes]
 -version = "0.7.0"
@@ -44,7 +44,7 @@ install.
  [dependencies.buffered-reader]
  version = "1.0.0"
  default-features = false
-@@ -66,53 +50,13 @@
+@@ -84,59 +68,13 @@
  version = "0.4"
  optional = true
  
@@ -74,12 +74,18 @@ install.
 -
 -[dependencies.ecdsa]
 -version = "0.11"
--features = ["hazmat", "arithmetic"]
+-features = [
+-    "hazmat",
+-    "arithmetic",
+-]
 -optional = true
 -
 -[dependencies.ed25519-dalek]
 -version = "1"
--features = ["rand", "u64_backend"]
+-features = [
+-    "rand",
+-    "u64_backend",
+-]
 -optional = true
 -default-features = false
 -
@@ -96,9 +102,9 @@ install.
 -optional = true
 -
  [dependencies.idna]
- version = "0.2"
+ version = ">=0.2, <0.4"
  
-@@ -125,10 +69,6 @@
+@@ -149,10 +87,6 @@
  [dependencies.libc]
  version = "0.2.66"
  
@@ -109,7 +115,7 @@ install.
  [dependencies.memsec]
  version = ">=0.5"
  default-features = false
-@@ -137,67 +77,20 @@
+@@ -161,70 +95,20 @@
  version = "7.0.2"
  optional = true
  
@@ -120,7 +126,10 @@ install.
 -
 -[dependencies.p256]
 -version = "0.8"
--features = ["ecdh", "ecdsa"]
+-features = [
+-    "ecdh",
+-    "ecdsa",
+-]
 -optional = true
 -
 -[dependencies.rand07]
@@ -177,17 +186,57 @@ install.
  [dependencies.xxhash-rust]
  version = "0.8"
  features = ["xxh3"]
-@@ -224,33 +117,8 @@
- compression = ["compression-deflate", "compression-bzip2"]
- compression-bzip2 = ["bzip2", "buffered-reader/compression-bzip2"]
- compression-deflate = ["flate2", "buffered-reader/compression-deflate"]
--crypto-cng = ["eax", "winapi", "win-crypto-ng", "ed25519-dalek", "num-bigint-dig"]
+@@ -262,78 +146,12 @@
+     "flate2",
+     "buffered-reader/compression-deflate",
+ ]
+-crypto-cng = [
+-    "eax",
+-    "winapi",
+-    "win-crypto-ng",
+-    "ed25519-dalek",
+-    "num-bigint-dig",
+-]
  crypto-nettle = ["nettle"]
--crypto-rust = ["aes", "block-modes", "block-padding", "blowfish", "cast5", "cipher", "des", "digest", "eax", "ed25519-dalek", "generic-array", "idea", "md-5", "num-bigint-dig", "rand07", "ripemd160", "rsa", "sha-1", "sha2", "twofish", "typenum", "x25519-dalek", "p256", "rand_core", "rand_core/getrandom", "ecdsa"]
- default = ["compression", "crypto-nettle"]
+-crypto-rust = [
+-    "aes",
+-    "block-modes",
+-    "block-padding",
+-    "blowfish",
+-    "cast5",
+-    "cipher",
+-    "des",
+-    "digest",
+-    "eax",
+-    "ed25519-dalek",
+-    "generic-array",
+-    "idea",
+-    "md-5",
+-    "num-bigint-dig",
+-    "rand07",
+-    "ripemd160",
+-    "rsa",
+-    "sha-1",
+-    "sha2",
+-    "twofish",
+-    "typenum",
+-    "x25519-dalek",
+-    "p256",
+-    "rand_core",
+-    "rand_core/getrandom",
+-    "ecdsa",
+-]
+ default = [
+     "compression",
+     "crypto-nettle",
+ ]
+ 
 -[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.chrono]
 -version = "0.4.10"
--features = ["std", "wasmbind"]
+-features = [
+-    "std",
+-    "wasmbind",
+-]
 -default-features = false
 -
 -[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.getrandom]
@@ -198,9 +247,13 @@ install.
 -version = "0.7"
 -features = ["wasm-bindgen"]
 -package = "rand"
+-
 -[target."cfg(windows)".dependencies.win-crypto-ng]
 -version = "0.4"
--features = ["rand", "block-cipher"]
+-features = [
+-    "rand",
+-    "block-cipher",
+-]
 -optional = true
 -
 -[target."cfg(windows)".dependencies.winapi]
@@ -208,6 +261,7 @@ install.
 -features = ["bcrypt"]
 -optional = true
 -default-features = false
+-
  [badges.gitlab]
  repository = "sequoia-pgp/sequoia"
  
