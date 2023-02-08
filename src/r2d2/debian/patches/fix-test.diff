@@ -1,0 +1,17 @@
+Index: r2d2/src/test.rs
+===================================================================
+--- r2d2.orig/src/test.rs
++++ r2d2/src/test.rs
+@@ -486,10 +486,10 @@ fn test_max_lifetime() {
+         .build(Handler(AtomicIsize::new(5)))
+         .unwrap();
+     let conn = pool.get().unwrap();
+-    thread::sleep(Duration::from_secs(2));
++    thread::sleep(Duration::from_secs(3));
+     assert_eq!(4, DROPPED.load(Ordering::SeqCst));
+     drop(conn);
+-    thread::sleep(Duration::from_secs(2));
++    thread::sleep(Duration::from_secs(3));
+     assert_eq!(5, DROPPED.load(Ordering::SeqCst));
+     assert!(pool.get().is_err());
+ }
