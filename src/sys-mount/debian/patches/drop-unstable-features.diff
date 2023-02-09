@@ -8,8 +8,6 @@ Forwarded: not-needed
 Last-Update: 2023-02-08
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
-Index: src/lib.rs
-===================================================================
 --- a/src/lib.rs
 +++ b/src/lib.rs
 @@ -109,27 +109,27 @@
@@ -55,3 +53,22 @@ Index: src/lib.rs
      }
  }
  
+--- a/examples/umount.rs
++++ b/examples/umount.rs
+@@ -22,10 +22,10 @@
+         UnmountFlags::empty()
+     };
+ 
+-    let Err(why) = unmount(src, flags) else {
+-        return ExitCode::SUCCESS;
+-    };
+-
+-    eprintln!("failed to unmount {}: {}", src, why);
+-    ExitCode::FAILURE
++    if let Err(why) = unmount(src, flags) {
++        eprintln!("failed to unmount {}: {}", src, why);
++        ExitCode::FAILURE
++    } else {
++        ExitCode::SUCCESS
++    }
+ }
