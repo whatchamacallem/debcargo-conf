@@ -1,0 +1,29 @@
+Description: Disable tests requiring unavailable test crate
+Last-Update: 2023-02-10
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/tests/ok.rs
++++ b/tests/ok.rs
+@@ -1,4 +1,4 @@
+-extern crate test_crate;
++/*extern crate test_crate;
+ 
+ use test_crate::*;
+ 
+@@ -7,4 +7,4 @@
+ #[test]
+ fn check_it_works() {
+     it_works();
+-}
++}*/
+--- a/tests/macro-errors.rs
++++ b/tests/macro-errors.rs
+@@ -1,7 +1,7 @@
+ extern crate trybuild;
+ 
+ #[cfg_attr(skip_ui_tests, ignore)]
+-#[test]
++//#[test]
+ fn ui() {
+     let t = trybuild::TestCases::new();
+     t.compile_fail("tests/ui/*.rs");

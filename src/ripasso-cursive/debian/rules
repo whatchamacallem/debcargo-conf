@@ -1,0 +1,22 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/pkg-info.mk
+
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_install:
+	mkdir -p debian/ripasso-cursive/usr/share/locale/de/LC_MESSAGES/
+	mkdir -p debian/ripasso-cursive/usr/share/locale/fr/LC_MESSAGES/
+	mkdir -p debian/ripasso-cursive/usr/share/locale/it/LC_MESSAGES/
+	mkdir -p debian/ripasso-cursive/usr/share/locale/nb/LC_MESSAGES/
+	mkdir -p debian/ripasso-cursive/usr/share/locale/nn/LC_MESSAGES/
+	mkdir -p debian/ripasso-cursive/usr/share/locale/sv/LC_MESSAGES/
+	cp -f target/translations/cursive/de.mo debian/ripasso-cursive/usr/share/locale/de/LC_MESSAGES/ripasso-cursive.mo
+	cp -f target/translations/cursive/fr.mo debian/ripasso-cursive/usr/share/locale/fr/LC_MESSAGES/ripasso-cursive.mo
+	cp -f target/translations/cursive/it.mo debian/ripasso-cursive/usr/share/locale/it/LC_MESSAGES/ripasso-cursive.mo
+	cp -f target/translations/cursive/nb.mo debian/ripasso-cursive/usr/share/locale/nb/LC_MESSAGES/ripasso-cursive.mo
+	cp -f target/translations/cursive/nn.mo debian/ripasso-cursive/usr/share/locale/nn/LC_MESSAGES/ripasso-cursive.mo
+	cp -f target/translations/cursive/sv.mo debian/ripasso-cursive/usr/share/locale/sv/LC_MESSAGES/ripasso-cursive.mo
+	dh_install
+

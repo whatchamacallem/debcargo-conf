@@ -1,0 +1,24 @@
+Index: test-dir/src/lib.rs
+===================================================================
+--- test-dir.orig/src/lib.rs
++++ test-dir/src/lib.rs
+@@ -313,6 +313,9 @@ mod tests {
+     fn test_testdir_current_rnd_dir() {
+         let path;
+         {
++            if let Some(cargo_target_dir) = option_env!("CARGO_TARGET_DIR") {
++                std::env::set_current_dir(cargo_target_dir).unwrap();
++            }
+             let dir = TestDir::current_rnd();
+ 
+             // Dir created
+@@ -332,6 +335,9 @@ mod tests {
+     fn test_testdir_current_dir() {
+         let path;
+         {
++            if let Some(cargo_target_dir) = option_env!("CARGO_TARGET_DIR") {
++                std::env::set_current_dir(cargo_target_dir).unwrap();
++            }
+             let dir = TestDir::current("a/b/c");
+ 
+             // Dir created
