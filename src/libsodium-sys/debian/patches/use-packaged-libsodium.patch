@@ -1,0 +1,79 @@
+--- a/build.rs
++++ b/build.rs
+@@ -28,11 +28,11 @@
+     }
+ 
+     let lib_dir_isset = env::var("SODIUM_LIB_DIR").is_ok();
+-    let use_pkg_isset = if cfg!(feature = "use-pkg-config") {
++    let use_pkg_isset = /*if cfg!(feature = "use-pkg-config") {*/
+         true
+-    } else {
++    /*} else {
+         env::var("SODIUM_USE_PKG_CONFIG").is_ok()
+-    };
++    }*/;
+     let shared_isset = env::var("SODIUM_SHARED").is_ok();
+ 
+     if lib_dir_isset && use_pkg_isset {
+@@ -47,7 +47,7 @@
+         }
+ 
+         find_libsodium_pkg();
+-    } else {
++    } /*else {
+         if shared_isset {
+             println!(
+                 "cargo:warning=SODIUM_SHARED has no effect for building libsodium from source"
+@@ -55,7 +55,7 @@
+         }
+ 
+         build_libsodium();
+-    }
++    }*/
+ }
+ 
+ /* Must be called when SODIUM_LIB_DIR is set to any value
+@@ -134,7 +134,7 @@
+     }
+ }
+ 
+-#[cfg(windows)]
++/*#[cfg(windows)]
+ fn make_libsodium(_: &str, _: &Path, _: &Path) -> PathBuf {
+     // We don't build anything on windows, we simply linked to precompiled
+     // libs.
+@@ -291,14 +291,14 @@
+     }
+ 
+     install_dir.join("lib")
+-}
++}*/
+ 
+ #[cfg(any(windows, target_env = "msvc"))]
+ fn get_crate_dir() -> PathBuf {
+     env::var("CARGO_MANIFEST_DIR").unwrap().into()
+ }
+ 
+-#[cfg(target_env = "msvc")]
++/*#[cfg(target_env = "msvc")]
+ fn is_release_profile() -> bool {
+     env::var("PROFILE").unwrap() == "release"
+ }
+@@ -329,9 +329,9 @@
+ #[cfg(all(windows, not(target_env = "msvc"), target_pointer_width = "64"))]
+ fn get_lib_dir() -> PathBuf {
+     get_crate_dir().join("mingw/win64/")
+-}
++}*/
+ 
+-fn build_libsodium() {
++/*fn build_libsodium() {
+     use std::{ffi::OsStr, fs};
+ 
+     // Determine build target triple
+@@ -396,4 +396,4 @@
+ 
+     println!("cargo:include={}", include_dir.to_str().unwrap());
+     println!("cargo:lib={}", lib_dir.to_str().unwrap());
+-}
++}*/
