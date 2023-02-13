@@ -3,6 +3,12 @@
 %:
 	dh $@ --buildsystem cargo
 
+override_dh_install:
+	mkdir -p debian/pleaser/usr/share/zsh/vendor-completions debian/pleaser/etc/bash_completion.d
+	cp -f completions/zsh/_please debian/pleaser/usr/share/zsh/vendor-completions
+	cp -f completions/bash/please debian/pleaser/etc/bash_completion.d
+	dh_install
+
 override_dh_installman:
 	cd man && ln -s please.1 pleaseedit.1
 	dh_installman -O--buildsystem=cargo
