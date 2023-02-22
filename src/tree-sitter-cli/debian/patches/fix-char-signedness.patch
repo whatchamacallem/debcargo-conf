@@ -1,0 +1,19 @@
+Index: rust-tree-sitter-cli-0.20.7/src/tests/tags_test.rs
+===================================================================
+--- rust-tree-sitter-cli-0.20.7.orig/src/tests/tags_test.rs
++++ rust-tree-sitter-cli-0.20.7/src/tests/tags_test.rs
+@@ -404,12 +404,13 @@ fn test_tags_via_c_api() {
+         .unwrap();
+ 
+         let syntax_types: Vec<&str> = unsafe {
++            use std::os::raw::c_char;
+             let mut len: u32 = 0;
+             let ptr =
+                 c::ts_tagger_syntax_kinds_for_scope_name(tagger, c_scope_name.as_ptr(), &mut len);
+             slice::from_raw_parts(ptr, len as usize)
+                 .iter()
+-                .map(|i| CStr::from_ptr(*i).to_str().unwrap())
++                .map(|i| CStr::from_ptr(*i as *const c_char).to_str().unwrap())
+                 .collect()
+         };
+ 
