@@ -1,0 +1,30 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 6f5e00b..ba9897a 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -25,7 +25,7 @@ repository = "https://github.com/budziq/rust-skeptic"
+ version = "0.6"
+ 
+ [dependencies.cargo_metadata]
+-version = "0.14"
++version = "0.15"
+ 
+ [dependencies.error-chain]
+ version = "0.12"
+diff --git a/src/rt.rs b/src/rt.rs
+index 4c59754..e86e4d1 100644
+--- a/src/rt.rs
++++ b/src/rt.rs
+@@ -76,10 +76,10 @@ fn handle_test(
+         .packages
+         .iter()
+         .map(|package| &package.edition)
+-        .max_by_key(|edition| u64::from_str(edition).unwrap())
++        .max_by_key(|edition| edition.clone())
+         .unwrap()
+         .clone();
+-    if edition != "2015" {
++    if edition != cargo_metadata::Edition::E2015 {
+         cmd.arg(format!("--edition={}", edition));
+     }
+ 
