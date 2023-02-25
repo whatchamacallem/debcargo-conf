@@ -1,0 +1,53 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index d3ee095..590983f 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -32,15 +32,15 @@ features = ["from_metadata"]
+ version = "0.15"
+ 
+ [dependencies.miniz_oxide]
+-version = "0.5.0"
++version = "0.6"
+ 
+ [dependencies.object]
+-version = "0.28.1"
++version = "0.30"
+ features = ["write"]
+ default-features = false
+ 
+ [dependencies.pico-args]
+-version = "0.5"
++version = "0.4"
+ 
+ [dependencies.serde]
+ version = "1.0.147"
+diff --git a/src/object_file.rs b/src/object_file.rs
+index 95a221d..84232e9 100644
+--- a/src/object_file.rs
++++ b/src/object_file.rs
+@@ -103,7 +103,7 @@ fn create_object_file(
+                 } else {
+                     elf::EF_MIPS_ARCH_32R2
+                 };
+-            file.flags = FileFlags::Elf { e_flags };
++            file.flags = FileFlags::Elf { os_abi: object::elf::ELFOSABI_LINUX, abi_version: 0, e_flags };
+         }
+         Architecture::Mips64 => {
+             // copied from `mips64el-linux-gnuabi64-gcc foo.c -c`
+@@ -114,14 +114,14 @@ fn create_object_file(
+                 } else {
+                     elf::EF_MIPS_ARCH_64R2
+                 };
+-            file.flags = FileFlags::Elf { e_flags };
++            file.flags = FileFlags::Elf { os_abi: object::elf::ELFOSABI_LINUX, abi_version: 0, e_flags };
+         }
+         Architecture::Riscv64 if has_riscv_double_precision_float_abi(target_triple) => {
+             // copied from `riscv64-linux-gnu-gcc foo.c -c`, note though
+             // that the `+d` target feature represents whether the double
+             // float abi is enabled.
+             let e_flags = elf::EF_RISCV_RVC | elf::EF_RISCV_FLOAT_ABI_DOUBLE;
+-            file.flags = FileFlags::Elf { e_flags };
++            file.flags = FileFlags::Elf { os_abi: object::elf::ELFOSABI_LINUX, abi_version: 0, e_flags };
+         }
+         _ => {}
+     };
