@@ -149,5 +149,7 @@ if __name__ == '__main__':
 		print(USAGE)
 		exit(1)
 
+	if ' ' in argv[1]:
+		argv[1:] = list(filter(lambda a: a != '', argv[1].split(' ')))
 	chain_build(argv[1:])
 
