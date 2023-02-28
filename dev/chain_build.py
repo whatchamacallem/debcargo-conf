@@ -73,7 +73,7 @@ def find_built(specs: list[tuple[str, str | None]]) -> list[tuple[str, str]]:
 
 COLL_LINE = 'collapse_features = true'
 def collapse_features(crate: str):
-	f = open(join('src', crate, 'debian', 'debcargo.toml'), 'r+')
+	f = open(join('src', _todash(crate), 'debian', 'debcargo.toml'), 'r+')
 	toml = f.read()
 	if COLL_LINE not in toml:
 		# below is to avoid inserting at end ending up in [some.directive]
