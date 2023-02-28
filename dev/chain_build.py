@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-USAGE = 'Usage: dev/build_chain.py <CRATE>[=<REALVER>] <CRATE2>[=<REALVER>] ...'
+USAGE = 'Usage: dev/chain_build.py <CRATE>[=<REALVER>] <CRATE2>[=<REALVER>] ...'
 
 f'''
 Build a chain of packages, each having all previous packages as "extra
@@ -28,13 +28,12 @@ from os import getcwd, chdir, walk, stat, environ
 from os.path import exists, isdir, join
 
 
-
 def _todash(crate: str) -> str:
 	return crate.replace('_', '-')
 
 
 def _print(*args):
-	print('\n### build_chain ###\n', *args, '\n')
+	print('\n### chain_build ###\n', *args, '\n')
 
 
 DCH_VER_RE = re.compile(r'\((.*?)\)')
@@ -55,7 +54,7 @@ def find_built(specs: list[tuple[str, str | None]]) -> list[tuple[str, str]]:
 			if file.endswith('.deb'):
 				# we build in `build/` anyway
 				debs.append(file)
-	
+
 	now = now_ts()
 	built = []
 	for crate, ver in specs:
@@ -114,7 +113,7 @@ def parse_specs(specs: tuple[str]) -> list[tuple[str, str | None]]:
 	return parsed
 
 
-def build_chain(specs):
+def chain_build(specs):
 	specs = parse_specs(specs)
 	built = find_built(specs)
 	try:
@@ -125,7 +124,7 @@ def build_chain(specs):
 	except:
 		built, debs = [], []
 		print('No recently built packages')
-	
+
 	input('Starting chain build, press any key to continue, Ctrl+C to abort')
 
 	for crate, ver in specs:
@@ -149,6 +148,6 @@ if __name__ == '__main__':
 	if len(argv) < 2:
 		print(USAGE)
 		exit(1)
-	
-	build_chain(argv[1:])
+
+	chain_build(argv[1:])
 
