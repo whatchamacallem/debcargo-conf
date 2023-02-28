@@ -92,8 +92,8 @@ def build_one(crate: str, ver: str | None, prev_debs: list[str]):
 	env = environ.copy()
 	if ver is not None:
 		env['REALVER'] = ver
-	# to skip pager and carry on
-	env['GIT_PAGER'] = 'true'
+	# prevent git from stopping us with a pager
+	env['GIT_PAGER'] = 'cat'
 	# \n is for when update.sh stops for confirmation
 	run(('./update.sh', crate), env=env, input=b'\n')
 	env['EXTRA_DEBS'] = ','.join(prev_debs)
