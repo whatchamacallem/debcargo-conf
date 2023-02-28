@@ -95,11 +95,11 @@ def build_one(crate: str, ver: str | None, prev_debs: list[str]):
 	# prevent git from stopping us with a pager
 	env['GIT_PAGER'] = 'cat'
 	# \n is for when update.sh stops for confirmation
-	run(('./update.sh', crate), env=env, input=b'\n')
+	run(('./update.sh', crate), env=env, input=b'\n', check=True)
 	env['EXTRA_DEBS'] = ','.join(prev_debs)
 	collapse_features(crate)
 	chdir('build')
-	run(('./build.sh', crate), env=env)
+	run(('./build.sh', crate), env=env, check=True)
 	chdir('..')
 
 
