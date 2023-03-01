@@ -175,7 +175,10 @@ if __name__ == '__main__':
 		print(USAGE)
 		exit(1)
 
-	if ' ' in argv[1]:
-		argv[1:] = list(filter(lambda a: a != '', argv[1].split(' ')))
+	i = 1
+	while i < len(argv):
+		if ' ' in argv[i]:
+			argv[i:] = list(filter(lambda a: a != '', argv[1].split(' '))) + argv[i + 1:]
+		i += 1
 	chain_build(argv[1:])
 
