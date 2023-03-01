@@ -8,6 +8,8 @@ dependency deb" as in build.sh. It fails when one in the chain fails to
 build, and picks up where it stopped next time by checking which packages
 have been recently built.
 
+This script needs python-apt to work.
+
 This script expects to run at the root of the debcargo-conf repository.
 
 {USAGE}
@@ -26,6 +28,14 @@ from subprocess import run
 from time import time as now_ts
 from os import getcwd, chdir, walk, stat, environ
 from os.path import exists, isdir, join
+try:
+	from apt.cache import Cache as AptCache
+except:
+	print('This scripts depends on python-apt to work, apt install python3-apt and rerun')
+	exit(1)
+
+
+aptc = AptCache()
 
 
 def _todash(crate: str) -> str:
@@ -57,16 +67,24 @@ def find_built(specs: list[tuple[str, str | None]]) -> list[tuple[str, str]]:
 
 	now = now_ts()
 	built = []
+	print('Conducting search in apt cache and build/ directory for already built debs, hang on')
 	for crate, ver in specs:
+		crate = _todash(crate)
+		if ver is None:
+			try:
+				ver = _get_dch_version(crate)
+			except:
+				# version isn't specified, and d/changelog doesn't exist,
+				# means it's yet to be `./update.sh`d, move on
+				continue
+		pkg = aptc.get('librust-{crate}-dev')
+		if pkg is not None and pkg.candidate.version.startswith(ver):
+			built.append((crate, None))
+			continue
 		for deb in debs:
-			if ver is None:
-				try:
-					ver = _get_dch_version(crate)
-				except:
-					continue
 			# if the deb exists and it's younger than one day (86400 secs), we
 			# consider it "fresh"
-			if f'{_todash(crate)}-dev_{ver}' in deb and stat(join('build', deb)).st_mtime + 86400 >= now:
+			if f'{crate}-dev_{ver}' in deb and stat(join('build', deb)).st_mtime + 86400 >= now:
 				built.append((crate, deb))
 	return built
 
@@ -117,10 +135,11 @@ def chain_build(specs):
 	specs = parse_specs(specs)
 	built = find_built(specs)
 	try:
-		built, debs = map(list, zip(*built))
 		print('Found recently built debs:')
-		for i in range(len(built)):
-			print(built[i], debs[i])
+		for crate, deb in built:
+			if deb is not None:
+				print(crate, deb)
+		built, debs = map(list, zip(*built))
 	except:
 		built, debs = [], []
 		print('No recently built packages')
