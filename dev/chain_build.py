@@ -141,7 +141,7 @@ def chain_build(specs):
 		for crate, deb in built:
 			if deb is not None:
 				print(crate, deb)
-		built, debs = map(list, zip(*built))
+		built, debs = map(set, zip(*built))
 	except:
 		built, debs = [], []
 		print('No recently built packages')
@@ -158,11 +158,11 @@ def chain_build(specs):
 			print(e)
 			_print(f'Failed to build crate {crate}. Please fix it and rerun the same command to resume the build chain.')
 			exit(1)
-		built.append(crate)
+		built.add(crate)
 		if ver is None:
 			# used in a glob, so
 			ver = '-'
-		debs.append(_find(f'build/*{_todash(crate)}-dev*{ver}*.deb')[0][6:])
+		debs.add(_find(f'build/*{_todash(crate)}-dev*{ver}*.deb')[0][6:])
 
 
 if __name__ == '__main__':
