@@ -101,7 +101,7 @@ def collapse_features(crate: str):
 				f.seek(0)
 				f.write('\n'.join(lines))
 				f.close()
-				return
+				return True
 
 
 def build_one(crate: str, ver: str | None, prev_debs: list[str]):
@@ -112,8 +112,10 @@ def build_one(crate: str, ver: str | None, prev_debs: list[str]):
 	env['GIT_PAGER'] = 'cat'
 	# \n is for when update.sh stops for confirmation
 	run(('./update.sh', crate), env=env, input=b'\n', check=True)
+	# if not set before, rerun ./update.sh to enable it
+	if collapse_features(crate):
+		run(('./update.sh', crate), env=env, input=b'\n', check=True)
 	env['EXTRA_DEBS'] = ','.join(prev_debs)
-	collapse_features(crate)
 	chdir('build')
 	run(('./build.sh', crate), env=env, check=True)
 	chdir('..')
@@ -123,7 +125,9 @@ def parse_specs(specs: tuple[str]) -> list[tuple[str, str | None]]:
 	parsed = []
 	for spec in specs:
 		if '=' in spec:
-			parsed.append(spec.split('='))
+			crate, ver = spec.split('=')
+			# filter out 1.2.3+surplus-version-part
+			parsed.append((crate, ver.split('+')[0]))
 		else:
 			parsed.append((spec, None))
 	return parsed
