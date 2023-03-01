@@ -95,9 +95,10 @@ def collapse_features(crate: str):
 	f = open(join('src', _todash(crate), 'debian', 'debcargo.toml'), 'r+')
 	toml = f.read()
 	if COLL_LINE not in toml:
-		# below is to avoid inserting at end ending up in [some.directive]
+		_print('writing collapse_features for', crate)
 		lines = toml.split('\n')
 		for i, line in enumerate(lines):
+			# avoid inserting at end ending up in [some.directive]
 			if line.startswith('['): #] to work around auto indent in my nvim
 				lines.insert(i, COLL_LINE)
 				lines.insert(i + 1, '')
@@ -105,6 +106,10 @@ def collapse_features(crate: str):
 				f.write('\n'.join(lines))
 				f.close()
 				return True
+		f.write('\n')
+		f.write(COLL_LINE)
+		f.close()
+		return True
 
 
 def build_one(crate: str, ver: str | None, prev_debs: list[str]):
