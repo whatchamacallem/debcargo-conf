@@ -162,7 +162,7 @@ def chain_build(specs):
 		if ver is None:
 			# used in a glob, so
 			ver = '-'
-		debs.append(_find(f'build/*{_todash(crate)}*{ver}*.deb')[0][6:])
+		debs.append(_find(f'build/*{_todash(crate)}-dev*{ver}*.deb')[0][6:])
 
 
 if __name__ == '__main__':
