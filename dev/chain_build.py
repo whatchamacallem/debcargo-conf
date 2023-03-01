@@ -61,6 +61,7 @@ def _get_dch_version(crate: str) -> str:
 	return DCH_VER_RE.search(open(join('src', _todash(crate), 'debian', 'changelog')).readline()).group(1)
 
 
+FRESH = 7 * 24 * 60 * 60
 def find_built(specs: list[tuple[str, str | None]]) -> list[tuple[str, str, str]]:
 	# get all debs first, so we needn't walk again and again
 	chdir('build')
@@ -83,9 +84,8 @@ def find_built(specs: list[tuple[str, str | None]]) -> list[tuple[str, str, str]
 			built.append((crate, pkg.candidate.version, 'apt'))
 			continue
 		for deb in debs:
-			# if the deb exists and it's younger than one day (86400 secs), we
-			# consider it "fresh"
-			if f'{_crate}-dev_{ver}' in deb and stat(join('build', deb)).st_mtime + 86400 >= now:
+			# if the deb exists and it's younger than one week, we consider it "fresh"
+			if f'{_crate}-dev_{ver}' in deb and stat(join('build', deb)).st_mtime + FRESH >= now:
 				built.append((crate, deb, 'build'))
 	return built
 
