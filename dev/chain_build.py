@@ -131,7 +131,12 @@ def chain_build(specs):
 		if crate in built:
 			continue
 		_print('Start building', crate, 'version', ver, 'with previous debs', debs)
-		build_one(crate, ver, debs)
+		try:
+			build_one(crate, ver, debs)
+		except Exception as e:
+			print(e)
+			_print(f'Failed to build crate {crate}. Please fix it and rerun the same command to resume the build chain.')
+			exit(1)
 		built.append(crate)
 		# use wildcard here to save some cost `walk`ing again
 		if ver is None:
