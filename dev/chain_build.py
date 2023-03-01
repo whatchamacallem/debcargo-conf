@@ -23,7 +23,7 @@ Those env vars are passed to build.sh, read it for their descriptions.
 '''
 
 import re
-from sys import argv
+from sys import argv, stdout
 from subprocess import run
 from time import time as now_ts
 from os import getcwd, chdir, stat, environ
@@ -43,7 +43,10 @@ def _todash(crate: str) -> str:
 
 
 def _print(*args):
-	print('\n### chain_build ###\n', *args, '\n')
+	if stdout.isatty():
+		print('\n\x1b[34;100m[chain_build]\x1b[;m', *args, '\n')
+	else:
+		print('[chain_build]', *args, '\n')
 
 
 # this is actually faster than os.walk
@@ -58,14 +61,14 @@ def _get_dch_version(crate: str) -> str:
 	return DCH_VER_RE.search(open(join('src', _todash(crate), 'debian', 'changelog')).readline()).group(1)
 
 
-def find_built(specs: list[tuple[str, str | None]]) -> list[tuple[str, str]]:
+def find_built(specs: list[tuple[str, str | None]]) -> list[tuple[str, str, str]]:
 	# get all debs first, so we needn't walk again and again
 	chdir('build')
 	debs = _find('*.deb')
 	chdir('..')
 	now = now_ts()
 	built = []
-	print('Conducting search in apt cache and build/ directory for already built debs')
+	_print('Conducting search in apt cache and build/ directory for already built debs')
 	for crate, ver in specs:
 		_crate = _todash(crate)
 		if ver is None:
@@ -77,13 +80,13 @@ def find_built(specs: list[tuple[str, str | None]]) -> list[tuple[str, str]]:
 				continue
 		pkg = aptc.get('librust-{_crate}-dev')
 		if pkg is not None and pkg.candidate.version.startswith(ver):
-			built.append((crate, None))
+			built.append((crate, pkg.candidate.version, 'apt'))
 			continue
 		for deb in debs:
 			# if the deb exists and it's younger than one day (86400 secs), we
 			# consider it "fresh"
 			if f'{_crate}-dev_{ver}' in deb and stat(join('build', deb)).st_mtime + 86400 >= now:
-				built.append((crate, deb))
+				built.append((crate, deb, 'build'))
 	return built
 
 
@@ -136,17 +139,26 @@ def parse_specs(specs: tuple[str]) -> list[tuple[str, str | None]]:
 def chain_build(specs):
 	specs = parse_specs(specs)
 	built = find_built(specs)
-	try:
-		print('Found recently built debs:')
-		for crate, deb in built:
-			if deb is not None:
+	if built:
+		_print('Existing debs:')
+		for crate, deb, kind in built:
+			if kind == 'build':
 				print(crate, deb)
-		built, debs = map(set, zip(*built))
-	except:
-		built, debs = [], []
-		print('No recently built packages')
+			elif kind == 'apt':
+				print(carte, deb, 'in apt repository')
+		built, debs, _ = map(set, zip(*built))
+		_print('To be built:')
+		for crate, ver in specs:
+			if crate not in built:
+				if ver is None:
+					ver = _get_dch_version(crate)
+				print(crate, ver)
+	else:
+		built, debs = set(), set()
+		_print('No recently built packages')
 
-	input('Starting chain build, press any key to continue, Ctrl+C to abort')
+	_print('Starting chain build, press any key to continue, Ctrl+C to abort')
+	input()
 
 	for crate, ver in specs:
 		if crate in built:
@@ -168,7 +180,7 @@ def chain_build(specs):
 if __name__ == '__main__':
 	cwd = getcwd()
 	if not (isdir(join(cwd, 'build')) and exists(join(cwd, 'build.sh'))):
-		print('Please run this script at root of debcargo-conf')
+		_print('Please run this script at root of debcargo-conf')
 		exit(1)
 
 	if len(argv) < 2:
