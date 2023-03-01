@@ -26,7 +26,7 @@ import re
 from sys import argv
 from subprocess import run
 from time import time as now_ts
-from os import getcwd, chdir, walk, stat, environ
+from os import getcwd, chdir, stat, environ
 from os.path import exists, isdir, join
 try:
 	from apt.cache import Cache as AptCache
@@ -46,6 +46,11 @@ def _print(*args):
 	print('\n### chain_build ###\n', *args, '\n')
 
 
+# this is actually faster than os.walk
+def _find(pattern: str):
+	 return run(f'ls {pattern}', shell=True, capture_output=True, check=True, text=True).stdout.strip().split('\n')
+
+
 DCH_VER_RE = re.compile(r'\((.*?)\)')
 def _get_dch_version(crate: str) -> str:
 	# normally we check if there is a match, but a valid d/changelog should
@@ -55,21 +60,14 @@ def _get_dch_version(crate: str) -> str:
 
 def find_built(specs: list[tuple[str, str | None]]) -> list[tuple[str, str]]:
 	# get all debs first, so we needn't walk again and again
-	debs = []
-	for dirpath, _, files in walk('build', topdown=True):
-		if dirpath != 'build':
-			# we have topdown=True, so it's safe to cut off
-			break
-		for file in files:
-			if file.endswith('.deb'):
-				# we build in `build/` anyway
-				debs.append(file)
-
+	chdir('build')
+	debs = _find('*.deb')
+	chdir('..')
 	now = now_ts()
 	built = []
-	print('Conducting search in apt cache and build/ directory for already built debs, hang on')
+	print('Conducting search in apt cache and build/ directory for already built debs')
 	for crate, ver in specs:
-		crate = _todash(crate)
+		_crate = _todash(crate)
 		if ver is None:
 			try:
 				ver = _get_dch_version(crate)
@@ -77,14 +75,14 @@ def find_built(specs: list[tuple[str, str | None]]) -> list[tuple[str, str]]:
 				# version isn't specified, and d/changelog doesn't exist,
 				# means it's yet to be `./update.sh`d, move on
 				continue
-		pkg = aptc.get('librust-{crate}-dev')
+		pkg = aptc.get('librust-{_crate}-dev')
 		if pkg is not None and pkg.candidate.version.startswith(ver):
 			built.append((crate, None))
 			continue
 		for deb in debs:
 			# if the deb exists and it's younger than one day (86400 secs), we
 			# consider it "fresh"
-			if f'{crate}-dev_{ver}' in deb and stat(join('build', deb)).st_mtime + 86400 >= now:
+			if f'{_crate}-dev_{ver}' in deb and stat(join('build', deb)).st_mtime + 86400 >= now:
 				built.append((crate, deb))
 	return built
 
@@ -157,10 +155,10 @@ def chain_build(specs):
 			_print(f'Failed to build crate {crate}. Please fix it and rerun the same command to resume the build chain.')
 			exit(1)
 		built.append(crate)
-		# use wildcard here to save some cost `walk`ing again
 		if ver is None:
+			# used in a glob, so
 			ver = '-'
-		debs.append(f'*{_todash(crate)}*{ver}*.deb')
+		debs.append(_find(f'build/*{_todash(crate)}*{ver}*.deb')[0][6:])
 
 
 if __name__ == '__main__':
