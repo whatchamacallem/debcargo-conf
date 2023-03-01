@@ -136,7 +136,7 @@ def chain_build(specs):
 		# use wildcard here to save some cost `walk`ing again
 		if ver is None:
 			ver = '-'
-		debs.append(f'*{crate}*{ver}*.deb')
+		debs.append(f'*{_todash(crate)}*{ver}*.deb')
 
 
 if __name__ == '__main__':
