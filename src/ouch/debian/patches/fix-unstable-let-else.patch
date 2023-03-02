@@ -1,0 +1,18 @@
+Description: Rewrite a let…else statement which is currently unstable.
+Last-Update: 2023-03-02
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/extension.rs
++++ b/src/extension.rs
+@@ -144,7 +144,10 @@
+ pub fn separate_known_extensions_from_name(path: &Path) -> (&Path, Vec<Extension>) {
+     let mut extensions = vec![];
+ 
+-    let Some(mut name) = path.file_name().and_then(<[u8] as ByteSlice>::from_os_str) else {
++    let mut name;
++    if let Some(_name) = path.file_name().and_then(<[u8] as ByteSlice>::from_os_str) {
++        name = _name;
++    } else {
+         return (path, extensions);
+     };
+ 
