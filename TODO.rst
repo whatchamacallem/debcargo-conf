@@ -127,37 +127,30 @@ Since every gtk-rs release is versioned and a lot of crates are affected updatin
 I made this convienient dependency tree to illustrate how to update. You should start at the top and update all sys-crates first.
 Then update the regular crates, also from top to bottom. For convinience pass the debs along like this: `./build.sh gstreamer-sys *.deb`.
 
+**Never update just one single package or just some part of this stack! Check if it can be bumped safely!**
+
+
 sys crate overview
-  
+ 
 
-```
+* glib-sys
+* gobject-sys, cairo-sys-rs, graphene-sys, gdk4-wayland-sys -> need glib-sys
+* gio-sys, atk-sys, gstreamer-sys, pango-sys -> need gobject-sys
+* pangocairo-sys -> needs cairo-sys-rs and pango-sys
+* gdk-pixbuf-sys, gdk-sys -> need gio-sys
+* gdkx11-sys, gtk-sys -> need gdk-sys
+* gdk4-sys -> needs gdkx11-sys
+* gdk4-x11-sys -> needs gdk-4-sys
+* gsk4-sys -> needs gdk-x11-sys
+* gtk4-sys -> needs gsk-4-sys
+* libadwaita-sys, libshumate-sys -> need gtk4-sys
 
-glib-sys
- |
- |-----------------------|----------------------------------------------------------------------|-----------------------|-----------------|
-gobject-sys		cairo-sys-rs								|		graphene-sys		gdk4-wayland-sys
- |				|-----------------------------------------------|		|			
- |										|		|		
- |-------------------|------------------------|---------------------|		|		|
-gio-sys		atk-sys			   gstreamer-sys	pango-sys	|		|
- |		  |---------------------|	|			|-------|---------------|
- |					|	|				|
- |					|	|			pangocairo-sys
- |-----------------------|		|	|
- gdk-pixbuf-sys		gdk-sys		|	|
- | 			 |		|	|
- |			 |--------------|	|
- |		gdkx11-sys 	     gtk-sys	|
- gdk4-sys			   	|	|
- |---------gdk4-x11-sys	 		|	|
-gsk4-sys			|-------|	gstreamer-base-sys
- |			libhandy-sys			|----------------------|
-gtk4-sys					gstreamer-audio-sys	gstreamer-video-sys
- |-----------------------|				|			|
-libadwaita-sys		libshumate-sys		gstreamer-pbutils-sys	gstreamer-player-sys
+* gstreamer-sys -> needs gio-sys
+* gstreamer-audio-sys -> gstreamer-sys
+* gstreamer-video-sys -> gstreamer-sys
+* gstreamer-pbutils-sys -> gstreamer-audio-sys
+* gstreamer-player-sys -> gstreamer-video-sys
 
-
-```
 
 Non-sys crate overview
 
@@ -185,8 +178,10 @@ Non-sys crate overview
 * gdk4-wayland -> gdk4
 * gtk4 -> cairo-rs, gdk4, gdk-pixbuf, gtk4-sys, gtk4-macros, graphene-rs
 
-* gstreamer -> ?
-
+* gstreamer -> glib
+* gstreamer-base -> gstreamer
+* gstreamer-video -> gstreamer-base
+* gstreamer-audio -> gstreamer-audio
   
 cxx depedency tree
 -----------------
