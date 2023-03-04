@@ -73,7 +73,6 @@ def find_built(specs: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
 	chdir('build')
 	debs = _find('*.deb')
 	chdir('..')
-	now = now_ts()
 	built = []
 	_print('Conducting search in apt cache and build/ directory for existing debs')
 	for crate, ver in specs:
@@ -82,12 +81,14 @@ def find_built(specs: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
 			try:
 				ver = _get_dch_version(crate)
 			except:
-				# version isn't specified, and d/changelog doesn't exist,
-				# means it's yet to be `./update.sh`d, move on
-				continue
+				pass
 		pkg = aptc.get(f'librust-{_crate}-dev')
-		if pkg is not None and pkg.candidate.version.startswith(ver):
+		if pkg is not None and (ver == '*' or pkg.candidate.version.startswith(ver)):
 			built.append((crate, pkg.candidate.version, 'apt'))
+			continue
+		if ver == '*':
+			# version isn't specified, and d/changelog doesn't exist,
+			# means it's yet to be `./update.sh`d, move on
 			continue
 		for deb in debs:
 			if f'{_crate}-dev_{ver}' in deb:
