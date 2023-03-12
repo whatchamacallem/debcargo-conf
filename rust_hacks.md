@@ -47,8 +47,14 @@ in it needs to go up and down into the new directory.
 capitol did a nice writeup which can be read here:
 https://blog.hackeriet.no/packaging-rust-part-II/
 
+## built-using-dh-cargo
 
-
+If you get an error like this:
+```
+You must patch build.rs of CRATE to output 'println!(\"dh-cargo:deb-built-using=$lib=\$s={}\", env::var(\"CARGO_MANIFEST_DIR\").unwrap());' 
+where: $s is 1 if the license(s) of the included static libs require source distribution alongside binaries, otherwise 0"
+```
+when building a FFi rust library you need to patch build.rs like stated above. $s is 0 for BSD-like licenses such as MIT and 1 for copyleft licenses like GPL.
 
 ## Skipping tests / special d/rules overrides
 
