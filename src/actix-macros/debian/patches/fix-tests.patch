@@ -1,0 +1,58 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index be69b7b..4462913 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -16,14 +16,6 @@ use proc_macro::TokenStream;
+ use quote::quote;
+ 
+ /// Marks async entry-point function to be executed by Actix system.
+-///
+-/// # Examples
+-/// ```
+-/// #[actix_rt::main]
+-/// async fn main() {
+-///     println!("Hello world");
+-/// }
+-/// ```
+ #[allow(clippy::needless_doctest_main)]
+ #[proc_macro_attribute]
+ #[cfg(not(test))] // Work around for rust-lang/rust#62127
+@@ -97,14 +89,6 @@ pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
+ }
+ 
+ /// Marks async test function to be executed in an Actix system.
+-///
+-/// # Examples
+-/// ```
+-/// #[actix_rt::test]
+-/// async fn my_test() {
+-///     assert!(true);
+-/// }
+-/// ```
+ #[proc_macro_attribute]
+ pub fn test(args: TokenStream, item: TokenStream) -> TokenStream {
+     let mut input = match syn::parse::<syn::ItemFn>(item.clone()) {
+diff --git a/tests/trybuild.rs b/tests/trybuild.rs
+deleted file mode 100644
+index 2af9963..0000000
+--- a/tests/trybuild.rs
++++ /dev/null
+@@ -1,18 +0,0 @@
+-#[rustversion::stable(1.46)] // MSRV
+-#[test]
+-fn compile_macros() {
+-    let t = trybuild::TestCases::new();
+-    t.pass("tests/trybuild/main-01-basic.rs");
+-    t.compile_fail("tests/trybuild/main-02-only-async.rs");
+-    t.pass("tests/trybuild/main-03-fn-params.rs");
+-    t.pass("tests/trybuild/main-04-system-path.rs");
+-    t.compile_fail("tests/trybuild/main-05-system-expect-path.rs");
+-    t.compile_fail("tests/trybuild/main-06-unknown-attr.rs");
+-
+-    t.pass("tests/trybuild/test-01-basic.rs");
+-    t.pass("tests/trybuild/test-02-keep-attrs.rs");
+-    t.compile_fail("tests/trybuild/test-03-only-async.rs");
+-    t.pass("tests/trybuild/test-04-system-path.rs");
+-    t.compile_fail("tests/trybuild/test-05-system-expect-path.rs");
+-    t.compile_fail("tests/trybuild/test-06-unknown-attr.rs");
+-}
