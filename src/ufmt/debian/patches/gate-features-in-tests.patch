@@ -1,0 +1,44 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index d74072e..cc071f8 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -49,7 +49,9 @@
+ //!
+ //! let mut s = String::new();
+ //! let pair = Pair { x: 1, y: 2 };
++//! #[cfg(feature="std")]
+ //! uwrite!(s, "{:?}", pair).unwrap();
++//! #[cfg(feature="std")]
+ //! assert_eq!(s, "Pair { x: 1, y: 2 }");
+ //! ```
+ //!
+@@ -62,7 +64,9 @@
+ //! use ufmt::uwrite;
+ //!
+ //! let mut s = String::new();
++//! #[cfg(feature="std")]
+ //! uwrite!(s, "{:#06x}", 0x42);
++//! #[cfg(feature="std")]
+ //! assert_eq!(s, "0x0042");
+ //! ```
+ //!
+diff --git a/tests/gh36.rs b/tests/gh36.rs
+index 0f73844..ff8dfff 100644
+--- a/tests/gh36.rs
++++ b/tests/gh36.rs
+@@ -19,6 +19,7 @@ struct Pair {
+     y: u32,
+ }
+ 
++#[cfg(feature="std")]
+ #[test]
+ fn uwrite() {
+     let mut s = String::new();
+@@ -28,6 +29,7 @@ fn uwrite() {
+     assert_eq!(s, "Pair { x: 1, y: 2 }");
+ }
+ 
++#[cfg(feature="std")]
+ #[test]
+ fn uwriteln() {
+     let mut s = String::new();
