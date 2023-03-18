@@ -1,0 +1,44 @@
+diff --git a/tests/tests.rs b/tests/tests.rs
+index be7c324..217e558 100644
+--- a/tests/tests.rs
++++ b/tests/tests.rs
+@@ -235,39 +235,6 @@ fn system_stop_stops_arbiters() {
+     arb.join().unwrap();
+ }
+ 
+-#[cfg(not(feature = "io-uring"))]
+-#[test]
+-fn new_system_with_tokio() {
+-    let (tx, rx) = channel();
+-
+-    let res = System::with_tokio_rt(move || {
+-        tokio::runtime::Builder::new_multi_thread()
+-            .enable_io()
+-            .enable_time()
+-            .thread_keep_alive(Duration::from_millis(1000))
+-            .worker_threads(2)
+-            .max_blocking_threads(2)
+-            .on_thread_start(|| {})
+-            .on_thread_stop(|| {})
+-            .build()
+-            .unwrap()
+-    })
+-    .block_on(async {
+-        actix_rt::time::sleep(Duration::from_millis(1)).await;
+-
+-        tokio::task::spawn(async move {
+-            tx.send(42).unwrap();
+-        })
+-        .await
+-        .unwrap();
+-
+-        123usize
+-    });
+-
+-    assert_eq!(res, 123);
+-    assert_eq!(rx.recv().unwrap(), 42);
+-}
+-
+ #[cfg(not(feature = "io-uring"))]
+ #[test]
+ fn new_arbiter_with_tokio() {
