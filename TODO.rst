@@ -10,7 +10,7 @@ Remove old libraries
 
 Should file a RM request to ftpmasters for these old crates:
 
-No old crates, yay !
+- wayland-commons after the 0.30 wayland stack is uploaded
 
 
 Unblocking testing migrations
