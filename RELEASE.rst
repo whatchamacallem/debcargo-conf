@@ -16,7 +16,15 @@ please help with improving the script. White does not always mean there is no
 problem; the excuses page is the authoritative source on the matter.)
 
 Generally, you should look at the bottom-most packages in this diagram, and
-deal with their issues first. More details for each package can be found at:
+deal with their issues first.
+
+You can also visit the permanent rust transition tracker here:
+
+  https://release.debian.org/transitions/html/rust.html
+
+This page also gives you an overview about architectures being broken for a package.
+Ideally, all rust crates on this site should migrate to testing eventually.
+ More details for each package can be found at:
 
   https://qa.debian.org/excuses.php?package=rust-$crate
 
