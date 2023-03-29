@@ -3,7 +3,9 @@ Release
 
 For this team's purposes, the job is not done until the package gets into
 Debian Testing. This is a rigorous QA process the details of which can be read
-about elsewhere. The short version for us, is to run::
+about elsewhere. 
+
+Install graphviz and pypy3, then run::
 
   dev/rust-excuses.mk refresh all
 
