@@ -72,24 +72,14 @@ librsvg
 
 see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629  
 
-[ ] alga
-[ ] c_vec
-[x] criterion
-[ ] downcast-rs
-[ ] handlebars
-[ ] itertools-num
-[ ] matrixmultiply
-[ ] nalgebra
-[ ] num-traits-0.1.43
-[ ] pest_derive
-[ ] quote-0.3.15
-[ ] rand-0.4.2
-[ ] rawpointer
-[ ] syn-0.11.11
-[ ] synom
-[ ] unicode-xid-0.0.4
+[ ] nalgebra: 4 reverse dependencies
+[ ] simba: 2 reverse dependencies
+[ ] rctree: no missing dependencies
+[ ] lopdf: one reverse dependency
+[ ] yeslogic-fontconfig-sys:
 [x] clap v4
-[ ] GTK related packages
+[x] GTK related packages
+[ ] some cairo related packages (need newer gtk)
 
 
 bench
