@@ -208,8 +208,7 @@ fractal (#900928)
 * gstreamer-editing-services
 * gstreamer-player
 * matrix-sdk (WIP)
-* comrak
-* sourceview4
+* sourceview5
 * ashpd crates
 
 obfuscate
