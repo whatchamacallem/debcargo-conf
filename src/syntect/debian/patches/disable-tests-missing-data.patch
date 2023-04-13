@@ -204,18 +204,24 @@ Index: syntect/src/parsing/parser.rs
      fn can_parse_simple() {
          let ss = SyntaxSet::load_from_folder("testdata/Packages").unwrap();
          let mut state = {
-@@ -736,7 +736,7 @@ mod tests {
+@@ -736,9 +736,9 @@ mod tests {
              (7, Pop(1))
          ];
          assert_eq!(&ops2[0..test_ops2.len()], &test_ops2[..]);
 -    }
 +    }*/
  
-     #[test]
+-    #[test]
++    /*#[test]
      fn can_parse_yaml() {
-@@ -884,7 +884,7 @@ mod tests {
+         let ps = SyntaxSet::load_from_folder("testdata/Packages").unwrap();
+         let mut state = {
+@@ -882,9 +882,9 @@ mod tests {
+ 
+         // test fix for issue #25
          assert_eq!(ops(&mut state, "struct{estruct", &ss).len(), 10);
-     }
+-    }
++    }*/
  
 -    #[test]
 +    /*#[test]
@@ -258,15 +264,27 @@ Index: syntect/src/parsing/parser.rs
      fn can_parse_nested_clear_scopes() {
          let line = "'hello #nested_clear_scopes_test world foo bar test \\n '";
          let expect = [
-@@ -931,7 +931,7 @@ mod tests {
+@@ -931,9 +931,9 @@ mod tests {
              "<source.test>, <string.quoted.single.example>, <constant.character.escape.example>",
          ];
          expect_scope_stacks(line, &expect, TEST_SYNTAX);
 -    }
 +    }*/
  
-     #[test]
+-    #[test]
++    /*#[test]
      fn can_parse_infinite_loop() {
+         let line = "#infinite_loop_test 123";
+         let expect = [
+@@ -953,7 +953,7 @@ mod tests {
+             "<source.test>, <test>, <keyword.control.test>",
+         ];
+         expect_scope_stacks(line, &expect, TEST_SYNTAX);
+-    }
++    }*/
+ 
+     #[test]
+     fn can_parse_prototype_that_pops_main() {
 @@ -1002,7 +1002,7 @@ contexts:
          expect_scope_stacks(line, &expect, syntax);
      }
@@ -336,3 +354,90 @@ Index: syntect/src/highlighting/theme_set.rs
 -    }
 +    }*/
  }
+Index: syntect/benches/highlighting.rs
+===================================================================
+--- syntect.orig/benches/highlighting.rs
++++ syntect/benches/highlighting.rs
+@@ -15,7 +15,7 @@ fn highlight_file(b: &mut Bencher, file:
+     let ts = ThemeSet::load_defaults();
+ 
+     let syntax = ss.find_syntax_for_file(path).unwrap().unwrap();
+-    let s = std::fs::read_to_string(path).unwrap();
++    let s = std::fs::read_to_string(path).expect(&("failed to read ".to_owned()+path));
+ 
+     b.iter(|| {
+         highlight_utils::do_highlight(&s, &ss, syntax, &ts.themes["base16-ocean.dark"])
+@@ -46,8 +46,8 @@ fn highlight_html(b: &mut Bencher) {
+ 
+ fn highlighting_benchmark(c: &mut Criterion) {
+     c.bench_function("stack_matching", stack_matching);
+-    c.bench_function("highlight_html", highlight_html);
+-    let mut highlight = c.benchmark_group("highlight");
++    //c.bench_function("highlight_html", highlight_html);
++    /*let mut highlight = c.benchmark_group("highlight");
+     for input in &[
+         "highlight_test.erb",
+         "InspiredGitHub.tmTheme",
+@@ -58,7 +58,7 @@ fn highlighting_benchmark(c: &mut Criter
+     ] {
+         highlight.bench_with_input(format!("\"{}\"", input), input, |b, s| highlight_file(b, s));
+     }
+-    highlight.finish();
++    highlight.finish();*/
+ }
+ 
+ criterion_group! {
+Index: syntect/benches/load_and_highlight.rs
+===================================================================
+--- syntect.orig/benches/load_and_highlight.rs
++++ syntect/benches/load_and_highlight.rs
+@@ -13,7 +13,7 @@ fn run(b: &mut criterion::Bencher, file:
+         let ts = syntect::highlighting::ThemeSet::load_defaults();
+ 
+         let syntax = ss.find_syntax_for_file(path).unwrap().unwrap();
+-        let s = std::fs::read_to_string(path).unwrap();
++        let s = std::fs::read_to_string(path).expect(&("failed to read ".to_owned()+path));
+ 
+         highlight_utils::do_highlight(&s, &ss, syntax, &ts.themes["base16-ocean.dark"]);
+     })
+Index: syntect/Cargo.toml
+===================================================================
+--- syntect.orig/Cargo.toml
++++ syntect/Cargo.toml
+@@ -37,6 +37,7 @@ categories = [
+ ]
+ license = "MIT"
+ repository = "https://github.com/trishume/syntect"
++autobenches = false
+ 
+ [lib]
+ bench = false
+@@ -45,17 +46,17 @@ bench = false
+ name = "highlighting"
+ harness = false
+ 
+-[[bench]]
+-name = "load_and_highlight"
+-harness = false
+-
+-[[bench]]
+-name = "loading"
+-harness = false
+-
+-[[bench]]
+-name = "parsing"
+-harness = false
++#[[bench]]
++#name = "load_and_highlight"
++#harness = false
++
++#[[bench]]
++#name = "loading"
++#harness = false
++
++#[[bench]]
++#name = "parsing"
++#harness = false
+ 
+ [dependencies.bincode]
+ version = "1.0"
