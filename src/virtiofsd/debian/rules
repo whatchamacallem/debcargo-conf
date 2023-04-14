@@ -2,17 +2,16 @@
 %:
 	dh $@ --buildsystem cargo
 
-# this still creates another layer of 'bin' below..
-export DEB_CARGO_INSTALL_PREFIX=/usr/libexec
-
 override_dh_dwz:
 	# Don't do anything. fails because of the
 	# https://github.com/rust-lang/rust/issues/66118
 
 execute_after_dh_auto_install:
-	# remove extra 'bin' dir
-	mv debian/virtiofsd/usr/libexec/bin/* debian/virtiofsd/usr/libexec/
-	rmdir debian/virtiofsd/usr/libexec/bin
+# debcargo-install always puts binaries into $prefix/bin/,
+# while we need our daemon in $prefix/libexec/.
+	mkdir -p debian/virtiofsd/usr/libexec
+	mv debian/virtiofsd/usr/bin/virtiofsd debian/virtiofsd/usr/libexec/
+	rmdir debian/virtiofsd/usr/bin
 
 override_dh_auto_test:
 	dh_auto_test -- test --all
