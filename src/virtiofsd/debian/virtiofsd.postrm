@@ -1,0 +1,11 @@
+#! /bin/sh
+set -e
+
+case "$1" in
+  remove | abort-install | disappear )
+# remove this diversion for bookworm+2 once qemu is definitely >=8.0
+    dpkg-divert --package virtiofsd --remove --rename \
+	--divert /usr/share/qemu/vhost-user/50-qemu-virtiofsd.qemu \
+	/usr/share/qemu/vhost-user/50-qemu-virtiofsd.json
+    ;;
+esac
