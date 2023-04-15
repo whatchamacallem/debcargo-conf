@@ -1,0 +1,52 @@
+--- rust-vm-memory-0.10.0.orig/src/mmap.rs
++++ rust-vm-memory-0.10.0/src/mmap.rs
+@@ -1302,6 +1302,7 @@ mod tests {
+         }
+     }
+ 
++    #[cfg(not(target_arch = "powerpc64"))]
+     #[test]
+     fn test_retrieve_fd_backing_memory_region() {
+         let f = TempFile::new().unwrap().into_file();
+@@ -1330,6 +1331,7 @@ mod tests {
+     // https://docs.microsoft.com/en-us/windows/desktop/api/memoryapi/nf-memoryapi-mapviewoffile
+     #[test]
+     #[cfg(unix)]
++    #[cfg(not(target_arch = "powerpc64"))]
+     fn test_retrieve_offset_from_fd_backing_memory_region() {
+         let f = TempFile::new().unwrap().into_file();
+         f.set_len(0x1400).unwrap();
+@@ -1558,6 +1560,7 @@ mod tests {
+         );
+     }
+ 
++    #[cfg(not(target_arch = "powerpc64"))]
+     #[test]
+     fn test_dirty_tracking() {
+         test_guest_memory_and_region(|| {
+--- rust-vm-memory-0.10.0.orig/src/mmap_unix.rs
++++ rust-vm-memory-0.10.0/src/mmap_unix.rs
+@@ -557,6 +557,7 @@ mod tests {
+         assert_eq!(&buf1[offset..], buf2);
+     }
+ 
++    #[cfg(not(target_arch = "powerpc64"))]
+     #[test]
+     fn test_mmap_region_build() {
+         let a = Arc::new(TempFile::new().unwrap().into_file());
+@@ -645,6 +646,7 @@ mod tests {
+         assert!(!r.owned());
+     }
+ 
++    #[cfg(not(target_arch = "powerpc64"))]
+     #[test]
+     fn test_mmap_region_fds_overlap() {
+         let a = Arc::new(TempFile::new().unwrap().into_file());
+@@ -675,6 +677,7 @@ mod tests {
+         assert!(!r1.fds_overlap(&r2));
+     }
+ 
++    #[cfg(not(target_arch = "powerpc64"))]
+     #[test]
+     fn test_dirty_tracking() {
+         // Using the `crate` prefix because we aliased `MmapRegion` to `MmapRegion<()>` for
