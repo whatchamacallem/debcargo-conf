@@ -1,0 +1,117 @@
+Index: rust-vm-superio-0.7.0/src/rtc_pl031.rs
+===================================================================
+--- rust-vm-superio-0.7.0.orig/src/rtc_pl031.rs
++++ rust-vm-superio-0.7.0/src/rtc_pl031.rs
+@@ -369,19 +369,23 @@ impl<EV: RtcEvents> Rtc<EV> {
+ mod tests {
+     use super::*;
+ 
++    #[cfg(target_has_atomic = "64")]
+     use std::sync::atomic::AtomicU64;
+     use std::sync::Arc;
+     use std::thread;
+     use std::time::Duration;
+ 
++    #[cfg(target_has_atomic = "64")]
+     use vmm_sys_util::metric::Metric;
+ 
++    #[cfg(target_has_atomic = "64")]
+     #[derive(Default)]
+     struct ExampleRtcMetrics {
+         invalid_read_count: AtomicU64,
+         invalid_write_count: AtomicU64,
+     }
+ 
++    #[cfg(target_has_atomic = "64")]
+     impl RtcEvents for ExampleRtcMetrics {
+         fn invalid_read(&self) {
+             self.invalid_read_count.inc();
+@@ -409,6 +413,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(target_has_atomic = "64")]
+     fn test_data_register() {
+         // Verify we can read the Data Register, but not write to it,
+         // and that the Data Register RTC count increments over time.
+@@ -613,6 +618,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(target_has_atomic = "64")]
+     fn test_interrupt_clear_register() {
+         // Test clearing the interrupt. This also tests
+         // that the invalid read and write metrics are incremented.
+@@ -807,6 +813,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(target_has_atomic = "64")]
+     fn test_invalid_write_offset() {
+         // Test that writing to an invalid register offset has no effect
+         // on the RTC value (as read from the data register), and confirm
+@@ -877,6 +884,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(target_has_atomic = "64")]
+     fn test_invalid_read_offset() {
+         // Test that reading from an invalid register offset has no effect,
+         // and confirm the invalid read metric increments.
+@@ -908,6 +916,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(target_has_atomic = "64")]
+     fn test_state() {
+         let metrics = Arc::new(ExampleRtcMetrics::default());
+         let mut rtc = Rtc::with_events(metrics);
+Index: rust-vm-superio-0.7.0/src/serial.rs
+===================================================================
+--- rust-vm-superio-0.7.0.orig/src/serial.rs
++++ rust-vm-superio-0.7.0/src/serial.rs
+@@ -672,10 +672,12 @@ mod tests {
+     use super::*;
+ 
+     use std::io::{sink, Result};
++    #[cfg(target_has_atomic = "64")]
+     use std::sync::atomic::AtomicU64;
+     use std::sync::Arc;
+ 
+     use vmm_sys_util::eventfd::EventFd;
++    #[cfg(target_has_atomic = "64")]
+     use vmm_sys_util::metric::Metric;
+ 
+     const RAW_INPUT_BUF: [u8; 3] = [b'a', b'b', b'c'];
+@@ -688,6 +690,7 @@ mod tests {
+         }
+     }
+ 
++    #[cfg(target_has_atomic = "64")]
+     struct ExampleSerialEvents {
+         read_count: AtomicU64,
+         out_byte_count: AtomicU64,
+@@ -695,6 +698,7 @@ mod tests {
+         buffer_ready_event: EventFd,
+     }
+ 
++    #[cfg(target_has_atomic = "64")]
+     impl ExampleSerialEvents {
+         fn new() -> Self {
+             ExampleSerialEvents {
+@@ -706,6 +710,7 @@ mod tests {
+         }
+     }
+ 
++    #[cfg(target_has_atomic = "64")]
+     impl SerialEvents for ExampleSerialEvents {
+         fn buffer_read(&self) {
+             self.read_count.inc();
+@@ -965,6 +970,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(target_has_atomic = "64")]
+     fn test_serial_events() {
+         let intr_evt = EventFd::new(libc::EFD_NONBLOCK).unwrap();
+ 
