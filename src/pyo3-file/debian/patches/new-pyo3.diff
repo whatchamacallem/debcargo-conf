@@ -11,20 +11,7 @@ Index: pyo3-file/Cargo.toml
  
  [dependencies.pyo3]
 -version = "0.16.4"
-+version = ">=0.16"
++version = ">=0.16, <0.18"
  
  [dev-dependencies.skeptic]
  version = "0.13.7"
-Index: pyo3-file/src/lib.rs
-===================================================================
---- pyo3-file.orig/src/lib.rs
-+++ pyo3-file/src/lib.rs
-@@ -23,7 +23,7 @@ impl PyFileLikeObject {
-         let text_io = io.getattr("TextIOBase")?;
- 
-         let text_io_type = text_io.extract::<&PyType>()?;
--        let is_text_io = text_io_type.is_instance(&object)?;
-+        let is_text_io = text_io_type.is_instance(&object.as_ref(py))?;
- 
-         Ok(PyFileLikeObject {
-             inner: object,
