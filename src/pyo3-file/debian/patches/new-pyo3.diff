@@ -24,7 +24,7 @@ Index: pyo3-file/src/lib.rs
  
          let text_io_type = text_io.extract::<&PyType>()?;
 -        let is_text_io = text_io_type.is_instance(&object)?;
-+        let is_text_io = text_io_type.is_instance(&object.as_ref(py))?;
++        let is_text_io = object.as_ref(py).is_instance(text_io_type)?;
  
          Ok(PyFileLikeObject {
              inner: object,
