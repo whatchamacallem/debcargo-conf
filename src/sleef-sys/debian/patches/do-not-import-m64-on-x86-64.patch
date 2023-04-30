@@ -1,0 +1,29 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index f8c69ee..fd82cbb 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -26,6 +26,7 @@ cfg_if! {
+         #[cfg(target_arch = "x86_64")]
+         use core::arch::x86_64 as x86;
+ 
++        #[cfg(target_arch = "x86")]
+         pub use self::x86::{
+             // MMX:
+             __m64,
+@@ -36,6 +37,16 @@ cfg_if! {
+             // FIXME: AVX-512:
+             //__m512, __m512i, __m512d,
+         };
++
++        #[cfg(target_arch = "x86_64")]
++        pub use self::x86::{
++            // SSE:
++            __m128, __m128i, __m128d,
++            // AVX:
++            __m256, __m256i, __m256d,
++            // FIXME: AVX-512:
++            //__m512, __m512i, __m512d,
++        };
+     } else if #[cfg(all(target_arch = "aarch64", target_feature = "neon"))] {
+         pub use core::arch::aarch64::{
+             int8x8_t, uint8x8_t, poly8x8_t, int16x4_t, uint16x4_t,
