@@ -1,0 +1,29 @@
+From 9c8c84ef95eb885973d9793e8bd23e294c3cc9b0 Mon Sep 17 00:00:00 2001
+From: Michael Tokarev <mjt@tls.msk.ru>
+Date: Sun, 16 Apr 2023 15:13:49 +0300
+Subject: [PATCH] Disable compilation of Atomic64 code in metric.rs if there's
+ no Atomic64
+
+Atomic64 is not present, at least, on armel, mipsel and x32 platforms.
+
+Signed-off-by: Michael Tokarev <mjt@tls.msk.ru>
+---
+ src/metric.rs | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/metric.rs b/src/metric.rs
+index c728161..64c79ed 100644
+--- a/src/metric.rs
++++ b/src/metric.rs
+@@ -11,6 +11,8 @@
+ //! of these components can choose what metrics they’re interested in and also
+ //! can add their own custom metrics without the need to maintain forks.
+ 
++#![cfg(target_has_atomic = "64")]
++
+ use std::sync::atomic::{AtomicU64, Ordering};
+ 
+ /// Abstraction over the common metric operations.
+-- 
+2.30.2
+

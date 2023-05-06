@@ -1,0 +1,13 @@
+--- rust-vmm-sys-util-0.11.1.orig/src/linux/aio.rs
++++ rust-vmm-sys-util-0.11.1/src/linux/aio.rs
+@@ -46,7 +46,10 @@ pub const MAX_REQUESTS: usize = 0x10000;
+ #[derive(Debug, Default, Copy, Clone)]
+ pub struct IoControlBlock {
+     pub aio_data: __u64,
++    #[cfg(target_endian = "big")]
++    pub aio_reserved1: __u32,
+     pub aio_key: __u32,
++    #[cfg(not(target_endian = "big"))]
+     pub aio_reserved1: __u32,
+     pub aio_lio_opcode: __u16,
+     pub aio_reqprio: __s16,
