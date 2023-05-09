@@ -12,6 +12,8 @@ execute_after_dh_auto_install:
 	mkdir -p debian/virtiofsd/usr/libexec
 	mv debian/virtiofsd/usr/bin/virtiofsd debian/virtiofsd/usr/libexec/
 	rmdir debian/virtiofsd/usr/bin
+# qemu-7.2 (bookworm) compat symlink, remove for trixie+1
+	dh_link -pvirtiofsd usr/libexec/virtiofsd usr/lib/qemu/virtiofsd
 
 override_dh_auto_test:
 	dh_auto_test -- test --all
