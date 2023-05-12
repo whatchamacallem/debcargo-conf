@@ -30,19 +30,24 @@ Then follow 1.1)
 Alternatively you can do it directly in the build directory with
 [quilt](https://wiki.debian.org/UsingQuilt):
 
-1. In the root directory of `debcargo-conf`, `cd build/foo`
-2. `quilt series` to check existing patches, `quilt push -a` to test apply all
-	of them, and `quilt pop -a` to unapply them
-3. `quilt new patch-name.patch` to create a new patch, `quilt edit
-path/to/file` to edit a file with changes saved in current patch, `quilt
-header -e --dep3` to add a DEP-3 patch header
-4. `quilt refresh` to update current patch and prevent fuzz (we don't allow
-fuzzes when building)
-5. `cp -r debian/patches ../../src/foo/debian/` to copy updated patches over
-6. In root directory, run `./update.sh foo` to update the build directory
+1. In the root directory of `debcargo-conf`, `mkdir -p src/foo/debian/patches
+   && ./update.sh foo && ln -s src/foo/debian/patches build/foo/debian/`
+   (linking it there so it's "sync"ed)
+2. `cd build/foo`
+3. `quilt series` to check existing patches, `quilt push -a` to test apply all
+   of them, and `quilt pop -a` to unapply them, `quilt push patch-name` to
+   apply the series until exactly that patch
+4. `quilt new patch-name.patch` to create a new patch, `quilt edit
+   path/to/file` to edit a file with changes saved in current patch, `quilt
+   header -e --dep3` to add a DEP-3 patch header
+5. `quilt refresh` to update current patch and prevent fuzz (we don't allow
+   fuzzes when building)
+
+You may want to also `rm -r build/foo/.pc` if quilt complains about something
+you don't recognize.
 
 Note that `update.sh` deletes and re-creates `build/foo`, so an open terminal
-in it needs to go up and down into the new directory.
+in it needs to go up and down once, into the new directory.
 
 capitol did a nice writeup which can be read here:
 https://blog.hackeriet.no/packaging-rust-part-II/
