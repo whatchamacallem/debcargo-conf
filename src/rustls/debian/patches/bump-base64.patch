@@ -1,0 +1,65 @@
+From dbcf3668bbe1d915530cb0e5096cd4e85074e66d Mon Sep 17 00:00:00 2001
+From: Dirkjan Ochtman <dirkjan@ochtman.nl>
+Date: Mon, 12 Dec 2022 10:11:12 +0100
+Subject: [PATCH] Update development dependencies
+
+[FG]
+backported
+
+Signed-off-by: Fabian Grünbichler <f.gruenbichler@proxmox.com>
+---
+ Cargo.toml                     |  6 +++---
+ examples/internal/bogo_shim.rs | 10 +++++-----
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+Index: rustls/Cargo.toml
+===================================================================
+--- rustls.orig/Cargo.toml
++++ rustls/Cargo.toml
+@@ -67,7 +67,7 @@ features = [
+ ]
+ 
+ [dev-dependencies.base64]
+-version = "0.13.0"
++version = "0.21.0"
+ 
+ [dev-dependencies.env_logger]
+ version = "0.9.0"
+Index: rustls/examples/internal/bogo_shim.rs
+===================================================================
+--- rustls.orig/examples/internal/bogo_shim.rs
++++ rustls/examples/internal/bogo_shim.rs
+@@ -4,7 +4,7 @@
+ // https://boringssl.googlesource.com/boringssl/+/master/ssl/test
+ //
+ 
+-use base64;
++use base64::prelude::{Engine, BASE64_STANDARD};
+ use env_logger;
+ use rustls;
+ 
+@@ -945,20 +945,20 @@ fn main() {
+                 opts.export_keying_material_context_used = true;
+             }
+             "-quic-transport-params" => {
+-                opts.quic_transport_params = base64::decode(args.remove(0).as_bytes())
++                opts.quic_transport_params = BASE64_STANDARD.decode(args.remove(0).as_bytes())
+                     .expect("invalid base64");
+             }
+             "-expect-quic-transport-params" => {
+-                opts.expect_quic_transport_params = base64::decode(args.remove(0).as_bytes())
++                opts.expect_quic_transport_params = BASE64_STANDARD.decode(args.remove(0).as_bytes())
+                     .expect("invalid base64");
+             }
+ 
+             "-ocsp-response" => {
+-                opts.server_ocsp_response = base64::decode(args.remove(0).as_bytes())
++                opts.server_ocsp_response = BASE64_STANDARD.decode(args.remove(0).as_bytes())
+                     .expect("invalid base64");
+             }
+             "-signed-cert-timestamps" => {
+-                opts.server_sct_list = base64::decode(args.remove(0).as_bytes())
++                opts.server_sct_list = BASE64_STANDARD.decode(args.remove(0).as_bytes())
+                     .expect("invalid base64");
+ 
+                 if opts.server_sct_list.len() == 2 &&
