@@ -31,10 +31,11 @@ Index: native-tls/src/test.rs
 ===================================================================
 --- native-tls.orig/src/test.rs
 +++ native-tls/src/test.rs
-@@ -1,7 +1,8 @@
+@@ -1,7 +1,9 @@
 -use std::fs;
++use base64::engine::general_purpose::STANDARD;
++use base64::engine::Engine as _;
 +use hex;
-+use base64;
 +#[allow(unused_imports)]
  use std::io::{Read, Write};
  use std::net::{TcpListener, TcpStream};
@@ -42,7 +43,7 @@ Index: native-tls/src/test.rs
  use std::string::String;
  use std::thread;
  
-@@ -53,12 +54,8 @@ fn connect_no_root_certs() {
+@@ -53,12 +55,14 @@ fn connect_no_root_certs() {
  
  #[test]
  fn server_no_root_certs() {
@@ -52,12 +53,18 @@ Index: native-tls/src/test.rs
 -        &keys.server.pkcs12,
 -        &keys.server.pkcs12_password
 -    ));
-+    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let buf = &STANDARD
++        .decode(
++            include_str!("../test/identity.p12.base64")
++                .split('\n')
++                .collect::<String>(),
++        )
++        .unwrap();
 +    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
      let builder = p!(TlsAcceptor::new(identity));
  
      let listener = p!(TcpListener::bind("0.0.0.0:0"));
-@@ -75,14 +72,15 @@ fn server_no_root_certs() {
+@@ -75,14 +79,15 @@ fn server_no_root_certs() {
          p!(socket.write_all(b"world"));
      });
  
@@ -75,7 +82,7 @@ Index: native-tls/src/test.rs
  
      p!(socket.write_all(b"hello"));
      let mut buf = vec![];
-@@ -94,12 +92,8 @@ fn server_no_root_certs() {
+@@ -94,12 +99,14 @@ fn server_no_root_certs() {
  
  #[test]
  fn server() {
@@ -85,12 +92,18 @@ Index: native-tls/src/test.rs
 -        &keys.server.pkcs12,
 -        &keys.server.pkcs12_password
 -    ));
-+    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let buf = &STANDARD
++        .decode(
++            include_str!("../test/identity.p12.base64")
++                .split('\n')
++                .collect::<String>(),
++        )
++        .unwrap();
 +    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
      let builder = p!(TlsAcceptor::new(identity));
  
      let listener = p!(TcpListener::bind("0.0.0.0:0"));
-@@ -116,13 +110,14 @@ fn server() {
+@@ -116,13 +123,14 @@ fn server() {
          p!(socket.write_all(b"world"));
      });
  
@@ -107,16 +120,33 @@ Index: native-tls/src/test.rs
  
      p!(socket.write_all(b"hello"));
      let mut buf = vec![];
-@@ -133,36 +128,47 @@ fn server() {
+@@ -133,36 +141,59 @@ fn server() {
  }
  
  #[test]
 -fn certificate_from_pem() {
 -    let dir = tempfile::tempdir().unwrap();
 -    let keys = test_cert_gen::keys();
+-
+-    let der_path = dir.path().join("cert.der");
+-    fs::write(&der_path, &keys.client.cert_der).unwrap();
+-    let output = Command::new("openssl")
+-        .arg("x509")
+-        .arg("-in")
+-        .arg(der_path)
+-        .arg("-inform")
+-        .arg("der")
+-        .stderr(Stdio::piped())
+-        .output()
 +#[cfg(not(target_os = "ios"))]
 +fn server_pem() {
-+    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let buf = &STANDARD
++        .decode(
++            include_str!("../test/identity.p12.base64")
++                .split('\n')
++                .collect::<String>(),
++        )
+         .unwrap();
 +    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
 +    let builder = p!(TlsAcceptor::new(identity));
 +
@@ -130,18 +160,7 @@ Index: native-tls/src/test.rs
 +        let mut buf = [0; 5];
 +        p!(socket.read_exact(&mut buf));
 +        assert_eq!(&buf, b"hello");
- 
--    let der_path = dir.path().join("cert.der");
--    fs::write(&der_path, &keys.client.cert_der).unwrap();
--    let output = Command::new("openssl")
--        .arg("x509")
--        .arg("-in")
--        .arg(der_path)
--        .arg("-inform")
--        .arg("der")
--        .stderr(Stdio::piped())
--        .output()
--        .unwrap();
++
 +        p!(socket.write_all(b"world"));
 +    });
  
@@ -173,12 +192,18 @@ Index: native-tls/src/test.rs
 -        &keys.server.pkcs12,
 -        &keys.server.pkcs12_password
 -    ));
-+    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let buf = &STANDARD
++        .decode(
++            include_str!("../test/identity.p12.base64")
++                .split('\n')
++                .collect::<String>(),
++        )
++        .unwrap();
 +    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
      let builder = p!(TlsAcceptor::new(identity));
  
      let listener = p!(TcpListener::bind("0.0.0.0:0"));
-@@ -174,28 +180,26 @@ fn peer_certificate() {
+@@ -174,28 +205,35 @@ fn peer_certificate() {
          assert!(socket.peer_certificate().unwrap().is_none());
      });
  
@@ -193,7 +218,10 @@ Index: native-tls/src/test.rs
 -    let socket = p!(builder.connect("localhost", socket));
 +    let socket = p!(builder.connect("foobar.com", socket));
  
-+    let cert_der = Certificate::from_pem(include_bytes!("../test/cert.pem")).unwrap().to_der().unwrap();
++    let cert_der = Certificate::from_pem(include_bytes!("../test/cert.pem"))
++        .unwrap()
++        .to_der()
++        .unwrap();
      let cert = socket.peer_certificate().unwrap().unwrap();
 -    assert_eq!(cert.to_der().unwrap(), keys.client.cert_der);
 +    assert_eq!(cert.to_der().unwrap(), &cert_der[..]);
@@ -209,12 +237,18 @@ Index: native-tls/src/test.rs
 -        &keys.server.pkcs12,
 -        &keys.server.pkcs12_password
 -    ));
-+    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let buf = &STANDARD
++        .decode(
++            include_str!("../test/identity.p12.base64")
++                .split('\n')
++                .collect::<String>(),
++        )
++        .unwrap();
 +    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
      let builder = p!(TlsAcceptor::builder(identity)
          .min_protocol_version(Some(Protocol::Tlsv12))
          .max_protocol_version(Some(Protocol::Tlsv12))
-@@ -215,7 +219,8 @@ fn server_tls11_only() {
+@@ -215,7 +253,8 @@ fn server_tls11_only() {
          p!(socket.write_all(b"world"));
      });
  
@@ -224,7 +258,7 @@ Index: native-tls/src/test.rs
  
      let socket = p!(TcpStream::connect(("localhost", port)));
      let builder = p!(TlsConnector::builder()
-@@ -223,7 +228,7 @@ fn server_tls11_only() {
+@@ -223,7 +262,7 @@ fn server_tls11_only() {
          .min_protocol_version(Some(Protocol::Tlsv12))
          .max_protocol_version(Some(Protocol::Tlsv12))
          .build());
@@ -233,7 +267,7 @@ Index: native-tls/src/test.rs
  
      p!(socket.write_all(b"hello"));
      let mut buf = vec![];
-@@ -235,12 +240,8 @@ fn server_tls11_only() {
+@@ -235,12 +274,14 @@ fn server_tls11_only() {
  
  #[test]
  fn server_no_shared_protocol() {
@@ -243,12 +277,18 @@ Index: native-tls/src/test.rs
 -        &keys.server.pkcs12,
 -        &keys.server.pkcs12_password
 -    ));
-+    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let buf = &STANDARD
++        .decode(
++            include_str!("../test/identity.p12.base64")
++                .split('\n')
++                .collect::<String>(),
++        )
++        .unwrap();
 +    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
      let builder = p!(TlsAcceptor::builder(identity)
          .min_protocol_version(Some(Protocol::Tlsv12))
          .build());
-@@ -253,7 +254,8 @@ fn server_no_shared_protocol() {
+@@ -253,7 +294,8 @@ fn server_no_shared_protocol() {
          assert!(builder.accept(socket).is_err());
      });
  
@@ -258,7 +298,7 @@ Index: native-tls/src/test.rs
  
      let socket = p!(TcpStream::connect(("localhost", port)));
      let builder = p!(TlsConnector::builder()
-@@ -261,19 +263,15 @@ fn server_no_shared_protocol() {
+@@ -261,19 +303,21 @@ fn server_no_shared_protocol() {
          .min_protocol_version(Some(Protocol::Tlsv11))
          .max_protocol_version(Some(Protocol::Tlsv11))
          .build());
@@ -276,12 +316,18 @@ Index: native-tls/src/test.rs
 -        &keys.server.pkcs12,
 -        &keys.server.pkcs12_password
 -    ));
-+    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let buf = &STANDARD
++        .decode(
++            include_str!("../test/identity.p12.base64")
++                .split('\n')
++                .collect::<String>(),
++        )
++        .unwrap();
 +    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
      let builder = p!(TlsAcceptor::new(identity));
  
      let listener = p!(TcpListener::bind("0.0.0.0:0"));
-@@ -288,19 +286,15 @@ fn server_untrusted() {
+@@ -288,19 +332,21 @@ fn server_untrusted() {
  
      let socket = p!(TcpStream::connect(("localhost", port)));
      let builder = p!(TlsConnector::new());
@@ -299,12 +345,18 @@ Index: native-tls/src/test.rs
 -        &keys.server.pkcs12,
 -        &keys.server.pkcs12_password
 -    ));
-+    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let buf = &STANDARD
++        .decode(
++            include_str!("../test/identity.p12.base64")
++                .split('\n')
++                .collect::<String>(),
++        )
++        .unwrap();
 +    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
      let builder = p!(TlsAcceptor::new(identity));
  
      let listener = p!(TcpListener::bind("0.0.0.0:0"));
-@@ -321,7 +315,7 @@ fn server_untrusted_unverified() {
+@@ -321,7 +367,7 @@ fn server_untrusted_unverified() {
      let builder = p!(TlsConnector::builder()
          .danger_accept_invalid_certs(true)
          .build());
@@ -313,7 +365,7 @@ Index: native-tls/src/test.rs
  
      p!(socket.write_all(b"hello"));
      let mut buf = vec![];
-@@ -333,16 +327,9 @@ fn server_untrusted_unverified() {
+@@ -333,16 +379,15 @@ fn server_untrusted_unverified() {
  
  #[test]
  fn import_same_identity_multiple_times() {
@@ -327,13 +379,19 @@ Index: native-tls/src/test.rs
 -        &keys.server.pkcs12,
 -        &keys.server.pkcs12_password
 -    ));
-+    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let buf = &STANDARD
++        .decode(
++            include_str!("../test/identity.p12.base64")
++                .split('\n')
++                .collect::<String>(),
++        )
++        .unwrap();
 +    let _ = p!(Identity::from_pkcs12(buf, "mypass"));
 +    let _ = p!(Identity::from_pkcs12(buf, "mypass"));
  
      let p8buf = include_bytes!("../test/chain.pem");
      let key = include_bytes!("../test/key.pem");
-@@ -362,12 +349,8 @@ fn from_pkcs8_rejects_rsa_key() {
+@@ -362,12 +407,14 @@ fn from_pkcs8_rejects_rsa_key() {
  
  #[test]
  fn shutdown() {
@@ -343,12 +401,18 @@ Index: native-tls/src/test.rs
 -        &keys.server.pkcs12,
 -        &keys.server.pkcs12_password
 -    ));
-+    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let buf = &STANDARD
++        .decode(
++            include_str!("../test/identity.p12.base64")
++                .split('\n')
++                .collect::<String>(),
++        )
++        .unwrap();
 +    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
      let builder = p!(TlsAcceptor::new(identity));
  
      let listener = p!(TcpListener::bind("0.0.0.0:0"));
-@@ -385,19 +368,66 @@ fn shutdown() {
+@@ -385,19 +432,72 @@ fn shutdown() {
          p!(socket.shutdown());
      });
  
@@ -374,7 +438,13 @@ Index: native-tls/src/test.rs
 +fn tls_server_end_point() {
 +    let expected = "4712b939fbcb42a6b5101b42139a25b14f81b418facabd378746f12f85cc6544";
 +
-+    let buf = &base64::decode(include_str!("../test/identity.p12.base64").split('\n').collect::<String>()).unwrap();
++    let buf = &STANDARD
++        .decode(
++            include_str!("../test/identity.p12.base64")
++                .split('\n')
++                .collect::<String>(),
++        )
++        .unwrap();
 +    let identity = p!(Identity::from_pkcs12(buf, "mypass"));
 +    let builder = p!(TlsAcceptor::new(identity));
 +
@@ -433,7 +503,7 @@ Index: native-tls/Cargo.toml
 -[dev-dependencies.test-cert-gen]
 -version = "0.1"
 +[dev-dependencies.base64]
-+version = "0.13"
++version = "0.21"
  
  [features]
  alpn = []
