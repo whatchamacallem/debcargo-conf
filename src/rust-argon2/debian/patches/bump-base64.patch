@@ -1,0 +1,71 @@
+Index: rust-argon2/Cargo.toml
+===================================================================
+--- rust-argon2.orig/Cargo.toml
++++ rust-argon2/Cargo.toml
+@@ -25,7 +25,7 @@ repository = "https://github.com/sru-sys
+ [lib]
+ name = "argon2"
+ [dependencies.base64]
+-version = "0.13"
++version = "0.21"
+ 
+ [dependencies.blake2b_simd]
+ version = "1.0"
+Index: rust-argon2/src/encoding.rs
+===================================================================
+--- rust-argon2.orig/src/encoding.rs
++++ rust-argon2/src/encoding.rs
+@@ -12,7 +12,9 @@ use crate::error::Error;
+ use crate::result::Result;
+ use crate::variant::Variant;
+ use crate::version::Version;
+-use base64;
++
++use base64::engine::general_purpose::{STANDARD, STANDARD_NO_PAD};
++use base64::engine::Engine as _;
+ 
+ /// Structure containing the options.
+ struct Options {
+@@ -34,13 +36,18 @@ pub fn base64_len(length: u32) -> u32 {
+ /// Attempts to decode the encoded string slice.
+ pub fn decode_string(encoded: &str) -> Result<Decoded> {
+     let items: Vec<&str> = encoded.split('$').collect();
++    let config = STANDARD
++        .config()
++        .with_decode_padding_mode(base64::engine::DecodePaddingMode::Indifferent);
++    let engine =
++        base64::engine::general_purpose::GeneralPurpose::new(&base64::alphabet::STANDARD, config);
+     if items.len() == 6 {
+         decode_empty(items[0])?;
+         let variant = decode_variant(items[1])?;
+         let version = decode_version(items[2])?;
+         let options = decode_options(items[3])?;
+-        let salt = base64::decode(items[4])?;
+-        let hash = base64::decode(items[5])?;
++        let salt = engine.decode(items[4])?;
++        let hash = engine.decode(items[5])?;
+ 
+         Ok(Decoded {
+             variant,
+@@ -55,8 +62,8 @@ pub fn decode_string(encoded: &str) -> R
+         decode_empty(items[0])?;
+         let variant = decode_variant(items[1])?;
+         let options = decode_options(items[2])?;
+-        let salt = base64::decode(items[3])?;
+-        let hash = base64::decode(items[4])?;
++        let salt = engine.decode(items[3])?;
++        let hash = engine.decode(items[4])?;
+ 
+         Ok(Decoded {
+             variant,
+@@ -139,8 +146,8 @@ pub fn encode_string(context: &Context,
+         context.config.mem_cost,
+         context.config.time_cost,
+         context.config.lanes,
+-        base64::encode_config(context.salt, base64::STANDARD_NO_PAD),
+-        base64::encode_config(hash, base64::STANDARD_NO_PAD),
++        STANDARD_NO_PAD.encode(context.salt),
++        STANDARD_NO_PAD.encode(hash),
+     )
+ }
+ 
