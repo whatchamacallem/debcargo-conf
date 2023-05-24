@@ -1,0 +1,38 @@
+=== modified file 'src/config.rs'
+--- old/src/config.rs	2023-05-23 18:33:13 +0000
++++ new/src/config.rs	2023-05-24 18:17:30 +0000
+@@ -784,6 +784,7 @@
+     pub addresses: Vec<Prefix>,
+     pub listeners: Vec<NetAddr>,
+     pub dns_listeners: AddressType,
++    #[cfg(feature = "dns")]
+     pub dns_routes: Vec<crate::dns::config::Route>,
+     pub acls: Vec<crate::acl::Acl>,
+ }
+@@ -826,6 +827,7 @@
+         let mut addresses = None;
+         let mut listeners = None;
+         let mut dns_listeners = None;
++        #[cfg(feature = "dns")]
+         let mut dns_routes = None;
+         let mut default_listen_style = DefaultAddressType::Unspecified;
+         let mut acls = None;
+@@ -876,7 +878,9 @@
+                     acls = parse_array("acls", s, crate::acl::parse_acl)?;
+                 }
+                 (Some("dns-routes"), s) => {
++                    #[cfg(feature = "dns")] {
+                     dns_routes = crate::dns::config::parse_dns_routes("dns-routes", s)?;
++                    }
+                 }
+                 (Some(x), _) => {
+                     return Err(Error::InvalidConfig(format!(
+@@ -911,6 +915,7 @@
+                 }
+                 DefaultAddressType::Interface => AddressType::BindInterface,
+             }),
++            #[cfg(feature = "dns")]
+             dns_routes: dns_routes.unwrap_or_default(),
+             captive_portal,
+             listeners: listeners.unwrap_or_else(|| {
+
