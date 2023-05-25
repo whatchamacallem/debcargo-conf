@@ -3,13 +3,8 @@
 %:
 	dh $@ --buildsystem cargo
 
-override_dh_install:
-	mv ./target/*/release/build/*/out/assets/completions/bat.zsh _bat
-	mv ./target/*/release/build/*/out/assets/completions/bat.fish bat.fish
-	mv ./target/*/release/build/*/out/assets/completions/bat.bash bat.bash
-	mv ./target/*/release/build/*/out/assets/manual/bat.1 doc/bat.1
-	dh_install
-
-override_dh_dwz:
-# Don't do anything. fails because of the
-# https://github.com/rust-lang/rust/issues/66118
+override_dh_auto_install:
+	# Once #946616 is fixed run `dh_auto_install --destdir=debian/tmp/`
+	# and use d/bat.install with dh-exec to install the renamed binary.
+	dh_auto_install
+	mv debian/bat/usr/bin/bat debian/bat/usr/bin/batcat
