@@ -18,20 +18,14 @@ diff --git a/Cargo.toml b/Cargo.toml
 index be03fed..07dc4f0 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -39,5 +39,3 @@ version = "0.3"
- 
- [build-dependencies.tempfile]
- version = "3"
+@@ -39,2 +39,0 @@ version = "0.3"
 -[target."cfg(target_env = \"msvc\")".build-dependencies.vcpkg]
 -version = "0.2.9"
 diff --git a/build.rs b/build.rs
 index 7a7c524..e0dbe66 100644
 --- a/build.rs
 +++ b/build.rs
-@@ -88,19 +88,6 @@ fn check_cv448(includes: &[PathBuf]) -> bool {
-                                     "nettle_ed448_shake256_sign"))
- }
- 
+@@ -88,14 +88,0 @@ fn check_cv448(includes: &[PathBuf]) -> bool {
 -#[cfg(target_env = "msvc")]
 -fn try_vcpkg() -> Result<Config> {
 -    let lib = vcpkg::Config::new()
@@ -39,15 +33,10 @@ index 7a7c524..e0dbe66 100644
 -        .find_package("nettle")?;
 -
 -    Ok(Config {
--        have_cv448: check_cv448(&include_paths),
--        include_paths,
+-        have_cv448: check_cv448(&lib.include_paths),
+-        have_ocb: check_ocb(&include_paths),
+-        include_paths: lib.include_paths,
 -    })
 -}
 -
 -#[cfg(not(target_env = "msvc"))]
- fn try_vcpkg() -> Result<Config> { Err("not applicable")?; unreachable!() }
- 
- fn print_library(lib: &pkg_config::Library, mode: &str) {
--- 
-2.34.1
-
