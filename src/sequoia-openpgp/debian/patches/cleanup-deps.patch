@@ -13,11 +13,20 @@ Index: sequoia-openpgp/Cargo.toml
 ===================================================================
 --- sequoia-openpgp.orig/Cargo.toml
 +++ sequoia-openpgp/Cargo.toml
-@@ -55,3 +55,0 @@ required-features = ["compression-deflat 1
+@@ -55,9 +55,6 @@ required-features = ["compression-deflat
+ name = "run_benchmarks"
+ harness = false
+ 
 -[dependencies.aes]
 -version = "0.8"
 -optional = true
-@@ -65,7 +65,0 @@ required-features = ["compression-deflat 2
+ 
+ [dependencies.anyhow]
+ version = "1.0.18"
+@@ -65,18 +62,6 @@ version = "1.0.18"
+ [dependencies.base64]
+ version = "0.21"
+ 
 -[dependencies.block-padding]
 -version = "0.3"
 -optional = true
@@ -25,11 +34,26 @@ Index: sequoia-openpgp/Cargo.toml
 -[dependencies.blowfish]
 -version = "0.9"
 -optional = true
-@@ -85,3 +69,0 @@ 3
+-
+-[dependencies.botan]
+-version = "0.10"
+-optional = true
+-
+ [dependencies.buffered-reader]
+ version = "1.0.0"
+ default-features = false
+@@ -85,72 +70,13 @@ default-features = false
+ version = "0.4"
+ optional = true
+ 
 -[dependencies.cast5]
 -version = "0.11"
 -optional = true
-@@ -90,12 +90,0 @@ 4
+-
+-[dependencies.cfb-mode]
+-version = "0.8"
+-optional = true
+-
 -[dependencies.cipher]
 -version = "0.4"
 -features = ["std"]
@@ -42,11 +66,18 @@ Index: sequoia-openpgp/Cargo.toml
 -[dependencies.digest]
 -version = "0.10"
 -optional = true
-@@ -110,3 +110,0 @@ 5
+-
+ [dependencies.dyn-clone]
+ version = "1"
+ 
 -[dependencies.eax]
 -version = "0.5"
 -optional = true
-@@ -105,7 +115,0 @@ 6
+-
+-[dependencies.ecb]
+-version = "0.1"
+-optional = true
+-
 -[dependencies.ecdsa]
 -version = "0.16"
 -features = [
@@ -54,7 +85,13 @@ Index: sequoia-openpgp/Cargo.toml
 -    "arithmetic",
 -]
 -optional = true
-@@ -105,8 +120,0 @@ 7
+-
+-[dependencies.ed25519]
+-version = "1"
+-features = ["std"]
+-optional = true
+-default-features = false
+-
 -[dependencies.ed25519-dalek]
 -version = "1"
 -features = [
@@ -63,7 +100,11 @@ Index: sequoia-openpgp/Cargo.toml
 -]
 -optional = true
 -default-features = false
-@@ -134,7 +125,0 @@ 8
+-
+ [dependencies.flate2]
+ version = "1.0.1"
+ optional = true
+ 
 -[dependencies.generic-array]
 -version = "0.14.4"
 -optional = true
@@ -71,17 +112,42 @@ Index: sequoia-openpgp/Cargo.toml
 -[dependencies.idea]
 -version = "0.5"
 -optional = true
-@@ -154,4 +130,0 @@ 9
+ 
+ [dependencies.idna]
+ version = ">=0.2, <0.4"
+@@ -164,10 +90,6 @@ version = "1.4.0"
+ [dependencies.libc]
+ version = "0.2.66"
+ 
 -[dependencies.md-5]
 -version = "0.10"
 -features = ["oid"]
 -optional = true
-@@ -166,4 +140,0 @@ 10
+ 
+ [dependencies.memsec]
+ version = ">=0.5, <0.7"
+@@ -177,43 +99,24 @@ default-features = false
+ version = "7.2.2"
+ optional = true
+ 
 -[dependencies.num-bigint-dig]
 -version = "0.8"
 -optional = true
 -default-features = false
-@@ -175,7 +150,0 @@ 11
+ 
+ [dependencies.once_cell]
+ version = "1"
+ 
+ [dependencies.openssl]
+-version = "0.10.47"
++version = "0.10.45"
+ optional = true
+ 
+ [dependencies.openssl-sys]
+-version = "0.9.82"
++version = "0.9.80"
+ optional = true
+ 
 -[dependencies.p256]
 -version = "0.13"
 -features = [
@@ -89,7 +155,12 @@ Index: sequoia-openpgp/Cargo.toml
 -    "ecdsa",
 -]
 -optional = true
-@@ -185,8 +155,0 @@ 12
+ 
+ [dependencies.rand]
+ version = "0.8"
+ optional = true
+ package = "rand"
+ 
 -[dependencies.rand07]
 -version = "0.7.3"
 -optional = true
@@ -98,7 +169,13 @@ Index: sequoia-openpgp/Cargo.toml
 -[dependencies.rand_core]
 -version = "0.6"
 -optional = true
-@@ -195,13 +160,0 @@ 13
+ 
+ [dependencies.regex]
+ version = "1"
+@@ -221,44 +124,16 @@ version = "1"
+ [dependencies.regex-syntax]
+ version = "0.6"
+ 
 -[dependencies.ripemd]
 -version = "0.1"
 -features = ["oid"]
@@ -112,12 +189,20 @@ Index: sequoia-openpgp/Cargo.toml
 -version = "0.10"
 -features = ["oid"]
 -optional = true
-@@ -210,4 +170,0 @@ 14
+ 
+ [dependencies.sha1collisiondetection]
+ version = "0.2.3"
+ features = ["std"]
+ default-features = false
+ 
 -[dependencies.sha2]
 -version = "0.10"
 -features = ["oid"]
 -optional = true
-@@ -220,11 +180,0 @@ 15
+ 
+ [dependencies.thiserror]
+ version = "1.0.2"
+ 
 -[dependencies.twofish]
 -version = "0.7"
 -optional = true
@@ -129,7 +214,15 @@ Index: sequoia-openpgp/Cargo.toml
 -[dependencies.x25519-dalek-ng]
 -version = "1"
 -optional = true
-@@ -276,8 +190,0 @@ 16
+ 
+ [dependencies.xxhash-rust]
+ version = "0.8"
+@@ -298,87 +173,16 @@ compression-deflate = [
+     "flate2",
+     "buffered-reader/compression-deflate",
+ ]
+-crypto-botan = ["botan/botan3"]
+-crypto-botan2 = ["botan"]
 -crypto-cng = [
 -    "cipher",
 -    "eax",
@@ -138,7 +231,11 @@ Index: sequoia-openpgp/Cargo.toml
 -    "ed25519-dalek",
 -    "num-bigint-dig",
 -]
-@@ -290,31 +200,0 @@ 17
+ crypto-nettle = ["nettle"]
+ crypto-openssl = [
+     "openssl",
+     "openssl-sys",
+ ]
 -crypto-rust = [
 -    "aes",
 -    "block-padding",
@@ -170,7 +267,11 @@ Index: sequoia-openpgp/Cargo.toml
 -    "rand_core/getrandom",
 -    "ecdsa",
 -]
-@@ -320,30 +210,0 @@
+ default = [
+     "compression",
+     "crypto-nettle",
+ ]
+ 
 -[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.chrono]
 -version = "0.4.10"
 -features = [
@@ -201,3 +302,6 @@ Index: sequoia-openpgp/Cargo.toml
 -features = ["bcrypt"]
 -optional = true
 -default-features = false
+ 
+ [badges.gitlab]
+ repository = "sequoia-pgp/sequoia"
