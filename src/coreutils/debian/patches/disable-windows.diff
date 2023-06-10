@@ -2,14 +2,14 @@ Index: coreutils/src/uu/date/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/date/Cargo.toml
 +++ coreutils/src/uu/date/Cargo.toml
-@@ -22,8 +22,8 @@ uucore = { version=">=0.0.17", package="
+@@ -26,8 +26,8 @@ humantime_to_duration = { workspace=true
  [target.'cfg(unix)'.dependencies]
- libc = "0.2"
+ libc = { workspace=true }
  
 -[target.'cfg(windows)'.dependencies]
--windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_Foundation", "Win32_System_SystemInformation"] }
+-windows-sys = { workspace=true, features = ["Win32_Foundation", "Win32_System_SystemInformation"] }
 +#[target.'cfg(windows)'.dependencies]
-+#windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_Foundation", "Win32_System_SystemInformation"] }
++#windows-sys = { workspace=true, features = ["Win32_Foundation", "Win32_System_SystemInformation"] }
  
  [[bin]]
  name = "date"
@@ -17,14 +17,14 @@ Index: coreutils/src/uu/du/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/du/Cargo.toml
 +++ coreutils/src/uu/du/Cargo.toml
-@@ -21,8 +21,8 @@ glob = "0.3.0"
- clap = { version = "4.0", features = ["wrap_help", "cargo"] }
- uucore = { version=">=0.0.17", package="uucore", path="../../uucore" }
+@@ -21,8 +21,8 @@ glob = { workspace=true }
+ clap = { workspace=true }
+ uucore = { workspace=true }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
--windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_Storage_FileSystem", "Win32_Foundation"] }
+-windows-sys = { workspace=true, features = ["Win32_Storage_FileSystem", "Win32_Foundation"] }
 +#[target.'cfg(target_os = "windows")'.dependencies]
-+#windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_Storage_FileSystem", "Win32_Foundation"] }
++#windows-sys = { workspace=true, features = ["Win32_Storage_FileSystem", "Win32_Foundation"] }
  
  [[bin]]
  name = "du"
@@ -32,14 +32,14 @@ Index: coreutils/src/uu/hostname/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/hostname/Cargo.toml
 +++ coreutils/src/uu/hostname/Cargo.toml
-@@ -19,8 +19,8 @@ clap = { version = "4.0", features = ["w
+@@ -19,8 +19,8 @@ clap = { workspace=true }
  hostname = { version = "0.3", features = ["set"] }
- uucore = { version=">=0.0.17", package="uucore", path="../../uucore", features=["wide"] }
+ uucore = { workspace=true, features=["wide"] }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
--windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_Networking_WinSock", "Win32_Foundation"] }
+-windows-sys = { workspace=true, features = ["Win32_Networking_WinSock", "Win32_Foundation"] }
 +#[target.'cfg(target_os = "windows")'.dependencies]
-+#windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_Networking_WinSock", "Win32_Foundation"] }
++#windows-sys = { workspace=true, features = ["Win32_Networking_WinSock", "Win32_Foundation"] }
  
  [[bin]]
  name = "hostname"
@@ -47,14 +47,14 @@ Index: coreutils/src/uu/rm/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/rm/Cargo.toml
 +++ coreutils/src/uu/rm/Cargo.toml
-@@ -23,8 +23,8 @@ uucore = { version=">=0.0.17", package="
+@@ -22,8 +22,8 @@ uucore = { workspace=true, features=["fs
  [target.'cfg(unix)'.dependencies]
- libc = "0.2.137"
+ libc = { workspace=true }
  
 -[target.'cfg(windows)'.dependencies]
--windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_Storage_FileSystem"] }
+-windows-sys = { workspace=true, features = ["Win32_Storage_FileSystem"] }
 +#[target.'cfg(windows)'.dependencies]
-+#windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_Storage_FileSystem"] }
++#windows-sys = { workspace=true, features = ["Win32_Storage_FileSystem"] }
  
  [[bin]]
  name = "rm"
@@ -62,14 +62,14 @@ Index: coreutils/src/uu/sync/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/sync/Cargo.toml
 +++ coreutils/src/uu/sync/Cargo.toml
-@@ -22,8 +22,8 @@ uucore = { version=">=0.0.17", package="
+@@ -22,8 +22,8 @@ uucore = { workspace=true, features=["wi
  [target.'cfg(any(target_os = "linux", target_os = "android"))'.dependencies]
- nix = "0"
+ nix = { workspace=true }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
--windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_Storage_FileSystem", "Win32_System_WindowsProgramming", "Win32_Foundation"] }
-+# [target.'cfg(target_os = "windows")'.dependencies]
-+# windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_Storage_FileSystem", "Win32_System_WindowsProgramming", "Win32_Foundation"] }
+-windows-sys = { workspace=true, features = ["Win32_Storage_FileSystem", "Win32_System_WindowsProgramming", "Win32_Foundation"] }
++#[target.'cfg(target_os = "windows")'.dependencies]
++#windows-sys = { workspace=true, features = ["Win32_Storage_FileSystem", "Win32_System_WindowsProgramming", "Win32_Foundation"] }
  
  [[bin]]
  name = "sync"
@@ -77,31 +77,31 @@ Index: coreutils/src/uu/tail/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/tail/Cargo.toml
 +++ coreutils/src/uu/tail/Cargo.toml
-@@ -24,9 +24,9 @@ uucore = { version=">=0.0.17", package="
- same-file = "1.0.6"
- atty = "0.2"
+@@ -25,9 +25,9 @@ same-file = { workspace=true }
+ is-terminal = { workspace=true }
+ fundu = { workspace=true }
  
 -[target.'cfg(windows)'.dependencies]
--windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_System_Threading", "Win32_Foundation"] }
--winapi-util = { version="0.1.5" }
-+# [target.'cfg(windows)'.dependencies]
-+# windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_System_Threading", "Win32_Foundation"] }
-+# winapi-util = { version="0.1.5" }
+-windows-sys = { workspace=true, features = ["Win32_System_Threading", "Win32_Foundation"] }
+-winapi-util = { workspace=true }
++#[target.'cfg(windows)'.dependencies]
++#windows-sys = { workspace=true, features = ["Win32_System_Threading", "Win32_Foundation"] }
++#winapi-util = { workspace=true }
  
- [target.'cfg(unix)'.dependencies]
- nix = { version = "0", features = ["fs"] }
+ [dev-dependencies]
+ rstest = { workspace=true }
 Index: coreutils/src/uu/touch/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/touch/Cargo.toml
 +++ coreutils/src/uu/touch/Cargo.toml
-@@ -20,8 +20,8 @@ clap = { version = "4.0", features = ["w
- time = { version = "0.3", features = ["parsing", "formatting", "local-offset", "macros"] }
- uucore = { version=">=0.0.17", package="uucore", path="../../uucore", features=["libc"] }
+@@ -22,8 +22,8 @@ humantime_to_duration = { workspace=true
+ time = { workspace=true, features = ["parsing", "formatting", "local-offset", "macros"] }
+ uucore = { workspace=true, features=["libc"] }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
--windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_Storage_FileSystem", "Win32_Foundation"] }
-+# [target.'cfg(target_os = "windows")'.dependencies]
-+# windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_Storage_FileSystem", "Win32_Foundation"] }
+-windows-sys = { workspace=true, features = ["Win32_Storage_FileSystem", "Win32_Foundation"] }
++#[target.'cfg(target_os = "windows")'.dependencies]
++#windows-sys = { workspace=true, features = ["Win32_Storage_FileSystem", "Win32_Foundation"] }
  
  [[bin]]
  name = "touch"
@@ -110,40 +110,43 @@ Index: coreutils/src/uu/whoami/Cargo.toml
 --- coreutils.orig/src/uu/whoami/Cargo.toml
 +++ coreutils/src/uu/whoami/Cargo.toml
 @@ -18,8 +18,8 @@ path = "src/whoami.rs"
- clap = { version = "4.0", features = ["wrap_help", "cargo"] }
- uucore = { version=">=0.0.17", package="uucore", path="../../uucore", features=["entries"] }
+ clap = { workspace=true }
+ uucore = { workspace=true, features=["entries"] }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
--windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_NetworkManagement_NetManagement", "Win32_System_WindowsProgramming", "Win32_Foundation"] }
-+# [target.'cfg(target_os = "windows")'.dependencies]
-+# windows-sys = { version = "0.42.0", default-features = false, features = ["Win32_NetworkManagement_NetManagement", "Win32_System_WindowsProgramming", "Win32_Foundation"] }
+-windows-sys = { workspace=true, features = ["Win32_NetworkManagement_NetManagement", "Win32_System_WindowsProgramming", "Win32_Foundation"] }
++#[target.'cfg(target_os = "windows")'.dependencies]
++#windows-sys = { workspace=true, features = ["Win32_NetworkManagement_NetManagement", "Win32_System_WindowsProgramming", "Win32_Foundation"] }
  
  [target.'cfg(unix)'.dependencies]
- libc = "0.2.137"
+ libc = { workspace=true }
 Index: coreutils/src/uucore/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uucore/Cargo.toml
 +++ coreutils/src/uucore/Cargo.toml
-@@ -44,17 +44,17 @@ nix = { version = "0", default-features
- clap = "4.0"
- once_cell = "1"
+@@ -56,9 +56,9 @@ clap = { workspace=true }
+ once_cell = { workspace=true }
+ tempfile = { workspace=true }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
 -winapi-util = { version= "0.1.5", optional=true }
--windows-sys = { version = "0.42.0", optional = true, default-features = false, features = ["Win32_Storage_FileSystem", "Win32_Foundation", "Win32_System_WindowsProgramming"] }
-+# [target.'cfg(target_os = "windows")'.dependencies]
-+# winapi-util = { version= "0.1.5", optional=true }
-+# windows-sys = { version = "0.42.0", optional = true, default-features = false, features = ["Win32_Storage_FileSystem", "Win32_Foundation", "Win32_System_WindowsProgramming"] }
+-windows-sys = { version = "0.48.0", optional = true, default-features = false, features = ["Win32_Storage_FileSystem", "Win32_Foundation", "Win32_System_WindowsProgramming"] }
++#[target.'cfg(target_os = "windows")'.dependencies]
++#winapi-util = { version= "0.1.5", optional=true }
++#windows-sys = { version = "0.48.0", optional = true, default-features = false, features = ["Win32_Storage_FileSystem", "Win32_Foundation", "Win32_System_WindowsProgramming"] }
  
  [features]
  default = []
- # * non-default features
- encoding = ["data-encoding", "data-encoding-macro", "z85", "thiserror"]
- entries = ["libc"]
--fs = ["libc", "winapi-util", "windows-sys"]
--fsext = ["libc", "time", "windows-sys"]
-+fs = ["libc"]
-+fsext = ["libc", "time"]
- lines = []
- memo = ["itertools"]
- mode = ["libc"]
+Index: coreutils/Cargo.toml
+===================================================================
+--- coreutils.orig/Cargo.toml
++++ coreutils/Cargo.toml
+@@ -328,7 +328,7 @@ unicode-width = "0.1.10"
+ utf-8 = "0.7.6"
+ walkdir = "2.3"
+ winapi-util = "0.1.5"
+-windows-sys = { version="0.48.0", default-features=false }
++#windows-sys = { version="0.48.0", default-features=false }
+ xattr = "1.0.0"
+ zip = { version = "0.6.6", default_features=false, features=["deflate"] }
+ 
