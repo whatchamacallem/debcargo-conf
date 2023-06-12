@@ -27,13 +27,15 @@ Env vars:
 - SBUILD_OPTS
 - EXTRA_DEBS
 Those env vars are passed to build.sh, read it for their descriptions.
+
+- REPACKAGE: Use ./repackage.sh instead of ./update.sh to prepare the source package
 '''
 
 import re
 from sys import argv, stdout
 from subprocess import run
 from time import time as now_ts
-from os import getcwd, chdir, stat, environ
+from os import getcwd, chdir, stat, environ, makedirs
 from os.path import basename, exists, isdir, join
 try:
 	from apt.cache import Cache as AptCache
@@ -124,11 +126,14 @@ def build_one(crate: str, ver: str, prev_debs: list[str]):
 		env['REALVER'] = ver
 	# prevent git from stopping us with a pager
 	env['GIT_PAGER'] = 'cat'
-	# \n is for when update.sh stops for confirmation
-	run(('./update.sh', crate), env=env, input=b'\n', check=True)
-	# if not set before, rerun ./update.sh to enable it
-	if collapse_features(crate):
+	if 'REPACKAGE' in env:
+		run(('./repackage.sh', crate), env=env, check=True)
+	else:
+		# \n is for when update.sh stops for confirmation
 		run(('./update.sh', crate), env=env, input=b'\n', check=True)
+		# if not set before, rerun ./update.sh to enable it
+		if collapse_features(crate):
+			run(('./update.sh', crate), env=env, input=b'\n', check=True)
 	env['EXTRA_DEBS'] = ','.join(prev_debs)
 	chdir('build')
 	run(('./build.sh', crate), env=env, check=True)
@@ -214,9 +219,12 @@ if __name__ == '__main__':
 		exit()
 
 	cwd = getcwd()
-	if not (isdir(join(cwd, 'build')) and exists(join(cwd, 'build.sh'))):
+	if not (exists(join(cwd, 'repackage.sh')) and exists(join(cwd, 'build.sh'))):
 		_print('Please run this script at root of debcargo-conf')
 		exit(1)
+
+	# Make sure build directory is present
+	makedirs('build', exist_ok=True)
 
 	# flatten shell substituted args 
 	i = 1
