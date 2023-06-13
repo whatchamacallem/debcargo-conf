@@ -1,0 +1,34 @@
+Index: condure/Cargo.toml
+===================================================================
+--- condure.orig/Cargo.toml
++++ condure/Cargo.toml
+@@ -61,7 +61,7 @@ harness = false
+ version = "0.7"
+ 
+ [dependencies.base64]
+-version = "0.13"
++version = "0.21"
+ 
+ [dependencies.clap]
+ version = "3.2"
+Index: condure/src/connection.rs
+===================================================================
+--- condure.orig/src/connection.rs
++++ condure/src/connection.rs
+@@ -99,6 +99,7 @@ fn get_host<'a>(headers: &'a [httparse::
+     "localhost"
+ }
+ 
++use base64::Engine;
+ fn calculate_ws_accept(key: &[u8]) -> Result<ArrayString<WS_ACCEPT_MAX>, ()> {
+     let input_len = key.len() + websocket::WS_GUID.len();
+ 
+@@ -119,7 +120,7 @@ fn calculate_ws_accept(key: &[u8]) -> Re
+ 
+     let mut output = [0; WS_ACCEPT_MAX];
+ 
+-    let size = base64::encode_config_slice(&digest, base64::STANDARD, &mut output);
++    let size = base64::engine::general_purpose::STANDARD.encode_slice(&digest, &mut output).unwrap();
+ 
+     let output = match str::from_utf8(&output[..size]) {
+         Ok(s) => s,
