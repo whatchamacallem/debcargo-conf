@@ -1,0 +1,35 @@
+--- old/Cargo.toml	2023-06-13 10:30:32.177131251 +0100
++++ new/Cargo.toml	2023-06-13 10:30:56.769337160 +0100
+@@ -23,7 +23,7 @@
+ license = "MIT/Apache-2.0"
+ repository = "https://github.com/hsivonen/charset"
+ [dependencies.base64]
+-version = "0.13"
++version = "0.21"
+ 
+ [dependencies.encoding_rs]
+ version = "0.8.22"
+diff --git a/src/lib.rs b/src/lib.rs
+index b63913d..b57f624 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -72,6 +72,8 @@
+ extern crate base64;
+ extern crate encoding_rs;
+ 
++use base64::Engine;
++
+ #[cfg(feature = "serde")]
+ extern crate serde;
+ 
+@@ -513,8 +515,9 @@ fn utf7_base64_decode(bytes: &[u8], string: &mut String) -> bool {
+             (false, 80)
+         };
+         let len;
++        let engine = base64::engine::general_purpose::STANDARD_NO_PAD;
+         loop {
+-            match base64::decode_config_slice(&tail[..cap], base64::STANDARD_NO_PAD, &mut buf[..]) {
++            match engine.decode_slice(&tail[..cap], &mut buf[..]) {
+                 Ok(l) => {
+                     len = l;
+                     break;
