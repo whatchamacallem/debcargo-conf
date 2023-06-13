@@ -1,0 +1,272 @@
+This patch is based on the upstream commit described below, adapted for use in
+the Debian package by Peter Michael Green.
+
+commit e7e2cfeb0a5d7d42ae858c710a4efb5e3b74956c
+Author: Dan Gohman <dev@sunfishcode.online>
+Date:   Wed May 24 10:14:51 2023 -0700
+
+    Update for linux-raw-sys being modular.
+
+Index: rustix/src/backend/linux_raw/c.rs
+===================================================================
+--- rustix.orig/src/backend/linux_raw/c.rs
++++ rustix/src/backend/linux_raw/c.rs
+@@ -5,18 +5,31 @@
+ 
+ #![allow(unused_imports)]
+ 
++pub type size_t = usize;
++#[cfg(feature = "net")]
+ pub(crate) use linux_raw_sys::cmsg_macros::*;
+ pub(crate) use linux_raw_sys::ctypes::*;
+ pub(crate) use linux_raw_sys::errno::EINVAL;
++#[cfg(not(any(target_arch = "arm", target_arch = "sparc", target_arch = "x86")))]
++pub(crate) use linux_raw_sys::general::{__kernel_gid_t as gid_t, __kernel_uid_t as uid_t};
+ pub(crate) use linux_raw_sys::general::{
++    iovec, siginfo_t, CLD_CONTINUED, CLD_DUMPED, CLD_EXITED, CLD_KILLED, CLD_STOPPED, CLD_TRAPPED,
++    O_CLOEXEC, O_NONBLOCK, O_NONBLOCK as PIDFD_NONBLOCK, P_ALL, P_PID, P_PIDFD,
++};
++pub(crate) use linux_raw_sys::general::{AT_FDCWD, O_NOCTTY, O_RDWR};
++#[cfg(feature = "fs")]
++pub(crate) use linux_raw_sys::general::{NFS_SUPER_MAGIC, PROC_SUPER_MAGIC, UTIME_NOW, UTIME_OMIT};
++#[cfg(feature = "fs")]
++pub(crate) use linux_raw_sys::general::{XATTR_CREATE, XATTR_REPLACE};
++#[cfg(feature = "net")]
++pub(crate) use linux_raw_sys::net::{
+     AF_DECnet, __kernel_sa_family_t as sa_family_t, __kernel_sockaddr_storage as sockaddr_storage,
+-    cmsghdr, in6_addr, in_addr, iovec, ip_mreq, ipv6_mreq, linger, msghdr, siginfo_t, size_t,
+-    sockaddr, sockaddr_in, sockaddr_in6, sockaddr_un, socklen_t, AF_APPLETALK, AF_ASH, AF_ATMPVC,
+-    AF_ATMSVC, AF_AX25, AF_BLUETOOTH, AF_BRIDGE, AF_CAN, AF_ECONET, AF_IEEE802154, AF_INET,
+-    AF_INET6, AF_IPX, AF_IRDA, AF_ISDN, AF_IUCV, AF_KEY, AF_LLC, AF_NETBEUI, AF_NETLINK, AF_NETROM,
+-    AF_PACKET, AF_PHONET, AF_PPPOX, AF_RDS, AF_ROSE, AF_RXRPC, AF_SECURITY, AF_SNA, AF_TIPC,
+-    AF_UNIX, AF_UNSPEC, AF_WANPIPE, AF_X25, CLD_CONTINUED, CLD_DUMPED, CLD_EXITED, CLD_KILLED,
+-    CLD_STOPPED, CLD_TRAPPED, IPPROTO_AH, IPPROTO_BEETPH, IPPROTO_COMP, IPPROTO_DCCP, IPPROTO_EGP,
++    cmsghdr, in6_addr, in_addr, ip_mreq, ipv6_mreq, linger, msghdr, sockaddr, sockaddr_in,
++    sockaddr_in6, sockaddr_un, socklen_t, AF_APPLETALK, AF_ASH, AF_ATMPVC, AF_ATMSVC, AF_AX25,
++    AF_BLUETOOTH, AF_BRIDGE, AF_CAN, AF_ECONET, AF_IEEE802154, AF_INET, AF_INET6, AF_IPX, AF_IRDA,
++    AF_ISDN, AF_IUCV, AF_KEY, AF_LLC, AF_NETBEUI, AF_NETLINK, AF_NETROM, AF_PACKET, AF_PHONET,
++    AF_PPPOX, AF_RDS, AF_ROSE, AF_RXRPC, AF_SECURITY, AF_SNA, AF_TIPC, AF_UNIX, AF_UNSPEC,
++    AF_WANPIPE, AF_X25, IPPROTO_AH, IPPROTO_BEETPH, IPPROTO_COMP, IPPROTO_DCCP, IPPROTO_EGP,
+     IPPROTO_ENCAP, IPPROTO_ESP, IPPROTO_ETHERNET, IPPROTO_FRAGMENT, IPPROTO_GRE, IPPROTO_ICMP,
+     IPPROTO_ICMPV6, IPPROTO_IDP, IPPROTO_IGMP, IPPROTO_IP, IPPROTO_IPIP, IPPROTO_IPV6, IPPROTO_MH,
+     IPPROTO_MPLS, IPPROTO_MPTCP, IPPROTO_MTP, IPPROTO_PIM, IPPROTO_PUP, IPPROTO_RAW,
+@@ -25,12 +38,10 @@ pub(crate) use linux_raw_sys::general::{
+     IPV6_MULTICAST_LOOP, IPV6_UNICAST_HOPS, IPV6_V6ONLY, IP_ADD_MEMBERSHIP, IP_DROP_MEMBERSHIP,
+     IP_MULTICAST_LOOP, IP_MULTICAST_TTL, IP_TTL, MSG_CMSG_CLOEXEC, MSG_CONFIRM, MSG_DONTROUTE,
+     MSG_DONTWAIT, MSG_EOR, MSG_ERRQUEUE, MSG_MORE, MSG_NOSIGNAL, MSG_OOB, MSG_PEEK, MSG_TRUNC,
+-    MSG_WAITALL, O_CLOEXEC, O_NONBLOCK, O_NONBLOCK as PIDFD_NONBLOCK, P_ALL, P_PID, P_PIDFD,
+-    SCM_CREDENTIALS, SCM_RIGHTS, SHUT_RD, SHUT_RDWR, SHUT_WR, SOCK_DGRAM, SOCK_RAW, SOCK_RDM,
+-    SOCK_SEQPACKET, SOCK_STREAM, SOL_SOCKET, SO_BROADCAST, SO_ERROR, SO_KEEPALIVE, SO_LINGER,
+-    SO_PASSCRED, SO_RCVBUF, SO_RCVTIMEO_NEW, SO_RCVTIMEO_OLD, SO_REUSEADDR, SO_SNDBUF,
++    MSG_WAITALL, SCM_CREDENTIALS, SCM_RIGHTS, SHUT_RD, SHUT_RDWR, SHUT_WR, SOCK_DGRAM, SOCK_RAW,
++    SOCK_RDM, SOCK_SEQPACKET, SOCK_STREAM, SOL_SOCKET, SO_BROADCAST, SO_ERROR, SO_KEEPALIVE,
++    SO_LINGER, SO_PASSCRED, SO_RCVBUF, SO_RCVTIMEO_NEW, SO_RCVTIMEO_OLD, SO_REUSEADDR, SO_SNDBUF,
+     SO_SNDTIMEO_NEW, SO_SNDTIMEO_OLD, SO_TYPE, TCP_NODELAY,
+ };
+-pub(crate) use linux_raw_sys::general::{NFS_SUPER_MAGIC, PROC_SUPER_MAGIC, UTIME_NOW, UTIME_OMIT};
+-pub(crate) use linux_raw_sys::general::{O_NOCTTY, O_RDWR};
+-pub(crate) use linux_raw_sys::general::{XATTR_CREATE, XATTR_REPLACE};
++#[cfg(feature = "io_uring")]
++pub(crate) use {linux_raw_sys::general::open_how, linux_raw_sys::io_uring::*};
+Index: rustix/src/backend/linux_raw/conv.rs
+===================================================================
+--- rustix.orig/src/backend/linux_raw/conv.rs
++++ rustix/src/backend/linux_raw/conv.rs
+@@ -43,11 +43,11 @@ use core::ptr::null_mut;
+ use linux_raw_sys::general::__kernel_clockid_t;
+ #[cfg(target_pointer_width = "64")]
+ use linux_raw_sys::general::__kernel_loff_t;
+-#[cfg(feature = "net")]
+-use linux_raw_sys::general::socklen_t;
+ #[cfg(target_pointer_width = "32")]
+ #[cfg(feature = "fs")]
+ use linux_raw_sys::general::O_LARGEFILE;
++#[cfg(feature = "net")]
++use linux_raw_sys::net::socklen_t;
+ 
+ /// Convert `SYS_*` constants for socketcall.
+ #[cfg(target_arch = "x86")]
+Index: rustix/src/backend/linux_raw/net/read_sockaddr.rs
+===================================================================
+--- rustix.orig/src/backend/linux_raw/net/read_sockaddr.rs
++++ rustix/src/backend/linux_raw/net/read_sockaddr.rs
+@@ -23,9 +23,9 @@ unsafe fn read_ss_family(storage: *const
+     // Assert that we know the layout of `sockaddr`.
+     let _ = c::sockaddr {
+         __storage: c::sockaddr_storage {
+-            __bindgen_anon_1: linux_raw_sys::general::__kernel_sockaddr_storage__bindgen_ty_1 {
++            __bindgen_anon_1: linux_raw_sys::net::__kernel_sockaddr_storage__bindgen_ty_1 {
+                 __bindgen_anon_1:
+-                    linux_raw_sys::general::__kernel_sockaddr_storage__bindgen_ty_1__bindgen_ty_1 {
++                    linux_raw_sys::net::__kernel_sockaddr_storage__bindgen_ty_1__bindgen_ty_1 {
+                         ss_family: 0_u16,
+                         __data: [0; 126_usize],
+                     },
+Index: rustix/src/backend/linux_raw/net/syscalls.rs
+===================================================================
+--- rustix.orig/src/backend/linux_raw/net/syscalls.rs
++++ rustix/src/backend/linux_raw/net/syscalls.rs
+@@ -31,7 +31,7 @@ use core::mem::MaybeUninit;
+ use {
+     super::super::conv::{slice_just_addr, x86_sys},
+     super::super::reg::{ArgReg, SocketArg},
+-    linux_raw_sys::general::{
++    linux_raw_sys::net::{
+         SYS_ACCEPT, SYS_ACCEPT4, SYS_BIND, SYS_CONNECT, SYS_GETPEERNAME, SYS_GETSOCKNAME,
+         SYS_GETSOCKOPT, SYS_LISTEN, SYS_RECV, SYS_RECVFROM, SYS_RECVMSG, SYS_SEND, SYS_SENDMSG,
+         SYS_SENDTO, SYS_SETSOCKOPT, SYS_SHUTDOWN, SYS_SOCKET, SYS_SOCKETPAIR,
+@@ -1482,7 +1482,7 @@ pub(crate) mod sockopt {
+     #[inline]
+     fn to_ipv6mr_multiaddr(multiaddr: &Ipv6Addr) -> c::in6_addr {
+         c::in6_addr {
+-            in6_u: linux_raw_sys::general::in6_addr__bindgen_ty_1 {
++            in6_u: linux_raw_sys::net::in6_addr__bindgen_ty_1 {
+                 u6_addr8: multiaddr.octets(),
+             },
+         }
+Index: rustix/src/backend/linux_raw/net/write_sockaddr.rs
+===================================================================
+--- rustix.orig/src/backend/linux_raw/net/write_sockaddr.rs
++++ rustix/src/backend/linux_raw/net/write_sockaddr.rs
+@@ -40,7 +40,7 @@ pub(crate) unsafe fn encode_sockaddr_v6(
+         sin6_port: u16::to_be(v6.port()),
+         sin6_flowinfo: u32::to_be(v6.flowinfo()),
+         sin6_addr: c::in6_addr {
+-            in6_u: linux_raw_sys::general::in6_addr__bindgen_ty_1 {
++            in6_u: linux_raw_sys::net::in6_addr__bindgen_ty_1 {
+                 u6_addr8: v6.ip().octets(),
+             },
+         },
+Index: rustix/src/backend/linux_raw/runtime/syscalls.rs
+===================================================================
+--- rustix.orig/src/backend/linux_raw/runtime/syscalls.rs
++++ rustix/src/backend/linux_raw/runtime/syscalls.rs
+@@ -27,7 +27,8 @@ use core::convert::TryInto;
+ use core::mem::MaybeUninit;
+ #[cfg(target_pointer_width = "32")]
+ use linux_raw_sys::general::__kernel_old_timespec;
+-use linux_raw_sys::general::{__kernel_pid_t, kernel_sigset_t, PR_SET_NAME, SIGCHLD};
++use linux_raw_sys::general::{__kernel_pid_t, kernel_sigset_t, SIGCHLD};
++use linux_raw_sys::prctl::PR_SET_NAME;
+ #[cfg(target_arch = "x86_64")]
+ use {super::super::conv::ret_infallible, linux_raw_sys::general::ARCH_SET_FS};
+ 
+Index: rustix/src/io_uring.rs
+===================================================================
+--- rustix.orig/src/io_uring.rs
++++ rustix/src/io_uring.rs
+@@ -29,7 +29,13 @@ use crate::{backend, io};
+ use core::ffi::c_void;
+ use core::mem::{zeroed, MaybeUninit};
+ use core::ptr::{null_mut, write_bytes};
+-use linux_raw_sys::general as sys;
++use linux_raw_sys::net;
++
++mod sys {
++    pub(super) use linux_raw_sys::io_uring::*;
++    #[cfg(test)]
++    pub(super) use {crate::backend::c::iovec, linux_raw_sys::general::open_how};
++}
+ 
+ /// `io_uring_setup(entries, params)`—Setup a context for performing
+ /// asynchronous I/O.
+@@ -728,19 +734,19 @@ bitflags::bitflags! {
+     #[derive(Default)]
+     pub struct RecvmsgOutFlags: u32 {
+         /// `MSG_EOR`
+-        const EOR = sys::MSG_EOR;
++        const EOR = net::MSG_EOR;
+ 
+         /// `MSG_TRUNC`
+-        const TRUNC = sys::MSG_TRUNC;
++        const TRUNC = net::MSG_TRUNC;
+ 
+         /// `MSG_CTRUNC`
+-        const CTRUNC = sys::MSG_CTRUNC;
++        const CTRUNC = net::MSG_CTRUNC;
+ 
+         /// `MSG_OOB`
+-        const OOB = sys::MSG_OOB;
++        const OOB = net::MSG_OOB;
+ 
+         /// `MSG_ERRQUEUE`
+-        const ERRQUEUE = sys::MSG_ERRQUEUE;
++        const ERRQUEUE = net::MSG_ERRQUEUE;
+     }
+ }
+ 
+Index: rustix/Cargo.toml
+===================================================================
+--- rustix.orig/Cargo.toml
++++ rustix/Cargo.toml
+@@ -154,7 +154,7 @@ io_uring = [
+ linux_4_11 = []
+ linux_latest = ["linux_4_11"]
+ mm = []
+-net = []
++net = ["linux-raw-sys/net"]
+ os_pipe = []
+ param = ["fs"]
+ process = []
+@@ -177,7 +177,7 @@ rustc-dep-of-std = [
+ ]
+ std = ["io-lifetimes"]
+ termios = []
+-thread = []
++thread = ["linux-raw-sys/prctl"]
+ time = []
+ use-libc = [
+     "libc_errno",
+@@ -187,11 +187,13 @@ use-libc-auxv = ["libc"]
+ cc = []
+ 
+ [target."cfg(all(any(target_os = \"android\", target_os = \"linux\"), any(rustix_use_libc, miri, not(all(target_os = \"linux\", any(target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\"), all(target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"powerpc64\", target_arch = \"riscv64\", target_arch = \"mips\", target_arch = \"mips64\"))))))))".dependencies.linux-raw-sys]
+-version = "0.3.6"
++version = "0.4.1"
+ features = [
+     "general",
+     "ioctl",
+     "no_std",
++    "system",
++    "prctl",
+ ]
+ default-features = false
+ 
+@@ -210,12 +212,14 @@ default-features = false
+ package = "errno"
+ 
+ [target."cfg(all(not(rustix_use_libc), not(miri), target_os = \"linux\", any(target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\"), all(target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"powerpc64\", target_arch = \"riscv64\", target_arch = \"mips\", target_arch = \"mips64\")))))".dependencies.linux-raw-sys]
+-version = "0.3.6"
++version = "0.4.1"
+ features = [
+     "general",
+     "errno",
+     "ioctl",
+     "no_std",
++    "system",
++    "prctl",
+ ]
+ default-features = false
+ 
+Index: rustix/src/backend/linux_raw/process/types.rs
+===================================================================
+--- rustix.orig/src/backend/linux_raw/process/types.rs
++++ rustix/src/backend/linux_raw/process/types.rs
+@@ -2,7 +2,7 @@ use super::super::c;
+ use linux_raw_sys::general::membarrier_cmd;
+ 
+ /// `sysinfo`
+-pub type Sysinfo = linux_raw_sys::general::sysinfo;
++pub type Sysinfo = linux_raw_sys::system::sysinfo;
+ 
+ /// A command for use with [`membarrier`] and [`membarrier_cpu`].
+ ///
+@@ -233,7 +233,7 @@ pub type RawUid = u32;
+ /// A CPU identifier as a raw integer.
+ pub type RawCpuid = u32;
+ 
+-pub(crate) type RawUname = linux_raw_sys::general::new_utsname;
++pub(crate) type RawUname = linux_raw_sys::system::new_utsname;
+ 
+ #[repr(C)]
+ #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
