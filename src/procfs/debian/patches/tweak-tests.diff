@@ -1,0 +1,40 @@
+Index: procfs/src/meminfo.rs
+===================================================================
+--- procfs.orig/src/meminfo.rs
++++ procfs/src/meminfo.rs
+@@ -549,7 +549,11 @@ mod test {
+             assert!(meminfo.shmem_pmd_mapped.is_none());
+         }
+ 
+-        if kernel >= KernelVersion::new(3, 1, 0) && config.as_ref().map_or(true, |cfg| cfg.contains_key("CONFIG_CMA")) {
++        if kernel >= KernelVersion::new(3, 1, 0) && config.is_none() {
++            // the kernel is new enough to support CMA, but we were not
++            // able to read the config, so we don't know if it's enabled
++            // or not.
++        } else if kernel >= KernelVersion::new(3, 1, 0) && config.as_ref().map_or(true, |cfg| cfg.contains_key("CONFIG_CMA")) {
+             assert!(meminfo.cma_total.is_some());
+             assert!(meminfo.cma_free.is_some());
+         } else {
+Index: procfs/src/process/tests.rs
+===================================================================
+--- procfs.orig/src/process/tests.rs
++++ procfs/src/process/tests.rs
+@@ -382,15 +382,15 @@ fn test_proc_auxv() {
+             }
+             12 => {
+                 println!("Effective UID: {}", v);
+-                assert!(v > 0);
++                assert_eq!(v as u32, rustix::process::geteuid().as_raw());
+             }
+             13 => {
+                 println!("Real GID: {}", v);
+-                assert!(v > 0);
++                assert_eq!(v as u32, rustix::process::getgid().as_raw());
+             }
+             14 => {
+                 println!("Effective GID: {}", v);
+-                assert!(v > 0);
++                assert_eq!(v as u32, rustix::process::getegid().as_raw());
+             }
+             15 => {
+                 println!("Platform string address: 0x{:x}", v);
