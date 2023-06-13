@@ -1,0 +1,118 @@
+From f364d9dce487c2fdfdc40728d80700217222c7c4 Mon Sep 17 00:00:00 2001
+From: Markus Wanner <markus@bluegap.ch>
+Date: Mon, 23 Jan 2023 21:37:09 +0100
+Subject: [PATCH] Update aes dependency from 0.7.5 to 0.8.2 and adjust
+ accordingly.
+
+---
+ Cargo.toml   |  4 ++--
+ src/crypt.rs | 31 ++++++++++++++-----------------
+ 2 files changed, 16 insertions(+), 19 deletions(-)
+
+Index: pdf/Cargo.toml.orig
+===================================================================
+--- pdf.orig/Cargo.toml.orig	2023-02-24 12:05:07.709566474 +0100
++++ pdf/Cargo.toml.orig	2023-02-24 12:05:07.705566512 +0100
+@@ -29,8 +29,8 @@
+ tempfile = { version = "3.2.0", optional = true }
+ md5 = "0.7"
+ jpeg-decoder = { version = "0.3.0", default-features = false }
+-aes = "0.7.5"
+-block-modes = "0.8.1"
++aes = "0.8.2"
++cbc = "0.1"
+ stringprep = "0.1.2"
+ sha2 = "0.10.2"
+ fax = "0.2.0"
+Index: pdf/src/crypt.rs
+===================================================================
+--- pdf.orig/src/crypt.rs	2023-02-24 12:05:07.709566474 +0100
++++ pdf/src/crypt.rs	2023-02-24 12:05:47.361189833 +0100
+@@ -2,9 +2,8 @@
+ 
+ use crate as pdf;
+ use aes::cipher::generic_array::{sequence::Split, GenericArray};
+-use aes::{Aes128, Aes256, NewBlockCipher};
+-use block_modes::block_padding::{NoPadding, Pkcs7};
+-use block_modes::{BlockMode, Cbc};
++use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit};
++use aes::cipher::block_padding::{NoPadding, Pkcs7};
+ use sha2::{Digest, Sha256, Sha384, Sha512};
+ use std::fmt;
+ use std::collections::HashMap;
+@@ -13,6 +12,10 @@
+ use crate::primitive::{Dictionary, PdfString, Name};
+ use crate::error::{PdfError, Result};
+ 
++type Aes128CbcEnc = cbc::Encryptor<aes::Aes128>;
++type Aes128CbcDec = cbc::Decryptor<aes::Aes128>;
++type Aes256CbcDec = cbc::Decryptor<aes::Aes256>;
++
+ const PADDING: [u8; 32] = [
+     0x28, 0xBF, 0x4E, 0x5E, 0x4E, 0x75, 0x8A, 0x41,
+     0x64, 0x00, 0x4E, 0x56, 0xFF, 0xFA, 0x01, 0x08,
+@@ -450,10 +453,8 @@
+             };
+ 
+             let zero_iv = GenericArray::from_slice(&[0u8; 16]);
+-            let key_unwrap_cipher: Cbc<Aes256, NoPadding> =
+-                Cbc::new(Aes256::new(&intermediate_key), zero_iv);
+-            let key_slice = t!(key_unwrap_cipher
+-                .decrypt(&mut wrapped_key)
++            let key_slice = t!(Aes256CbcDec::new(&intermediate_key, zero_iv)
++                .decrypt_padded_mut::<NoPadding>(&mut wrapped_key)
+                 .map_err(|_| PdfError::InvalidPassword));
+             let mut key = [0u8; 32];
+             key.copy_from_slice(key_slice);
+@@ -486,8 +487,7 @@
+ 
+         let mut i = 0;
+         while i < 64 || i < data[data_total_len - 1] as usize + 32 {
+-            let aes: Cbc<Aes128, NoPadding> = Cbc::new(Aes128::new(&key), &iv);
+-
++            let aes = Aes128CbcEnc::new(&key, &iv);
+             let data_repeat_len = password.len() + block_size + u.len();
+             data[..password.len()].copy_from_slice(password);
+             data[password.len()..password.len() + block_size].copy_from_slice(&block[..block_size]);
+@@ -499,7 +499,7 @@
+ 
+             // The plaintext length will always be a multiple of the block size, unwrap is okay
+             let encrypted = aes
+-                .encrypt(&mut data[..data_total_len], data_total_len)
++                .encrypt_padded_mut::<NoPadding>(&mut data[..data_total_len], data_total_len)
+                 .unwrap();
+ 
+             let sum: usize = encrypted[..16].iter().map(|byte| *byte as usize).sum();
+@@ -579,28 +579,26 @@
+                 let key = *md5::compute(&key[..n + 9]);
+ 
+                 // d)
+-                type Aes128Cbc = Cbc<Aes128, Pkcs7>;
+                 let key = &key[..(n + 5).min(16)];
+                 if data.len() < 16 {
+                     return Err(PdfError::DecryptionFailure);
+                 }
+                 let (iv, ciphertext) = data.split_at_mut(16);
+                 let cipher =
+-                    t!(Aes128Cbc::new_from_slices(key, iv).map_err(|_| PdfError::DecryptionFailure));
++                    t!(Aes128CbcDec::new_from_slices(key, iv).map_err(|_| PdfError::DecryptionFailure));
+                 Ok(t!(cipher
+-                    .decrypt(ciphertext)
++                    .decrypt_padded_mut::<Pkcs7>(ciphertext)
+                     .map_err(|_| PdfError::DecryptionFailure)))
+             }
+             CryptMethod::AESV3 => {
+-                type Aes256Cbc = Cbc<Aes256, Pkcs7>;
+                 if data.len() < 16 {
+                     return Err(PdfError::DecryptionFailure);
+                 }
+                 let (iv, ciphertext) = data.split_at_mut(16);
+                 let cipher =
+-                    t!(Aes256Cbc::new_from_slices(self.key(), iv).map_err(|_| PdfError::DecryptionFailure));
++                    t!(Aes256CbcDec::new_from_slices(self.key(), iv).map_err(|_| PdfError::DecryptionFailure));
+                 Ok(t!(cipher
+-                    .decrypt(ciphertext)
++                    .decrypt_padded_mut::<Pkcs7>(ciphertext)
+                     .map_err(|_| PdfError::DecryptionFailure)))
+             }
+         }
