@@ -8,25 +8,27 @@ desync_finder, dump_ivf and dump_lookahead_data are only useful for internal dev
  Cargo.toml | 30 ------------------------------
  1 file changed, 30 deletions(-)
 
-diff --git a/Cargo.toml b/Cargo.toml
-index abbcb39..63b7659 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -45,11 +45,6 @@ name = "rav1e"
+@@ -63,15 +63,6 @@
  bench = false
  required-features = ["binaries"]
  
 -[[bin]]
 -name = "rav1e-ch"
 -bench = false
--required-features = ["binaries", "channel-api", "unstable"]
+-required-features = [
+-    "binaries",
+-    "channel-api",
+-    "unstable",
+-]
 -
  [dependencies.aom-sys]
- version = "0.3.0"
+ version = "0.3.2"
  optional = true
-@@ -65,17 +60,9 @@ version = "0.8.1"
- optional = true
- default-features = false
+@@ -91,17 +82,9 @@
+ version = "0.2.0"
+ features = ["serialize"]
  
 -[dependencies.backtrace]
 -version = "0.3"
@@ -42,7 +44,7 @@ index abbcb39..63b7659 100644
  [dependencies.cfg-if]
  version = "1.0"
  
-@@ -89,10 +76,6 @@ default-features = false
+@@ -128,10 +111,6 @@
  version = "0.15"
  optional = true
  
@@ -51,14 +53,14 @@ index abbcb39..63b7659 100644
 -optional = true
 -
  [dependencies.dav1d-sys]
- version = "0.7"
+ version = "0.7.0"
  optional = true
-@@ -101,12 +84,6 @@ optional = true
+@@ -140,12 +119,6 @@
  version = "0.6"
  optional = true
  
 -[dependencies.image]
--version = "0.23"
+-version = "0.24.3"
 -features = ["png"]
 -optional = true
 -default-features = false
@@ -66,23 +68,35 @@ index abbcb39..63b7659 100644
  [dependencies.itertools]
  version = "0.10"
  
-@@ -200,19 +177,12 @@ asm = ["nasm-rs", "cc", "regex"]
- bench = []
- binaries = ["ivf", "y4m", "clap", "scan_fmt", "fern", "console", "av-metrics"]
- capi = []
+@@ -292,8 +265,6 @@
+     "nom",
+ ]
+ capi = ["scan_fmt"]
 -channel-api = ["crossbeam"]
 -check_asm = []
  decode_test = ["aom-sys"]
  decode_test_dav1d = ["dav1d-sys"]
- default = ["binaries", "asm", "signal_support"]
+ default = [
+@@ -303,14 +274,7 @@
+     "signal_support",
+     "git_version",
+ ]
 -desync_finder = ["backtrace"]
 -dump_ivf = ["ivf"]
--dump_lookahead_data = ["byteorder", "image"]
+-dump_lookahead_data = [
+-    "byteorder",
+-    "image",
+-]
+ git_version = ["built/git2"]
 -quick_test = []
  scenechange = []
- serialize = ["serde", "toml", "v_frame/serialize", "arrayvec/serde"]
+ serialize = [
+     "serde",
+@@ -320,7 +284,6 @@
+ ]
  signal_support = ["signal-hook"]
+ threading = ["rayon/threads"]
 -unstable = []
+ 
  [target."cfg(any(decode_test, decode_test_dav1d))".dependencies.system-deps]
  version = "6"
- 
