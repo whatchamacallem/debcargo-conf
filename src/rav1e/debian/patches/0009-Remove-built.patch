@@ -1,0 +1,61 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -228,10 +228,6 @@
+ [dev-dependencies.semver]
+ version = "1.0"
+ 
+-[build-dependencies.built]
+-version = "0.5.2"
+-features = []
+-
+ [build-dependencies.cc]
+ version = "1.0"
+ features = ["parallel"]
+@@ -270,9 +266,7 @@
+     "asm",
+     "threading",
+     "signal_support",
+-    "git_version",
+ ]
+-git_version = ["built/git2"]
+ scenechange = []
+ serialize = [
+     "serde",
+--- a/build.rs
++++ b/build.rs
+@@ -251,8 +251,6 @@
+ fn main() {
+   rustc_version_check();
+ 
+-  built::write_built_file().expect("Failed to acquire build-time information");
+-
+   let arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
+   let os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+   // let env = env::var("CARGO_CFG_TARGET_ENV").unwrap();
+--- a/src/bin/common.rs
++++ b/src/bin/common.rs
+@@ -275,8 +275,8 @@
+     format!(
+       "{}\n{} {}\nCompiled CPU Features: {}\nAssembly: {}\nThreading: {}\nUnstable Features: {}\nCompiler Flags: {}",
+       get_version(),
+-      built_info::RUSTC_VERSION,
+-      built_info::TARGET,
++      "unknown rustc version",
++      "unknown target",
+       option_env!("CARGO_CFG_TARGET_FEATURE").unwrap_or("(None)"),
+       if cfg!(feature = "asm") { "Enabled" } else { "Disabled" },
+       if cfg!(feature = "threading") { "Enabled" } else { "Disabled" },
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -77,11 +77,6 @@
+ #[macro_use]
+ extern crate log;
+ 
+-pub(crate) mod built_info {
+-  // The file has been placed there by the build script.
+-  include!(concat!(env!("OUT_DIR"), "/built.rs"));
+-}
+-
+ mod serialize {
+   cfg_if::cfg_if! {
+     if #[cfg(feature="serialize")] {
