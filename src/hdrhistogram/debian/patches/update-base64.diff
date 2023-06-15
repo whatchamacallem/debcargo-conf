@@ -1,0 +1,84 @@
+Index: hdrhistogram/Cargo.toml
+===================================================================
+--- hdrhistogram.orig/Cargo.toml
++++ hdrhistogram/Cargo.toml
+@@ -58,7 +58,7 @@ name = "cli"
+ required-features = ["serialization"]
+ 
+ [dependencies.base64]
+-version = "0.13"
++version = "0.21"
+ optional = true
+ 
+ [dependencies.byteorder]
+Index: hdrhistogram/src/serialization/interval_log/mod.rs
+===================================================================
+--- hdrhistogram.orig/src/serialization/interval_log/mod.rs
++++ hdrhistogram/src/serialization/interval_log/mod.rs
+@@ -486,7 +486,8 @@ impl<'a, 'b, W: 'a + io::Write, S: 'b +
+             .serializer
+             .serialize(h, &mut self.serialize_buf)
+             .map_err(IntervalLogWriterError::SerializeError)?;
+-        base64::encode_config_buf(&self.serialize_buf, base64::STANDARD, &mut self.text_buf);
++        use base64::Engine;
++        base64::engine::general_purpose::STANDARD.encode_string(&self.serialize_buf, &mut self.text_buf);
+ 
+         self.writer.write_all(self.text_buf.as_bytes())?;
+         self.writer.write_all(b"\n")?;
+Index: hdrhistogram/tests/interval_log.rs
+===================================================================
+--- hdrhistogram.orig/tests/interval_log.rs
++++ hdrhistogram/tests/interval_log.rs
+@@ -11,6 +11,7 @@ mod tests {
+     use std::io::{BufRead, Read};
+     use std::path::Path;
+     use std::{io, iter, str, time};
++    use base64::Engine;
+ 
+     #[test]
+     fn parse_sample_tagged_interval_log_start_timestamp() {
+@@ -118,7 +119,7 @@ mod tests {
+         let mut deserializer = Deserializer::new();
+         for ilh in intervals {
+             let serialized_histogram =
+-                base64::decode_config(ilh.encoded_histogram(), base64::STANDARD).unwrap();
++                base64::engine::general_purpose::STANDARD.decode(ilh.encoded_histogram()).unwrap();
+             let decoded_hist: Histogram<u64> = deserializer
+                 .deserialize(&mut io::Cursor::new(&serialized_histogram))
+                 .unwrap();
+@@ -150,7 +151,7 @@ mod tests {
+             .for_each(|mut line| {
+                 let hist_index = line.rfind("HISTF").unwrap();
+                 let serialized =
+-                    base64::decode_config(&line[hist_index..], base64::STANDARD).unwrap();
++                    base64::engine::general_purpose::STANDARD.decode(&line[hist_index..]).unwrap();
+ 
+                 let decoded_hist: Histogram<u64> = deserializer
+                     .deserialize(&mut io::Cursor::new(serialized))
+@@ -163,7 +164,7 @@ mod tests {
+ 
+                 // replace the deflate histogram with the predictable non-deflate one
+                 line.truncate(hist_index);
+-                line.push_str(&base64::encode_config(&serialize_buf, base64::STANDARD));
++                line.push_str(&base64::engine::general_purpose::STANDARD.encode(&serialize_buf));
+ 
+                 log_without_headers.extend_from_slice(line.as_bytes());
+                 log_without_headers.extend_from_slice("\n".as_bytes());
+@@ -185,7 +186,7 @@ mod tests {
+                 })
+                 .for_each(|ilh| {
+                     let serialized_histogram =
+-                        base64::decode_config(ilh.encoded_histogram(), base64::STANDARD).unwrap();
++                        base64::engine::general_purpose::STANDARD.decode(ilh.encoded_histogram()).unwrap();
+                     let decoded_hist: Histogram<u64> = deserializer
+                         .deserialize(&mut io::Cursor::new(&serialized_histogram))
+                         .unwrap();
+@@ -281,7 +282,7 @@ mod tests {
+         let mut deserializer = Deserializer::new();
+         for (index, ilh) in parsed.iter().enumerate() {
+             let serialized_histogram =
+-                base64::decode_config(ilh.encoded_histogram(), base64::STANDARD).unwrap();
++                base64::engine::general_purpose::STANDARD.decode(ilh.encoded_histogram()).unwrap();
+             let decoded_hist: Histogram<u64> = deserializer
+                 .deserialize(&mut io::Cursor::new(&serialized_histogram))
+                 .unwrap();
