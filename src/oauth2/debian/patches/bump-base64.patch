@@ -15,16 +15,16 @@ Index: oauth2/src/lib.rs
 ===================================================================
 --- oauth2.orig/src/lib.rs
 +++ oauth2/src/lib.rs
-@@ -429,6 +429,8 @@ use std::marker::PhantomData;
- use std::sync::Arc;
- use std::time::Duration;
+@@ -429,6 +429,8 @@ use std::time::Duration;
  
+ use chrono::serde::ts_seconds_option;
+ use chrono::{DateTime, Utc};
 +use base64::engine::general_purpose::STANDARD;
 +use base64::engine::Engine as _;
  use http::header::{HeaderMap, HeaderValue, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
  use http::status::StatusCode;
  use serde::de::DeserializeOwned;
-@@ -1993,7 +1995,7 @@ fn endpoint_request<'a>(
+@@ -1998,7 +2000,7 @@ fn endpoint_request<'a>(
              let urlencoded_secret: String =
                  form_urlencoded::byte_serialize(secret.secret().as_bytes()).collect();
              let b64_credential =
