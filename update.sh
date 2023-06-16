@@ -118,7 +118,9 @@ When satisfied with all of these outputs:
 - of lintian after running ./build.sh
 - of dev/list-rdeps.sh $CRATE
 
-then you can commit and push all your changes.
+then you can commit. For example:
+git commit -m "$CRATE: new upstream release" src/$CRATE/
+and push all your changes.
 
 Then, ask a Debian Developer to run \`./release.sh $*\`. This finalises your
 changes in the changelog, and allows them to build and upload the package. If
