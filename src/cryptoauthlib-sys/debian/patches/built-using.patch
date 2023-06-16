@@ -1,0 +1,16 @@
+Index: cryptoauthlib-sys/build.rs
+===================================================================
+--- cryptoauthlib-sys.orig/build.rs
++++ cryptoauthlib-sys/build.rs
+@@ -1,3 +1,5 @@
++use std::env;
++
+ fn main() {
+     let dst = cmake::Config::new("cryptoauthlib")
+         .no_build_target(true) // Prevent installing in host system directories
+@@ -7,4 +9,5 @@ fn main() {
+     // Below caller LD_FLAGS are defined. First -L then -l
+     println!("cargo:rustc-link-search=native={}/build/lib", dst.display());
+     println!("cargo:rustc-link-lib=static=cryptoauth");
++    println!("dh-cargo:deb-built-using=cryptoauth=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
+ }
