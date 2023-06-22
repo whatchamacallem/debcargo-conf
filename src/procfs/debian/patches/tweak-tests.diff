@@ -1,7 +1,7 @@
-Index: procfs/src/meminfo.rs
+Index: rust-procfs-0.14.2/src/meminfo.rs
 ===================================================================
---- procfs.orig/src/meminfo.rs
-+++ procfs/src/meminfo.rs
+--- rust-procfs-0.14.2.orig/src/meminfo.rs
++++ rust-procfs-0.14.2/src/meminfo.rs
 @@ -382,9 +382,9 @@ impl Meminfo {
              file_huge_pages: map.remove("FileHugePages"),
          };
@@ -14,7 +14,20 @@ Index: procfs/src/meminfo.rs
  
          Ok(meminfo)
      }
-@@ -549,7 +549,11 @@ mod test {
+@@ -514,7 +514,11 @@ mod test {
+             assert!(meminfo.commit_limit.is_none());
+         }
+ 
+-        if kernel >= KernelVersion::new(2, 6, 32)
++        if kernel >= KernelVersion::new(2, 6, 32) && config.is_none() {
++            // the kernel is new enough to support MEMORY_FAILURE, but we were
++            // not able to read the config, so we don't know if it's enabled
++            // or not.
++        } else if kernel >= KernelVersion::new(2, 6, 32)
+             && config
+                 .as_ref()
+                 .map_or(std::path::Path::new("/proc/kpagecgroup").exists(), |cfg| {
+@@ -549,7 +553,11 @@ mod test {
              assert!(meminfo.shmem_pmd_mapped.is_none());
          }
  
@@ -27,10 +40,46 @@ Index: procfs/src/meminfo.rs
              assert!(meminfo.cma_total.is_some());
              assert!(meminfo.cma_free.is_some());
          } else {
-Index: procfs/src/process/tests.rs
+@@ -557,7 +565,10 @@ mod test {
+             assert!(meminfo.cma_free.is_none());
+         }
+ 
+-        if config
++        if config.is_none() {
++            // we do not know if huge pages are enabled, since we
++            // cannot read the kernel configuration.
++        } else if config
+             .as_ref()
+             .map_or(true, |cfg| cfg.contains_key("CONFIG_HUGETLB_PAGE"))
+         {
+@@ -570,7 +581,10 @@ mod test {
+             assert!(meminfo.hugepagesize.is_none());
+         }
+ 
+-        if kernel >= KernelVersion::new(2, 6, 17)
++        if kernel >= KernelVersion::new(2, 6, 17) && config.is_none() {
++            // we do not know if huge pages are enabled, since we
++            // cannot read the kernel configuration.
++        } else if kernel >= KernelVersion::new(2, 6, 17)
+             && config
+                 .as_ref()
+                 .map_or(true, |cfg| cfg.contains_key("CONFIG_HUGETLB_PAGE"))
+@@ -580,7 +594,10 @@ mod test {
+             assert!(meminfo.hugepages_rsvd.is_none());
+         }
+ 
+-        if kernel >= KernelVersion::new(2, 6, 24)
++        if kernel >= KernelVersion::new(2, 6, 24) && config.is_none() {
++            // we do not know if huge pages are enabled, since we
++            // cannot read the kernel configuration.
++        } else if kernel >= KernelVersion::new(2, 6, 24)
+             && config
+                 .as_ref()
+                 .map_or(true, |cfg| cfg.contains_key("CONFIG_HUGETLB_PAGE"))
+Index: rust-procfs-0.14.2/src/process/tests.rs
 ===================================================================
---- procfs.orig/src/process/tests.rs
-+++ procfs/src/process/tests.rs
+--- rust-procfs-0.14.2.orig/src/process/tests.rs
++++ rust-procfs-0.14.2/src/process/tests.rs
 @@ -382,15 +382,15 @@ fn test_proc_auxv() {
              }
              12 => {
@@ -50,10 +99,10 @@ Index: procfs/src/process/tests.rs
              }
              15 => {
                  println!("Platform string address: 0x{:x}", v);
-Index: procfs/src/process/task.rs
+Index: rust-procfs-0.14.2/src/process/task.rs
 ===================================================================
---- procfs.orig/src/process/task.rs
-+++ procfs/src/process/task.rs
+--- rust-procfs-0.14.2.orig/src/process/task.rs
++++ rust-procfs-0.14.2/src/process/task.rs
 @@ -105,7 +105,7 @@ mod tests {
      use std::process;
      use std::sync::{Arc, Barrier};
@@ -72,10 +121,10 @@ Index: procfs/src/process/task.rs
  
      #[test]
      fn test_task_children() {
-Index: procfs/src/cpuinfo.rs
+Index: rust-procfs-0.14.2/src/cpuinfo.rs
 ===================================================================
---- procfs.orig/src/cpuinfo.rs
-+++ procfs/src/cpuinfo.rs
+--- rust-procfs-0.14.2.orig/src/cpuinfo.rs
++++ rust-procfs-0.14.2/src/cpuinfo.rs
 @@ -152,8 +152,9 @@ mod tests {
          let info = CpuInfo::new().unwrap();
          println!("{:#?}", info.flags(0));
@@ -88,10 +137,10 @@ Index: procfs/src/cpuinfo.rs
              // May not be available on some old kernels:
              info.physical_id(num);
          }
-Index: procfs/src/lib.rs
+Index: rust-procfs-0.14.2/src/lib.rs
 ===================================================================
---- procfs.orig/src/lib.rs
-+++ procfs/src/lib.rs
+--- rust-procfs-0.14.2.orig/src/lib.rs
++++ rust-procfs-0.14.2/src/lib.rs
 @@ -1302,7 +1302,11 @@ mod tests {
          assert!(diff <= 1);
  
@@ -105,3 +154,29 @@ Index: procfs/src/lib.rs
  
          // the sum of each individual CPU should be equal to the total cpu entry
          // note: on big machines with 128 cores, it seems that the differences can be rather high,
+Index: rust-procfs-0.14.2/src/net.rs
+===================================================================
+--- rust-procfs-0.14.2.orig/src/net.rs
++++ rust-procfs-0.14.2/src/net.rs
+@@ -729,6 +729,11 @@ mod tests {
+         // When you connect to [2a00:1450:4001:814::200e]:80 (ipv6.google.com) the entry with
+         // 5014002A14080140000000000E200000:0050 remote endpoint is created in /proc/net/tcp6
+         // on Linux 4.19.
++        // little endian systems use a weird mixed-endian order for the ipv6 address, while
++        // big endian ones  are consistently big endian.
++        #[cfg(target_endian = "big")]
++        let addr = parse_addressport_str("2a00145040010814000000000000200e:0050").unwrap();
++        #[cfg(target_endian = "little")]
+         let addr = parse_addressport_str("5014002A14080140000000000E200000:0050").unwrap();
+         assert_eq!(addr.port(), 80);
+         match addr.ip() {
+@@ -737,6 +742,9 @@ mod tests {
+         }
+ 
+         // IPv6 test case from https://stackoverflow.com/questions/41940483/parse-ipv6-addresses-from-proc-net-tcp6-python-2-7/41948004#41948004
++        #[cfg(target_endian = "big")]
++        let addr = parse_addressport_str("20010db8000000000123456789abcdef:0").unwrap();
++        #[cfg(target_endian = "little")]
+         let addr = parse_addressport_str("B80D01200000000067452301EFCDAB89:0").unwrap();
+         assert_eq!(addr.port(), 0);
+         match addr.ip() {
