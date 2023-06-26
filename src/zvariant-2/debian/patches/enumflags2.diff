@@ -1,0 +1,85 @@
+This patch is based on manually applying fixes from 
+https://github.com/dbus2/zbus/commit/fd5a4fa5f446320a4eee952288b338382a5d14ab
+to the zvariant 2.x codebase.
+
+Index: zvariant-2/src/from_value.rs
+===================================================================
+--- zvariant-2.orig/src/from_value.rs
++++ zvariant-2/src/from_value.rs
+@@ -123,13 +123,13 @@ impl TryFrom<Value<'_>> for OwnedSignatu
+ #[cfg(feature = "enumflags2")]
+ impl<'a, F> TryFrom<Value<'a>> for enumflags2::BitFlags<F>
+ where
+-    F: enumflags2::RawBitFlags,
+-    F::Type: TryFrom<Value<'a>, Error = Error>,
++    F: enumflags2::BitFlag,
++    F::Numeric: TryFrom<Value<'a>, Error = Error>,
+ {
+     type Error = Error;
+ 
+     fn try_from(value: Value<'a>) -> Result<Self, Self::Error> {
+-        Self::from_bits(F::Type::try_from(value)?)
++        Self::from_bits(F::Numeric::try_from(value)?)
+             .map_err(|_| Error::Message("Failed to convert to bitflags".into()))
+     }
+ }
+Index: zvariant-2/src/owned_value.rs
+===================================================================
+--- zvariant-2.orig/src/owned_value.rs
++++ zvariant-2/src/owned_value.rs
+@@ -110,8 +110,8 @@ where
+ #[cfg(feature = "enumflags2")]
+ impl<'a, F> TryFrom<OwnedValue> for enumflags2::BitFlags<F>
+ where
+-    F: enumflags2::RawBitFlags,
+-    F::Type: TryFrom<Value<'a>, Error = crate::Error>,
++    F: enumflags2::BitFlag,
++    F::Numeric: TryFrom<Value<'a>, Error = crate::Error>,
+ {
+     type Error = crate::Error;
+ 
+@@ -210,14 +210,16 @@ impl<'de> Deserialize<'de> for OwnedValu
+ mod tests {
+     use byteorder::LE;
+     use std::{convert::TryFrom, error::Error, result::Result};
+-
++    #[cfg(feature = "enumflags2")]
++    use enumflags2::bitflags;
+     use crate::{from_slice, to_bytes, EncodingContext, OwnedValue, Value};
+ 
+     #[cfg(feature = "enumflags2")]
+     #[test]
+     fn bitflags() -> Result<(), Box<dyn Error>> {
++        #[bitflags]
+         #[repr(u32)]
+-        #[derive(enumflags2::BitFlags, Copy, Clone, Debug)]
++        #[derive(Copy, Clone, Debug)]
+         pub enum Flaggy {
+             One = 0x1,
+             Two = 0x2,
+Index: zvariant-2/src/type.rs
+===================================================================
+--- zvariant-2.orig/src/type.rs
++++ zvariant-2/src/type.rs
+@@ -324,7 +324,7 @@ where
+ #[cfg(feature = "enumflags2")]
+ impl<F> Type for enumflags2::BitFlags<F>
+ where
+-    F: Type + enumflags2::RawBitFlags,
++    F: Type + enumflags2::BitFlag,
+ {
+     #[inline]
+     fn signature() -> Signature<'static> {
+Index: zvariant-2/Cargo.toml
+===================================================================
+--- zvariant-2.orig/Cargo.toml
++++ zvariant-2/Cargo.toml
+@@ -35,7 +35,7 @@ optional = true
+ version = "1.3.1"
+ 
+ [dependencies.enumflags2]
+-version = "0.6.4"
++version = "0.7.7"
+ features = ["serde"]
+ optional = true
+ 
