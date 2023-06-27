@@ -2,6 +2,8 @@
 %:
 	dh $@ --buildsystem cargo
 
-override_dh_auto_install:
-	dh_auto_install
+execute_after_dh_auto_install:
 	rm debian/rust-findutils/usr/bin/testing-commandline
+	mkdir -p debian/rust-findutils/usr/lib/cargo/bin/findutils/
+	mv debian/rust-findutils/usr/bin/* \
+	   debian/rust-findutils/usr/lib/cargo/bin/findutils/
