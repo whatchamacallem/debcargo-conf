@@ -1,2 +1,28 @@
 overlay = "."
 uploaders = ["Marc Dequènes (Duck) <Duck@DuckCorp.org>"]
+collapse_features = true
+
+[source]
+build_depends = ["fonts-dejavu-core", "librust-libm-dev"]
+
+# tests fail unless the std or libm-math feature is enabled
+# but they are exclusive
+[packages.lib]
+test_is_broken = true
+
+[packages."lib+std"]
+test_is_broken = false
+
+[packages."lib+libm-math"]
+test_is_broken = false
+
+# could work but depends on test data that are excluded in upstream's
+# Cargo.toml (./dev directory)
+[packages."lib+gpu_cache"]
+test_is_broken = true
+
+[packages."lib+default"]
+test_is_broken = false
+
+[packages."lib+@"]
+test_is_broken = true
