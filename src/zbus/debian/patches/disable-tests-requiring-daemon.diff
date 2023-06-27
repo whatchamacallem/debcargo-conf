@@ -1,75 +1,45 @@
-Index: zbus/src/connection.rs
-===================================================================
 --- zbus.orig/src/connection.rs
 +++ zbus/src/connection.rs
-@@ -1598,11 +1598,11 @@ mod tests {
-         )
-     }
+@@ -1600,3 +1600,3 @@
  
 -    #[test]
 +    /*#[test]
      #[timeout(15000)]
-     fn serial_monotonically_increases() {
+@@ -1604,3 +1604,3 @@
          crate::utils::block_on(test_serial_monotonically_increases());
 -    }
 +    }*/
  
-     async fn test_serial_monotonically_increases() {
-         let c = Connection::session().await.unwrap();
-@@ -1622,7 +1622,7 @@ mod tests {
-         crate::block_on(async { addr.connect().await }).expect("Unable to connect to session bus");
-     }
+@@ -1624,3 +1624,3 @@
  
 -    #[test]
 +    /*#[test]
      #[timeout(15000)]
-     fn disconnect_on_drop() {
-         // Reproducer for https://gitlab.freedesktop.org/dbus/zbus/-/issues/308 where setting up the
-@@ -1664,7 +1664,7 @@ mod tests {
-         // Let's still make sure the name is gone.
-         let name_has_owner = dbus.name_has_owner(name.try_into().unwrap()).await.unwrap();
+@@ -1666,3 +1666,3 @@
          assert!(!name_has_owner);
 -    }
 +    }*/
  
-     #[cfg(any(unix, not(feature = "tokio")))]
-     #[test]
-Index: zbus/src/fdo.rs
-===================================================================
 --- zbus.orig/src/fdo.rs
 +++ zbus/src/fdo.rs
-@@ -909,7 +909,7 @@ mod tests {
-         assert_eq!(e.description(), Some("so long"));
-     }
+@@ -911,3 +911,3 @@
  
 -    #[test]
 +    /*#[test]
      #[timeout(15000)]
-     fn signal() {
-         // Multi-threaded scheduler.
-@@ -977,5 +977,5 @@ mod tests {
-                 let v = changed.get().await.ok();
-                 dbg!(v)
+@@ -979,3 +979,3 @@
              });
 -    }
 +    }*/
  }
-Index: zbus/src/lib.rs
-===================================================================
 --- zbus.orig/src/lib.rs
 +++ zbus/src/lib.rs
-@@ -185,7 +185,7 @@ mod tests {
-         assert!(primary.flags() == MessageFlags::NoAutoStart);
-     }
+@@ -187,3 +187,3 @@
  
 -    #[test]
 +    /*#[test]
      #[timeout(15000)]
-     #[instrument]
-     fn basic_connection() {
-@@ -534,9 +534,9 @@ mod tests {
-                 break;
-             }
+@@ -536,5 +536,5 @@
          }
 -    }
 +    }*/
@@ -77,47 +47,27 @@ Index: zbus/src/lib.rs
 -    #[test]
 +    /*#[test]
      #[timeout(15000)]
-     fn issue104() {
-         // Tests the fix for https://gitlab.freedesktop.org/dbus/zbus/-/issues/104
-@@ -600,7 +600,7 @@ mod tests {
-             proxy.open_session("plain", &Value::from("")).unwrap();
-             trace!("Called open_session");
+@@ -602,3 +602,3 @@
          };
 -    }
 +    }*/
  
-     // This one we just want to see if it builds, no need to run it. For details see:
-     //
-@@ -622,7 +622,7 @@ mod tests {
-         }
-     }
+@@ -624,3 +624,3 @@
  
 -    #[test]
 +    /*#[test]
      #[timeout(15000)]
-     fn issue_122() {
-         let conn = blocking::Connection::session().unwrap();
-@@ -673,7 +673,7 @@ mod tests {
-         conn.send_message(msg).unwrap();
- 
+@@ -675,3 +675,3 @@
          child.join().unwrap();
 -    }
 +    }*/
  
-     #[test]
-     #[ignore]
-@@ -699,7 +699,7 @@ mod tests {
-         }
-     }
+@@ -701,3 +701,3 @@
  
 -    #[test]
 +    /*#[test]
      #[timeout(15000)]
-     fn issue173() {
-         // Tests the fix for https://gitlab.freedesktop.org/dbus/zbus/-/issues/173
-@@ -761,9 +761,9 @@ mod tests {
-         }
- 
+@@ -763,5 +763,5 @@
          child.join().unwrap();
 -    }
 +    }*/
@@ -125,11 +75,7 @@ Index: zbus/src/lib.rs
 -    #[test]
 +    /*#[test]
      #[timeout(15000)]
-     fn uncached_property() {
-         block_on(test_uncached_property()).unwrap();
-@@ -842,9 +842,9 @@ mod tests {
-         assert!(client.uncached_prop().await.unwrap());
- 
+@@ -844,5 +844,5 @@
          Ok(())
 -    }
 +    }*/
@@ -137,91 +83,55 @@ Index: zbus/src/lib.rs
 -    #[test]
 +    /*#[test]
      #[timeout(15000)]
-     fn issue_260() {
-         // Low-level server example in the book doesn't work. The reason was that
-@@ -864,7 +864,7 @@ mod tests {
-             Ok::<(), zbus::Error>(())
-         })
+@@ -866,3 +866,3 @@
          .unwrap();
 -    }
 +    }*/
  
-     async fn issue_260_service(connection: &Connection) -> Result<()> {
-         use futures_util::stream::TryStreamExt;
-Index: zbus/src/proxy_builder.rs
-===================================================================
 --- zbus.orig/src/proxy_builder.rs
 +++ zbus/src/proxy_builder.rs
-@@ -200,7 +200,7 @@ pub trait ProxyDefault {
- mod tests {
-     use super::*;
+@@ -202,3 +202,3 @@
  
 -    #[test]
 +    /*#[test]
      #[ntest::timeout(15000)]
-     fn builder() {
-         crate::utils::block_on(builder_async());
-@@ -223,5 +223,5 @@ mod tests {
-         ));
-         let proxy = builder.build().await.unwrap();
+@@ -225,3 +225,3 @@
          assert!(matches!(proxy.inner.destination, BusName::Unique(_)));
 -    }
 +    }*/
  }
-Index: zbus/tests/e2e.rs
-===================================================================
 --- zbus.orig/tests/e2e.rs
 +++ zbus/tests/e2e.rs
-@@ -600,11 +600,11 @@ async fn my_iface_test(conn: Connection,
-     Ok(val)
- }
+@@ -602,3 +602,3 @@
  
 -#[test]
 +/*#[test]
  #[timeout(15000)]
- fn iface_and_proxy() {
+@@ -606,3 +606,3 @@
      block_on(iface_and_proxy_(false));
 -}
 +}*/
  
- #[cfg(unix)]
- #[test]
-Index: zbus/src/blocking/proxy.rs
-===================================================================
 --- zbus.orig/src/blocking/proxy.rs
 +++ zbus/src/blocking/proxy.rs
-@@ -486,7 +486,7 @@ mod tests {
-     use crate::blocking;
-     use ntest::timeout;
+@@ -488,3 +488,3 @@
  
 -    #[test]
 +    /*#[test]
      #[timeout(15000)]
-     fn signal() {
-         // Register a well-known name with the session bus and ensure we get the appropriate
-@@ -521,5 +521,5 @@ mod tests {
-         // connection and secondly after we ask for a specific name. Let's make sure we only get the
-         // one we subscribed to.
+@@ -523,3 +523,3 @@
          assert!(signal.args().unwrap().name() == well_known);
 -    }
 +    }*/
  }
-Index: zbus/src/proxy.rs
-===================================================================
 --- zbus.orig/src/proxy.rs
 +++ zbus/src/proxy.rs
-@@ -1323,7 +1323,7 @@ mod tests {
-     use futures_util::StreamExt;
-     use ntest::timeout;
+@@ -1325,3 +1325,3 @@
  
 -    #[test]
 +    /*#[test]
      #[timeout(15000)]
-     fn signal() {
-         block_on(test_signal()).unwrap();
-@@ -1495,5 +1495,5 @@ mod tests {
-         handle.await;
- 
+@@ -1497,3 +1497,3 @@
          Ok(())
 -    }
 +    }*/
