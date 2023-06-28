@@ -87,10 +87,10 @@ run_debcargo() {
 	if [ $? -ne 0 ]; then
 		echo "Command failed. If the patches failed to apply, to rebase them, run":
 		echo "cd $BUILDDIR"
-		echo "quilt pop -a -f --fuzz=0"
+		echo "quilt pop -a -f"
 		echo "rm -rf .pc"
 		echo "ln -s $PKGDIR/debian/patches"
-		echo "quilt push -a -f"
+		echo "quilt push --fuzz=0 -a -f"
 		echo "$EDITOR <file>"
 		echo "quilt refresh"
 		exit 1
