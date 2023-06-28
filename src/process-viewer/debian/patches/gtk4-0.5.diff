@@ -1,0 +1,115 @@
+This patch reduces the process-viewer dependency to 0.5 and adjusts the code accordingly.
+
+Upstream skipped from 0.4 straight to 0.6. Some changes were based on reverting parts of
+https://github.com/GuillaumeGomez/process-viewer/commit/f157ae091bb117bb294a0b2f87c67e5a92e2d791
+
+Index: process-viewer/Cargo.toml
+===================================================================
+--- process-viewer.orig/Cargo.toml
++++ process-viewer/Cargo.toml
+@@ -27,7 +27,7 @@ license = "MIT"
+ repository = "https://github.com/GuillaumeGomez/process-viewer"
+ 
+ [dependencies.gtk]
+-version = "0.6"
++version = "0.5"
+ package = "gtk4"
+ 
+ [dependencies.libc]
+Index: process-viewer/src/main.rs
+===================================================================
+--- process-viewer.orig/src/main.rs
++++ process-viewer/src/main.rs
+@@ -181,7 +181,7 @@ fn run_command<T: IsA<gtk::Window>>(inpu
+         gtk::DialogFlags::DESTROY_WITH_PARENT,
+         gtk::MessageType::Info,
+         gtk::ButtonsType::Ok,
+-        x,
++        &x,
+     );
+     m.set_modal(true);
+     m.connect_response(|dialog, response| {
+@@ -543,7 +543,7 @@ fn build_ui(application: &gtk::Applicati
+     let graphs = gio::SimpleAction::new_stateful(
+         "graphs",
+         None,
+-        settings.borrow().display_graph.to_variant(),
++        &settings.borrow().display_graph.to_variant(),
+     );
+     graphs.connect_activate(glib::clone!(@weak settings => move |g, _| {
+         let mut is_active = false;
+@@ -562,7 +562,7 @@ fn build_ui(application: &gtk::Applicati
+     let temperature = gio::SimpleAction::new_stateful(
+         "temperature",
+         None,
+-        settings.borrow().display_fahrenheit.to_variant(),
++        &settings.borrow().display_fahrenheit.to_variant(),
+     );
+     temperature.connect_activate(move |g, _| {
+         let mut is_active = false;
+@@ -666,7 +666,7 @@ fn main() {
+         let provider = gtk::CssProvider::new();
+         // Style needed for graph.
+         provider.load_from_data(
+-            r#"
++            br#"
+ graph_widget {
+     color: @theme_fg_color;
+ }
+Index: process-viewer/src/graph.rs
+===================================================================
+--- process-viewer.orig/src/graph.rs
++++ process-viewer/src/graph.rs
+@@ -23,7 +23,7 @@ impl GraphWidget {
+     /// If `keep_max` is set to `true`, then this value will never go down, meaning that graphs
+     /// won't rescale down. It is not taken into account if `max` is `None`.
+     pub fn new(max: Option<f32>, keep_max: bool) -> Self {
+-        let widget = glib::Object::new::<Self>();
++        let widget: Self = glib::Object::new::<Self>(&[]);
+         widget.imp().graph.borrow().set_max(max);
+         widget.imp().graph.borrow().set_keep_max(keep_max);
+         widget.imp().graph.borrow().set_hexpand(true);
+@@ -137,7 +137,7 @@ glib::wrapper! {
+ impl GraphInnerWidget {
+     #[allow(clippy::new_without_default)]
+     pub fn new() -> Self {
+-        glib::Object::new()
++        glib::Object::new::<Self>(&[])
+     }
+ 
+     pub fn set_max(&self, max: Option<f32>) {
+@@ -439,7 +439,7 @@ glib::wrapper! {
+ 
+ impl SquareWidget {
+     pub fn new(color: Color) -> Self {
+-        let widget = glib::Object::new::<Self>();
++        let widget: Self = glib::Object::new::<Self>(&[]);
+         widget.imp().color.set(color);
+         widget
+     }
+Index: process-viewer/src/network_dialog.rs
+===================================================================
+--- process-viewer.orig/src/network_dialog.rs
++++ process-viewer/src/network_dialog.rs
+@@ -439,7 +439,7 @@ pub fn create_network_dialog(
+             Inhibit(false)
+         }
+     ));
+-    popup.add_controller(event_controller);
++    popup.add_controller(&event_controller);
+     popup.set_resizable(true);
+     popup.show();
+ 
+Index: process-viewer/src/process_dialog.rs
+===================================================================
+--- process-viewer.orig/src/process_dialog.rs
++++ process-viewer/src/process_dialog.rs
+@@ -408,7 +408,7 @@ pub fn create_process_dialog(process: &s
+             Inhibit(false)
+         }),
+     );
+-    popup.add_controller(event_controller);
++    popup.add_controller(&event_controller);
+     popup.set_resizable(true);
+     popup.show();
+ 
