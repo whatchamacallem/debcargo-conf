@@ -1,0 +1,23 @@
+Index: sysinfo/src/lib.rs
+===================================================================
+--- sysinfo.orig/src/lib.rs
++++ sysinfo/src/lib.rs
+@@ -192,6 +192,7 @@ mod doctest {
+ #[cfg(test)]
+ mod test {
+     use crate::*;
++    use std::time::Instant;
+ 
+     #[cfg(feature = "unknown-ci")]
+     #[test]
+@@ -281,7 +282,9 @@ mod test {
+         for _ in 0..10 {
+             s.refresh_cpu();
+             // Wait a bit to update CPU usage values
+-            std::thread::sleep(std::time::Duration::from_millis(100));
++            //std::thread::sleep(std::time::Duration::from_millis(100));
++            let now = Instant::now();
++            while now.elapsed() < std::time::Duration::from_millis(100) {}
+             if s.cpus().iter().any(|c| c.cpu_usage() > 0.0) {
+                 // All good!
+                 return;
