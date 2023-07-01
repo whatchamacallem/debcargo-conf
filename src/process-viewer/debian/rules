@@ -5,6 +5,9 @@
 ifeq ($(DEB_HOST_ARCH),mipsel)
 override_dh_auto_test:
 	echo tests are disabled on mipsel due to running out of address space.
+
+execute_after_dh_auto_configure:
+	sed -i s/debuginfo=2/debuginfo=1/ debian/cargo_home/config
 else
 override_dh_auto_test:
 	dh_auto_test -- test --all
