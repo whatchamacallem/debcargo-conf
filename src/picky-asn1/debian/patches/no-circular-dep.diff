@@ -1,0 +1,257 @@
+Description: drop tests requiring picky_asn1_der
+
+ We cannot introduce a circular dependency on picky-asn1-der given that it
+ depends on picky-asn1.
+
+Author: Emanuele Rocca <ema@debian.org>
+Last-Update: 2023-07-03
+Index: picky-asn1/src/tag.rs
+===================================================================
+--- picky-asn1.orig/src/tag.rs
++++ picky-asn1/src/tag.rs
+@@ -198,67 +198,6 @@ impl fmt::Debug for Tag {
+ /// Can be used to implement ASN.1 Choice.
+ ///
+ /// # Examples
+-/// ```
+-/// use serde::de;
+-/// use picky_asn1::{
+-///     wrapper::{IntegerAsn1, Utf8StringAsn1},
+-///     tag::{Tag, TagPeeker},
+-/// };
+-/// use std::fmt;
+-///
+-/// pub enum MyChoice {
+-///     Integer(u32),
+-///     Utf8String(String),
+-/// }
+-///
+-/// impl<'de> de::Deserialize<'de> for MyChoice {
+-///     fn deserialize<D>(deserializer: D) -> Result<Self, <D as de::Deserializer<'de>>::Error>
+-///     where
+-///         D: de::Deserializer<'de>,
+-///     {
+-///         struct Visitor;
+-///
+-///         impl<'de> de::Visitor<'de> for Visitor {
+-///             type Value = MyChoice;
+-///
+-///             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+-///                 formatter.write_str("a valid MyChoice")
+-///             }
+-///
+-///             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+-///             where
+-///                 A: de::SeqAccess<'de>,
+-///             {
+-///                 match seq.next_element::<TagPeeker>()?.unwrap().next_tag {
+-///                     Tag::INTEGER => {
+-///                         let value = seq.next_element::<u32>()?.unwrap();
+-///                         Ok(MyChoice::Integer(value))
+-///                     }
+-///                     Tag::UTF8_STRING => {
+-///                         let value = seq.next_element::<String>()?.unwrap();
+-///                         Ok(MyChoice::Utf8String(value))
+-///                     }
+-///                     _ => Err(de::Error::invalid_value(
+-///                         de::Unexpected::Other(
+-///                             "[MyChoice] unsupported or unknown choice value",
+-///                         ),
+-///                         &"a supported choice value",
+-///                     ))
+-///                 }
+-///             }
+-///         }
+-///
+-///         deserializer.deserialize_enum("MyChoice", &["Integer", "Utf8String"], Visitor)
+-///     }
+-/// }
+-///
+-/// let buffer = b"\x0C\x06\xE8\x8B\x97\xE5\xAD\x97";
+-/// let my_choice: MyChoice = picky_asn1_der::from_bytes(buffer).unwrap();
+-/// match my_choice {
+-///     MyChoice::Integer(_) => panic!("wrong variant"),
+-///     MyChoice::Utf8String(string) => assert_eq!(string, "苗字"),
+-/// }
+-/// ```
+ #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+ pub struct TagPeeker {
+     pub next_tag: Tag,
+Index: picky-asn1/src/wrapper.rs
+===================================================================
+--- picky-asn1.orig/src/wrapper.rs
++++ picky-asn1/src/wrapper.rs
+@@ -442,25 +442,6 @@ impl fmt::Debug for IntegerAsn1 {
+ /// A wrapper encoding/decoding only the header of the provided Asn1Wrapper with a length of 0.
+ ///
+ /// Examples:
+-/// ```
+-/// use picky_asn1::wrapper::{ExplicitContextTag0, HeaderOnly};
+-/// use serde::{Serialize, Deserialize};
+-///
+-/// let tag_only = HeaderOnly::<ExplicitContextTag0<()>>::default();
+-/// let buffer = [0xA0, 0x00];
+-///
+-/// let encoded = picky_asn1_der::to_vec(&tag_only).expect("couldn't serialize");
+-/// assert_eq!(
+-///     encoded,
+-///     buffer,
+-/// );
+-///
+-/// let decoded: HeaderOnly<ExplicitContextTag0<()>> = picky_asn1_der::from_bytes(&buffer).expect("couldn't deserialize");
+-/// assert_eq!(
+-///     decoded,
+-///     tag_only,
+-/// );
+-/// ```
+ #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Hash, Clone, Default)]
+ pub struct HeaderOnly<T: Asn1Type>(
+     #[serde(
+@@ -545,45 +526,6 @@ where
+ /// instead of using `BitStringAsn1` manually.
+ ///
+ /// Examples
+-/// ```
+-/// use picky_asn1::wrapper::BitStringAsn1Container;
+-/// use serde::{Serialize, Deserialize};
+-///
+-/// #[derive(Serialize, Deserialize, Debug, PartialEq)]
+-/// struct MyType {
+-///     a: u32,
+-///     b: u16,
+-///     c: u16,
+-/// }
+-///
+-/// type MyTypeEncapsulated = BitStringAsn1Container<MyType>;
+-///
+-/// let encapsulated: MyTypeEncapsulated = MyType {
+-///     a: 83910,
+-///     b: 3839,
+-///     c: 4023,
+-/// }.into();
+-///
+-/// let buffer = [
+-///     0x03, 0x10, 0x00, // bit string part
+-///     0x30, 0x0d, // sequence
+-///     0x02, 0x03, 0x01, 0x47, 0xc6, // integer a
+-///     0x02, 0x02, 0x0e, 0xff, // integer b
+-///     0x02, 0x02, 0x0f, 0xb7, // integer c
+-/// ];
+-///
+-/// let encoded = picky_asn1_der::to_vec(&encapsulated).expect("couldn't serialize");
+-/// assert_eq!(
+-///     encoded,
+-///     buffer,
+-/// );
+-///
+-/// let decoded: MyTypeEncapsulated = picky_asn1_der::from_bytes(&buffer).expect("couldn't deserialize");
+-/// assert_eq!(
+-///     decoded,
+-///     encapsulated,
+-/// );
+-/// ```
+ #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Hash, Clone)]
+ pub struct BitStringAsn1Container<Encapsulated>(pub Encapsulated);
+ 
+@@ -597,45 +539,6 @@ impls! { BitStringAsn1Container<Encapsul
+ /// instead of using `OctetStringAsn1` manually.
+ ///
+ /// Examples
+-/// ```
+-/// use picky_asn1::wrapper::OctetStringAsn1Container;
+-/// use serde::{Serialize, Deserialize};
+-///
+-/// #[derive(Serialize, Deserialize, Debug, PartialEq)]
+-/// struct MyType {
+-///     a: u32,
+-///     b: u16,
+-///     c: u16,
+-/// }
+-///
+-/// type MyTypeEncapsulated = OctetStringAsn1Container<MyType>;
+-///
+-/// let encapsulated: MyTypeEncapsulated = MyType {
+-///     a: 83910,
+-///     b: 3839,
+-///     c: 4023,
+-/// }.into();
+-///
+-/// let buffer = [
+-///     0x04, 0x0F, // octet string part
+-///     0x30, 0x0d, // sequence
+-///     0x02, 0x03, 0x01, 0x47, 0xc6, // integer a
+-///     0x02, 0x02, 0x0e, 0xff, // integer b
+-///     0x02, 0x02, 0x0f, 0xb7, // integer c
+-/// ];
+-///
+-/// let encoded = picky_asn1_der::to_vec(&encapsulated).expect("couldn't serialize");
+-/// assert_eq!(
+-///     encoded,
+-///     buffer,
+-/// );
+-///
+-/// let decoded: MyTypeEncapsulated = picky_asn1_der::from_bytes(&buffer).expect("couldn't deserialize");
+-/// assert_eq!(
+-///     decoded,
+-///     encapsulated,
+-/// );
+-/// ```
+ #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Hash, Clone)]
+ pub struct OctetStringAsn1Container<Encapsulated>(pub Encapsulated);
+ 
+@@ -647,55 +550,6 @@ impls! { OctetStringAsn1Container<Encaps
+ /// a default value is returned).
+ ///
+ /// Examples:
+-/// ```
+-/// use picky_asn1::wrapper::{Optional, ExplicitContextTag0};
+-/// use serde::{Serialize, Deserialize};
+-///
+-/// #[derive(Serialize, Deserialize, Debug, PartialEq)]
+-/// struct MyWrapper(u8);
+-///
+-/// impl Default for MyWrapper {
+-///     fn default() -> Self {
+-///         Self(10)
+-///     }
+-/// }
+-///
+-/// #[derive(Serialize, Deserialize, Debug, PartialEq)]
+-/// struct ComplexType {
+-///     // skip if default to reduce encoded size
+-///     #[serde(skip_serializing_if = "optional_field_is_default")]
+-///     optional_field: Optional<MyWrapper>,
+-///     // behind application tag 0 to distinguish from optional_field that is a ASN.1 integer too.
+-///     explicit_field: ExplicitContextTag0<u8>,
+-/// }
+-///
+-/// fn optional_field_is_default(wrapper: &Optional<MyWrapper>) -> bool {
+-///     wrapper.0 == MyWrapper::default()
+-/// }
+-///
+-/// let complex_type = ComplexType {
+-///     optional_field: MyWrapper::default().into(),
+-///     explicit_field: 5.into(),
+-/// };
+-///
+-/// let buffer = [
+-///     0x30, 0x05, // sequence
+-///     // optional field isn't present
+-///     0xA0, 0x03, 0x02, 0x01, 0x05, // explicit field
+-/// ];
+-///
+-/// let encoded = picky_asn1_der::to_vec(&complex_type).expect("couldn't serialize");
+-/// assert_eq!(
+-///     encoded,
+-///     buffer,
+-/// );
+-///
+-/// let decoded: ComplexType = picky_asn1_der::from_bytes(&buffer).expect("couldn't deserialize");
+-/// assert_eq!(
+-///     decoded,
+-///     complex_type,
+-/// );
+-/// ```
+ #[derive(Debug, PartialEq, Eq, PartialOrd, Hash, Clone)]
+ pub struct Optional<T>(pub T);
+ 
