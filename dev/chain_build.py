@@ -86,7 +86,7 @@ def find_built(specs: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
 			except:
 				pass
 		pkg = aptc.get(f'librust-{_crate}-dev')
-		if pkg is not None and (ver == '*' or pkg.candidate.version.startswith(ver)):
+		if pkg is not None and pkg.candidate is not None and (ver == '*' or pkg.candidate.version.startswith(ver)):
 			built.append((crate, pkg.candidate.version, 'apt'))
 			continue
 		if ver == '*':
