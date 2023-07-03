@@ -79,13 +79,14 @@ def find_built(specs: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
 	_print('Conducting search in apt cache and build/ directory for existing debs')
 	for crate, ver in specs:
 		_crate = _todash(crate)
+		pkg_re = re.compile(f'^librust-{_crate}(?:\+.*?)?-dev_{ver}')
 		if ver == '*':
 			try:
 				ver = _get_dch_version(crate)
 			except:
 				pass
 		pkg = aptc.get(f'librust-{_crate}-dev')
-		if pkg is not None and (ver == '*' or pkg.candidate.version.startswith(ver)):
+		if pkg is not None and pkg.candidate is not None and (ver == '*' or pkg.candidate.version.startswith(ver)):
 			built.append((crate, pkg.candidate.version, 'apt'))
 			continue
 		if ver == '*':
@@ -93,7 +94,7 @@ def find_built(specs: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
 			# means it's yet to be `./update.sh`d, move on
 			continue
 		for deb in debs:
-			if f'{_crate}-dev_{ver}' in deb:
+			if pkg_re.match(deb) is not None:
 				built.append((crate, deb, 'build'))
 	return built
 
@@ -209,8 +210,15 @@ def chain_build(specs):
 		built.add(crate)
 		if ver == '*':
 			# used in a glob, so
-			ver = '-'
-		debs.add(_find(f'build/*{_todash(crate)}-dev*{ver}*.deb')[0][6:])
+			ver = ''
+		_crate=_todash(crate)
+		pkg_re = re.compile(f'^librust-{_crate}(?:\+.*?)?-dev_{ver}')
+		chdir('build')
+		all_debs = _find('*.deb')
+		chdir('..')
+		for deb in all_debs:
+			if pkg_re.match(deb) is not None:
+				debs.add(deb)
 
 
 if __name__ == '__main__':
