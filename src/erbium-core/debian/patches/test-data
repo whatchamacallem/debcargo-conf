@@ -4,11 +4,10 @@ Date:   Sun May 21 18:46:53 2023 +0100
 
     Move files used in tests to crates/erbium-core
 
-diff --git a/erbium.conf.example b/erbium.conf.example
-new file mode 100644
-index 0000000..9c198e3
+Index: erbium-core/erbium.conf.example
+===================================================================
 --- /dev/null
-+++ b/erbium.conf.example
++++ erbium-core/erbium.conf.example
 @@ -0,0 +1,133 @@
 +##   Copyright 2021 Perry Lorier
 +##
@@ -143,11 +142,10 @@ index 0000000..9c198e3
 +#           # This policy has a match, but no addresses, so it will allocate an address out of the parent.
 +#           - { match-hardware-address: 00:00:5E:00:53:F0 }
 +
-diff --git a/man/erbium.conf.5 b/man/erbium.conf.5
-new file mode 100644
-index 0000000..67d0145
+Index: erbium-core/man/erbium.conf.5
+===================================================================
 --- /dev/null
-+++ b/man/erbium.conf.5
++++ erbium-core/man/erbium.conf.5
 @@ -0,0 +1,538 @@
 +.\"   Copyright 2023 Perry Lorier
 +.\"
@@ -687,16 +685,16 @@ index 0000000..67d0145
 +.BR erbium-dhcp (8),
 +.BR erbium-conftest (8)
 +
-diff --git a/src/test_man_configs.rs b/src/test_man_configs.rs
-index 207dcc6..56b0485 100644
---- a/src/test_man_configs.rs
-+++ b/src/test_man_configs.rs
+Index: erbium-core/src/test_man_configs.rs
+===================================================================
+--- erbium-core.orig/src/test_man_configs.rs
++++ erbium-core/src/test_man_configs.rs
 @@ -5,7 +5,7 @@ use tokio;
   * run the config parser over them to make sure they're valid.
   */
  async fn man_page_example_configs() {
--    let mut contents = include_str!("../../../man/erbium.conf.5");
-+    let mut contents = include_str!("../man/erbium.conf.5");
+-    let contents = include_str!("../../../man/erbium.conf.5");
++    let contents = include_str!("../man/erbium.conf.5");
      let mut example: String = Default::default();
      let mut in_example = false;
      let mut examples = 0;
@@ -709,4 +707,3 @@ index 207dcc6..56b0485 100644
      // If the line is indented, replace the "#" with a " ", keeping the indentation.
      contents = contents.replace("\n#  ", "\n  ");
      // If the line is not indented, then strip the leading "# "
-
