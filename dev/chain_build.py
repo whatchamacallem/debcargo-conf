@@ -34,9 +34,8 @@ Those env vars are passed to build.sh, read it for their descriptions.
 import re
 from sys import argv, stdout
 from subprocess import run
-from time import time as now_ts
-from os import getcwd, chdir, stat, environ, makedirs
-from os.path import basename, exists, isdir, join
+from os import getcwd, chdir, environ, makedirs
+from os.path import basename, exists, join
 try:
 	from apt.cache import Cache as AptCache
 except:
