@@ -119,7 +119,7 @@ When satisfied with all of these outputs:
 - of dev/list-rdeps.sh $CRATE
 
 then you can commit. For example:
-git commit -m "$CRATE: new upstream release" src/$CRATE/
+git commit -m "$CRATE: new upstream release" src/$PKGNAME/
 and push all your changes.
 
 Then, ask a Debian Developer to run \`./release.sh $*\`. This finalises your
