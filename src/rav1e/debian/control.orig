@@ -15,10 +15,10 @@ Build-Depends: debhelper (>= 12),
  librust-cc-1+default-dev,
  librust-cc-1+parallel-dev,
  librust-cfg-if-1+default-dev,
- librust-clap-4+color-dev (>= 4.0.32-~~),
- librust-clap-4+derive-dev (>= 4.0.32-~~),
- librust-clap-4+std-dev (>= 4.0.32-~~),
- librust-clap-4+wrap-help-dev (>= 4.0.32-~~),
+ librust-clap-4.0.32+color-dev,
+ librust-clap-4.0.32+derive-dev,
+ librust-clap-4.0.32+std-dev,
+ librust-clap-4.0.32+wrap-help-dev,
  librust-clap-complete-4+default-dev (>= 4.0.3-~~),
  librust-console-0.15+default-dev,
  librust-fern-0.6+default-dev,
@@ -38,6 +38,9 @@ Build-Depends: debhelper (>= 12),
  librust-rayon-1+default-dev,
  librust-rustc-version-0.4+default-dev,
  librust-scan-fmt-0.2-dev (>= 0.2.3-~~),
+ librust-serde-1+default-dev,
+ librust-serde-1+derive-dev,
+ librust-serde-big-array-0.4+default-dev (>= 0.4.1-~~),
  librust-signal-hook-0.3+default-dev,
  librust-simd-helpers-0.1+default-dev,
  librust-system-deps-6+default-dev,
@@ -52,15 +55,16 @@ Build-Depends: debhelper (>= 12),
  librust-ivf-0.1-dev,
  librust-pretty-assertions-1-dev,
  librust-quickcheck-1-dev,
- librust-quickcheck-macros-1-dev
+ librust-quickcheck-macros-1-dev,
 Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
 Uploaders:
  Sebastian Ramacher <sramacher@debian.org>
-Standards-Version: 4.6.1
+Standards-Version: 4.5.1
 Vcs-Git: https://salsa.debian.org/rust-team/debcargo-conf.git [src/rav1e]
 Vcs-Browser: https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/rav1e
 X-Cargo-Crate: rav1e
 Rules-Requires-Root: no
+Homepage: https://github.com/xiph/rav1e
 
 Package: librust-rav1e-dev
 Architecture: any
@@ -77,10 +81,10 @@ Depends:
  librust-cc-1+default-dev,
  librust-cc-1+parallel-dev,
  librust-cfg-if-1+default-dev,
- librust-clap-4+color-dev (>= 4.0.32-~~),
- librust-clap-4+derive-dev (>= 4.0.32-~~),
- librust-clap-4+std-dev (>= 4.0.32-~~),
- librust-clap-4+wrap-help-dev (>= 4.0.32-~~),
+ librust-clap-4.0.32+color-dev,
+ librust-clap-4.0.32+derive-dev,
+ librust-clap-4.0.32+std-dev,
+ librust-clap-4.0.32+wrap-help-dev,
  librust-clap-complete-4+default-dev (>= 4.0.3-~~),
  librust-clap-lex-0.3.0+default-dev,
  librust-console-0.15+default-dev,
@@ -237,36 +241,52 @@ Description: Fastest and safest AV1 encoder - Rust source code
  This package contains the source for the Rust rav1e crate, packaged by debcargo
  for use with cargo and dh-cargo.
 
+Package: librav1e0
+Architecture: any
+Multi-Arch: same
+Section: libs
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+Built-Using: ${cargo:Built-Using}
+XB-X-Cargo-Built-Using: ${cargo:X-Cargo-Built-Using}
+Description: Fastest and safest AV1 encoder - shared library
+ rav1e is a encoder for the AV1 video codec.
+ .
+ This package contains the shared library.
+
+Package: librav1e-dev
+Architecture: any
+Multi-Arch: same
+Section: libdevel
+Depends:
+ librav1e0 (= ${binary:Version}),
+ ${misc:Depends}
+Description: Fastest and safest AV1 encoder - development files
+ rav1e is a encoder for the AV1 video codec.
+ .
+ This package contains the development files.
+
 Package: rav1e
 Architecture: any
-Multi-Arch: allowed
 Section: video
 Depends:
  ${misc:Depends},
  ${shlibs:Depends},
- ${cargo:Depends}
-Recommends:
- ${cargo:Recommends}
-Suggests:
- ${cargo:Suggests}
-Provides:
- ${cargo:Provides}
-Built-Using: ${cargo:Built-Using}
-XB-X-Cargo-Built-Using: ${cargo:X-Cargo-Built-Using}
-Description: Fastest and safest AV1 encoder
- rav1e is a commendline encoder for the AV1 video codec. It supports the
+Description: Fastest and safest AV1 encoder - command line encoder
+ rav1e is a encoder for the AV1 video codec. It supports the
  following features:
   * Intra, inter, and switch frames
   * 64x64 superblocks
   * 4x4 to 64x64 RDO-selected square and rectangular blocks
   * DC, H, V, Paeth, smooth, and all directional prediction modes
   * DCT, (FLIP-)ADST and identity transforms (up to 64x64, 16x16 and 32x32
- respectively)
+    respectively)
   * 8-, 10- and 12-bit depth color
   * 4:2:0, 4:2:2 and 4:4:4 chroma sampling
   * 11 speed settings (0-10, exhaustive to near real-time)
   * Constant quantizer and target bitrate (single- and multi-pass) encoding
- modes
+    modes
   * Still picture mode
  .
  This package contains the command line encoder.
