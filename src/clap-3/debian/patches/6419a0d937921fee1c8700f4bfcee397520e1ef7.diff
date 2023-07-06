@@ -1,0 +1,243 @@
+Index: clap-3/src/builder/debug_asserts.rs
+===================================================================
+--- clap-3.orig/src/builder/debug_asserts.rs
++++ clap-3/src/builder/debug_asserts.rs
+@@ -1,6 +1,6 @@
+ use std::cmp::Ordering;
+ 
+-use clap_lex::RawOsStr;
++use clap_lex::OsStrExt as _;
+ 
+ use crate::builder::arg::ArgProvider;
+ use crate::mkeymap::KeyType;
+@@ -808,9 +808,9 @@ fn assert_defaults<'d>(
+         if let Some(validator) = arg.validator_os.as_ref() {
+             let mut validator = validator.lock().unwrap();
+             if let Some(delim) = arg.get_value_delimiter() {
+-                let default_os = RawOsStr::new(default_os);
+-                for part in default_os.split(delim) {
+-                    if let Err(err) = validator(&part.to_os_str()) {
++                //let default_os = RawOsStr::new(default_os);
++                for part in default_os.split(&delim.to_string()) {
++                    if let Err(err) = validator(part) {
+                         panic!(
+                             "Argument `{}`'s {}={:?} failed validation: {}",
+                             arg.name, field, part, err
+@@ -827,16 +827,16 @@ fn assert_defaults<'d>(
+ 
+         let value_parser = arg.get_value_parser();
+         let assert_cmd = Command::new("assert");
+-        if let Some(delim) = arg.get_value_delimiter() {
+-            let default_os = RawOsStr::new(default_os);
+-            for part in default_os.split(delim) {
+-                if let Err(err) = value_parser.parse_ref(&assert_cmd, Some(arg), &part.to_os_str())
+-                {
++        if let Some(val_delim) = arg.get_value_delimiter() {
++            let mut val_delim_buffer = [0; 4];
++            let val_delim = val_delim.encode_utf8(&mut val_delim_buffer);
++            for part in default_os.split(val_delim) {
++                if let Err(err) = value_parser.parse_ref(&assert_cmd, Some(arg), part) {
+                     panic!(
+                         "Argument `{}`'s {}={:?} failed validation: {}",
+                         arg.name,
+                         field,
+-                        part.to_str_lossy(),
++                        part.to_string_lossy(),
+                         err
+                     );
+                 }
+Index: clap-3/src/parser/parser.rs
+===================================================================
+--- clap-3.orig/src/parser/parser.rs
++++ clap-3/src/parser/parser.rs
+@@ -4,8 +4,7 @@ use std::{
+     ffi::{OsStr, OsString},
+ };
+ 
+-// Third Party
+-use clap_lex::RawOsStr;
++use clap_lex::OsStrExt as _;
+ 
+ // Internal
+ use crate::builder::AppSettings as AS;
+@@ -93,9 +92,8 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+             }
+ 
+             debug!(
+-                "Parser::get_matches_with: Begin parsing '{:?}' ({:?})",
++                "Parser::get_matches_with: Begin parsing '{:?}'",
+                 arg_os.to_value_os(),
+-                arg_os.to_value_os().as_raw_bytes()
+             );
+ 
+             // Has the user already passed '--'? Meaning only positional args follow
+@@ -537,7 +535,7 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+     // Checks if the arg matches a subcommand name, or any of its aliases (if defined)
+     fn possible_subcommand(
+         &self,
+-        arg: Result<&str, &RawOsStr>,
++        arg: Result<&str, &OsStr>,
+         valid_arg_found: bool,
+     ) -> Option<&str> {
+         debug!("Parser::possible_subcommand: arg={:?}", arg);
+@@ -713,8 +711,8 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+     fn parse_long_arg(
+         &mut self,
+         matcher: &mut ArgMatcher,
+-        long_arg: Result<&str, &RawOsStr>,
+-        long_value: Option<&RawOsStr>,
++        long_arg: &str,
++        long_value: Option<&OsStr>,
+         parse_state: &ParseState,
+         valid_arg_found: &mut bool,
+         trailing_values: bool,
+@@ -729,14 +727,6 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+         }
+ 
+         debug!("Parser::parse_long_arg: Does it contain '='...");
+-        let long_arg = match long_arg {
+-            Ok(long_arg) => long_arg,
+-            Err(long_arg) => {
+-                return Ok(ParseResult::NoMatchingArg {
+-                    arg: long_arg.to_str_lossy().into_owned(),
+-                });
+-            }
+-        };
+         if long_arg.is_empty() {
+             debug_assert!(
+                 long_value.is_some(),
+@@ -795,7 +785,7 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+                     .collect();
+ 
+                 Ok(ParseResult::UnneededAttachedValue {
+-                    rest: rest.to_str_lossy().into_owned(),
++                    rest: rest.to_string_lossy().into_owned(),
+                     used,
+                     arg: arg.to_string(),
+                 })
+@@ -873,7 +863,7 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+                 Ok(c) => c,
+                 Err(rest) => {
+                     return Ok(ParseResult::NoMatchingArg {
+-                        arg: format!("-{}", rest.to_str_lossy()),
++                        arg: format!("-{}", rest.to_string_lossy()),
+                     });
+                 }
+             };
+@@ -901,8 +891,8 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+                 // Cloning the iterator, so we rollback if it isn't there.
+                 let val = short_arg.clone().next_value_os().unwrap_or_default();
+                 debug!(
+-                    "Parser::parse_short_arg:iter:{}: val={:?} (bytes), val={:?} (ascii), short_arg={:?}",
+-                    c, val, val.as_raw_bytes(), short_arg
++                    "Parser::parse_short_arg:iter:{}: val={:?}, short_arg={:?}",
++                    c, val, short_arg
+                 );
+                 let val = Some(val).filter(|v| !v.is_empty());
+ 
+@@ -913,7 +903,7 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+                 //
+                 // e.g. `-xvf`, when require_equals && x.min_vals == 0, we don't
+                 // consume the `vf`, even if it's provided as value.
+-                let (val, has_eq) = if let Some(val) = val.and_then(|v| v.strip_prefix('=')) {
++                let (val, has_eq) = if let Some(val) = val.and_then(|v| v.strip_prefix("=")) {
+                     (Some(val), true)
+                 } else {
+                     (val, false)
+@@ -954,7 +944,7 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+     fn parse_opt_value(
+         &self,
+         ident: Identifier,
+-        attached_value: Option<&RawOsStr>,
++        attached_value: Option<&OsStr>,
+         arg: &Arg<'help>,
+         matcher: &mut ArgMatcher,
+         trailing_values: bool,
+@@ -979,7 +969,7 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+                         let trailing_values = false; // CLI should not be affecting default_missing_values
+                         let _parse_result = self.split_arg_values(
+                             arg,
+-                            &RawOsStr::new(v),
++                            v,
+                             trailing_values,
+                             &mut arg_values,
+                         );
+@@ -1043,7 +1033,7 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+     fn split_arg_values(
+         &self,
+         arg: &Arg<'help>,
+-        val: &RawOsStr,
++        val: &OsStr,
+         trailing_values: bool,
+         output: &mut Vec<OsString>,
+     ) -> Option<ParseResult> {
+@@ -1059,8 +1049,9 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+             delim = None;
+         }
+         match delim {
+-            Some(delim) if val.contains(delim) => {
+-                let vals = val.split(delim).map(|x| x.to_os_str().into_owned());
++            Some(delim) if val.contains(&delim.to_string()) => {
++                let delimstr = delim.to_string();
++                let vals = val.split(&delimstr).map(|x| x.to_owned());
+                 for raw_val in vals {
+                     if Some(raw_val.as_os_str()) == arg.terminator.map(OsStr::new) {
+                         return Some(ParseResult::ValuesDone);
+@@ -1070,11 +1061,11 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+                 // Delimited values are always considered the final value
+                 Some(ParseResult::ValuesDone)
+             }
+-            _ if Some(val) == arg.terminator.map(RawOsStr::from_str) => {
++            _ if Some(val) == arg.terminator.map(OsStr::new) => {
+                 Some(ParseResult::ValuesDone)
+             }
+             _ => {
+-                output.push(val.to_os_str().into_owned());
++                output.push(val.to_owned());
+                 if arg.is_require_value_delimiter_set() {
+                     Some(ParseResult::ValuesDone)
+                 } else {
+@@ -1358,7 +1349,6 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+ 
+             debug!("Parser::add_env: Checking arg `{}`", arg);
+             if let Some((_, Some(ref val))) = arg.env {
+-                let val = RawOsStr::new(val);
+ 
+                 if arg.is_takes_value_set() {
+                     debug!(
+@@ -1381,7 +1371,7 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+                         #[allow(deprecated)]
+                         ArgAction::IncOccurrence => {
+                             debug!("Parser::add_env: Found a flag with value `{:?}`", val);
+-                            let predicate = str_to_bool(val.to_str_lossy());
++                            let predicate = str_to_bool(val.to_string_lossy());
+                             debug!("Parser::add_env: Found boolean literal `{:?}`", predicate);
+                             if predicate.unwrap_or(true) {
+                                 let _ = self.react(
+@@ -1457,7 +1447,7 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+                     for v in arg.default_missing_vals.iter() {
+                         let _parse_result = self.split_arg_values(
+                             arg,
+-                            &RawOsStr::new(v),
++                            v,
+                             trailing_values,
+                             &mut arg_values,
+                         );
+@@ -1510,7 +1500,7 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+                             let mut arg_values = Vec::new();
+                             let _parse_result = self.split_arg_values(
+                                 arg,
+-                                &RawOsStr::new(default),
++                                default,
+                                 trailing_values,
+                                 &mut arg_values,
+                             );
+@@ -1549,7 +1539,7 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+                 for v in arg.default_vals.iter() {
+                     let _parse_result = self.split_arg_values(
+                         arg,
+-                        &RawOsStr::new(v),
++                        v,
+                         trailing_values,
+                         &mut arg_values,
+                     );
