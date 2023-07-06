@@ -163,6 +163,8 @@ def parse_specs(specs: tuple[str]) -> list[tuple[str, str]]:
 def chain_build(specs):
 	specs = parse_specs(specs)
 	found = find_built(specs)
+	env = environ.copy()
+	extra_debs = env['EXTRA_DEBS']
 	built, debs = set(), set()
 	if found:
 		_print('Existing debs:')
@@ -185,6 +187,11 @@ def chain_build(specs):
 	else:
 		built, debs = set(), set()
 		_print('No recently built packages')
+	if extra_debs:
+		_print('EXTRA_DEBS:')
+		for deb in extra_debs.split(' '):
+			print(deb)
+			debs.add(deb)
 
 	_print('Starting chain build, press any key to continue, Ctrl+C to abort')
 	input()
