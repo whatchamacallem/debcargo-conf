@@ -2,7 +2,7 @@ Index: pbkdf2/Cargo.toml
 ===================================================================
 --- pbkdf2.orig/Cargo.toml
 +++ pbkdf2/Cargo.toml
-@@ -67,9 +67,6 @@ version = "0.10"
+@@ -80,9 +80,6 @@ version = "0.10"
  [dev-dependencies.sha2]
  version = "0.10"
  
@@ -10,43 +10,49 @@ Index: pbkdf2/Cargo.toml
 -version = "0.10"
 -
  [features]
- default = ["simple"]
- parallel = ["rayon", "std"]
-Index: pbkdf2/tests/gost.rs
+ default = ["hmac"]
+ parallel = [
+Index: pbkdf2/tests/mod.rs
 ===================================================================
---- pbkdf2.orig/tests/gost.rs
-+++ pbkdf2/tests/gost.rs
-@@ -5,7 +5,7 @@ use hex_literal::hex;
+--- pbkdf2.orig/tests/mod.rs
++++ pbkdf2/tests/mod.rs
+@@ -2,7 +2,7 @@
+ use hex_literal::hex;
+ use pbkdf2::pbkdf2_hmac_array as f;
+ use sha1::Sha1;
+-use streebog::Streebog512;
++//use streebog::Streebog512;
+ 
+ /// Tests from RFC 6070:
+ /// https://www.rfc-editor.org/rfc/rfc6070
+@@ -43,6 +43,7 @@ fn rfc6070() {
+ 
+ /// Test vectors from R 50.1.111-2016:
+ /// https://tc26.ru/standard/rs/Р 50.1.111-2016.pdf
++/*
  #[test]
- #[rustfmt::skip]
- fn gost_test() {
--    let pbkdf2 = pbkdf2::pbkdf2::<hmac::Hmac<streebog::Streebog512>>;
-+    /*let pbkdf2 = pbkdf2::pbkdf2::<hmac::Hmac<streebog::Streebog512>>;
-     let mut res64 = [0u8; 64];
-     let mut res100 = [0u8; 100];
- 
-@@ -40,7 +40,7 @@ fn gost_test() {
-             867c09841b6d58e29d0347c996301d55
-             df0d34e47cf68f4e3c2cdaf1d9ab86c3
-         "),
--    );
-+    );*/
- 
-     // this test passes, but takes more than 1 minute to
-     // execute in release mode
-@@ -57,7 +57,7 @@ fn gost_test() {
+ fn gost() {
+     assert_eq!(
+@@ -74,7 +75,7 @@ fn gost() {
+             "df0d34e47cf68f4e3c2cdaf1d9ab86c3"
+         ),
+     );
+-
++*/
+     // this test passes, but takes a long time to execute
+     /*
+     assert_eq!(
+@@ -87,7 +88,7 @@ fn gost() {
+         ),
      );
      */
- 
--    pbkdf2(
-+    /*pbkdf2(
-         b"passwordPASSWORDpassword",
-         b"saltSALTsaltSALTsaltSALTsaltSALTsalt",
-         4096,
-@@ -85,5 +85,5 @@ fn gost_test() {
-             167f782c18e97e92976d9c1d970831ea
-             78ccb879f67068cdac1910740844e830
-         "),
--    );
-+    );*/
+-
++/*
+     assert_eq!(
+         f::<Streebog512, 100>(
+             b"passwordPASSWORDpassword",
+@@ -115,3 +116,4 @@ fn gost() {
+         ),
+     );
  }
++*/
