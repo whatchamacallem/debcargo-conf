@@ -2,7 +2,7 @@ Index: notify/Cargo.toml
 ===================================================================
 --- notify.orig/Cargo.toml
 +++ notify/Cargo.toml
-@@ -64,19 +64,13 @@ version = "3.2.0"
+@@ -65,24 +65,11 @@ version = "3.2.0"
  
  [features]
  default = [
@@ -19,15 +19,19 @@ Index: notify/Cargo.toml
  
 -[target."cfg(any(target_os=\"freebsd\", target_os=\"openbsd\", target_os = \"netbsd\", target_os = \"dragonflybsd\"))".dependencies.kqueue]
 -version = "^1.0.4"
-+#[target."cfg(any(target_os=\"freebsd\", target_os=\"openbsd\", target_os = \"netbsd\", target_os = \"dragonflybsd\"))".dependencies.kqueue]
-+#version = "^1.0.4"
- 
- [target."cfg(any(target_os=\"freebsd\", target_os=\"openbsd\", target_os = \"netbsd\", target_os = \"dragonflybsd\"))".dependencies.mio]
- version = "0.8"
-@@ -90,27 +84,27 @@ default-features = false
+-
+-[target."cfg(any(target_os=\"freebsd\", target_os=\"openbsd\", target_os = \"netbsd\", target_os = \"dragonflybsd\"))".dependencies.mio]
+-version = "0.8"
+-features = ["os-ext"]
+-
+ [target."cfg(any(target_os=\"linux\", target_os=\"android\"))".dependencies.inotify]
+ version = "0.9"
+ default-features = false
+@@ -90,27 +77,3 @@ default-features = false
+ [target."cfg(any(target_os=\"linux\", target_os=\"android\"))".dependencies.mio]
  version = "0.8"
  features = ["os-ext"]
- 
+-
 -[target."cfg(target_os=\"macos\")".dependencies.fsevent-sys]
 -version = "4"
 -optional = true
@@ -41,38 +45,13 @@ Index: notify/Cargo.toml
 -features = ["os-ext"]
 -optional = true
 -
--[target."cfg(windows)".dependencies.winapi]
--version = "0.3.8"
+-[target."cfg(windows)".dependencies.windows-sys]
+-version = "0.45.0"
 -features = [
--    "fileapi",
--    "handleapi",
--    "ioapiset",
--    "minwinbase",
--    "synchapi",
--    "winbase",
--    "winnt",
+-    "Win32_System_Threading",
+-    "Win32_Foundation",
+-    "Win32_Storage_FileSystem",
+-    "Win32_Security",
+-    "Win32_System_WindowsProgramming",
+-    "Win32_System_IO",
 -]
-+# [target."cfg(target_os=\"macos\")".dependencies.fsevent-sys]
-+# version = "4"
-+# optional = true
-+
-+# [target."cfg(target_os=\"macos\")".dependencies.kqueue]
-+# version = "1.0"
-+# optional = true
-+
-+# [target."cfg(target_os=\"macos\")".dependencies.mio]
-+# version = "0.8"
-+# features = ["os-ext"]
-+# optional = true
-+
-+# [target."cfg(windows)".dependencies.winapi]
-+# version = "0.3.8"
-+# features = [
-+#     "fileapi",
-+#     "handleapi",
-+#     "ioapiset",
-+#     "minwinbase",
-+#     "synchapi",
-+#     "winbase",
-+#     "winnt",
-+# ]
