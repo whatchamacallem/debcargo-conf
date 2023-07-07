@@ -1,0 +1,28 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 762a9b4..e0141d8 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -23,7 +23,7 @@ license = "Apache-2.0"
+ repository = "https://github.com/randombit/wycheproof-rs"
+ 
+ [dependencies.base64]
+-version = "0.13"
++version = "0.21"
+ 
+ [dependencies.hex]
+ version = "0.4"
+diff --git a/src/test_keys.rs b/src/test_keys.rs
+index 20d9ff8..5bbe6c8 100644
+--- a/src/test_keys.rs
++++ b/src/test_keys.rs
+@@ -1,8 +1,9 @@
+ use super::*;
++use base64::Engine;
+ 
+ fn int_from_base64<'de, D: Deserializer<'de>>(deserializer: D) -> Result<LargeInteger, D::Error> {
+     let s: &str = Deserialize::deserialize(deserializer)?;
+-    let bytes = base64::decode_config(s, base64::URL_SAFE).map_err(D::Error::custom)?;
++    let bytes = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(s).map_err(D::Error::custom)?;
+     Ok(LargeInteger::new(bytes))
+ }
+ 
