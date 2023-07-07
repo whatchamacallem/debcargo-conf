@@ -164,7 +164,7 @@ def chain_build(specs):
 	specs = parse_specs(specs)
 	found = find_built(specs)
 	env = environ.copy()
-	extra_debs = env['EXTRA_DEBS']
+	extra_debs = env.get('EXTRA_DEBS')
 	built, debs = set(), set()
 	if found:
 		_print('Existing debs:')
@@ -241,7 +241,7 @@ if __name__ == '__main__':
 	# Make sure build directory is present
 	makedirs('build', exist_ok=True)
 
-	# flatten shell substituted args 
+	# flatten shell substituted args
 	i = 1
 	while i < len(argv):
 		if ' ' in argv[i]:
