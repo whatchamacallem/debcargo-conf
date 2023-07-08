@@ -1,17 +1,18 @@
-Index: nu-ansi-term/.github/workflows/ci.yml
-===================================================================
---- nu-ansi-term.orig/.github/workflows/ci.yml
-+++ nu-ansi-term/.github/workflows/ci.yml
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 67fab00..dced090 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
 @@ -25,3 +25,5 @@ jobs:
        - run: cargo fmt --check --all
        - run: cargo clippy -- -D warnings
        - run: cargo run --example 256_colors
 +      - run: cargo run --example hyperlink
 +      - run: cargo run --example title
-Index: nu-ansi-term/examples/hyperlink.rs
-===================================================================
+diff --git a/examples/hyperlink.rs b/examples/hyperlink.rs
+new file mode 100644
+index 0000000..3c17b76
 --- /dev/null
-+++ nu-ansi-term/examples/hyperlink.rs
++++ b/examples/hyperlink.rs
 @@ -0,0 +1,15 @@
 +use nu_ansi_term::Color;
 +mod may_sleep;
@@ -28,10 +29,11 @@ Index: nu-ansi-term/examples/hyperlink.rs
 +    println!("{}", link);
 +    sleep(sleep_ms);
 +}
-Index: nu-ansi-term/examples/may_sleep/mod.rs
-===================================================================
+diff --git a/examples/may_sleep/mod.rs b/examples/may_sleep/mod.rs
+new file mode 100644
+index 0000000..04724d4
 --- /dev/null
-+++ nu-ansi-term/examples/may_sleep/mod.rs
++++ b/examples/may_sleep/mod.rs
 @@ -0,0 +1,35 @@
 +pub fn parse_cmd_args() -> Option<u16> {
 +    let mut sleep_ms: Option<u16> = None;
@@ -68,10 +70,11 @@ Index: nu-ansi-term/examples/may_sleep/mod.rs
 +        std::thread::sleep(sleep_ms);
 +    }
 +}
-Index: nu-ansi-term/examples/title.rs
-===================================================================
+diff --git a/examples/title.rs b/examples/title.rs
+new file mode 100644
+index 0000000..c043d87
 --- /dev/null
-+++ nu-ansi-term/examples/title.rs
++++ b/examples/title.rs
 @@ -0,0 +1,19 @@
 +use nu_ansi_term::AnsiGenericString;
 +mod may_sleep;
@@ -92,10 +95,10 @@ Index: nu-ansi-term/examples/title.rs
 +    // the results
 +    sleep(sleep_ms);
 +}
-Index: nu-ansi-term/src/ansi.rs
-===================================================================
---- nu-ansi-term.orig/src/ansi.rs
-+++ nu-ansi-term/src/ansi.rs
+diff --git a/src/ansi.rs b/src/ansi.rs
+index d615289..901e160 100644
+--- a/src/ansi.rs
++++ b/src/ansi.rs
 @@ -1,5 +1,5 @@
  #![allow(missing_docs)]
 -use crate::style::{Color, OSControl, Style};
@@ -112,7 +115,11 @@ Index: nu-ansi-term/src/ansi.rs
 -            if self.with_reset {
 -                write!(f, "\x1B[0m")?
 -            }
--
++        // Prefix everything with reset characters if needed
++        if self.with_reset {
++            write!(f, "\x1B[0m")?
++        }
+ 
 -            // "Specified Graphical Rendition" prefixes
 -            // Write the codes’ prefix, then write numbers, separated by
 -            // semicolons, for each text style we want to apply.
@@ -130,11 +137,7 @@ Index: nu-ansi-term/src/ansi.rs
 -                    write!(f, "{}", c)?;
 -                    Ok(())
 -                };
-+        // Prefix everything with reset characters if needed
-+        if self.with_reset {
-+            write!(f, "\x1B[0m")?
-+        }
- 
+-
 -                if self.is_bold {
 -                    write_char('1')?
 -                }
@@ -176,20 +179,23 @@ Index: nu-ansi-term/src/ansi.rs
                  }
                  written_anything = true;
 -                bg.write_background_code(f)?;
--            }
 +                #[cfg(feature = "gnu_legacy")]
 +                write!(f, "0")?;
 +                write!(f, "{}", c)?;
 +                Ok(())
 +            };
- 
++
++            if self.is_bold {
++                write_char('1')?
+             }
+-
 -            if let Some(fg) = self.foreground {
 -                if written_anything {
 -                    write!(f, ";")?;
 -                }
 -                fg.write_foreground_code(f)?;
-+            if self.is_bold {
-+                write_char('1')?
++            if self.is_dimmed {
++                write_char('2')?
              }
 -
 -            // All the SGR codes end with an `m`, because reasons.
@@ -200,31 +206,27 @@ Index: nu-ansi-term/src/ansi.rs
 -        match self.oscontrol {
 -            Some(OSControl::Hyperlink) => {
 -                write!(f, "\x1B]8;;")?;
-+            if self.is_dimmed {
-+                write_char('2')?
-             }
--            Some(OSControl::Title) => {
--                write!(f, "\x1B]2;")?;
 +            if self.is_italic {
 +                write_char('3')?
-             }
--            Some(OSControl::Icon) => {
--                write!(f, "\x1B]I;")?;
++            }
 +            if self.is_underline {
 +                write_char('4')?
-             }
--            Some(OSControl::Cwd) => {
--                write!(f, "\x1B]7;")?;
++            }
 +            if self.is_blink {
 +                write_char('5')?
              }
--            None => {}
+-            Some(OSControl::Title) => {
+-                write!(f, "\x1B]2;")?;
 +            if self.is_reverse {
 +                write_char('7')?
-+            }
+             }
+-            Some(OSControl::Icon) => {
+-                write!(f, "\x1B]I;")?;
 +            if self.is_hidden {
 +                write_char('8')?
-+            }
+             }
+-            Some(OSControl::Cwd) => {
+-                write!(f, "\x1B]7;")?;
 +            if self.is_strikethrough {
 +                write_char('9')?
 +            }
@@ -244,7 +246,8 @@ Index: nu-ansi-term/src/ansi.rs
 +        if let Some(fg) = self.foreground {
 +            if written_anything {
 +                write!(f, ";")?;
-+            }
+             }
+-            None => {}
 +            fg.write_foreground_code(f)?;
          }
  
@@ -319,10 +322,10 @@ Index: nu-ansi-term/src/ansi.rs
              }
              Difference::Empty => {
                  Ok(()) // nothing to write
-Index: nu-ansi-term/src/difference.rs
-===================================================================
---- nu-ansi-term.orig/src/difference.rs
-+++ nu-ansi-term/src/difference.rs
+diff --git a/src/difference.rs b/src/difference.rs
+index f1b5ce4..30a88f1 100644
+--- a/src/difference.rs
++++ b/src/difference.rs
 @@ -43,10 +43,6 @@ impl Difference {
              return Empty;
          }
@@ -356,10 +359,10 @@ Index: nu-ansi-term/src/difference.rs
          ExtraStyles(extra_styles)
      }
  }
-Index: nu-ansi-term/src/display.rs
-===================================================================
---- nu-ansi-term.orig/src/display.rs
-+++ nu-ansi-term/src/display.rs
+diff --git a/src/display.rs b/src/display.rs
+index 9ff00f0..881fa4f 100644
+--- a/src/display.rs
++++ b/src/display.rs
 @@ -1,11 +1,32 @@
 -use crate::ansi::{HYPERLINK_RESET, RESET};
 +use crate::ansi::RESET;
@@ -422,7 +425,7 @@ Index: nu-ansi-term/src/display.rs
          }
      }
  }
-@@ -109,83 +130,56 @@ impl<'a, S: 'a + ToOwned + ?Sized> AnsiG
+@@ -109,83 +130,56 @@ impl<'a, S: 'a + ToOwned + ?Sized> AnsiGenericString<'a, S>
  where
      <S as ToOwned>::Owned: fmt::Debug,
  {
@@ -700,7 +703,7 @@ Index: nu-ansi-term/src/display.rs
              }
          }
  
-@@ -506,26 +454,12 @@ mod tests {
+@@ -506,25 +454,11 @@ mod tests {
  
      #[test]
      fn title() {
@@ -710,7 +713,7 @@ Index: nu-ansi-term/src/display.rs
          idempotent(title)
      }
  
-     #[test]
+-    #[test]
 -    fn icon() {
 -        let icon = Style::icon().paint("/path/to/test.icn");
 -        assert_eq!(icon.to_string(), "\x1B]I;/path/to/test.icn\x1B\\");
@@ -724,14 +727,13 @@ Index: nu-ansi-term/src/display.rs
 -        idempotent(cwd)
 -    }
 -
--    #[test]
+     #[test]
      fn hyperlink() {
          let mut styled = Red.paint("Link to example.com.");
-         styled.hyperlink("https://example.com");
-Index: nu-ansi-term/src/style.rs
-===================================================================
---- nu-ansi-term.orig/src/style.rs
-+++ nu-ansi-term/src/style.rs
+diff --git a/src/style.rs b/src/style.rs
+index 89057ca..154028d 100644
+--- a/src/style.rs
++++ b/src/style.rs
 @@ -21,12 +21,6 @@ pub struct Style {
      /// The style's background color, if it has one.
      pub background: Option<Color>,
@@ -838,10 +840,11 @@ Index: nu-ansi-term/src/style.rs
 +        assert_eq!(serde_json::to_string(&style).unwrap(), "{\"foreground\":null,\"background\":null,\"is_bold\":false,\"is_dimmed\":false,\"is_italic\":false,\"is_underline\":false,\"is_blink\":false,\"is_reverse\":false,\"is_hidden\":false,\"is_strikethrough\":false,\"with_reset\":false}".to_string());
      }
  }
-Index: nu-ansi-term/tests/style.rs
-===================================================================
+diff --git a/tests/style.rs b/tests/style.rs
+new file mode 100644
+index 0000000..e0c5202
 --- /dev/null
-+++ nu-ansi-term/tests/style.rs
++++ b/tests/style.rs
 @@ -0,0 +1,28 @@
 +use nu_ansi_term::Style;
 +
