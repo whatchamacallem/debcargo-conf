@@ -1,11 +1,22 @@
 #!/usr/bin/make -f
 
+include /usr/share/dpkg/pkg-info.mk
+
+BINARY_EPOCH = 1
+
 %:
 	dh $@ --buildsystem cargo
 
 override_dh_installman:
 	cp $$(find . -name sd.1 | grep release) debian/sd.1
 	dh_installman -O--buildsystem=cargo
+
+override_dh_gencontrol:
+	#1037192: an old packaged also named sd had a higher version than this one,
+	# which violates monotonically increasing version constraint.
+	# Use an epoch on the binary package to overcome that.
+	# Source package is different, no need to use epoch.
+	dh_gencontrol -psd -- -v${BINARY_EPOCH}:${DEB_VERSION_UPSTREAM_REVISION}
 
 override_dh_dwz:
 	# Don't do anything, fails because of
