@@ -1,19 +1,28 @@
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -107,9 +107,6 @@ default = ["x11", "wayland", "wayland-dl
-     "parking_lot",
- ]
+Index: winit/Cargo.toml
+===================================================================
+--- winit.orig/Cargo.toml
++++ winit/Cargo.toml
+@@ -83,8 +83,6 @@ default_features = false
+ version = "0.1.1"
  
--[target."cfg(any(target_os = \"ios\", target_os = \"macos\"))".dependencies.objc]
--version = "0.2.7"
--
- [target."cfg(any(target_os = \"linux\", target_os = \"dragonfly\", target_os = \"freebsd\", target_os = \"openbsd\", target_os = \"netbsd\"))".dependencies.libc]
- version = "0.2.64"
- 
-@@ -151,85 +151,3 @@ optional = true
- [target."cfg(any(target_os = \"linux\", target_os = \"dragonfly\", target_os = \"freebsd\", target_os = \"openbsd\", target_os = \"netbsd\"))".dependencies.x11-dl]
+ [features]
+-android-game-activity = ["android-activity/game-activity"]
+-android-native-activity = ["android-activity/native-activity"]
+ default = [
+     "x11",
+     "wayland",
+@@ -159,96 +157,5 @@ optional = true
  version = "2.18.5"
  optional = true
+ 
+-[target."cfg(any(target_os = \"ios\", target_os = \"macos\"))".dependencies.core-foundation]
+-version = "0.9.3"
+-
+-[target."cfg(any(target_os = \"ios\", target_os = \"macos\"))".dependencies.objc2]
+-version = ">=0.3.0-beta.3, <0.3.0-beta.4"
+-
+ [target."cfg(any(target_os = \"linux\", target_os = \"dragonfly\", target_os = \"freebsd\", target_os = \"openbsd\", target_os = \"netbsd\"))".build-dependencies.wayland-scanner]
+ version = "0.29.5"
 -
 -[target."cfg(target_arch = \"wasm32\")".dependencies.wasm-bindgen]
 -version = "0.2.45"
@@ -29,6 +38,7 @@
 -    "DomRect",
 -    "Element",
 -    "Event",
+-    "EventListenerOptions",
 -    "EventTarget",
 -    "FocusEvent",
 -    "HtmlCanvasElement",
@@ -47,29 +57,31 @@
 -[target."cfg(target_arch = \"wasm32\")".dev-dependencies.console_log]
 -version = "0.2"
 -
+-[target."cfg(target_arch = \"wasm32\")".dev-dependencies.web-sys]
+-version = "0.3.22"
+-features = ["CanvasRenderingContext2d"]
+-
+-[target."cfg(target_os = \"android\")".dependencies.android-activity]
+-version = "0.4.0"
+-
 -[target."cfg(target_os = \"android\")".dependencies.ndk]
 -version = "0.7.0"
 -
--[target."cfg(target_os = \"android\")".dependencies.ndk-glue]
--version = "0.7.0"
--
--[target."cfg(target_os = \"macos\")".dependencies.cocoa]
--version = "0.24"
--
--[target."cfg(target_os = \"macos\")".dependencies.core-foundation]
--version = "0.9"
--
 -[target."cfg(target_os = \"macos\")".dependencies.core-graphics]
--version = "0.22"
+-version = "0.22.3"
 -
 -[target."cfg(target_os = \"macos\")".dependencies.dispatch]
 -version = "0.2.0"
 -
--[target."cfg(target_os = \"windows\")".dependencies.parking_lot]
--version = "0.12"
+-[target."cfg(target_os = \"redox\")".dependencies.orbclient]
+-version = "0.3.42"
+-default-features = false
+-
+-[target."cfg(target_os = \"redox\")".dependencies.redox_syscall]
+-version = "0.3"
 -
 -[target."cfg(target_os = \"windows\")".dependencies.windows-sys]
--version = "0.36"
+-version = "0.45"
 -features = [
 -    "Win32_Devices_HumanInterfaceDevice",
 -    "Win32_Foundation",
