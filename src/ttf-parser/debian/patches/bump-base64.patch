@@ -15,49 +15,7 @@ Index: ttf-parser/examples/font2svg.rs
 ===================================================================
 --- ttf-parser.orig/examples/font2svg.rs
 +++ ttf-parser/examples/font2svg.rs
-@@ -1,5 +1,5 @@
--use std::path::PathBuf;
- use std::io::Write;
-+use std::path::PathBuf;
- 
- use ttf_parser as ttf;
- 
-@@ -13,7 +13,8 @@ Usage:
- ";
- 
- struct Args {
--    #[allow(dead_code)] variations: Vec<ttf::Variation>,
-+    #[allow(dead_code)]
-+    variations: Vec<ttf::Variation>,
-     ttf_path: PathBuf,
-     svg_path: PathBuf,
- }
-@@ -81,7 +82,8 @@ fn process(args: Args) -> Result<(), Box
-     #[allow(unused_mut)]
-     let mut face = ttf::Face::from_slice(&font_data, 0)?;
-     if face.is_variable() {
--        #[cfg(feature = "variable-fonts")] {
-+        #[cfg(feature = "variable-fonts")]
-+        {
-             for variation in args.variations {
-                 face.set_variation(variation.axis, variation.value)
-                     .ok_or("failed to create variation coordinates")?;
-@@ -104,7 +106,13 @@ fn process(args: Args) -> Result<(), Box
-     svg.write_attribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
-     svg.write_attribute_fmt(
-         "viewBox",
--        format_args!("{} {} {} {}", 0, 0, cell_size * COLUMNS as f64, cell_size * rows as f64),
-+        format_args!(
-+            "{} {} {} {}",
-+            0,
-+            0,
-+            cell_size * COLUMNS as f64,
-+            cell_size * rows as f64
-+        ),
-     );
- 
-     draw_grid(face.number_of_glyphs(), cell_size, &mut svg);
-@@ -133,7 +141,10 @@ fn process(args: Args) -> Result<(), Box
+@@ -141,7 +141,10 @@ fn process(args: Args) -> Result<(), Box
              svg.write_attribute_raw("xlink:href", |buf| {
                  buf.extend_from_slice(b"data:image/png;base64, ");
  
@@ -69,7 +27,7 @@ Index: ttf-parser/examples/font2svg.rs
                  enc.write_all(img.data).unwrap();
                  enc.finish().unwrap();
              });
-@@ -147,7 +158,10 @@ fn process(args: Args) -> Result<(), Box
+@@ -155,7 +158,10 @@ fn process(args: Args) -> Result<(), Box
              svg.write_attribute_raw("xlink:href", |buf| {
                  buf.extend_from_slice(b"data:image/svg+xml;base64, ");
  
@@ -81,16 +39,3 @@ Index: ttf-parser/examples/font2svg.rs
                  enc.write_all(img).unwrap();
                  enc.finish().unwrap();
              });
-@@ -179,11 +193,7 @@ fn process(args: Args) -> Result<(), Box
-     Ok(())
- }
- 
--fn draw_grid(
--    n_glyphs: u16,
--    cell_size: f64,
--    svg: &mut xmlwriter::XmlWriter,
--) {
-+fn draw_grid(n_glyphs: u16, cell_size: f64, svg: &mut xmlwriter::XmlWriter) {
-     let columns = COLUMNS;
-     let rows = (n_glyphs as f64 / columns as f64).ceil() as u32;
- 
