@@ -1,0 +1,266 @@
+Index: async-tar/tests/all.rs
+===================================================================
+--- async-tar.orig/tests/all.rs
++++ async-tar/tests/all.rs
+@@ -25,17 +25,17 @@ macro_rules! t {
+     };
+ }
+ 
+-macro_rules! tar {
++/*macro_rules! tar {
+     ($e:expr) => {
+         &include_bytes!(concat!("archives/", $e))[..]
+     };
+-}
++}*/
+ 
+ mod header;
+ 
+ /// test that we can concatenate the simple.tar archive and extract the same entries twice when we
+ /// use the ignore_zeros option.
+-#[async_std::test]
++/*#[async_std::test]
+ async fn simple_concat() {
+     let bytes = tar!("simple.tar");
+     let mut archive_bytes = Vec::new();
+@@ -79,9 +79,9 @@ async fn simple_concat() {
+ 
+         names
+     }
+-}
++}*/
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ async fn header_impls() {
+     let ar = Archive::new(Cursor::new(tar!("simple.tar")));
+     let hn = Header::new_old();
+@@ -95,9 +95,9 @@ async fn header_impls() {
+         let h2b = h2.as_bytes();
+         assert!(h1b[..] == h2b[..] && h2b[..] != hnb[..])
+     }
+-}
++}*/
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ async fn header_impls_missing_last_header() {
+     let ar = Archive::new(Cursor::new(tar!("simple_missing_last_header.tar")));
+     let hn = Header::new_old();
+@@ -112,9 +112,9 @@ async fn header_impls_missing_last_heade
+         let h2b = h2.as_bytes();
+         assert!(h1b[..] == h2b[..] && h2b[..] != hnb[..])
+     }
+-}
++}*/
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ async fn reading_files() {
+     let rdr = Cursor::new(tar!("reading_files.tar"));
+     let ar = Archive::new(rdr);
+@@ -133,7 +133,7 @@ async fn reading_files() {
+     assert_eq!(s, "b\nb\nb\nb\nb\nb\nb\nb\nb\nb\nb\n");
+ 
+     assert!(entries.next().await.is_none());
+-}
++}*/
+ 
+ #[async_std::test]
+ async fn writing_files() {
+@@ -213,7 +213,7 @@ async fn large_filename() {
+     assert!(entries.next().await.is_none());
+ }
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ async fn reading_entries() {
+     let rdr = Cursor::new(tar!("reading_files.tar"));
+     let ar = Archive::new(rdr);
+@@ -233,7 +233,7 @@ async fn reading_entries() {
+     t!(b.read_to_string(&mut s).await);
+     assert_eq!(s, "b\nb\nb\nb\nb\nb\nb\nb\nb\nb\nb\n");
+     assert!(entries.next().await.is_none());
+-}
++}*/
+ 
+ async fn check_dirtree(td: &TempDir) {
+     let dir_a = td.path().join("a");
+@@ -253,16 +253,16 @@ async fn check_dirtree(td: &TempDir) {
+         .unwrap_or(false));
+ }
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ async fn extracting_directories() {
+     let td = t!(TempBuilder::new().prefix("async-tar").tempdir());
+     let rdr = Cursor::new(tar!("directory.tar"));
+     let ar = Archive::new(rdr);
+     t!(ar.unpack(td.path()).await);
+     check_dirtree(&td).await;
+-}
++}*/
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ #[cfg(all(unix, feature = "xattr"))]
+ async fn xattrs() {
+     // If /tmp is a tmpfs, xattr will fail
+@@ -277,9 +277,9 @@ async fn xattrs() {
+ 
+     let val = xattr::get(td.path().join("a/b"), "user.pax.flags").unwrap();
+     assert_eq!(val.unwrap(), b"epm");
+-}
++}*/
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ #[cfg(all(unix, feature = "xattr"))]
+ async fn no_xattrs() {
+     // If /tmp is a tmpfs, xattr will fail
+@@ -296,7 +296,7 @@ async fn no_xattrs() {
+         xattr::get(td.path().join("a/b"), "user.pax.flags").unwrap(),
+         None
+     );
+-}
++}*/
+ 
+ #[async_std::test]
+ async fn writing_and_extracting_directories() {
+@@ -415,7 +415,7 @@ async fn append_dir_all_does_not_work_on
+     assert!(result.is_err());
+ }
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ async fn extracting_duplicate_dirs() {
+     let td = t!(TempBuilder::new().prefix("async-tar").tempdir());
+     let rdr = Cursor::new(tar!("duplicate_dirs.tar"));
+@@ -427,7 +427,7 @@ async fn extracting_duplicate_dirs() {
+         .await
+         .map(|m| m.is_dir())
+         .unwrap_or(false));
+-}
++}*/
+ 
+ #[async_std::test]
+ async fn unpack_old_style_bsd_dir() {
+@@ -582,7 +582,7 @@ async fn extracting_malicious_tarball()
+         .unwrap_or(false));
+ }
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ async fn octal_spaces() {
+     let rdr = Cursor::new(tar!("spaces.tar"));
+     let ar = Archive::new(rdr);
+@@ -594,7 +594,7 @@ async fn octal_spaces() {
+     assert_eq!(entry.header().size().unwrap(), 2);
+     assert_eq!(entry.header().mtime().unwrap(), 0o12_440_016_664);
+     assert_eq!(entry.header().cksum().unwrap(), 0o4253);
+-}
++}*/
+ 
+ #[async_std::test]
+ async fn extracting_malformed_tar_null_blocks() {
+@@ -623,15 +623,15 @@ async fn extracting_malformed_tar_null_b
+     assert!(ar.unpack(td.path()).await.is_ok());
+ }
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ async fn empty_filename() {
+     let td = t!(TempBuilder::new().prefix("async-tar").tempdir());
+     let rdr = Cursor::new(tar!("empty_filename.tar"));
+     let ar = Archive::new(rdr);
+     assert!(ar.unpack(td.path()).await.is_ok());
+-}
++}*/
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ async fn file_times() {
+     let td = t!(TempBuilder::new().prefix("async-tar").tempdir());
+     let rdr = Cursor::new(tar!("file_times.tar"));
+@@ -645,7 +645,7 @@ async fn file_times() {
+     assert_eq!(mtime.nanoseconds(), 0);
+     assert_eq!(atime.unix_seconds(), 1_000_000_000);
+     assert_eq!(atime.nanoseconds(), 0);
+-}
++}*/
+ 
+ #[async_std::test]
+ async fn backslash_treated_well() {
+@@ -693,7 +693,7 @@ async fn nul_bytes_in_path() {
+     assert!(err.to_string().contains("contains a nul byte"));
+ }
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ async fn links() {
+     let ar = Archive::new(Cursor::new(tar!("link.tar")));
+     let mut entries = t!(ar.entries());
+@@ -704,9 +704,9 @@ async fn links() {
+     );
+     let other = t!(entries.next().await.unwrap());
+     assert!(t!(other.header().link_name()).is_none());
+-}
++}*/
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ #[cfg(unix)] // making symlinks on windows is hard
+ async fn unpack_links() {
+     let td = t!(TempBuilder::new().prefix("async-tar").tempdir());
+@@ -720,9 +720,9 @@ async fn unpack_links() {
+         Path::new("file")
+     );
+     t!(File::open(td.path().join("lnk")).await);
+-}
++}*/
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ async fn pax_simple() {
+     let ar = Archive::new(tar!("pax.tar"));
+     let mut entries = t!(ar.entries());
+@@ -749,7 +749,7 @@ async fn pax_path() {
+ 
+     let first = t!(entries.next().await.unwrap());
+     assert!(first.path().unwrap().ends_with("aaaaaaaaaaaaaaa"));
+-}
++}*/
+ 
+ #[async_std::test]
+ async fn long_name_trailing_nul() {
+@@ -824,7 +824,7 @@ async fn encoded_long_name_has_trailing_
+     assert!(header_name.starts_with(b"././@LongLink\x00"));
+ }
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ async fn reading_sparse() {
+     let rdr = Cursor::new(tar!("sparse.tar"));
+     let ar = Archive::new(rdr);
+@@ -921,7 +921,7 @@ async fn extract_sparse() {
+     assert!(s[0x1000 + 6..0x2fa0].chars().all(|x| x == '\u{0}'));
+     assert_eq!(&s[0x2fa0..0x2fa0 + 6], "world\n");
+     assert!(s[0x2fa0 + 6..0x4000].chars().all(|x| x == '\u{0}'));
+-}
++}*/
+ 
+ #[async_std::test]
+ async fn path_separators() {
+@@ -1097,10 +1097,10 @@ async fn tar_directory_containing_symlin
+     ar.finish().await.unwrap();
+ }
+ 
+-#[async_std::test]
++/*#[async_std::test]
+ async fn long_path() {
+     let td = t!(TempBuilder::new().prefix("tar-rs").tempdir());
+     let rdr = Cursor::new(tar!("7z_long_path.tar"));
+     let ar = Archive::new(rdr);
+     ar.unpack(td.path()).await.unwrap();
+-}
++}*/
