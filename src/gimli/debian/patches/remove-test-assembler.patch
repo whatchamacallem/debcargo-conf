@@ -2,7 +2,7 @@ Index: gimli/Cargo.toml
 ===================================================================
 --- gimli.orig/Cargo.toml
 +++ gimli/Cargo.toml
-@@ -100,9 +100,6 @@ version = "1.0"
+@@ -105,9 +105,6 @@ version = "1.0"
  [dev-dependencies.regex]
  version = "1"
  
@@ -634,7 +634,7 @@ Index: gimli/src/read/line.rs
 ===================================================================
 --- gimli.orig/src/read/line.rs
 +++ gimli/src/read/line.rs
-@@ -1884,10 +1884,10 @@ mod tests {
+@@ -1895,10 +1895,10 @@ mod tests {
      use crate::constants;
      use crate::endianity::LittleEndian;
      use crate::read::{EndianSlice, Error};
@@ -647,7 +647,7 @@ Index: gimli/src/read/line.rs
  
      #[test]
      fn test_parse_debug_line_32_ok() {
-@@ -2913,7 +2913,7 @@ mod tests {
+@@ -2937,7 +2937,7 @@ mod tests {
              },
          ];
  
@@ -656,14 +656,15 @@ Index: gimli/src/read/line.rs
              let length = Label::new();
              let header_length = Label::new();
              let start = Label::new();
-@@ -3023,6 +3023,6 @@ mod tests {
+@@ -3047,7 +3047,7 @@ mod tests {
              );
              assert_eq!(header.file_names(), expected_file_names);
              assert_eq!(header.file(0), Some(&expected_file_names[0]));
 -        }
 +        }*/
      }
- }
+ 
+     #[test]
 Index: gimli/src/read/loclists.rs
 ===================================================================
 --- gimli.orig/src/read/loclists.rs
@@ -695,7 +696,7 @@ Index: gimli/src/read/mod.rs
 ===================================================================
 --- gimli.orig/src/read/mod.rs
 +++ gimli/src/read/mod.rs
-@@ -679,9 +679,9 @@ mod tests {
+@@ -685,9 +685,9 @@ mod tests {
      use super::*;
      use crate::common::Format;
      use crate::endianity::LittleEndian;
@@ -707,7 +708,7 @@ Index: gimli/src/read/mod.rs
      fn test_parse_initial_length_32_ok() {
          let section = Section::with_endian(Endian::Little).L32(0x7856_3412);
          let buf = section.get_contents().unwrap();
-@@ -820,5 +820,5 @@ mod tests {
+@@ -826,5 +826,5 @@ mod tests {
              Err(Error::UnsupportedOffset) => assert!(true),
              otherwise => panic!("Unexpected result: {:?}", otherwise),
          };
@@ -718,7 +719,7 @@ Index: gimli/src/read/op.rs
 ===================================================================
 --- gimli.orig/src/read/op.rs
 +++ gimli/src/read/op.rs
-@@ -1990,9 +1990,9 @@ mod tests {
+@@ -2000,9 +2000,9 @@ mod tests {
      use crate::endianity::LittleEndian;
      use crate::leb128;
      use crate::read::{EndianSlice, Error, Result, UnitOffset};
@@ -730,7 +731,7 @@ Index: gimli/src/read/op.rs
  
      fn encoding4() -> Encoding {
          Encoding {
-@@ -2062,7 +2062,7 @@ mod tests {
+@@ -2072,7 +2072,7 @@ mod tests {
          }
      }
  
@@ -739,7 +740,7 @@ Index: gimli/src/read/op.rs
          input: F,
          expect: &Operation<EndianSlice<LittleEndian>>,
          encoding: Encoding,
-@@ -2076,9 +2076,9 @@ mod tests {
+@@ -2086,9 +2086,9 @@ mod tests {
              check_op_parse_eof(&input[..i], encoding);
          }
          check_op_parse_simple(&input, expect, encoding);
@@ -751,7 +752,7 @@ Index: gimli/src/read/op.rs
      fn test_op_parse_onebyte() {
          // Doesn't matter for this test.
          let encoding = encoding4();
-@@ -2206,9 +2206,9 @@ mod tests {
+@@ -2216,9 +2216,9 @@ mod tests {
              let (opcode, ref result) = *item;
              check_op_parse(|s| s.D8(opcode.0), result, encoding);
          }
@@ -763,7 +764,7 @@ Index: gimli/src/read/op.rs
      fn test_op_parse_twobyte() {
          // Doesn't matter for this test.
          let encoding = encoding4();
-@@ -2489,7 +2489,7 @@ mod tests {
+@@ -2499,7 +2499,7 @@ mod tests {
                  ));
              }
  
@@ -772,7 +773,7 @@ Index: gimli/src/read/op.rs
                  let (op, ref expect) = *item;
                  let input = Section::with_endian(Endian::Little)
                      .D8(op.0)
-@@ -2497,7 +2497,7 @@ mod tests {
+@@ -2507,7 +2507,7 @@ mod tests {
                      .get_contents()
                      .unwrap();
                  check_op_parse_simple(&input, expect, encoding);
@@ -781,7 +782,7 @@ Index: gimli/src/read/op.rs
          }
      }
  
-@@ -2534,7 +2534,7 @@ mod tests {
+@@ -2544,7 +2544,7 @@ mod tests {
          }
      }
  
@@ -790,7 +791,7 @@ Index: gimli/src/read/op.rs
      fn test_op_parse_bit_piece() {
          // Doesn't matter for this test.
          let encoding = encoding4();
-@@ -2559,7 +2559,7 @@ mod tests {
+@@ -2569,7 +2569,7 @@ mod tests {
                  );
              }
          }
@@ -799,7 +800,7 @@ Index: gimli/src/read/op.rs
  
      #[test]
      fn test_op_parse_implicit_value() {
-@@ -2673,9 +2673,9 @@ mod tests {
+@@ -2683,9 +2683,9 @@ mod tests {
              },
              encoding,
          );
@@ -811,7 +812,7 @@ Index: gimli/src/read/op.rs
      fn test_op_convert() {
          // Doesn't matter for this test.
          let encoding = encoding4();
-@@ -2809,7 +2809,7 @@ mod tests {
+@@ -2819,7 +2819,7 @@ mod tests {
              &Operation::WasmGlobal { index: 1000 },
              encoding,
          );
