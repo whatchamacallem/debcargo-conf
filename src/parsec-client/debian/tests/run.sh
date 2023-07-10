@@ -2,18 +2,22 @@
 
 set -ex
 
+RUNDIR="/run/parsec"
+
 function cleanup {
-    kill $(cat /run/parsec/parsec.pid)
-    rm -r /run/parsec
+    if [ -f "${RUNDIR}/parsec.pid" ]; then
+        kill "$(cat ${RUNDIR}/parsec.pid)"
+    fi
+    rm -r $RUNDIR
 }
 
 trap cleanup EXIT
 
-mkdir /run/parsec
+mkdir -p ${RUNDIR}
 
 parsec -c debian/tests/config.toml &
-echo $! > /run/parsec/parsec.pid
+echo $! > ${RUNDIR}/parsec.pid
 
 sleep 3
 
-/usr/share/cargo/bin/cargo-auto-test $@
+/usr/share/cargo/bin/cargo-auto-test "$@"
