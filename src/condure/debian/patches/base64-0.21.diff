@@ -2,7 +2,7 @@ Index: condure/Cargo.toml
 ===================================================================
 --- condure.orig/Cargo.toml
 +++ condure/Cargo.toml
-@@ -61,7 +61,7 @@ harness = false
+@@ -64,7 +64,7 @@ harness = false
  version = "0.7"
  
  [dependencies.base64]
@@ -10,25 +10,34 @@ Index: condure/Cargo.toml
 +version = "0.21"
  
  [dependencies.clap]
- version = "3.2"
+ version = "4.3"
 Index: condure/src/connection.rs
 ===================================================================
 --- condure.orig/src/connection.rs
 +++ condure/src/connection.rs
-@@ -99,6 +99,7 @@ fn get_host<'a>(headers: &'a [httparse::
-     "localhost"
- }
- 
+@@ -78,6 +78,7 @@ use std::task::Context;
+ use std::task::Poll;
+ use std::thread;
+ use std::time::{Duration, Instant};
 +use base64::Engine;
- fn calculate_ws_accept(key: &[u8]) -> Result<ArrayString<WS_ACCEPT_MAX>, ()> {
-     let input_len = key.len() + websocket::WS_GUID.len();
  
-@@ -119,7 +120,7 @@ fn calculate_ws_accept(key: &[u8]) -> Re
+ const URI_SIZE_MAX: usize = 4096;
+ const HEADERS_MAX: usize = 64;
+@@ -124,7 +125,7 @@ fn gen_ws_key() -> ArrayString<WS_KEY_MA
+ 
+     let mut output = [0; WS_KEY_MAX];
+ 
+-    let size = base64::encode_config_slice(nonce, base64::STANDARD, &mut output);
++    let size = base64::engine::general_purpose::STANDARD.encode_slice(nonce, &mut output).unwrap();
+ 
+     let output = str::from_utf8(&output[..size]).unwrap();
+ 
+@@ -152,7 +153,7 @@ pub fn calculate_ws_accept(key: &[u8]) -
  
      let mut output = [0; WS_ACCEPT_MAX];
  
--    let size = base64::encode_config_slice(&digest, base64::STANDARD, &mut output);
-+    let size = base64::engine::general_purpose::STANDARD.encode_slice(&digest, &mut output).unwrap();
+-    let size = base64::encode_config_slice(digest, base64::STANDARD, &mut output);
++    let size = base64::engine::general_purpose::STANDARD.encode_slice(digest, &mut output).unwrap();
  
      let output = match str::from_utf8(&output[..size]) {
          Ok(s) => s,
