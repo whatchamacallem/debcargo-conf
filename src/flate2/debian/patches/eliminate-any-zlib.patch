@@ -52,25 +52,25 @@ Index: flate2/src/mem.rs
 ===================================================================
 --- flate2.orig/src/mem.rs
 +++ flate2/src/mem.rs
-@@ -220,7 +220,7 @@ impl Compress {
+@@ -211,7 +211,7 @@ impl Compress {
      ///
-     /// This constructor is only available when the `zlib` feature is used.
-     /// Other backends currently do not support custom window bits.
+     /// If `window_bits` does not fall into the range 9 ..= 15,
+     /// `new_with_window_bits` will panic.
 -    #[cfg(feature = "any_zlib")]
 +    #[cfg(feature = "zlib")]
      pub fn new_with_window_bits(
          level: Compression,
          zlib_header: bool,
-@@ -252,7 +252,7 @@ impl Compress {
+@@ -238,7 +238,7 @@ impl Compress {
      ///
-     /// This constructor is only available when the `zlib` feature is used.
-     /// Other backends currently do not support gzip headers for Compress.
+     /// If `window_bits` does not fall into the range 9 ..= 15,
+     /// `new_with_window_bits` will panic.
 -    #[cfg(feature = "any_zlib")]
 +    #[cfg(feature = "zlib")]
      pub fn new_gzip(level: Compression, window_bits: u8) -> Compress {
          assert!(
              window_bits > 8 && window_bits < 16,
-@@ -278,7 +278,7 @@ impl Compress {
+@@ -264,7 +264,7 @@ impl Compress {
      /// Specifies the compression dictionary to use.
      ///
      /// Returns the Adler-32 checksum of the dictionary.
@@ -79,7 +79,7 @@ Index: flate2/src/mem.rs
      pub fn set_dictionary(&mut self, dictionary: &[u8]) -> Result<u32, CompressError> {
          let stream = &mut *self.inner.inner.stream_wrapper;
          stream.msg = std::ptr::null_mut();
-@@ -311,7 +311,7 @@ impl Compress {
+@@ -297,7 +297,7 @@ impl Compress {
      /// the compression of the available input data before changing the
      /// compression level. Flushing the stream before calling this method
      /// ensures that the function will succeed on the first call.
@@ -88,25 +88,25 @@ Index: flate2/src/mem.rs
      pub fn set_level(&mut self, level: Compression) -> Result<(), CompressError> {
          use std::os::raw::c_int;
          let stream = &mut *self.inner.inner.stream_wrapper;
-@@ -398,7 +398,7 @@ impl Decompress {
+@@ -379,7 +379,7 @@ impl Decompress {
      ///
-     /// This constructor is only available when the `zlib` feature is used.
-     /// Other backends currently do not support custom window bits.
+     /// If `window_bits` does not fall into the range 9 ..= 15,
+     /// `new_with_window_bits` will panic.
 -    #[cfg(feature = "any_zlib")]
 +    #[cfg(feature = "zlib")]
      pub fn new_with_window_bits(zlib_header: bool, window_bits: u8) -> Decompress {
          assert!(
              window_bits > 8 && window_bits < 16,
-@@ -423,7 +423,7 @@ impl Decompress {
+@@ -399,7 +399,7 @@ impl Decompress {
      ///
-     /// This constructor is only available when the `zlib` feature is used.
-     /// Other backends currently do not support gzip headers for Decompress.
+     /// If `window_bits` does not fall into the range 9 ..= 15,
+     /// `new_with_window_bits` will panic.
 -    #[cfg(feature = "any_zlib")]
 +    #[cfg(feature = "zlib")]
      pub fn new_gzip(window_bits: u8) -> Decompress {
          assert!(
              window_bits > 8 && window_bits < 16,
-@@ -513,7 +513,7 @@ impl Decompress {
+@@ -489,7 +489,7 @@ impl Decompress {
      }
  
      /// Specifies the decompression dictionary to use.
@@ -115,7 +115,7 @@ Index: flate2/src/mem.rs
      pub fn set_dictionary(&mut self, dictionary: &[u8]) -> Result<u32, DecompressError> {
          let stream = &mut *self.inner.inner.stream_wrapper;
          stream.msg = std::ptr::null_mut();
-@@ -605,7 +605,7 @@ mod tests {
+@@ -581,7 +581,7 @@ mod tests {
      use crate::write;
      use crate::{Compression, Decompress, FlushDecompress};
  
@@ -124,7 +124,7 @@ Index: flate2/src/mem.rs
      use crate::{Compress, FlushCompress};
  
      #[test]
-@@ -666,7 +666,7 @@ mod tests {
+@@ -642,7 +642,7 @@ mod tests {
          assert!(dst.starts_with(string));
      }
  
@@ -133,7 +133,7 @@ Index: flate2/src/mem.rs
      #[test]
      fn set_dictionary_with_zlib_header() {
          let string = "hello, hello!".as_bytes();
-@@ -715,7 +715,7 @@ mod tests {
+@@ -691,7 +691,7 @@ mod tests {
          assert_eq!(&decoded[..decoder.total_out() as usize], string);
      }
  
@@ -142,7 +142,7 @@ Index: flate2/src/mem.rs
      #[test]
      fn set_dictionary_raw() {
          let string = "hello, hello!".as_bytes();
-@@ -746,7 +746,7 @@ mod tests {
+@@ -722,7 +722,7 @@ mod tests {
          assert_eq!(&decoded[..decoder.total_out() as usize], string);
      }
  
@@ -151,7 +151,7 @@ Index: flate2/src/mem.rs
      #[test]
      fn test_gzip_flate() {
          let string = "hello, hello!".as_bytes();
-@@ -772,7 +772,7 @@ mod tests {
+@@ -748,7 +748,7 @@ mod tests {
          assert_eq!(&decoded[..decoder.total_out() as usize], string);
      }
  
@@ -164,7 +164,7 @@ Index: flate2/Cargo.toml
 ===================================================================
 --- flate2.orig/Cargo.toml
 +++ flate2/Cargo.toml
-@@ -60,12 +60,10 @@ default-features = false
+@@ -68,16 +68,14 @@ default-features = false
  version = "0.8"
  
  [features]
@@ -175,5 +175,10 @@ Index: flate2/Cargo.toml
  zlib = [
 -    "any_zlib",
      "libz-sys",
+ ]
+ zlib-default = [
+-    "any_zlib",
++    "zlib",
+     "libz-sys/default",
  ]
  
