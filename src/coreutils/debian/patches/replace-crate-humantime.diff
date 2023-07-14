@@ -1,0 +1,47 @@
+commit 9aef5ac35b974e1f081fd4d5d0e29a4e41fd58c5
+Author: Roy Ivy III <rivy.dev@gmail.com>
+Date:   Sun Jun 11 10:35:32 2023 -0500
+
+    deps ~ change from 'humantime_to_duration' to 'parse_datetime'
+
+Index: coreutils/src/uu/touch/Cargo.toml
+===================================================================
+--- coreutils.orig/src/uu/touch/Cargo.toml
++++ coreutils/src/uu/touch/Cargo.toml
+@@ -1,4 +1,4 @@
+-# spell-checker:ignore humantime
++# spell-checker:ignore datetime
+ [package]
+ name = "uu_touch"
+ version = "0.0.19"
+@@ -18,7 +18,7 @@ path = "src/touch.rs"
+ [dependencies]
+ filetime = { workspace=true }
+ clap = { workspace=true }
+-humantime_to_duration = { workspace=true }
++parse_datetime = { workspace=true }
+ time = { workspace=true, features = ["parsing", "formatting", "local-offset", "macros"] }
+ uucore = { workspace=true, features=["libc"] }
+ 
+Index: coreutils/src/uu/touch/src/touch.rs
+===================================================================
+--- coreutils.orig/src/uu/touch/src/touch.rs
++++ coreutils/src/uu/touch/src/touch.rs
+@@ -84,7 +84,7 @@ pub fn uumain(args: impl uucore::Args) -
+     ) {
+         (Some(reference), Some(date)) => {
+             let (atime, mtime) = stat(Path::new(reference), !matches.get_flag(options::NO_DEREF))?;
+-            if let Ok(offset) = humantime_to_duration::from_str(date) {
++            if let Ok(offset) = parse_datetime::from_str(date) {
+                 let mut seconds = offset.whole_seconds();
+                 let mut nanos = offset.subsec_nanoseconds();
+                 if nanos < 0 {
+@@ -445,7 +445,7 @@ fn parse_date(s: &str) -> UResult<FileTi
+         }
+     }
+ 
+-    if let Ok(duration) = humantime_to_duration::from_str(s) {
++    if let Ok(duration) = parse_datetime::from_str(s) {
+         let now_local = time::OffsetDateTime::now_local().unwrap();
+         let diff = now_local.checked_add(duration).unwrap();
+         return Ok(local_dt_to_filetime(diff));
