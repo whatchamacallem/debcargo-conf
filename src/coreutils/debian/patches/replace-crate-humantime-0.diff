@@ -24,7 +24,7 @@ Index: coreutils/Cargo.toml
 -humantime_to_duration = "0.2.1"
  indicatif = "0.17"
  is-terminal = "0.4"
- itertools = "0.10"
+ itertools = "0"
 @@ -302,6 +301,7 @@ number_prefix = "0.4"
  once_cell = "1"
  onig = { version = "6", default-features = false }
@@ -56,7 +56,7 @@ Index: coreutils/src/uu/date/src/date.rs
 ===================================================================
 --- coreutils.orig/src/uu/date/src/date.rs
 +++ coreutils/src/uu/date/src/date.rs
-@@ -6,7 +6,7 @@
+@@ -6,10 +6,10 @@
  // For the full copyright and license information, please view the LICENSE
  // file that was distributed with this source code.
  
@@ -64,8 +64,20 @@ Index: coreutils/src/uu/date/src/date.rs
 +// spell-checker:ignore (chrono) Datelike Timelike ; (format) DATEFILE MMDDhhmm ; (vars) datetime datetimes
  
  use chrono::format::{Item, StrftimeItems};
- use chrono::{DateTime, Duration as ChronoDuration, FixedOffset, Local, Offset, Utc};
-@@ -171,7 +171,7 @@ pub fn uumain(args: impl uucore::Args) -
+-use chrono::{DateTime, Duration as ChronoDuration, FixedOffset, Local, Offset, Utc};
++use chrono::{DateTime, Duration, FixedOffset, Local, Offset, Utc};
+ #[cfg(windows)]
+ use chrono::{Datelike, Timelike};
+ use clap::{crate_version, Arg, ArgAction, Command};
+@@ -18,7 +18,6 @@ use libc::{clock_settime, timespec, CLOC
+ use std::fs::File;
+ use std::io::{BufRead, BufReader};
+ use std::path::PathBuf;
+-use time::Duration;
+ use uucore::display::Quotable;
+ #[cfg(not(any(target_os = "redox")))]
+ use uucore::error::FromIo;
+@@ -171,7 +170,7 @@ pub fn uumain(args: impl uucore::Args) -
      };
  
      let date_source = if let Some(date) = matches.get_one::<String>(OPT_DATE) {
@@ -74,3 +86,20 @@ Index: coreutils/src/uu/date/src/date.rs
              DateSource::Human(duration)
          } else {
              DateSource::Custom(date.into())
+@@ -226,13 +225,10 @@ pub fn uumain(args: impl uucore::Args) -
+                 let iter = std::iter::once(date);
+                 Box::new(iter)
+             }
+-            DateSource::Human(ref input) => {
+-                // Get the current DateTime<FixedOffset> and convert the input time::Duration to chrono::Duration
+-                // for things like "1 year ago"
++            DateSource::Human(relative_time) => {
++                // Get the current DateTime<FixedOffset> for things like "1 year ago"
+                 let current_time = DateTime::<FixedOffset>::from(Local::now());
+-                let input_chrono = ChronoDuration::seconds(input.as_seconds_f32() as i64)
+-                    + ChronoDuration::nanoseconds(input.subsec_nanoseconds() as i64);
+-                let iter = std::iter::once(Ok(current_time + input_chrono));
++                let iter = std::iter::once(Ok(current_time + relative_time));
+                 Box::new(iter)
+             }
+             DateSource::File(ref path) => {
