@@ -1,0 +1,38 @@
+Description: Enable build with older termion versions.
+ This patch disables an example build that depend on recent termion versions.
+Author: Johann Felix Soden <johfel@debian.org>
+Forwarded: not-needed
+Last-Update: 2023-07-06
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/examples/demo/main.rs
++++ b/examples/demo/main.rs
+@@ -1,8 +1,6 @@
+ mod app;
+ #[cfg(feature = "crossterm")]
+ mod crossterm;
+-#[cfg(feature = "termion")]
+-mod termion;
+ #[cfg(feature = "termwiz")]
+ mod termwiz;
+ 
+@@ -10,9 +8,7 @@
+ 
+ #[cfg(feature = "crossterm")]
+ use crate::crossterm::run;
+-#[cfg(all(feature = "termion", not(feature = "crossterm"), not(feature = "termwiz")))]
+-use crate::termion::run;
+-#[cfg(all(feature = "termwiz", not(feature = "crossterm"), not(feature = "termion")))]
++#[cfg(all(feature = "termwiz", not(feature = "crossterm")))]
+ use crate::termwiz::run;
+ 
+ use argh::FromArgs;
+@@ -32,7 +28,7 @@
+ fn main() -> Result<(), Box<dyn Error>> {
+     let cli: Cli = argh::from_env();
+     let tick_rate = Duration::from_millis(cli.tick_rate);
+-    #[cfg(any(feature = "termwiz", feature = "crossterm", feature = "termion"))]
++    #[cfg(any(feature = "termwiz", feature = "crossterm"))]
+     run(tick_rate, cli.enhanced_graphics)?;
+     Ok(())
+ }

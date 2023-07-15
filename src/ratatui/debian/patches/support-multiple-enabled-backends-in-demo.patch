@@ -1,0 +1,28 @@
+Description: Support multiple enabled backends in demo
+ This patch allows to build the demo even if multiple backends are enabled.
+Author: Johann Felix Soden <johfel@debian.org>
+Forwarded: not-needed
+Last-Update: 2023-07-14
+---
+--- a/examples/demo/main.rs
++++ b/examples/demo/main.rs
+@@ -10,9 +10,9 @@
+ 
+ #[cfg(feature = "crossterm")]
+ use crate::crossterm::run;
+-#[cfg(feature = "termion")]
++#[cfg(all(feature = "termion", not(feature = "crossterm"), not(feature = "termwiz")))]
+ use crate::termion::run;
+-#[cfg(feature = "termwiz")]
++#[cfg(all(feature = "termwiz", not(feature = "crossterm"), not(feature = "termion")))]
+ use crate::termwiz::run;
+ 
+ use argh::FromArgs;
+@@ -32,6 +32,7 @@
+ fn main() -> Result<(), Box<dyn Error>> {
+     let cli: Cli = argh::from_env();
+     let tick_rate = Duration::from_millis(cli.tick_rate);
++    #[cfg(any(feature = "termwiz", feature = "crossterm", feature = "termion"))]
+     run(tick_rate, cli.enhanced_graphics)?;
+     Ok(())
+ }
