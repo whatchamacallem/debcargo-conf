@@ -20,7 +20,14 @@ override_dh_auto_test:
 
 override_dh_auto_install:
 	CARGO_HOME=$(CURDIR)/debian/cargo_home DEB_CARGO_CRATE=coreutils_$(VERSION) /usr/share/cargo/bin/cargo prepare-debian debian/cargo_registry --link-from-system
+#use thin rather than full lto on 32-bit to avoid running out of address space.
+ifeq ($(DEB_HOST_ARCH_BITS),32)
+	sed -i 's/lto = true/lto = "thin"/' Cargo.toml
+endif
 	CARGO_HOME=$(CURDIR)/debian/cargo_home DESTDIR=$(CURDIR)/debian/tmp/ make SELINUX_ENABLED=1 PROFILE=release MULTICALL=$(MULTICALL) install
+ifeq ($(DEB_HOST_ARCH_BITS),32)
+	sed -i 's/lto = "thin"/lto = true/' Cargo.toml
+endif
 # Create the symlink early to be able to generate the manpages
 	dh_link
 
@@ -43,3 +50,9 @@ execute_before_dh_installman:
 override_dh_dwz:
 	# Don't do anything. fails because of the
 	# https://github.com/rust-lang/rust/issues/66118
+
+#use lower debuginfo level on 32-bit to avoid running out of address space.
+ifeq ($(DEB_HOST_ARCH_BITS),32)
+execute_after_dh_auto_configure:
+	sed -i s/debuginfo=2/debuginfo=1/ debian/cargo_home/config
+endif
