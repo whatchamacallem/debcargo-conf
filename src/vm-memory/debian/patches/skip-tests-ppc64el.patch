@@ -1,52 +1,32 @@
---- rust-vm-memory-0.10.0.orig/src/mmap.rs
-+++ rust-vm-memory-0.10.0/src/mmap.rs
-@@ -1302,6 +1302,7 @@ mod tests {
-         }
-     }
- 
+diff --git a/src/mmap.rs b/src/mmap.rs
+index 0a442e6..4bcaf4e 100644
+--- a/src/mmap.rs
++++ b/src/mmap.rs
+@@ -1284,2 +1284,3 @@ mod tests {
+     #[test]
 +    #[cfg(not(target_arch = "powerpc64"))]
-     #[test]
      fn test_retrieve_fd_backing_memory_region() {
-         let f = TempFile::new().unwrap().into_file();
-@@ -1330,6 +1331,7 @@ mod tests {
-     // https://docs.microsoft.com/en-us/windows/desktop/api/memoryapi/nf-memoryapi-mapviewoffile
-     #[test]
+@@ -1311,2 +1312,3 @@ mod tests {
      #[cfg(unix)]
 +    #[cfg(not(target_arch = "powerpc64"))]
      fn test_retrieve_offset_from_fd_backing_memory_region() {
-         let f = TempFile::new().unwrap().into_file();
-         f.set_len(0x1400).unwrap();
-@@ -1558,6 +1560,7 @@ mod tests {
-         );
-     }
- 
-+    #[cfg(not(target_arch = "powerpc64"))]
+@@ -1530,2 +1532,3 @@ mod tests {
      #[test]
++    #[cfg(not(target_arch = "powerpc64"))]
      fn test_dirty_tracking() {
-         test_guest_memory_and_region(|| {
---- rust-vm-memory-0.10.0.orig/src/mmap_unix.rs
-+++ rust-vm-memory-0.10.0/src/mmap_unix.rs
-@@ -557,6 +557,7 @@ mod tests {
-         assert_eq!(&buf1[offset..], buf2);
-     }
- 
+diff --git a/src/mmap_unix.rs b/src/mmap_unix.rs
+index c1d1adb..68952a3 100644
+--- a/src/mmap_unix.rs
++++ b/src/mmap_unix.rs
+@@ -542,2 +542,3 @@ mod tests {
+     #[cfg(not(miri))] // Miri cannot mmap files
 +    #[cfg(not(target_arch = "powerpc64"))]
-     #[test]
      fn test_mmap_region_build() {
-         let a = Arc::new(TempFile::new().unwrap().into_file());
-@@ -645,6 +646,7 @@ mod tests {
-         assert!(!r.owned());
-     }
- 
+@@ -632,2 +633,3 @@ mod tests {
+     #[cfg(not(miri))] // Miri cannot mmap files
 +    #[cfg(not(target_arch = "powerpc64"))]
-     #[test]
      fn test_mmap_region_fds_overlap() {
-         let a = Arc::new(TempFile::new().unwrap().into_file());
-@@ -675,6 +677,7 @@ mod tests {
-         assert!(!r1.fds_overlap(&r2));
-     }
- 
-+    #[cfg(not(target_arch = "powerpc64"))]
+@@ -662,2 +664,3 @@ mod tests {
      #[test]
++    #[cfg(not(target_arch = "powerpc64"))]
      fn test_dirty_tracking() {
-         // Using the `crate` prefix because we aliased `MmapRegion` to `MmapRegion<()>` for
