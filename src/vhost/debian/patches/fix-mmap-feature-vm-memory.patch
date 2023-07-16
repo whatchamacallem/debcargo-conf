@@ -1,0 +1,18 @@
+Description: Enable backend-mmap feature
+ Upstream change brought a struct in vm-memory that's guarded by backend-mmap,
+ but they didn't enable it for the normal dep, which their tests mysteriously
+ let slip through.
+Bug: https://github.com/rust-vmm/vhost/pull/175
+Last-Update: 2023-07-16
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -37,6 +37,7 @@
+ 
+ [dependencies.vm-memory]
+ version = "0.12.0"
++features = ["backend-mmap"]
+ 
+ [dependencies.vmm-sys-util]
+ version = "0.11.0"
