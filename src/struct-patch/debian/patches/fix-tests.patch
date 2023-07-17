@@ -1,0 +1,38 @@
+Description: Fix tests if feature 'status' is disabled
+Author: Johann Felix Soden <johfel@debian.org>
+Forwarded: pending
+Last-Update: 2023-07-17
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -52,7 +52,11 @@
+ #[cfg(test)]
+ mod tests {
+     use serde::Deserialize;
++
++    #[cfg(feature = "status")]
+     use struct_patch::{Patch, PatchStatus};
++    #[cfg(not(feature = "status"))]
++    use struct_patch::{Patch};
+ 
+     use crate as struct_patch;
+ 
+@@ -83,6 +87,7 @@
+         );
+     }
+ 
++    #[cfg(feature = "status")]
+     #[test]
+     fn test_empty() {
+         #[derive(Patch)]
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -41,3 +41,7 @@
+ [features]
+ default = ["status"]
+ status = ["struct-patch-derive/status"]
++
++[[example]]
++name = "status"
++required-features = ["status"]
