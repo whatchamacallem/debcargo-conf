@@ -1,0 +1,25 @@
+Index: rust-plotters-0.3.5/src/chart/context.rs
+===================================================================
+--- rust-plotters-0.3.5.orig/src/chart/context.rs
++++ rust-plotters-0.3.5/src/chart/context.rs
+@@ -133,7 +133,7 @@ impl<'a, DB: DrawingBackend, CT: CoordTr
+     }
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature = "ttf"))]
+ mod test {
+     use crate::prelude::*;
+ 
+Index: rust-plotters-0.3.5/src/drawing/area.rs
+===================================================================
+--- rust-plotters-0.3.5.orig/src/drawing/area.rs
++++ rust-plotters-0.3.5/src/drawing/area.rs
+@@ -710,6 +710,7 @@ mod drawing_area_tests {
+         }
+     }
+     #[test]
++    #[cfg(feature="ttf")]
+     fn test_titled() {
+         let drawing_area = create_mocked_drawing_area(1024, 768, |m| {
+             m.check_draw_text(|c, font, size, _pos, text| {
