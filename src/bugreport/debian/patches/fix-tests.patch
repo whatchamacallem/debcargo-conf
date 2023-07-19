@@ -1,0 +1,37 @@
+Description: Fix tests
+Author: Johann Felix Soden <johfel@debian.org>
+Forwarded: pending
+Last-Update: 2023-07-19
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -4,8 +4,10 @@
+ //!
+ //! Usage example:
+ //! ```
++//! #[cfg(feature = "format_markdown")]
+ //! use bugreport::{bugreport, collector::*, format::Markdown};
+ //!
++//! #[cfg(feature = "format_markdown")]
+ //! bugreport!()
+ //!     .info(SoftwareVersion::default())
+ //!     .info(OperatingSystem::default())
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -38,3 +38,15 @@
+ default = ["collector_operating_system", "format_markdown"]
+ format_markdown = []
+ format_plaintext = []
++
++[[example]]
++name = "simple"
++required-features = ["default"]
++
++[[example]]
++name = "readme"
++required-features = ["default"]
++
++[[example]]
++name = "custom_collector"
++required-features = ["default"]
