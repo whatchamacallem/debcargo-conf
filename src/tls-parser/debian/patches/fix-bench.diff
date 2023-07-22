@@ -1,0 +1,88 @@
+This patch is based on parts of the upstream commit described below, adapted
+for use in the Debian package by Peter Michael Green.
+
+Despite the patch being described as "fix clippy warnings" it seems to fix an
+actual build error in at least bench_dh.
+
+commit 440354568ba0c33f72ca875ec4186a32aa2bca26
+Author: Pierre Chifflier <chifflier@wzdftpd.net>
+Date:   Thu Dec 16 16:55:37 2021 +0100
+
+    Fix clippy warnings (rust 1.57)
+
+diff --git a/benches/bench_dh.rs b/benches/bench_dh.rs
+index 2dbe98f02..0bf7f53dd 100644
+--- a/benches/bench_dh.rs
++++ b/benches/bench_dh.rs
+@@ -3,11 +3,11 @@
+ 
+ extern crate test;
+ 
+-#[macro_use]
+ extern crate nom;
+ extern crate tls_parser;
+ 
+ mod tls_dh {
++    use nom::sequence::pair;
+     use test::Bencher;
+     use tls_parser::*;
+ 
+@@ -44,7 +44,7 @@ mod tls_dh {
+     fn bench_tls_ecdhe_params(b: &mut Bencher) {
+         let bytes = ECDHE_PARAMS;
+         b.iter(|| {
+-            let _ = pair!(bytes, parse_ecdh_params, parse_digitally_signed);
++            let _ = pair(parse_ecdh_params, parse_digitally_signed)(bytes);
+         })
+     }
+ } // mod tls_dh
+diff --git a/benches/bench_handshake.rs b/benches/bench_handshake.rs
+index 032306258..ec2c22e8d 100644
+--- a/benches/bench_handshake.rs
++++ b/benches/bench_handshake.rs
+@@ -44,7 +44,7 @@ mod tls_handshake {
+     #[bench]
+     fn bench_tls_record_clienthello(b: &mut Bencher) {
+         b.iter(|| {
+-            let _ = parse_tls_plaintext(&CH);
++            let _ = parse_tls_plaintext(CH);
+         })
+     }
+ 
+@@ -353,7 +353,7 @@ mod tls_handshake {
+     fn bench_tls_record_serverhello(b: &mut Bencher) {
+         let bytes = &SERVER_REPLY1[0..64];
+         b.iter(|| {
+-            let _ = parse_tls_plaintext(&bytes);
++            let _ = parse_tls_plaintext(bytes);
+         })
+     }
+ 
+@@ -361,7 +361,7 @@ mod tls_handshake {
+     fn bench_tls_record_certificate(b: &mut Bencher) {
+         let bytes = &SERVER_REPLY1[64..3150];
+         b.iter(|| {
+-            let _ = parse_tls_plaintext(&bytes);
++            let _ = parse_tls_plaintext(bytes);
+         })
+     }
+ 
+@@ -369,7 +369,7 @@ mod tls_handshake {
+     fn bench_tls_record_serverkeyexchange(b: &mut Bencher) {
+         let bytes = &SERVER_REPLY1[3150..3488];
+         b.iter(|| {
+-            let _ = parse_tls_plaintext(&bytes);
++            let _ = parse_tls_plaintext(bytes);
+         })
+     }
+ 
+@@ -377,7 +377,7 @@ mod tls_handshake {
+     fn bench_tls_record_serverdone(b: &mut Bencher) {
+         let bytes = &SERVER_REPLY1[3488..];
+         b.iter(|| {
+-            let _ = parse_tls_plaintext(&bytes);
++            let _ = parse_tls_plaintext(bytes);
+         })
+     }
+ } // mod tls_handshake
+ 
