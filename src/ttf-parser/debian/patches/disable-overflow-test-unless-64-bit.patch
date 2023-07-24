@@ -1,0 +1,19 @@
+Description: Disable font_collection_num_fonts_overflow test unless arch is 64-bit
+ Disable the test until upstream determines how they want to fix it.
+ https://github.com/RazrFalcon/ttf-parser/issues/127
+Author: James McCoy <jamessan@debian.org>
+Forwarded: not-needed
+Last-Update: 2023-07-24
+---
+Index: ttf-parser/tests/tables/main.rs
+===================================================================
+--- ttf-parser.orig/tests/tables/main.rs
++++ ttf-parser/tests/tables/main.rs
+@@ -121,6 +121,7 @@ fn empty_font_collection() {
+     );
+ }
+ 
++#[cfg(target_pointer_width = "64")]
+ #[test]
+ fn font_collection_num_fonts_overflow() {
+     use Unit::*;
