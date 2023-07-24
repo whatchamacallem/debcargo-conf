@@ -1,0 +1,20 @@
+--- rust-phf-generator-0.11.2.orig/Cargo.toml
++++ rust-phf-generator-0.11.2/Cargo.toml
+@@ -45,3 +45,6 @@ default-features = false
+ 
+ [dev-dependencies.criterion]
+ version = "0.3.6"
++
++[features]
++criterion = ["dep:criterion", "phf_shared/std"]
+--- rust-phf-generator-0.11.2.orig/src/bin/gen_hash_test.rs
++++ rust-phf-generator-0.11.2/src/bin/gen_hash_test.rs
+@@ -10,7 +10,7 @@ fn gen_vec(len: usize) -> Vec<String> {
+     let mut rng = SmallRng::seed_from_u64(0xAAAAAAAAAAAAAAAA).sample_iter(Alphanumeric);
+ 
+     (0..len)
+-        .map(move |_| rng.by_ref().take(64).collect::<String>())
++        .map(move |_| rng.by_ref().take(64).map(char::from).collect::<String>())
+         .collect()
+ }
+ 
