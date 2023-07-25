@@ -1,0 +1,49 @@
+--- ruma-common.orig/Cargo.toml
++++ ruma-common/Cargo.toml
+@@ -41,3 +41,3 @@
+ [dependencies.base64]
+-version = "0.13.0"
++version = "0.21.0"
+ 
+--- ruma-common.orig/src/serde/base64.rs
++++ ruma-common/src/serde/base64.rs
+@@ -4,2 +4,6 @@
+ 
++use base64::{
++    engine::{general_purpose, GeneralPurpose, GeneralPurposeConfig},
++    Engine,
++};
+ use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+@@ -27,3 +31,3 @@
+ #[doc(hidden)]
+-pub struct Conf(base64::Config);
++pub struct Conf(base64::alphabet::Alphabet);
+ 
+@@ -38,4 +42,3 @@
+ impl Base64Config for Standard {
+-    // See https://github.com/matrix-org/matrix-spec/issues/838
+-    const CONF: Conf = Conf(base64::STANDARD_NO_PAD.decode_allow_trailing_bits(true));
++    const CONF: Conf = Conf(base64::alphabet::STANDARD);
+ }
+@@ -51,3 +54,10 @@
+ impl Base64Config for UrlSafe {
+-    const CONF: Conf = Conf(base64::URL_SAFE_NO_PAD.decode_allow_trailing_bits(true));
++    const CONF: Conf = Conf(base64::alphabet::URL_SAFE);
++}
++
++impl<C: Base64Config, B> Base64<C, B> {
++    // See https://github.com/matrix-org/matrix-spec/issues/838
++    const CONFIG: GeneralPurposeConfig =
++        general_purpose::NO_PAD.with_decode_allow_trailing_bits(true);
++    const ENGINE: GeneralPurpose = GeneralPurpose::new(&C::CONF.0, Self::CONFIG);
+ }
+@@ -67,3 +77,3 @@
+     pub fn encode(&self) -> String {
+-        base64::encode_config(&self.bytes, C::CONF.0)
++        Self::ENGINE.encode(self.as_bytes())
+     }
+@@ -86,3 +96,3 @@
+     pub fn parse(encoded: impl AsRef<[u8]>) -> Result<Self, Base64DecodeError> {
+-        base64::decode_config(encoded, C::CONF.0).map(Self::new).map_err(Base64DecodeError)
++        Self::ENGINE.decode(encoded).map(Self::new).map_err(Base64DecodeError)
+     }

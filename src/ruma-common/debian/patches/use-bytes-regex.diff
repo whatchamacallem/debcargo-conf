@@ -1,0 +1,24 @@
+commit ed7c26ff9f3dd249af041f4f2bfffbf62cac6b9b
+Author: Kévin Commaille <zecakeh@tedomum.fr>
+Date:   Mon Apr 24 16:39:19 2023 +0200
+
+    push: Use bytes Regex to fix regex construction
+    
+    Due to a new error detected in the regex crate.
+
+diff --git a/crates/ruma-common/src/push/condition.rs b/crates/ruma-common/src/push/condition.rs
+index 7f1a6e5c..42ccc5fb 100644
+--- ruma-common/src/push/condition.rs
++++ ruma-common/src/push/condition.rs
+@@ -4,1 +4,1 @@
+-use regex::Regex;
++use regex::bytes::Regex;
+@@ -392,7 +392,7 @@ impl StrExt for str {
+             // The word characters in ASCII compatible mode (with the `-u` flag) match the
+             // definition in the spec: any character not in the set `[A-Za-z0-9_]`.
+             let regex = format!(r"(?-u:^|\W|\b){}(?-u:\b|\W|$)", chunks.concat());
+-            Regex::new(&regex).ok().filter(|re| re.is_match(self)).is_some()
++            Regex::new(&regex).ok().filter(|re| re.is_match(self.as_bytes())).is_some()
+         } else {
+             match self.find(pattern) {
+                 Some(start) => {
