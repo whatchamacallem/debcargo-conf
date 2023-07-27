@@ -1,0 +1,26 @@
+Don't specifically allow obsolete warning flag and don't deny warnings in
+general, this should maximise compatibility.
+
+See https://github.com/rusticstuff/simdutf8/issues/68
+
+Index: simdutf8/src/implementation/algorithm.rs
+===================================================================
+--- simdutf8.orig/src/implementation/algorithm.rs
++++ simdutf8/src/implementation/algorithm.rs
+@@ -182,7 +182,6 @@ macro_rules! algorithm_simd {
+             #[cfg_attr(not(target_arch="aarch64"), target_feature(enable = $feat))]
+             #[inline]
+             #[allow(unconditional_panic)] // does not panic because len is checked
+-            #[allow(const_err)] // the same, but for Rust 1.38.0
+             unsafe fn check_block(&mut self, input: SimdInput) {
+                 // WORKAROUND
+                 // necessary because the for loop is not unrolled on ARM64
+Index: simdutf8/src/lib.rs
+===================================================================
+--- simdutf8.orig/src/lib.rs
++++ simdutf8/src/lib.rs
+@@ -1,4 +1,3 @@
+-#![deny(warnings)]
+ #![warn(unused_extern_crates)]
+ #![deny(
+     clippy::all,
