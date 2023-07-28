@@ -1,0 +1,56 @@
+Index: netlink-proto/Cargo.toml
+===================================================================
+--- netlink-proto.orig/Cargo.toml
++++ netlink-proto/Cargo.toml
+@@ -25,16 +25,6 @@ keywords = [
+ license = "MIT"
+ repository = "https://github.com/rust-netlink/netlink-proto"
+ 
+-[[example]]
+-name = "dump_links"
+-
+-[[example]]
+-name = "dump_links_async"
+-required-features = ["smol_socket"]
+-
+-[[example]]
+-name = "audit_netlink_events"
+-
+ [dependencies.bytes]
+ version = "1.0"
+ 
+@@ -69,9 +59,6 @@ features = ["attributes"]
+ [dev-dependencies.env_logger]
+ version = "0.9"
+ 
+-[dev-dependencies.netlink-packet-audit]
+-version = "0.5.0"
+-
+ [dev-dependencies.netlink-packet-route]
+ version = "0.14.1"
+ 
+Index: netlink-proto/src/connection.rs
+===================================================================
+--- netlink-proto.orig/src/connection.rs
++++ netlink-proto/src/connection.rs
+@@ -326,20 +326,3 @@ where
+         }
+     }
+ }
+-
+-#[cfg(all(test, feature = "tokio_socket"))]
+-mod tests {
+-    use crate::new_connection;
+-    use crate::sys::protocols::NETLINK_AUDIT;
+-    use netlink_packet_audit::AuditMessage;
+-    use tokio::time;
+-
+-    #[tokio::test]
+-    async fn connection_is_closed() {
+-        let (conn, _, _) =
+-            new_connection::<AuditMessage>(NETLINK_AUDIT).unwrap();
+-        let join_handle = tokio::spawn(conn);
+-        time::sleep(time::Duration::from_millis(200)).await;
+-        assert!(join_handle.is_finished());
+-    }
+-}
