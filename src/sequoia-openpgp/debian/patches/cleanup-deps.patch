@@ -1,72 +1,81 @@
-From 7e3f8f4f86d1fbd9ab1745fc0b1d00a19fb3c656 Mon Sep 17 00:00:00 2001
-From: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-Date: Wed, 2 Feb 2022 02:49:45 -0500
-Subject: [PATCH 1/2] Drop windows and wasm targets
-
-We can't build or test the windows targets, and we don't have all of
-the dependencies for the wasm (web assembly) targets.
-
-Dropping them from Cargo.toml leaves us building the expected
-nettle-backed version of sequoia, which is appropriate for a debian
-install.
-Index: sequoia-openpgp/Cargo.toml
-===================================================================
---- sequoia-openpgp.orig/Cargo.toml
-+++ sequoia-openpgp/Cargo.toml
-@@ -55,9 +55,6 @@ required-features = ["compression-deflat
+diff --git a/Cargo.toml b/Cargo.toml
+index e3c9012..d325ff3 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -55,9 +55,9 @@ required-features = ["compression-deflate"]
  name = "run_benchmarks"
  harness = false
  
 -[dependencies.aes]
 -version = "0.8"
 -optional = true
++#[dependencies.aes]
++#version = "0.8"
++#optional = true
  
  [dependencies.anyhow]
  version = "1.0.18"
-@@ -65,18 +62,6 @@ version = "1.0.18"
+@@ -65,13 +65,13 @@ version = "1.0.18"
  [dependencies.base64]
  version = "0.21"
  
 -[dependencies.block-padding]
 -version = "0.3"
 -optional = true
--
++#[dependencies.block-padding]
++#version = "0.3"
++#optional = true
+ 
 -[dependencies.blowfish]
 -version = "0.9"
 -optional = true
--
--[dependencies.botan]
--version = "0.10"
--optional = true
--
- [dependencies.buffered-reader]
- version = "1.0.0"
- default-features = false
-@@ -85,72 +70,13 @@ default-features = false
++#[dependencies.blowfish]
++#version = "0.9"
++#optional = true
+ 
+ [dependencies.botan]
+ version = "0.10"
+@@ -85,72 +85,72 @@ default-features = false
  version = "0.4"
  optional = true
  
 -[dependencies.cast5]
 -version = "0.11"
 -optional = true
--
++#[dependencies.cast5]
++#version = "0.11"
++#optional = true
+ 
 -[dependencies.cfb-mode]
 -version = "0.8"
 -optional = true
--
++#[dependencies.cfb-mode]
++#version = "0.8"
++#optional = true
+ 
 -[dependencies.cipher]
 -version = "0.4"
 -features = ["std"]
 -optional = true
--
++#[dependencies.cipher]
++#version = "0.4"
++#features = ["std"]
++#optional = true
+ 
 -[dependencies.des]
 -version = "0.8"
 -optional = true
--
++#[dependencies.des]
++#version = "0.8"
++#optional = true
+ 
 -[dependencies.digest]
 -version = "0.10"
 -optional = true
--
++#[dependencies.digest]
++#version = "0.10"
++#optional = true
+ 
  [dependencies.dyn-clone]
  version = "1"
  
@@ -100,7 +109,37 @@ Index: sequoia-openpgp/Cargo.toml
 -]
 -optional = true
 -default-features = false
--
++#[dependencies.eax]
++#version = "0.5"
++#optional = true
++
++#[dependencies.ecb]
++#version = "0.1"
++#optional = true
++
++#[dependencies.ecdsa]
++#version = "0.16"
++#features = [
++#    "hazmat",
++#    "arithmetic",
++#]
++#optional = true
++
++#[dependencies.ed25519]
++#version = "1"
++#features = ["std"]
++#optional = true
++#default-features = false
++
++#[dependencies.ed25519-dalek]
++#version = "1"
++#features = [
++#    "rand",
++#    "u64_backend",
++#]
++#optional = true
++#default-features = false
+ 
  [dependencies.flate2]
  version = "1.0.1"
  optional = true
@@ -108,14 +147,20 @@ Index: sequoia-openpgp/Cargo.toml
 -[dependencies.generic-array]
 -version = "0.14.4"
 -optional = true
--
++#[dependencies.generic-array]
++#version = "0.14.4"
++#optional = true
+ 
 -[dependencies.idea]
 -version = "0.5"
 -optional = true
++#[dependencies.idea]
++#version = "0.5"
++#optional = true
  
  [dependencies.idna]
  version = ">=0.2, <0.4"
-@@ -164,10 +90,6 @@ version = "1.4.0"
+@@ -164,10 +164,10 @@ version = "1.4.0"
  [dependencies.libc]
  version = "0.2.66"
  
@@ -123,10 +168,14 @@ Index: sequoia-openpgp/Cargo.toml
 -version = "0.10"
 -features = ["oid"]
 -optional = true
++#[dependencies.md-5]
++#version = "0.10"
++#features = ["oid"]
++#optional = true
  
  [dependencies.memsec]
  version = ">=0.5, <0.7"
-@@ -177,43 +99,24 @@ default-features = false
+@@ -177,43 +177,43 @@ default-features = false
  version = "7.2.2"
  optional = true
  
@@ -134,6 +183,10 @@ Index: sequoia-openpgp/Cargo.toml
 -version = "0.8"
 -optional = true
 -default-features = false
++#[dependencies.num-bigint-dig]
++#version = "0.8"
++#optional = true
++#default-features = false
  
  [dependencies.once_cell]
  version = "1"
@@ -155,6 +208,13 @@ Index: sequoia-openpgp/Cargo.toml
 -    "ecdsa",
 -]
 -optional = true
++#[dependencies.p256]
++#version = "0.13"
++#features = [
++#    "ecdh",
++#    "ecdsa",
++#]
++#optional = true
  
  [dependencies.rand]
  version = "0.8"
@@ -165,14 +225,21 @@ Index: sequoia-openpgp/Cargo.toml
 -version = "0.7.3"
 -optional = true
 -package = "rand"
--
++#[dependencies.rand07]
++#version = "0.7.3"
++#optional = true
++#package = "rand"
+ 
 -[dependencies.rand_core]
 -version = "0.6"
 -optional = true
++#[dependencies.rand_core]
++#version = "0.6"
++#optional = true
  
  [dependencies.regex]
  version = "1"
-@@ -221,44 +124,16 @@ version = "1"
+@@ -221,44 +221,44 @@ version = "1"
  [dependencies.regex-syntax]
  version = "0.6"
  
@@ -180,15 +247,26 @@ Index: sequoia-openpgp/Cargo.toml
 -version = "0.1"
 -features = ["oid"]
 -optional = true
--
++#[dependencies.ripemd]
++#version = "0.1"
++#features = ["oid"]
++#optional = true
+ 
 -[dependencies.rsa]
 -version = "0.9.0"
 -optional = true
--
++#[dependencies.rsa]
++#version = "0.9.0"
++#optional = true
+ 
 -[dependencies.sha-1]
 -version = "0.10"
 -features = ["oid"]
 -optional = true
++#[dependencies.sha-1]
++#version = "0.10"
++#features = ["oid"]
++#optional = true
  
  [dependencies.sha1collisiondetection]
  version = "0.2.3"
@@ -199,6 +277,10 @@ Index: sequoia-openpgp/Cargo.toml
 -version = "0.10"
 -features = ["oid"]
 -optional = true
++#[dependencies.sha2]
++#version = "0.10"
++#features = ["oid"]
++#optional = true
  
  [dependencies.thiserror]
  version = "1.0.2"
@@ -206,23 +288,33 @@ Index: sequoia-openpgp/Cargo.toml
 -[dependencies.twofish]
 -version = "0.7"
 -optional = true
--
++#[dependencies.twofish]
++#version = "0.7"
++#optional = true
+ 
 -[dependencies.typenum]
 -version = "1.12.0"
 -optional = true
--
++#[dependencies.typenum]
++#version = "1.12.0"
++#optional = true
+ 
 -[dependencies.x25519-dalek-ng]
 -version = "1"
 -optional = true
++#[dependencies.x25519-dalek-ng]
++#version = "1"
++#optional = true
  
  [dependencies.xxhash-rust]
  version = "0.8"
-@@ -298,87 +173,16 @@ compression-deflate = [
+@@ -298,87 +298,87 @@ compression-deflate = [
      "flate2",
      "buffered-reader/compression-deflate",
  ]
 -crypto-botan = ["botan/botan3"]
--crypto-botan2 = ["botan"]
++#crypto-botan = ["botan/botan3"]
+ crypto-botan2 = ["botan"]
 -crypto-cng = [
 -    "cipher",
 -    "eax",
@@ -231,6 +323,14 @@ Index: sequoia-openpgp/Cargo.toml
 -    "ed25519-dalek",
 -    "num-bigint-dig",
 -]
++#crypto-cng = [
++#    "cipher",
++#    "eax",
++#    "winapi",
++#    "win-crypto-ng",
++#    "ed25519-dalek",
++#    "num-bigint-dig",
++#]
  crypto-nettle = ["nettle"]
  crypto-openssl = [
      "openssl",
@@ -267,6 +367,37 @@ Index: sequoia-openpgp/Cargo.toml
 -    "rand_core/getrandom",
 -    "ecdsa",
 -]
++#crypto-rust = [
++#    "aes",
++#    "block-padding",
++#    "blowfish",
++#    "cast5",
++#    "cfb-mode",
++#    "cipher",
++#    "des",
++#    "digest",
++#    "eax",
++#    "ecb",
++#    "ed25519",
++#    "ed25519-dalek",
++#    "generic-array",
++#    "idea",
++#    "md-5",
++#    "num-bigint-dig",
++#    "rand",
++#    "rand07",
++#    "ripemd",
++#    "rsa",
++#    "sha-1",
++#    "sha2",
++#    "twofish",
++#    "typenum",
++#    "x25519-dalek-ng",
++#    "p256",
++#    "rand_core",
++#    "rand_core/getrandom",
++#    "ecdsa",
++#]
  default = [
      "compression",
      "crypto-nettle",
@@ -302,6 +433,39 @@ Index: sequoia-openpgp/Cargo.toml
 -features = ["bcrypt"]
 -optional = true
 -default-features = false
++#[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.chrono]
++#version = "0.4.10"
++#features = [
++#    "std",
++#    "wasmbind",
++#]
++#default-features = false
++
++#[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.getrandom]
++#version = "0.2"
++#features = ["js"]
++
++#[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.rand07]
++#version = "0.7"
++#features = ["wasm-bindgen"]
++#package = "rand"
++
++#[target."cfg(windows)".dependencies.win-crypto-ng]
++#version = ">=0.4, <0.6"
++#features = [
++#    "rand",
++#    "block-cipher",
++#]
++#optional = true
++
++#[target."cfg(windows)".dependencies.winapi]
++#version = "0.3.8"
++#features = ["bcrypt"]
++#optional = true
++#default-features = false
  
  [badges.gitlab]
  repository = "sequoia-pgp/sequoia"
+-- 
+2.41.0
+
