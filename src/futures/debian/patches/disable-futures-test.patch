@@ -589,15 +589,15 @@ Index: futures/tests/lock_mutex.rs
 -}
 +}*/
  
--#[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
-+/*#[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
- #[test]
+-#[test]
++/*#[test]
  fn mutex_contested() {
-     let (tx, mut rx) = mpsc::unbounded();
-@@ -64,4 +64,4 @@ fn mutex_contested() {
-         let lock = mutex.lock().await;
-         assert_eq!(num_tasks, *lock);
-     })
+     {
+         let (tx, mut rx) = mpsc::unbounded();
+@@ -66,4 +66,4 @@ fn mutex_contested() {
+         });
+     }
+     std::thread::sleep(std::time::Duration::from_millis(500)); // wait for background threads closed: https://github.com/rust-lang/miri/issues/1371
 -}
 +}*/
 Index: futures/tests/oneshot.rs
@@ -723,7 +723,7 @@ Index: futures/tests/sink.rs
  
  // test `flush` by using `with` to make the first insertion into a sink block
  // until a oneshot is completed
-@@ -337,7 +337,7 @@ fn with_flat_map() {
+@@ -336,7 +336,7 @@ fn with_flat_map() {
  
  // Check that `with` propagates `poll_ready` to the inner sink.
  // Regression test for the issue #1834.
@@ -732,7 +732,7 @@ Index: futures/tests/sink.rs
  fn with_propagates_poll_ready() {
      let (tx, mut rx) = mpsc::channel::<i32>(0);
      let mut tx = tx.with(|item: i32| future::ok::<i32, mpsc::SendError>(item + 10));
-@@ -359,7 +359,7 @@ fn with_propagates_poll_ready() {
+@@ -358,7 +358,7 @@ fn with_propagates_poll_ready() {
              assert_eq!(tx.as_mut().start_send(1), Ok(()));
          })
      }));
@@ -741,7 +741,7 @@ Index: futures/tests/sink.rs
  
  // test that the `with` sink doesn't require the underlying sink to flush,
  // but doesn't claim to be flushed until the underlying sink is
-@@ -485,7 +485,7 @@ fn fanout_backpressure() {
+@@ -484,7 +484,7 @@ fn fanout_backpressure() {
      })
  }
  
@@ -750,7 +750,7 @@ Index: futures/tests/sink.rs
  fn sink_map_err() {
      {
          let cx = &mut panic_context();
-@@ -497,7 +497,7 @@ fn sink_map_err() {
+@@ -496,7 +496,7 @@ fn sink_map_err() {
  
      let tx = mpsc::channel(0).0;
      assert_eq!(Pin::new(&mut tx.sink_map_err(|_| ())).start_send(()), Err(()));
@@ -759,7 +759,7 @@ Index: futures/tests/sink.rs
  
  #[test]
  fn sink_unfold() {
-@@ -531,7 +531,7 @@ fn sink_unfold() {
+@@ -530,7 +530,7 @@ fn sink_unfold() {
      }))
  }
  
@@ -768,7 +768,7 @@ Index: futures/tests/sink.rs
  fn err_into() {
      #[derive(Copy, Clone, Debug, PartialEq, Eq)]
      struct ErrIntoTest;
-@@ -552,4 +552,4 @@ fn err_into() {
+@@ -551,4 +551,4 @@ fn err_into() {
  
      let tx = mpsc::channel(0).0;
      assert_eq!(Pin::new(&mut tx.sink_err_into()).start_send(()), Err(ErrIntoTest));
@@ -778,16 +778,34 @@ Index: futures/tests/stream.rs
 ===================================================================
 --- futures.orig/tests/stream.rs
 +++ futures/tests/stream.rs
-@@ -9,7 +9,7 @@ use futures::sink::SinkExt;
- use futures::stream::{self, StreamExt};
- use futures::task::Poll;
+@@ -15,7 +15,7 @@ use futures::task::Poll;
  use futures::{ready, FutureExt};
+ use futures_core::Stream;
+ use futures_executor::ThreadPool;
 -use futures_test::task::noop_context;
 +//use futures_test::task::noop_context;
  
  #[test]
  fn select() {
-@@ -399,7 +399,7 @@ fn ready_chunks_panic_on_cap_zero() {
+@@ -59,7 +59,7 @@ fn scan() {
+     });
+ }
+ 
+-#[test]
++/*#[test]
+ fn flatten_unordered() {
+     use futures::executor::block_on;
+     use futures::stream::*;
+@@ -396,7 +396,7 @@ fn flatten_unordered() {
+         .unwrap();
+ 
+     block_on(empty_state_move_handle);
+-}
++}*/
+ 
+ #[test]
+ fn take_until() {
+@@ -478,7 +478,7 @@ fn ready_chunks_panic_on_cap_zero() {
      let _ = rx1.ready_chunks(0);
  }
  
@@ -796,9 +814,9 @@ Index: futures/tests/stream.rs
  fn ready_chunks() {
      let (mut tx, rx1) = mpsc::channel::<i32>(16);
  
-@@ -419,3 +419,4 @@ fn ready_chunks() {
-         assert_eq!(s.next().await.unwrap(), vec![4]);
-     });
+@@ -535,3 +535,4 @@ fn select_with_strategy_doesnt_terminate
+         assert_eq!(count.get(), times_should_poll + 1);
+     }
  }
 +*/
 Index: futures/tests/stream_abortable.rs
@@ -836,10 +854,10 @@ Index: futures/tests/stream_futures_ordered.rs
 ===================================================================
 --- futures.orig/tests/stream_futures_ordered.rs
 +++ futures/tests/stream_futures_ordered.rs
-@@ -2,10 +2,10 @@ use futures::channel::oneshot;
- use futures::executor::{block_on, block_on_stream};
+@@ -3,10 +3,10 @@ use futures::executor::{block_on, block_
  use futures::future::{self, join, Future, FutureExt, TryFutureExt};
  use futures::stream::{FuturesOrdered, StreamExt};
+ use futures::task::Poll;
 -use futures_test::task::noop_context;
 +//use futures_test::task::noop_context;
  use std::any::Any;
@@ -849,28 +867,52 @@ Index: futures/tests/stream_futures_ordered.rs
  fn works_1() {
      let (a_tx, a_rx) = oneshot::channel::<i32>();
      let (b_tx, b_rx) = oneshot::channel::<i32>();
-@@ -44,7 +44,7 @@ fn works_2() {
+@@ -44,9 +44,9 @@ fn works_2() {
      assert!(stream.poll_next_unpin(&mut cx).is_pending());
      c_tx.send(33).unwrap();
      assert!(stream.poll_next_unpin(&mut cx).is_ready());
 -}
 +}*/
  
+-#[test]
++/*#[test]
+ fn test_push_front() {
+     let (a_tx, a_rx) = oneshot::channel::<i32>();
+     let (b_tx, b_rx) = oneshot::channel::<i32>();
+@@ -107,7 +107,7 @@ fn test_push_back() {
+ 
+     assert_eq!(Poll::Ready(Some(Ok(3))), stream.poll_next_unpin(&mut cx));
+     assert_eq!(Poll::Ready(Some(Ok(4))), stream.poll_next_unpin(&mut cx));
+-}
++}*/
+ 
  #[test]
  fn from_iterator() {
-@@ -55,7 +55,7 @@ fn from_iterator() {
+@@ -118,7 +118,7 @@ fn from_iterator() {
      assert_eq!(block_on(stream.collect::<Vec<_>>()), vec![1, 2, 3]);
  }
  
--#[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
-+/*#[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
- #[test]
+-#[test]
++/*#[test]
  fn queue_never_unblocked() {
      let (_a_tx, a_rx) = oneshot::channel::<Box<dyn Any + Send>>();
-@@ -83,4 +83,4 @@ fn queue_never_unblocked() {
+     let (b_tx, b_rx) = oneshot::channel::<Box<dyn Any + Send>>();
+@@ -145,9 +145,9 @@ fn queue_never_unblocked() {
      c_tx.send(Box::new(())).unwrap();
      assert!(stream.poll_next_unpin(cx).is_pending());
      assert!(stream.poll_next_unpin(cx).is_pending());
+-}
++}*/
+ 
+-#[test]
++/*#[test]
+ fn test_push_front_negative() {
+     let (a_tx, a_rx) = oneshot::channel::<i32>();
+     let (b_tx, b_rx) = oneshot::channel::<i32>();
+@@ -169,4 +169,4 @@ fn test_push_front_negative() {
+     assert_eq!(Poll::Ready(Some(Ok(3))), stream.poll_next_unpin(&mut cx));
+     assert_eq!(Poll::Ready(Some(Ok(2))), stream.poll_next_unpin(&mut cx));
+     assert_eq!(Poll::Ready(Some(Ok(1))), stream.poll_next_unpin(&mut cx));
 -}
 +}*/
 Index: futures/tests/stream_futures_unordered.rs
@@ -905,16 +947,16 @@ Index: futures/tests/stream_futures_unordered.rs
  
  #[test]
  fn works_1() {
-@@ -57,7 +57,7 @@ fn works_1() {
+@@ -56,7 +56,7 @@ fn works_1() {
+     assert_eq!(None, iter.next());
  }
  
- #[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
 -#[test]
 +/*#[test]
  fn works_2() {
      let (a_tx, a_rx) = oneshot::channel::<i32>();
      let (b_tx, b_rx) = oneshot::channel::<i32>();
-@@ -75,7 +75,7 @@ fn works_2() {
+@@ -74,7 +74,7 @@ fn works_2() {
      c_tx.send(20).unwrap();
      assert_eq!(stream.poll_next_unpin(&mut cx), Poll::Ready(Some(Ok(30))));
      assert_eq!(stream.poll_next_unpin(&mut cx), Poll::Ready(None));
@@ -923,16 +965,16 @@ Index: futures/tests/stream_futures_unordered.rs
  
  #[test]
  fn from_iterator() {
-@@ -87,7 +87,7 @@ fn from_iterator() {
+@@ -85,7 +85,7 @@ fn from_iterator() {
+     assert_eq!(block_on(stream.collect::<Vec<_>>()), vec![1, 2, 3]);
  }
  
- #[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
 -#[test]
 +/*#[test]
  fn finished_future() {
      let (_a_tx, a_rx) = oneshot::channel::<i32>();
      let (b_tx, b_rx) = oneshot::channel::<i32>();
-@@ -110,7 +110,7 @@ fn finished_future() {
+@@ -108,7 +108,7 @@ fn finished_future() {
      assert!(stream.poll_next_unpin(cx).is_ready());
      assert!(stream.poll_next_unpin(cx).is_pending());
      assert!(stream.poll_next_unpin(cx).is_pending());
@@ -941,8 +983,8 @@ Index: futures/tests/stream_futures_unordered.rs
  
  #[test]
  fn iter_mut_cancel() {
-@@ -261,7 +261,7 @@ fn into_iter_len() {
-     assert!(into_iter.next().is_none());
+@@ -273,7 +273,7 @@ fn into_iter_partial() {
+     // don't panic when iterator is dropped before completing
  }
  
 -#[test]
@@ -950,7 +992,7 @@ Index: futures/tests/stream_futures_unordered.rs
  fn futures_not_moved_after_poll() {
      // Future that will be ready after being polled twice,
      // asserting that it does not move.
-@@ -272,9 +272,9 @@ fn futures_not_moved_after_poll() {
+@@ -284,9 +284,9 @@ fn futures_not_moved_after_poll() {
      assert_stream_next!(stream, ());
      assert_stream_next!(stream, ());
      assert_stream_done!(stream);
@@ -962,7 +1004,7 @@ Index: futures/tests/stream_futures_unordered.rs
  fn len_valid_during_out_of_order_completion() {
      // Complete futures out-of-order and add new futures afterwards to ensure
      // length values remain correct.
-@@ -312,9 +312,9 @@ fn len_valid_during_out_of_order_complet
+@@ -324,9 +324,9 @@ fn len_valid_during_out_of_order_complet
      a_tx.send(7).unwrap();
      assert_eq!(stream.poll_next_unpin(&mut cx), Poll::Ready(Some(Ok(7))));
      assert_eq!(stream.len(), 0);
@@ -974,7 +1016,7 @@ Index: futures/tests/stream_futures_unordered.rs
  fn polled_only_once_at_most_per_iteration() {
      #[derive(Debug, Clone, Copy, Default)]
      struct F {
-@@ -346,7 +346,7 @@ fn polled_only_once_at_most_per_iteratio
+@@ -358,7 +358,7 @@ fn polled_only_once_at_most_per_iteratio
  
      let mut tasks = FuturesUnordered::<F>::new();
      assert_eq!(Poll::Ready(None), tasks.poll_next_unpin(cx));
@@ -1070,10 +1112,10 @@ Index: futures/tests/stream_try_stream.rs
 ===================================================================
 --- futures.orig/tests/stream_try_stream.rs
 +++ futures/tests/stream_try_stream.rs
-@@ -4,9 +4,9 @@ use futures::{
-     stream::{self, StreamExt, TryStreamExt},
-     task::Poll,
+@@ -7,9 +7,9 @@ use futures::{
  };
+ use futures_executor::block_on;
+ use futures_task::Context;
 -use futures_test::task::noop_context;
 +//use futures_test::task::noop_context;
  
@@ -1082,7 +1124,7 @@ Index: futures/tests/stream_try_stream.rs
  fn try_filter_map_after_err() {
      let cx = &mut noop_context();
      let mut s = stream::iter(1..=3)
-@@ -15,9 +15,9 @@ fn try_filter_map_after_err() {
+@@ -18,9 +18,9 @@ fn try_filter_map_after_err() {
          .filter_map(|r| async move { r.ok() })
          .boxed();
      assert_eq!(Poll::Ready(None), s.poll_next_unpin(cx));
@@ -1094,7 +1136,7 @@ Index: futures/tests/stream_try_stream.rs
  fn try_skip_while_after_err() {
      let cx = &mut noop_context();
      let mut s = stream::iter(1..=3)
-@@ -26,9 +26,9 @@ fn try_skip_while_after_err() {
+@@ -29,9 +29,9 @@ fn try_skip_while_after_err() {
          .filter_map(|r| async move { r.ok() })
          .boxed();
      assert_eq!(Poll::Ready(None), s.poll_next_unpin(cx));
@@ -1106,12 +1148,15 @@ Index: futures/tests/stream_try_stream.rs
  fn try_take_while_after_err() {
      let cx = &mut noop_context();
      let mut s = stream::iter(1..=3)
-@@ -37,4 +37,4 @@ fn try_take_while_after_err() {
+@@ -40,7 +40,7 @@ fn try_take_while_after_err() {
          .filter_map(|r| async move { r.ok() })
          .boxed();
      assert_eq!(Poll::Ready(None), s.poll_next_unpin(cx));
 -}
 +}*/
+ 
+ #[test]
+ fn try_flatten_unordered() {
 Index: futures/tests/stream_unfold.rs
 ===================================================================
 --- futures.orig/tests/stream_unfold.rs
