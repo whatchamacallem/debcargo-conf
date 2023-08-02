@@ -1,11 +1,17 @@
---- rust-chrono-0.4.23.orig/tests/dateutils.rs
-+++ rust-chrono-0.4.23/tests/dateutils.rs
-@@ -1,10 +1,11 @@
+Index: chrono/tests/dateutils.rs
+===================================================================
+--- chrono.orig/tests/dateutils.rs
++++ chrono/tests/dateutils.rs
+@@ -1,6 +1,7 @@
+ #[cfg(unix)]
  use chrono::offset::TimeZone;
+ #[cfg(unix)]
 +#[cfg(feature="clock")]
  use chrono::Local;
+ #[cfg(unix)]
  use chrono::{Datelike, NaiveDate, NaiveDateTime, Timelike};
- 
+@@ -8,7 +9,7 @@ use chrono::{Datelike, NaiveDate, NaiveD
+ #[cfg(unix)]
  use std::{path, process};
  
 -#[cfg(unix)]
@@ -13,12 +19,30 @@
  fn verify_against_date_command_local(path: &'static str, dt: NaiveDateTime) {
      let output = process::Command::new(path)
          .arg("-d")
-@@ -49,7 +50,7 @@ fn verify_against_date_command_local(pat
+@@ -81,7 +82,7 @@ fn assert_run_date_version() {
  }
  
  #[test]
 -#[cfg(unix)]
 +#[cfg(all(unix,feature="clock"))]
  fn try_verify_against_date_command() {
-     let date_path = "/usr/bin/date";
+     if !path::Path::new(DATE_PATH).exists() {
+         eprintln!("date command {:?} not found, skipping", DATE_PATH);
+@@ -116,7 +117,7 @@ fn try_verify_against_date_command() {
+     eprintln!("Command {:?} was run {} times", DATE_PATH, count);
+ }
  
+-#[cfg(target_os = "linux")]
++#[cfg(all(target_os = "linux", feature = "clock"))]
+ fn verify_against_date_command_format_local(path: &'static str, dt: NaiveDateTime) {
+     let required_format =
+         "d%d D%D F%F H%H I%I j%j k%k l%l m%m M%M S%S T%T u%u U%U w%w W%W X%X y%y Y%Y z%:z";
+@@ -157,7 +158,7 @@ fn verify_against_date_command_format_lo
+ }
+ 
+ #[test]
+-#[cfg(target_os = "linux")]
++#[cfg(all(target_os = "linux", feature = "clock"))]
+ fn try_verify_against_date_command_format() {
+     if !path::Path::new(DATE_PATH).exists() {
+         eprintln!("date command {:?} not found, skipping", DATE_PATH);
