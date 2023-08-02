@@ -1,0 +1,175 @@
+Index: fundu/Cargo.toml
+===================================================================
+--- fundu.orig/Cargo.toml
++++ fundu/Cargo.toml
+@@ -145,9 +145,6 @@ version = "0.5.0"
+ [dev-dependencies.rstest]
+ version = "0.17.0"
+ 
+-[dev-dependencies.rstest_reuse]
+-version = "0.5.0"
+-
+ [dev-dependencies.serde_test]
+ version = "1.0.162"
+ 
+Index: fundu/src/lib.rs
+===================================================================
+--- fundu.orig/src/lib.rs
++++ fundu/src/lib.rs
+@@ -331,8 +331,8 @@ pub use custom::{
+     },
+ };
+ pub use error::{ParseError, TryFromDurationError};
+-#[cfg(test)]
+-pub use rstest_reuse;
++//#[cfg(test)]
++//pub use rstest_reuse;
+ #[cfg(feature = "standard")]
+ pub use standard::{
+     builder::DurationParserBuilder, parser::parse_duration, parser::DurationParser,
+Index: fundu/src/parse.rs
+===================================================================
+--- fundu.orig/src/parse.rs
++++ fundu/src/parse.rs
+@@ -1409,7 +1409,7 @@ impl<'a> ReprParserTemplate<'a> for Repr
+ #[cfg(test)]
+ mod tests {
+     use rstest::rstest;
+-    use rstest_reuse::{apply, template};
++    //use rstest_reuse::{apply, template};
+ 
+     use super::*;
+ 
+@@ -1463,7 +1463,7 @@ mod tests {
+         assert_eq!(parser.bytes.current_pos, 8);
+     }
+ 
+-    #[template]
++    /*#[template]
+     #[rstest]
+     #[case::zero("0", Whole(1, 1))]
+     #[case::one("1", Whole(0, 1))]
+@@ -1482,9 +1482,9 @@ mod tests {
+     #[case::eight_zero_digits_end("1111111100000000", Whole(0, 16))]
+     #[case::eight_zero_digits_middle("11111111000000001", Whole(0, 17))]
+     #[case::max_16_digits("9999999999999999", Whole(0, 16))]
+-    fn test_duration_repr_parser_parse_whole(#[case] input: &str, #[case] expected: Whole) {}
++    fn test_duration_repr_parser_parse_whole(#[case] input: &str, #[case] expected: Whole) {}*/
+ 
+-    #[apply(test_duration_repr_parser_parse_whole)]
++    /*#[apply(test_duration_repr_parser_parse_whole)]
+     fn test_duration_repr_parser_parse_whole_single(input: &str, expected: Whole) {
+         let mut parser = ReprParserSingle::new(input);
+         assert_eq!(parser.parse_whole(), expected);
+@@ -1494,7 +1494,7 @@ mod tests {
+     fn test_duration_repr_parser_parse_whole_multiple(input: &str, expected: Whole) {
+         let mut parser = ReprParserMultiple::new(input, |byte| byte == b' ', &[]); // cov:excl-line
+         assert_eq!(parser.parse_whole(), expected);
+-    }
++    }*/
+ 
+     // TODO: add test case for parse_multiple
+     #[test]
+@@ -1528,7 +1528,7 @@ mod tests {
+         assert_eq!(duration_repr.fract, Some(Fract(1, i16::MAX as usize + 101)));
+     }
+ 
+-    #[template]
++    /*#[template]
+     #[rstest]
+     #[case::zero("0", Fract(0, 1))]
+     #[case::one("1", Fract(0, 1))]
+@@ -1541,9 +1541,9 @@ mod tests {
+     #[case::max_8_digits("99999999", Fract(0, 8))]
+     #[case::max_8_digits_minus_one("99999998", Fract(0, 8))]
+     #[case::nine_digits("123456789", Fract(0, 9))]
+-    fn test_duration_repr_parser_parse_fract(#[case] input: &str, #[case] expected: Fract) {}
++    fn test_duration_repr_parser_parse_fract(#[case] input: &str, #[case] expected: Fract) {}*/
+ 
+-    #[apply(test_duration_repr_parser_parse_fract)]
++    /*#[apply(test_duration_repr_parser_parse_fract)]
+     fn test_duration_repr_parser_parse_fract_single(input: &str, expected: Fract) {
+         let mut parser = ReprParserSingle::new(input);
+         assert_eq!(parser.parse_fract(), expected);
+@@ -1553,5 +1553,5 @@ mod tests {
+     fn test_duration_repr_parser_parse_fract_multiple(input: &str, expected: Fract) {
+         let mut parser = ReprParserMultiple::new(input, |byte| byte == b' ', &[]); // cov:excl-line
+         assert_eq!(parser.parse_fract(), expected);
+-    }
++    }*/
+ }
+Index: fundu/src/time.rs
+===================================================================
+--- fundu.orig/src/time.rs
++++ fundu/src/time.rs
+@@ -962,7 +962,7 @@ mod tests {
+     #[cfg(feature = "chrono")]
+     use chrono::Duration as ChronoDuration;
+     use rstest::rstest;
+-    use rstest_reuse::{apply, template};
++    //use rstest_reuse::{apply, template};
+     #[cfg(feature = "serde")]
+     use serde_test::{assert_tokens, Token};
+ 
+@@ -1189,7 +1189,7 @@ mod tests {
+         }
+     }
+ 
+-    #[template]
++    /*#[template]
+     #[rstest]
+     #[case::both_standard_zero(Duration::ZERO, Duration::ZERO, Duration::ZERO)]
+     #[case::both_positive_zero(
+@@ -1251,15 +1251,15 @@ mod tests {
+         #[case] rhs: Duration,
+         #[case] expected: Duration,
+     ) {
+-    }
++    }*/
+ 
+-    #[apply(test_fundu_duration_add_no_overflow_template)]
++    /*#[apply(test_fundu_duration_add_no_overflow_template)]
+     fn test_fundu_duration_add(lhs: Duration, rhs: Duration, expected: Duration) {
+         assert_eq!(lhs + rhs, expected);
+         assert_eq!(rhs + lhs, expected);
+-    }
++    }*/
+ 
+-    #[apply(test_fundu_duration_add_no_overflow_template)]
++    /*#[apply(test_fundu_duration_add_no_overflow_template)]
+     fn test_fundu_duration_add_assign(lhs: Duration, rhs: Duration, expected: Duration) {
+         let mut res = lhs;
+         res += rhs;
+@@ -1295,9 +1295,9 @@ mod tests {
+     fn test_fundu_duration_checked_sub(lhs: Duration, rhs: Duration, expected: Duration) {
+         assert_eq!(lhs.checked_sub(rhs.neg()), Some(expected));
+         assert_eq!(rhs.checked_sub(lhs.neg()), Some(expected));
+-    }
++    }*/
+ 
+-    #[template]
++    /*#[template]
+     #[rstest]
+     #[case::min(Duration::MIN, Duration::MIN)]
+     #[case::min_minus_one(Duration::MIN, Duration::negative(1, 0))]
+@@ -1321,9 +1321,9 @@ mod tests {
+         Duration::negative(u64::MAX / 2 + 1, 999_999_999 / 2 + 1),
+          Duration::negative(u64::MAX / 2 + 1, 999_999_999 / 2)
+     )]
+-    fn test_fundu_duration_add_overflow_template(#[case] lhs: Duration, #[case] rhs: Duration) {}
++    fn test_fundu_duration_add_overflow_template(#[case] lhs: Duration, #[case] rhs: Duration) {}*/
+ 
+-    #[apply(test_fundu_duration_add_overflow_template)]
++    /*#[apply(test_fundu_duration_add_overflow_template)]
+     #[should_panic = "Overflow when adding duration"]
+     fn test_fundu_duration_add_and_add_assign_then_overflow(mut lhs: Duration, rhs: Duration) {
+         lhs += rhs;
+@@ -1368,7 +1368,7 @@ mod tests {
+                 Duration::MAX
+             };
+         assert_eq!(lhs.saturating_sub(rhs.neg()), expected);
+-    }
++    }*/
+ 
+     #[rstest]
+     #[case::positive_zero(Duration::ZERO, Duration::ZERO, Ordering::Equal)]
