@@ -5,7 +5,7 @@ This document aims to document some nice "hacks" and tricks to employ when packa
 ## Getting an overview of missing crates
 
 A nice tool to generate a graphical overview of a rust projects' dependency tree is `cargo debstatus`. Install it like that:
-`cargo install cargo-debstatus`. Then download either a release or clone the git project and `cd` into there. Run `cargo debstatus` to get a nice graph about dependencies and reverse dependencies.
+`apt install cargo-debstatus` (trixie and sid). Then download either a release or clone the git project and `cd` into there. Run `cargo debstatus` to get a nice graph about dependencies and reverse dependencies.
 
 ## Patching crates
 If a crate needs a) a newer dependency or b) an older dependency than the one in the archive you need to patch the crate. This is relatively common. You can also use this to patch out features in Cargo.toml or make changes to the source code. 
@@ -59,34 +59,78 @@ If you get an error like this:
 You must patch build.rs of CRATE to output 'println!(\"dh-cargo:deb-built-using=$lib=\$s={}\", env::var(\"CARGO_MANIFEST_DIR\").unwrap());' 
 where: $s is 1 if the license(s) of the included static libs require source distribution alongside binaries, otherwise 0"
 ```
-when building a FFi rust library you need to patch build.rs like stated above. $s is 0 for BSD-like licenses such as MIT and 1 for copyleft licenses like GPL.
+when building a FFI rust library you need to patch build.rs like stated above. $s is 0 for BSD-like licenses such as MIT and 1 for copyleft licenses like GPL.
 
-## Skipping tests / special d/rules overrides
+## Skipping doctests
 
-Sometimes you get broken tests that can't be excluded or patched away. For instance if a test would require direct access to the RAM which isn't possible with `sbuild`. Then it is reasonable to skip those in `d/rules`.
+In case doctests get run during the build process and you want to disable them add the following lines in Cargo.toml (as patch):
+
+```diff
+
++[lib]
++doctest = false
+
+```
+
+They often fails so you can safely disable them that way. Example: xdg-home, rust-apt
+
+## Skipping / ignoring tests 
+
+Sometimes you get broken tests that can't be excluded or patched away. For instance if a test would require direct access to the RAM which isn't possible 
+with `sbuild`, then it's reasonable to skip those with a patch. For instance if test::foo::hello-world fails, you add the following line as patch in tests/foo.rs:
+
+```diff
+#[test]
++#[ignore = "broken in debian, needs RAM access"] 
+fn hello-world()
+...
+
+```
+
+This allows the other tests to run. Create and include it the usual way.
+
+## Special d/rules overrides
+
+In case you need special overrides for d/rules not provided by debcargo:
 
 1) `cd src/foocrate/debian && touch rules`
 2) `cd ../../../ && ./update.sh foocrate`. This will generate a `rules.debcargo.hint` file you can use as template, similar to d/copyright
 3) `cd src/foocrate/debian && cp rules.debcargo.hint rules`
-4) use your favorite editor to edit the rules file to your needs. For skipping tests you can do the following:
+4) use your favorite editor to edit the rules file to your needs. 
 
-```
+```make
+# runs all tests on a single thread
 override_dh_auto_test:
-	dh_auto_test -- test -- --skip tests::broken_test --skip tests::second_broken_test
+	dh_auto_test -- test -- --test-threads 1
 ```
-
-if those are the broken tests. Then `cd` in the top-level directory and run `./update.sh` again. You might also need to skip the same tests in the autopkgtest runner. To do that, create a `tests/control` file in the `debian/` folder. 
-
 
 ## Packaging binary crates
 
-TODO
+File an ITP for them as this is team policy. Add the following content (as minimum) in debcargo.toml:
+
+```toml
+summary = "short program summary"
+description = """
+long, exhaustive description of the program. this equals the extended-description line in debian/control 
+for "regular" packages.
+"""    
+# the section for the application
+[source]
+section = rust
+```
+Examples to take inspiration from include lsd, bat, alacritty, ...
+
+If a package ships a binary but you only want to use it as library add this stanza in debcargo.toml:
+```toml
+[packages.lib]
+bin = false
+```
 
 ## debcargo.toml tweaks
 
 ### Excluding files
 In case you need to exclude certain files from `debcargo.toml`, there is an easy way to do that.
-Just add `excludes = ["foo/bar.rs", ""bar/non-dfsg-file"]` in debcargo.toml. This has the following usecases:
+Just add `excludes = ["foo/bar.rs", "bar/non-dfsg-file.c"]` in debcargo.toml. This has the following usecases:
 
 - Exclude non-dfsg/unnecessary files form the orig tarball (Example: svg-metadata)
   This is also **required** for some sys-crates to exclude vendored copies of the C library already in debian
@@ -112,10 +156,8 @@ Sometimes debcargo marks files as suspicious, most of the time those are tests w
 Some crates depend on a crate with an alpha/beta version strings. debcargo will emit an error if that is the case. To allow those deps, pass the following:
 `allow_prerelease_deps = true`. Do this only if you are sure this will work !
 
-
 ### Collapsing features
 If a crate has features, `collapse_features = true` **should** be set in `debcargo.toml`. This is strongly recommended. See issue #17 in the debcargo repo for the reasoning.
-
 
 ### Marking feature tests as broken 
 
@@ -146,7 +188,9 @@ test_is_broken = true
 ```
 Examples: cxx, hashbrown, uom, ...
 
-Do this only if *some* features fail. If all feature tests fail, read the test logs and look at the upstream test system. Make sure that some tests pass or that the tests aren't meant to be run. Some upstream projects run all test in a specific container or use specific setup. Also some crates are only tested with their default features enabled by upstream. If that's the case mark all test as broken:
+Do this only if *some* features fail. If all feature tests fail, read the test logs and look at the upstream test system. Make sure that some tests 
+pass or that the tests aren't meant to be run. Some upstream projects run all test in a specific container or use specific setup. Also some crates are only tested 
+with their default features enabled by upstream. If that's the case mark all tests as broken:
 
 ```
 # tests need a postgres container to run
@@ -164,8 +208,9 @@ For a full documentation of all keywords available in `debcargo.toml` refer to d
 
 ## Arch-specific failures
 
-It can rarely happen that tests (read: autopkgtest) fail on specific arches because how bytes are addressed on that arch. The best course of action is to investigate first if it indeed is an arch-specific failure. 
-If that's the case you need to write a patch that skips those faulty tests (on that arch) so the package can enter testing. Because arch names are different in rust, here is a handy table comparing them:
+It can rarely happen that tests (read: autopkgtest) fail on specific arches because how bytes are addressed on that arch. The best course of action is to 
+investigate first if it indeed is an arch-specific failure. If that's the case you need to write a patch that skips those faulty tests (on that arch) so the 
+package can enter testing. Because arch names are different in rust, here is a handy table comparing them:
 
 
 | Debian arch name | rust arch name (target_arch) |
@@ -177,14 +222,14 @@ If that's the case you need to write a patch that skips those faulty tests (on t
 | armel            | arm        |
 | armhf            | arm |
 | ppc64el | powerpc64 |
-| s390x | powerpc64? |
+| s390x | powerpc64? s390x? |
+| riscv64 | riscv64 |
 | **Other official arches¹** | |
 | mipsel | mips? |
 | mips64el | mips64 |
 | **Unoffical ports with rustc/cargo (not really relevant)** | |
 |  powerpc 	| powerpc? |
 | ppc64 	| powerpc? |
-| riscv64 | riscv64 |
 | sparc64 | sparc64? |
 | x32 | ? |
 
@@ -195,8 +240,6 @@ Arches without rustc/cargo:
 - hppa 
 - hurd-i386  
 - ia64  
-- kfreebsd-amd64  
-- kfreebsd-i386  
 - m68k  
 
 Only the first seven are really relevant, I included the rest for completeness's sake. 
