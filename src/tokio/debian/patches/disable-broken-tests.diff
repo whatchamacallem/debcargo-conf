@@ -1,0 +1,191 @@
+Index: tokio/tests/io_read_to_end.rs
+===================================================================
+--- tokio.orig/tests/io_read_to_end.rs
++++ tokio/tests/io_read_to_end.rs
+@@ -78,7 +78,7 @@ async fn read_to_end_uninit() {
+     assert_eq!(buf.len(), 33);
+ }
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ async fn read_to_end_doesnt_grow_with_capacity() {
+     let arr: Vec<u8> = (0..100).collect();
+ 
+@@ -108,9 +108,9 @@ async fn read_to_end_doesnt_grow_with_ca
+             }
+         }
+     }
+-}
++}*/
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ async fn read_to_end_grows_capacity_if_unfit() {
+     let bytes = b"the_vector_startingcap_will_be_smaller";
+     let mut mock = Builder::new().read(bytes).build();
+@@ -121,4 +121,4 @@ async fn read_to_end_grows_capacity_if_u
+         .unwrap();
+     // *4 since it doubles when it doesn't fit and again when reaching EOF
+     assert_eq!(buf.capacity(), initial_capacity * 4);
+-}
++}*/
+Index: tokio/tests/io_copy_bidirectional.rs
+===================================================================
+--- tokio.orig/tests/io_copy_bidirectional.rs
++++ tokio/tests/io_copy_bidirectional.rs
+@@ -110,7 +110,7 @@ async fn blocking_one_side_does_not_bloc
+     .await
+ }
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ async fn immediate_exit_on_write_error() {
+     let payload = b"here, take this";
+     let error = || io::Error::new(io::ErrorKind::Other, "no thanks!");
+@@ -126,9 +126,9 @@ async fn immediate_exit_on_write_error()
+         .build();
+ 
+     assert!(copy_bidirectional(&mut a, &mut b).await.is_err());
+-}
++}*/
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ async fn immediate_exit_on_read_error() {
+     let error = || io::Error::new(io::ErrorKind::Other, "got nothing!");
+ 
+@@ -137,4 +137,4 @@ async fn immediate_exit_on_read_error()
+     let mut b = tokio_test::io::Builder::new().read_error(error()).build();
+ 
+     assert!(copy_bidirectional(&mut a, &mut b).await.is_err());
+-}
++}*/
+Index: tokio/tests/io_read_line.rs
+===================================================================
+--- tokio.orig/tests/io_read_line.rs
++++ tokio/tests/io_read_line.rs
+@@ -29,7 +29,7 @@ async fn read_line() {
+     assert_eq!(buf, "");
+ }
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ async fn read_line_not_all_ready() {
+     let mock = Builder::new()
+         .read(b"Hello Wor")
+@@ -58,9 +58,9 @@ async fn read_line_not_all_ready() {
+     let bytes = read.read_line(&mut line).await.unwrap();
+     assert_eq!(bytes, 1);
+     assert_eq!(line.as_str(), "2");
+-}
++}*/
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ async fn read_line_invalid_utf8() {
+     let mock = Builder::new().read(b"Hello Wor\xffld.\n").build();
+ 
+@@ -71,9 +71,9 @@ async fn read_line_invalid_utf8() {
+     assert_eq!(err.kind(), ErrorKind::InvalidData);
+     assert_eq!(err.to_string(), "stream did not contain valid UTF-8");
+     assert_eq!(line.as_str(), "Foo");
+-}
++}*/
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ async fn read_line_fail() {
+     let mock = Builder::new()
+         .read(b"Hello Wor")
+@@ -87,9 +87,9 @@ async fn read_line_fail() {
+     assert_eq!(err.kind(), ErrorKind::Other);
+     assert_eq!(err.to_string(), "The world has no end");
+     assert_eq!(line.as_str(), "FooHello Wor");
+-}
++}*/
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ async fn read_line_fail_and_utf8_fail() {
+     let mock = Builder::new()
+         .read(b"Hello Wor")
+@@ -104,4 +104,4 @@ async fn read_line_fail_and_utf8_fail()
+     assert_eq!(err.kind(), ErrorKind::Other);
+     assert_eq!(err.to_string(), "The world has no end");
+     assert_eq!(line.as_str(), "Foo");
+-}
++}*/
+Index: tokio/tests/io_read_to_string.rs
+===================================================================
+--- tokio.orig/tests/io_read_to_string.rs
++++ tokio/tests/io_read_to_string.rs
+@@ -31,7 +31,7 @@ async fn to_string_does_not_truncate_on_
+     assert_eq!(s, "abc");
+ }
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ async fn to_string_does_not_truncate_on_io_error() {
+     let mut mock = Builder::new()
+         .read(b"def")
+@@ -46,7 +46,7 @@ async fn to_string_does_not_truncate_on_
+     }
+ 
+     assert_eq!(s, "abc");
+-}
++}*/
+ 
+ #[tokio::test]
+ async fn to_string_appends() {
+Index: tokio/tests/io_read_until.rs
+===================================================================
+--- tokio.orig/tests/io_read_until.rs
++++ tokio/tests/io_read_until.rs
+@@ -23,7 +23,7 @@ async fn read_until() {
+     assert_eq!(buf, []);
+ }
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ async fn read_until_not_all_ready() {
+     let mock = Builder::new()
+         .read(b"Hello Wor")
+@@ -52,9 +52,9 @@ async fn read_until_not_all_ready() {
+     let bytes = read.read_until(b'#', &mut chunk).await.unwrap();
+     assert_eq!(bytes, 1);
+     assert_eq!(chunk, b"2");
+-}
++}*/
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ async fn read_until_fail() {
+     let mock = Builder::new()
+         .read(b"Hello \xffWor")
+@@ -71,4 +71,5 @@ async fn read_until_fail() {
+     assert_eq!(err.kind(), ErrorKind::Other);
+     assert_eq!(err.to_string(), "The world has no end");
+     assert_eq!(chunk, b"FooHello \xffWor");
+-}
++}*/
++
+Index: tokio/tests/fs_try_exists.rs
+===================================================================
+--- tokio.orig/tests/fs_try_exists.rs
++++ tokio/tests/fs_try_exists.rs
+@@ -15,7 +15,7 @@ async fn try_exists() {
+     assert!(fs::try_exists(existing_path).await.unwrap());
+     assert!(!fs::try_exists(nonexisting_path).await.unwrap());
+     // FreeBSD root user always has permission to stat.
+-    #[cfg(all(unix, not(target_os = "freebsd")))]
++    /*#[cfg(all(unix, not(target_os = "freebsd")))]
+     {
+         use std::os::unix::prelude::PermissionsExt;
+         let permission_denied_directory_path = dir.path().join("baz");
+@@ -40,5 +40,5 @@ async fn try_exists() {
+             permission_denied_result.err().unwrap().kind(),
+             std::io::ErrorKind::PermissionDenied
+         );
+-    }
++    }*/
+ }

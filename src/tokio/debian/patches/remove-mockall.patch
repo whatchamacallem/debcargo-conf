@@ -1,0 +1,117 @@
+Index: tokio/Cargo.toml
+===================================================================
+--- tokio.orig/Cargo.toml
++++ tokio/Cargo.toml
+@@ -84,9 +84,6 @@ version = "0.3"
+ version = "0.3.0"
+ features = ["async-await"]
+ 
+-[dev-dependencies.mockall]
+-version = "0.11.1"
+-
+ [dev-dependencies.tokio-stream]
+ version = "0.1"
+ 
+Index: tokio/src/fs/file.rs
+===================================================================
+--- tokio.orig/src/fs/file.rs
++++ tokio/src/fs/file.rs
+@@ -19,17 +19,17 @@ use std::task::Context;
+ use std::task::Poll;
+ use std::task::Poll::*;
+ 
+-#[cfg(test)]
++/*#[cfg(test)]
+ use super::mocks::JoinHandle;
+ #[cfg(test)]
+ use super::mocks::MockFile as StdFile;
+ #[cfg(test)]
+-use super::mocks::{spawn_blocking, spawn_mandatory_blocking};
+-#[cfg(not(test))]
++use super::mocks::{spawn_blocking, spawn_mandatory_blocking};*/
++//#[cfg(not(test))]
+ use crate::blocking::JoinHandle;
+-#[cfg(not(test))]
++//#[cfg(not(test))]
+ use crate::blocking::{spawn_blocking, spawn_mandatory_blocking};
+-#[cfg(not(test))]
++//#[cfg(not(test))]
+ use std::fs::File as StdFile;
+ 
+ /// A reference to an open file on the filesystem.
+@@ -816,5 +816,5 @@ impl Inner {
+     }
+ }
+ 
+-#[cfg(test)]
+-mod tests;
++//#[cfg(test)]
++//mod tests;
+Index: tokio/src/fs/mod.rs
+===================================================================
+--- tokio.orig/src/fs/mod.rs
++++ tokio/src/fs/mod.rs
+@@ -105,8 +105,8 @@ pub use self::copy::copy;
+ mod try_exists;
+ pub use self::try_exists::try_exists;
+ 
+-#[cfg(test)]
+-mod mocks;
++//#[cfg(test)]
++//mod mocks;
+ 
+ feature! {
+     #![unix]
+@@ -125,10 +125,10 @@ cfg_windows! {
+ 
+ use std::io;
+ 
+-#[cfg(not(test))]
++//#[cfg(not(test))]
+ use crate::blocking::spawn_blocking;
+-#[cfg(test)]
+-use mocks::spawn_blocking;
++//#[cfg(test)]
++//use mocks::spawn_blocking;
+ 
+ pub(crate) async fn asyncify<F, T>(f: F) -> io::Result<T>
+ where
+Index: tokio/src/fs/open_options.rs
+===================================================================
+--- tokio.orig/src/fs/open_options.rs
++++ tokio/src/fs/open_options.rs
+@@ -3,11 +3,11 @@ use crate::fs::{asyncify, File};
+ use std::io;
+ use std::path::Path;
+ 
+-#[cfg(test)]
++/*#[cfg(test)]
+ mod mock_open_options;
+ #[cfg(test)]
+ use mock_open_options::MockOpenOptions as StdOpenOptions;
+-#[cfg(not(test))]
++#[cfg(not(test))]*/
+ use std::fs::OpenOptions as StdOpenOptions;
+ 
+ #[cfg(unix)]
+Index: tokio/src/fs/read_dir.rs
+===================================================================
+--- tokio.orig/src/fs/read_dir.rs
++++ tokio/src/fs/read_dir.rs
+@@ -11,13 +11,13 @@ use std::sync::Arc;
+ use std::task::Context;
+ use std::task::Poll;
+ 
+-#[cfg(test)]
++/*#[cfg(test)]
+ use super::mocks::spawn_blocking;
+ #[cfg(test)]
+ use super::mocks::JoinHandle;
+-#[cfg(not(test))]
++#[cfg(not(test))]*/
+ use crate::blocking::spawn_blocking;
+-#[cfg(not(test))]
++//#[cfg(not(test))]
+ use crate::blocking::JoinHandle;
+ 
+ const CHUNK_SIZE: usize = 32;
