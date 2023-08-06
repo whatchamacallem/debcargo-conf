@@ -1,0 +1,209 @@
+Index: tokio/tests/task_join_set.rs
+===================================================================
+--- tokio.orig/tests/task_join_set.rs
++++ tokio/tests/task_join_set.rs
+@@ -10,7 +10,7 @@ fn rt() -> tokio::runtime::Runtime {
+         .build()
+         .unwrap()
+ }
+-
++#[cfg(feature = "test-util")]
+ #[tokio::test(start_paused = true)]
+ async fn test_with_sleep() {
+     let mut set = JoinSet::new();
+@@ -104,6 +104,7 @@ async fn alternating() {
+     }
+ }
+ 
++#[cfg(feature = "test-util")]
+ #[tokio::test(start_paused = true)]
+ async fn abort_tasks() {
+     let mut set = JoinSet::new();
+@@ -154,6 +155,7 @@ fn runtime_gone() {
+         .is_cancelled());
+ }
+ 
++#[cfg(feature = "test-util")]
+ #[tokio::test(start_paused = true)]
+ async fn abort_all() {
+     let mut set: JoinSet<()> = JoinSet::new();
+Index: tokio/tests/test_clock.rs
+===================================================================
+--- tokio.orig/tests/test_clock.rs
++++ tokio/tests/test_clock.rs
+@@ -1,5 +1,5 @@
+ #![warn(rust_2018_idioms)]
+-#![cfg(feature = "full")]
++#![cfg(all(feature = "full",feature = "test-util"))]
+ 
+ use tokio::time::{self, Duration, Instant};
+ 
+Index: tokio/src/runtime/time/tests/mod.rs
+===================================================================
+--- tokio.orig/src/runtime/time/tests/mod.rs
++++ tokio/src/runtime/time/tests/mod.rs
+@@ -32,6 +32,7 @@ fn model(f: impl Fn() + Send + Sync + 's
+     f();
+ }
+ 
++#[cfg(feature = "test-util")]
+ fn rt(start_paused: bool) -> crate::runtime::Runtime {
+     crate::runtime::Builder::new_current_thread()
+         .enable_time()
+@@ -41,6 +42,7 @@ fn rt(start_paused: bool) -> crate::runt
+ }
+ 
+ #[test]
++#[cfg(feature = "test-util")]
+ fn single_timer() {
+     model(|| {
+         let rt = rt(false);
+@@ -75,6 +77,7 @@ fn single_timer() {
+ }
+ 
+ #[test]
++#[cfg(feature = "test-util")]
+ fn drop_timer() {
+     model(|| {
+         let rt = rt(false);
+@@ -109,6 +112,7 @@ fn drop_timer() {
+ }
+ 
+ #[test]
++#[cfg(feature = "test-util")]
+ fn change_waker() {
+     model(|| {
+         let rt = rt(false);
+@@ -145,6 +149,7 @@ fn change_waker() {
+ }
+ 
+ #[test]
++#[cfg(feature = "test-util")]
+ fn reset_future() {
+     model(|| {
+         let finished_early = Arc::new(AtomicBool::new(false));
+@@ -211,6 +216,7 @@ fn normal_or_miri<T>(normal: T, miri: T)
+ 
+ #[test]
+ #[cfg(not(loom))]
++#[cfg(feature = "test-util")]
+ fn poll_process_levels() {
+     let rt = rt(true);
+     let handle = rt.handle();
+@@ -246,6 +252,7 @@ fn poll_process_levels() {
+ 
+ #[test]
+ #[cfg(not(loom))]
++#[cfg(feature = "test-util")]
+ fn poll_process_levels_targeted() {
+     let mut context = Context::from_waker(noop_waker_ref());
+ 
+Index: tokio/tests/async_send_sync.rs
+===================================================================
+--- tokio.orig/tests/async_send_sync.rs
++++ tokio/tests/async_send_sync.rs
+@@ -544,6 +544,7 @@ assert_value!(tokio::time::Timeout<BoxFu
+ assert_value!(tokio::time::Timeout<BoxFuture<()>>: !Send & !Sync & !Unpin);
+ assert_value!(tokio::time::error::Elapsed: Send & Sync & Unpin);
+ assert_value!(tokio::time::error::Error: Send & Sync & Unpin);
++#[cfg(feature = "test-util")]
+ async_assert_fn!(tokio::time::advance(Duration): Send & Sync & !Unpin);
+ async_assert_fn!(tokio::time::sleep(Duration): Send & Sync & !Unpin);
+ async_assert_fn!(tokio::time::sleep_until(Instant): Send & Sync & !Unpin);
+Index: tokio/tests/rt_time_start_paused.rs
+===================================================================
+--- tokio.orig/tests/rt_time_start_paused.rs
++++ tokio/tests/rt_time_start_paused.rs
+@@ -1,4 +1,4 @@
+-#![cfg(all(feature = "full"))]
++#![cfg(all(feature = "full", feature = "test_util"))]
+ 
+ use tokio::time::{Duration, Instant};
+ 
+Index: tokio/tests/sync_mpsc.rs
+===================================================================
+--- tokio.orig/tests/sync_mpsc.rs
++++ tokio/tests/sync_mpsc.rs
+@@ -621,6 +621,7 @@ fn try_recv_close_while_empty_unbounded(
+     assert_eq!(Err(TryRecvError::Disconnected), rx.try_recv());
+ }
+ 
++#[cfg(feature = "test-util")]
+ #[tokio::test(start_paused = true)]
+ #[cfg(feature = "full")]
+ async fn recv_timeout() {
+Index: tokio/tests/sync_once_cell.rs
+===================================================================
+--- tokio.orig/tests/sync_once_cell.rs
++++ tokio/tests/sync_once_cell.rs
+@@ -1,5 +1,5 @@
+ #![warn(rust_2018_idioms)]
+-#![cfg(feature = "full")]
++#![cfg(all(feature = "full", feature = "test-util"))]
+ 
+ use std::mem;
+ use std::ops::Drop;
+Index: tokio/tests/time_interval.rs
+===================================================================
+--- tokio.orig/tests/time_interval.rs
++++ tokio/tests/time_interval.rs
+@@ -1,5 +1,5 @@
+ #![warn(rust_2018_idioms)]
+-#![cfg(feature = "full")]
++#![cfg(all(feature = "full", feature = "test_util"))]
+ 
+ use std::pin::Pin;
+ use std::task::{Context, Poll};
+Index: tokio/tests/time_panic.rs
+===================================================================
+--- tokio.orig/tests/time_panic.rs
++++ tokio/tests/time_panic.rs
+@@ -13,6 +13,7 @@ mod support {
+ use support::panic::test_panic;
+ 
+ #[test]
++#[cfg(feature = "test-util")]
+ fn pause_panic_caller() -> Result<(), Box<dyn Error>> {
+     let panic_location_file = test_panic(|| {
+         let rt = current_thread();
+@@ -30,6 +31,7 @@ fn pause_panic_caller() -> Result<(), Bo
+ }
+ 
+ #[test]
++#[cfg(feature = "test-util")]
+ fn resume_panic_caller() -> Result<(), Box<dyn Error>> {
+     let panic_location_file = test_panic(|| {
+         let rt = current_thread();
+Index: tokio/tests/time_pause.rs
+===================================================================
+--- tokio.orig/tests/time_pause.rs
++++ tokio/tests/time_pause.rs
+@@ -1,5 +1,5 @@
+ #![warn(rust_2018_idioms)]
+-#![cfg(feature = "full")]
++#![cfg(all(feature = "full", feature = "test-util"))]
+ 
+ use rand::SeedableRng;
+ use rand::{rngs::StdRng, Rng};
+Index: tokio/tests/time_sleep.rs
+===================================================================
+--- tokio.orig/tests/time_sleep.rs
++++ tokio/tests/time_sleep.rs
+@@ -1,5 +1,5 @@
+ #![warn(rust_2018_idioms)]
+-#![cfg(feature = "full")]
++#![cfg(all(feature = "full", feature = "test-util"))]
+ 
+ use std::future::Future;
+ use std::task::Context;
+Index: tokio/tests/time_timeout.rs
+===================================================================
+--- tokio.orig/tests/time_timeout.rs
++++ tokio/tests/time_timeout.rs
+@@ -1,5 +1,5 @@
+ #![warn(rust_2018_idioms)]
+-#![cfg(feature = "full")]
++#![cfg(all(feature = "full",feature = "test-util"))]
+ 
+ use tokio::sync::oneshot;
+ use tokio::time::{self, timeout, timeout_at, Instant};
