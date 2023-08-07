@@ -1,0 +1,42 @@
+Index: ctr/Cargo.toml
+===================================================================
+--- ctr.orig/Cargo.toml
++++ ctr/Cargo.toml
+@@ -55,9 +55,6 @@ version = "0.4"
+ [dev-dependencies.kuznyechik]
+ version = "0.8"
+ 
+-[dev-dependencies.magma]
+-version = "0.8"
+-
+ [features]
+ alloc = ["cipher/alloc"]
+ block-padding = ["cipher/block-padding"]
+Index: ctr/tests/gost/mod.rs
+===================================================================
+--- ctr.orig/tests/gost/mod.rs
++++ ctr/tests/gost/mod.rs
+@@ -1,7 +1,7 @@
+ use cipher::{KeyIvInit, StreamCipher};
+ use hex_literal::hex;
+ 
+-type MagmaCtr = ctr::Ctr32BE<magma::Magma>;
++//type MagmaCtr = ctr::Ctr32BE<magma::Magma>;
+ type KuznyechikCtr = ctr::Ctr64BE<kuznyechik::Kuznyechik>;
+ 
+ /// Test vectors from GOST R 34.13-2015 (Section A.1.2)
+@@ -29,7 +29,7 @@ fn kuznyechik() {
+     assert_eq!(pt[..], ct[..]);
+ }
+ 
+-/// Test vectors from GOST R 34.13-2015 (Section A.2.2)
++/* /// Test vectors from GOST R 34.13-2015 (Section A.2.2)
+ #[test]
+ fn magma() {
+     let key = hex!(
+@@ -52,4 +52,4 @@ fn magma() {
+     let mut cipher = MagmaCtr::new(&key.into(), &nonce.into());
+     cipher.apply_keystream(&mut pt);
+     assert_eq!(pt[..], ct[..]);
+-}
++}*/
