@@ -1,0 +1,63 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index 3c868e2..23a939d 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -73,19 +73,6 @@ fn wrap_with_dummy_const(
+ ///   of the field with the attribute. This is intended to be used for types implementing
+ ///   `HasCompact` as shown in the example.
+ ///
+-/// ```
+-/// # use parity_scale_codec_derive::Encode;
+-/// # use parity_scale_codec::{Encode as _, HasCompact};
+-/// #[derive(Encode)]
+-/// struct StructType {
+-///     #[codec(skip)]
+-///     a: u32,
+-///     #[codec(compact)]
+-///     b: u32,
+-///     #[codec(encoded_as = "<u32 as HasCompact>::Type")]
+-///     c: u32,
+-/// }
+-/// ```
+ ///
+ /// # Enum
+ ///
+@@ -103,24 +90,6 @@ fn wrap_with_dummy_const(
+ ///
+ /// field attributes: same as struct fields attributes.
+ ///
+-/// ```
+-/// # use parity_scale_codec_derive::Encode;
+-/// # use parity_scale_codec::Encode as _;
+-/// #[derive(Encode)]
+-/// enum EnumType {
+-///     #[codec(index = 15)]
+-///     A,
+-///     #[codec(skip)]
+-///     B,
+-///     C = 3,
+-///     D,
+-/// }
+-///
+-/// assert_eq!(EnumType::A.encode(), vec![15]);
+-/// assert_eq!(EnumType::B.encode(), vec![]);
+-/// assert_eq!(EnumType::C.encode(), vec![3]);
+-/// assert_eq!(EnumType::D.encode(), vec![2]);
+-/// ```
+ #[proc_macro_derive(Encode, attributes(codec))]
+ pub fn encode_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+ 	let mut input: DeriveInput = match syn::parse(input) {
+@@ -251,13 +220,6 @@ pub fn decode_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream
+ ///
+ /// # Example
+ ///
+-/// ```
+-/// # use parity_scale_codec_derive::CompactAs;
+-/// # use parity_scale_codec::{Encode, HasCompact};
+-/// # use std::marker::PhantomData;
+-/// #[derive(CompactAs)]
+-/// struct MyWrapper<T>(u32, #[codec(skip)] PhantomData<T>);
+-/// ```
+ #[proc_macro_derive(CompactAs, attributes(codec))]
+ pub fn compact_as_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+ 	let mut input: DeriveInput = match syn::parse(input) {
