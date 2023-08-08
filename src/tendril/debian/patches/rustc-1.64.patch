@@ -1,0 +1,30 @@
+This patch was extracted from te upstream commit described below.
+
+commit e85d94731dcc983b6ec3f694379bb6c112018e88
+Author: Martin Robinson <mrobinson@igalia.com>
+Date:   Tue Jul 11 13:40:13 2023 +0200
+
+    Enable the GitHub merge queue (#69)
+    
+    * Enable the GitHub merge queue
+    
+    * Update main.yml
+    
+    * Fix the unit tests
+
+diff --git a/src/tendril.rs b/src/tendril.rs
+index 0941b267e..0a33d8279 100644
+--- a/src/tendril.rs
++++ b/src/tendril.rs
+@@ -1701,8 +1701,9 @@ mod test {
+         assert_eq!(correct, mem::size_of::<ByteTendril>());
+         assert_eq!(correct, mem::size_of::<StrTendril>());
+ 
+-        assert_eq!(correct, mem::size_of::<Option<ByteTendril>>());
+-        assert_eq!(correct, mem::size_of::<Option<StrTendril>>());
++        // This is no longer true. See https://github.com/servo/tendril/issues/66
++        // assert_eq!(correct, mem::size_of::<Option<ByteTendril>>());
++        // assert_eq!(correct, mem::size_of::<Option<StrTendril>>());
+ 
+         assert_eq!(
+             mem::size_of::<*const ()>() * 2,

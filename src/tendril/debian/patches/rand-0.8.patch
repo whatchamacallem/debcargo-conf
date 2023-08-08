@@ -1,0 +1,71 @@
+Index: tendril/Cargo.toml
+===================================================================
+--- tendril.orig/Cargo.toml
++++ tendril/Cargo.toml
+@@ -34,7 +34,7 @@ version = "0.1"
+ [dependencies.utf-8]
+ version = "0.7"
+ [dev-dependencies.rand]
+-version = "0.4"
++version = "0.8"
+ 
+ [features]
+ bench = []
+Index: tendril/examples/fuzz.rs
+===================================================================
+--- tendril.orig/examples/fuzz.rs
++++ tendril/examples/fuzz.rs
+@@ -6,20 +6,21 @@
+ 
+ //! A simple fuzz tester for the library.
+ 
+-#![deny(warnings)]
++//#![deny(warnings)]
+ 
+ extern crate rand;
+ extern crate tendril;
+ 
+ use std::borrow::ToOwned;
+ 
+-use rand::distributions::{IndependentSample, Range};
++use rand::distributions::Distribution;
++use rand::distributions::uniform::Uniform as Range;
+ use rand::Rng;
+ use tendril::StrTendril;
+ 
+ fn fuzz() {
+     let mut rng = rand::thread_rng();
+-    let capacity = Range::new(0u32, 1 << 14).ind_sample(&mut rng);
++    let capacity = Range::new(0u32, 1 << 14).sample(&mut rng);
+     let mut buf_string = String::with_capacity(capacity as usize);
+     let mut buf_tendril = StrTendril::with_capacity(capacity);
+     let mut string_slices = vec![];
+@@ -32,7 +33,7 @@ fn fuzz() {
+         }
+ 
+         let dist_action = Range::new(0, 100);
+-        match dist_action.ind_sample(&mut rng) {
++        match dist_action.sample(&mut rng) {
+             0..=15 => {
+                 let (start, end) = random_slice(&mut rng, TEXT);
+                 let snip = &TEXT[start..end];
+@@ -107,7 +108,7 @@ fn fuzz() {
+ 
+ fn random_boundary<R: Rng>(rng: &mut R, text: &str) -> usize {
+     loop {
+-        let i = Range::new(0, text.len() + 1).ind_sample(rng);
++        let i = Range::new(0, text.len() + 1).sample(rng);
+         if text.is_char_boundary(i) {
+             return i;
+         }
+@@ -116,8 +117,8 @@ fn random_boundary<R: Rng>(rng: &mut R,
+ 
+ fn random_slice<R: Rng>(rng: &mut R, text: &str) -> (usize, usize) {
+     loop {
+-        let start = Range::new(0, text.len() + 1).ind_sample(rng);
+-        let end = Range::new(start, text.len() + 1).ind_sample(rng);
++        let start = Range::new(0, text.len() + 1).sample(rng);
++        let end = Range::new(start, text.len() + 1).sample(rng);
+         if !text.is_char_boundary(start) {
+             continue;
+         }
