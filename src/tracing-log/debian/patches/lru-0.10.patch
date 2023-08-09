@@ -1,0 +1,81 @@
+Index: tracing-log/Cargo.toml
+===================================================================
+--- tracing-log.orig/Cargo.toml
++++ tracing-log/Cargo.toml
+@@ -58,7 +58,7 @@ version = "1.3.0"
+ version = "0.4"
+ 
+ [dependencies.lru]
+-version = "0.7.0"
++version = "0.10.0"
+ optional = true
+ 
+ [dependencies.tracing-core]
+Index: tracing-log/src/interest_cache.rs
+===================================================================
+--- tracing-log.orig/src/interest_cache.rs
++++ tracing-log/src/interest_cache.rs
+@@ -89,15 +89,25 @@ struct Key {
+ struct State {
+     min_verbosity: Level,
+     epoch: usize,
+-    cache: LruCache<Key, u64, ahash::RandomState>,
++    cache: Option<LruCache<Key, u64>>,
+ }
+ 
++use core::num::NonZeroUsize;
++
+ impl State {
+     fn new(epoch: usize, config: &InterestCacheConfig) -> Self {
+-        State {
+-            epoch,
+-            min_verbosity: config.min_verbosity,
+-            cache: LruCache::new(config.lru_cache_size),
++        if let Some(lru_cache_size) = NonZeroUsize::new(config.lru_cache_size) {
++            State {
++                epoch,
++                min_verbosity: config.min_verbosity,
++                cache: Some(LruCache::new(lru_cache_size)),
++            }
++        } else {
++            State {
++                epoch,
++                min_verbosity: config.min_verbosity,
++                cache: None,
++            }
+         }
+     }
+ }
+@@ -170,7 +180,7 @@ pub(crate) fn try_cache(metadata: &Metad
+         }
+ 
+         let level = metadata.level();
+-        if state.cache.cap() == 0 || level < state.min_verbosity {
++        if state.cache.is_none() || level < state.min_verbosity {
+             return callback();
+         }
+ 
+@@ -202,7 +212,8 @@ pub(crate) fn try_cache(metadata: &Metad
+             level_and_length: level as usize | target.len().wrapping_shl(3),
+         };
+ 
+-        if let Some(&cached) = state.cache.get(&key) {
++        if let Some(cache) = &mut state.cache {
++          if let Some(&cached) = cache.get(&key) {
+             // And here we make sure that the target actually matches.
+             //
+             // This is just a hash of the target string, so theoretically we're not guaranteed
+@@ -221,10 +232,12 @@ pub(crate) fn try_cache(metadata: &Metad
+             // Realistically we should never land here, unless someone is using a non-static
+             // target string with the same length and level, or is very lucky and found a hash
+             // collision for the cache's key.
++          }
+         }
+ 
+         let interest = callback();
+-        state.cache.put(key, target_hash | interest as u64);
++        // we have checked if state.cache is none earlier.
++        state.cache.as_mut().unwrap().put(key, target_hash | interest as u64);
+ 
+         interest
+     })
