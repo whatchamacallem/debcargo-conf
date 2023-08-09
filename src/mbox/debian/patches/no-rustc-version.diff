@@ -1,0 +1,32 @@
+Index: mbox/build.rs
+===================================================================
+--- mbox.orig/build.rs
++++ mbox/build.rs
+@@ -1,13 +1,3 @@
+-extern crate rustc_version;
+-
+-use rustc_version::{version_meta, Channel};
+-
+ pub fn main() {
+-    let meta = version_meta().unwrap();
+-
+-    let channel = match meta.channel {
+-        Channel::Dev | Channel::Nightly => "nightly",
+-        Channel::Beta | Channel::Stable => "stable",
+-    };
+-    println!("cargo:rustc-cfg={}_channel", channel);
++    println!("cargo:rustc-cfg=stable_channel");
+ }
+Index: mbox/Cargo.toml
+===================================================================
+--- mbox.orig/Cargo.toml
++++ mbox/Cargo.toml
+@@ -27,8 +27,6 @@ version = "0.2"
+ [dependencies.stable_deref_trait]
+ version = "1.0"
+ default-features = false
+-[build-dependencies.rustc_version]
+-version = "0.3"
+ 
+ [features]
+ default = ["std"]
