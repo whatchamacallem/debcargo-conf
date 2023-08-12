@@ -1,0 +1,248 @@
+Index: hyper/Cargo.toml
+===================================================================
+--- hyper.orig/Cargo.toml
++++ hyper/Cargo.toml
+@@ -154,9 +154,6 @@ features = [
+     "test-util",
+ ]
+ 
+-[dev-dependencies.tokio-test]
+-version = "0.4"
+-
+ [dev-dependencies.tokio-util]
+ version = "0.7"
+ features = ["codec"]
+Index: hyper/src/body/body.rs
+===================================================================
+--- hyper.orig/src/body/body.rs
++++ hyper/src/body/body.rs
+@@ -733,6 +733,7 @@ mod tests {
+         assert!(rx.data().await.is_none());
+     }
+ 
++    #[cfg(any())] // disable test because it uses tokio-test
+     #[test]
+     fn channel_ready() {
+         let (mut tx, _rx) = Body::new_channel(DecodedLength::CHUNKED, /*wanter = */ false);
+@@ -742,6 +743,7 @@ mod tests {
+         assert!(tx_ready.poll().is_ready(), "tx is ready immediately");
+     }
+ 
++    #[cfg(any())] // disable test because it uses tokio-test
+     #[test]
+     fn channel_wanter() {
+         let (mut tx, mut rx) = Body::new_channel(DecodedLength::CHUNKED, /*wanter = */ true);
+@@ -763,6 +765,7 @@ mod tests {
+         );
+     }
+ 
++    #[cfg(any())] // disable test because it uses tokio-test
+     #[test]
+     fn channel_notices_closure() {
+         let (mut tx, rx) = Body::new_channel(DecodedLength::CHUNKED, /*wanter = */ true);
+Index: hyper/src/common/io/rewind.rs
+===================================================================
+--- hyper.orig/src/common/io/rewind.rs
++++ hyper/src/common/io/rewind.rs
+@@ -113,6 +113,7 @@ mod tests {
+     use bytes::Bytes;
+     use tokio::io::AsyncReadExt;
+ 
++    #[cfg(any())] // disable test because it uses tokio-test
+     #[tokio::test]
+     async fn partial_rewind() {
+         let underlying = [104, 101, 108, 108, 111];
+@@ -135,6 +136,7 @@ mod tests {
+         assert_eq!(&buf, &underlying);
+     }
+ 
++    #[cfg(any())] // disable test because it uses tokio-test
+     #[tokio::test]
+     async fn full_rewind() {
+         let underlying = [104, 101, 108, 108, 111];
+Index: hyper/src/common/drain.rs
+===================================================================
+--- hyper.orig/src/common/drain.rs
++++ hyper/src/common/drain.rs
+@@ -125,7 +125,7 @@ mod tests {
+         }
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn watch() {
+         let mut mock = tokio_test::task::spawn(());
+         mock.enter(|cx, _| {
+@@ -213,5 +213,5 @@ mod tests {
+             // Now all watchers are gone, draining is complete
+             assert!(Pin::new(&mut draining).poll(cx).is_ready());
+         });
+-    }
++    }*/
+ }
+Index: hyper/src/proto/h1/decode.rs
+===================================================================
+--- hyper.orig/src/proto/h1/decode.rs
++++ hyper/src/proto/h1/decode.rs
+@@ -595,7 +595,7 @@ mod tests {
+         assert_eq!(e.kind(), io::ErrorKind::InvalidInput);
+     }
+ 
+-    #[tokio::test]
++    /*#[tokio::test]
+     async fn test_read_chunked_after_eof() {
+         let mut mock_buf = &b"10\r\n1234567890abcdef\r\n0\r\n\r\n"[..];
+         let mut decoder = Decoder::chunked();
+@@ -613,11 +613,11 @@ mod tests {
+         // ensure read after eof also returns eof
+         let buf = decoder.decode_fut(&mut mock_buf).await.expect("decode");
+         assert_eq!(0, buf.len());
+-    }
++    }*/
+ 
+     // perform an async read using a custom buffer size and causing a blocking
+     // read at the specified byte
+-    async fn read_async(mut decoder: Decoder, content: &[u8], block_at: usize) -> String {
++    /*async fn read_async(mut decoder: Decoder, content: &[u8], block_at: usize) -> String {
+         let mut outs = Vec::new();
+ 
+         let mut ins = if block_at == 0 {
+@@ -676,7 +676,7 @@ mod tests {
+     async fn test_read_eof_async() {
+         let content = "foobar";
+         all_async_cases(content, content, Decoder::eof()).await;
+-    }
++    }*/
+ 
+     #[cfg(feature = "nightly")]
+     #[bench]
+Index: hyper/src/proto/h1/dispatch.rs
+===================================================================
+--- hyper.orig/src/proto/h1/dispatch.rs
++++ hyper/src/proto/h1/dispatch.rs
+@@ -656,7 +656,7 @@ mod tests {
+     use crate::proto::h1::ClientTransaction;
+     use std::time::Duration;
+ 
+-    #[test]
++    /*#[test]
+     fn client_read_bytes_before_writing_request() {
+         let _ = pretty_env_logger::try_init();
+ 
+@@ -689,9 +689,9 @@ mod tests {
+                 other => panic!("expected Canceled, got {:?}", other),
+             }
+         });
+-    }
++    }*/
+ 
+-    #[tokio::test]
++    /*#[tokio::test]
+     async fn client_flushing_is_not_ready_for_next_request() {
+         let _ = pretty_env_logger::try_init();
+ 
+@@ -746,5 +746,5 @@ mod tests {
+         // Ensure conn.write_body wasn't called with the empty chunk.
+         // If it is, it will trigger an assertion.
+         assert!(dispatcher.poll().is_pending());
+-    }
++    }*/
+ }
+Index: hyper/src/proto/h1/io.rs
+===================================================================
+--- hyper.orig/src/proto/h1/io.rs
++++ hyper/src/proto/h1/io.rs
+@@ -677,7 +677,7 @@ mod tests {
+     use super::*;
+     use std::time::Duration;
+ 
+-    use tokio_test::io::Builder as Mock;
++    //use tokio_test::io::Builder as Mock;
+ 
+     // #[cfg(feature = "nightly")]
+     // use test::Bencher;
+@@ -713,7 +713,7 @@ mod tests {
+         // io_buf.flush().await.expect("should short-circuit flush");
+     }
+ 
+-    #[tokio::test]
++    /*#[tokio::test]
+     async fn parse_reads_until_blocked() {
+         use crate::proto::h1::ClientTransaction;
+ 
+@@ -761,7 +761,7 @@ mod tests {
+             buffered.read_buf,
+             b"HTTP/1.1 200 OK\r\nServer: hyper\r\n"[..]
+         );
+-    }
++    }*/
+ 
+     #[test]
+     fn read_strategy_adaptive_increments() {
+@@ -870,7 +870,7 @@ mod tests {
+         fuzz(::std::usize::MAX);
+     }
+ 
+-    #[test]
++    /*#[test]
+     #[should_panic]
+     #[cfg(debug_assertions)] // needs to trigger a debug_assert
+     fn write_buf_requires_non_empty_bufs() {
+@@ -878,7 +878,7 @@ mod tests {
+         let mut buffered = Buffered::<_, Cursor<Vec<u8>>>::new(mock);
+ 
+         buffered.buffer(Cursor::new(Vec::new()));
+-    }
++    }(*/
+ 
+     /*
+     TODO: needs tokio_test::io to allow configure write_buf calls
+@@ -903,7 +903,7 @@ mod tests {
+     }
+     */
+ 
+-    #[tokio::test]
++    /*#[tokio::test]
+     async fn write_buf_flatten() {
+         let _ = pretty_env_logger::try_init();
+ 
+@@ -919,7 +919,7 @@ mod tests {
+         assert_eq!(buffered.write_buf.queue.bufs_cnt(), 0);
+ 
+         buffered.flush().await.expect("flush");
+-    }
++    }*/
+ 
+     #[test]
+     fn write_buf_flatten_partially_flushed() {
+@@ -956,7 +956,7 @@ mod tests {
+         assert_eq!(write_buf.headers.pos, 0);
+     }
+ 
+-    #[tokio::test]
++    /*#[tokio::test]
+     async fn write_buf_queue_disable_auto() {
+         let _ = pretty_env_logger::try_init();
+ 
+@@ -982,7 +982,7 @@ mod tests {
+         buffered.flush().await.expect("flush");
+ 
+         assert_eq!(buffered.write_buf.queue.bufs_cnt(), 0);
+-    }
++    }*/
+ 
+     // #[cfg(feature = "nightly")]
+     // #[bench]
+Index: hyper/src/lib.rs
+===================================================================
+--- hyper.orig/src/lib.rs
++++ hyper/src/lib.rs
+@@ -2,7 +2,7 @@
+ #![deny(missing_debug_implementations)]
+ #![cfg_attr(test, deny(rust_2018_idioms))]
+ #![cfg_attr(all(test, feature = "full"), deny(unreachable_pub))]
+-#![cfg_attr(all(test, feature = "full"), deny(warnings))]
++//#![cfg_attr(all(test, feature = "full"), deny(warnings))]
+ #![cfg_attr(all(test, feature = "nightly"), feature(test))]
+ #![cfg_attr(docsrs, feature(doc_cfg))]
+ 

@@ -1,0 +1,51 @@
+Index: hyper/Cargo.toml
+===================================================================
+--- hyper.orig/Cargo.toml
++++ hyper/Cargo.toml
+@@ -205,6 +205,3 @@ tcp = [
+     "tokio/rt",
+     "tokio/time",
+ ]
+-
+-[target."cfg(any(target_os = \"linux\", target_os = \"macos\"))".dev-dependencies.pnet_datalink]
+-version = "0.27.2"
+Index: hyper/src/client/connect/http.rs
+===================================================================
+--- hyper.orig/src/client/connect/http.rs
++++ hyper/src/client/connect/http.rs
+@@ -739,7 +739,7 @@ mod tests {
+         assert_eq!(&*err.msg, super::INVALID_NOT_HTTP);
+     }
+ 
+-    #[cfg(any(target_os = "linux", target_os = "macos"))]
++    /*#[cfg(any(target_os = "linux", target_os = "macos"))]
+     fn get_local_ips() -> (Option<std::net::Ipv4Addr>, Option<std::net::Ipv6Addr>) {
+         use std::net::{IpAddr, TcpListener};
+ 
+@@ -763,7 +763,7 @@ mod tests {
+         }
+ 
+         (ip_v4, ip_v6)
+-    }
++    }*/
+ 
+     #[tokio::test]
+     async fn test_errors_missing_scheme() {
+@@ -776,7 +776,7 @@ mod tests {
+     }
+ 
+     // NOTE: pnet crate that we use in this test doesn't compile on Windows
+-    #[cfg(any(target_os = "linux", target_os = "macos"))]
++    /*#[cfg(any(target_os = "linux", target_os = "macos"))]
+     #[tokio::test]
+     async fn local_address() {
+         use std::net::{IpAddr, TcpListener};
+@@ -811,7 +811,7 @@ mod tests {
+         if let Some(ip) = bind_ip_v6 {
+             assert_client_ip(format!("http://[::1]:{}", port), server6, ip.into()).await;
+         }
+-    }
++    }*/
+ 
+     #[test]
+     #[cfg_attr(not(feature = "__internal_happy_eyeballs_tests"), ignore)]
