@@ -1,0 +1,73 @@
+Index: unicode-names2-macros/Cargo.toml
+===================================================================
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -25,10 +25,10 @@ repository = "https://github.com/ProgVal
+ name = "unicode_names2_macros"
+ proc-macro = true
+ [dependencies.regex]
+-version = "0.1.80"
++version = "1.7.1"
+ 
+ [dependencies.syn]
+-version = "0.15"
++version = "2.0.26"
+ 
+ [dependencies.unicode_names2]
+ version = "0.6.0"
+Index: unicode-names2-macros/src/lib.rs
+===================================================================
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1,6 +1,6 @@
+ //! A macro that maps unicode names to chars and strings.
+ 
+-#![crate_type="dylib"]
++#![crate_type = "dylib"]
+ 
+ extern crate regex;
+ 
+@@ -17,7 +17,10 @@ impl syn::parse::Parse for CharByName {
+         let string: syn::LitStr = input.parse()?;
+         let name = string.value();
+         match unicode_names2::character(&name) {
+-            None => Err(syn::Error::new(string.span(), format!("`{}` does not name a character", name))),
++            None => Err(syn::Error::new(
++                string.span(),
++                format!("`{}` does not name a character", name),
++            )),
+             Some(c) => Ok(CharByName(syn::LitChar::new(c, string.span()))),
+         }
+     }
+@@ -38,16 +41,15 @@ impl syn::parse::Parse for StringWithCha
+         let names_re = regex::Regex::new(r"\\N\{(.*?)(?:\}|$)").unwrap();
+ 
+         let mut errors = Vec::new();
+-        let new = names_re.replace_all(&string.value(), |c: &regex::Captures| {
+-            let full = c.at(0).unwrap();
++        let string_value = string.value();
++        let new = names_re.replace_all(&string_value, |c: &regex::Captures| {
++            let full = c.get(0).unwrap().as_str();
+             if !full.ends_with("}") {
+                 errors.push(format!("unclosed escape in `named!`: {}", full));
+             } else {
+-                let name = c.at(1).unwrap();
++                let name = c.get(1).unwrap().as_str();
+                 match unicode_names2::character(name) {
+-                    Some(c) => {
+-                        return c.to_string()
+-                    },
++                    Some(c) => return c.to_string(),
+                     None => {
+                         errors.push(format!("`{}` does not name a character", name));
+                     }
+@@ -59,8 +61,7 @@ impl syn::parse::Parse for StringWithCha
+         if errors.len() > 0 {
+             // TODO: show all errors at once?
+             Err(syn::Error::new(string.span(), errors.get(0).unwrap()))
+-        }
+-        else {
++        } else {
+             Ok(StringWithCharNames(syn::LitStr::new(&new, string.span())))
+         }
+     }
