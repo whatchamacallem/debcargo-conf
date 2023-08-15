@@ -1,0 +1,58 @@
+Description: generate bindings if needed.
+ if pre-generated bindings are not available on the current architecture,
+ generate them rather than failing the build.
+ 
+ This does mean unconditionally depending on bindgen for the build script
+ which will slow down builds a bit, but I think that is an acceptable
+ tradeoff for Debian.
+Author: Peter Michael Green <plugwash@debian.org>
+
+--- rust-tss-esapi-sys-0.4.0.orig/Cargo.toml
++++ rust-tss-esapi-sys-0.4.0/Cargo.toml
+@@ -34,7 +34,6 @@ repository = "https://github.com/paralla
+ 
+ [build-dependencies.bindgen]
+ version = "0.60.0"
+-optional = true
+ 
+ [build-dependencies.pkg-config]
+ version = "0.3.0"
+@@ -43,4 +42,4 @@ version = "0.3.0"
+ version = "0.12.0"
+ 
+ [features]
+-generate-bindings = ["bindgen"]
++generate-bindings = []
+--- rust-tss-esapi-sys-0.4.0.orig/build.rs
++++ rust-tss-esapi-sys-0.4.0/build.rs
+@@ -1,7 +1,6 @@
+ // Copyright 2021 Contributors to the Parsec project.
+ // SPDX-License-Identifier: Apache-2.0
+ 
+-#[cfg(feature = "generate-bindings")]
+ use std::path::PathBuf;
+ 
+ const MINIMUM_VERSION: &str = "2.3.3";
+@@ -32,7 +31,13 @@ fn main() {
+             (Architecture::X86_64, OperatingSystem::Darwin) => {}
+             (Architecture::X86_64, OperatingSystem::Linux) => {}
+             (arch, os) => {
+-                panic!("Compilation target (architecture, OS) tuple ({}, {}) is not part of the supported tuples. Please compile with the \"generate-bindings\" feature or add support for your platform :)", arch, os);
++                //panic!("Compilation target (architecture, OS) tuple ({}, {}) is not part of the supported tuples. Please compile with the \"generate-bindings\" feature or add support for your platform :)", arch, os);
++                //no bindings available, lets generate some
++                let out_path = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
++                let esys_path = out_path.join("tss_esapi_bindings.rs");
++                generate_from_system(esys_path);
++                //tell the main code to use the generated bindings
++                print!("cargo:rustc-cfg=feature=\"generate-bindings\"\n");
+             }
+         }
+ 
+@@ -58,7 +63,6 @@ fn main() {
+ }
+ 
+ #[allow(clippy::uninlined_format_args)]
+-#[cfg(feature = "generate-bindings")]
+ pub fn generate_from_system(esapi_out: PathBuf) {
+     pkg_config::Config::new()
+         .atleast_version(MINIMUM_VERSION)
