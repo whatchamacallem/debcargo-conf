@@ -1,0 +1,28 @@
+Index: zram-generator/tests/test_cases.rs
+===================================================================
+--- zram-generator.orig/tests/test_cases.rs
++++ zram-generator/tests/test_cases.rs
+@@ -30,14 +30,20 @@ fn unshorn() {
+     }
+ 
+     sched::unshare(sched::CloneFlags::CLONE_NEWNS).expect("unshare(NEWNS)");
+-    mount::mount::<_, _, str, str>(
++    let mountresult = mount::mount::<_, _, str, str>(
+         Some("none"),
+         "/",
+         None,
+         mount::MsFlags::MS_REC | mount::MsFlags::MS_PRIVATE,
+         None,
+-    )
+-    .unwrap();
++    );
++    if let Err(e) = mountresult {
++        if e == nix::errno::Errno::EINVAL {
++            eprintln!("mount failed with EINVAL, probablly a lack of kernel support");
++            exit(0);
++        }
++    }
++    mountresult.unwrap();
+ 
+     mount::mount::<str, _, _, str>(None, "/proc", Some("tmpfs"), mount::MsFlags::empty(), None)
+         .unwrap();
