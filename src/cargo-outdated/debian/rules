@@ -3,8 +3,8 @@
 %:
 	dh $@ --buildsystem cargo
 
-#lto disabled on these architectures due to address space exhaustion.
-ifneq (,$(filter $(DEB_HOST_ARCH),armhf armel mipsel))
+#lto disabled on 32bit architectures due to address space exhaustion.
+ifeq ($(DEB_HOST_ARCH_BITS), 32)
   LTO=false
 else
   LTO=true
