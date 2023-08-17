@@ -1,0 +1,87 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 2b78a1fb0b57818eef1091f18caff15f79849d11
+Author: Daniel McCarney <daniel@binaryparadox.net>
+Date:   Wed Mar 29 14:53:47 2023 -0400
+
+    deps: update rustls, tokio-rustls, quinn, webpki, webpki-roots.
+    
+    This commit updates the Rustls dependency to the recently released
+    0.21.0 tag, and to update tokio-rustls to 0.24.0 to use the same rustls
+    release. It also updates webpki-roots to 0.23.0, and to use rustls' fork
+    of webpki instead of the original.
+    
+    A couple of small upstream API changes are addressed to ensure the build
+    and tests pass.
+
+Index: trust-dns-proto/src/quic/quic_client_stream.rs
+===================================================================
+--- trust-dns-proto.orig/src/quic/quic_client_stream.rs
++++ trust-dns-proto/src/quic/quic_client_stream.rs
+@@ -190,7 +190,7 @@ impl QuicClientStreamBuilder {
+         let socket = socket.into_std()?;
+ 
+         let endpoint_config = quic_config::endpoint();
+-        let mut endpoint = Endpoint::new(endpoint_config, None, socket, quinn::TokioRuntime)?;
++        let mut endpoint = Endpoint::new(endpoint_config, None, socket, Arc::new(quinn::TokioRuntime))?;
+ 
+         // ensure the ALPN protocol is set correctly
+         let mut crypto_config = self.crypto_config;
+Index: trust-dns-proto/src/quic/quic_config.rs
+===================================================================
+--- trust-dns-proto.orig/src/quic/quic_config.rs
++++ trust-dns-proto/src/quic/quic_config.rs
+@@ -15,7 +15,7 @@ pub(crate) fn endpoint() -> EndpointConf
+     // all DNS packets have a maximum size of u16 due to DoQ and 1035 rfc
+     // TODO: the RFC claims max == u16::max, but this matches the max in some test servers.
+     endpoint_config
+-        .max_udp_payload_size(0x45acu16 as u64)
++        .max_udp_payload_size(0x45ac)
+         .expect("max udp payload size exceeded");
+ 
+     endpoint_config
+Index: trust-dns-proto/src/quic/quic_server.rs
+===================================================================
+--- trust-dns-proto.orig/src/quic/quic_server.rs
++++ trust-dns-proto/src/quic/quic_server.rs
+@@ -60,7 +60,7 @@ impl QuicServer {
+             endpoint_config,
+             Some(server_config),
+             socket,
+-            quinn::TokioRuntime,
++            Arc::new(quinn::TokioRuntime),
+         )?;
+ 
+         Ok(Self { endpoint })
+Index: trust-dns-proto/Cargo.toml
+===================================================================
+--- trust-dns-proto.orig/Cargo.toml
++++ trust-dns-proto/Cargo.toml
+@@ -117,7 +117,7 @@ features = [
+ optional = true
+ 
+ [dependencies.quinn]
+-version = "0.9"
++version = "0.10"
+ optional = true
+ 
+ [dependencies.rand]
+@@ -129,7 +129,7 @@ features = ["std"]
+ optional = true
+ 
+ [dependencies.rustls]
+-version = "0.20.0"
++version = "0.21.0"
+ optional = true
+ 
+ [dependencies.rustls-native-certs]
+@@ -173,7 +173,7 @@ version = "0.6.0"
+ optional = true
+ 
+ [dependencies.tokio-rustls]
+-version = "0.23.0"
++version = "0.24.0"
+ features = ["early-data"]
+ optional = true
+ 
