@@ -7,6 +7,10 @@ excludes = ["benches/**"]
 # cf. #1026769
 build_depends = ["librust-ring-dev"]
 
+[packages.lib]
+# to ensure trust-dns packages are built against a consistent version of rustls.
+extra_lines = ["Breaks: librust-trust-dns-client-dev (<< 0.22.0-3), librust-trust-dns-resolver-dev (<< 0.22.0-3), librust-trust-dns-server-dev (<< 0.22.0-3)"]
+
 # thread 'rustls::tests::test_tls_client_stream_ipv4' panicked at 'failed to open file: ../../tests/test-data/ca.der', src/rustls/tests.rs:64:56
 [packages."lib+dns-over-https"]
 test_is_broken = true
