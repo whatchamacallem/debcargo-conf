@@ -4,7 +4,7 @@ Index: arc-swap/Cargo.toml
 +++ arc-swap/Cargo.toml
 @@ -27,6 +27,7 @@ categories = [
  ]
- license = "Apache-2.0/MIT"
+ license = "MIT OR Apache-2.0"
  repository = "https://github.com/vorner/arc-swap"
 +autotests = false
  
@@ -18,12 +18,12 @@ Index: arc-swap/Cargo.toml
 -version = "~1"
 -
  [dev-dependencies.criterion]
- version = "~0.3"
+ version = "~0.4"
  
-@@ -94,3 +92,6 @@ status = "actively-developed"
+@@ -88,3 +86,6 @@ weak = []
  
- [badges.travis-ci]
- repository = "vorner/arc-swap"
+ [badges.maintenance]
+ status = "actively-developed"
 +
 +[[test]]
 +name = "random"
@@ -31,7 +31,7 @@ Index: arc-swap/src/lib.rs
 ===================================================================
 --- arc-swap.orig/src/lib.rs
 +++ arc-swap/src/lib.rs
-@@ -802,7 +802,7 @@ macro_rules! t {
+@@ -808,7 +808,7 @@ macro_rules! t {
              use std::panic;
              use std::sync::atomic::{self, AtomicUsize};
  
@@ -40,7 +40,7 @@ Index: arc-swap/src/lib.rs
              use crossbeam_utils::thread;
  
              use super::*;
-@@ -876,7 +876,7 @@ macro_rules! t {
+@@ -882,7 +882,7 @@ macro_rules! t {
              /// always increasing in each serie.
              ///
              /// For performance, we try to reuse the threads here.
@@ -49,7 +49,7 @@ Index: arc-swap/src/lib.rs
              fn multi_writers() {
                  let first_value = Arc::new((0, 0));
                  let shared = As::from(Arc::clone(&first_value));
-@@ -937,7 +937,7 @@ macro_rules! t {
+@@ -943,7 +943,7 @@ macro_rules! t {
                      drop(barrier);
                  })
                  .unwrap();
@@ -58,7 +58,7 @@ Index: arc-swap/src/lib.rs
  
              #[test]
              fn load_null() {
-@@ -981,7 +981,7 @@ macro_rules! t {
+@@ -987,7 +987,7 @@ macro_rules! t {
              /// * Thread 1 loads a value.
              /// * Thread 2 replaces the shared value. The original value is not destroyed.
              /// * Thread 1 drops the guard. The value is destroyed and this is observable in both threads.
@@ -67,7 +67,7 @@ Index: arc-swap/src/lib.rs
              fn guard_drop_in_thread() {
                  for _ in 0..ITERATIONS {
                      let cnt = Arc::new(AtomicUsize::new(0));
-@@ -1026,7 +1026,7 @@ macro_rules! t {
+@@ -1032,7 +1032,7 @@ macro_rules! t {
                      })
                      .unwrap();
                  }
