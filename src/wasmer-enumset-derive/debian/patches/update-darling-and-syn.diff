@@ -1,0 +1,38 @@
+Code change taken from 
+https://github.com/Lymia/enumset/commit/dcb82cb805fe8cbd8ab0437440f1275dfdc048de
+
+Index: wasmer-enumset-derive/Cargo.toml
+===================================================================
+--- wasmer-enumset-derive.orig/Cargo.toml
++++ wasmer-enumset-derive/Cargo.toml
+@@ -22,7 +22,7 @@ repository = "https://github.com/wasmeri
+ [lib]
+ proc-macro = true
+ [dependencies.darling]
+-version = "0.10.0"
++version = "0.20.0"
+ 
+ [dependencies.proc-macro2]
+ version = "1"
+@@ -31,7 +31,7 @@ version = "1"
+ version = "1"
+ 
+ [dependencies.syn]
+-version = "1"
++version = "2"
+ 
+ [features]
+ serde = []
+Index: wasmer-enumset-derive/src/lib.rs
+===================================================================
+--- wasmer-enumset-derive.orig/src/lib.rs
++++ wasmer-enumset-derive/src/lib.rs
+@@ -480,7 +480,7 @@ fn derive_enum_set_type_0(input: DeriveI
+     } else if let Data::Enum(data) = &input.data {
+         let mut info = EnumSetInfo::new(&input, attrs);
+         for attr in &input.attrs {
+-            if attr.path.is_ident(&Ident::new("repr", Span::call_site())) {
++            if attr.path().is_ident(&Ident::new("repr", Span::call_site())) {
+                 let meta: Ident = attr.parse_args()?;
+                 info.push_explicit_repr(attr.span(), meta.to_string().as_str())?;
+             }
