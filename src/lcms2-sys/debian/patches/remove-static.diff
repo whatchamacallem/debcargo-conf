@@ -37,16 +37,12 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  status = "actively-developed"
 --- a/src/build.rs
 +++ b/src/build.rs
-@@ -1,93 +1,6 @@
--#[cfg(feature = "dynamic")]
- extern crate pkg_config;
--#[cfg(any(feature = "static", feature = "static-fallback"))]
--extern crate cc;
- 
+@@ -1,88 +1,7 @@
 -use std::env;
 -use std::env::consts;
 -use std::path::Path;
--
++extern crate pkg_config;
+ 
 -fn main() {
 -    if let Ok(include_dir) = env::var("LCMS2_INCLUDE_DIR") {
 -        println!("cargo:include={}", include_dir);
@@ -95,8 +91,11 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -fn compile_static() {
 -    println!("cargo:warning='static' feature of lcms2-sys is disabled, so the library won't be built, and probably won't work at all");
 -    println!("cargo:rustc-link-lib=lcms2");
--}
--
++fn main()
++{
++	pkg_config::probe_library("lcms2").unwrap();
+ }
+ 
 -#[cfg(any(feature = "static", feature = "static-fallback"))]
 -fn compile_static() {
 -    cc::Build::new()
@@ -130,7 +129,4 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -        .compile("liblcms2.a");
 -
 -    println!("cargo:include={}", dunce::canonicalize("vendor/include").unwrap().display());
-+fn main()
-+{
-+	pkg_config::probe_library("lcms2").unwrap();
- }
+-}
