@@ -1,0 +1,377 @@
+Description: Replace libipld by multihash
+ This avoids needing to upload all of libipld* to Debian.
+Author: Jochen Sprickerhof <jspricke@debian.org>
+Origin: vendor
+Forwarded: no
+Last-Update: 2023-08-29
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: rust-unixfs/Cargo.toml
+===================================================================
+--- rust-unixfs.orig/Cargo.toml
++++ rust-unixfs/Cargo.toml
+@@ -35,8 +35,15 @@ default-features = false
+ version = "0.2"
+ optional = true
+ 
+-[dependencies.libipld]
+-version = "0.16"
++[dependencies.multihash]
++version = "0.19"
++
++[dependencies.multihash-codetable]
++version = "0.1"
++features = ["sha2", "digest"]
++
++[dependencies.cid]
++version = "0.10"
+ 
+ [dependencies.quick-protobuf]
+ version = "0.8"
+Index: rust-unixfs/benches/ingest-tar.rs
+===================================================================
+--- rust-unixfs.orig/benches/ingest-tar.rs
++++ rust-unixfs/benches/ingest-tar.rs
+@@ -1,5 +1,5 @@
+ use criterion::{black_box, criterion_group, criterion_main, Criterion};
+-use libipld::multihash::Multihash;
++use multihash::Multihash;
+ 
+ pub fn criterion_benchmark(c: &mut Criterion) {
+     let file = "benchmark.tar";
+@@ -23,7 +23,7 @@ pub fn criterion_benchmark(c: &mut Crite
+ }
+ 
+ fn ingest_tar(bytes: &[u8], buffer: &mut Vec<u8>, path: &mut String) {
+-    use libipld::Cid;
++    use Cid;
+     use rust_unixfs::dir::builder::{BufferingTreeBuilder, TreeOptions};
+     use rust_unixfs::file::adder::FileAdder;
+     use sha2::{Digest, Sha256};
+@@ -54,7 +54,7 @@ fn ingest_tar(bytes: &[u8], buffer: &mut
+             let len = buffer.len();
+ 
+             let mh = Multihash::wrap(
+-                libipld::multihash::Code::Sha2_256.into(),
++                multihash_codetable::Code::Sha2_256.into(),
+                 &Sha256::digest(&buffer),
+             )
+             .unwrap();
+Index: rust-unixfs/examples/add.rs
+===================================================================
+--- rust-unixfs.orig/examples/add.rs
++++ rust-unixfs/examples/add.rs
+@@ -1,4 +1,4 @@
+-use libipld::Cid;
++use cid::Cid;
+ use rust_unixfs::file::adder::FileAdder;
+ use std::fmt;
+ use std::io::{BufRead, BufReader};
+@@ -130,7 +130,7 @@ struct Stats {
+ impl fmt::Display for Stats {
+     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+         let hash = self.last.as_ref().unwrap().hash();
+-        let cidv1 = Cid::new_v1(libipld::IpldCodec::DagPb.into(), hash.to_owned());
++        let cidv1 = Cid::new_v1(0x70, hash.to_owned());
+         write!(
+             fmt,
+             "{} blocks, {} block bytes, {} or {}",
+Index: rust-unixfs/examples/cat.rs
+===================================================================
+--- rust-unixfs.orig/examples/cat.rs
++++ rust-unixfs/examples/cat.rs
+@@ -1,4 +1,4 @@
+-use libipld::Cid;
++use cid::Cid;
+ use rust_unixfs::file::{visit::IdleFileVisit, FileReadFailed};
+ use std::convert::TryFrom;
+ use std::fmt;
+Index: rust-unixfs/examples/get.rs
+===================================================================
+--- rust-unixfs.orig/examples/get.rs
++++ rust-unixfs/examples/get.rs
+@@ -1,4 +1,4 @@
+-use libipld::Cid;
++use cid::Cid;
+ use std::convert::TryFrom;
+ use std::fmt;
+ use std::io::{Error as IoError, Read};
+Index: rust-unixfs/examples/resolve.rs
+===================================================================
+--- rust-unixfs.orig/examples/resolve.rs
++++ rust-unixfs/examples/resolve.rs
+@@ -1,4 +1,4 @@
+-use libipld::Cid;
++use cid::Cid;
+ use rust_unixfs::dir::{resolve, LookupError, ResolveError};
+ use std::convert::TryFrom;
+ use std::fmt;
+@@ -64,7 +64,7 @@ fn main() {
+ 
+ #[derive(Debug)]
+ pub enum PathError {
+-    InvalidCid(libipld::cid::Error),
++    InvalidCid(cid::Error),
+     InvalidPath,
+ }
+ 
+Index: rust-unixfs/src/dir.rs
+===================================================================
+--- rust-unixfs.orig/src/dir.rs
++++ rust-unixfs/src/dir.rs
+@@ -2,7 +2,7 @@ use crate::pb::{FlatUnixFs, PBLink, PBNo
+ use crate::{InvalidCidInLink, UnexpectedNodeType};
+ use core::convert::TryFrom;
+ use core::fmt;
+-use libipld::Cid;
++use cid::Cid;
+ 
+ mod sharded_lookup;
+ pub use sharded_lookup::{Cache, LookupError, ShardError, ShardedLookup};
+@@ -217,7 +217,7 @@ mod tests {
+     use crate::test_support::FakeBlockstore;
+     use core::convert::TryFrom;
+     use hex_literal::hex;
+-    use libipld::Cid;
++    use cid::Cid;
+ 
+     #[test]
+     fn resolve_paths_from_plain_dagpb() {
+Index: rust-unixfs/src/dir/builder.rs
+===================================================================
+--- rust-unixfs.orig/src/dir/builder.rs
++++ rust-unixfs/src/dir/builder.rs
+@@ -1,5 +1,5 @@
+ use core::fmt;
+-use libipld::Cid;
++use cid::Cid;
+ 
+ mod dir_builder;
+ use dir_builder::DirBuilder;
+Index: rust-unixfs/src/dir/sharded_lookup.rs
+===================================================================
+--- rust-unixfs.orig/src/dir/sharded_lookup.rs
++++ rust-unixfs/src/dir/sharded_lookup.rs
+@@ -5,7 +5,7 @@ use alloc::borrow::Cow;
+ use alloc::collections::VecDeque;
+ use core::convert::TryFrom;
+ use core::fmt;
+-use libipld::Cid;
++use cid::Cid;
+ 
+ /// A cache of data structures used while traversing. Reduces allocations when walking over multiple
+ /// path segments.
+Index: rust-unixfs/src/file/adder.rs
+===================================================================
+--- rust-unixfs.orig/src/file/adder.rs
++++ rust-unixfs/src/file/adder.rs
+@@ -1,5 +1,6 @@
+-use libipld::multihash::{self, Multihash};
+-use libipld::Cid;
++use multihash::Multihash;
++use multihash_codetable::Code;
++use cid::Cid;
+ 
+ use crate::pb::{FlatUnixFs, PBLink, UnixFs, UnixFsType};
+ use alloc::borrow::Cow;
+@@ -313,7 +314,7 @@ fn render_and_hash(flat: &FlatUnixFs<'_>
+     let mut writer = Writer::new(&mut out);
+     flat.write_message(&mut writer)
+         .expect("unsure how this could fail");
+-    let mh = Multihash::wrap(multihash::Code::Sha2_256.into(), &Sha256::digest(&out)).unwrap();
++    let mh = Multihash::wrap(Code::Sha2_256.into(), &Sha256::digest(&out)).unwrap();
+     let cid = Cid::new_v0(mh).expect("sha2_256 is the correct multihash for cidv0");
+     (cid, out)
+ }
+@@ -645,7 +646,7 @@ mod tests {
+     use crate::test_support::FakeBlockstore;
+     use core::convert::TryFrom;
+     use hex_literal::hex;
+-    use libipld::Cid;
++    use cid::Cid;
+ 
+     #[test]
+     fn test_size_chunker() {
+Index: rust-unixfs/src/file/visit.rs
+===================================================================
+--- rust-unixfs.orig/src/file/visit.rs
++++ rust-unixfs/src/file/visit.rs
+@@ -1,6 +1,6 @@
+ use core::convert::TryFrom;
+ use core::ops::Range;
+-use libipld::Cid;
++use cid::Cid;
+ 
+ use crate::file::reader::{FileContent, FileReader, Traversal};
+ use crate::file::{FileReadFailed, Metadata};
+Index: rust-unixfs/src/lib.rs
+===================================================================
+--- rust-unixfs.orig/src/lib.rs
++++ rust-unixfs/src/lib.rs
+@@ -47,11 +47,11 @@ pub struct InvalidCidInLink {
+     /// for other kinds.
+     pub name: Cow<'static, str>,
+     /// Error from the attempted conversion
+-    pub source: libipld::cid::Error,
++    pub source: cid::Error,
+ }
+ 
+-impl<'a> From<(usize, pb::PBLink<'a>, libipld::cid::Error)> for InvalidCidInLink {
+-    fn from((nth, link, source): (usize, pb::PBLink<'a>, libipld::cid::Error)) -> Self {
++impl<'a> From<(usize, pb::PBLink<'a>, cid::Error)> for InvalidCidInLink {
++    fn from((nth, link, source): (usize, pb::PBLink<'a>, cid::Error)) -> Self {
+         let hash = match link.Hash {
+             Some(Cow::Borrowed(x)) if !x.is_empty() => Cow::Owned(x.to_vec()),
+             Some(Cow::Borrowed(_)) | None => Cow::Borrowed(&[][..]),
+Index: rust-unixfs/src/symlink.rs
+===================================================================
+--- rust-unixfs.orig/src/symlink.rs
++++ rust-unixfs/src/symlink.rs
+@@ -33,8 +33,9 @@ pub fn serialize_symlink_block(target_pa
+ mod tests {
+     use super::serialize_symlink_block;
+     use core::convert::TryFrom;
+-    use libipld::multihash::{self, Multihash};
+-    use libipld::Cid;
++    use multihash::{self, Multihash};
++    use multihash_codetable::Code;
++    use cid::Cid;
+     use sha2::{Digest, Sha256};
+ 
+     #[test]
+@@ -46,7 +47,7 @@ mod tests {
+         // `foo_directory/b`.
+         serialize_symlink_block("b", &mut buf);
+ 
+-        let mh = Multihash::wrap(multihash::Code::Sha2_256.into(), &Sha256::digest(&buf)).unwrap();
++        let mh = Multihash::wrap(Code::Sha2_256.into(), &Sha256::digest(&buf)).unwrap();
+         let cid = Cid::new_v0(mh).expect("sha2_256 is the correct multihash for cidv0");
+ 
+         assert_eq!(
+Index: rust-unixfs/src/test_support.rs
+===================================================================
+--- rust-unixfs.orig/src/test_support.rs
++++ rust-unixfs/src/test_support.rs
+@@ -1,8 +1,9 @@
+ use core::convert::TryFrom;
+ use hash_hasher::HashedMap;
+ use hex_literal::hex;
+-use libipld::multihash::Multihash;
+-use libipld::{multihash, Cid};
++use multihash::Multihash;
++use multihash_codetable::Code;
++use cid::Cid;
+ 
+ #[derive(Default)]
+ pub struct FakeBlockstore {
+@@ -30,7 +31,7 @@ impl FakeBlockstore {
+         sha.update(block);
+         let result = sha.finalize();
+ 
+-        let mh = Multihash::wrap(multihash::Code::Sha2_256.into(), &result[..]).unwrap();
++        let mh = Multihash::wrap(Code::Sha2_256.into(), &result[..]).unwrap();
+         let cid = Cid::new_v0(mh).unwrap();
+ 
+         assert!(
+Index: rust-unixfs/src/walk.rs
+===================================================================
+--- rust-unixfs.orig/src/walk.rs
++++ rust-unixfs/src/walk.rs
+@@ -7,7 +7,7 @@ use alloc::borrow::Cow;
+ use core::convert::TryFrom;
+ use core::fmt;
+ use either::Either;
+-use libipld::Cid;
++use cid::Cid;
+ use std::path::{Path, PathBuf};
+ 
+ /// `Walker` helps with walking a UnixFS tree, including all of the content and files. It is
+@@ -863,7 +863,7 @@ mod tests {
+         let blocks = FakeBlockstore::with_fixtures();
+ 
+         let trickle_foobar =
+-            libipld::Cid::try_from("QmWfQ48ChJUj4vWKFsUDe4646xCBmXgdmNfhjz9T7crywd").unwrap();
++            cid::Cid::try_from("QmWfQ48ChJUj4vWKFsUDe4646xCBmXgdmNfhjz9T7crywd").unwrap();
+         let mut walker = Walker::new(trickle_foobar, String::new());
+ 
+         let mut counter = 0;
+@@ -927,7 +927,7 @@ mod tests {
+         let blocks = FakeBlockstore::with_fixtures();
+ 
+         let mut cache = None;
+-        let mut walker = Walker::new(libipld::Cid::try_from(cid).unwrap(), root_name.to_string());
++        let mut walker = Walker::new(cid::Cid::try_from(cid).unwrap(), root_name.to_string());
+ 
+         while walker.should_continue() {
+             let (next, _) = walker.pending_links();
+Index: rust-unixfs/src/dir/builder/buffered.rs
+===================================================================
+--- rust-unixfs.orig/src/dir/builder/buffered.rs
++++ rust-unixfs/src/dir/builder/buffered.rs
+@@ -1,7 +1,7 @@
+ use super::{DirBuilder, Entry, Leaf, PostOrderIterator, TreeBuildingFailed, TreeOptions};
+ use crate::Metadata;
+ use alloc::collections::btree_map::Entry::*;
+-use libipld::Cid;
++use cid::Cid;
+ 
+ /// UnixFs directory tree builder which buffers entries until `build()` is called.
+ #[derive(Debug)]
+@@ -189,8 +189,8 @@ mod tests {
+         super::OwnedTreeNode, BufferingTreeBuilder, Metadata, TreeBuildingFailed, TreeOptions,
+     };
+     use core::convert::TryFrom;
+-    use libipld::multihash::{Code, MultihashDigest};
+-    use libipld::Cid;
++    use multihash_codetable::{Code, MultihashDigest};
++    use cid::Cid;
+ 
+     #[test]
+     fn some_directories() {
+Index: rust-unixfs/src/dir/builder/custom_pb.rs
+===================================================================
+--- rust-unixfs.orig/src/dir/builder/custom_pb.rs
++++ rust-unixfs/src/dir/builder/custom_pb.rs
+@@ -2,7 +2,7 @@
+ 
+ use super::NamedLeaf;
+ use crate::pb::UnixFs;
+-use libipld::Cid;
++use cid::Cid;
+ use quick_protobuf::{MessageWrite, Writer, WriterBackend};
+ 
+ /// Newtype which uses the &[Option<(NamedLeaf)>] as Vec<PBLink>.
+@@ -71,7 +71,7 @@ struct WriteableCid<'a>(&'a Cid);
+ 
+ impl<'a> MessageWrite for WriteableCid<'a> {
+     fn get_size(&self) -> usize {
+-        use libipld::cid::Version::*;
++        use cid::Version::*;
+         use quick_protobuf::sizeofs::*;
+ 
+         let hash_len = self.0.hash().to_bytes().len();
+@@ -87,7 +87,7 @@ impl<'a> MessageWrite for WriteableCid<'
+     }
+ 
+     fn write_message<W: WriterBackend>(&self, w: &mut Writer<W>) -> quick_protobuf::Result<()> {
+-        use libipld::cid::Version::*;
++        use cid::Version::*;
+ 
+         match self.0.version() {
+             V0 => { /* cidv0 has only the _multi_hash */ }
+Index: rust-unixfs/src/dir/builder/iter.rs
+===================================================================
+--- rust-unixfs.orig/src/dir/builder/iter.rs
++++ rust-unixfs/src/dir/builder/iter.rs
+@@ -2,8 +2,9 @@ use super::{
+     CustomFlatUnixFs, DirBuilder, Entry, Leaf, NamedLeaf, TreeConstructionFailed, TreeOptions,
+ };
+ use core::fmt;
+-use libipld::multihash::{Code, Multihash};
+-use libipld::Cid;
++use multihash::Multihash;
++use multihash_codetable::Code;
++use cid::Cid;
+ use std::collections::HashMap;
+ 
+ /// Constructs the directory nodes required for a tree.
