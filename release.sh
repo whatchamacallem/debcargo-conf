@@ -204,7 +204,7 @@ cat <<eof
 Since the source package is already in Debian and this version does not introduce
 new binaries, then you can just go ahead and directly dput the source package.
 
-  cd build && dput ${DEBSRC}_${DEBVER}_source.changes && git checkout - && git merge -
+  cd build && dput ${DEBSRC}_${DEBVER}_source.changes && git checkout - && git merge - && cd -
 
 If you want to build and test it, run:
 
