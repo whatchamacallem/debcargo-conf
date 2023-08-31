@@ -2,20 +2,26 @@ Index: addr2line/Cargo.toml
 ===================================================================
 --- addr2line.orig/Cargo.toml
 +++ addr2line/Cargo.toml
-@@ -58,5 +58,0 @@ required-features = ["std-object"]
+@@ -44,11 +44,6 @@ debug = true
+ name = "addr2line"
+ required-features = ["default"]
+ 
 -[[test]]
 -name = "parse"
 -required-features = ["std-object"]
 -
 -
+ [dependencies.cpp_demangle]
+ version = "0.4"
+ features = ["alloc"]
 Index: addr2line/tests/parse.rs
 ===================================================================
 --- addr2line.orig/tests/parse.rs
 +++ addr2line/tests/parse.rs
-@@ -24,7 +24,7 @@ fn release_fixture_path() -> PathBuf {
+@@ -20,7 +20,7 @@ fn release_fixture_path() -> PathBuf {
  }
  
- fn with_file<F: FnOnce(&object::File)>(target: &path::Path, f: F) {
+ fn with_file<F: FnOnce(&object::File<'_>)>(target: &path::Path, f: F) {
 -    let file = File::open(target).unwrap();
 +    let file = File::open(target).expect(&format!("could not open file {}",target.display()));
      let map = unsafe { memmap2::Mmap::map(&file).unwrap() };

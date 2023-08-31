@@ -1,20 +1,39 @@
---- rust-addr2line-0.13.0.orig/Cargo.toml
-+++ rust-addr2line-0.13.0/Cargo.toml
-@@ -75,3 +75,2 @@
+Index: addr2line/Cargo.toml
+===================================================================
+--- addr2line.orig/Cargo.toml
++++ addr2line/Cargo.toml
+@@ -89,7 +89,6 @@ optional = true
+ 
+ [dependencies.smallvec]
  version = "1"
 -optional = true
  default-features = false
-@@ -93,1 +92,0 @@
+ 
+ [dev-dependencies.backtrace]
+@@ -113,7 +112,6 @@ default = [
+     "cpp_demangle",
+     "std-object",
+     "fallible-iterator",
 -    "smallvec",
---- rust-addr2line-0.13.0.orig/src/lib.rs
-+++ rust-addr2line-0.13.0/src/lib.rs
-@@ -54,3 +54,3 @@
+     "memmap2",
+ ]
+ std = ["gimli/std"]
+Index: addr2line/src/lib.rs
+===================================================================
+--- addr2line.orig/src/lib.rs
++++ addr2line/src/lib.rs
+@@ -57,12 +57,12 @@ use core::u64;
+ use crate::function::{Function, Functions, InlinedFunction};
+ use crate::lazy::LazyCell;
  
 -#[cfg(feature = "smallvec")]
 +#[cfg(feature = "default")]
  mod maybe_small {
-@@ -59,3 +59,3 @@
+     pub type Vec<T> = smallvec::SmallVec<[T; 16]>;
+     pub type IntoIter<T> = smallvec::IntoIter<[T; 16]>;
  }
 -#[cfg(not(feature = "smallvec"))]
 +#[cfg(not(feature = "default"))]
  mod maybe_small {
+     pub type Vec<T> = alloc::vec::Vec<T>;
+     pub type IntoIter<T> = alloc::vec::IntoIter<T>;
