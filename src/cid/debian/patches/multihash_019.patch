@@ -1,0 +1,178 @@
+Description: Update to multihash 0.19
+Author:Luke Parker <lukeparker5132@gmail.com>
+Origin: https://github.com/multiformats/rust-cid/pull/140
+Last-Update: 2023-08-29
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: cid/Cargo.toml
+===================================================================
+--- cid.orig/Cargo.toml
++++ cid/Cargo.toml
+@@ -27,10 +27,6 @@ keywords = [
+ ]
+ license = "MIT"
+ 
+-[dependencies.arbitrary]
+-version = "1.1.0"
+-optional = true
+-
+ [dependencies.core2]
+ version = "0.4"
+ default-features = false
+@@ -41,13 +37,7 @@ optional = true
+ default-features = false
+ 
+ [dependencies.multihash]
+-version = "0.18.0"
+-default-features = false
+-
+-[dependencies.parity-scale-codec]
+-version = "3.0.0"
+-features = ["derive"]
+-optional = true
++version = "0.19.0"
+ default-features = false
+ 
+ [dependencies.quickcheck]
+@@ -82,22 +72,10 @@ alloc = [
+     "core2/alloc",
+     "serde/alloc",
+ ]
+-arb = [
+-    "quickcheck",
+-    "rand",
+-    "multihash/arb",
+-    "multihash/multihash-impl",
+-    "multihash/sha2",
+-    "arbitrary",
+-]
+ default = [
+     "std",
+     "multihash/default",
+ ]
+-scale-codec = [
+-    "parity-scale-codec",
+-    "multihash/scale-codec",
+-]
+ serde-codec = [
+     "alloc",
+     "serde",
+Index: cid/examples/readme.rs
+===================================================================
+--- cid.orig/examples/readme.rs
++++ cid/examples/readme.rs
+@@ -1,5 +1,5 @@
+-use cid::multihash::{Code, MultihashDigest};
+ use cid::Cid;
++use multihash_codetable::{Code, MultihashDigest};
+ use std::convert::TryFrom;
+ 
+ const RAW: u64 = 0x55;
+Index: cid/src/arb.rs
+===================================================================
+--- cid.orig/src/arb.rs
++++ cid/src/arb.rs
+@@ -2,7 +2,8 @@
+ 
+ use std::convert::TryFrom;
+ 
+-use multihash::{Code, MultihashDigest, MultihashGeneric};
++use multihash::Multihash;
++use multihash_codetable::{Code, MultihashDigest};
+ use quickcheck::Gen;
+ use rand::{
+     distributions::{weighted::WeightedIndex, Distribution},
+@@ -48,7 +49,7 @@ impl<const S: usize> quickcheck::Arbitra
+                 _ => unreachable!(),
+             };
+ 
+-            let hash: MultihashGeneric<S> = quickcheck::Arbitrary::arbitrary(g);
++            let hash: Multihash<S> = quickcheck::Arbitrary::arbitrary(g);
+             CidGeneric::new_v1(codec, hash)
+         }
+     }
+@@ -57,7 +58,7 @@ impl<const S: usize> quickcheck::Arbitra
+ impl<'a, const S: usize> arbitrary::Arbitrary<'a> for CidGeneric<S> {
+     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
+         if S >= 32 && u.ratio(1, 10)? {
+-            let mh = MultihashGeneric::wrap(Code::Sha2_256.into(), u.bytes(32)?).unwrap();
++            let mh = Multihash::wrap(Code::Sha2_256.into(), u.bytes(32)?).unwrap();
+             return Ok(CidGeneric::new_v0(mh).expect("32 bytes is correct for v0"));
+         }
+ 
+@@ -86,7 +87,7 @@ impl<'a, const S: usize> arbitrary::Arbi
+         let v1 = size_hint::and_all(&[
+             <[u8; 2]>::size_hint(depth),
+             (0, Some(8)),
+-            <MultihashGeneric<S> as arbitrary::Arbitrary>::size_hint(depth),
++            <Multihash<S> as arbitrary::Arbitrary>::size_hint(depth),
+         ]);
+         if S >= 32 {
+             size_hint::and(<u8>::size_hint(depth), size_hint::or((32, Some(32)), v1))
+@@ -100,7 +101,7 @@ impl<'a, const S: usize> arbitrary::Arbi
+ mod tests {
+     use crate::CidGeneric;
+     use arbitrary::{Arbitrary, Unstructured};
+-    use multihash::MultihashGeneric;
++    use multihash::Multihash;
+ 
+     #[test]
+     fn arbitrary() {
+@@ -109,8 +110,7 @@ mod tests {
+             23, 32, 32, 23, 65, 98, 193, 108, 3,
+         ]);
+         let c = <CidGeneric<16> as Arbitrary>::arbitrary(&mut u).unwrap();
+-        let c2 =
+-            CidGeneric::<16>::new_v1(22, MultihashGeneric::wrap(13, &[6, 7, 8, 9, 6]).unwrap());
++        let c2 = CidGeneric::<16>::new_v1(22, Multihash::wrap(13, &[6, 7, 8, 9, 6]).unwrap());
+         assert_eq!(c.hash(), c2.hash());
+         assert_eq!(c.codec(), c2.codec());
+         assert_eq!(c, c2)
+Index: cid/src/cid.rs
+===================================================================
+--- cid.orig/src/cid.rs
++++ cid/src/cid.rs
+@@ -10,7 +10,7 @@ use core::convert::TryFrom;
+ #[cfg(feature = "alloc")]
+ use multibase::{encode as base_encode, Base};
+ 
+-use multihash::MultihashGeneric as Multihash;
++use multihash::Multihash;
+ use unsigned_varint::encode as varint_encode;
+ 
+ #[cfg(feature = "alloc")]
+@@ -228,7 +228,7 @@ impl<const S: usize> Cid<S> {
+     /// ```
+     /// use cid::Cid;
+     /// use multibase::Base;
+-    /// use multihash::{Code, MultihashDigest};
++    /// use multihash_codetable::{Code, MultihashDigest};
+     ///
+     /// const RAW: u64 = 0x55;
+     ///
+Index: cid/tests/lib.rs
+===================================================================
+--- cid.orig/tests/lib.rs
++++ cid/tests/lib.rs
+@@ -4,7 +4,7 @@ use std::str::FromStr;
+ 
+ use cid::{Cid, CidGeneric, Error, Version};
+ use multibase::Base;
+-use multihash::{derive::Multihash, Code, MultihashDigest};
++use multihash_codetable::{Code, MultihashDigest};
+ 
+ const RAW: u64 = 0x55;
+ const DAG_PB: u64 = 0x70;
+@@ -174,10 +174,10 @@ fn a_function_that_takes_a_generic_cid<c
+ // is using `Cid` instead of `Cid<SomeSize>`. The code will still work with other sizes.
+ #[test]
+ fn method_can_take_differently_sized_cids() {
+-    #[derive(Clone, Copy, Debug, Eq, PartialEq, Multihash)]
++    #[derive(Clone, Copy, Debug, Eq, PartialEq, MultihashDigest)]
+     #[mh(alloc_size = 128)]
+     enum Code128 {
+-        #[mh(code = 0x12, hasher = multihash::Sha2_256)]
++        #[mh(code = 0x12, hasher = multihash_codetable::Sha2_256)]
+         Sha2_256,
+     }
+ 
