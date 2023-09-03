@@ -103,8 +103,8 @@ Index: coreutils/src/uu/touch/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/touch/Cargo.toml
 +++ coreutils/src/uu/touch/Cargo.toml
-@@ -27,12 +27,6 @@ time = { workspace = true, features = [
- ] }
+@@ -22,12 +22,6 @@ chrono = { workspace = true }
+ parse_datetime = { workspace = true }
  uucore = { workspace = true, features = ["libc"] }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
@@ -138,27 +138,35 @@ Index: coreutils/src/uucore/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uucore/Cargo.toml
 +++ coreutils/src/uucore/Cargo.toml
-@@ -60,21 +60,13 @@ clap = { workspace = true }
+@@ -60,13 +60,13 @@ clap = { workspace = true }
  once_cell = { workspace = true }
  tempfile = { workspace = true }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
--winapi-util = { version = "0.1.5", optional = true }
--windows-sys = { version = "0.48.0", optional = true, default-features = false, features = [
+-winapi-util = { workspace = true, optional = true }
+-windows-sys = { workspace = true, optional = true, default-features = false, features = [
 -  "Win32_Storage_FileSystem",
 -  "Win32_Foundation",
 -  "Win32_System_WindowsProgramming",
 -] }
--
++# [target.'cfg(target_os = "windows")'.dependencies]
++# winapi-util = { workspace = true, optional = true }
++# windows-sys = { workspace = true, optional = true, default-features = false, features = [
++#   "Win32_Storage_FileSystem",
++#   "Win32_Foundation",
++#   "Win32_System_WindowsProgramming",
++# ] }
+ 
  [features]
  default = []
- # * non-default features
+@@ -74,8 +74,8 @@ default = []
+ backup-control = []
  encoding = ["data-encoding", "data-encoding-macro", "z85", "thiserror"]
  entries = ["libc"]
--fs = ["libc", "winapi-util", "windows-sys"]
+-fs = ["dunce", "libc", "winapi-util", "windows-sys"]
 -fsext = ["libc", "time", "windows-sys"]
-+fs = ["libc"]
-+fsext = ["libc", "time"]
++fs = ["dunce", "libc"]#, "winapi-util", "windows-sys"]
++fsext = ["libc", "time"]#, "windows-sys"]
  lines = []
  memo = ["itertools"]
  mode = ["libc"]
@@ -166,11 +174,14 @@ Index: coreutils/Cargo.toml
 ===================================================================
 --- coreutils.orig/Cargo.toml
 +++ coreutils/Cargo.toml
-@@ -329,7 +329,6 @@ unicode-width = "0.1.10"
+@@ -329,8 +329,8 @@ unicode-segmentation = "1"
+ unicode-width = "0.1.10"
  utf-8 = "0.7.6"
  walkdir = "2.3"
- winapi-util = "0.1.5"
+-winapi-util = "0.1.5"
 -windows-sys = { version = "0.48.0", default-features = false }
- xattr = "1.0.0"
++#winapi-util = "0.1.5"
++#windows-sys = { version = "0.48.0", default-features = false }
+ xattr = "1.0.1"
  zip = { version = "0.6.6", default_features = false, features = ["deflate"] }
  
