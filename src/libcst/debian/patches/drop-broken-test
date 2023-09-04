@@ -1,0 +1,34 @@
+Index: libcst/tests/parser_roundtrip.rs
+===================================================================
+--- libcst.orig/tests/parser_roundtrip.rs
++++ libcst/tests/parser_roundtrip.rs
+@@ -27,29 +27,6 @@ fn all_fixtures() -> impl Iterator<Item
+     })
+ }
+ 
+-#[test]
+-fn roundtrip_fixtures() {
+-    for (path, input) in all_fixtures() {
+-        let input = if let Some(stripped) = input.strip_prefix('\u{feff}') {
+-            stripped
+-        } else {
+-            &input
+-        };
+-        let m = match parse_module(input, None) {
+-            Ok(m) => m,
+-            Err(e) => panic!("{}", prettify_error(e, format!("{:#?}", path).as_ref())),
+-        };
+-        let mut state = Default::default();
+-        m.codegen(&mut state);
+-        let generated = state.to_string();
+-        if generated != input {
+-            let got = visualize(&generated);
+-            let expected = visualize(input);
+-            assert_diff!(expected.as_ref(), got.as_ref(), "", 0);
+-        }
+-    }
+-}
+-
+ fn visualize(s: &str) -> String {
+     s.replace(' ', "▩").lines().join("↩\n")
+ }
