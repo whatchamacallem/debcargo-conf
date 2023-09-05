@@ -3,11 +3,15 @@
 	dh $@ --buildsystem cargo
 
 override_dh_auto_configure:
-	mv completion/* ./
+	cp completion/* ./
 	mv bash_tealdeer tldr
 	mv fish_tealdeer tldr.fish
 	mv zsh_tealdeer tldr.zsh
 	dh_auto_configure
+
+override_dh_auto_clean:
+	rm tldr tldr.*sh || true
+	dh_auto_clean
 
 override_dh_installman:
 	help2man \
