@@ -1,0 +1,45 @@
+Description: Disable rustls on reqwest to allow building on other architectures
+ Upstream somehow chose to go rustls only, which depends on ring, limiting
+ architectures. Change to reqwest+native-tls. This is based on
+ https://github.com/dbrgn/tealdeer/pull/303, can be dropped on next release.
+Last-Update: 2023-09-06
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -108,10 +108,11 @@
+ version = "3.1.0"
+ 
+ [features]
+-default = ["native-roots"]
++default = ["native-tls"]
+ logging = ["env_logger"]
+-native-roots = ["reqwest/rustls-tls-native-roots"]
+-webpki-roots = ["reqwest/rustls-tls-webpki-roots"]
++#native-roots = ["reqwest/rustls-tls-native-roots"]
++#webpki-roots = ["reqwest/rustls-tls-webpki-roots"]
++native-tls = ["reqwest/native-tls"]
+ 
+ [target."cfg(not(windows))".dependencies.pager]
+ version = "0.16"
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -18,10 +18,16 @@
+ 
+ #[cfg(any(
+     all(feature = "native-roots", feature = "webpki-roots"),
+-    not(any(feature = "native-roots", feature = "webpki-roots")),
++    all(feature = "native-roots", feature = "native-tls"),
++    all(feature = "webpki-roots", feature = "native-tls"),
++    not(any(
++        feature = "native-roots",
++        feature = "webpki-roots",
++        feature = "native-tls"
++    )),
+ ))]
+ compile_error!(
+-    "exactly one of feature \"native-roots\" and feature \"webpki-roots\" must be enabled"
++    "exactly one of the features \"native-roots\", \"webpki-roots\" or \"native-tls\" must be enabled"
+ );
+ 
+ use std::{env, process};
