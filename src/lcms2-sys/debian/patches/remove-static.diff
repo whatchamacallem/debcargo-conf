@@ -2,12 +2,12 @@ Description: Remove static feautures and patch build.rs
  This patch removes all unnecessary features and patches build.rs to only check for a system-provided liblcms2.
 Author: Matthias Geiger <matthias.geiger1024@tutanota.de>
 Forwarded: not-needed
-Last-Update: 2023-07-03
+Last-Update: 2023-09-07
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -55,27 +55,11 @@ doctest = false
+@@ -56,28 +56,8 @@ doctest = false
  [dependencies.libc]
  version = "0.2.129"
  
@@ -15,9 +15,9 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -version = "1.0.73"
 -optional = true
 -
- [build-dependencies.dunce]
- version = "1.0.2"
- 
+-[build-dependencies.dunce]
+-version = "1.0.2"
+-
  [build-dependencies.pkg-config]
  version = "0.3.25"
 -optional = true
@@ -28,22 +28,24 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -    "static-fallback",
 -    "parallel",
 -]
--dynamic = ["pkg-config"]
--parallel = ["cc/parallel"]
--static = ["cc"]
--static-fallback = ["cc"]
+-dynamic = ["dep:pkg-config"]
+-lcms2-strict-cgats = []
+-parallel = ["cc?/parallel"]
+-static = ["dep:cc"]
+-static-fallback = ["dep:cc"]
  
  [badges.maintenance]
  status = "actively-developed"
+
 --- a/src/build.rs
 +++ b/src/build.rs
-@@ -1,88 +1,7 @@
+@@ -1,103 +1,7 @@
 -use std::env;
 -use std::env::consts;
 -use std::path::Path;
 +extern crate pkg_config;
  
--fn main() {
+ fn main() {
 -    if let Ok(include_dir) = env::var("LCMS2_INCLUDE_DIR") {
 -        println!("cargo:include={}", include_dir);
 -    }
@@ -51,13 +53,12 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -    if let Some(lib_dir) = env::var_os("LCMS2_LIB_DIR") {
 -        let lib_dir = Path::new(&lib_dir);
 -        let dylib_name = format!("{}lcms2{}", consts::DLL_PREFIX, consts::DLL_SUFFIX);
--        if lib_dir.join(dylib_name).exists() ||
--           lib_dir.join("liblcms2.a").exists() ||
--           lib_dir.join("lcms2.lib").exists() {
+-        if [&dylib_name, "liblcms2.a", "lcms2.so", "lcms2.lib"].iter().any(|file| lib_dir.join(file).exists()) {
 -            println!("cargo:rustc-link-search=native={}", lib_dir.display());
 -            println!("cargo:rustc-link-lib=lcms2");
 -            return;
 -        }
+-        println!("cargo:warning=LCMS2_LIB_DIR path ({}) did not contain {dylib_name}", lib_dir.display());
 -    }
 -
 -    let requires_static_only = cfg!(feature = "static") || env::var("LCMS2_STATIC").is_ok();
@@ -70,10 +71,14 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -fn configure_pkg_config() -> bool {
 -    match pkg_config::probe_library("lcms2") {
 -        Ok(info) => {
--            for path in info.include_paths {
--                println!("cargo:include={}", path.display());
+-            let joined_paths = std::env::join_paths(info.include_paths).ok().and_then(|p| p.into_string().ok());
+-            if let Some(joined_paths) = joined_paths {
+-                println!("cargo:include={joined_paths}");
+-                true
+-            } else {
+-                println!("cargo:warning=got invalid include paths from pkg-config of lcms2");
+-                false
 -            }
--            true
 -        },
 -        Err(err) => {
 -            println!("cargo:warning=pkg_config failed ({}). Falling back to static build.", err);
@@ -91,15 +96,12 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -fn compile_static() {
 -    println!("cargo:warning='static' feature of lcms2-sys is disabled, so the library won't be built, and probably won't work at all");
 -    println!("cargo:rustc-link-lib=lcms2");
-+fn main()
-+{
-+	pkg_config::probe_library("lcms2").unwrap();
- }
- 
+-}
+-
 -#[cfg(any(feature = "static", feature = "static-fallback"))]
 -fn compile_static() {
--    cc::Build::new()
--        .include("vendor/include")
+-    let mut cc = cc::Build::new();
+-        cc.include("vendor/include")
 -        .file("vendor/src/cmsalpha.c")
 -        .file("vendor/src/cmscam02.c")
 -        .file("vendor/src/cmscgats.c")
@@ -125,8 +127,24 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -        .file("vendor/src/cmstypes.c")
 -        .file("vendor/src/cmsvirt.c")
 -        .file("vendor/src/cmswtpnt.c")
--        .file("vendor/src/cmsxform.c")
--        .compile("liblcms2.a");
+-        .file("vendor/src/cmsxform.c");
 -
+-    if env::var_os("CARGO_CFG_TARGET_ENDIAN").as_deref() == Some("big".as_ref()) {
+-        cc.define("CMS_USE_BIG_ENDIAN", Some("1"));
+-    }
+-
+-    if cfg!(feature = "lcms2-strict-cgats") {
+-        cc.define("CMS_STRICT_CGATS", Some("1"));
+-    }
+-
+-    if env::var_os("DEBUG").as_deref() != Some("true".as_ref()) {
+-        cc.define("NDEBUG", Some("1"));
+-    }
+-
+-    cc.compile("liblcms2.a");
 -    println!("cargo:include={}", dunce::canonicalize("vendor/include").unwrap().display());
--}
++  
++  pkg_config::probe_library("lcms2").unwrap();
++  
+ }
+
