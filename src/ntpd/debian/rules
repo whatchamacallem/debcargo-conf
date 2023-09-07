@@ -1,0 +1,31 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/pkg-info.mk
+
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_installman:
+	help2man \
+		--name "ntp-ctl" \
+		--no-info \
+		--version-string $(DEB_VERSION_UPSTREAM) \
+		debian/ntpd/usr/bin/ntp-ctl > debian/ntp-ctl.1
+
+	help2man \
+		--name "ntp-daemon" \
+		--no-info \
+		--version-string $(DEB_VERSION_UPSTREAM) \
+		debian/ntpd/usr/bin/ntp-daemon > debian/ntp-daemon.1
+
+	help2man \
+		--name "ntp-metrics-exporter" \
+		--no-info \
+		--version-string $(DEB_VERSION_UPSTREAM) \
+		debian/ntpd/usr/bin/ntp-metrics-exporter > debian/ntp-metrics-exporter.1
+
+	dh_installman -O--buildsystem=cargo
+
+override_dh_dwz:
+	# Don't do anything. fails because of the
+	# https://github.com/rust-lang/rust/issues/66118
