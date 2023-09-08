@@ -1,0 +1,23 @@
+# copy and paste from https://github.com/pendulum-project/ntpd-rs/blob/main/docs/examples/run-as-service.md
+[Unit]
+Description=Rust Network Time Service
+Documentation=https://github.com/pendulum-project/ntpd-rs
+After=network-online.target
+Wants=network-online.target
+Conflicts=systemd-timesyncd.service ntp.service chrony.service
+
+[Service]
+Type=simple
+Restart=no
+ExecStart=/usr/bin/ntp-daemon
+Environment="RUST_LOG=info"
+RuntimeDirectory=ntpd-rs
+User=ntpd-rs
+Group=ntpd-rs
+AmbientCapabilities=CAP_SYS_TIME
+# Note: when running a server on the default port 123, permissions to bind to
+# low (<1024) ports is also needed, which can be given with
+# AmbientCapabilities=CAP_SYS_TIME CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target
