@@ -1,0 +1,67 @@
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.TH lookup 1  "lookup " 
+.SH NAME
+lookup \- Lookup the certificates associated with a User ID
+.SH SYNOPSIS
+\fBlookup\fR [\fB\-\-email\fR] [\fB\-h\fR|\fB\-\-help\fR] <\fIUSERID\fR> 
+.SH DESCRIPTION
+Lookup the certificates associated with a User ID.
+.PP
+Identifies authenticated bindings (User ID and certificate pairs) where the User ID matches the specified User ID.
+.PP
+If a binding could be authenticated to the specified level (by default: fully authenticated, i.e., a trust amount of 120), then the exit status is 0.  Otherwise the exit status is 1.
+.PP
+If a binding could be patially authenticated (i.e., its trust amount is greater than 0), then the binding is displayed, even if the trust is below the specified threshold.
+.SH OPTIONS
+.TP
+\fB\-\-email\fR=\fIEMAIL\fR
+Changes the USERID parameter to match User IDs with the specified email address.
+
+Interprets the USERID parameter as an email address, which is then used to select User IDs with that email address.
+
+Unlike when comparing User IDs, email addresses are first normalized by the domain to ASCII using IDNA2008 Punycode conversion, and then converting the resulting email address to lowercase using the empty locale.
+
+If multiple User IDs match, they are each considered in turn, and this function returns success if at least one of those User IDs can be authenticated.  Note: The paths to the different User IDs are not combined.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print help information (use `\-h` for a summary)
+.TP
+<\fIUSERID\fR>
+The User ID to authenticate.
+
+This is case sensitive, and must be the whole User ID, not just a substring or an email address.
+.SH EXTRA
+EXAMPLES:
+
+  # Lookup a certificate with the given User ID.
+  $ sq\-wot \-\-keyring keyring.pgp \\
+      \-\-partial \\
+      \-\-trust\-root 8F17777118A33DDA9BA48E62AACB3243630052D9 \\
+    lookup \\
+      \*(AqAlice <alice@example.org>\*(Aq
+
+  # The same as above, but output in DOT format and convert it to
+  # an SVG using Graphviz\*(Aqs DOT compiler.
+  $ sq\-wot \-\-format dot \\
+      \-\-keyring keyring.pgp \\
+      \-\-partial \\
+      \-\-trust\-root 8F17777118A33DDA9BA48E62AACB3243630052D9 \\
+    lookup \\
+      \*(AqAlice <alice@example.org>\*(Aq \\
+    | dot \-Tsvg \-o alice.svg
+
+  # Lookup a certificate with the given email address.
+  $ sq\-wot \-\-keyring keyring.pgp \\
+      \-\-trust\-root 8F17777118A33DDA9BA48E62AACB3243630052D9 \\
+    lookup \\
+      \-\-email \*(Aqalice@example.org\*(Aq
+
+  # The same as above, but output in DOT format and convert it to
+  # an SVG using Graphviz\*(Aqs DOT compiler.
+  $ sq\-wot \-\-format dot \\
+      \-\-keyring keyring.pgp \\
+      \-\-trust\-root 8F17777118A33DDA9BA48E62AACB3243630052D9 \\
+    lookup \\
+      \-\-email \*(Aqalice@example.org\*(Aq \\
+    | dot \-Tsvg \-o alice.svg
