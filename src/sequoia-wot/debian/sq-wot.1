@@ -1,0 +1,145 @@
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.TH sequoia-wot 1  "sequoia-wot 0.8.1" 
+.SH NAME
+sequoia\-wot \- An implementation of OpenPGP\*(Aqs web of trust.
+.SH SYNOPSIS
+\fBsequoia\-wot\fR [\fB\-\-gpg\fR] [\fB\-k\fR|\fB\-\-keyring\fR] [\fB\-\-gpg\-keyring\fR] [\fB\-\-network\fR] [\fB\-\-keyserver\fR] [\fB\-r\fR|\fB\-\-trust\-root\fR] [\fB\-f\fR|\fB\-\-format\fR] [\fB\-\-gpg\-ownertrust\fR] [\fB\-\-gossip\fR] [\fB\-\-certification\-network\fR] [\fB\-a\fR|\fB\-\-trust\-amount\fR] [\fB\-\-partial\fR] [\fB\-\-full\fR] [\fB\-\-double\fR] [\fB\-\-time\fR] [\fB\-\-known\-notation\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIsubcommands\fR>
+.SH DESCRIPTION
+An implementation of OpenPGP\*(Aqs web of trust.
+.SH OPTIONS
+.TP
+\fB\-\-gpg\fR=\fIGPG\fR
+Uses gpg\*(Aqs keyring and gpg\*(Aqs trust roots.
+
+When this option is set, `sq\-wot` reads gpg\*(Aqs keyring and gpg\*(Aqs ownertrust.  This is equivalent to passing `\-\-gpg\-keyring` and `\-\-gpg\-ownertrust`.
+.TP
+\fB\-k\fR, \fB\-\-keyring\fR=\fIFILE\fR
+Adds KEYRING to the list of keyrings
+
+The keyrings are read at start up and used to build a web of trust network.  Note: if a certificate occurs multiple times, the first version is taken; they are not currently merged.
+.TP
+\fB\-\-gpg\-keyring\fR=\fIGPG_KEYRING\fR
+Adds GnuPG\*(Aqs keyring to the list of keyrings.
+
+This option causes `sq\-wot` to read gpg\*(Aqs keyring, by parsing the output of `gpg \-\-export \-\-export\-options export\-local\-sigs`.
+.TP
+\fB\-\-network\fR=\fINETWORK\fR
+Looks up missing certificates over the network.
+
+This causes `sq\-wot` to look up missing certificates on a key server.  The default key server can be overridden using the `\-\-keyserver` option.
+
+Certificates fetched from a key server are cached locally in the default cert\-d.  The default cert\-d is also checked prior to fetching a certificate from the key server.
+.TP
+\fB\-\-keyserver\fR=\fIKEYSERVER\fR [default: hkps://keyserver.ubuntu.com]
+Sets the keyserver to use to KEYSERVER.
+
+This option only makes sense when used in conjunction with the `\-\-network` option.  Currently, it is only possible to set a single keyserver.
+.TP
+\fB\-r\fR, \fB\-\-trust\-root\fR=\fIFINGERPRINT|KEYID\fR
+Treats the specified certificate as a trust root.
+
+It is possible to have multiple trust roots.  All trust roots are treated equivalently.  This can be combined with `\-\-gpg\-ownertrust`.
+.TP
+\fB\-f\fR, \fB\-\-format\fR=\fIFORMAT\fR [default: human\-readable]
+Render the output in a specific format
+
+Choosing a different output format allows for further post processing of the data using external tools.
+.br
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+dot: output in graphviz\*(Aqs DOT format
+.IP \(bu 2
+human\-readable: output in human readable format
+.RE
+.TP
+\fB\-\-gpg\-ownertrust\fR=\fIGPG_OWNERTRUST\fR
+Causes `sq\-wot` to use gpg\*(Aqs trust roots as the trust roots.
+
+`sq\-wot` reads the output of `gpg \-\-export\-ownertrust`.  It treats gpg\*(Aqs ultimately trusted certificates as fully trust roots.  Similar to gpg, it also treats certificates marked as fully and marginally trusted as fully and marginally trusted roots, if a self\-signed User ID can be authenticated by an ultimately trusted root.
+
+It is possible to set additional trust roots using the `\-\-trust\-root` option.
+.TP
+\fB\-\-gossip\fR=\fIGOSSIP\fR
+Treats all certificates as unreliable trust roots.
+
+This option is useful for figuring out what others think about a certificate (i.e., gossip or hearsay).  In other words, this finds arbitrary paths to a particular certificate.
+
+Gossip is useful in helping to identify alternative ways to authenticate a certificate.  For instance, imagine Ed wants to authenticate Laura\*(Aqs certificate, but asking her directly is inconvenient.  Ed discovers that Micah has certified Laura\*(Aqs certificate, but Ed hasn\*(Aqt yet authenticated Micah\*(Aqs certificate.  If Ed is willing to rely on Micah as a trusted introducer, and authenticating Micah\*(Aqs certificate is easier than authenticating Laura\*(Aqs certificate, then Ed has learned about an easier way to authenticate Laura\*(Aqs certificate.
+
+EXAMPLES:
+
+# Get gossip about a certificate.{n} $ sq\-wot \-\-keyring keyring.pgp \\\\{n} \-\-gossip identify 3217C509292FC67076ECD75C7614269BDDF73B36
+.TP
+\fB\-\-certification\-network\fR=\fICERTIFICATION_NETWORK\fR
+Treats the network as a certification network.
+
+Normally, `sq\-wot` treats the web\-of\-trust network as an authentication network where a certification only means that the binding is correct, not that the target should be treated as a trusted introducer.  In a certification network, the targets of certifications are treated as trusted introducers with infinite depth, and any regular expressions are ignored. Note: The trust amount remains unchanged.  This is how most so\-called pgp path\-finding algorithms work.
+.TP
+\fB\-a\fR, \fB\-\-trust\-amount\fR=\fITRUST_AMOUNT\fR
+The required amount of trust.
+
+120 indicates full authentication; values less than 120 indicate partial authentication.  When `\-\-certification\-network` is passed, this defaults to 1200, i.e., sq\-wot tries to find 10 paths.
+.TP
+\fB\-\-partial\fR=\fIPARTIAL\fR
+Require partial authentication.
+
+This is the same as passing `\-\-trust\-amount 40`.
+.TP
+\fB\-\-full\fR=\fIFULL\fR
+Require full authentication.
+
+This is the same as passing `\-\-trust\-amount 120`.
+.TP
+\fB\-\-double\fR=\fIDOUBLE\fR
+Require double authentication.
+
+This is the same as passing `\-\-trust\-amount 240`.
+.TP
+\fB\-\-time\fR=\fITIME\fR
+Sets the reference time to TIME.
+
+TIME is interpreted as an ISO 8601 timestamp.  To set the reference time to July 21, 2013 at midnight UTC, you can do:
+
+$ sq\-wot \-\-time 20130721 CMD ...
+
+To include a time, add a T, the time and optionally the timezone (the default timezone is UTC):
+
+$ sq\-wot \-\-time 20130721T0550+0200 CMD ...
+.TP
+\fB\-\-known\-notation\fR=\fIKNOWN_NOTATION\fR
+Adds NOTATION to the list of known notations
+
+This is used when validating signatures.  Signatures that have unknown notations with the critical bit set are considered invalid.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print help information (use `\-h` for a summary)
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print version information
+.SH SUBCOMMANDS
+.TP
+sequoia\-wot\-authenticate(1)
+Authenticate a binding
+.TP
+sequoia\-wot\-lookup(1)
+Lookup the certificates associated with a User ID
+.TP
+sequoia\-wot\-identify(1)
+Identify a certificate
+.TP
+sequoia\-wot\-list(1)
+List all authenticated bindings (User ID and certificate pairs)
+.TP
+sequoia\-wot\-path(1)
+Verify the specified path
+.TP
+sequoia\-wot\-help(1)
+Print this message or the help of the given subcommand(s)
+.SH VERSION
+v0.8.1
+.SH AUTHORS
+Neal H. Walfield <neal@pep.foundation>

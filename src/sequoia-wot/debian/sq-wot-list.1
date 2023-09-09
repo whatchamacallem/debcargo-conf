@@ -1,0 +1,51 @@
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.TH list 1  "list " 
+.SH NAME
+list \- List all authenticated bindings (User ID and certificate pairs)
+.SH SYNOPSIS
+\fBlist\fR [\fB\-\-email\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fIPATTERN\fR] 
+.SH DESCRIPTION
+List all authenticated bindings (User ID and certificate pairs).
+.PP
+Only bindings that meet the specified trust amount (by default bindings that are fully authenticated, i.e., have a trust amount of 120), are shown.
+.PP
+Even if no bindings are shown, the exit status is 0.
+.PP
+If \-\-email is provided, then a pattern matches if it is a case insensitive substring of the email address as\-is or the normalized email address.  Note: unlike the email address, the pattern is not normalized.  In particular, puny code normalization is not done on the pattern.
+.SH OPTIONS
+.TP
+\fB\-\-email\fR=\fIEMAIL\fR
+Changes the USERID parameter to match User IDs with the specified email address.
+
+Interprets the USERID parameter as an email address, which is then used to select User IDs with that email address.
+
+Unlike when comparing User IDs, email addresses are first normalized by the domain to ASCII using IDNA2008 Punycode conversion, and then converting the resulting email address to lowercase using the empty locale.
+
+If multiple User IDs match, they are each considered in turn, and this function returns success if at least one of those User IDs can be authenticated.  Note: The paths to the different User IDs are not combined.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print help information (use `\-h` for a summary)
+.TP
+[\fIPATTERN\fR]
+A pattern to select the bindings to authenticate.
+
+The pattern is treated as a UTF\-8 encoded string and a case insensitive substring search (using the current locale) is performed against each User ID.  If a User ID is not valid UTF\-8, the binding is ignored.
+.SH EXTRA
+EXAMPLES:
+
+# List all bindings for example.org that are at least partially
+# authenticated.
+$ sq\-wot \-\-keyring keyring.pgp \\
+    \-\-partial \\
+    \-\-trust\-root 8F17777118A33DDA9BA48E62AACB3243630052D9 \\
+  list @example.org
+
+# The same as above, but output in DOT format and convert it to
+# an SVG using Graphviz\*(Aqs DOT compiler.
+$ sq\-wot \-\-format dot \\
+    \-\-keyring keyring.pgp \\
+    \-\-partial \\
+    \-\-trust\-root 8F17777118A33DDA9BA48E62AACB3243630052D9 \\
+  list @example.org \\
+  | dot \-Tsvg \-o example_org.svg

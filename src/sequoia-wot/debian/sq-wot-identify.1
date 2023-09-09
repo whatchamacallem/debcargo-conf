@@ -1,0 +1,41 @@
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.TH identify 1  "identify " 
+.SH NAME
+identify \- Identify a certificate
+.SH SYNOPSIS
+\fBidentify\fR [\fB\-h\fR|\fB\-\-help\fR] <\fIFINGERPRINT|KEYID\fR> 
+.SH DESCRIPTION
+Identify a certificate.
+.PP
+Identify a certificate by finding authenticated bindings (User ID and certificate pairs).
+.PP
+If a binding could be authenticated to the specified level (by default: fully authenticated, i.e., a trust amount of 120), then the exit status is 0.  Otherwise the exit status is 1.
+.PP
+If a binding could be patially authenticated (i.e., its trust amount is greater than 0), then the binding is displayed, even if the trust is below the specified threshold.
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print help information (use `\-h` for a summary)
+.TP
+<\fIFINGERPRINT|KEYID\fR>
+The fingerprint or Key ID of the certificate to authenticate
+.SH EXTRA
+EXAMPLES:
+
+  # Identify a certificate.
+  $ sq\-wot \-\-keyring keyring.pgp \\
+      \-\-partial \\
+      \-\-trust\-root 8F17777118A33DDA9BA48E62AACB3243630052D9 \\
+    identify \\
+      C7B1406CD2F612E9CE2136156F2DA183236153AE
+
+  # The same as above, but output in DOT format and convert it to
+  # an SVG using Graphviz\*(Aqs DOT compiler.
+  $ sq\-wot \-\-format dot \\
+      \-\-keyring keyring.pgp \\
+      \-\-partial \\
+      \-\-trust\-root 8F17777118A33DDA9BA48E62AACB3243630052D9 \\
+    identify \\
+      C7B1406CD2F612E9CE2136156F2DA183236153AE \\
+    | dot \-Tsvg \-o C7B1406CD2F612E9CE2136156F2DA183236153AE.svg
