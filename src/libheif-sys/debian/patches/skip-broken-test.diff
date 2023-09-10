@@ -1,7 +1,7 @@
 Description: Skip tests that fail on 32-bit arches
 Author: Natthias Geiger <werdahias@riseup.net>
 Forwarded: https://github.com/Cykooz/libheif-sys/issues/5
-Last-Update: 2023-08-30
+Last-Update: 2023-09-10
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 
@@ -38,6 +38,14 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 +#[cfg(not(target_pointer_width = "32"))]
  fn bindgen_test_layout_heif_depth_representation_info() {
      const UNINIT: ::core::mem::MaybeUninit<heif_depth_representation_info> =
+         ::core::mem::MaybeUninit::uninit();
+@@ -1229,6 +1229,7 @@ pub struct heif_property_user_descriptio
+     pub tags: *const libc::c_char,
+ }
+ #[test]
++#[cfg(not(target_pointer_width = "32"))]
+ fn bindgen_test_layout_heif_property_user_description() {
+     const UNINIT: ::core::mem::MaybeUninit<heif_property_user_description> =
          ::core::mem::MaybeUninit::uninit();
 @@ -1498,6 +1502,7 @@ pub struct heif_decoding_options {
      pub color_conversion_options: heif_color_conversion_options,
