@@ -1,0 +1,64 @@
+Description: Skip tests that fail on 32-bit arches
+Author: Natthias Geiger <werdahias@riseup.net>
+Forwarded: https://github.com/sgrif/pq-sys/issues/32
+Last-Update: 2023-09-11
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -37,6 +37,7 @@ pub struct __sbuf {
+     pub _size: ::std::os::raw::c_int,
+ }
+ #[test]
++#[cfg(not(target_pointer_width = "32"))]
+ fn bindgen_test_layout___sbuf() {
+     assert_eq!(::std::mem::size_of::<__sbuf>() , 16usize);
+     assert_eq!(::std::mem::align_of::<__sbuf>() , 8usize);
+@@ -91,6 +92,7 @@ pub struct __sFILE {
+     pub _offset: fpos_t,
+ }
+ #[test]
++#[cfg(not(target_pointer_width = "32"))]
+ fn bindgen_test_layout___sFILE() {
+     assert_eq!(::std::mem::size_of::<__sFILE>() , 152usize);
+     assert_eq!(::std::mem::align_of::<__sFILE>() , 8usize);
+@@ -235,6 +237,7 @@ pub struct pgNotify {
+     pub next: *mut pgNotify,
+ }
+ #[test]
++#[cfg(not(target_pointer_width = "32"))]
+ fn bindgen_test_layout_pgNotify() {
+     assert_eq!(::std::mem::size_of::<pgNotify>() , 32usize);
+     assert_eq!(::std::mem::align_of::<pgNotify>() , 8usize);
+@@ -268,6 +271,7 @@ pub struct _PQprintOpt {
+     pub fieldName: *mut *mut ::std::os::raw::c_char,
+ }
+ #[test]
++#[cfg(not(target_pointer_width = "32"))]
+ fn bindgen_test_layout__PQprintOpt() {
+     assert_eq!(::std::mem::size_of::<_PQprintOpt>() , 40usize);
+     assert_eq!(::std::mem::align_of::<_PQprintOpt>() , 8usize);
+@@ -288,6 +292,7 @@ pub struct _PQconninfoOption {
+     pub dispsize: ::std::os::raw::c_int,
+ }
+ #[test]
++#[cfg(not(target_pointer_width = "32"))]
+ fn bindgen_test_layout__PQconninfoOption() {
+     assert_eq!(::std::mem::size_of::<_PQconninfoOption>() , 56usize);
+     assert_eq!(::std::mem::align_of::<_PQconninfoOption>() , 8usize);
+@@ -311,6 +316,7 @@ pub struct _bindgen_ty_8__bindgen_ty_1 {
+     pub bindgen_union_field: u64,
+ }
+ #[test]
++#[cfg(not(target_arch = "x86"))]
+ fn bindgen_test_layout__bindgen_ty_8__bindgen_ty_1() {
+     assert_eq!(::std::mem::size_of::<_bindgen_ty_8__bindgen_ty_1>() , 8usize);
+     assert_eq!(::std::mem::align_of::<_bindgen_ty_8__bindgen_ty_1>() ,
+@@ -340,6 +346,7 @@ pub struct pgresAttDesc {
+     pub atttypmod: ::std::os::raw::c_int,
+ }
+ #[test]
++#[cfg(not(target_pointer_width = "32"))]
+ fn bindgen_test_layout_pgresAttDesc() {
+     assert_eq!(::std::mem::size_of::<pgresAttDesc>() , 32usize);
+     assert_eq!(::std::mem::align_of::<pgresAttDesc>() , 8usize);
