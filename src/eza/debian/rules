@@ -1,0 +1,25 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/pkg-info.mk
+
+%:
+	dh $@ --buildsystem cargo --with bash-completion
+
+override_dh_install:
+	mkdir -p debian/eza/usr/share/fish/completions/ debian/eza/usr/share/zsh/vendor-completions/
+	cp -f completions/completions.fish debian/eza/usr/share/fish/completions/eza.fish
+	chmod -x debian/eza/usr/share/fish/completions/eza.fish
+	cp -f completions/completions.zsh debian/eza/usr/share/zsh/vendor-completions/_eza
+	dh_install
+
+override_dh_installman:
+	pandoc --standalone -f markdown -t man man/eza.1.md        > debian/eza.1
+	pandoc --standalone -f markdown -t man man/eza_colors.5.md > debian/eza_colors.5
+	dh_installman -O--buildsystem=cargo
+
+override_dh_auto_test:
+	dh_auto_test || true
+
+override_dh_dwz:
+	# Don't do anything. fails because of the
+	# https://github.com/rust-lang/rust/issues/66118
