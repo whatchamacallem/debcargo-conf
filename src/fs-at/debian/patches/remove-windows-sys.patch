@@ -1,0 +1,41 @@
+Description: Remove Windows-specific crates
+ Removed aligned, once_cell (not needed on non-Windows) and windows-sys
+Author: Zixing Liu <zixing.liu@canonical.com>
+Forwarded: not-needed
+Last-Update: 2023-09-12
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- rust-fs-at-0.1.10.orig/Cargo.toml
++++ rust-fs-at-0.1.10/Cargo.toml
+@@ -52,7 +52,6 @@ version = "0.2.11"
+ [features]
+ default = []
+ log = ["dep:log"]
+-workaround-procmon = ["dep:once_cell"]
+ 
+ [target."cfg(not(windows))".dependencies.libc]
+ version = "0.2.147"
+@@ -61,23 +60,3 @@ version = "0.2.147"
+ version = "0.26.2"
+ features = ["dir"]
+ default-features = false
+-
+-[target."cfg(windows)".dependencies.aligned]
+-version = "0.4.1"
+-
+-[target."cfg(windows)".dependencies.once_cell]
+-version = "1.18.0"
+-optional = true
+-
+-[target."cfg(windows)".dependencies.windows-sys]
+-version = "0.48.0"
+-features = [
+-    "Win32_Foundation",
+-    "Win32_Storage_FileSystem",
+-    "Win32_System_SystemServices",
+-    "Win32_System_WindowsProgramming",
+-    "Win32_Security",
+-    "Win32_System_Kernel",
+-    "Win32_System_IO",
+-    "Win32_System_Ioctl",
+-]
