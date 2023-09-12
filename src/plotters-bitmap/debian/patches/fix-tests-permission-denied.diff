@@ -1,0 +1,32 @@
+Index: plotters-bitmap/src/bitmap/test.rs
+===================================================================
+--- plotters-bitmap.orig/src/bitmap/test.rs
++++ plotters-bitmap/src/bitmap/test.rs
+@@ -396,17 +396,24 @@ mod test {
+     use plotters::style::text_anchor::{HPos, Pos, VPos};
+     use std::fs;
+     use std::path::Path;
++    use std::path::PathBuf;
+ 
+-    static DST_DIR: &str = "target/test/bitmap";
++    fn get_dst_dir() -> PathBuf {
++        if let Some(cargo_target_dir) = option_env!("CARGO_TARGET_DIR") {
++            return Path::new(cargo_target_dir).join("bitmap");
++        } else {
++            return Path::new("target/test/bitmap").to_path_buf();
++        }
++    }
+ 
+     fn checked_save_file(name: &str, content: &[u8], w: u32, h: u32) {
+         /*
+           Please use the PNG file to manually verify the results.
+         */
+         assert!(content.iter().any(|x| *x != 0));
+-        fs::create_dir_all(DST_DIR).unwrap();
++        fs::create_dir_all(get_dst_dir()).unwrap();
+         let file_name = format!("{}.png", name);
+-        let file_path = Path::new(DST_DIR).join(file_name);
++        let file_path = get_dst_dir().join(file_name);
+         println!("{:?} created", file_path);
+         let img = ImageBuffer::<Rgb<u8>, &[u8]>::from_raw(w, h, content).unwrap();
+         img.save(&file_path).unwrap();
