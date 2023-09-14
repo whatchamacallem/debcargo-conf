@@ -1,0 +1,13 @@
+Index: cachedir/src/lib.rs
+===================================================================
+--- cachedir.orig/src/lib.rs
++++ cachedir/src/lib.rs
+@@ -229,7 +229,7 @@ fn mkdir_atomic_works() {
+     let cache = directory.path().join("cache");
+     let threads = (0..10).map(|_| {
+         let cache = cache.clone();
+-        thread::spawn(move || mkdir_atomic(cache))
++        std::thread::spawn(move || mkdir_atomic(cache))
+     });
+     let results = threads.map(|t| t.join().unwrap().unwrap());
+     let creations: usize = results.map(|created| if created { 1 } else { 0 }).sum();
