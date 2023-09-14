@@ -8,10 +8,8 @@ Subject: [PATCH] Build against the local dynamic libxxhash installation
  build.rs   | 9 ++-------
  2 files changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/Cargo.toml b/Cargo.toml
-index 0e67499..1970448 100644
---- a/Cargo.toml
-+++ b/Cargo.toml
+--- xxhash-c-sys.orig/Cargo.toml
++++ xxhash-c-sys/Cargo.toml
 @@ -16,8 +16,6 @@
  authors = ["Douman <douman@gmx.se>"]
  include = [
@@ -20,8 +18,8 @@ index 0e67499..1970448 100644
 -    "**/*.h",
      "Cargo.toml",
      "README.md",
- ]
-@@ -36,5 +34,5 @@
+     "LICENSE",
+@@ -37,5 +35,5 @@
  version = "0.2"
  default-features = false
  
@@ -29,10 +27,8 @@ index 0e67499..1970448 100644
 -version = "1"
 +[build-dependencies.pkg-config]
 +version = "0.3"
-diff --git a/build.rs b/build.rs
-index 15ceda2..97977cd 100644
---- a/build.rs
-+++ b/build.rs
+--- xxhash-c-sys.orig/build.rs
++++ xxhash-c-sys/build.rs
 @@ -1,9 +1,4 @@
 +extern crate pkg_config;
  fn main() {
@@ -45,6 +41,3 @@ index 15ceda2..97977cd 100644
 -    cc.compile("xxhash");
 +    pkg_config::Config::new().atleast_version("0.8.1").probe("libxxhash").unwrap();
  }
--- 
-2.35.1
-
