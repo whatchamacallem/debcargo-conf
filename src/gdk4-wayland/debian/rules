@@ -1,0 +1,71 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+# regenerating the source code and apply patch(es)
+execute_before_dh_auto_build:
+	cp /usr/share/gir-1.0/GLib-2.0.gir $(CURDIR)
+	cp /usr/share/gir-1.0/freetype2-2.0.gir $(CURDIR)
+	cp /usr/share/gir-1.0/GObject-2.0.gir $(CURDIR)
+	cp /usr/share/gir-1.0/Gio-2.0.gir $(CURDIR)
+	cp /usr/share/gir-1.0/PangoCairo-1.0.gir $(CURDIR)
+	cp /usr/share/gir-1.0/GdkWayland-4.0.gir $(CURDIR)
+	cp /usr/share/gir-1.0/HarfBuzz-0.0.gir $(CURDIR)
+	cp /usr/share/gir-1.0/Gdk-4.0.gir $(CURDIR)
+	cp /usr/share/gir-1.0/Pango-1.0.gir $(CURDIR)
+	cp /usr/share/gir-1.0/GdkPixbuf-2.0.gir $(CURDIR)
+	cp /usr/share/gir-1.0/GModule-2.0.gir $(CURDIR)
+	cp /usr/share/gir-1.0/cairo-1.0.gir $(CURDIR)
+	# We need to fix some gir files; lines taken from https://github.com/gtk-rs/gir-files/blob/master/fix.sh
+	# this needs to be re-done for every new upstream release :(
+	# freetype
+	xmlstarlet ed -L \
+	-d '///_:alias[@name="Int32"]' \
+	freetype2-2.0.gir
+	# harfbuzz
+	xmlstarlet ed -L \
+	-d '///_:function[@c:identifier="hb_graphite2_face_get_gr_face"]' \
+	-d '///_:function[@c:identifier="hb_graphite2_font_get_gr_font"]' \
+	-d '///_:function[@c:identifier="hb_ft_face_create"]' \
+	-d '///_:function[@c:identifier="hb_ft_face_create_cached"]' \
+	-d '///_:function[@c:identifier="hb_ft_face_create_referenced"]' \
+	-d '///_:function[@c:identifier="hb_ft_font_create"]' \
+	-d '///_:function[@c:identifier="hb_ft_font_create_cached"]' \
+	-d '///_:function[@c:identifier="hb_ft_font_create_referenced"]' \
+	-d '///_:function[@c:identifier="hb_ft_font_get_face"]' \
+	-d '///_:function[@c:identifier="hb_ft_font_lock_face"]' \
+	HarfBuzz-0.0.gir
+	#pango
+	xmlstarlet ed -L \
+	-i '///_:type[not(@name) and @c:type="hb_font_t*"]' -t 'attr' -n 'name' -v "gconstpointer" \
+	-u '//_:type[@c:type="hb_font_t*"]/@c:type' -v "gconstpointer" \
+	-i '///_:array[not(@name) and @c:type="hb_feature_t*"]' -t 'attr' -n 'name' -v "gconstpointer" \
+	-r '///_:array[@c:type="hb_feature_t*"]' -v "type" \
+	-d '//_:type[@c:type="hb_feature_t*"]/*' \
+	-d '//_:type[@c:type="hb_feature_t*"]/@length' \
+	-d '//_:type[@c:type="hb_feature_t*"]/@zero-terminated' \
+	-u '//_:type[@c:type="hb_feature_t*"]/@c:type' -v "gconstpointer" \
+	Pango-1.0.gir
+	xmlstarlet ed -L \
+	-d '//_:record[@c:type="PangoGlyphVisAttr"]/_:field/@bits' \
+	-d '//_:record[@c:type="PangoGlyphVisAttr"]/_:field[@name="is_color"]' \
+	Pango-1.0.gir
+	# gdk4-wayland
+	xmlstarlet ed -L \
+	-u '//_:class[@name="WaylandDevice"]/_:method[@name="get_wl_keyboard"]//_:type[@name="gpointer"]/@c:type' -v "gpointer" \
+	-u '//_:class[@name="WaylandDevice"]/_:method[@name="get_wl_pointer"]//_:type[@name="gpointer"]/@c:type' -v "gpointer" \
+	-u '//_:class[@name="WaylandDevice"]/_:method[@name="get_wl_seat"]//_:type[@name="gpointer"]/@c:type' -v "gpointer" \
+	-u '//_:class[@name="WaylandDisplay"]/_:method[@name="get_wl_compositor"]//_:type[@name="gpointer"]/@c:type' -v "gpointer" \
+	-u '//_:class[@name="WaylandDisplay"]/_:method[@name="get_wl_display"]//_:type[@name="gpointer"]/@c:type' -v "gpointer" \
+	-u '//_:class[@name="WaylandMonitor"]/_:method[@name="get_wl_output"]//_:type[@name="gpointer"]/@c:type' -v "gpointer" \
+	-u '//_:class[@name="WaylandSeat"]/_:method[@name="get_wl_seat"]//_:type[@name="gpointer"]/@c:type' -v "gpointer" \
+	-u '//_:class[@name="WaylandSurface"]/_:method[@name="get_wl_surface"]//_:type[@name="gpointer"]/@c:type' -v "gpointer" \
+	-u '//_:class[@name="WaylandDevice"]/_:method[@name="get_xkb_keymap"]//_:type[@name="gpointer"]/@c:type' -v "gpointer" \
+	GdkWayland-4.0.gir
+	
+	sed -i 's/girs_directories\s=\s\[\"\.\.\/gir-files\"\]/girs_directories = \[\".\"\]/' $(CURDIR)/Gir.toml
+	gir -o .
+
+# remove the .gir files before install
+execute_before_dh_auto_install:
+	rm $(CURDIR)/*.gir
