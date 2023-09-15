@@ -1,0 +1,21 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_auto_install:
+	# /usr/bin/{su,sudo,visudo} are already used, install into /usr/lib/cargo/bin
+	DEB_CARGO_INSTALL_PREFIX=/usr/lib/cargo dh_auto_install
+	pandoc -s -t man docs/man/su.1.md -o su-rs.1
+	pandoc -s -t man docs/man/sudo.8.md  -o sudo-rs.8
+	pandoc -s -t man docs/man/visudo.8.md -o visudo-rs.8
+	chmod 4755 debian/sudo-rs/usr/lib/cargo/bin/sudo
+
+override_dh_dwz:
+	# Don't do anything. fails because of the
+	# https://github.com/rust-lang/rust/issues/66118
+
+override_dh_auto_clean:
+	rm -f *.1 *.8
+	dh_auto_clean
+
