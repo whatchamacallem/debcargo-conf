@@ -241,12 +241,15 @@ conditions for (2), e.g. https://github.com/hsivonen/simd/issues/25
 obvious so documentation is less necessary, and dependent crates all do it
 correctly already.)
 
-Setting collapse_features in debcargo.conf
+Collapsing features in debcargo.toml
 ------------------------------------------
 
-Rust and Debian have a two different levels of abstraction when handling dependencies and the
-relationship between them. In rust the lowest level is a feature, and in Debian it's the binary
-package.
+TL;DR: Set `collapse_features = true` in debcargo.toml, unless something
+breaks. This eliminates empty feature packages and speeds up the NEW trip.
+
+Rust and Debian have two different levels of abstraction when handling
+dependencies and the relationship between them. In Rust the lowest level is a
+feature, while in Debian it's the binary package.
 
 This means that the following dependency chain is not a problem in rust:
 
@@ -258,12 +261,13 @@ there is no dependency cycle on the per-feature level, and this is enforced by
 cargo; but if collapse_features is used then package A+AX+AY would cyclicly
 depend on package B+BX+BY.
 
-This is reflected in the Debian packages by producing `Provides` lines for all combinations
-of features, and this can become a quite large section.
+This is reflected in the Debian packages by producing `Provides` lines for all
+combinations of features, and this can become a quite large section.
 
-Setting `collapse_features = true` in debcargo.toml removes this behaviour and is recommended,
-but it can lead to dependency cycles of debian packages, if that happens those must be
-broken up by having some or all of the packages set this feature to false.
+Setting `collapse_features = true` in debcargo.toml removes this behaviour and
+is generally recommended, unless when it leads to dependency cycles of Debian
+packages. If that happens, those must be broken up by having some or all of the
+packages set this feature to false.
 
 Changed orig tarballs
 ---------------------
