@@ -93,10 +93,11 @@ This allows the other tests to run. Create and include it the usual way.
 
 In case you need special overrides for d/rules not provided by debcargo:
 
-1) `cd src/foocrate/debian && touch rules`
-2) `cd ../../../ && ./update.sh foocrate`. This will generate a `rules.debcargo.hint` file you can use as template, similar to d/copyright
-3) `cd src/foocrate/debian && cp rules.debcargo.hint rules`
-4) use your favorite editor to edit the rules file to your needs. 
+1) `touch src/foocrate/debian/rules && ./update.sh foocrate`. This will
+generate a `rules.debcargo.hint` alongside it, which you can use as template,
+similar to the case of d/copyright
+2) `cd src/foocrate/debian && cp rules.debcargo.hint rules`
+3) use your favorite editor to edit the rules file to your needs. 
 
 ```make
 # runs all tests on a single thread
