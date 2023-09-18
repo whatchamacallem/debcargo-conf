@@ -31,7 +31,7 @@ Alternatively you can do it directly in the build directory with
 [quilt](https://wiki.debian.org/UsingQuilt):
 
 1. In the root directory of `debcargo-conf`, `mkdir -p src/foo/debian/patches
-   && ./update.sh foo && (cd build/foo/debian && ln -s ../../../src/foo/debian/patches)`
+   && ./update.sh foo && ln -srf build/foo/debian/patches src/foo/debian/`
    (linking it there so it's "sync"ed)
 2. `cd build/foo`
 3. `quilt series` to check existing patches, `quilt push -a` to test apply all
