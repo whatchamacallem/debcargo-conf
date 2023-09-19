@@ -1,0 +1,9 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_auto_clean:
+	# remove the sources that build the binary
+	# they are included in the default build target
+	rm -fr $(CURDIR)/src/bin
+	dh_auto_clean -O--buildsystem=cargo
