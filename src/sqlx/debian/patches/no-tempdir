@@ -1,0 +1,32 @@
+Index: sqlx/tests/sqlite/sqlcipher.rs
+===================================================================
+--- sqlx.orig/tests/sqlite/sqlcipher.rs
++++ sqlx/tests/sqlite/sqlcipher.rs
+@@ -3,10 +3,10 @@ use std::str::FromStr;
+ use sqlx::sqlite::SqliteQueryResult;
+ use sqlx::{query, Connection, SqliteConnection};
+ use sqlx::{sqlite::SqliteConnectOptions, ConnectOptions};
+-use tempdir::TempDir;
++use tempfile::TempDir;
+ 
+ async fn new_db_url() -> anyhow::Result<(String, TempDir)> {
+-    let dir = TempDir::new("sqlcipher_test")?;
++    let dir = TempDir::new()?;
+     let filepath = dir.path().join("database.sqlite3");
+ 
+     Ok((format!("sqlite://{}", filepath.display()), dir))
+Index: sqlx/Cargo.toml
+===================================================================
+--- sqlx.orig/Cargo.toml
++++ sqlx/Cargo.toml
+@@ -289,8 +289,8 @@ features = ["derive"]
+ [dev-dependencies.serde_json]
+ version = "1.0.73"
+ 
+-[dev-dependencies.tempdir]
+-version = "0.3.7"
++[dev-dependencies.tempfile]
++version = "0.3"
+ 
+ [dev-dependencies.time_]
+ version = "0.3.2"
