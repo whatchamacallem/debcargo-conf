@@ -1,0 +1,55 @@
+Index: timsort/Cargo.toml
+===================================================================
+--- timsort.orig/Cargo.toml
++++ timsort/Cargo.toml
+@@ -19,5 +19,5 @@ description = "Rust implementation of th
+ license = "MIT/Apache-2.0"
+ repository = "https://github.com/RustPython/rust-timsort"
+ [dev-dependencies.rand]
+-version = "0.7"
++version = "0.8"
+ features = ["small_rng"]
+Index: timsort/benches/bench_default.rs
+===================================================================
+--- timsort.orig/benches/bench_default.rs
++++ timsort/benches/bench_default.rs
+@@ -141,7 +141,7 @@ fn sort_strings(b: &mut Bencher) {
+     let mut v = Vec::with_capacity(n);
+     let mut bytes = 0;
+     for _ in 0..n {
+-        let len = rng.gen_range(0, 60);
++        let len = rng.gen_range(0..=60);
+         bytes += len;
+         let mut s = String::with_capacity(len);
+         if len == 0 {
+@@ -149,7 +149,7 @@ fn sort_strings(b: &mut Bencher) {
+             continue;
+         }
+         for _ in 0..len {
+-            s.push(rng.gen_range(b'a', b'z') as char);
++            s.push(rng.gen_range(b'a'..=b'z') as char);
+         }
+         v.push(s);
+     }
+Index: timsort/benches/bench.rs
+===================================================================
+--- timsort.orig/benches/bench.rs
++++ timsort/benches/bench.rs
+@@ -137,7 +137,7 @@ fn sort_strings(b: &mut Bencher) {
+     let mut v = Vec::with_capacity(n);
+     let mut bytes = 0;
+     for _ in 0..n {
+-        let len = rng.gen_range(0, 60);
++        let len = rng.gen_range(0..=60);
+         bytes += len;
+         let mut s = String::with_capacity(len);
+         if len == 0 {
+@@ -145,7 +145,7 @@ fn sort_strings(b: &mut Bencher) {
+             continue;
+         }
+         for _ in 0..len {
+-            s.push(rng.gen_range(b'a', b'z') as char);
++            s.push(rng.gen_range(b'a'..=b'z') as char);
+         }
+         v.push(s);
+     }
