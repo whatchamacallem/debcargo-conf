@@ -204,7 +204,7 @@ if test $(echo "$upload_bin_packages"|grep librust|wc -l) -ge 2; then
     echo "${RED}"
     echo "collapse_features = true missing in $PKGDIR_REL/debian/debcargo.toml"
     echo "${NC}To add it:"
-    echo "git checkout - && git branch -d $RELBRANCH && echo 'collapse_features = true' >> $PKGDIR_REL/debian/debcargo.toml && git commit -m '$PKGDIR_REL: add collapse_features = true' $PKGDIR_REL/debian/debcargo.toml"
+    echo "git checkout - && git branch -D $RELBRANCH && echo 'collapse_features = true' >> $PKGDIR_REL/debian/debcargo.toml && git commit -m '$PKGDIR_REL: add collapse_features = true' $PKGDIR_REL/debian/debcargo.toml"
     echo "${NC}"
     exit 1
 fi
