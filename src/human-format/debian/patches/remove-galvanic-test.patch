@@ -1,0 +1,218 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 4a0638f..bb544b0 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -27,8 +27,7 @@ repository = "https://github.com/BobGneu/human-format-rs"
+ [lib]
+ name = "human_format"
+ path = "src/lib.rs"
+-[dev-dependencies.galvanic-test]
+-version = "0.1.3"
++
+ [badges.appveyor]
+ repository = "BobGneu/human-format-rs"
+ 
+diff --git a/src/lib.rs b/src/lib.rs
+index 9bca219..e174f16 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -143,7 +143,7 @@ impl Formatter {
+ 
+         let magnitude_multiplier = self.scales.get_magnitude_multipler(&suffix);
+ 
+-        (result * magnitude_multiplier)
++        result * magnitude_multiplier
+     }
+ }
+ 
+diff --git a/tests/demo.rs b/tests/demo.rs
+index 441b58d..a697c2f 100644
+--- a/tests/demo.rs
++++ b/tests/demo.rs
+@@ -1,98 +1,105 @@
+-#[macro_use]
+-extern crate galvanic_test;
+ extern crate human_format;
+ 
+-test_suite! {
+-    name demo_examples;
+-    use human_format::*;
++use human_format::*;
+ 
+-    test should_allow_use_of_si_scale_implicitly() {
+-        assert_eq!(Formatter::new()
+-            .format(1000 as f64),
+-            "1.00 k");
+-    }
++#[test]
++fn should_allow_use_of_si_scale_implicitly() {
++    assert_eq!(Formatter::new()
++        .format(1000 as f64),
++        "1.00 k");
++}
+ 
+-    test should_allow_explicit_decimals() {
+-        assert_eq!(Formatter::new()
+-            .with_decimals(1)
+-            .format(1000 as f64),
+-            "1.0 k");
+-    }
++#[test]
++fn should_allow_explicit_decimals() {
++    assert_eq!(Formatter::new()
++        .with_decimals(1)
++        .format(1000 as f64),
++        "1.0 k");
++}
+ 
+-    test should_allow_explicit_separator() {
+-        assert_eq!(Formatter::new()
+-            .with_separator(" - ")
+-            .format(1000 as f64),
+-            "1.00 - k");
+-    }
++#[test]
++fn should_allow_explicit_separator() {
++    assert_eq!(Formatter::new()
++        .with_separator(" - ")
++        .format(1000 as f64),
++        "1.00 - k");
++}
+ 
+-    test should_allow_use_of_si_scale_explicitly() {
+-        assert_eq!(Formatter::new()
+-            .with_scales(Scales::SI())
+-            .format(1000 as f64),
+-            "1.00 k");
+-    }
++#[test]
++fn should_allow_use_of_si_scale_explicitly() {
++    assert_eq!(Formatter::new()
++        .with_scales(Scales::SI())
++        .format(1000 as f64),
++        "1.00 k");
++}
+ 
+-    test should_allow_use_of_binary_scale_explicitly() {
+-        assert_eq!(Formatter::new()
+-            .with_scales(Scales::Binary())
+-            .format(1024 as f64),
+-            "1.00 Ki");
+-    }
++#[test]
++fn should_allow_use_of_binary_scale_explicitly() {
++    assert_eq!(Formatter::new()
++        .with_scales(Scales::Binary())
++        .format(1024 as f64),
++        "1.00 Ki");
++}
+ 
+-    test should_allow_use_of_binary_units_explicitly() {
+-        assert_eq!(Formatter::new()
+-            .with_scales(Scales::Binary())
+-            .with_units("B")
+-            .format(102400 as f64),
+-            "100.00 KiB");
+-    }
++#[test]
++fn should_allow_use_of_binary_units_explicitly() {
++    assert_eq!(Formatter::new()
++        .with_scales(Scales::Binary())
++        .with_units("B")
++        .format(102400 as f64),
++        "100.00 KiB");
++}
+ 
+-    test should_output_10_24MiB() {
+-        assert_eq!(Formatter::new()
+-            .with_scales(Scales::Binary())
+-            .with_units("B")
+-            .format(1024.0 * 1024.0 as f64),
+-            "1.00 MiB");
+-    }
++#[test]
++fn should_output_10_24MiB() {
++    assert_eq!(Formatter::new()
++        .with_scales(Scales::Binary())
++        .with_units("B")
++        .format(1024.0 * 1024.0 as f64),
++        "1.00 MiB");
++}
+ 
+-    test should_allow_explicit_suffix_and_unit() {
+-        assert_eq!(Formatter::new()
+-            .with_suffix("k")
+-            .with_units("m")
+-            .format(1024 as f64),
+-            "1.02 km");
+-    }
++#[test]
++fn should_allow_explicit_suffix_and_unit() {
++    assert_eq!(Formatter::new()
++        .with_suffix("k")
++        .with_units("m")
++        .format(1024 as f64),
++        "1.02 km");
++}
+ 
+-    test should_allow_use_of_explicit_scale() {
+-        let mut scales = Scales::new();
++#[test]
++fn should_allow_use_of_explicit_scale() {
++    let mut scales = Scales::new();
+ 
+-        scales
+-            .with_base(1024)
+-            .with_suffixes(vec!["","Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"]);
++    scales
++        .with_base(1024)
++        .with_suffixes(vec!["","Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"]);
+ 
+-        assert_eq!(Formatter::new()
+-            .with_scales(scales)
+-            .with_units("B")
+-            .format(1024 as f64),
+-            "1.00 KiB");
+-    }
++    assert_eq!(Formatter::new()
++        .with_scales(scales)
++        .with_units("B")
++        .format(1024 as f64),
++        "1.00 KiB");
++}
+ 
+-    test should_allow_parsing_to_f64() {
+-        assert_eq!(Formatter::new()
+-            .parse("1.00 k"), 1000.0);
+-    }
++#[test]
++fn should_allow_parsing_to_f64() {
++    assert_eq!(Formatter::new()
++        .parse("1.00 k"), 1000.0);
++}
+ 
+-    test should_allow_parsing_binary_values_to_f64() {
+-        assert_eq!(Formatter::new()
+-            .with_scales(Scales::Binary())
+-            .parse("1.00 Ki"), 1024.0);
+-    }
++#[test]
++fn should_allow_parsing_binary_values_to_f64() {
++    assert_eq!(Formatter::new()
++        .with_scales(Scales::Binary())
++        .parse("1.00 Ki"), 1024.0);
++}
+ 
+-    test should_allow_parsing_binary_values_with_units_to_f64() {
+-        assert_eq!(Formatter::new()
+-            .with_scales(Scales::Binary())
+-            .with_units("B")
+-            .parse("1.00 KiB"), 1024.0);
+-    }
++#[test]
++fn should_allow_parsing_binary_values_with_units_to_f64() {
++    assert_eq!(Formatter::new()
++        .with_scales(Scales::Binary())
++        .with_units("B")
++        .parse("1.00 KiB"), 1024.0);
+ }
