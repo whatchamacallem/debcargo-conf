@@ -127,6 +127,13 @@ If a package ships a binary but you only want to use it as library add this stan
 bin = false
 ```
 
+## Packaging a lot of crates
+
+Use the `dev/chain_build.py` script. It has a self-explanatory help message,
+but basically you run `dev/chain_build.py lowest_dep_1 lowest_dep2 lower_dep_1
+lower_dep_2 target_crate`, solve build failures, press enter to continue,
+solve, continue, repeat, until the target crate is successfully built.
+
 ## debcargo.toml tweaks
 
 ### Excluding files

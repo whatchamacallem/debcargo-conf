@@ -401,6 +401,9 @@ In ``#debian-rust`` came these two blog posts along with the remark of _good rea
 
 Now are they, those two blog posts, parked here. Waiting for better integration.
 
+Also, there is a rust_hacks.md alongside this README that summarizes some
+useful "hacks" in packaging.
+
 
 Developing Rust code using Debian-packaged crates
 =================================================
