@@ -69,7 +69,16 @@ def _get_dch_version(crate: str) -> str:
 	return DCH_VER_RE.search(open(join('src', _todash(crate), 'debian', 'changelog')).readline()).group(1)
 
 
-def find_built(specs: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
+def find_existing(specs: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
+	'''Find existing debs.
+
+	:param specs: A list of 2-tuples, each being (name, version) of a crate
+	
+	:return: A list of 3-tuples, each being (crate_name, deb_name, source),
+	where source is either 'apt' (from apt cache) or 'build' (waiting for
+	build)
+	'''
+
 	# get all debs first, so we needn't walk again and again
 	chdir('build')
 	debs = _find('*.deb')
@@ -100,10 +109,12 @@ def find_built(specs: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
 
 COLL_LINE = 'collapse_features = true'
 def collapse_features(crate: str):
+	'''Write COLL_LINE into `crate`'s debcargo.toml.'''
+
 	f = open(join('src', _todash(crate), 'debian', 'debcargo.toml'), 'r+')
 	toml = f.read()
 	if COLL_LINE not in toml:
-		_print('writing collapse_features for', crate)
+		_print(f'writing {COLL_LINE} for {crate}')
 		lines = toml.split('\n')
 		for i, line in enumerate(lines):
 			# avoid inserting at end ending up in [some.directive]
@@ -121,11 +132,23 @@ def collapse_features(crate: str):
 
 
 def build_one(crate: str, ver: str, prev_debs: list[str]):
+	'''Build package for given crate.
+
+	:param crate: Crate name.
+	:param ver: Version to build, can be '*' or a version number. '*' means
+	latest available.
+	:param prev_debs: A list of previously built debs, passed to build process
+	to be installed as additional packages (usually dependencies).
+
+	:raises: Fails when running repackage.sh or update.sh failed.
+	'''
+
 	env = environ.copy()
 	if ver != '*':
 		env['REALVER'] = ver
 	# prevent git from stopping us with a pager
 	env['GIT_PAGER'] = 'cat'
+	# TODO: make repackage.sh the default
 	if 'REPACKAGE' in env:
 		run(('./repackage.sh', crate), env=env, check=True)
 	else:
@@ -140,7 +163,16 @@ def build_one(crate: str, ver: str, prev_debs: list[str]):
 	chdir('..')
 
 
-def parse_specs(specs: tuple[str]) -> list[tuple[str, str]]:
+def parse_specs(specs: list[str]) -> list[tuple[str, str]]:
+	'''Parses input specs.
+
+	Each spec is a string in the format 'crate[=version]'.
+
+	:param specs: A tuple of spec strings.
+
+	:return: A list of 2-tuples, each being (name, version) of a crate.
+	'''
+
 	recorded = []
 	versions = {}
 	for spec in specs:
@@ -159,9 +191,14 @@ def parse_specs(specs: tuple[str]) -> list[tuple[str, str]]:
 	return [(crate, versions[crate]) for crate in recorded]
 
 
-def chain_build(specs):
+def chain_build(specs: list[str]):
+	'''Build crates in a chain.
+
+	:param specs: A tuple of crate specs. See `parse_specs()`.
+	'''
+
 	specs = parse_specs(specs)
-	found = find_built(specs)
+	found = find_existing(specs)
 	env = environ.copy()
 	extra_debs = env.get('EXTRA_DEBS')
 	built, debs = set(), set()
