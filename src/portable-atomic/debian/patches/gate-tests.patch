@@ -2,7 +2,7 @@ Index: portable-atomic/src/tests/mod.rs
 ===================================================================
 --- portable-atomic.orig/src/tests/mod.rs
 +++ portable-atomic/src/tests/mod.rs
-@@ -25,7 +25,9 @@ test_atomic_int_pub!(i16);
+@@ -27,14 +27,18 @@ test_atomic_int_pub!(i16);
  test_atomic_int_pub!(u16);
  test_atomic_int_pub!(i32);
  test_atomic_int_pub!(u32);
@@ -10,25 +10,10 @@ Index: portable-atomic/src/tests/mod.rs
  test_atomic_int_pub!(i64);
 +#[cfg(any(fallback,target_has_atomic = "64"))]
  test_atomic_int_pub!(u64);
- 
- // As of qemu 7.0.0 , using lqarx/stqcx. with qemu-user hangs.
-@@ -41,6 +43,7 @@ test_atomic_int_pub!(u64);
-     ),
-     cfg(not(qemu))
- )]
 +#[cfg(feature = "fallback")]
  test_atomic_int_pub!(i128);
- #[cfg_attr(
-     all(
-@@ -52,6 +55,7 @@ test_atomic_int_pub!(i128);
-     ),
-     cfg(not(qemu))
- )]
 +#[cfg(feature = "fallback")]
  test_atomic_int_pub!(u128);
- #[cfg(qemu)]
- #[cfg(target_arch = "powerpc64")]
-@@ -70,7 +74,7 @@ test_atomic_int_load_store_pub!(u128);
  
  #[cfg(feature = "float")]
  test_atomic_float_pub!(f32);
@@ -37,7 +22,7 @@ Index: portable-atomic/src/tests/mod.rs
  test_atomic_float_pub!(f64);
  
  #[deny(improper_ctypes)]
-@@ -85,7 +89,9 @@ extern "C" {
+@@ -49,7 +53,9 @@ extern "C" {
      fn _atomic_u16_ffi_safety(_: AtomicU16);
      fn _atomic_i32_ffi_safety(_: AtomicI32);
      fn _atomic_u32_ffi_safety(_: AtomicU32);
@@ -47,7 +32,7 @@ Index: portable-atomic/src/tests/mod.rs
      fn _atomic_u64_ffi_safety(_: AtomicU64);
      // TODO: 128-bit integers are not FFI safe
      // https://github.com/rust-lang/unsafe-code-guidelines/issues/119
-@@ -94,11 +100,11 @@ extern "C" {
+@@ -58,7 +64,7 @@ extern "C" {
      // fn _atomic_u128_ffi_safety(_: AtomicU128);
      #[cfg(feature = "float")]
      fn _atomic_f32_ffi_safety(_: AtomicF32);
@@ -56,16 +41,15 @@ Index: portable-atomic/src/tests/mod.rs
      fn _atomic_f64_ffi_safety(_: AtomicF64);
  }
  
--#[cfg(target_arch = "x86_64")]
-+#[cfg(all(target_arch = "x86_64",fallback))]
- #[test]
- #[cfg_attr(miri, ignore)] // Miri doesn't support inline assembly
- fn test_x86_64_atomic_128_is_lock_free() {
-Index: portable-atomic/src/tests/serde.rs
-===================================================================
---- portable-atomic.orig/src/tests/serde.rs
-+++ portable-atomic/src/tests/serde.rs
-@@ -38,13 +38,15 @@ fn test() {
+@@ -105,6 +111,7 @@ fn test_is_lock_free() {
+             assert!(!AtomicU64::is_lock_free());
+         }
+     }
++    #[cfg(any(fallback,target_has_atomic = "128"))]
+     if cfg!(portable_atomic_no_asm) && cfg!(not(portable_atomic_unstable_asm)) {
+         assert!(!AtomicI128::is_always_lock_free());
+         assert!(!AtomicI128::is_lock_free());
+@@ -344,14 +351,16 @@ fn test_serde() {
      t!(AtomicU16, u16, U16);
      t!(AtomicI32, i32, I32);
      t!(AtomicU32, u32, U32);
@@ -80,5 +64,6 @@ Index: portable-atomic/src/tests/serde.rs
      t!(AtomicF32, f32, F32);
 -    #[cfg(feature = "float")]
 +    #[cfg(all(feature = "float",any(fallback,target_has_atomic = "64")))]
+     #[cfg(not(target_arch = "mips"))] // LLVM 17 (nightly-2023-08-09) bug: assertion failed at core/src/num/diy_float.rs:78:9
      t!(AtomicF64, f64, F64);
  }

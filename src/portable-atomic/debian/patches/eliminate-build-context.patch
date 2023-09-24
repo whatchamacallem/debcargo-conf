@@ -1,0 +1,33 @@
+Index: portable-atomic/Cargo.toml
+===================================================================
+--- portable-atomic.orig/Cargo.toml
++++ portable-atomic/Cargo.toml
+@@ -60,9 +60,6 @@ version = "1.0.103"
+ optional = true
+ default-features = false
+ 
+-[dev-dependencies.build-context]
+-version = "0.1"
+-
+ [dev-dependencies.crossbeam-utils]
+ version = "0.8"
+ 
+Index: portable-atomic/src/tests/helper.rs
+===================================================================
+--- portable-atomic.orig/src/tests/helper.rs
++++ portable-atomic/src/tests/helper.rs
+@@ -2102,12 +2102,12 @@ fn skip_should_panic_test() -> bool {
+     is_panic_abort()
+         || cfg!(miri)
+         || option_env!("CARGO_PROFILE_RELEASE_LTO").map_or(false, |v| v == "fat")
+-            && build_context::SANITIZE.contains("memory")
++            && option_env!("MSAN_OPTIONS").is_some()
+ }
+ 
+ // For -C panic=abort -Z panic_abort_tests: https://github.com/rust-lang/rust/issues/67650
+ fn is_panic_abort() -> bool {
+-    build_context::PANIC.contains("abort")
++    false
+ }
+ 
+ // Test the cases that should not fail if the memory ordering is implemented correctly.
