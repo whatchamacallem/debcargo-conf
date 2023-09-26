@@ -34,19 +34,6 @@ endif
 override_dh_missing:
 	dh_missing --fail-missing
 
-execute_before_dh_installman:
-	cd $(CURDIR)/debian/rust-coreutils/usr/lib/cargo/bin/coreutils/; \
-	for f in *; do \
-		filename=$$(basename $$f); \
-		help2man --no-discard-stderr --no-info $$f > $(CURDIR)/docs/rust-$$filename.1; \
-	done
-	
-	cd $(CURDIR)/debian/tmp/usr/bin/; \
-	PATH=.:$PATH help2man --no-discard-stderr --no-info --version-string=$(UPSTREAM_VERSION) coreutils > $(CURDIR)/docs/coreutils.1 || true
-	
-	# test --help returns nothing
-	rm -f $(CURDIR)/docs/rust-test.1
-
 override_dh_dwz:
 	# Don't do anything. fails because of the
 	# https://github.com/rust-lang/rust/issues/66118
