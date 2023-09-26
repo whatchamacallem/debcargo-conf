@@ -2,12 +2,24 @@ Description: Remove rstar to simplify packaging
 Last-Update: 2022-10-17
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -36,16 +36,6 @@
- [dependencies.num-traits]
- version = "0.2"
+Index: geo-types/Cargo.toml
+===================================================================
+--- geo-types.orig/Cargo.toml
++++ geo-types/Cargo.toml
+@@ -41,26 +41,6 @@ version = "0.2"
+ features = ["libm"]
+ default-features = false
  
+-[dependencies.rstar_0_10]
+-version = "0.10"
+-optional = true
+-package = "rstar"
+-
+-[dependencies.rstar_0_11]
+-version = "0.11"
+-optional = true
+-package = "rstar"
+-
 -[dependencies.rstar_0_8]
 -version = "0.8"
 -optional = true
@@ -20,13 +32,26 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -
  [dependencies.serde]
  version = "1"
- features = ["derive"]
-@@ -55,13 +45,3 @@
- version = ">= 0.4.0, < 0.6.0"
+ features = [
+@@ -75,26 +55,8 @@ version = ">= 0.4.0, < 0.6.0"
  
  [features]
+ default = ["std"]
 -rstar = ["rstar_0_8"]
+ std = [
+     "approx?/std",
+     "num-traits/std",
+     "serde?/std",
+ ]
 -use-rstar = ["use-rstar_0_8"]
+-use-rstar_0_10 = [
+-    "rstar_0_10",
+-    "approx",
+-]
+-use-rstar_0_11 = [
+-    "rstar_0_11",
+-    "approx",
+-]
 -use-rstar_0_8 = [
 -    "rstar_0_8",
 -    "approx",
@@ -35,140 +60,3 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -    "rstar_0_9",
 -    "approx",
 -]
---- a/src/geometry/polygon.rs
-+++ b/src/geometry/polygon.rs
-@@ -543,7 +543,7 @@
-     }
- }
- 
--#[cfg(any(feature = "rstar_0_8", feature = "rstar_0_9"))]
-+/*#[cfg(any(feature = "rstar_0_8", feature = "rstar_0_9"))]
- macro_rules! impl_rstar_polygon {
-     ($rstar:ident) => {
-         impl<T> $rstar::RTreeObject for Polygon<T>
-@@ -563,4 +563,4 @@
- impl_rstar_polygon!(rstar_0_8);
- 
- #[cfg(feature = "rstar_0_9")]
--impl_rstar_polygon!(rstar_0_9);
-+impl_rstar_polygon!(rstar_0_9);*/
---- a/src/lib.rs
-+++ b/src/lib.rs
-@@ -83,8 +83,8 @@
- #[macro_use]
- extern crate serde;
- 
--#[cfg(feature = "rstar_0_8")]
--extern crate rstar_0_8;
-+/*#[cfg(feature = "rstar_0_8")]
-+extern crate rstar_0_8;*/
- 
- #[cfg(test)]
- #[macro_use]
-@@ -127,9 +127,9 @@
- #[cfg(feature = "arbitrary")]
- mod arbitrary;
- 
--#[cfg(any(feature = "rstar_0_8", feature = "rstar_0_9"))]
-+/*#[cfg(any(feature = "rstar_0_8", feature = "rstar_0_9"))]
- #[doc(hidden)]
--pub mod private_utils;
-+pub mod private_utils;*/
- 
- #[cfg(test)]
- mod tests {
-@@ -207,7 +207,7 @@
-         assert_eq!(p.x(), 1_000_000i64);
-     }
- 
--    #[cfg(feature = "rstar_0_8")]
-+    /*#[cfg(feature = "rstar_0_8")]
-     #[test]
-     /// ensure Line's SpatialObject impl is correct
-     fn line_test() {
-@@ -235,7 +235,7 @@
-         // difference in 15th decimal place
-         assert_relative_eq!(26.0, rl.distance_2(&Point::new(4.0, 10.0)));
-         assert_relative_eq!(25.999999999999996, l.distance_2(&Point::new(4.0, 10.0)));
--    }
-+    }*/
- 
-     #[test]
-     fn test_rects() {
---- a/src/geometry/coordinate.rs
-+++ b/src/geometry/coordinate.rs
-@@ -316,7 +316,7 @@
-     }
- }
- 
--#[cfg(feature = "rstar_0_8")]
-+/*#[cfg(feature = "rstar_0_8")]
- impl<T> ::rstar_0_8::Point for Coordinate<T>
- where
-     T: ::num_traits::Float + ::rstar_0_8::RTreeNum,
-@@ -386,4 +386,4 @@
-             _ => unreachable!(),
-         }
-     }
--}
-+}*/
---- a/src/geometry/point.rs
-+++ b/src/geometry/point.rs
-@@ -555,7 +555,7 @@
-     }
- }
- 
--#[cfg(feature = "rstar_0_8")]
-+/*#[cfg(feature = "rstar_0_8")]
- // These are required for rstar RTree
- impl<T> ::rstar_0_8::Point for Point<T>
- where
-@@ -612,7 +612,7 @@
-             _ => unreachable!(),
-         }
-     }
--}
-+}*/
- 
- #[cfg(test)]
- mod test {
---- a/src/geometry/line.rs
-+++ b/src/geometry/line.rs
-@@ -221,7 +221,7 @@
-     }
- }
- 
--#[cfg(any(feature = "rstar_0_8", feature = "rstar_0_9"))]
-+/*#[cfg(any(feature = "rstar_0_8", feature = "rstar_0_9"))]
- macro_rules! impl_rstar_line {
-     ($rstar:ident) => {
-         impl<T> ::$rstar::RTreeObject for Line<T>
-@@ -252,7 +252,7 @@
- impl_rstar_line!(rstar_0_8);
- 
- #[cfg(feature = "rstar_0_9")]
--impl_rstar_line!(rstar_0_9);
-+impl_rstar_line!(rstar_0_9);*/
- 
- #[cfg(test)]
- mod test {
---- a/src/geometry/line_string.rs
-+++ b/src/geometry/line_string.rs
-@@ -478,7 +478,7 @@
-     }
- }
- 
--#[cfg(any(feature = "rstar_0_8", feature = "rstar_0_9"))]
-+/*#[cfg(any(feature = "rstar_0_8", feature = "rstar_0_9"))]
- macro_rules! impl_rstar_line_string {
-     ($rstar:ident) => {
-         impl<T> ::$rstar::RTreeObject for LineString<T>
-@@ -523,7 +523,7 @@
- impl_rstar_line_string!(rstar_0_8);
- 
- #[cfg(feature = "rstar_0_9")]
--impl_rstar_line_string!(rstar_0_9);
-+impl_rstar_line_string!(rstar_0_9);*/
- 
- #[cfg(test)]
- mod test {
