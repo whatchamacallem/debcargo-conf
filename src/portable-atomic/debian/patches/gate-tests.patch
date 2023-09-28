@@ -1,7 +1,7 @@
-Index: portable-atomic/src/tests/mod.rs
+Index: rust-portable-atomic-1.4.3/src/tests/mod.rs
 ===================================================================
---- portable-atomic.orig/src/tests/mod.rs
-+++ portable-atomic/src/tests/mod.rs
+--- rust-portable-atomic-1.4.3.orig/src/tests/mod.rs
++++ rust-portable-atomic-1.4.3/src/tests/mod.rs
 @@ -27,14 +27,18 @@ test_atomic_int_pub!(i16);
  test_atomic_int_pub!(u16);
  test_atomic_int_pub!(i32);
@@ -41,6 +41,15 @@ Index: portable-atomic/src/tests/mod.rs
      fn _atomic_f64_ffi_safety(_: AtomicF64);
  }
  
+@@ -76,7 +82,7 @@ fn test_is_lock_free() {
+     assert!(AtomicI32::is_lock_free());
+     assert!(AtomicU32::is_always_lock_free());
+     assert!(AtomicU32::is_lock_free());
+-    #[cfg(not(portable_atomic_no_cfg_target_has_atomic))]
++    #[cfg(all(not(portable_atomic_no_cfg_target_has_atomic),any(fallback,target_has_atomic = "64")))]
+     {
+         if cfg!(all(
+             feature = "fallback",
 @@ -105,6 +111,7 @@ fn test_is_lock_free() {
              assert!(!AtomicU64::is_lock_free());
          }
