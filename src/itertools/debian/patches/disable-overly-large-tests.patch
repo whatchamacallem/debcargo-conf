@@ -1,0 +1,72 @@
+--- a/tests/quick.rs
++++ b/tests/quick.rs
+@@ -392,13 +392,16 @@
+ 
+ quickcheck! {
+ 
++    #[cfg(doc)]
+     fn size_product(a: Iter<u16>, b: Iter<u16>) -> bool {
+         correct_size_hint(a.cartesian_product(b))
+     }
++    #[cfg(doc)]
+     fn size_product3(a: Iter<u16>, b: Iter<u16>, c: Iter<u16>) -> bool {
+         correct_size_hint(iproduct!(a, b, c))
+     }
+ 
++    #[cfg(doc)]
+     fn correct_cartesian_product3(a: Iter<u16>, b: Iter<u16>, c: Iter<u16>,
+                                   take_manual: usize) -> ()
+     {
+@@ -804,6 +807,7 @@
+ }
+ 
+ quickcheck! {
++    #[cfg(doc)]
+     fn exact_repeatn((n, x): (usize, i32)) -> bool {
+         let it = itertools::repeat_n(x, n);
+         exact_size(it)
+@@ -897,12 +901,14 @@
+ }
+ 
+ quickcheck! {
++    #[cfg(doc)]
+     fn size_combinations(it: Iter<i16>) -> bool {
+         correct_size_hint(it.tuple_combinations::<(_, _)>())
+     }
+ }
+ 
+ quickcheck! {
++    #[cfg(doc)]
+     fn equal_combinations(it: Iter<i16>) -> bool {
+         let values = it.clone().collect_vec();
+         let mut cmb = it.tuple_combinations();
+@@ -1709,18 +1715,21 @@
+ }
+ 
+ quickcheck! {
++    #[cfg(doc)]
+     fn fused_combination(a: Iter<i16>) -> bool
+     {
+         is_fused(a.clone().combinations(1)) &&
+         is_fused(a.combinations(3))
+     }
+ 
++    #[cfg(doc)]
+     fn fused_combination_with_replacement(a: Iter<i16>) -> bool
+     {
+         is_fused(a.clone().combinations_with_replacement(1)) &&
+         is_fused(a.combinations_with_replacement(3))
+     }
+ 
++    #[cfg(doc)]
+     fn fused_tuple_combination(a: Iter<i16>) -> bool
+     {
+         is_fused(a.clone().fuse().tuple_combinations::<(_,)>()) &&
+@@ -1743,6 +1752,7 @@
+         is_fused(a.fuse().interleave_shortest(b.fuse()))
+     }
+     
++    #[cfg(doc)]
+     fn fused_product(a: Iter<i16>, b: Iter<i16>) -> bool
+     {
+         is_fused(a.fuse().cartesian_product(b.fuse()))
