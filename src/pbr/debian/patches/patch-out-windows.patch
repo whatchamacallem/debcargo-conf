@@ -1,13 +1,27 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -26,10 +26,3 @@
- version = "0.1.35"
+@@ -39,10 +39,3 @@
  [dev-dependencies.rand]
- version = "0.3.14"
--[target."cfg(target_os = \"redox\")".dependencies.termion]
--version = "1.4"
--[target."cfg(target_os = \"windows\")".dependencies.kernel32-sys]
--version = "0.2"
--
+ version = "0.8"
+ 
 -[target."cfg(target_os = \"windows\")".dependencies.winapi]
--version = "0.2"
+-version = "0.3"
+-features = [
+-    "wincon",
+-    "processenv",
+-    "winbase",
+-]
+--- a/src/tty/mod.rs
++++ b/src/tty/mod.rs
+@@ -22,7 +22,7 @@
+ #[cfg(target_os = "wasi")]
+ pub use self::wasi::*;
+ 
+-#[cfg(windows)]
+-mod windows;
+-#[cfg(windows)]
+-pub use self::windows::*;
++//#[cfg(windows)]
++//mod windows;
++//#[cfg(windows)]
++//pub use self::windows::*;
