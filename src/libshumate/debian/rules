@@ -70,9 +70,8 @@ execute_before_dh_auto_build:
 	-d '///_:function[@c:identifier="hb_ft_font_get_face"]' \
 	-d '///_:function[@c:identifier="hb_ft_font_lock_face"]' \
 	HarfBuzz-0.0.gir
-	sed -i 's/girs_directories\s=\s\[\"\.\.\/\.\.\/gir-files\",\s\"\.\.\/\.\.\/\"\]/girs_directories=\[\".\"\]/' $(CURDIR)/Gir.toml
+	sed -i 's/girs_directories\s=\s\[\"\.\.\/gir-files\",\s\"\.\.\/\"\]/girs_directories=\[\".\"\]/' $(CURDIR)/Gir.toml
 	gir -o .
-	patch -p1 < $(CURDIR)/debian/patches/skip-cross-validate-constants-with-c.diff
 	
 # Remove the .gir files before install
 execute_before_dh_auto_install:
