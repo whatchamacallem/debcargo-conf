@@ -40,14 +40,16 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
      "nfa-pikevm",
 --- a/src/dfa/determinize.rs
 +++ b/src/dfa/determinize.rs
-@@ -275,13 +275,13 @@
-                 matches.insert(id, pat_ids);
-             }
-         }
--        log! {
-+        /*log! {
-             use core::mem::size_of;
-             let per_elem = size_of::<StateID>() + size_of::<Vec<PatternID>>();
+@@ -264,7 +264,7 @@
+         // corresponding to the key.
+         let mut matches: BTreeMap<StateID, Vec<PatternID>> = BTreeMap::new();
+         self.cache.clear();
+-        #[cfg(feature = "logging")]
++        /*#[cfg(feature = "logging")]
+         let mut total_pat_len = 0;
+         for (i, state) in self.builder_states.into_iter().enumerate() {
+             if let Some(pat_ids) = state.match_pattern_ids() {
+@@ -281,7 +281,7 @@
              let pats = total_pat_len * size_of::<PatternID>();
              let mem = (matches.len() * per_elem) + pats;
              log::debug!("matches map built, memory usage: {}", mem);
