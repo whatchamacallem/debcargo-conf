@@ -1,0 +1,72 @@
+Description: Temporarily disable logging feature to make build
+Last-Update: 2023-10-02
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -44,9 +44,9 @@
+ optional = true
+ default-features = false
+ 
+-[dependencies.log]
+-version = "0.4.14"
+-optional = true
++#[dependencies.log]
++#version = "0.4.14"
++#optional = true
+ 
+ [dependencies.memchr]
+ version = "2.6.0"
+@@ -114,14 +114,14 @@
+ ]
+ internal-instrument = ["internal-instrument-pikevm"]
+ internal-instrument-pikevm = [
+-    "logging",
++#    "logging",
+     "std",
+ ]
+-logging = [
+-    "dep:log",
+-    "aho-corasick?/logging",
+-    "memchr?/logging",
+-]
++#logging = [
++#    "dep:log",
++#    "aho-corasick?/logging",
++#    "memchr?/logging",
++#]
+ meta = [
+     "syntax",
+     "nfa-pikevm",
+--- a/src/dfa/determinize.rs
++++ b/src/dfa/determinize.rs
+@@ -275,13 +275,13 @@
+                 matches.insert(id, pat_ids);
+             }
+         }
+-        log! {
++        /*log! {
+             use core::mem::size_of;
+             let per_elem = size_of::<StateID>() + size_of::<Vec<PatternID>>();
+             let pats = total_pat_len * size_of::<PatternID>();
+             let mem = (matches.len() * per_elem) + pats;
+             log::debug!("matches map built, memory usage: {}", mem);
+-        }
++        }*/
+         // At this point, we shuffle the "special" states in the final DFA.
+         // This permits a DFA's match loop to detect a match condition (among
+         // other things) by merely inspecting the current state's identifier,
+--- a/src/macros.rs
++++ b/src/macros.rs
+@@ -12,9 +12,9 @@
+ }
+ 
+ macro_rules! debug {
+-    ($($tt:tt)*) => { log!(log::debug!($($tt)*)) }
++    ($($tt:tt)*) => { } //log!(log::debug!($($tt)*)) }
+ }
+ 
+ macro_rules! trace {
+-    ($($tt:tt)*) => { log!(log::trace!($($tt)*)) }
++    ($($tt:tt)*) => { } //log!(log::trace!($($tt)*)) }
+ }
