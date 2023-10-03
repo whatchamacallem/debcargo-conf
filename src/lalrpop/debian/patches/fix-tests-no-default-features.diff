@@ -29,13 +29,13 @@ Index: lalrpop/src/lexer/nfa/test.rs
  
 +#[cfg(feature = "lexer")]
  #[test]
- fn literal() {
-     let num = re::parse_regex(r#"(?i:aBCdeF)"#).unwrap();
+ // This test requires regex's unicode case support
+ #[cfg_attr(not(feature = "unicode"), ignore)]
 Index: lalrpop/src/lr1/build/test.rs
 ===================================================================
 --- lalrpop.orig/src/lr1/build/test.rs
 +++ lalrpop/src/lr1/build/test.rs
-@@ -217,6 +217,7 @@ fn shift_reduce_conflict1() {
+@@ -216,6 +216,7 @@ fn shift_reduce_conflict1() {
  }
  
  /// One of the few grammars that IS LR(0).
@@ -43,15 +43,15 @@ Index: lalrpop/src/lr1/build/test.rs
  #[test]
  fn lr0_expr_grammar_with_explicit_eof() {
      let _tls = Tls::test();
-@@ -248,6 +249,7 @@ T: () = {
+@@ -247,6 +248,7 @@ T: () = {
  }
  
- /// Without the artifical '$', grammar is not LR(0).
+ /// Without the artificial '$', grammar is not LR(0).
 +#[cfg(feature = "lexer")]
  #[test]
  fn lr0_expr_grammar_with_implicit_eof() {
      let _tls = Tls::test();
-@@ -278,6 +280,7 @@ T: () = {
+@@ -277,6 +279,7 @@ T: () = {
  /// When we moved to storing items as (lr0 -> TokenSet) pairs, a bug
  /// in the transitive closure routine could cause us to have `(Foo,
  /// S0)` and `(Foo, S1)` as distinct items instead of `(Foo, S0|S1)`.
@@ -59,14 +59,14 @@ Index: lalrpop/src/lr1/build/test.rs
  #[test]
  fn issue_144() {
      let _tls = Tls::test();
-@@ -329,6 +332,7 @@ ty: () = {
+@@ -328,6 +331,7 @@ ty: () = {
  }
  
  // Not sure if this is the right spot
 +#[cfg(feature = "lexer")]
  #[test]
- fn match_grammar() {
-     let _tls = Tls::test();
+ // This test requires regex's unicode case support
+ #[cfg_attr(not(feature = "unicode"), ignore)]
 Index: lalrpop/src/lr1/first/test.rs
 ===================================================================
 --- lalrpop.orig/src/lr1/first/test.rs
@@ -75,7 +75,7 @@ Index: lalrpop/src/lr1/first/test.rs
 +#![cfg(feature = "lexer")]
  use super::FirstSets;
  use crate::grammar::repr::*;
- use crate::lr1::lookahead::Token::EOF;
+ use crate::lr1::lookahead::{Token, TokenSet};
 Index: lalrpop/src/lr1/lane_table/test.rs
 ===================================================================
 --- lalrpop.orig/src/lr1/lane_table/test.rs
@@ -84,7 +84,7 @@ Index: lalrpop/src/lr1/lane_table/test.rs
 +#![cfg(feature = "lexer")]
  use crate::grammar::repr::*;
  use crate::lr1::build;
- use crate::lr1::core::*;
+ use crate::lr1::build_states;
 Index: lalrpop/src/lr1/trace/reduce/test.rs
 ===================================================================
 --- lalrpop.orig/src/lr1/trace/reduce/test.rs
