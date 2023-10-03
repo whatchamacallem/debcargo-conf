@@ -1,0 +1,47 @@
+This patch is based on the upstream commit descibed below, adapted for use in
+the Debian package by Peter Michael Green.
+
+commit 39b2dbe04d3f8036b20477d86d4ad988ee79101f
+Author: Jeong YunWon <jeong@youknowone.org>
+Date:   Sat May 6 04:34:51 2023 +0900
+
+    Update lalrpop to 0.20.0
+
+Index: rustpython-parser/src/error.rs
+===================================================================
+--- rustpython-parser.orig/src/error.rs
++++ rustpython-parser/src/error.rs
+@@ -217,7 +217,7 @@ pub(crate) fn parse_error_from_lalrpop(
+                 source_path,
+             }
+         }
+-        LalrpopError::UnrecognizedEOF { location, expected } => {
++        LalrpopError::UnrecognizedEof { location, expected } => {
+             // This could be an initial indentation error that we should ignore
+             let indent_error = expected == ["Indent"];
+             if indent_error {
+Index: rustpython-parser/Cargo.toml
+===================================================================
+--- rustpython-parser.orig/Cargo.toml
++++ rustpython-parser/Cargo.toml
+@@ -27,7 +27,8 @@ version = "0.7.6"
+ version = "0.10.3"
+ 
+ [dependencies.lalrpop-util]
+-version = "0.19.8"
++version = "0.20"
++default-features = false
+ 
+ [dependencies.log]
+ version = "0.4.16"
+@@ -69,8 +70,9 @@ version = "1.14.0"
+ version = "1.0.45"
+ 
+ [build-dependencies.lalrpop]
+-version = "0.19.8"
++version = "0.20"
+ optional = true
++default-features = false
+ 
+ [build-dependencies.phf_codegen]
+ version = "0.10"
