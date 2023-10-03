@@ -1,0 +1,122 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+The git commit attributes the changes to Dependabot, but the real author
+of the actual code changes seems to be Thayne McCombs
+
+commit ed23fb9054c4ae9c3848f18baef0bb911d4000b8
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Thu Jun 1 17:58:33 2023 +0000
+
+    Upgrade regex and regex-syntax
+    
+    Bump regex from 1.7.3 to 1.9.1
+    
+    Bumps [regex](https://github.com/rust-lang/regex) from 1.7.3 to 1.8.3.
+    - [Release notes](https://github.com/rust-lang/regex/releases)
+    - [Changelog](https://github.com/rust-lang/regex/blob/master/CHANGELOG.md)
+    - [Commits](https://github.com
+    
+    Bump regex-syntax from 0.6.29 to 0.7.2
+    
+    Bumps [regex-syntax](https://github.com/rust-lang/regex) from 0.6.29 to 0.7.2.
+    - [Release notes](https://github.com/rust-lang/regex/releases)
+    - [Changelog](https://github.com/rust-lang/regex/blob/master/CHANGELOG.md)
+    - [Commits](https://github.com/rust-lang/regex/commits)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: regex
+      dependency-type: direct:production
+      update-type: version-update:semver-minor
+    - dependency-name: regex-syntax
+      dependency-type: direct:production
+      update-type: version-update:semver-minor
+    
+    Supersedes: #1334
+    Supersedes: #1343
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+Index: fd-find/src/regex_helper.rs
+===================================================================
+--- fd-find.orig/src/regex_helper.rs
++++ fd-find/src/regex_helper.rs
+@@ -3,7 +3,7 @@ use regex_syntax::ParserBuilder;
+ 
+ /// Determine if a regex pattern contains a literal uppercase character.
+ pub fn pattern_has_uppercase_char(pattern: &str) -> bool {
+-    let mut parser = ParserBuilder::new().allow_invalid_utf8(true).build();
++    let mut parser = ParserBuilder::new().utf8(false).build();
+ 
+     parser
+         .parse(pattern)
+@@ -16,16 +16,18 @@ fn hir_has_uppercase_char(hir: &Hir) ->
+     use regex_syntax::hir::*;
+ 
+     match hir.kind() {
+-        HirKind::Literal(Literal::Unicode(c)) => c.is_uppercase(),
+-        HirKind::Literal(Literal::Byte(b)) => char::from(*b).is_uppercase(),
++        HirKind::Literal(Literal(bytes)) => match std::str::from_utf8(&bytes) {
++            Ok(s) => s.chars().any(|c| c.is_uppercase()),
++            Err(_) => bytes.iter().any(|b| char::from(*b).is_uppercase()),
++        },
+         HirKind::Class(Class::Unicode(ranges)) => ranges
+             .iter()
+             .any(|r| r.start().is_uppercase() || r.end().is_uppercase()),
+         HirKind::Class(Class::Bytes(ranges)) => ranges
+             .iter()
+             .any(|r| char::from(r.start()).is_uppercase() || char::from(r.end()).is_uppercase()),
+-        HirKind::Group(Group { hir, .. }) | HirKind::Repetition(Repetition { hir, .. }) => {
+-            hir_has_uppercase_char(hir)
++        HirKind::Capture(Capture { sub, .. }) | HirKind::Repetition(Repetition { sub, .. }) => {
++            hir_has_uppercase_char(sub)
+         }
+         HirKind::Concat(hirs) | HirKind::Alternation(hirs) => {
+             hirs.iter().any(hir_has_uppercase_char)
+@@ -36,7 +38,7 @@ fn hir_has_uppercase_char(hir: &Hir) ->
+ 
+ /// Determine if a regex pattern only matches strings starting with a literal dot (hidden files)
+ pub fn pattern_matches_strings_with_leading_dot(pattern: &str) -> bool {
+-    let mut parser = ParserBuilder::new().allow_invalid_utf8(true).build();
++    let mut parser = ParserBuilder::new().utf8(false).build();
+ 
+     parser
+         .parse(pattern)
+@@ -56,7 +58,7 @@ fn hir_matches_strings_with_leading_dot(
+         HirKind::Concat(hirs) => {
+             let mut hirs = hirs.iter();
+             if let Some(hir) = hirs.next() {
+-                if hir.kind() != &HirKind::Anchor(Anchor::StartText) {
++                if hir.kind() != &HirKind::Look(Look::Start) {
+                     return false;
+                 }
+             } else {
+@@ -64,7 +66,10 @@ fn hir_matches_strings_with_leading_dot(
+             }
+ 
+             if let Some(hir) = hirs.next() {
+-                hir.kind() == &HirKind::Literal(Literal::Unicode('.'))
++                match hir.kind() {
++                    HirKind::Literal(Literal(bytes)) => bytes.starts_with(&[b'.']),
++                    _ => false,
++                }
+             } else {
+                 false
+             }
+Index: fd-find/Cargo.toml
+===================================================================
+--- fd-find.orig/Cargo.toml
++++ fd-find/Cargo.toml
+@@ -110,10 +110,10 @@ version = "1.15"
+ version = "1.17.0"
+ 
+ [dependencies.regex]
+-version = "1.7.1"
++version = "1.9.1"
+ 
+ [dependencies.regex-syntax]
+-version = "0.6"
++version = "0.7"
+ 
+ [dev-dependencies.diff]
+ version = "0.1"
