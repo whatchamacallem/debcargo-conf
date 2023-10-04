@@ -1,8 +1,24 @@
-Index: zbus/src/connection.rs
-===================================================================
---- zbus.orig/src/connection.rs
-+++ zbus/src/connection.rs
-@@ -1450,11 +1450,11 @@ mod tests {
+--- a/src/blocking/connection.rs
++++ b/src/blocking/connection.rs
+@@ -283,7 +283,7 @@ mod tests {
+         Guid,
+     };
+ 
+-    #[test]
++    /*#[test]
+     #[timeout(15000)]
+     fn unix_p2p() {
+         let guid = Guid::generate();
+@@ -329,5 +329,5 @@ mod tests {
+                 break;
+             }
+         }
+-    }
++    }*/
+ }
+--- a/src/connection.rs
++++ b/src/connection.rs
+@@ -1477,11 +1477,11 @@ mod tests {
          Ok(())
      }
  
@@ -16,7 +32,7 @@ Index: zbus/src/connection.rs
  
      async fn test_tcp_p2p() -> Result<()> {
          let (server1, client1) = tcp_p2p_pipe().await?;
-@@ -1501,12 +1501,12 @@ mod tests {
+@@ -1528,12 +1528,12 @@ mod tests {
          futures_util::try_join!(server_conn_builder.build(), client_conn_builder.build())
      }
  
@@ -31,11 +47,9 @@ Index: zbus/src/connection.rs
  
      #[cfg(unix)]
      async fn test_unix_p2p() -> Result<()> {
-Index: zbus/src/fdo.rs
-===================================================================
---- zbus.orig/src/fdo.rs
-+++ zbus/src/fdo.rs
-@@ -892,7 +892,7 @@ mod tests {
+--- a/src/fdo.rs
++++ b/src/fdo.rs
+@@ -984,7 +984,7 @@ mod tests {
      use tokio::runtime;
      use zbus_names::WellKnownName;
  
@@ -44,7 +58,7 @@ Index: zbus/src/fdo.rs
      fn error_from_zerror() {
          let m = Message::method(Some(":1.2"), None::<()>, "/", None::<()>, "foo", &()).unwrap();
          let m = Message::method_error(
-@@ -907,7 +907,7 @@ mod tests {
+@@ -999,7 +999,7 @@ mod tests {
          assert_eq!(e, fdo::Error::TimedOut("so long".to_string()),);
          assert_eq!(e.name(), "org.freedesktop.DBus.Error.TimedOut");
          assert_eq!(e.description(), Some("so long"));
@@ -53,11 +67,9 @@ Index: zbus/src/fdo.rs
  
      /*#[test]
      #[timeout(15000)]
-Index: zbus/src/lib.rs
-===================================================================
---- zbus.orig/src/lib.rs
-+++ zbus/src/lib.rs
-@@ -159,7 +159,7 @@ mod tests {
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -162,7 +162,7 @@ mod tests {
          std::env::var_os("ZBUS_GDBUS_TEST").is_some()
      }
  
@@ -66,7 +78,7 @@ Index: zbus/src/lib.rs
      fn msg() {
          let mut m = Message::method(
              None::<()>,
-@@ -183,7 +183,7 @@ mod tests {
+@@ -186,7 +186,7 @@ mod tests {
          let primary = m.primary_header();
          assert!(*primary.serial_num().unwrap() == 11);
          assert!(primary.flags() == MessageFlags::NoAutoStart);
@@ -75,12 +87,10 @@ Index: zbus/src/lib.rs
  
      /*#[test]
      #[timeout(15000)]
-Index: zbus/src/message.rs
-===================================================================
---- zbus.orig/src/message.rs
-+++ zbus/src/message.rs
-@@ -842,7 +842,7 @@ mod tests {
-     use super::{Message, MessageBuilder};
+--- a/src/message.rs
++++ b/src/message.rs
+@@ -555,7 +555,7 @@ mod tests {
+     use super::Message;
      use crate::Error;
  
 -    #[test]
@@ -88,50 +98,16 @@ Index: zbus/src/message.rs
      fn test() {
          #[cfg(unix)]
          let stdout = std::io::stdout();
-@@ -883,9 +883,9 @@ mod tests {
+@@ -596,5 +596,5 @@ mod tests {
          )
          .unwrap();
          assert_eq!(e.to_string(), "Error org.freedesktop.zbus.Error: kaboom!");
 -    }
 +    }*/
- 
--    #[test]
-+    /*#[test]
-     fn test_raw() -> Result<(), Error> {
-         let raw_body: &[u8] = &[16, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4, 0, 0, 0];
-         let message_builder = MessageBuilder::signal("/", "test.test", "test")?;
-@@ -902,5 +902,5 @@ mod tests {
-         assert_eq!(output, vec![1, 2, 3, 4]);
- 
-         Ok(())
--    }
-+    }*/
  }
-Index: zbus/src/blocking/connection.rs
-===================================================================
---- zbus.orig/src/blocking/connection.rs
-+++ zbus/src/blocking/connection.rs
-@@ -270,7 +270,7 @@ mod tests {
-         Guid,
-     };
- 
--    #[test]
-+    /*#[test]
-     #[timeout(15000)]
-     fn unix_p2p() {
-         let guid = Guid::generate();
-@@ -316,5 +316,5 @@ mod tests {
-                 break;
-             }
-         }
--    }
-+    }*/
- }
-Index: zbus/src/raw/connection.rs
-===================================================================
---- zbus.orig/src/raw/connection.rs
-+++ zbus/src/raw/connection.rs
-@@ -225,10 +225,10 @@ mod tests {
+--- a/src/raw/connection.rs
++++ b/src/raw/connection.rs
+@@ -227,10 +227,10 @@ mod tests {
      use crate::message::Message;
      use futures_util::future::poll_fn;
  
@@ -144,10 +120,8 @@ Index: zbus/src/raw/connection.rs
  
      async fn raw_send_receive_async() {
          #[cfg(not(feature = "tokio"))]
-Index: zbus/tests/e2e.rs
-===================================================================
---- zbus.orig/tests/e2e.rs
-+++ zbus/tests/e2e.rs
+--- a/tests/e2e.rs
++++ b/tests/e2e.rs
 @@ -606,12 +606,12 @@ fn iface_and_proxy() {
      block_on(iface_and_proxy_(false));
  }*/
