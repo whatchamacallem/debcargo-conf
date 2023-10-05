@@ -1,0 +1,58 @@
+commit 5594834e913d4e566d07923a5ed099d1d074d154
+Author: Peter Michael Green <plugwash@debian.org>
+Date:   Thu Oct 5 17:38:44 2023 +0000
+
+    Fix rint and rintf on x87.
+
+diff --git a/src/math/rint.rs b/src/math/rint.rs
+index 0c6025c1f..8edbe3440 100644
+--- a/src/math/rint.rs
++++ b/src/math/rint.rs
+@@ -8,9 +8,19 @@ pub fn rint(x: f64) -> f64 {
+         x
+     } else {
+         let ans = if is_positive {
+-            x + one_over_e - one_over_e
++            #[cfg(all(target_arch = "x86", not(target_feature = "sse2")))]
++            let x = force_eval!(x);
++            let xplusoneovere = x + one_over_e;
++            #[cfg(all(target_arch = "x86", not(target_feature = "sse2")))]
++            let xplusoneovere = force_eval!(xplusoneovere);
++            xplusoneovere - one_over_e
+         } else {
+-            x - one_over_e + one_over_e
++            #[cfg(all(target_arch = "x86", not(target_feature = "sse2")))]
++            let x = force_eval!(x);
++            let xminusoneovere = x - one_over_e;
++            #[cfg(all(target_arch = "x86", not(target_feature = "sse2")))]
++            let xminusoneovere = force_eval!(xminusoneovere);
++            xminusoneovere + one_over_e
+         };
+ 
+         if ans == 0.0 {
+diff --git a/src/math/rintf.rs b/src/math/rintf.rs
+index d427793f7..7a7da618a 100644
+--- a/src/math/rintf.rs
++++ b/src/math/rintf.rs
+@@ -8,9 +8,19 @@ pub fn rintf(x: f32) -> f32 {
+         x
+     } else {
+         let ans = if is_positive {
+-            x + one_over_e - one_over_e
++            #[cfg(all(target_arch = "x86", not(target_feature = "sse2")))]
++            let x = force_eval!(x);
++            let xplusoneovere = x + one_over_e;
++            #[cfg(all(target_arch = "x86", not(target_feature = "sse2")))]
++            let xplusoneovere = force_eval!(xplusoneovere);
++            xplusoneovere - one_over_e
+         } else {
+-            x - one_over_e + one_over_e
++            #[cfg(all(target_arch = "x86", not(target_feature = "sse2")))]
++            let x = force_eval!(x);
++            let xminusoneovere = x - one_over_e;
++            #[cfg(all(target_arch = "x86", not(target_feature = "sse2")))]
++            let xminusoneovere = force_eval!(xminusoneovere);
++            xminusoneovere + one_over_e
+         };
+ 
+         if ans == 0.0 {
