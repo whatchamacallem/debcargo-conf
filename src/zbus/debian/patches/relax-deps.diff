@@ -1,20 +1,38 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -27,12 +27,9 @@ license = "MIT"
- repository = "https://github.com/dbus2/zbus/"
- resolver = "2"
+@@ -43,11 +43,11 @@ version = "1.6.0"
+ optional = true
  
--[package.metadata.docs.rs]
--all-features = true
--targets = ["x86_64-unknown-linux-gnu"]
+ [dependencies.async-io]
+-version = "1.12.0"
++version = "1.13"
+ optional = true
  
- [dependencies.async-broadcast]
--version = "0.5.0"
-+version = "0.5"
+ [dependencies.async-lock]
+-version = "2.6.0"
++version = "2.8"
+ optional = true
  
- [dependencies.async-executor]
- version = "1.5.0"
-@@ -116,7 +113,7 @@ version = "1.0"
+ [dependencies.async-recursion]
+@@ -61,7 +61,7 @@ optional = true
+ version = "0.1.58"
+ 
+ [dependencies.blocking]
+-version = "1.0.2"
++version = "1.3"
+ optional = true
+ 
+ [dependencies.byteorder]
+@@ -95,7 +95,7 @@ default-features = false
+ version = "0.4.3"
+ 
+ [dependencies.once_cell]
+-version = "1.4.0"
++version = "1.18"
+ 
+ [dependencies.ordered-stream]
+ version = "0.2"
+@@ -116,7 +116,7 @@ version = "1.0"
  features = ["derive"]
  
  [dependencies.serde-xml-rs]
@@ -23,62 +41,74 @@
  optional = true
  
  [dependencies.serde_repr]
-@@ -143,17 +140,9 @@ features = [
- ]
+@@ -130,7 +130,7 @@ features = ["std"]
+ version = "1.1.0"
+ 
+ [dependencies.tokio]
+-version = "1.21.2"
++version = "1.29"
+ features = [
+     "rt",
+     "net",
+@@ -144,14 +144,14 @@ features = [
  optional = true
  
--[dependencies.tokio-vsock]
+ [dependencies.tokio-vsock]
 -version = "0.3.3"
--optional = true
--
++version = "0.3"
+ optional = true
+ 
  [dependencies.tracing]
  version = "0.1.37"
  
--[dependencies.vsock]
+ [dependencies.vsock]
 -version = "0.3.0"
--optional = true
--
- [dependencies.xdg-home]
- version = "1.0.0"
++version = "0.2"
+ optional = true
  
-@@ -179,7 +168,7 @@ version = "0.3.3"
- version = "0.3.25"
+ [dependencies.xdg-home]
+@@ -176,10 +176,10 @@ features = ["attributes"]
+ version = "0.3.3"
+ 
+ [dev-dependencies.futures-util]
+-version = "0.3.25"
++version = "0.3"
  
  [dev-dependencies.ntest]
 -version = "0.9.0"
-+version = "0.8.1"
++version = "0.8"
  
  [dev-dependencies.tempfile]
  version = "3.3.0"
-@@ -224,45 +213,18 @@ default = ["async-io"]
- gvariant = ["zvariant/gvariant"]
- time = ["zvariant/time"]
- tokio = ["dep:tokio"]
--tokio-vsock = [
--    "dep:tokio-vsock",
--    "tokio",
--]
- url = ["zvariant/url"]
- uuid = ["zvariant/uuid"]
--vsock = [
--    "dep:vsock",
--    "dep:async-io",
--]
+@@ -201,9 +201,8 @@ features = [
+ ]
+ 
+ [dev-dependencies.tracing-subscriber]
+-version = "0.3.16"
++version = "0.3"
+ features = [
+-    "env-filter",
+     "fmt",
+     "ansi",
+ ]
+@@ -234,11 +233,9 @@ vsock = [
+     "dep:vsock",
+     "dep:async-io",
+ ]
 -windows-gdbus = []
++
  xml = ["serde-xml-rs"]
  
- [target."cfg(target_os = \"macos\")".dependencies.async-process]
- version = "1.7.0"
+-[target."cfg(target_os = \"macos\")".dependencies.async-process]
+-version = "1.7.0"
  
  [target."cfg(unix)".dependencies.nix]
--version = "0.26.0"
-+version = "0.26"
- features = [
-     "socket",
+ version = "0.26.0"
+@@ -247,22 +244,3 @@ features = [
      "uio",
  ]
  default-features = false
- 
+-
 -[target."cfg(windows)".dependencies.uds_windows]
 -version = "1.0.2"
 -
@@ -97,3 +127,4 @@
 -    "winerror",
 -    "winsock2",
 -]
+
