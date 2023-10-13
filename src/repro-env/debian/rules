@@ -1,13 +1,16 @@
 #!/usr/bin/make -f
 %:
-	dh $@ --buildsystem cargo --with bash-completion
+	dh $@ --buildsystem cargo
 
 override_dh_auto_test:
 	dh_auto_test -- test --all
 
 override_dh_install:
-	mkdir -p debian/repro-env/usr/share/zsh/vendor-completions debian/repro-env/usr/share/fish/completions
-	debian/repro-env/usr/bin/repro-env completions bash > debian/repro-env.bash
+	mkdir -p \
+		debian/repro-env/usr/share/bash-completion/completions \
+		debian/repro-env/usr/share/zsh/vendor-completions \
+		debian/repro-env/usr/share/fish/completions
+	debian/repro-env/usr/bin/repro-env completions bash > debian/repro-env/usr/share/bash-completion/completions/repro-env
 	debian/repro-env/usr/bin/repro-env completions zsh > debian/repro-env/usr/share/zsh/vendor-completions/_repro-env
 	debian/repro-env/usr/bin/repro-env completions fish > debian/repro-env/usr/share/fish/completions/repro-env.fish
 	dh_install
