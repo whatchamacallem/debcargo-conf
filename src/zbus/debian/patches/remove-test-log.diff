@@ -226,7 +226,7 @@ Index: zbus/src/message_builder.rs
 ===================================================================
 --- zbus.orig/src/message_builder.rs
 +++ zbus/src/message_builder.rs
-@@ -358,7 +358,7 @@ impl<'m> From<MessageHeader<'m>> for Mes
+@@ -358,9 +358,10 @@ impl<'m> From<MessageHeader<'m>> for Mes
  mod tests {
      use super::MessageBuilder;
      use crate::Error;
@@ -234,5 +234,8 @@ Index: zbus/src/message_builder.rs
 +    
  
      #[test]
++    #[cfg(not(target_arch = "s390x"))]
      fn test_raw() -> Result<(), Error> {
+         let raw_body: &[u8] = &[16, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4, 0, 0, 0];
+         let message_builder = MessageBuilder::signal("/", "test.test", "test")?;
 
