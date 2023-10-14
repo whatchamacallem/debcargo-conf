@@ -1,7 +1,7 @@
-Index: build/Cargo.toml
+Index: carapace-spec-clap/Cargo.toml
 ===================================================================
---- build.orig/Cargo.toml
-+++ build/Cargo.toml
+--- carapace-spec-clap.orig/Cargo.toml
++++ carapace-spec-clap/Cargo.toml
 @@ -44,7 +44,7 @@ version = "1.0"
  features = ["derive"]
  
@@ -11,3 +11,286 @@ Index: build/Cargo.toml
  
  [dev-dependencies.snapbox]
  version = "0.4"
+Index: carapace-spec-clap/tests/snapshots/aliases.yaml
+===================================================================
+--- carapace-spec-clap.orig/tests/snapshots/aliases.yaml
++++ carapace-spec-clap/tests/snapshots/aliases.yaml
+@@ -1,6 +1,7 @@
++---
+ name: aliases
+ description: testing bash completions
+ flags:
+-  -f, --flag: cmd flag
+-  -o, --option=: cmd option
+-  -V, --version: Print version
++  "-f, --flag": cmd flag
++  "-o, --option=": cmd option
++  "-V, --version": Print version
+Index: carapace-spec-clap/tests/snapshots/basic.yaml
+===================================================================
+--- carapace-spec-clap.orig/tests/snapshots/basic.yaml
++++ carapace-spec-clap/tests/snapshots/basic.yaml
+@@ -1,11 +1,12 @@
++---
+ name: basic
+-description: ''
++description: ""
+ flags:
+-  -v: ''
++  "-v": ""
+ persistentflags:
+-  -c: ''
++  "-c": ""
+ commands:
+-- name: test
+-  description: Subcommand
+-  flags:
+-    -d*: ''
++  - name: test
++    description: Subcommand
++    flags:
++      "-d*": ""
+Index: carapace-spec-clap/tests/snapshots/feature_sample.yaml
+===================================================================
+--- carapace-spec-clap.orig/tests/snapshots/feature_sample.yaml
++++ carapace-spec-clap/tests/snapshots/feature_sample.yaml
+@@ -1,11 +1,12 @@
++---
+ name: feature_sample
+ description: Tests completions
+ flags:
+-  -c, --config*: some config file
+-  -V, --version: Print version
++  "-c, --config*": some config file
++  "-V, --version": Print version
+ commands:
+-- name: test
+-  description: tests things
+-  flags:
+-    --case=: the case to test
+-    -V, --version: Print version
++  - name: test
++    description: tests things
++    flags:
++      "--case=": the case to test
++      "-V, --version": Print version
+Index: carapace-spec-clap/tests/snapshots/quoting.yaml
+===================================================================
+--- carapace-spec-clap.orig/tests/snapshots/quoting.yaml
++++ carapace-spec-clap/tests/snapshots/quoting.yaml
+@@ -1,23 +1,24 @@
++---
+ name: quoting
+-description: ''
++description: ""
+ flags:
+-  --backslash: Avoid '/n'
+-  --backticks: For more information see `echo test`
+-  --brackets: List packages [filter]
+-  --double-quotes: Can be "always", "auto", or "never"
+-  --expansions: Execute the shell command with $SHELL
+-  --single-quotes: Can be 'always', 'auto', or 'never'
+-  -V, --version: Print version
++  "--backslash": "Avoid '//n'"
++  "--backticks": "For more information see `echo test`"
++  "--brackets": "List packages [filter]"
++  "--double-quotes": "Can be /"always/", /"auto/", or /"never/""
++  "--expansions": Execute the shell command with $SHELL
++  "--single-quotes": "Can be 'always', 'auto', or 'never'"
++  "-V, --version": Print version
+ commands:
+-- name: cmd-single-quotes
+-  description: Can be 'always', 'auto', or 'never'
+-- name: cmd-double-quotes
+-  description: Can be "always", "auto", or "never"
+-- name: cmd-backticks
+-  description: For more information see `echo test`
+-- name: cmd-backslash
+-  description: Avoid '/n'
+-- name: cmd-brackets
+-  description: List packages [filter]
+-- name: cmd-expansions
+-  description: Execute the shell command with $SHELL
++  - name: cmd-single-quotes
++    description: "Can be 'always', 'auto', or 'never'"
++  - name: cmd-double-quotes
++    description: "Can be /"always/", /"auto/", or /"never/""
++  - name: cmd-backticks
++    description: "For more information see `echo test`"
++  - name: cmd-backslash
++    description: "Avoid '//n'"
++  - name: cmd-brackets
++    description: "List packages [filter]"
++  - name: cmd-expansions
++    description: Execute the shell command with $SHELL
+Index: carapace-spec-clap/tests/snapshots/special_commands.yaml
+===================================================================
+--- carapace-spec-clap.orig/tests/snapshots/special_commands.yaml
++++ carapace-spec-clap/tests/snapshots/special_commands.yaml
+@@ -1,21 +1,22 @@
++---
+ name: special_commands
+ description: Tests completions
+ flags:
+-  -c, --config*: some config file
+-  -V, --version: Print version
++  "-c, --config*": some config file
++  "-V, --version": Print version
+ commands:
+-- name: test
+-  description: tests things
+-  flags:
+-    --case=: the case to test
+-    -V, --version: Print version
+-- name: some_cmd
+-  description: tests other things
+-  flags:
+-    -V, --version: Print version
+-- name: some-cmd-with-hyphens
+-  aliases:
+-  - hyphen
+-  description: ''
+-  flags:
+-    -V, --version: Print version
++  - name: test
++    description: tests things
++    flags:
++      "--case=": the case to test
++      "-V, --version": Print version
++  - name: some_cmd
++    description: tests other things
++    flags:
++      "-V, --version": Print version
++  - name: some-cmd-with-hyphens
++    aliases:
++      - hyphen
++    description: ""
++    flags:
++      "-V, --version": Print version
+Index: carapace-spec-clap/tests/snapshots/sub_subcommands.yaml
+===================================================================
+--- carapace-spec-clap.orig/tests/snapshots/sub_subcommands.yaml
++++ carapace-spec-clap/tests/snapshots/sub_subcommands.yaml
+@@ -1,25 +1,26 @@
++---
+ name: sub_subcommands
+ description: Tests completions
+ flags:
+-  -c, --config*: some config file
+-  -V, --version: Print version
++  "-c, --config*": some config file
++  "-V, --version": Print version
+ commands:
+-- name: test
+-  description: tests things
+-  flags:
+-    --case=: the case to test
+-    -V, --version: Print version
+-- name: some_cmd
+-  description: top level subcommand
+-  flags:
+-    -V, --version: Print version
+-  commands:
+-  - name: sub_cmd
+-    description: sub-subcommand
++  - name: test
++    description: tests things
+     flags:
+-      --config=: the other case to test
+-      -V, --version: Print version
+-    completion:
+-      flag:
+-        config:
+-        - Lest quotes aren't escaped.
++      "--case=": the case to test
++      "-V, --version": Print version
++  - name: some_cmd
++    description: top level subcommand
++    flags:
++      "-V, --version": Print version
++    commands:
++      - name: sub_cmd
++        description: sub-subcommand
++        flags:
++          "--config=": the other case to test
++          "-V, --version": Print version
++        completion:
++          flag:
++            config:
++              - "Lest quotes aren't escaped."
+Index: carapace-spec-clap/tests/snapshots/value_hint.yaml
+===================================================================
+--- carapace-spec-clap.orig/tests/snapshots/value_hint.yaml
++++ carapace-spec-clap/tests/snapshots/value_hint.yaml
+@@ -1,42 +1,43 @@
++---
+ name: value_hint
+-description: ''
++description: ""
+ flags:
+-  --choice=: ''
+-  -c, --cmd=: ''
+-  --cmd-name=: ''
+-  -d, --dir=: ''
+-  --email=: ''
+-  -e, --exe=: ''
+-  -f, --file=: ''
+-  -H, --host=: ''
+-  --other=: ''
+-  -p, --path=: ''
+-  --unknown=: ''
+-  --url=: ''
+-  -u, --user=: ''
++  "--choice=": ""
++  "-c, --cmd=": ""
++  "--cmd-name=": ""
++  "-d, --dir=": ""
++  "--email=": ""
++  "-e, --exe=": ""
++  "-f, --file=": ""
++  "-H, --host=": ""
++  "--other=": ""
++  "-p, --path=": ""
++  "--unknown=": ""
++  "--url=": ""
++  "-u, --user=": ""
+ completion:
+   flag:
+     choice:
+-    - bash
+-    - fish
+-    - zsh
++      - bash
++      - fish
++      - zsh
+     cmd:
+-    - $_os.PathExecutables
+-    - $files
++      - $_os.PathExecutables
++      - $files
+     cmd-name:
+-    - $_os.PathExecutables
+-    - $files
++      - $_os.PathExecutables
++      - $files
+     dir:
+-    - $directories
++      - $directories
+     exe:
+-    - $files
++      - $files
+     file:
+-    - $files
++      - $files
+     host:
+-    - $_net.Hosts
++      - $_net.Hosts
+     path:
+-    - $files
++      - $files
+     user:
+-    - $_os.Users
++      - $_os.Users
+   positionalany:
+-  - TODO
++    - TODO
