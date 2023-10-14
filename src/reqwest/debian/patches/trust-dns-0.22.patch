@@ -1,0 +1,172 @@
+This patch is based on a revert of upstream commits
+afc3a9364aae281012a81d2573ed29243c8eda03,
+d3d95a5b560c5cf8d87e346455011b47ab24bd8a and 
+0292486abab25914c046b71ab6d6da24206614d3 djusted for use in the Debian package
+by Peter Micheal Green.
+
+Index: reqwest/src/dns/trust_dns.rs
+===================================================================
+--- reqwest.orig/src/dns/trust_dns.rs
++++ reqwest/src/dns/trust_dns.rs
+@@ -1,9 +1,13 @@
+ //! DNS resolution via the [trust_dns_resolver](https://github.com/bluejekyll/trust-dns) crate
+ 
+ use hyper::client::connect::dns::Name;
+-use once_cell::sync::OnceCell;
++use once_cell::sync::Lazy;
++use tokio::sync::Mutex;
+ pub use trust_dns_resolver::config::{ResolverConfig, ResolverOpts};
+-use trust_dns_resolver::{lookup_ip::LookupIpIntoIter, system_conf, TokioAsyncResolver};
++use trust_dns_resolver::{
++    lookup_ip::LookupIpIntoIter, system_conf, AsyncResolver, TokioConnection,
++    TokioConnectionProvider, TokioHandle,
++};
+ 
+ use std::io;
+ use std::net::SocketAddr;
+@@ -11,24 +15,64 @@ use std::sync::Arc;
+ 
+ use super::{Addrs, Resolve, Resolving};
+ 
++use crate::error::BoxError;
++
++type SharedResolver = Arc<AsyncResolver<TokioConnection, TokioConnectionProvider>>;
++
++static SYSTEM_CONF: Lazy<io::Result<(ResolverConfig, ResolverOpts)>> =
++    Lazy::new(|| system_conf::read_system_conf().map_err(io::Error::from));
++
+ /// Wrapper around an `AsyncResolver`, which implements the `Resolve` trait.
+-#[derive(Debug, Default, Clone)]
++#[derive(Debug, Clone)]
+ pub(crate) struct TrustDnsResolver {
+-    /// Since we might not have been called in the context of a
+-    /// Tokio Runtime in initialization, so we must delay the actual
+-    /// construction of the resolver.
+-    state: Arc<OnceCell<TokioAsyncResolver>>,
++    state: Arc<Mutex<State>>,
+ }
+ 
+ struct SocketAddrs {
+     iter: LookupIpIntoIter,
+ }
+ 
++#[derive(Debug)]
++enum State {
++    Init,
++    Ready(SharedResolver),
++}
++
++impl TrustDnsResolver {
++    /// Create a new resolver with the default configuration,
++    /// which reads from `/etc/resolve.conf`.
++    pub fn new() -> io::Result<Self> {
++        SYSTEM_CONF.as_ref().map_err(|e| {
++            io::Error::new(e.kind(), format!("error reading DNS system conf: {}", e))
++        })?;
++
++        // At this stage, we might not have been called in the context of a
++        // Tokio Runtime, so we must delay the actual construction of the
++        // resolver.
++        Ok(TrustDnsResolver {
++            state: Arc::new(Mutex::new(State::Init)),
++        })
++    }
++}
++
+ impl Resolve for TrustDnsResolver {
+     fn resolve(&self, name: Name) -> Resolving {
+         let resolver = self.clone();
+         Box::pin(async move {
+-            let resolver = resolver.state.get_or_try_init(new_resolver)?;
++            let mut lock = resolver.state.lock().await;
++
++            let resolver = match &*lock {
++                State::Init => {
++                    let resolver = new_resolver().await?;
++                    *lock = State::Ready(resolver.clone());
++                    resolver
++                }
++                State::Ready(resolver) => resolver.clone(),
++            };
++
++            // Don't keep lock once the resolver is constructed, otherwise
++            // only one lookup could be done at a time.
++            drop(lock);
+ 
+             let lookup = resolver.lookup_ip(name.as_str()).await?;
+             let addrs: Addrs = Box::new(SocketAddrs {
+@@ -47,14 +91,18 @@ impl Iterator for SocketAddrs {
+     }
+ }
+ 
+-/// Create a new resolver with the default configuration,
+-/// which reads from `/etc/resolve.conf`.
+-fn new_resolver() -> io::Result<TokioAsyncResolver> {
+-    let (config, opts) = system_conf::read_system_conf().map_err(|e| {
+-        io::Error::new(
+-            io::ErrorKind::Other,
+-            format!("error reading DNS system conf: {}", e),
+-        )
+-    })?;
+-    Ok(TokioAsyncResolver::tokio(config, opts))
++async fn new_resolver() -> Result<SharedResolver, BoxError> {
++    let (config, opts) = SYSTEM_CONF
++        .as_ref()
++        .expect("can't construct TrustDnsResolver if SYSTEM_CONF is error")
++        .clone();
++    new_resolver_with_config(config, opts)
++}
++
++fn new_resolver_with_config(
++    config: ResolverConfig,
++    opts: ResolverOpts,
++) -> Result<SharedResolver, BoxError> {
++    let resolver = AsyncResolver::new(config, opts, TokioHandle)?;
++    Ok(Arc::new(resolver))
+ }
+Index: reqwest/src/lib.rs
+===================================================================
+--- reqwest.orig/src/lib.rs
++++ reqwest/src/lib.rs
+@@ -160,12 +160,12 @@
+ //!   [`Identity`][Identity] type.
+ //! - Various parts of TLS can also be configured or even disabled on the
+ //!   `ClientBuilder`.
+-//!
++//! 
+ //! ## WASM
+ //! The Client implementation automatically switches to the WASM one when the target_arch is wasm32,
+ //! the usage is basically the same as the async api. Some of the features are disabled in wasm
+ //! : [`tls`](tls) [`cookie`](cookie) [`blocking`](blocking).
+-//!
++//! 
+ //!
+ //! ## Optional Features
+ //!
+Index: reqwest/src/async_impl/client.rs
+===================================================================
+--- reqwest.orig/src/async_impl/client.rs
++++ reqwest/src/async_impl/client.rs
+@@ -270,7 +270,7 @@ impl ClientBuilder {
+             let mut resolver: Arc<dyn Resolve> = match config.trust_dns {
+                 false => Arc::new(GaiResolver::new()),
+                 #[cfg(feature = "trust-dns")]
+-                true => Arc::new(TrustDnsResolver::default()),
++                true => Arc::new(TrustDnsResolver::new().map_err(crate::error::builder)?),
+                 #[cfg(not(feature = "trust-dns"))]
+                 true => unreachable!("trust-dns shouldn't be enabled unless the feature is"),
+             };
+Index: reqwest/Cargo.toml
+===================================================================
+--- reqwest.orig/Cargo.toml
++++ reqwest/Cargo.toml
+@@ -350,8 +350,7 @@ optional = true
+ default-features = false
+ 
+ [target."cfg(not(target_arch = \"wasm32\"))".dependencies.trust-dns-resolver]
+-version = "0.23"
+-features = ["tokio-runtime"]
++version = "0.22"
+ optional = true
+ 
+ 
