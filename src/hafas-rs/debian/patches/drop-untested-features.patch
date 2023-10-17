@@ -1,0 +1,76 @@
+Description: Drop untested non-default features
+Last-Update: 2023-10-17
+
+This crate is primarily packaged as a dependency to another app, which
+doesn't use any feature involving JS or WASM (those being marked
+"Untested" in the project's README). In order to simplify packaging and
+avoid introducing an unnecessary package in the Debian archive, let's
+just patch out those features.
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: hafas-rs/Cargo.toml
+===================================================================
+--- hafas-rs.orig/Cargo.toml
++++ hafas-rs/Cargo.toml
+@@ -71,10 +71,6 @@
+ features = ["http1"]
+ optional = true
+ 
+-[dependencies.js-sys]
+-version = "0.3"
+-optional = true
+-
+ [dependencies.log]
+ version = "0.4"
+ 
+@@ -110,26 +106,6 @@
+ ]
+ optional = true
+ 
+-[dependencies.wasm-bindgen]
+-version = "0.2"
+-optional = true
+-
+-[dependencies.wasm-bindgen-futures]
+-version = "0.4"
+-optional = true
+-
+-[dependencies.web-sys]
+-version = "0.3.64"
+-features = [
+-    "Headers",
+-    "Request",
+-    "RequestInit",
+-    "RequestMode",
+-    "Response",
+-    "Window",
+-]
+-optional = true
+-
+ [dev-dependencies.env_logger]
+ version = "0.10.0"
+ 
+@@ -195,12 +171,6 @@
+ ]
+ insa-profile = []
+ irish-rail-profile = []
+-js-error = ["wasm-bindgen"]
+-js-fetch-requester = [
+-    "js-error",
+-    "web-sys",
+-    "wasm-bindgen-futures",
+-]
+ mobil-nrw-profile = []
+ mobiliteit-lu-profile = []
+ nahsh-profile = []
+@@ -242,10 +212,4 @@
+ vsn-profile = []
+ vvt-profile = []
+ vvv-profile = []
+-wasm-bindings = [
+-    "wasm-bindgen/serde-serialize",
+-    "js-sys",
+-    "chrono/wasmbind",
+-    "wasm-bindgen-futures",
+-]
+ zvv-profile = []
