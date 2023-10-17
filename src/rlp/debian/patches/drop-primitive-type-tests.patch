@@ -1,0 +1,195 @@
+Description: primitive-types is not yet packaged in Debian
+
+Index: rlp/Cargo.toml
+===================================================================
+--- rlp.orig/Cargo.toml
++++ rlp/Cargo.toml
+@@ -42,10 +42,6 @@ version = "0.5"
+ [dev-dependencies.hex-literal]
+ version = "0.4"
+ 
+-[dev-dependencies.primitive-types]
+-version = "0.12"
+-features = ["impl-rlp"]
+-
+ [features]
+ default = ["std"]
+ derive = ["rlp-derive"]
+Index: rlp/tests/tests.rs
+===================================================================
+--- rlp.orig/tests/tests.rs
++++ rlp/tests/tests.rs
+@@ -10,7 +10,6 @@ use core::{cmp, fmt};
+ 
+ use bytes::{Bytes, BytesMut};
+ use hex_literal::hex;
+-use primitive_types::{H160, U256};
+ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
+ 
+ #[test]
+@@ -210,19 +209,19 @@ fn encode_u128() {
+ 	run_encode_tests(tests);
+ }
+ 
+-#[test]
+-fn encode_u256() {
+-	let tests = vec![
+-		ETestPair::from((U256::from(0_u64), hex!("80"))),
+-		ETestPair::from((U256::from(0x0100_0000_u64), hex!("8401000000"))),
+-		ETestPair::from((U256::from(0xffff_ffff_u64), hex!("84ffffffff"))),
+-		ETestPair::from((
+-			hex!("  8090a0b0c0d0e0f00910203040506077000000000000000100000000000012f0").into(),
+-			hex!("a08090a0b0c0d0e0f00910203040506077000000000000000100000000000012f0"),
+-		)),
+-	];
+-	run_encode_tests(tests);
+-}
++//#[test]
++//fn encode_u256() {
++//	let tests = vec![
++//		ETestPair::from((U256::from(0_u64), hex!("80"))),
++//		ETestPair::from((U256::from(0x0100_0000_u64), hex!("8401000000"))),
++//		ETestPair::from((U256::from(0xffff_ffff_u64), hex!("84ffffffff"))),
++//		ETestPair::from((
++//			hex!("  8090a0b0c0d0e0f00910203040506077000000000000000100000000000012f0").into(),
++//			hex!("a08090a0b0c0d0e0f00910203040506077000000000000000100000000000012f0"),
++//		)),
++//	];
++//	run_encode_tests(tests);
++//}
+ 
+ #[test]
+ fn encode_str() {
+@@ -268,14 +267,14 @@ fn encode_into_existing_buffer() {
+ 	);
+ }
+ 
+-#[test]
+-fn encode_address() {
+-	let tests = vec![ETestPair::from((
+-		H160::from(hex!("ef2d6d194084c2de36e0dabfce45d046b37d1106")),
+-		hex!("94ef2d6d194084c2de36e0dabfce45d046b37d1106"),
+-	))];
+-	run_encode_tests(tests);
+-}
++//#[test]
++//fn encode_address() {
++//	let tests = vec![ETestPair::from((
++//		H160::from(hex!("ef2d6d194084c2de36e0dabfce45d046b37d1106")),
++//		hex!("94ef2d6d194084c2de36e0dabfce45d046b37d1106"),
++//	))];
++//	run_encode_tests(tests);
++//}
+ 
+ /// Vec<u8> (Bytes) is treated as a single value
+ #[test]
+@@ -466,19 +465,19 @@ fn decode_untrusted_u128() {
+ 	run_decode_tests(tests);
+ }
+ 
+-#[test]
+-fn decode_untrusted_u256() {
+-	let tests = vec![
+-		DTestPair::from((U256::from(0_u64), hex!("80"))),
+-		DTestPair::from((U256::from(0x0100_0000_u64), hex!("8401000000"))),
+-		DTestPair::from((U256::from(0xffff_ffff_u64), hex!("84ffffffff"))),
+-		DTestPair::from((
+-			hex!("  8090a0b0c0d0e0f00910203040506077000000000000000100000000000012f0").into(),
+-			hex!("a08090a0b0c0d0e0f00910203040506077000000000000000100000000000012f0"),
+-		)),
+-	];
+-	run_decode_tests(tests);
+-}
++//#[test]
++//fn decode_untrusted_u256() {
++//	let tests = vec![
++//		DTestPair::from((U256::from(0_u64), hex!("80"))),
++//		DTestPair::from((U256::from(0x0100_0000_u64), hex!("8401000000"))),
++//		DTestPair::from((U256::from(0xffff_ffff_u64), hex!("84ffffffff"))),
++//		DTestPair::from((
++//			hex!("  8090a0b0c0d0e0f00910203040506077000000000000000100000000000012f0").into(),
++//			hex!("a08090a0b0c0d0e0f00910203040506077000000000000000100000000000012f0"),
++//		)),
++//	];
++//	run_decode_tests(tests);
++//}
+ 
+ #[test]
+ fn decode_untrusted_str() {
+@@ -500,14 +499,14 @@ fn decode_untrusted_str() {
+ 	run_decode_tests(tests);
+ }
+ 
+-#[test]
+-fn decode_untrusted_address() {
+-	let tests = vec![DTestPair::from((
+-		H160::from(hex!("ef2d6d194084c2de36e0dabfce45d046b37d1106")),
+-		hex!("94ef2d6d194084c2de36e0dabfce45d046b37d1106"),
+-	))];
+-	run_decode_tests(tests);
+-}
++//#[test]
++//fn decode_untrusted_address() {
++//	let tests = vec![DTestPair::from((
++//		H160::from(hex!("ef2d6d194084c2de36e0dabfce45d046b37d1106")),
++//		hex!("94ef2d6d194084c2de36e0dabfce45d046b37d1106"),
++//	))];
++//	run_decode_tests(tests);
++//}
+ 
+ #[test]
+ fn decode_untrusted_vector_u64() {
+Index: rlp/benches/rlp.rs
+===================================================================
+--- rlp.orig/benches/rlp.rs
++++ rlp/benches/rlp.rs
+@@ -18,14 +18,14 @@ fn bench_encode(c: &mut Criterion) {
+ 			let _ = stream.out();
+ 		})
+ 	});
+-	c.bench_function("encode_u256", |b| {
+-		b.iter(|| {
+-			let mut stream = rlp::RlpStream::new();
+-			let uint: primitive_types::U256 = "8090a0b0c0d0e0f00910203040506077000000000000000100000000000012f0".into();
+-			stream.append(&uint);
+-			let _ = stream.out();
+-		})
+-	});
++	//c.bench_function("encode_u256", |b| {
++	//	b.iter(|| {
++	//		let mut stream = rlp::RlpStream::new();
++	//		let uint: primitive_types::U256 = "8090a0b0c0d0e0f00910203040506077000000000000000100000000000012f0".into();
++	//		stream.append(&uint);
++	//		let _ = stream.out();
++	//	})
++	//});
+ 	c.bench_function("encode_1000_u64", |b| {
+ 		b.iter(|| {
+ 			let mut stream = rlp::RlpStream::new_list(1000);
+@@ -64,16 +64,16 @@ fn bench_decode(c: &mut Criterion) {
+ 			let _: u64 = rlp.as_val().unwrap();
+ 		})
+ 	});
+-	c.bench_function("decode_u256", |b| {
+-		b.iter(|| {
+-			let data = vec![
+-				0xa0, 0x80, 0x90, 0xa0, 0xb0, 0xc0, 0xd0, 0xe0, 0xf0, 0x09, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x77,
+-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x12, 0xf0,
+-			];
+-			let rlp = rlp::Rlp::new(&data);
+-			let _: primitive_types::U256 = rlp.as_val().unwrap();
+-		})
+-	});
++	//c.bench_function("decode_u256", |b| {
++	//	b.iter(|| {
++	//		let data = vec![
++	//			0xa0, 0x80, 0x90, 0xa0, 0xb0, 0xc0, 0xd0, 0xe0, 0xf0, 0x09, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x77,
++	//			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x12, 0xf0,
++	//		];
++	//		let rlp = rlp::Rlp::new(&data);
++	//		let _: primitive_types::U256 = rlp.as_val().unwrap();
++	//	})
++	//});
+ 	c.bench_function("decode_1000_u64", |b| {
+ 		let mut stream = rlp::RlpStream::new_list(1000);
+ 		for i in 0..1000u64 {
