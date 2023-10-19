@@ -1,0 +1,50 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit e6b5a4ef9d202e6d8c316c86a911c4e387570f60
+Author: Thayne McCombs <astrothayne@gmail.com>
+Date:   Tue Oct 17 23:00:56 2023 -0600
+
+    bug: Update clap to 4.4.6
+    
+    This also fixes a couple of problems that are now errors:
+    
+    - Remove use of unstable-grouped feature flag that no longer exists
+    - Fix some conflicts rules with non-existant options
+      * has_results should have been quiet
+      * count doesn't exist. I'm not sure where it came from
+    
+    Fixes: #1397
+
+Index: fd-find/Cargo.toml
+===================================================================
+--- fd-find.orig/Cargo.toml
++++ fd-find/Cargo.toml
+@@ -57,13 +57,12 @@ features = [
+ default-features = false
+ 
+ [dependencies.clap]
+-version = "4"
++version = "4.4.6"
+ features = [
+     "suggestions",
+     "color",
+     "wrap_help",
+     "cargo",
+-    "unstable-grouped",
+     "derive",
+ ]
+ 
+diff --git a/src/cli.rs b/src/cli.rs
+index 994726705..53d0cbbc5 100644
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -26,7 +26,7 @@ use crate::filter::SizeFilter;
+     max_term_width = 98,
+     args_override_self = true,
+     group(ArgGroup::new("execs").args(&["exec", "exec_batch", "list_details"]).conflicts_with_all(&[
+-            "max_results", "has_results", "count"])),
++            "max_results", "quiet"])),
+ )]
+ pub struct Opts {
+     /// Include hidden directories and files in the search results (default:
