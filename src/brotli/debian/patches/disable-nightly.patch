@@ -1,24 +1,5 @@
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -43,10 +43,6 @@
- version = "~2.3"
- default-features = false
- 
--[dependencies.packed_simd_2]
--version = "0.3"
--optional = true
--
- [dependencies.sha2]
- version = "~0.10"
- optional = true
-@@ -59,7 +55,6 @@
- ffi-api = []
- pass-through-ffi-panics = []
- seccomp = ["brotli-decompressor/seccomp"]
--simd = ["packed_simd_2/into_bits"]
- std = ["alloc-stdlib", "brotli-decompressor/std"]
- validation = ["sha2"]
- vector_scratch_space = []
+diff --git a/src/bin/brotli.rs b/src/bin/brotli.rs
+index 1f88866..684fb85 100755
 --- a/src/bin/brotli.rs
 +++ b/src/bin/brotli.rs
 @@ -1,4 +1,4 @@
@@ -27,9 +8,11 @@
  
  mod test_broccoli;
  mod test_custom_dict;
+diff --git a/src/bin/integration_tests.rs b/src/bin/integration_tests.rs
+index 28e6fc8..2c60b41 100755
 --- a/src/bin/integration_tests.rs
 +++ b/src/bin/integration_tests.rs
-@@ -23,10 +23,10 @@
+@@ -23,10 +23,10 @@ use std::time::SystemTime;
  use brotli::BrotliDecompressStream;
  
  
@@ -42,7 +25,7 @@
  
  
  pub struct Buffer {
-@@ -97,7 +97,7 @@
+@@ -97,7 +97,7 @@ impl Runner for Passthrough {
      }
  }
  
@@ -51,7 +34,7 @@
  struct BenchmarkPassthrough<'a> (pub &'a mut Bencher);
  #[cfg(feature="benchmark")]
  impl<'a> Runner for BenchmarkPassthrough<'a>{
-@@ -105,7 +105,7 @@
+@@ -105,7 +105,7 @@ impl<'a> Runner for BenchmarkPassthrough<'a>{
          self.0.iter(cb)
      }
      
@@ -60,7 +43,7 @@
  // option_env!("BENCHMARK_MODE").is_some()
  
  fn decompress_internal<InputType, OutputType, Run: Runner>(r: &mut InputType,
-@@ -793,7 +793,7 @@
+@@ -793,7 +793,7 @@ fn assert_decompressed_input_matches_output(input_slice: &[u8],
    assert_eq!(output.data, output_slice)
  }
  
@@ -69,7 +52,7 @@
  fn benchmark_decompressed_input(input_slice: &[u8],
                                  output_slice: &[u8],
                                  input_buffer_size: usize,
-@@ -813,7 +813,7 @@
+@@ -813,7 +813,7 @@ fn benchmark_decompressed_input(input_slice: &[u8],
    }
    assert_eq!(output.data.len(), output_slice.len());
    assert_eq!(output.data, output_slice)
@@ -78,7 +61,7 @@
  pub struct LimitedBuffer<'a> {
    pub data: &'a mut [u8],
    pub write_offset: usize,
-@@ -972,7 +972,7 @@
+@@ -972,7 +972,7 @@ fn test_ukkonooa() {
                       false);
  }
  
@@ -87,7 +70,7 @@
  #[bench]
  fn bench_e2e_decode_q9_5_1024k(bench: &mut Bencher) {
      let td = expand_test_data(1024 * 1024);
-@@ -1068,7 +1068,7 @@
+@@ -1068,7 +1068,7 @@ fn bench_e2e_rt_q5_1024k(bench: &mut Bencher) {
                       &mut BenchmarkPassthrough(bench),
                       5,
                       false);
@@ -96,7 +79,7 @@
  
  
  #[test]
-@@ -1103,11 +1103,11 @@
+@@ -1103,11 +1103,11 @@ fn test_alice29() {
    assert_decompressed_input_matches_output(ALICE29_BR, ALICE29, 65536, 65536);
  }
  
@@ -110,6 +93,8 @@
  
  #[test]
  fn test_alice1() {
+diff --git a/src/enc/backward_references/benchmark.rs b/src/enc/backward_references/benchmark.rs
+index 50cb179..197cef7 100755
 --- a/src/enc/backward_references/benchmark.rs
 +++ b/src/enc/backward_references/benchmark.rs
 @@ -1,3 +1,4 @@
@@ -117,11 +102,13 @@
  #![cfg(feature="benchmark")]
  #![cfg(feature="std")]
  extern crate test;
-@@ -319,3 +320,4 @@
+@@ -319,3 +320,4 @@ fn bench_256k_cur_specialized(bench: &mut test::Bencher) {
                              &mut output);
    });
  }
 +*/
+diff --git a/src/enc/backward_references/mod.rs b/src/enc/backward_references/mod.rs
+index d381473..b0df9b2 100755
 --- a/src/enc/backward_references/mod.rs
 +++ b/src/enc/backward_references/mod.rs
 @@ -2,7 +2,6 @@
@@ -132,6 +119,8 @@
  use super::command::{Command, ComputeDistanceCode, InitCommand, BrotliDistanceParams};
  use super::hash_to_binary_tree::{H10, H10Buckets, H10DefaultParams, ZopfliNode};
  use super::dictionary_hash::kStaticDictionaryHash;
+diff --git a/src/lib.rs b/src/lib.rs
+index ac8ca08..5448e98 100755
 --- a/src/lib.rs
 +++ b/src/lib.rs
 @@ -4,7 +4,6 @@
