@@ -1,0 +1,68 @@
+Description: Update for regex-syntax 0.8
+Author: Peter Michael Green <plugwash@debian.org>
+
+--- rust-tree-sitter-cli-0.20.8.orig/Cargo.toml
++++ rust-tree-sitter-cli-0.20.8/Cargo.toml
+@@ -68,10 +68,10 @@ version = "0.4.6"
+ features = ["std"]
+ 
+ [dependencies.regex]
+-version = "1"
++version = "1.10"
+ 
+ [dependencies.regex-syntax]
+-version = "0.7.4"
++version = "0.8"
+ 
+ [dependencies.rustc-hash]
+ version = "1"
+--- rust-tree-sitter-cli-0.20.8.orig/src/generate/prepare_grammar/expand_tokens.rs
++++ rust-tree-sitter-cli-0.20.8/src/generate/prepare_grammar/expand_tokens.rs
+@@ -6,7 +6,7 @@ use anyhow::{anyhow, Context, Result};
+ use lazy_static::lazy_static;
+ use regex::Regex;
+ use regex_syntax::ast::{
+-    parse, Ast, Class, ClassPerlKind, ClassSet, ClassSetBinaryOpKind, ClassSetItem,
++    parse, Ast, ClassPerlKind, ClassSet, ClassSetBinaryOpKind, ClassSetItem,
+     ClassUnicodeKind, RepetitionKind, RepetitionRange,
+ };
+ use std::collections::HashMap;
+@@ -223,32 +223,30 @@ impl NfaBuilder {
+                 Ok(true)
+             }
+             Ast::Assertion(_) => Err(anyhow!("Regex error: Assertions are not supported")),
+-            Ast::Class(class) => match class {
+-                Class::Unicode(class) => {
++            Ast::ClassUnicode(class) => {
+                     let mut chars = self.expand_unicode_character_class(&class.kind)?;
+                     if class.negated {
+                         chars = chars.negate();
+                     }
+                     self.push_advance(chars, next_state_id);
+                     Ok(true)
+-                }
+-                Class::Perl(class) => {
++            }
++            Ast::ClassPerl(class) => {
+                     let mut chars = self.expand_perl_character_class(&class.kind);
+                     if class.negated {
+                         chars = chars.negate();
+                     }
+                     self.push_advance(chars, next_state_id);
+                     Ok(true)
+-                }
+-                Class::Bracketed(class) => {
++            }
++            Ast::ClassBracketed(class) => {
+                     let mut chars = self.translate_class_set(&class.kind)?;
+                     if class.negated {
+                         chars = chars.negate();
+                     }
+                     self.push_advance(chars, next_state_id);
+                     Ok(true)
+-                }
+-            },
++            }
+             Ast::Repetition(repetition) => match repetition.op.kind {
+                 RepetitionKind::ZeroOrOne => {
+                     self.expand_zero_or_one(&repetition.ast, next_state_id)
