@@ -1,0 +1,277 @@
+This patch is based on the commit described below, taken from upstream merge
+request https://gitlab.com/sequoia-pgp/sequoia/-/merge_requests/1567 and
+adapted for use in the Debian package by Peter Michael Green.
+
+commit 30bbee2ea7831b4e0c090d6dfe9f007365713484
+Author: Neal H. Walfield <neal@pep.foundation>
+Date:   Tue Oct 24 12:03:06 2023 +0200
+
+    openpgp: Upgrade regex-syntax.
+    
+      - Upgrade regex-syntax to 0.8.
+    
+      - Fixes #1056.
+
+Index: sequoia-openpgp/src/regex/mod.rs
+===================================================================
+--- sequoia-openpgp.orig/src/regex/mod.rs
++++ sequoia-openpgp/src/regex/mod.rs
+@@ -606,10 +606,6 @@ impl RegexSet {
+             match grammar::RegexParser::new().parse(re, lexer) {
+                 Ok(hir) => {
+                     had_good = true;
+-                    let hir = hir::Hir::group(hir::Group {
+-                        kind: hir::GroupKind::NonCapturing,
+-                        hir: Box::new(hir),
+-                    });
+                     regexes.push(hir);
+                 }
+                 Err(err) => {
+@@ -1411,6 +1407,65 @@ mod tests {
+             (true, "xabcdey"),
+             (false, "xa(b(c)d)ey"),
+         ]);
++        a("x(a|b)y", &[
++            (false, "xy"),
++            (true, "xay"),
++            (true, "xby"),
++            (false, "xaay"),
++            (false, "xbby"),
++            (false, "xaby"),
++            (false, "xaaby"),
++            (false, "xabby"),
++            (false, "xaabby"),
++            (false, "xcy"),
++        ]);
++        a("x(a|bc)y", &[
++            (false, "xy"),
++            (true, "xay"),
++            (false, "xby"),
++            (true, "xbcy"),
++            (false, "xaay"),
++            (false, "xbby"),
++            (false, "xaby"),
++            (false, "xabcy"),
++            (false, "xabby"),
++            (false, "xaabby"),
++            (false, "xcy"),
++            (false, "xacy"),
++        ]);
++        a("x(a|b|c)y", &[
++            (false, "xy"),
++            (true, "xay"),
++            (true, "xby"),
++            (true, "xcy"),
++            (false, "xaay"),
++            (false, "xbby"),
++            (false, "xaby"),
++            (false, "xabcy"),
++            (false, "xabby"),
++            (false, "xaabby"),
++            (false, "xacy"),
++        ]);
++        a("x(a|b)(c|d)y", &[
++            (false, "xy"),
++            (false, "xay"),
++            (false, "xby"),
++            (false, "xcy"),
++            (false, "xdy"),
++            (false, "xaay"),
++            (false, "xbby"),
++            (false, "xccy"),
++            (false, "xddy"),
++            (false, "xaby"),
++            (false, "xcdy"),
++            (true, "xacy"),
++            (true, "xady"),
++            (true, "xbcy"),
++            (true, "xbdy"),
++            (false, "xabcy"),
++            (false, "xabby"),
++            (false, "xaabby"),
++        ]);
+         a("x(a+|b+)y", &[
+             (false, "xy"),
+             (true, "xay"),
+@@ -2017,7 +2072,10 @@ mod tests {
+         // Try to make sure one re does not leak into another.
+         let re = RegexSet::new(&[ "cd$", "^ab" ])?;
+         assert!(re.is_match("abxx"));
++        assert!(! re.is_match("xabxx"));
+         assert!(re.is_match("xxcd"));
++        assert!(! re.is_match("xxcdx"));
++        assert!(re.is_match("abcdx"));
+ 
+         // Invalid regular expressions should be ignored.
+         let re = RegexSet::new(&[ "[ab", "cd]", "x" ])?;
+@@ -2052,6 +2110,14 @@ mod tests {
+         assert!(re.is_match("cd]"));
+         assert!(re.is_match("x"));
+ 
++        // The empty branch of the alternation should match everything.
++        let re = RegexSet::new(&[ "ab|", "cd" ])?;
++        assert!(re.is_match("a"));
++        assert!(re.is_match("b"));
++        assert!(re.is_match("x"));
++        assert!(re.is_match("xyx"));
++        assert!(re.is_match(""));
++
+         Ok(())
+     }
+ 
+Index: sequoia-openpgp/Cargo.toml
+===================================================================
+--- sequoia-openpgp.orig/Cargo.toml
++++ sequoia-openpgp/Cargo.toml
+@@ -183,7 +183,7 @@ optional = true
+ version = "1"
+ 
+ [dependencies.regex-syntax]
+-version = "0.6"
++version = "0.8"
+ 
+ [dependencies.ripemd]
+ version = "0.1"
+diff --git a/openpgp/src/regex/grammar.lalrpop b/openpgp/src/regex/grammar.lalrpop
+index fccd84f84..369afe0fe 100644
+--- openpgp/src/regex/grammar.lalrpop
++++ openpgp/src/regex/grammar.lalrpop
+@@ -25,7 +25,7 @@ pub(crate) Regex : Hir = {
+         // This is actually required for version 1.3.7 of the regex
+         // crate, which is the version that is in Debian Bullseye.
+         // See issue #694 for details.
+-        if r.iter().any(|b| b.kind().is_empty()) {
++        if r.iter().any(|b| *b.kind() == hir::HirKind::Empty) {
+             hir::Hir::empty()
+         } else {
+             Hir::alternation(r)
+@@ -46,14 +46,11 @@ Branch : Hir = {
+         hir::Hir::empty()
+     },
+     <p:Piece+> => {
+-        if p.iter().all(|p| p.kind().is_empty()) {
++        if p.iter().all(|p| *p.kind() == hir::HirKind::Empty) {
+             // All pieces are empty.  Just return empty.
+             hir::Hir::empty()
+         } else {
+-            hir::Hir::group(hir::Group {
+-                kind: hir::GroupKind::NonCapturing,
+-                hir: Box::new(hir::Hir::concat(p)),
+-            })
++            hir::Hir::concat(p)
+         }
+     },
+ }
+@@ -61,41 +58,44 @@ Branch : Hir = {
+ Piece : Hir = {
+     <a:Atom> => a,
+     <a:Atom> STAR => {
+-        if a.kind().is_empty() {
++        if *a.kind() == hir::HirKind::Empty {
+             // Piece is empty.  This is equivalent to empty so just
+             // return it.
+             a
+         } else {
+             hir::Hir::repetition(hir::Repetition {
+-                kind: hir::RepetitionKind::ZeroOrMore,
++                min: 0,
++                max: None,
+                 greedy: true,
+-                hir: Box::new(a)
++                sub: Box::new(a)
+             })
+         }
+     },
+     <a:Atom> PLUS => {
+-        if a.kind().is_empty() {
++        if *a.kind() == hir::HirKind::Empty {
+             // Piece is empty.  This is equivalent to empty so just
+             // return it.
+             a
+         } else {
+             hir::Hir::repetition(hir::Repetition {
+-                kind: hir::RepetitionKind::OneOrMore,
++                min: 1,
++                max: None,
+                 greedy: true,
+-                hir: Box::new(a)
++                sub: Box::new(a)
+             })
+         }
+     },
+     <a:Atom> QUESTION => {
+-        if a.kind().is_empty() {
++        if *a.kind() == hir::HirKind::Empty {
+             // Piece is empty.  This is equivalent to empty so just
+             // return it.
+             a
+         } else {
+             hir::Hir::repetition(hir::Repetition {
+-                kind: hir::RepetitionKind::ZeroOrOne,
++                min: 0,
++                max: Some(1),
+                 greedy: true,
+-                hir: Box::new(a)
++                sub: Box::new(a)
+             })
+         }
+     },
+@@ -103,38 +103,44 @@ Piece : Hir = {
+ 
+ Atom : Hir = {
+     LPAREN <r:Regex> RPAREN => {
+-        if r.kind().is_empty() {
+-            r
+-        } else {
+-            hir::Hir::group(hir::Group {
+-                kind: hir::GroupKind::NonCapturing,
+-                hir: Box::new(r),
+-            })
+-        }
++        r
+     },
+ 
+     Range,
+ 
+     DOT => {
+-        hir::Hir::any(false)
++        hir::Hir::dot(hir::Dot::AnyChar)
+     },
+     CARET => {
+-        hir::Hir::anchor(hir::Anchor::StartText)
++        hir::Hir::look(hir::Look::Start)
+     },
+     DOLLAR => {
+-        hir::Hir::anchor(hir::Anchor::EndText)
++        hir::Hir::look(hir::Look::End)
+     },
+ 
+     BACKSLASH <t:AnyChar> => {
+-        hir::Hir::literal(hir::Literal::Unicode(t.to_char()))
++        // "A buffer of length four is large enough to encode any
++        // char."
++        //
++        // https://doc.rust-lang.org/std/primitive.char.html#method.encode_utf8
++        let mut buffer = [0; 4];
++        // Convert the Unicode character t to a string.
++        let s = t.to_char().encode_utf8(&mut buffer);
++        hir::Hir::literal(s.as_bytes())
+     },
+ 
+     DASH => {
+-        hir::Hir::literal(hir::Literal::Unicode('-'))
++        hir::Hir::literal("-".as_bytes())
+     },
+ 
+     <t:OTHER> => {
+-        hir::Hir::literal(hir::Literal::Unicode(t.to_char()))
++        // "A buffer of length four is large enough to encode any
++        // char."
++        //
++        // https://doc.rust-lang.org/std/primitive.char.html#method.encode_utf8
++        let mut buffer = [0; 4];
++        let s = t.to_char().encode_utf8(&mut buffer);
++        hir::Hir::literal(s.as_bytes())
+     },
+ 
+ }
