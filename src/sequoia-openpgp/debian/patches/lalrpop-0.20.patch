@@ -1,0 +1,78 @@
+Index: sequoia-openpgp/Cargo.toml
+===================================================================
+--- sequoia-openpgp.orig/Cargo.toml
++++ sequoia-openpgp/Cargo.toml
+@@ -131,7 +131,7 @@ optional = true
+ version = ">=0.2, <0.5"
+ 
+ [dependencies.lalrpop-util]
+-version = ">=0.17, <0.20"
++version = "0.20"
+ 
+ [dependencies.lazy_static]
+ version = "1.4.0"
+@@ -236,7 +236,7 @@ version = "0.8"
+ version = "6.0"
+ 
+ [build-dependencies.lalrpop]
+-version = ">=0.17, <0.20"
++version = "0.20"
+ default-features = false
+ 
+ [features]
+Index: sequoia-openpgp/src/cert/parser/low_level/mod.rs
+===================================================================
+--- sequoia-openpgp.orig/src/cert/parser/low_level/mod.rs
++++ sequoia-openpgp/src/cert/parser/low_level/mod.rs
+@@ -60,8 +60,8 @@ pub(crate) fn parse_error_downcast(e: Pa
+         ParseError::User { error }
+         => ParseError::User { error },
+ 
+-        ParseError::UnrecognizedEOF { location, expected }
+-        => ParseError::UnrecognizedEOF { location, expected },
++        ParseError::UnrecognizedEof { location, expected }
++        => ParseError::UnrecognizedEof { location, expected },
+     }
+ }
+ 
+Index: sequoia-openpgp/src/cert/parser/mod.rs
+===================================================================
+--- sequoia-openpgp.orig/src/cert/parser/mod.rs
++++ sequoia-openpgp/src/cert/parser/mod.rs
+@@ -224,7 +224,7 @@ impl KeyringValidator {
+         } else {
+             match r {
+                 Ok(_) => KeyringValidity::KeyringPrefix,
+-                Err(ParseError::UnrecognizedEOF { .. }) =>
++                Err(ParseError::UnrecognizedEof { .. }) =>
+                     KeyringValidity::KeyringPrefix,
+                 Err(err) =>
+                     KeyringValidity::Error(
+Index: sequoia-openpgp/src/message/mod.rs
+===================================================================
+--- sequoia-openpgp.orig/src/message/mod.rs
++++ sequoia-openpgp/src/message/mod.rs
+@@ -274,7 +274,7 @@ impl MessageValidator {
+         } else {
+             match r {
+                 Ok(_) => MessageValidity::MessagePrefix,
+-                Err(ParseError::UnrecognizedEOF { .. }) =>
++                Err(ParseError::UnrecognizedEof { .. }) =>
+                     MessageValidity::MessagePrefix,
+                 Err(ref err) =>
+                     MessageValidity::Error(
+Index: sequoia-openpgp/src/regex/mod.rs
+===================================================================
+--- sequoia-openpgp.orig/src/regex/mod.rs
++++ sequoia-openpgp/src/regex/mod.rs
+@@ -288,8 +288,8 @@ pub(crate) fn parse_error_downcast(e: Pa
+         ParseError::User { error }
+         => ParseError::User { error },
+ 
+-        ParseError::UnrecognizedEOF { location, expected }
+-        => ParseError::UnrecognizedEOF { location, expected },
++        ParseError::UnrecognizedEof { location, expected }
++        => ParseError::UnrecognizedEof { location, expected },
+     }
+ }
+ 
