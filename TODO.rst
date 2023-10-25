@@ -72,14 +72,22 @@ librsvg
 
 see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629  
 
+
 [ ] nalgebra: 4 reverse dependencies
+
 [ ] simba: 2 reverse dependencies
+
 [ ] rctree: no missing dependencies
+
 [ ] lopdf: one reverse dependency
-[ ] yeslogic-fontconfig-sys:
+
+[ ] yeslogic-fontconfig-sys
+
 [x] clap v4
+
 [x] GTK related packages
-[ ] some cairo related packages (need newer gtk)
+
+[x] some cairo related packages (need newer gtk)
 
 
 bench
@@ -91,14 +99,6 @@ cargo-deb
 ----------------
 
 * should be packagable
-
-
-rustup (#1026333)
-------
-
-* rustup (not available as a crate)
- * download (private crate) (needs patched out reqwest features) 
-  * async-compression (merged)
 
 
 clap v2 dependency list 
@@ -139,7 +139,7 @@ sys crate overview
 * gstreamer-audio-sys -> gstreamer-sys
 * gstreamer-video-sys -> gstreamer-sys
 * gstreamer-pbutils-sys -> gstreamer-audio-sys
-* gstreamer-player-sys -> gstreamer-video-sys
+* gstreamer-play-sys -> gstreamer-video-sys
 
 
 Non-sys crate overview
@@ -159,7 +159,7 @@ Non-sys crate overview
 * gdk -> gdk-pixbuf, gio, glib, cairo-rs, pango, gdk-sys
 * gtk -> gtk3-macros, pango, gdk, gdk-pixbuf, cairo-rs, atk
 * gdk-x11 -> glib, gio, gdk, x11, gdkx11-sys
-* libhandy -> gdk, glib, gio, pango, gdk-pixbuf, gtk
+
 
 * gdk4 -> cairo-rs, gio, glib, pango, gdk-pixbuf, gdk4-sys
 * gdk4-x11 -> gdk4
@@ -172,6 +172,7 @@ Non-sys crate overview
 * gstreamer-base -> gstreamer
 * gstreamer-video -> gstreamer-base
 * gstreamer-audio -> gstreamer-audio
+* gstreamer-play -> gstreamer-video
   
 cxx depedency tree
 -----------------
@@ -205,27 +206,20 @@ fractal (#900928)
 
 * gspell
    * gspell-sys
-* gstreamer-editing-services
-* gstreamer-player
+* ???
 * matrix-sdk (WIP)
 * sourceview5
-* ashpd crates
 
-obfuscate
+
+obfuscate (new)
 ---------
 
-* libadwaita
+
 
 podcasts (#965044)
 --------
+ * can be packaged
 
-* gstreamer-player
-* mpris-player (broken)
-
-gping (#975495)
--------
-
-* needs an update
 
 lfs (#1006367)
 -------
@@ -234,16 +228,11 @@ lfs (#1006367)
  * coloor
  * minimad (merged)
 
-cargo debstatus (#1026852)
-------
-
-* postgres (merged)
 
 bottom
 -------
 
-* no missing deps, waiting on upstream to drop heim
-* TODO: file ITP
+* in new
 
 macchina
 ------
@@ -256,10 +245,7 @@ macchina
 shortwave (#951166)
 -------
 
-* libadwaita
-* mdns (merged)
-* libshumate
-* mpris-player ( deprecated, fails to build against newer dbus)
+* waiting for upstream to switch to mpris-server
 
 popsicle (#1007982)
 ------
@@ -283,9 +269,8 @@ Binary crates worth packaging (please add if you know more):
 - asus-ctl - control asus laptops (https://gitlab.com/asus-linux/asusctl)
 - bench - simple benchmarking
 - bingrep - Grep through binaries from various OSs and architectures.
-- bottom - Cross-platform monitoring tool (https://github.com/ClementTsang/bottom)
+- bottom - Cross-platform monitoring tool (https://github.com/ClementTsang/bottom)i -> in new
 - cargo-deb - Create Debian packages from Cargo projects
-- cargo-debstatus - Print the status of crate’s dependencies in Debian
 - cargo-download - Download sources of a crate
 - cargo-edit - Cargo editing subcommands (add, rm, upgrade)
 - diskonaut - interactive disk usage tui tool
@@ -298,7 +283,6 @@ Binary crates worth packaging (please add if you know more):
 - rural - User-friendly command-line HTTP tool
 - rust-analyzer - modular rust compiler frontend with LSP
 - rustfmt-nightly - rust coding style
-- rustup - installing and managing multiple rust toolchains
 - tmux-hints - Find matches (e.g. urls) and navigate them by keyboard
 - viu - Command-line image viewer
 - xsv - Command line program for manipulating CSV files
@@ -315,7 +299,7 @@ GUI GTK-based programs:
 - health - health tracking app (GTK/libadwaita, https://apps.gnome.org/de/app/dev.Cogitri.Health/)
 - kooha - screen recorder (GTK/libadwaita, https://github.com/SeaDve/Kooha)
 - mousai - song recognition (GTK/libadwaita, https://apps.gnome.org/de/app/io.github.seadve.Mousai/)
-- obfuscate - censor private information (GTK/libadwaita, https://apps.gnome.org/de/app/com.belmoussaoui.Obfuscate/)
+- obfuscate - censor private information (GTK/libadwaita, https://apps.gnome.org/de/app/com.belmoussaoui.Obfuscate/) -> new
 - pika-backup - backup program (GTK/libadwaita, https://apps.gnome.org/de/app/org.gnome.World.PikaBackup/)
 - podcasts - Podcasts app (GTK, https://wiki.gnome.org/Apps/Podcasts)
 - popsicle - USB flasher (GTK, https://github.com/pop-os/popsicle)
