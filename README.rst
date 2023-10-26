@@ -53,6 +53,7 @@ To prepare a release
   ./release.sh <rust-crate-name>                     # or
   ./release.sh <rust-crate-name> <old-version>       # as appropriate
   DISTRO=experimental ./release.sh <rust-crate-name> # to target another distro
+  EXTRA_DEBS=build/*.deb ./release.sh <rust-crate-name> # use local dependencies
 
 This prepares the necessary Debian files in ``build/``, and creates a git
 branch to manage the packaging until it is accepted in Debian itself. You need
