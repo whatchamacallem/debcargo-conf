@@ -9,14 +9,12 @@ Author: Peter Michael Green <plugwash@debian.org>
 
 --- rust-tss-esapi-sys-0.4.0.orig/Cargo.toml
 +++ rust-tss-esapi-sys-0.4.0/Cargo.toml
-@@ -34,7 +34,6 @@ repository = "https://github.com/paralla
- 
+@@ -35,5 +35,4 @@ repository = "https://github.com/paralla
  [build-dependencies.bindgen]
- version = "0.66.0"
+ version = "0.66.1"
 -optional = true
  
  [build-dependencies.pkg-config]
- version = "0.3.0"
 @@ -43,4 +42,4 @@ version = "0.3.0"
  version = "0.12.0"
  
@@ -25,14 +23,12 @@ Author: Peter Michael Green <plugwash@debian.org>
 +generate-bindings = []
 --- rust-tss-esapi-sys-0.4.0.orig/build.rs
 +++ rust-tss-esapi-sys-0.4.0/build.rs
-@@ -1,7 +1,6 @@
- // Copyright 2021 Contributors to the Parsec project.
+@@ -2,5 +2,4 @@
  // SPDX-License-Identifier: Apache-2.0
  
 -#[cfg(feature = "generate-bindings")]
  use std::path::PathBuf;
  
- const MINIMUM_VERSION: &str = "2.3.3";
 @@ -32,7 +31,13 @@ fn main() {
              (Architecture::X86_64, OperatingSystem::Darwin) => {}
              (Architecture::X86_64, OperatingSystem::Linux) => {}
@@ -48,11 +44,9 @@ Author: Peter Michael Green <plugwash@debian.org>
              }
          }
  
-@@ -58,7 +63,6 @@ fn main() {
+@@ -59,5 +64,4 @@ fn main() {
  }
  
- #[allow(clippy::uninlined_format_args)]
 -#[cfg(feature = "generate-bindings")]
  pub fn generate_from_system(esapi_out: PathBuf) {
      pkg_config::Config::new()
-         .atleast_version(MINIMUM_VERSION)
