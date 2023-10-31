@@ -1,0 +1,53 @@
+Index: tokio-uring/Cargo.toml
+===================================================================
+--- tokio-uring.orig/Cargo.toml
++++ tokio-uring/Cargo.toml
+@@ -62,11 +62,11 @@ version = "1.0.0"
+ version = "0.4.2"
+ 
+ [dependencies.socket2]
+-version = "0.4.4"
++version = "0.5"
+ features = ["all"]
+ 
+ [dependencies.tokio]
+-version = "1.2"
++version = "1.30"
+ features = [
+     "net",
+     "rt",
+@@ -85,7 +85,7 @@ version = "0.1.1"
+ version = "3.2.0"
+ 
+ [dev-dependencies.tokio]
+-version = "1.21.0"
++version = "1.30"
+ 
+ [dev-dependencies.tokio-test]
+ version = "0.4.2"
+Index: tokio-uring/src/driver/accept.rs
+===================================================================
+--- tokio-uring.orig/src/driver/accept.rs
++++ tokio-uring/src/driver/accept.rs
+@@ -42,7 +42,7 @@ impl Completable for Accept {
+         let fd = SharedFd::new(fd as i32);
+         let socket = Socket { fd };
+         let (_, addr) = unsafe {
+-            socket2::SockAddr::init(move |addr_storage, len| {
++            socket2::SockAddr::try_init(move |addr_storage, len| {
+                 *addr_storage = self.socketaddr.0.to_owned();
+                 *len = self.socketaddr.1;
+                 Ok(())
+Index: tokio-uring/src/driver/recv_from.rs
+===================================================================
+--- tokio-uring.orig/src/driver/recv_from.rs
++++ tokio-uring/src/driver/recv_from.rs
+@@ -27,7 +27,7 @@ impl<T: IoBufMut> Op<RecvFrom<T>> {
+             std::slice::from_raw_parts_mut(buf.stable_mut_ptr(), buf.bytes_total())
+         })];
+ 
+-        let socket_addr = Box::new(unsafe { SockAddr::init(|_, _| Ok(()))?.1 });
++        let socket_addr = Box::new(unsafe { SockAddr::try_init(|_, _| Ok(()))?.1 });
+ 
+         let mut msghdr: Box<libc::msghdr> = Box::new(unsafe { std::mem::zeroed() });
+         msghdr.msg_iov = io_slices.as_mut_ptr().cast();
