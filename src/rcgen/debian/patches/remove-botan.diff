@@ -2,25 +2,57 @@ Index: rcgen/Cargo.toml
 ===================================================================
 --- rcgen.orig/Cargo.toml
 +++ rcgen/Cargo.toml
-@@ -89,4 +89,0 @@ version = "0.10"
--
--[target."cfg(not(windows))".dev-dependencies.botan]
+@@ -74,10 +74,6 @@ features = [
+ version = "1.2"
+ optional = true
+ 
+-[dev-dependencies.botan]
 -version = "0.10"
 -features = ["vendored"]
+-
+ [dev-dependencies.openssl]
+ version = "0.10"
+ 
+Index: rcgen/tests/botan.rs
+===================================================================
 --- rcgen.orig/tests/botan.rs
 +++ rcgen/tests/botan.rs
-@@ -11,7 +11,7 @@ fn default_params() -> CertificateParams
+@@ -17,7 +17,7 @@ fn default_params() -> CertificateParams
  	params
  }
  
--fn check_cert<'a, 'b>(cert_der :&[u8], cert :&'a Certificate) {
-+/*fn check_cert<'a, 'b>(cert_der :&[u8], cert :&'a Certificate) {
+-fn check_cert<'a, 'b>(cert_der: &[u8], cert: &'a Certificate) {
++/*fn check_cert<'a, 'b>(cert_der: &[u8], cert: &'a Certificate) {
  	println!("{}", cert.serialize_pem().unwrap());
  	check_cert_ca(cert_der, cert, cert_der);
  }
-@@ -199,4 +199,4 @@ fn test_botan_imported_ca_with_printable
+@@ -200,9 +200,9 @@ fn test_botan_imported_ca() {
  	let cert_der = cert.serialize_der_with_signer(&imported_ca_cert).unwrap();
  
  	check_cert_ca(&cert_der, &cert, &ca_cert_der);
+-}
++}*/
+ 
+-#[cfg(feature = "x509-parser")]
++/*#[cfg(feature = "x509-parser")]
+ #[test]
+ fn test_botan_imported_ca_with_printable_string() {
+ 	use std::convert::TryInto;
+@@ -237,9 +237,9 @@ fn test_botan_imported_ca_with_printable
+ 	let cert_der = cert.serialize_der_with_signer(&imported_ca_cert).unwrap();
+ 
+ 	check_cert_ca(&cert_der, &cert, &ca_cert_der);
+-}
++}*/
+ 
+-#[test]
++/*#[test]
+ fn test_botan_crl_parse() {
+ 	// Create an issuer CA.
+ 	let alg = &rcgen::PKCS_ECDSA_P256_SHA256;
+@@ -292,4 +292,4 @@ fn test_botan_crl_parse() {
+ 
+ 	// We should find the EE cert revoked.
+ 	assert!(crl.is_revoked(&botan_ee).unwrap());
 -}
 +}*/
