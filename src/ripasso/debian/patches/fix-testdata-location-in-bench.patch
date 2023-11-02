@@ -2,7 +2,17 @@ Index: ripasso/benches/library_benchmark.rs
 ===================================================================
 --- ripasso.orig/benches/library_benchmark.rs
 +++ ripasso/benches/library_benchmark.rs
-@@ -44,11 +44,24 @@ fn pop_list(password_dir: PathBuf) -> pa
+@@ -5,8 +5,7 @@ use flate2::read::GzDecoder;
+ use ripasso::{crypto::CryptoImpl, pass};
+ use tar::Archive;
+ 
+-fn unpack_tar_gz(mut base_path: PathBuf, tar_gz_name: &str) -> Result<(), std::io::Error> {
+-    let target = format!("{}", base_path.as_path().display());
++fn unpack_tar_gz(mut base_path: PathBuf, tar_gz_name: &str, target:&str) -> Result<(), std::io::Error> {
+     base_path.push(tar_gz_name);
+ 
+     let path = format!("{}", base_path.as_path().display());
+@@ -44,19 +43,34 @@ fn pop_list(password_dir: PathBuf) -> pa
  }
  
  fn criterion_benchmark_load_4_passwords(c: &mut Criterion) {
@@ -31,4 +41,24 @@ Index: ripasso/benches/library_benchmark.rs
 +    }
      base_path.push("testres");
  
-     let mut password_dir: PathBuf = base_path.clone();
+-    let mut password_dir: PathBuf = base_path.clone();
++    let unpackdir = env!("CARGO_TARGET_TMPDIR");
++    let mut password_dir: PathBuf = PathBuf::from(unpackdir);
+     password_dir.push("populate_password_list_large_repo");
+ 
+     unpack_tar_gz(
+         base_path.clone(),
+         "populate_password_list_large_repo.tar.gz",
++        unpackdir
+     )
+     .unwrap();
+ 
+@@ -64,7 +78,7 @@ fn criterion_benchmark_load_4_passwords(
+         b.iter(|| pop_list(password_dir.clone()))
+     });
+ 
+-    cleanup(base_path, "populate_password_list_large_repo").unwrap();
++    cleanup(PathBuf::from(unpackdir), "populate_password_list_large_repo").unwrap();
+ }
+ 
+ criterion_group!(benches, criterion_benchmark_load_4_passwords);
