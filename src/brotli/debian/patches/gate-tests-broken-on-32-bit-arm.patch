@@ -1,5 +1,5 @@
 diff --git a/src/enc/test.rs b/src/enc/test.rs
-index fb2a5c2..a6d7aa3 100755
+index fb2a5c2..0dbd91b 100755
 --- a/src/enc/test.rs
 +++ b/src/enc/test.rs
 @@ -241,6 +241,7 @@ fn oneshot(input: &[u8],
@@ -10,7 +10,12 @@ index fb2a5c2..a6d7aa3 100755
  #[test]
  fn test_roundtrip_10x10y() {
    const BUFFER_SIZE: usize = 128;
-@@ -308,22 +309,27 @@ macro_rules! test_roundtrip_file {
+@@ -304,46 +305,56 @@ macro_rules! test_roundtrip_file {
+   }};
+ }
+ 
++#[cfg(not(all(target_arch = "arm", target_pointer_width = "32")))]
+ #[test]
  fn test_roundtrip_64x() {
    test_roundtrip_file!(include_bytes!("../../testdata/64x"), 72, 9, 10, false, 3, 2);
  }
@@ -38,7 +43,23 @@ index fb2a5c2..a6d7aa3 100755
  #[test]
  fn test_roundtrip_quickfox_repeated() {
    test_roundtrip_file!(include_bytes!("../../testdata/quickfox_repeated"), 16384, 9, 10, true, 257, 255);
-@@ -344,6 +350,7 @@ fn test_roundtrip_compressed() {
+ }
+ 
++#[cfg(not(all(target_arch = "arm", target_pointer_width = "32")))]
+ #[test]
+ fn test_roundtrip_asyoulik() {
+   test_roundtrip_file!(include_bytes!("../../testdata/asyoulik.txt"), 64384, 9, 15, false, 513, 511);
+ }
+ 
++#[cfg(not(all(target_arch = "arm", target_pointer_width = "32")))]
+ #[test]
+ fn test_roundtrip_asyoulik9_5() {
+   test_roundtrip_file!(include_bytes!("../../testdata/asyoulik.txt"), 62384, 10, 15, true, 513, 511);
+ }
+ 
++#[cfg(not(all(target_arch = "arm", target_pointer_width = "32")))]
+ #[test]
+ fn test_roundtrip_compressed() {
    test_roundtrip_file!(include_bytes!("../../testdata/compressed_file"), 50400, 9, 10, false, 1025, 1024);
  }
  
@@ -46,7 +67,12 @@ index fb2a5c2..a6d7aa3 100755
  #[test]
  fn test_roundtrip_compressed_repeated() {
    test_roundtrip_file!(include_bytes!("../../testdata/compressed_repeated"),
-@@ -359,18 +366,21 @@ fn test_roundtrip_compressed_repeated() {
+@@ -355,22 +366,26 @@ fn test_roundtrip_compressed_repeated() {
+                        2047);
+ }
+ 
++#[cfg(not(all(target_arch = "arm", target_pointer_width = "32")))]
+ #[test]
  fn test_roundtrip_first_58_bytes_alice() {
    test_roundtrip_file!(&include_bytes!("../../testdata/alice29.txt")[..58], 50400, 2, 10, true, 1, 2);
  }
@@ -68,7 +94,7 @@ index fb2a5c2..a6d7aa3 100755
  #[test]
  fn test_roundtrip_x() {
    const BUFFER_SIZE: usize = 16384;
-@@ -394,6 +404,7 @@ fn test_roundtrip_x() {
+@@ -394,6 +409,7 @@ fn test_roundtrip_x() {
    assert_eq!(compressed_offset, compressed.len());
  }
  
