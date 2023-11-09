@@ -1,0 +1,55 @@
+commit 1ec3c5a4fdcd468e8ded6a32c724cf7a788794ed
+Author: David Hewitt <1939362+davidhewitt@users.noreply.github.com>
+Date:   Thu Sep 21 08:34:45 2023 +0100
+
+    ci: adjust tests to avoid chrono panics
+
+diff --git a/src/conversions/chrono.rs b/src/conversions/chrono.rs
+index 1554898e32..863ceefb6f 100644
+--- a/src/conversions/chrono.rs
++++ b/src/conversions/chrono.rs
+@@ -597,7 +597,7 @@ mod tests {
+                 })
+             };
+ 
+-        check_utc("fold", 2014, 5, 6, 7, 8, 9, 1_999_999, 999_999, true);
++        check_utc("fold", 2014, 5, 6, 7, 8, 59, 1_999_999, 999_999, true);
+         check_utc("non fold", 2014, 5, 6, 7, 8, 9, 999_999, 999_999, false);
+ 
+         let check_fixed_offset =
+@@ -638,7 +638,7 @@ mod tests {
+                 })
+             };
+ 
+-        check_fixed_offset("fold", 2014, 5, 6, 7, 8, 9, 1_999_999, 999_999, true);
++        check_fixed_offset("fold", 2014, 5, 6, 7, 8, 59, 1_999_999, 999_999, true);
+         check_fixed_offset("non fold", 2014, 5, 6, 7, 8, 9, 999_999, 999_999, false);
+     }
+ 
+@@ -676,7 +676,7 @@ mod tests {
+                 })
+             };
+ 
+-        check_utc("fold", 2014, 5, 6, 7, 8, 9, 1_999_999, 999_999, true);
++        check_utc("fold", 2014, 5, 6, 7, 8, 59, 1_999_999, 999_999, true);
+         check_utc("non fold", 2014, 5, 6, 7, 8, 9, 999_999, 999_999, false);
+ 
+         let check_fixed_offset = |year, month, day, hour, minute, second, ms| {
+@@ -812,7 +812,7 @@ mod tests {
+             })
+         };
+ 
+-        check_time("fold", 3, 5, 7, 1_999_999, 999_999, true);
++        check_time("fold", 3, 5, 59, 1_999_999, 999_999, true);
+         check_time("non fold", 3, 5, 7, 999_999, 999_999, false);
+     }
+ 
+@@ -836,7 +836,7 @@ mod tests {
+             })
+         };
+ 
+-        check_time("fold", 3, 5, 7, 1_999_999, 999_999, true);
++        check_time("fold", 3, 5, 59, 1_999_999, 999_999, true);
+         check_time("non fold", 3, 5, 7, 999_999, 999_999, false);
+     }
+ 
