@@ -1,0 +1,25 @@
+From 3a6d3b26bdc21ac74a0ba6e4a637decf20da0a39 Mon Sep 17 00:00:00 2001
+From: David Henningsson <coding@diwic.se>
+Date: Sat, 26 Jun 2021 21:09:24 +0200
+Subject: [PATCH] Skip doctests
+
+Bindgen happened to generate a comment that Rust thought was a doc test,
+this is obviously not going to work since the comment was C code,
+not Rust code.
+
+Fixes: #8
+---
+ Cargo.toml | 3 +++
+ 1 file changed, 3 insertions(+)
+
+Index: alsa-sys/Cargo.toml
+===================================================================
+--- alsa-sys.orig/Cargo.toml
++++ alsa-sys/Cargo.toml
+@@ -27,3 +27,6 @@ repository = "https://github.com/diwic/a
+ version = "0.2.65"
+ [build-dependencies.pkg-config]
+ version = "0.3"
++
++[lib]
++doctest = false
