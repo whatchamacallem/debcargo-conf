@@ -1,12 +1,39 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index e3c9012..d325ff3 100644
+index f4bff6b..77fc5cc 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -55,3 +55,0 @@
--[dependencies.eax]
--version = "0.5"
+@@ -63,10 +63,10 @@ version = "0.8"
+ features = ["zeroize"]
+ optional = true
+ 
+-[dependencies.aes-gcm]
+-version = "0.10"
+-features = ["std"]
 -optional = true
-@@ -60,7 +60,0 @@
++#[dependencies.aes-gcm]
++#version = "0.10"
++#features = ["std"]
++#optional = true
+ 
+ [dependencies.anyhow]
+ version = "1.0.18"
+@@ -126,9 +126,9 @@ optional = true
+ version = "0.10"
+ optional = true
+ 
+-[dependencies.dsa]
+-version = "0.6"
+-optional = true
++#[dependencies.dsa]
++#version = "0.6"
++#optional = true
+ 
+ [dependencies.dyn-clone]
+ version = "1"
+@@ -141,36 +141,36 @@ optional = true
+ version = "0.1"
+ optional = true
+ 
 -[dependencies.ecdsa]
 -version = "0.16"
 -features = [
@@ -14,31 +41,61 @@ index e3c9012..d325ff3 100644
 -    "arithmetic",
 -]
 -optional = true
-@@ -70,5 +70,0 @@
+-
 -[dependencies.ed25519]
--version = "1"
+-version = "2"
 -features = ["std"]
 -optional = true
 -default-features = false
-@@ -80,8 +80,0 @@
+-
 -[dependencies.ed25519-dalek]
--version = "1"
+-version = "2"
 -features = [
--    "rand",
--    "u64_backend",
+-    "rand_core",
+-    "zeroize",
 -]
 -optional = true
--default-features = false
-@@ -90,3 +90,0 @@
++#[dependencies.ecdsa]
++#version = "0.16"
++#features = [
++#    "hazmat",
++#    "arithmetic",
++#]
++#optional = true
++
++#[dependencies.ed25519]
++#version = "2"
++#features = ["std"]
++#optional = true
++#default-features = false
++
++#[dependencies.ed25519-dalek]
++#version = "2"
++#features = [
++#    "rand_core",
++#    "zeroize",
++#]
++#optional = true
+ 
+ [dependencies.flate2]
+ version = "1.0.1"
+ optional = true
+ 
 -[dependencies.idea]
 -version = "0.5"
+-features = ["zeroize"]
 -optional = true
-@@ -100,3 +100,3 @@ 
- [dependencies.idna]
--version = ">=0.2, <0.4"
-+version = ">=0.2, <0.5"
++#[dependencies.idea]
++#version = "0.5"
++#features = ["zeroize"]
++#optional = true
  
-@@ -110,7 +110,0 @@ 
+ [dependencies.idna]
+ version = "0.4"
+@@ -213,13 +213,13 @@ optional = true
+ version = "0.9.90"
+ optional = true
+ 
 -[dependencies.p256]
 -version = "0.13"
 -features = [
@@ -46,34 +103,76 @@ index e3c9012..d325ff3 100644
 -    "ecdsa",
 -]
 -optional = true
-@@ -120,4 +120,0 @@ 
--[dependencies.rand07]
--version = "0.7.3"
++#[dependencies.p256]
++#version = "0.13"
++#features = [
++#    "ecdh",
++#    "ecdsa",
++#]
++#optional = true
+ 
+ [dependencies.rand]
+ version = "0.8"
+@@ -265,14 +265,14 @@ optional = true
+ version = "1.12.0"
+ optional = true
+ 
+-[dependencies.x25519-dalek]
+-version = "2"
+-features = [
+-    "static_secrets",
+-    "zeroize",
+-]
 -optional = true
--package = "rand"
-@@ -130,4 +130,0 @@ 
--[dependencies.sha-1]
--version = "0.10"
--features = ["oid"]
--optional = true
-@@ -140,3 +140,0 @@ 
--[dependencies.x25519-dalek-ng]
--version = "1"
--optional = true
-@@ -298,8 +298,0 @@
+-default-features = false
++#[dependencies.x25519-dalek]
++#version = "2"
++#features = [
++#    "static_secrets",
++#    "zeroize",
++#]
++#optional = true
++#default-features = false
+ 
+ [dependencies.xxhash-rust]
+ version = "0.8"
+@@ -311,86 +311,86 @@ compression-deflate = [
+ ]
+ crypto-botan = ["botan/botan3"]
+ crypto-botan2 = ["botan"]
 -crypto-cng = [
 -    "cipher",
 -    "eax",
 -    "winapi",
 -    "win-crypto-ng",
+-    "ed25519",
 -    "ed25519-dalek",
 -    "num-bigint-dig",
+-    "aes-gcm",
+-    "rand_core",
 -]
-@@ -310,31 +310,0 @@
++#crypto-cng = [
++#    "cipher",
++#    "eax",
++#    "winapi",
++#    "win-crypto-ng",
++#    "ed25519",
++#    "ed25519-dalek",
++#    "num-bigint-dig",
++#    "aes-gcm",
++#    "rand_core",
++#]
+ crypto-fuzzing = []
+ crypto-nettle = ["nettle"]
+ crypto-openssl = [
+     "openssl",
+     "openssl-sys",
+ ]
 -crypto-rust = [
 -    "aes",
 -    "block-padding",
 -    "blowfish",
+-    "camellia",
 -    "cast5",
 -    "cfb-mode",
 -    "cipher",
@@ -83,34 +182,113 @@ index e3c9012..d325ff3 100644
 -    "ecb",
 -    "ed25519",
 -    "ed25519-dalek",
--    "generic-array",
 -    "idea",
 -    "md-5",
 -    "num-bigint-dig",
--    "rand",
--    "rand07",
 -    "ripemd",
 -    "rsa",
--    "sha-1",
 -    "sha2",
+-    "sha1collisiondetection/digest-trait",
+-    "sha1collisiondetection/oid",
 -    "twofish",
 -    "typenum",
--    "x25519-dalek-ng",
+-    "x25519-dalek",
 -    "p256",
 -    "rand_core",
 -    "rand_core/getrandom",
 -    "ecdsa",
+-    "aes-gcm",
+-    "dsa",
 -]
-@@ -350,4 +350,0 @@
--[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.rand07]
--version = "0.7"
--features = ["wasm-bindgen"]
--package = "rand"
-@@ -360,7 +360,0 @@
++#crypto-rust = [
++#    "aes",
++#    "block-padding",
++#    "blowfish",
++#    "camellia",
++#    "cast5",
++#    "cfb-mode",
++#    "cipher",
++#    "des",
++#    "digest",
++#    "eax",
++#    "ecb",
++#    "ed25519",
++#    "ed25519-dalek",
++#    "idea",
++#    "md-5",
++#    "num-bigint-dig",
++#    "ripemd",
++#    "rsa",
++#    "sha2",
++#    "sha1collisiondetection/digest-trait",
++#    "sha1collisiondetection/oid",
++#    "twofish",
++#    "typenum",
++#    "x25519-dalek",
++#    "p256",
++#    "rand_core",
++#    "rand_core/getrandom",
++#    "ecdsa",
++#    "aes-gcm",
++#    "dsa",
++#]
+ default = [
+     "compression",
+     "crypto-nettle",
+ ]
+ 
+-[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.chrono]
+-version = "0.4.10"
+-features = [
+-    "std",
+-    "wasmbind",
+-    "clock",
+-]
+-default-features = false
+-
+-[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.getrandom]
+-version = "0.2"
+-features = ["js"]
+-
 -[target."cfg(windows)".dependencies.win-crypto-ng]
--version = ">=0.4, <0.5.1"
+-version = "0.5.1"
 -features = [
 -    "rand",
 -    "block-cipher",
 -]
 -optional = true
+-
+-[target."cfg(windows)".dependencies.winapi]
+-version = "0.3.8"
+-features = ["bcrypt"]
+-optional = true
+-default-features = false
++#[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.chrono]
++#version = "0.4.10"
++#features = [
++#    "std",
++#    "wasmbind",
++#    "clock",
++#]
++#default-features = false
++
++#[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.getrandom]
++#version = "0.2"
++#features = ["js"]
++
++#[target."cfg(windows)".dependencies.win-crypto-ng]
++#version = "0.5.1"
++#features = [
++#    "rand",
++#    "block-cipher",
++#]
++#optional = true
++
++#[target."cfg(windows)".dependencies.winapi]
++#version = "0.3.8"
++#features = ["bcrypt"]
++#optional = true
++#default-features = false
+ 
+ [badges.gitlab]
+ repository = "sequoia-pgp/sequoia"

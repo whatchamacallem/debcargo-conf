@@ -1,25 +1,44 @@
-Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-Subject: Drop Windows builds
-
 On debian packages for Sequoia crates, we do not package the Windows
 variants.  debian packages are for building tooling for debian systems.
 
+diff --git a/Cargo.toml b/Cargo.toml
+index 5ee0fea..0481b76 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -96,16 +96,9 @@
- compression = ["sequoia-openpgp/compression"]
- compression-bzip2 = ["sequoia-openpgp/compression-bzip2"]
- compression-deflate = ["sequoia-openpgp/compression-deflate"]
--crypto-cng = ["sequoia-openpgp/crypto-cng"]
- crypto-nettle = ["sequoia-openpgp/crypto-nettle"]
- default = ["sequoia-openpgp/default"]
--[target."cfg(windows)".dependencies.ctor]
--version = "0.1"
+@@ -125,21 +125,21 @@ features = [
+ ]
+ default-features = false
  
+-[target."cfg(windows)".dependencies.ctor]
+-version = "0.2"
+-
 -[target."cfg(windows)".dependencies.winapi]
 -version = "0.3.8"
 -features = ["winsock2"]
 -default-features = false
+-
+-[target."cfg(windows)".dev-dependencies.sequoia-openpgp]
+-version = "1"
+-features = [
+-    "crypto-cng",
+-    "__implicit-crypto-backend-for-tests",
+-]
+-default-features = false
++#[target."cfg(windows)".dependencies.ctor]
++#version = "0.2"
++
++#[target."cfg(windows)".dependencies.winapi]
++#version = "0.3.8"
++#features = ["winsock2"]
++#default-features = false
++
++#[target."cfg(windows)".dev-dependencies.sequoia-openpgp]
++#version = "1"
++#features = [
++#    "crypto-cng",
++#    "__implicit-crypto-backend-for-tests",
++#]
++#default-features = false
+ 
  [badges.gitlab]
  repository = "sequoia-pgp/sequoia"
- 

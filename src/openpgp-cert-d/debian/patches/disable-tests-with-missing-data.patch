@@ -1,8 +1,8 @@
 diff --git a/src/certd.rs b/src/certd.rs
-index 4768a4f..acf6122 100644
+index d64f3cb..8d8b4c1 100644
 --- a/src/certd.rs
 +++ b/src/certd.rs
-@@ -381,17 +381,17 @@ mod tests {
+@@ -412,17 +412,17 @@ mod tests {
  
      static ALICE: Testdata = Testdata {
          fingerprint: "eb85bb5fa33a75e15e944e63f231550c4f47e38e",
@@ -23,7 +23,7 @@ index 4768a4f..acf6122 100644
      };
  
      fn setup_testdir(
-@@ -402,7 +402,7 @@ mod tests {
+@@ -433,7 +433,7 @@ mod tests {
              t.add_to_certd(&base);
          }
  
@@ -32,116 +32,114 @@ index 4768a4f..acf6122 100644
          base.child("trust-root")
              .write_binary(trust_root_data)
              .unwrap();
-@@ -413,7 +413,7 @@ mod tests {
+@@ -444,7 +444,7 @@ mod tests {
  
      #[test]
-     fn test_get_fp() -> std::result::Result<(), Box<dyn std::error::Error>> {
+     fn get_fp() -> std::result::Result<(), Box<dyn std::error::Error>> {
 -        let data = include_bytes!("../../testdata/testy-new.pgp");
 +        let data = &[0; 0];
  
          let base = test_base();
          base.child("39/d100ab67d5bd8c04010205fb3751f1587daef1")
-@@ -438,7 +438,7 @@ mod tests {
+@@ -468,7 +468,7 @@ mod tests {
+ 
      #[test]
-     fn test_get_special() -> std::result::Result<(), Box<dyn std::error::Error>>
-     {
+     fn get_special() -> std::result::Result<(), Box<dyn std::error::Error>> {
 -        let data = include_bytes!("../../testdata/sender.pgp");
 +        let data = &[0; 0];
  
          let base = test_base();
          base.child("trust-root").write_binary(data).unwrap();
-@@ -463,9 +463,9 @@ mod tests {
+@@ -493,9 +493,9 @@ mod tests {
          Ok(())
      }
  
 -    #[test]
 +    //#[test]
-     fn test_insert_locked() -> Result<()> {
+     fn insert_locked() -> Result<()> {
 -        let data = include_bytes!("../../testdata/testy-new.pgp");
 +        let data = &[0; 0];
          let base = test_base();
  
          let file = base.child("39/d100ab67d5bd8c04010205fb3751f1587daef1");
-@@ -492,9 +492,9 @@ mod tests {
+@@ -522,9 +522,9 @@ mod tests {
          }
      }
  
 -    #[test]
 +    //#[test]
-     fn test_insert_special_locked() -> Result<()> {
+     fn insert_special_locked() -> Result<()> {
 -        let data = include_bytes!("../../testdata/sender.pgp");
 +        let data = &[0; 0];
          let base = test_base();
  
          let file = base.child("trust-root");
-@@ -525,9 +525,9 @@ mod tests {
+@@ -555,9 +555,9 @@ mod tests {
          }
      }
  
 -    #[test]
 +    //#[test]
-     fn test_insert_new() -> Result<()> {
+     fn insert_new() -> Result<()> {
 -        let data = include_bytes!("../../testdata/testy-new.pgp");
 +        let data = &[0; 0];
          let base = test_base();
  
          let file = base.child("39/d100ab67d5bd8c04010205fb3751f1587daef1");
-@@ -548,9 +548,9 @@ mod tests {
+@@ -578,9 +578,9 @@ mod tests {
          Ok(())
      }
  
 -    #[test]
 +    //#[test]
-     fn test_insert_special_new() -> Result<()> {
+     fn insert_special_new() -> Result<()> {
 -        let data = include_bytes!("../../testdata/sender.pgp");
 +        let data = &[0; 0];
          let base = test_base();
  
          let file = base.child("trust-root");
-@@ -574,10 +574,10 @@ mod tests {
+@@ -604,9 +604,9 @@ mod tests {
          Ok(())
      }
  
 -    #[test]
 +    //#[test]
-     fn test_insert_update(
-     ) -> std::result::Result<(), Box<dyn std::error::Error>> {
+     fn insert_update() -> std::result::Result<(), Box<dyn std::error::Error>> {
 -        let data = include_bytes!("../../testdata/testy-new.pgp");
 +        let data = &[0; 0];
          let base = test_base();
  
          let file = base.child("39/d100ab67d5bd8c04010205fb3751f1587daef1");
-@@ -599,10 +599,10 @@ mod tests {
+@@ -628,10 +628,10 @@ mod tests {
          Ok(())
      }
  
 -    #[test]
 +    //#[test]
-     fn test_insert_special_update(
+     fn insert_special_update(
      ) -> std::result::Result<(), Box<dyn std::error::Error>> {
 -        let data = include_bytes!("../../testdata/sender.pgp");
 +        let data = &[0; 0];
          let base = test_base();
  
          let file = base.child("trust-root");
-@@ -627,10 +627,10 @@ mod tests {
+@@ -656,9 +656,9 @@ mod tests {
          Ok(())
      }
  
 -    #[test]
 +    //#[test]
-     fn test_insert_get() -> std::result::Result<(), Box<dyn std::error::Error>>
-     {
+     fn insert_get() -> std::result::Result<(), Box<dyn std::error::Error>> {
 -        let data = include_bytes!("../../testdata/testy-new.pgp");
 +        let data = &[0; 0];
          let base = test_base();
  
          let certd = CertD::with_base_dir(&base)?;
 diff --git a/src/pgp.rs b/src/pgp.rs
-index 1f86829..6668a02 100644
+index 3cfc5bd..99620f1 100644
 --- a/src/pgp.rs
 +++ b/src/pgp.rs
-@@ -223,15 +223,15 @@ mod tests {
+@@ -231,15 +231,15 @@ mod tests {
  
      static ALICE: Testdata = Testdata {
          fingerprint: "eb85bb5fa33a75e15e944e63f231550c4f47e38e",
@@ -160,7 +158,7 @@ index 1f86829..6668a02 100644
      fn compute_fingerprint() {
          // old ctb
          assert_eq!(fingerprint(ALICE.data).unwrap(), ALICE.fingerprint);
-@@ -242,9 +242,9 @@ mod tests {
+@@ -250,9 +250,9 @@ mod tests {
          );
      }
  
@@ -172,7 +170,7 @@ index 1f86829..6668a02 100644
          assert!(matches!(
              fingerprint(data).unwrap_err(),
              Error::UnsupportedArmor
-@@ -260,10 +260,10 @@ mod tests {
+@@ -268,10 +268,10 @@ mod tests {
          ));
      }
  
