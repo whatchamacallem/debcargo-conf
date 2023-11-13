@@ -1,0 +1,59 @@
+Description: Skip tests that handle panics on x32
+ Handling of panics from threads seems to be broken on x32 at the moment.
+ This breaks several tests in this package and since the package has no
+ dev-dependencies this causes a FTBFS. I have reported this issue to rustc
+ upstream, but in the meantime I don't think it's serious enough to block
+ builds of this package, so I am skipping these tests on x32.
+Author: Peter Michael Green <plugwash@debian.org>
+Bug: https://github.com/rust-lang/rust/issues/117859
+
+--- rust-spin-0.9.8.orig/src/mutex/fair.rs
++++ rust-spin-0.9.8/src/mutex/fair.rs
+@@ -691,6 +691,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(not(all(target_arch = "x86_64",target_pointer_width = "32")))]  //skip on x32, catching panics seems to be broken there.
+     fn test_mutex_arc_access_in_unwind() {
+         let arc = Arc::new(FairMutex::<_>::new(1));
+         let arc2 = arc.clone();
+--- rust-spin-0.9.8.orig/src/mutex/spin.rs
++++ rust-spin-0.9.8/src/mutex/spin.rs
+@@ -499,6 +499,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(not(all(target_arch = "x86_64",target_pointer_width = "32")))]  //skip on x32, catching panics seems to be broken there.
+     fn test_mutex_arc_access_in_unwind() {
+         let arc = Arc::new(SpinMutex::<_>::new(1));
+         let arc2 = arc.clone();
+--- rust-spin-0.9.8.orig/src/mutex/ticket.rs
++++ rust-spin-0.9.8/src/mutex/ticket.rs
+@@ -493,6 +493,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(not(all(target_arch = "x86_64",target_pointer_width = "32")))]  //skip on x32, catching panics seems to be broken there.
+     fn test_mutex_arc_access_in_unwind() {
+         let arc = Arc::new(TicketMutex::<_>::new(1));
+         let arc2 = arc.clone();
+--- rust-spin-0.9.8.orig/src/once.rs
++++ rust-spin-0.9.8/src/once.rs
+@@ -647,6 +647,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(not(all(target_arch = "x86_64",target_pointer_width = "32")))]  //skip on x32, catching panics seems to be broken there.
+     fn panic() {
+         use std::panic;
+ 
+--- rust-spin-0.9.8.orig/src/rwlock.rs
++++ rust-spin-0.9.8/src/rwlock.rs
+@@ -1025,6 +1025,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(not(all(target_arch = "x86_64",target_pointer_width = "32")))]  //skip on x32, catching panics seems to be broken there.
+     fn test_rw_access_in_unwind() {
+         let arc = Arc::new(RwLock::new(1));
+         let arc2 = arc.clone();
