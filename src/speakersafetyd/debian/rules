@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+
+include /usr/share/rustc/architecture.mk
+
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_auto_test:
+	dh_auto_test -- test --all
+
+execute_after_dh_install:
+	# installs systemd service, udev rules, conf files and blackbox dir.
+	ln target/$(DEB_HOST_RUST_TYPE)/release/speakersafetyd target/release/speakersafetyd
+	$(MAKE) install \
+		DESTDIR="debian/speakersafetyd" \
+		UNITDIR="$(shell pkg-config --variable=systemdsystemunitdir systemd)" \
+		UDEVDIR="$(shell pkg-config --variable=udevdir udev)/rules.d"
+	rm -f target/release/speakersafetyd
