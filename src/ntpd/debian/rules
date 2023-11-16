@@ -22,7 +22,7 @@ override_dh_installman:
 		--name "ntp-metrics-exporter" \
 		--no-info \
 		--version-string $(DEB_VERSION_UPSTREAM) \
-		debian/ntpd-rs/usr/bin/ntp-metrics-exporter > debian/ntp-metrics-exporter.1
+		debian/ntpd-rs-metrics/usr/bin/ntp-metrics-exporter > debian/ntp-metrics-exporter.1
 
 	dh_installman -O--buildsystem=cargo
 
@@ -30,6 +30,9 @@ override_dh_install:
 	mkdir -p debian/ntpd-rs/etc/ntpd-rs/
 	cp docs/examples/conf/ntp.toml.default debian/ntpd-rs/etc/ntpd-rs/ntp.toml
 	dh_install
+	# our tooling install it regardless
+	rm -f debian/ntpd-rs-metrics/usr/bin/ntp-ctl debian/ntpd-rs-metrics/usr/bin/ntp-daemon
+
 
 override_dh_dwz:
 	# Don't do anything. fails because of the
