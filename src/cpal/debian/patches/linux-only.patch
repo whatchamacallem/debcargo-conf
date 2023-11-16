@@ -1,31 +1,118 @@
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -30,27 +30,8 @@
- [dev-dependencies.hound]
- version = "3.4"
+Index: cpal/Cargo.toml
+===================================================================
+--- cpal.orig/Cargo.toml
++++ cpal/Cargo.toml
+@@ -59,13 +59,6 @@ version = "3.5"
+ [dev-dependencies.ringbuf]
+ version = "0.3"
  
 -[features]
--asio = ["asio-sys"]
- [target."cfg(any(target_os = \"linux\", target_os = \"dragonfly\", target_os = \"freebsd\", target_os = \"openbsd\"))".dependencies.alsa-sys]
--version = "0.1"
-+version = "0.2"
- 
- [target."cfg(any(target_os = \"linux\", target_os = \"dragonfly\", target_os = \"freebsd\", target_os = \"openbsd\"))".dependencies.libc]
- version = "0.2"
--[target."cfg(any(target_os = \"macos\", target_os = \"ios\"))".dependencies.core-foundation-sys]
--version = "0.6.2"
+-asio = [
+-    "asio-sys",
+-    "num-traits",
+-]
+-oboe-shared-stdcxx = ["oboe/shared-stdcxx"]
 -
--[target."cfg(any(target_os = \"macos\", target_os = \"ios\"))".dependencies.coreaudio-rs]
--version = "0.9.1"
--features = ["audio_unit", "core_audio"]
--default-features = false
--[target."cfg(target_os = \"emscripten\")".dependencies.stdweb]
--version = "0.1.3"
--default-features = false
--[target."cfg(target_os = \"windows\")".dependencies.asio-sys]
+ [target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.js-sys]
+ version = "0.3.35"
+ 
+@@ -98,99 +91,3 @@ version = "0.2"
+ 
+ [target."cfg(any(target_os = \"linux\", target_os = \"dragonfly\", target_os = \"freebsd\", target_os = \"netbsd\"))".dependencies.parking_lot]
+ version = "0.12"
+-
+-[target."cfg(any(target_os = \"macos\", target_os = \"ios\"))".dependencies.core-foundation-sys]
+-version = "0.8.2"
+-
+-[target."cfg(any(target_os = \"macos\", target_os = \"ios\"))".dependencies.mach2]
+-version = "0.4"
+-
+-[target."cfg(any(target_os = \"macos\", target_os = \"ios\"))".dependencies.parking_lot]
+-version = "0.12"
+-
+-[target."cfg(target_os = \"android\")".dependencies.jni]
+-version = "0.19"
+-
+-[target."cfg(target_os = \"android\")".dependencies.ndk]
+-version = "0.7"
+-
+-[target."cfg(target_os = \"android\")".dependencies.ndk-context]
 -version = "0.1"
+-
+-[target."cfg(target_os = \"android\")".dependencies.oboe]
+-version = "0.5"
+-features = ["java-interface"]
+-
+-[target."cfg(target_os = \"android\")".dev-dependencies.ndk-glue]
+-version = "0.7"
+-
+-[target."cfg(target_os = \"emscripten\")".dependencies.js-sys]
+-version = "0.3.35"
+-
+-[target."cfg(target_os = \"emscripten\")".dependencies.wasm-bindgen]
+-version = "0.2.58"
+-
+-[target."cfg(target_os = \"emscripten\")".dependencies.wasm-bindgen-futures]
+-version = "0.4.33"
+-
+-[target."cfg(target_os = \"emscripten\")".dependencies.web-sys]
+-version = "0.3.35"
+-features = [
+-    "AudioContext",
+-    "AudioContextOptions",
+-    "AudioBuffer",
+-    "AudioBufferSourceNode",
+-    "AudioNode",
+-    "AudioDestinationNode",
+-    "Window",
+-    "AudioContextState",
+-]
+-
+-[target."cfg(target_os = \"ios\")".dependencies.coreaudio-rs]
+-version = "0.11"
+-features = [
+-    "audio_unit",
+-    "core_audio",
+-    "audio_toolbox",
+-]
+-default-features = false
+-
+-[target."cfg(target_os = \"macos\")".dependencies.coreaudio-rs]
+-version = "0.11"
+-features = [
+-    "audio_unit",
+-    "core_audio",
+-]
+-default-features = false
+-
+-[target."cfg(target_os = \"windows\")".dependencies.asio-sys]
+-version = "0.2"
 -optional = true
 -
--[target."cfg(target_os = \"windows\")".dependencies.winapi]
--version = "0.3"
--features = ["audiosessiontypes", "audioclient", "coml2api", "combaseapi", "debug", "devpkey", "handleapi", "ksmedia", "mmdeviceapi", "objbase", "std", "synchapi", "winuser"]
+-[target."cfg(target_os = \"windows\")".dependencies.num-traits]
+-version = "0.2.6"
+-optional = true
+-
+-[target."cfg(target_os = \"windows\")".dependencies.once_cell]
+-version = "1.12"
+-
+-[target."cfg(target_os = \"windows\")".dependencies.parking_lot]
+-version = "0.12"
+-
+-[target."cfg(target_os = \"windows\")".dependencies.windows]
+-version = "0.46.0"
+-features = [
+-    "Win32_Media_Audio",
+-    "Win32_Foundation",
+-    "Win32_System_Com",
+-    "Win32_Devices_Properties",
+-    "Win32_Media_KernelStreaming",
+-    "Win32_System_Com_StructuredStorage",
+-    "Win32_System_Ole",
+-    "Win32_System_Threading",
+-    "Win32_Security",
+-    "Win32_System_SystemServices",
+-    "Win32_System_WindowsProgramming",
+-    "Win32_Media_Multimedia",
+-    "Win32_UI_Shell_PropertiesSystem",
+-]
