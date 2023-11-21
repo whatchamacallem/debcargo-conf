@@ -1,0 +1,34 @@
+Description: Limit scope of failing test
+ The copy test relies on a file not present in the crates.io archive as
+ upstream stores it using git-lfs. Drop the part of the test actually making
+ use of this file, but keep the initial parsing as it's useful to identify
+ issues with XML parsing.
+Author: Arnaud Ferraris <aferraris@debian.org>
+Forwarded: not-needed
+Last-Update: 2023-11-21
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: a/tests/copy.rs
+===================================================================
+--- a/tests/copy.rs
++++ b/tests/copy.rs
+@@ -150,19 +150,4 @@
+ fn copy() {
+     let (bmap, mut input) = setup_data("test.img");
+     let mut output = OutputMock::new(bmap.image_size());
+-
+-    bmap_parser::copy(&mut input, &mut output, &bmap).unwrap();
+-    assert_eq!(bmap_parser::HashType::Sha256, bmap.checksum_type());
+-    assert_eq!(bmap.block_map().len(), output.ranges.len());
+-
+-    // Assert that written ranges match the ranges in the map file
+-    for (map, range) in bmap.block_map().zip(output.ranges.iter()) {
+-        assert_eq!(map.offset(), range.offset);
+-        assert_eq!(map.length(), range.data.len() as u64);
+-        assert_eq!(map.checksum().as_slice(), range.sha256());
+-    }
+-
+-    let (_, mut input) = setup_data("test.img");
+-    // Assert that the full gzipped content match the written output
+-    assert_eq!(sha256_reader(&mut input), output.sha256())
+ }

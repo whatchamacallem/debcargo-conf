@@ -1,0 +1,39 @@
+Description: Relax quick-xml dependency
+ As we use a newer version in Debian, make the changes needed by the updated
+ API.
+Author: Arnaud Ferraris <aferraris@debian.org>
+Forwarded: not-needed
+Last-Update: 2023-11-21
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: a/Cargo.toml
+===================================================================
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -36,7 +36,7 @@
+ version = "0.3.25"
+ 
+ [dependencies.quick-xml]
+-version = "0.26.0"
++version = "0.27.0"
+ features = ["serialize"]
+ 
+ [dependencies.serde]
+--- a/src/bmap/xml.rs
++++ b/src/bmap/xml.rs
+@@ -6,6 +6,7 @@
+ 
+ #[derive(Debug, Deserialize)]
+ struct Range {
++    #[serde(rename = "@chksum")]
+     chksum: String,
+     #[serde(rename = "$value")]
+     range: String,
+@@ -20,6 +21,7 @@
+ #[allow(dead_code)]
+ #[derive(Debug, Deserialize)]
+ struct Bmap {
++    #[serde(rename = "@version")]
+     version: String,
+     #[serde(rename = "ImageSize")]
+     image_size: u64,
