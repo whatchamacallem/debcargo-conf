@@ -12,6 +12,10 @@ override_dh_auto_install:
 	dh_auto_install
 	mv debian/bat/usr/bin/bat debian/bat/usr/bin/batcat
 
+override_dh_install: export TARGETDIR=$(wildcard target/*/release/build/bat-*/out)
+override_dh_install:
+	dh_install
+
 override_dh_installman:
 	cp target/*/release/build/bat-*/out/assets/manual/bat.1 doc/
 	dh_installman
