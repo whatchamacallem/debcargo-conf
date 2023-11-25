@@ -1,0 +1,78 @@
+Description: Update to bitflags 2
+ Cherry-picked from upstream merge request commit
+ 9e23908eec26661eea001091790441792b487616, modified for Debian
+Author: Anshul Gupta <ansg191@anshulg.com>
+Origin: https://gitlab.redox-os.org/redox-os/syscall/-/merge_requests/80
+Last-Update: 2023-11-25
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -24,7 +24,7 @@
+ name = "syscall"
+ 
+ [dependencies.bitflags]
+-version = "1.1.0"
++version = "2.4"
+ 
+ [dependencies.core]
+ version = "1.0.0"
+--- a/src/data.rs
++++ b/src/data.rs
+@@ -315,7 +315,7 @@
+ }
+ 
+ bitflags::bitflags! {
+-    #[derive(Default)]
++    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy, Default)]
+     pub struct GrantFlags: usize {
+         const GRANT_READ = 0x0000_0001;
+         const GRANT_WRITE = 0x0000_0002;
+@@ -329,6 +329,13 @@
+     }
+ }
+ 
++impl GrantFlags {
++    #[deprecated = "use the safe `from_bits_retain` method instead"]
++    pub unsafe fn from_bits_unchecked(bits: usize) -> Self {
++        Self::from_bits_retain(bits)
++    }
++}
++
+ #[derive(Clone, Copy, Debug, Default)]
+ #[repr(C)]
+ pub struct GrantDesc {
+--- a/src/flag.rs
++++ b/src/flag.rs
+@@ -13,7 +13,7 @@
+     ) => {
+         // First, use the inner bitflags
+         inner_bitflags! {
+-            #[derive(Default)]
++            #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy, Default)]
+             $(#[$outer])*
+             pub struct $BitFlags: $T {
+                 $(
+@@ -23,6 +23,13 @@
+             }
+         }
+ 
++        impl $BitFlags {
++            #[deprecated = "use the safe `from_bits_retain` method instead"]
++            pub unsafe fn from_bits_unchecked(bits: $T) -> Self {
++                Self::from_bits_retain(bits)
++            }
++        }
++
+         // Secondly, re-export all inner constants
+         // (`pub use self::Struct::*` doesn't work)
+         $(
+@@ -249,7 +256,7 @@
+         // Same as to_ne_bytes but in-place
+         unsafe {
+             slice::from_raw_parts(
+-                &self.bits as *const _ as *const u8,
++                &self.bits() as *const _ as *const u8,
+                 mem::size_of::<u64>()
+             )
+         }
