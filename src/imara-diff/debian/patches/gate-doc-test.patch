@@ -1,0 +1,157 @@
+doc tests depends on feature
+
+diff --git a/src/lib.rs b/src/lib.rs
+index c20b750..129b891 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -30,14 +30,17 @@
+ //!
+ //! ```
+ //! use imara_diff::intern::InternedInput;
++//! #[cfg(feature = "unified_diff")]
+ //! use imara_diff::{diff, Algorithm, UnifiedDiffBuilder};
+ //!
++//! #[cfg(feature = "unified_diff")]
+ //! let before = r#"fn foo() -> Bar {
+ //!     let mut foo = 2;
+ //!     foo *= 50;
+ //!     println!("hello world")
+ //! }"#;
+ //!
++//! #[cfg(feature = "unified_diff")]
+ //! let after = r#"// lorem ipsum
+ //! fn foo() -> Bar {
+ //!     let mut foo = 2;
+@@ -48,8 +51,11 @@
+ //! // foo
+ //! "#;
+ //!
++//! #[cfg(feature = "unified_diff")]
+ //! let input = InternedInput::new(before, after);
++//! #[cfg(feature = "unified_diff")]
+ //! let diff = diff(Algorithm::Histogram, &input, UnifiedDiffBuilder::new(&input));
++//! #[cfg(feature = "unified_diff")]
+ //! assert_eq!(
+ //!     diff,
+ //!     r#"@@ -1,5 +1,8 @@
+@@ -73,14 +79,17 @@
+ //! use std::ops::Range;
+ //!
+ //! use imara_diff::intern::InternedInput;
++//! #[cfg(feature = "unified_diff")]
+ //! use imara_diff::{diff, Algorithm, UnifiedDiffBuilder};
+ //!
++//! #[cfg(feature = "unified_diff")]
+ //! let before = r#"fn foo() -> Bar {
+ //!     let mut foo = 2;
+ //!     foo *= 50;
+ //!     println!("hello world")
+ //! }"#;
+ //!
++//! #[cfg(feature = "unified_diff")]
+ //! let after = r#"// lorem ipsum
+ //! fn foo() -> Bar {
+ //!     let mut foo = 2;
+@@ -91,11 +100,16 @@
+ //! // foo
+ //! "#;
+ //!
++//! #[cfg(feature = "unified_diff")]
+ //! let mut insertions = Vec::new();
++//! #[cfg(feature = "unified_diff")]
+ //! let mut removals = Vec::new();
++//! #[cfg(feature = "unified_diff")]
+ //! let mut replacements = Vec::new();
+ //!
++//! #[cfg(feature = "unified_diff")]
+ //! let input = InternedInput::new(before, after);
++//! #[cfg(feature = "unified_diff")]
+ //! let sink = |before: Range<u32>, after: Range<u32>| {
+ //!     let hunk_before: Vec<_> = input.before[before.start as usize..before.end as usize]
+ //!         .iter()
+@@ -113,9 +127,13 @@
+ //!         replacements.push((hunk_before, hunk_after))
+ //!     }
+ //! };
++//! #[cfg(feature = "unified_diff")]
+ //! let diff = diff(Algorithm::Histogram, &input, sink);
++//! #[cfg(feature = "unified_diff")]
+ //! assert_eq!(&insertions, &[vec!["// lorem ipsum"], vec!["// foo"]]);
++//! #[cfg(feature = "unified_diff")]
+ //! assert!(removals.is_empty());
++//! #[cfg(feature = "unified_diff")]
+ //! assert_eq!(
+ //!     &replacements,
+ //!     &[(
+@@ -133,19 +151,30 @@
+ //! use imara_diff::intern::InternedInput;
+ //! use imara_diff::sink::Counter;
+ //! use imara_diff::sources::lines_with_terminator;
++//! #[cfg(feature = "unified_diff")]
+ //! use imara_diff::{diff, Algorithm, UnifiedDiffBuilder};
+ //!
++//! #[cfg(feature = "unified_diff")]
+ //! let before = "foo";
++//! #[cfg(feature = "unified_diff")]
+ //! let after = "foo\n";
+ //!
++//! #[cfg(feature = "unified_diff")]
+ //! let input = InternedInput::new(before, after);
++//! #[cfg(feature = "unified_diff")]
+ //! let changes = diff(Algorithm::Histogram, &input, Counter::default());
++//! #[cfg(feature = "unified_diff")]
+ //! assert_eq!(changes.insertions, 0);
++//! #[cfg(feature = "unified_diff")]
+ //! assert_eq!(changes.removals, 0);
+ //!
++//! #[cfg(feature = "unified_diff")]
+ //! let input = InternedInput::new(lines_with_terminator(before), lines_with_terminator(after));
++//! #[cfg(feature = "unified_diff")]
+ //! let changes = diff(Algorithm::Histogram, &input, Counter::default());
++//! #[cfg(feature = "unified_diff")]
+ //! assert_eq!(changes.insertions, 1);
++//! #[cfg(feature = "unified_diff")]
+ //! assert_eq!(changes.removals, 1);
+ //! ```
+ 
+diff --git a/src/tests.rs b/src/tests.rs
+index 814170c..7bcc79e 100644
+--- a/src/tests.rs
++++ b/src/tests.rs
+@@ -6,8 +6,11 @@ use expect_test::{expect, expect_file};
+ 
+ use crate::intern::InternedInput;
+ use crate::sink::Counter;
+-use crate::{diff, Algorithm, UnifiedDiffBuilder};
++use crate::{diff, Algorithm};
++#[cfg(feature = "unified_diff")]
++use crate::UnifiedDiffBuilder;
+ 
++#[cfg(feature = "unified_diff")]
+ #[test]
+ fn replace() {
+     let before = r#"fn foo() -> Bar{
+@@ -45,6 +48,7 @@ fn foo() -> Bar{
+     }
+ }
+ 
++#[cfg(feature = "unified_diff")]
+ #[test]
+ fn identical_files() {
+     let file = r#"fn foo() -> Bar{
+@@ -60,6 +64,7 @@ fn identical_files() {
+     }
+ }
+ 
++#[cfg(feature = "unified_diff")]
+ #[test]
+ fn simple_insert() {
+     let before = r#"fn foo() -> Bar{
+@@ -113,6 +118,7 @@ pub fn project_root() -> PathBuf {
+     res
+ }
+ 
++#[cfg(feature = "unified_diff")]
+ //#[test]
+ fn hand_checked_udiffs() {
+     for algorithm in Algorithm::ALL {
