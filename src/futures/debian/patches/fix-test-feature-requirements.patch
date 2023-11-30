@@ -1,0 +1,439 @@
+Index: futures/tests/_require_features.rs
+===================================================================
+--- futures.orig/tests/_require_features.rs
++++ futures/tests/_require_features.rs
+@@ -1,4 +1,4 @@
+-#[cfg(not(all(
++/*#[cfg(not(all(
+     feature = "std",
+     feature = "alloc",
+     feature = "async-await",
+@@ -8,4 +8,4 @@
+ compile_error!(
+     "`futures` tests must have all stable features activated: \
+     use `--all-features` or `--features default,thread-pool,io-compat`"
+-);
++);*/
+Index: futures/tests/async_await_macros.rs
+===================================================================
+--- futures.orig/tests/async_await_macros.rs
++++ futures/tests/async_await_macros.rs
+@@ -1,3 +1,4 @@
++#![cfg(all(feature="executor",feature="async-await"))]
+ use futures::channel::{mpsc, oneshot};
+ use futures::executor::block_on;
+ use futures::future::{self, poll_fn, FutureExt};
+Index: futures/tests/eventual.rs
+===================================================================
+--- futures.orig/tests/eventual.rs
++++ futures/tests/eventual.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "thread-pool")]
+ use futures::channel::oneshot;
+ use futures::executor::ThreadPool;
+ use futures::future::{self, ok, Future, FutureExt, TryFutureExt};
+Index: futures/tests/future_abortable.rs
+===================================================================
+--- futures.orig/tests/future_abortable.rs
++++ futures/tests/future_abortable.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "executor")]
+ use futures::channel::oneshot;
+ use futures::executor::block_on;
+ use futures::future::{abortable, Aborted, FutureExt};
+Index: futures/tests/future_inspect.rs
+===================================================================
+--- futures.orig/tests/future_inspect.rs
++++ futures/tests/future_inspect.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::executor::block_on;
+ use futures::future::{self, FutureExt};
+ 
+Index: futures/tests/future_join.rs
+===================================================================
+--- futures.orig/tests/future_join.rs
++++ futures/tests/future_join.rs
+@@ -1,3 +1,4 @@
++#![cfg(all(feature="executor",feature="async-await"))]
+ use futures::executor::block_on;
+ use futures::future::Future;
+ use std::task::Poll;
+Index: futures/tests/future_join_all.rs
+===================================================================
+--- futures.orig/tests/future_join_all.rs
++++ futures/tests/future_join_all.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::executor::block_on;
+ use futures::future::{join_all, ready, Future, JoinAll};
+ use futures::pin_mut;
+Index: futures/tests/future_select_all.rs
+===================================================================
+--- futures.orig/tests/future_select_all.rs
++++ futures/tests/future_select_all.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::executor::block_on;
+ use futures::future::{ready, select_all};
+ use std::collections::HashSet;
+Index: futures/tests/future_select_ok.rs
+===================================================================
+--- futures.orig/tests/future_select_ok.rs
++++ futures/tests/future_select_ok.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::executor::block_on;
+ use futures::future::{err, ok, select_ok};
+ 
+Index: futures/tests/future_shared.rs
+===================================================================
+--- futures.orig/tests/future_shared.rs
++++ futures/tests/future_shared.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::channel::oneshot;
+ use futures::executor::{block_on, LocalPool};
+ use futures::future::{self, FutureExt, LocalFutureObj, TryFutureExt};
+Index: futures/tests/future_try_flatten_stream.rs
+===================================================================
+--- futures.orig/tests/future_try_flatten_stream.rs
++++ futures/tests/future_try_flatten_stream.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::executor::block_on_stream;
+ use futures::future::{err, ok, TryFutureExt};
+ use futures::sink::Sink;
+Index: futures/tests/future_try_join_all.rs
+===================================================================
+--- futures.orig/tests/future_try_join_all.rs
++++ futures/tests/future_try_join_all.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::executor::block_on;
+ use futures::pin_mut;
+ use futures_util::future::{err, ok, try_join_all, TryJoinAll};
+Index: futures/tests/io_buf_reader.rs
+===================================================================
+--- futures.orig/tests/io_buf_reader.rs
++++ futures/tests/io_buf_reader.rs
+@@ -1,3 +1,4 @@
++#![cfg(all(feature = "std",feature = "executor"))]
+ use futures::executor::block_on;
+ use futures::future::{Future, FutureExt};
+ use futures::io::{
+Index: futures/tests/io_buf_writer.rs
+===================================================================
+--- futures.orig/tests/io_buf_writer.rs
++++ futures/tests/io_buf_writer.rs
+@@ -1,3 +1,4 @@
++#![cfg(all(feature="std",feature="executor"))]
+ use futures::executor::block_on;
+ use futures::future::{Future, FutureExt};
+ use futures::io::{
+Index: futures/tests/io_cursor.rs
+===================================================================
+--- futures.orig/tests/io_cursor.rs
++++ futures/tests/io_cursor.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ //use assert_matches::assert_matches;
+ use futures::executor::block_on;
+ use futures::future::lazy;
+Index: futures/tests/io_line_writer.rs
+===================================================================
+--- futures.orig/tests/io_line_writer.rs
++++ futures/tests/io_line_writer.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::executor::block_on;
+ use futures::io::{AsyncWriteExt, LineWriter};
+ use std::io;
+Index: futures/tests/io_lines.rs
+===================================================================
+--- futures.orig/tests/io_lines.rs
++++ futures/tests/io_lines.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::executor::block_on;
+ use futures::future::{Future, FutureExt};
+ use futures::io::{AsyncBufReadExt, Cursor};
+Index: futures/tests/io_read_exact.rs
+===================================================================
+--- futures.orig/tests/io_read_exact.rs
++++ futures/tests/io_read_exact.rs
+@@ -1,3 +1,4 @@
++#![cfg(all(feature="std",feature="executor"))]
+ use futures::executor::block_on;
+ use futures::io::AsyncReadExt;
+ 
+Index: futures/tests/io_read_line.rs
+===================================================================
+--- futures.orig/tests/io_read_line.rs
++++ futures/tests/io_read_line.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::executor::block_on;
+ use futures::future::{Future, FutureExt};
+ use futures::io::{AsyncBufReadExt, Cursor};
+Index: futures/tests/io_read_to_end.rs
+===================================================================
+--- futures.orig/tests/io_read_to_end.rs
++++ futures/tests/io_read_to_end.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "executor")]
+ use futures::{
+     executor::block_on,
+     io::{self, AsyncRead, AsyncReadExt},
+Index: futures/tests/io_read_to_string.rs
+===================================================================
+--- futures.orig/tests/io_read_to_string.rs
++++ futures/tests/io_read_to_string.rs
+@@ -1,3 +1,4 @@
++#![cfg(all(feature="std",feature="executor"))]
+ use futures::executor::block_on;
+ use futures::future::{Future, FutureExt};
+ use futures::io::{AsyncReadExt, Cursor};
+Index: futures/tests/io_read_until.rs
+===================================================================
+--- futures.orig/tests/io_read_until.rs
++++ futures/tests/io_read_until.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::executor::block_on;
+ use futures::future::{Future, FutureExt};
+ use futures::io::{AsyncBufReadExt, Cursor};
+Index: futures/tests/io_window.rs
+===================================================================
+--- futures.orig/tests/io_window.rs
++++ futures/tests/io_window.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="std")]
+ #![allow(clippy::reversed_empty_ranges)] // This is intentional.
+ 
+ use futures::io::Window;
+Index: futures/tests/lock_mutex.rs
+===================================================================
+--- futures.orig/tests/lock_mutex.rs
++++ futures/tests/lock_mutex.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "thread-pool")]
+ use futures::channel::mpsc;
+ use futures::executor::{block_on, ThreadPool};
+ use futures::future::{ready, FutureExt};
+Index: futures/tests/macro_comma_support.rs
+===================================================================
+--- futures.orig/tests/macro_comma_support.rs
++++ futures/tests/macro_comma_support.rs
+@@ -1,3 +1,4 @@
++#![cfg(all(feature="executor",feature="async-await"))]
+ use futures::{
+     executor::block_on,
+     future::{self, FutureExt},
+Index: futures/tests/ready_queue.rs
+===================================================================
+--- futures.orig/tests/ready_queue.rs
++++ futures/tests/ready_queue.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::channel::oneshot;
+ use futures::executor::{block_on, block_on_stream};
+ use futures::future;
+Index: futures/tests/recurse.rs
+===================================================================
+--- futures.orig/tests/recurse.rs
++++ futures/tests/recurse.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::executor::block_on;
+ use futures::future::{self, BoxFuture, FutureExt};
+ use std::sync::mpsc;
+Index: futures/tests/sink.rs
+===================================================================
+--- futures.orig/tests/sink.rs
++++ futures/tests/sink.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::channel::{mpsc, oneshot};
+ use futures::executor::block_on;
+ use futures::future::{self, poll_fn, Future, FutureExt, TryFutureExt};
+Index: futures/tests/sink_fanout.rs
+===================================================================
+--- futures.orig/tests/sink_fanout.rs
++++ futures/tests/sink_fanout.rs
+@@ -1,3 +1,4 @@
++#![cfg(all(feature = "std",feature = "executor"))]
+ use futures::channel::mpsc;
+ use futures::executor::block_on;
+ use futures::future::join3;
+Index: futures/tests/stream.rs
+===================================================================
+--- futures.orig/tests/stream.rs
++++ futures/tests/stream.rs
+@@ -1,3 +1,4 @@
++#![cfg(all(feature = "thread-pool",feature="async-await"))]
+ use std::cell::Cell;
+ use std::iter;
+ use std::pin::Pin;
+Index: futures/tests/stream_abortable.rs
+===================================================================
+--- futures.orig/tests/stream_abortable.rs
++++ futures/tests/stream_abortable.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::channel::mpsc;
+ use futures::executor::block_on;
+ use futures::stream::{abortable, Stream, StreamExt};
+Index: futures/tests/stream_buffer_unordered.rs
+===================================================================
+--- futures.orig/tests/stream_buffer_unordered.rs
++++ futures/tests/stream_buffer_unordered.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "executor")]
+ use futures::channel::{mpsc, oneshot};
+ use futures::executor::{block_on, block_on_stream};
+ use futures::sink::SinkExt;
+Index: futures/tests/stream_catch_unwind.rs
+===================================================================
+--- futures.orig/tests/stream_catch_unwind.rs
++++ futures/tests/stream_catch_unwind.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::executor::block_on_stream;
+ use futures::stream::{self, StreamExt};
+ 
+Index: futures/tests/stream_futures_ordered.rs
+===================================================================
+--- futures.orig/tests/stream_futures_ordered.rs
++++ futures/tests/stream_futures_ordered.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::channel::oneshot;
+ use futures::executor::{block_on, block_on_stream};
+ use futures::future::{self, join, Future, FutureExt, TryFutureExt};
+Index: futures/tests/stream_futures_unordered.rs
+===================================================================
+--- futures.orig/tests/stream_futures_unordered.rs
++++ futures/tests/stream_futures_unordered.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::channel::oneshot;
+ use futures::executor::{block_on, block_on_stream};
+ use futures::future::{self, join, Future, FutureExt};
+Index: futures/tests/stream_into_async_read.rs
+===================================================================
+--- futures.orig/tests/stream_into_async_read.rs
++++ futures/tests/stream_into_async_read.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="std")]
+ use core::pin::Pin;
+ use futures::io::{AsyncBufRead, AsyncRead};
+ use futures::stream::{self, TryStreamExt};
+Index: futures/tests/stream_peekable.rs
+===================================================================
+--- futures.orig/tests/stream_peekable.rs
++++ futures/tests/stream_peekable.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::executor::block_on;
+ use futures::pin_mut;
+ use futures::stream::{self, Peekable, StreamExt};
+Index: futures/tests/stream_select_all.rs
+===================================================================
+--- futures.orig/tests/stream_select_all.rs
++++ futures/tests/stream_select_all.rs
+@@ -1,3 +1,4 @@
++#![cfg(all(feature="std",feature="executor"))]
+ use futures::channel::mpsc;
+ use futures::executor::{block_on, block_on_stream};
+ use futures::future::{self, FutureExt};
+Index: futures/tests/stream_select_next_some.rs
+===================================================================
+--- futures.orig/tests/stream_select_next_some.rs
++++ futures/tests/stream_select_next_some.rs
+@@ -1,3 +1,4 @@
++#![cfg(all(feature="executor",feature="async-await"))]
+ use futures::executor::block_on;
+ use futures::future::{self, FusedFuture, FutureExt};
+ use futures::select;
+Index: futures/tests/stream_split.rs
+===================================================================
+--- futures.orig/tests/stream_split.rs
++++ futures/tests/stream_split.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::executor::block_on;
+ use futures::sink::{Sink, SinkExt};
+ use futures::stream::{self, Stream, StreamExt};
+Index: futures/tests/stream_try_stream.rs
+===================================================================
+--- futures.orig/tests/stream_try_stream.rs
++++ futures/tests/stream_try_stream.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use core::pin::Pin;
+ use std::convert::Infallible;
+ 
+Index: futures/tests/task_atomic_waker.rs
+===================================================================
+--- futures.orig/tests/task_atomic_waker.rs
++++ futures/tests/task_atomic_waker.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="executor")]
+ use futures::executor::block_on;
+ use futures::future::poll_fn;
+ use futures::task::{AtomicWaker, Poll};
+Index: futures/tests/try_join.rs
+===================================================================
+--- futures.orig/tests/try_join.rs
++++ futures/tests/try_join.rs
+@@ -1,3 +1,4 @@
++#![cfg(all(feature = "executor",feature="async-await"))]
+ #![deny(unreachable_code)]
+ 
+ use futures::{executor::block_on, try_join};
+Index: futures/tests/eager_drop.rs
+===================================================================
+--- futures.orig/tests/eager_drop.rs
++++ futures/tests/eager_drop.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="std")]
+ use futures::channel::oneshot;
+ use futures::future::{self, Future, FutureExt, TryFutureExt};
+ use futures::task::{Context, Poll};
+Index: futures/tests/io_read.rs
+===================================================================
+--- futures.orig/tests/io_read.rs
++++ futures/tests/io_read.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="std")]
+ use futures::io::AsyncRead;
+ use futures_test::task::panic_context;
+ use std::io;
+Index: futures/tests/io_write.rs
+===================================================================
+--- futures.orig/tests/io_write.rs
++++ futures/tests/io_write.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="std")]
+ use futures::io::AsyncWrite;
+ use futures_test::task::panic_context;
+ use std::io;
+Index: futures/tests/object_safety.rs
+===================================================================
+--- futures.orig/tests/object_safety.rs
++++ futures/tests/object_safety.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="std")]
+ fn assert_is_object_safe<T>() {}
+ 
+ #[test]
+Index: futures/tests/oneshot.rs
+===================================================================
+--- futures.orig/tests/oneshot.rs
++++ futures/tests/oneshot.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature="std")]
+ use futures::channel::oneshot;
+ use futures::future::{FutureExt, TryFutureExt};
+ use futures_test::future::FutureTestExt;
