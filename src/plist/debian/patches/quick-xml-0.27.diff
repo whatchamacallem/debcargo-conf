@@ -1,0 +1,45 @@
+This patch is based on a revert of upstream commit
+9138186cf1d6de4bc5738f1627c4bfe3ec0c7b78
+
+Index: plist/src/stream/xml_writer.rs
+===================================================================
+--- plist.orig/src/stream/xml_writer.rs
++++ plist/src/stream/xml_writer.rs
+@@ -97,7 +97,7 @@ impl<W: Write> XmlWriter<W> {
+         if !self.started_plist {
+             if self.write_root_element {
+                 self.xml_writer
+-                    .get_mut()
++                    .inner()
+                     .write_all(XML_PROLOGUE)
+                     .map_err(error::from_io_without_position)?;
+             }
+@@ -113,13 +113,13 @@ impl<W: Write> XmlWriter<W> {
+                 // We didn't tell the xml_writer about the <plist> tag so we'll skip telling it
+                 // about the </plist> tag as well.
+                 self.xml_writer
+-                    .get_mut()
++                    .inner()
+                     .write_all(b"\n</plist>")
+                     .map_err(error::from_io_without_position)?;
+             }
+ 
+             self.xml_writer
+-                .get_mut()
++                .inner()
+                 .flush()
+                 .map_err(error::from_io_without_position)?;
+         }
+Index: plist/Cargo.toml
+===================================================================
+--- plist.orig/Cargo.toml
++++ plist/Cargo.toml
+@@ -40,7 +40,7 @@ version = "1.5.0"
+ version = "0.1.1"
+ 
+ [dependencies.quick_xml]
+-version = "0.31.0"
++version = "0.27.1"
+ package = "quick-xml"
+ 
+ [dependencies.serde]
