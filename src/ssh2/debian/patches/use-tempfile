@@ -8,21 +8,20 @@ Index: ssh2/Cargo.toml
 ===================================================================
 --- ssh2.orig/Cargo.toml
 +++ ssh2/Cargo.toml
-@@ -32,8 +32,8 @@ version = "0.2.23"
- 
+@@ -40,7 +40,7 @@ version = "0.3.0"
  [dependencies.parking_lot]
  version = "0.12"
+ 
 -[dev-dependencies.tempdir]
 -version = "0.3"
 +[dev-dependencies.tempfile]
 +version = "3"
  
  [features]
- openssl-on-win32 = ["libssh2-sys/openssl-on-win32"]
-diff --git a/tests/all/main.rs b/tests/all/main.rs
-index 87380eb..9a6e44f 100644
---- a/tests/all/main.rs
-+++ b/tests/all/main.rs
+Index: ssh2/tests/all/main.rs
+===================================================================
+--- ssh2.orig/tests/all/main.rs
++++ ssh2/tests/all/main.rs
 @@ -1,7 +1,7 @@
  #![deny(warnings)]
  
@@ -32,10 +31,10 @@ index 87380eb..9a6e44f 100644
  
  use std::env;
  use std::net::TcpStream;
-diff --git a/tests/all/session.rs b/tests/all/session.rs
-index ee3eaa0..86b1388 100644
---- a/tests/all/session.rs
-+++ b/tests/all/session.rs
+Index: ssh2/tests/all/session.rs
+===================================================================
+--- ssh2.orig/tests/all/session.rs
++++ ssh2/tests/all/session.rs
 @@ -2,7 +2,7 @@ use std::env;
  use std::fs::File;
  use std::io::{self, prelude::*};
@@ -54,10 +53,10 @@ index ee3eaa0..86b1388 100644
      let sess = ::authed_session();
      let mut ch = sess
          .scp_send(&td.path().join("foo"), 0o644, 6, None)
-diff --git a/tests/all/sftp.rs b/tests/all/sftp.rs
-index 7ebb69d..8ef3226 100644
---- a/tests/all/sftp.rs
-+++ b/tests/all/sftp.rs
+Index: ssh2/tests/all/sftp.rs
+===================================================================
+--- ssh2.orig/tests/all/sftp.rs
++++ ssh2/tests/all/sftp.rs
 @@ -1,6 +1,6 @@
  use std::fs::{self, File};
  use std::io::prelude::*;
@@ -75,3 +74,12 @@ index 7ebb69d..8ef3226 100644
      File::create(&td.path().join("foo")).unwrap();
      fs::create_dir(&td.path().join("bar")).unwrap();
  
+@@ -53,7 +53,7 @@ fn ops() {
+ 
+ #[test]
+ fn not_found() {
+-    let td = TempDir::new("foo").unwrap();
++    let td = TempDir::new().unwrap();
+ 
+     let sess = ::authed_session();
+     let sftp = sess.sftp().unwrap();
