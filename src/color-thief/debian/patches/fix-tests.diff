@@ -5,7 +5,7 @@ Description: Fix autopkgtests with the current version of rust-image
  We can also drop the "png_codec" feature as we have patched out the
  only test using a PNG image.
 Author: Arnaud Ferraris <aferraris@debian.org>
-Last-Update: 2023-11-03
+Last-Update: 2023-11-29
 
 --- a/Cargo.toml
 +++ b/Cargo.toml
@@ -51,7 +51,7 @@ Last-Update: 2023-11-03
          _ => unreachable!(),
      }
  }
-@@ -17,13 +17,13 @@
+@@ -17,12 +17,15 @@
  fn image1() {
      let img = image::open(&path::Path::new("images/photo1.jpg")).unwrap();
      let color_type = find_color(img.color());
@@ -62,8 +62,9 @@ Last-Update: 2023-11-03
      assert_eq!(colors[1], Color::new(215, 195, 134)); // 213, 193, 136
      assert_eq!(colors[2], Color::new(109, 204, 223)); // 110, 204, 223
      assert_eq!(colors[3], Color::new(127, 119,  58)); // 131, 122,  58
--    assert_eq!(colors[4], Color::new( 43, 125, 149)); //  43, 124, 148
++    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 +    assert_eq!(colors[4], Color::new( 42, 125, 149)); //  43, 124, 148
++    #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+     assert_eq!(colors[4], Color::new( 43, 125, 149)); //  43, 124, 148
      assert_eq!(colors[5], Color::new(134, 123, 107)); // 156, 175, 121
      assert_eq!(colors[6], Color::new(160, 178, 120)); // 131, 121, 110
-     assert_eq!(colors[7], Color::new(167, 199, 221)); // 167, 198, 220

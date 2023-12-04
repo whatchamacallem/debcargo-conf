@@ -1,0 +1,29 @@
+This patch is based on a revert of upstream commit 
+422933e4726f82d8726872c574cb954529c89691
+
+Index: plist/src/stream/binary_writer.rs
+===================================================================
+--- plist.orig/src/stream/binary_writer.rs
++++ plist/src/stream/binary_writer.rs
+@@ -578,7 +578,7 @@ fn is_even(value: usize) -> bool {
+ fn value_mut<'a>(
+     values: &'a mut IndexMap<Value<'static>, ValueState>,
+     value_index: usize,
+-) -> (&'a Value<'static>, &'a mut ValueState) {
++) -> (&'a mut Value<'static>, &'a mut ValueState) {
+     values
+         .get_index_mut(value_index)
+         .expect("internal consistency error")
+Index: plist/Cargo.toml
+===================================================================
+--- plist.orig/Cargo.toml
++++ plist/Cargo.toml
+@@ -34,7 +34,7 @@ repository = "https://github.com/ebarnar
+ version = "0.21.0"
+ 
+ [dependencies.indexmap]
+-version = "2.1.0"
++version = "1.5.0"
+ 
+ [dependencies.line-wrap]
+ version = "0.1.1"
