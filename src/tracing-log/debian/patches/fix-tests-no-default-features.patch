@@ -1,0 +1,26 @@
+Index: tracing-log/tests/log_tracer.rs
+===================================================================
+--- tracing-log.orig/tests/log_tracer.rs
++++ tracing-log/tests/log_tracer.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "log-tracer")]
+ use std::sync::{Arc, Mutex};
+ use tracing::subscriber::with_default;
+ use tracing_core::span::{Attributes, Record};
+@@ -59,6 +60,7 @@ impl Subscriber for TestSubscriber {
+ }
+ 
+ #[test]
++#[cfg(feature = "std")]
+ fn normalized_metadata() {
+     LogTracer::init().unwrap();
+     let me = Arc::new(State {
+Index: tracing-log/tests/reexport_log_crate.rs
+===================================================================
+--- tracing-log.orig/tests/reexport_log_crate.rs
++++ tracing-log/tests/reexport_log_crate.rs
+@@ -1,3 +1,4 @@
++#![cfg(all(feature = "log-tracer", feature = "std"))]
+ use tracing_log::{log::LevelFilter, LogTracer};
+ 
+ /// This test makes sure we can access `log::LevelFilter` through the `tracing_log` crate and don't
