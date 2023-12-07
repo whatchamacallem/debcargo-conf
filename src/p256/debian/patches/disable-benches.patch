@@ -1,0 +1,170 @@
+Delete benchmarking code, as it isn't feature gated correctly and not really needed in Debian
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 2fc5182..d8f37d4 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -43,14 +43,14 @@ rustdoc-args = [
+     "docsrs",
+ ]
+ 
+-[[bench]]
+-name = "field"
+-harness = false
+-required-features = ["expose-field"]
+-
+-[[bench]]
+-name = "scalar"
+-harness = false
++#[[bench]]
++#name = "field"
++#harness = false
++#required-features = ["expose-field"]
++
++#[[bench]]
++#name = "scalar"
++#harness = false
+ 
+ [dependencies.ecdsa-core]
+ version = "0.16"
+diff --git a/benches/field.rs b/benches/field.rs
+deleted file mode 100644
+index 43ece83..0000000
+--- a/benches/field.rs
++++ /dev/null
+@@ -1,54 +0,0 @@
+-//! secp256r1 field element benchmarks
+-
+-use criterion::{
+-    criterion_group, criterion_main, measurement::Measurement, BenchmarkGroup, Criterion,
+-};
+-use hex_literal::hex;
+-use p256::FieldElement;
+-
+-fn test_field_element_x() -> FieldElement {
+-    FieldElement::from_bytes(
+-        &hex!("1ccbe91c075fc7f4f033bfa248db8fccd3565de94bbfb12f3c59ff46c271bf83").into(),
+-    )
+-    .unwrap()
+-}
+-
+-fn test_field_element_y() -> FieldElement {
+-    FieldElement::from_bytes(
+-        &hex!("ce4014c68811f9a21a1fdb2c0e6113e06db7ca93b7404e78dc7ccd5ca89a4ca9").into(),
+-    )
+-    .unwrap()
+-}
+-
+-fn bench_field_element_mul<'a, M: Measurement>(group: &mut BenchmarkGroup<'a, M>) {
+-    let x = test_field_element_x();
+-    let y = test_field_element_y();
+-    group.bench_function("mul", |b| b.iter(|| &x * &y));
+-}
+-
+-fn bench_field_element_square<'a, M: Measurement>(group: &mut BenchmarkGroup<'a, M>) {
+-    let x = test_field_element_x();
+-    group.bench_function("square", |b| b.iter(|| x.square()));
+-}
+-
+-fn bench_field_element_sqrt<'a, M: Measurement>(group: &mut BenchmarkGroup<'a, M>) {
+-    let x = test_field_element_x();
+-    group.bench_function("sqrt", |b| b.iter(|| x.sqrt()));
+-}
+-
+-fn bench_field_element_invert<'a, M: Measurement>(group: &mut BenchmarkGroup<'a, M>) {
+-    let x = test_field_element_x();
+-    group.bench_function("invert", |b| b.iter(|| x.invert()));
+-}
+-
+-fn bench_field_element(c: &mut Criterion) {
+-    let mut group = c.benchmark_group("field element operations");
+-    bench_field_element_mul(&mut group);
+-    bench_field_element_square(&mut group);
+-    bench_field_element_invert(&mut group);
+-    bench_field_element_sqrt(&mut group);
+-    group.finish();
+-}
+-
+-criterion_group!(benches, bench_field_element);
+-criterion_main!(benches);
+diff --git a/benches/scalar.rs b/benches/scalar.rs
+deleted file mode 100644
+index a8db8d5..0000000
+--- a/benches/scalar.rs
++++ /dev/null
+@@ -1,75 +0,0 @@
+-//! secp256r1 scalar arithmetic benchmarks
+-
+-use criterion::{
+-    criterion_group, criterion_main, measurement::Measurement, BenchmarkGroup, Criterion,
+-};
+-use hex_literal::hex;
+-use p256::{elliptic_curve::group::ff::PrimeField, ProjectivePoint, Scalar};
+-
+-fn test_scalar_x() -> Scalar {
+-    Scalar::from_repr(
+-        hex!("519b423d715f8b581f4fa8ee59f4771a5b44c8130b4e3eacca54a56dda72b464").into(),
+-    )
+-    .unwrap()
+-}
+-
+-fn test_scalar_y() -> Scalar {
+-    Scalar::from_repr(
+-        hex!("0f56db78ca460b055c500064824bed999a25aaf48ebb519ac201537b85479813").into(),
+-    )
+-    .unwrap()
+-}
+-
+-fn bench_point_mul<'a, M: Measurement>(group: &mut BenchmarkGroup<'a, M>) {
+-    let p = ProjectivePoint::GENERATOR;
+-    let m = test_scalar_x();
+-    let s = Scalar::from_repr(m.into()).unwrap();
+-    group.bench_function("point-scalar mul", |b| b.iter(|| &p * &s));
+-}
+-
+-fn bench_scalar_sub<'a, M: Measurement>(group: &mut BenchmarkGroup<'a, M>) {
+-    let x = test_scalar_x();
+-    let y = test_scalar_y();
+-    group.bench_function("sub", |b| b.iter(|| &x - &y));
+-}
+-
+-fn bench_scalar_add<'a, M: Measurement>(group: &mut BenchmarkGroup<'a, M>) {
+-    let x = test_scalar_x();
+-    let y = test_scalar_y();
+-    group.bench_function("add", |b| b.iter(|| &x + &y));
+-}
+-
+-fn bench_scalar_mul<'a, M: Measurement>(group: &mut BenchmarkGroup<'a, M>) {
+-    let x = test_scalar_x();
+-    let y = test_scalar_y();
+-    group.bench_function("mul", |b| b.iter(|| &x * &y));
+-}
+-
+-fn bench_scalar_negate<'a, M: Measurement>(group: &mut BenchmarkGroup<'a, M>) {
+-    let x = test_scalar_x();
+-    group.bench_function("negate", |b| b.iter(|| -x));
+-}
+-
+-fn bench_scalar_invert<'a, M: Measurement>(group: &mut BenchmarkGroup<'a, M>) {
+-    let x = test_scalar_x();
+-    group.bench_function("invert", |b| b.iter(|| x.invert()));
+-}
+-
+-fn bench_point(c: &mut Criterion) {
+-    let mut group = c.benchmark_group("point operations");
+-    bench_point_mul(&mut group);
+-    group.finish();
+-}
+-
+-fn bench_scalar(c: &mut Criterion) {
+-    let mut group = c.benchmark_group("scalar operations");
+-    bench_scalar_sub(&mut group);
+-    bench_scalar_add(&mut group);
+-    bench_scalar_mul(&mut group);
+-    bench_scalar_negate(&mut group);
+-    bench_scalar_invert(&mut group);
+-    group.finish();
+-}
+-
+-criterion_group!(benches, bench_point, bench_scalar);
+-criterion_main!(benches);

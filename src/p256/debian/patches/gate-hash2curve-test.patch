@@ -1,0 +1,17 @@
+Fixes compilation failure of unit test
+
+diff --git a/src/arithmetic/hash2curve.rs b/src/arithmetic/hash2curve.rs
+index d638136..cc1b6e2 100644
+--- a/src/arithmetic/hash2curve.rs
++++ b/src/arithmetic/hash2curve.rs
+@@ -97,7 +97,9 @@ impl FromOkm for Scalar {
+ 
+ #[cfg(test)]
+ mod tests {
+-    use crate::{FieldElement, NistP256, Scalar, U256};
++    #![cfg(feature = "expose-field")]
++    use crate::FieldElement;
++    use crate::{NistP256, Scalar, U256};
+     use elliptic_curve::{
+         bigint::{ArrayEncoding, NonZero, U384},
+         consts::U48,
