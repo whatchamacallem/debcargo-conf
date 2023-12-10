@@ -26,7 +26,7 @@ Index: configparser/tests/test.rs
      assert_eq!(map2, *config.get_map_ref());
      let map3 = config.clone().read(config.writes())?;
      assert_eq!(map2, map3);
-@@ -106,6 +108,7 @@ fn non_cs() -> Result<(), Box<dyn Error>
+@@ -132,6 +134,7 @@ fn non_cs() -> Result<(), Box<dyn Error>
  #[test]
  #[allow(clippy::approx_constant)]
  fn cs() -> Result<(), Box<dyn Error>> {
@@ -34,7 +34,7 @@ Index: configparser/tests/test.rs
      let mut config = Ini::new_cs();
      let map = config.load("tests/test.ini")?;
      config.set_comment_symbols(&[';', '#', '!']);
-@@ -141,8 +144,9 @@ fn cs() -> Result<(), Box<dyn Error>> {
+@@ -167,8 +170,9 @@ fn cs() -> Result<(), Box<dyn Error>> {
          "defaultvalues"
      );
      config.setstr("default", "defaultvalues", None);
@@ -46,7 +46,7 @@ Index: configparser/tests/test.rs
      assert_eq!(map2, *config.get_map_ref());
      let map3 = config.clone().read(config.writes())?;
      assert_eq!(map2, map3);
-@@ -238,6 +242,7 @@ Float=3.1415
+@@ -264,6 +268,7 @@ Float=3.1415
  #[test]
  #[cfg(feature = "async-std")]
  fn async_load_write() -> Result<(), Box<dyn Error>> {
@@ -54,7 +54,7 @@ Index: configparser/tests/test.rs
      const OUT_FILE_CONTENTS: &str = "defaultvalues=defaultvalues
      [topsecret]
      KFC = the secret herb is orega-
-@@ -258,24 +263,25 @@ fn async_load_write() -> Result<(), Box<
+@@ -284,24 +289,25 @@ fn async_load_write() -> Result<(), Box<
  
      let mut config = Ini::new();
      config.read(OUT_FILE_CONTENTS.to_owned())?;
