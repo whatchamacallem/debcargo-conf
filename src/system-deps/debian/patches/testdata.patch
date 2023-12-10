@@ -5,137 +5,55 @@ the upstream git repository.
 src/tests/lib/libteststatic.a is an empty file upstream, but this does not
 play well with patches, so I added some dummy content.
 
-Index: system-deps/src/tests/toml-fallback-names/Cargo.toml
-===================================================================
 --- /dev/null
-+++ system-deps/src/tests/toml-fallback-names/Cargo.toml
++++ b/src/tests/toml-fallback-names/Cargo.toml
 @@ -0,0 +1,4 @@
 +[package.metadata.system-deps.test_lib]
 +version = "1.0"
 +name = "nosuchlib"
 +fallback-names = ["also-no-such-lib", "testlib", "should-not-get-here"]
-Index: system-deps/src/tests/toml-feature-not-string/Cargo.toml
-===================================================================
 --- /dev/null
-+++ system-deps/src/tests/toml-feature-not-string/Cargo.toml
++++ b/src/tests/toml-feature-not-string/Cargo.toml
 @@ -0,0 +1,2 @@
 +[package.metadata.system-deps]
 +testlib = { version = "1", feature = 2 }
-Index: system-deps/src/tests/toml-feature-versions/Cargo.toml
-===================================================================
 --- /dev/null
-+++ system-deps/src/tests/toml-feature-versions/Cargo.toml
++++ b/src/tests/toml-feature-versions/Cargo.toml
 @@ -0,0 +1,2 @@
 +[package.metadata.system-deps]
 +testdata = { version = "4", v5 = { version = "5" }, v6 = { version = "6" }}
-Index: system-deps/src/tests/toml-good/Cargo.toml
-===================================================================
 --- /dev/null
-+++ system-deps/src/tests/toml-good/Cargo.toml
++++ b/src/tests/toml-good/Cargo.toml
 @@ -0,0 +1,4 @@
 +[package.metadata.system-deps]
 +testdata = "4"
 +testlib = { version = "1", feature = "test-feature" }
 +testmore = { version = "2", feature = "another-test-feature" }
-Index: system-deps/src/tests/toml-missing-key/Cargo.toml
-===================================================================
 --- /dev/null
-+++ system-deps/src/tests/toml-missing-key/Cargo.toml
++++ b/src/tests/toml-invalid-cfg/Cargo.toml
+@@ -0,0 +1,2 @@
++[package.metadata.system-deps.'cfg(badger)']
++testanotherlib = { version = "1", optional = true }
+\ No newline at end of file
+--- /dev/null
++++ b/src/tests/toml-missing-key/Cargo.toml
 @@ -0,0 +1 @@
 +no-pkg-config-here = true
-Index: system-deps/src/tests/toml-not-table/Cargo.toml
-===================================================================
 --- /dev/null
-+++ system-deps/src/tests/toml-not-table/Cargo.toml
++++ b/src/tests/toml-not-table/Cargo.toml
 @@ -0,0 +1,2 @@
 +[package.metadata]
 +system-deps = "not a table"
-Index: system-deps/src/tests/toml-optional/Cargo.toml
-===================================================================
 --- /dev/null
-+++ system-deps/src/tests/toml-optional/Cargo.toml
++++ b/src/tests/toml-optional/Cargo.toml
 @@ -0,0 +1,4 @@
 +[package.metadata.system-deps]
 +testlib = { version = "1.0", optional = true, v5 = { version = "5.0", name = "testlib-5.0", optional = false }}
 +testmore = { version = "2", v3 = { version = "3.0", optional = true }}
 +testbadger = { version = "1", optional = true }
 \ No newline at end of file
-Index: system-deps/src/tests/toml-override-name/Cargo.toml
-===================================================================
 --- /dev/null
-+++ system-deps/src/tests/toml-override-name/Cargo.toml
-@@ -0,0 +1,2 @@
-+[package.metadata.system-deps]
-+test_lib = { name = "testlib", version = "1.0", v1_2 = { version = "1.2" } }
-Index: system-deps/src/tests/toml-two-libs/Cargo.toml
-===================================================================
---- /dev/null
-+++ system-deps/src/tests/toml-two-libs/Cargo.toml
-@@ -0,0 +1,3 @@
-+[package.metadata.system-deps]
-+testlib = { version = "1" }
-+testanotherlib = { version = "1" }
-Index: system-deps/src/tests/toml-unexpected-key/Cargo.toml
-===================================================================
---- /dev/null
-+++ system-deps/src/tests/toml-unexpected-key/Cargo.toml
-@@ -0,0 +1,2 @@
-+[package.metadata.system-deps]
-+testlib = { version = "1", color = "blue" }
-Index: system-deps/src/tests/toml-version-fallback-names/Cargo.toml
-===================================================================
---- /dev/null
-+++ system-deps/src/tests/toml-version-fallback-names/Cargo.toml
-@@ -0,0 +1,7 @@
-+[package.metadata.system-deps.test_lib]
-+version = "0.1"
-+name = "nosuchlib"
-+fallback-names = ["also-no-such-lib", "testlib", "should-not-get-here"]
-+v1 = { version = "1.0" }
-+v2 = { version = "2.0", fallback-names = ["testlib-2.0"] }
-+v99 = { version = "99.0", fallback-names = [] }
-+[package.metadata.system-deps.test_lib]
-Index: system-deps/src/tests/toml-version-in-table-not-string/Cargo.toml
-===================================================================
---- /dev/null
-+++ system-deps/src/tests/toml-version-in-table-not-string/Cargo.toml
-@@ -0,0 +1,2 @@
-+[package.metadata.system-deps]
-+testlib = { version = 1 }
-Index: system-deps/src/tests/toml-version-missing/Cargo.toml
-===================================================================
---- /dev/null
-+++ system-deps/src/tests/toml-version-missing/Cargo.toml
-@@ -0,0 +1,2 @@
-+[package.metadata.system-deps]
-+testlib = { feature = "test-feature" }
-Index: system-deps/src/tests/toml-version-names/Cargo.toml
-===================================================================
---- /dev/null
-+++ system-deps/src/tests/toml-version-names/Cargo.toml
-@@ -0,0 +1,2 @@
-+[package.metadata.system-deps]
-+testlib = { version = "1.2", v2 = { version = "2.0", name = "testlib-2.0" }, v3 = { version = "3.0", name = "testlib-3.0" }}
-\ No newline at end of file
-Index: system-deps/src/tests/toml-version-not-string/Cargo.toml
-===================================================================
---- /dev/null
-+++ system-deps/src/tests/toml-version-not-string/Cargo.toml
-@@ -0,0 +1,2 @@
-+[package.metadata.system-deps]
-+testlib = 1
-Index: system-deps/src/tests/toml-invalid-cfg/Cargo.toml
-===================================================================
---- /dev/null
-+++ system-deps/src/tests/toml-invalid-cfg/Cargo.toml
-@@ -0,0 +1,2 @@
-+[package.metadata.system-deps.'cfg(badger)']
-+testanotherlib = { version = "1", optional = true }
-\ No newline at end of file
-Index: system-deps/src/tests/toml-os-specific/Cargo.toml
-===================================================================
---- /dev/null
-+++ system-deps/src/tests/toml-os-specific/Cargo.toml
++++ b/src/tests/toml-os-specific/Cargo.toml
 @@ -0,0 +1,6 @@
 +[package.metadata.system-deps.'cfg(target_os = "linux")']
 +testdata = "1"
@@ -144,18 +62,73 @@ Index: system-deps/src/tests/toml-os-specific/Cargo.toml
 +[package.metadata.system-deps.'cfg(unix)']
 +testanotherlib = { version = "1", optional = true }
 \ No newline at end of file
-Index: system-deps/src/tests/toml-static/Cargo.toml
-===================================================================
 --- /dev/null
-+++ system-deps/src/tests/toml-static/Cargo.toml
++++ b/src/tests/toml-override-name/Cargo.toml
+@@ -0,0 +1,2 @@
++[package.metadata.system-deps]
++test_lib = { name = "testlib", version = "1.0", v1_2 = { version = "1.2" } }
+--- /dev/null
++++ b/src/tests/toml-static/Cargo.toml
 @@ -0,0 +1,4 @@
 +[package.metadata.system-deps]
 +testdata = "4"
 +teststaticlib = { version = "1", feature = "test-feature" }
 +testmore = { version = "2", feature = "another-test-feature" }
-Index: system-deps/src/tests/lib/libteststatic.a
-===================================================================
 --- /dev/null
-+++ system-deps/src/tests/lib/libteststatic.a
++++ b/src/tests/toml-two-libs/Cargo.toml
+@@ -0,0 +1,3 @@
++[package.metadata.system-deps]
++testlib = { version = "1" }
++testanotherlib = { version = "1" }
+--- /dev/null
++++ b/src/tests/toml-unexpected-key/Cargo.toml
+@@ -0,0 +1,2 @@
++[package.metadata.system-deps]
++testlib = { version = "1", color = "blue" }
+--- /dev/null
++++ b/src/tests/toml-version-fallback-names/Cargo.toml
+@@ -0,0 +1,7 @@
++[package.metadata.system-deps.test_lib]
++version = "0.1"
++name = "nosuchlib"
++fallback-names = ["also-no-such-lib", "testlib", "should-not-get-here"]
++v1 = { version = "1.0" }
++v2 = { version = "2.0", fallback-names = ["testlib-2.0"] }
++v99 = { version = "99.0", fallback-names = [] }
+--- /dev/null
++++ b/src/tests/toml-version-in-table-not-string/Cargo.toml
+@@ -0,0 +1,2 @@
++[package.metadata.system-deps]
++testlib = { version = 1 }
+--- /dev/null
++++ b/src/tests/toml-version-missing/Cargo.toml
+@@ -0,0 +1,2 @@
++[package.metadata.system-deps]
++testlib = { feature = "test-feature" }
+--- /dev/null
++++ b/src/tests/toml-version-names/Cargo.toml
+@@ -0,0 +1,2 @@
++[package.metadata.system-deps]
++testlib = { version = "1.2", v2 = { version = "2.0", name = "testlib-2.0" }, v3 = { version = "3.0", name = "testlib-3.0" }}
+\ No newline at end of file
+--- /dev/null
++++ b/src/tests/toml-version-not-string/Cargo.toml
+@@ -0,0 +1,2 @@
++[package.metadata.system-deps]
++testlib = 1
+--- /dev/null
++++ b/src/tests/toml-version-range-unsatisfied/Cargo.toml
+@@ -0,0 +1,3 @@
++[package.metadata.system-deps]
++testdata = "4"
++testlib = { version = ">= 1, < 1.2", feature = "test-feature" }
+--- /dev/null
++++ b/src/tests/toml-version-range/Cargo.toml
+@@ -0,0 +1,3 @@
++[package.metadata.system-deps]
++testdata = "4"
++testlib = { version = ">= 1, < 2", feature = "test-feature" }
+--- /dev/null
++++ b/src/tests/lib/libteststatic.a
 @@ -0,0 +1 @@
 +foo
