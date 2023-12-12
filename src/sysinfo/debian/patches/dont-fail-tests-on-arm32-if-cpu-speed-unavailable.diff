@@ -10,3 +10,15 @@ Index: sysinfo/src/lib.rs
          if std::env::var("APPLE_CI").is_err() && std::env::var("FREEBSD_CI").is_err() {
              s.refresh_cpu_specifics(CpuRefreshKind::everything());
              for proc_ in s.cpus() {
+Index: sysinfo/tests/cpu.rs
+===================================================================
+--- sysinfo.orig/tests/cpu.rs
++++ sysinfo/tests/cpu.rs
+@@ -20,6 +20,7 @@ fn test_cpu() {
+ }
+ 
+ #[test]
++#[cfg(not(target_arch = "arm"))]
+ fn test_physical_core_numbers() {
+     use sysinfo::SystemExt;
+ 
