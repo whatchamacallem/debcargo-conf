@@ -2,11 +2,11 @@ From 855b1ad050dc486cf6e8a9c35854264740222df7 Mon Sep 17 00:00:00 2001
 From: Ed Page <eopage@gmail.com>
 Date: Tue, 28 Feb 2023 15:55:19 -0600
 Subject: [PATCH] chore: Update base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 This removes one of cargo's duplicate dependencies
-
-[FG]
-adapted context for cargo 0.66
 
 Signed-off-by: Fabian Grünbichler <f.gruenbichler@proxmox.com>
 ---
@@ -18,11 +18,11 @@ Index: cargo/Cargo.toml
 ===================================================================
 --- cargo.orig/Cargo.toml
 +++ cargo/Cargo.toml
-@@ -39,7 +39,7 @@ version = "1.0"
- version = "0.2"
+@@ -35,7 +35,7 @@ doc = false
+ version = "1.0.47"
  
  [dependencies.base64]
--version = "0.13"
+-version = "0.13.1"
 +version = "0.21"
  
  [dependencies.bytesize]
@@ -34,14 +34,14 @@ Index: cargo/src/cargo/sources/git/known_hosts.rs
 @@ -20,6 +20,9 @@
  //! and revoked markers. See "FIXME" comments littered in this file.
  
- use crate::util::config::{Definition, Value};
+ use crate::util::config::{Config, Definition, Value};
 +use base64::engine::general_purpose::STANDARD;
 +use base64::engine::general_purpose::STANDARD_NO_PAD;
 +use base64::Engine as _;
  use git2::cert::{Cert, SshHostKeyType};
  use git2::CertificateCheckStatus;
  use hmac::Mac;
-@@ -283,7 +286,7 @@ fn check_ssh_known_hosts(
+@@ -358,7 +361,7 @@ fn check_ssh_known_hosts(
          .collect();
      for (patterns, key_type, key) in BUNDLED_KEYS {
          if !configured_hosts.contains(*patterns) {
@@ -50,37 +50,35 @@ Index: cargo/src/cargo/sources/git/known_hosts.rs
              known_hosts.push(KnownHost {
                  location: KnownHostLocation::Bundled,
                  patterns: patterns.to_string(),
-@@ -334,9 +337,8 @@ fn check_ssh_known_hosts_loaded(
+@@ -406,9 +409,8 @@ fn check_ssh_known_hosts_loaded(
      // support SHA256.
      let mut remote_fingerprint = cargo_util::Sha256::new();
-     remote_fingerprint.update(remote_host_key);
+     remote_fingerprint.update(remote_host_key.clone());
 -    let remote_fingerprint =
 -        base64::encode_config(remote_fingerprint.finish(), base64::STANDARD_NO_PAD);
--    let remote_host_key = base64::encode(remote_host_key);
+-    let remote_host_key_encoded = base64::encode(remote_host_key);
 +    let remote_fingerprint = STANDARD_NO_PAD.encode(remote_fingerprint.finish());
-+    let remote_host_key = STANDARD.encode(remote_host_key);
-     // FIXME: Ideally the error message should include the IP address of the
-     // remote host (to help the user validate that they are connecting to the
-     // host they were expecting to). However, I don't see a way to obtain that
-@@ -462,10 +464,10 @@ fn hashed_hostname_matches(host: &str, h
-     let hostandsalt = hashed.split_once('|');
-     if hostandsalt.is_none() { return false; };
-     let (b64_salt, b64_host) = hostandsalt.unwrap();
--    let salt = base64::decode(b64_salt);
-+    let salt = STANDARD.decode(b64_salt);
-     if salt.is_err() { return false; };
-     let salt = salt.unwrap();
--    let hashed_host = base64::decode(b64_host);
-+    let hashed_host = STANDARD.decode(b64_host);
-     if hashed_host.is_err() { return false; };
-     let hashed_host = hashed_host.unwrap();
-     let mac = hmac::Hmac::<sha1::Sha1>::new_from_slice(&salt);
-@@ -506,7 +508,7 @@ fn parse_known_hosts_line(line: &str, lo
-     let mut parts = line.split([' ', '\t']).filter(|s| !s.is_empty());
++    let remote_host_key_encoded = STANDARD.encode(remote_host_key);
+ 
+     for known_host in known_hosts {
+         // The key type from libgit2 needs to match the key type from the host file.
+@@ -607,8 +609,8 @@ impl KnownHost {
+ 
+ fn hashed_hostname_matches(host: &str, hashed: &str) -> bool {
+     let Some((b64_salt, b64_host)) = hashed.split_once('|') else { return false; };
+-    let Ok(salt) = base64::decode(b64_salt) else { return false; };
+-    let Ok(hashed_host) = base64::decode(b64_host) else { return false; };
++    let Ok(salt) = STANDARD.decode(b64_salt) else { return false; };
++    let Ok(hashed_host) = STANDARD.decode(b64_host) else { return false; };
+     let Ok(mut mac) = hmac::Hmac::<sha1::Sha1>::new_from_slice(&salt) else { return false; };
+     mac.update(host.as_bytes());
+     let result = mac.finalize().into_bytes();
+@@ -660,7 +662,7 @@ fn parse_known_hosts_line(line: &str, lo
+ 
      let patterns = parts.next()?;
      let key_type = parts.next()?;
 -    let key = parts.next().map(base64::decode)?.ok()?;
 +    let key = parts.next().map(|p| STANDARD.decode(p))?.ok()?;
      Some(KnownHost {
+         line_type,
          location,
-         patterns: patterns.to_string(),
