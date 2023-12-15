@@ -8,10 +8,10 @@ Build-Depends: debhelper (>= 12),
  libstd-rust-dev,
  librust-async-trait-0.1+default-dev (>= 0.1.22-~~),
  librust-libc-0.2+default-dev (>= 0.2.145-~~),
- librust-ntp-os-clock-1+default-dev,
- librust-ntp-proto-1+--internal-api-dev,
- librust-ntp-proto-1+default-dev,
- librust-ntp-udp-1+default-dev,
+ librust-ntp-os-clock-1+default-dev (>= 1.1.0-~~),
+ librust-ntp-proto-1+--internal-api-dev (>= 1.1.0-~~),
+ librust-ntp-proto-1+default-dev (>= 1.1.0-~~),
+ librust-ntp-udp-1+default-dev (>= 1.1.0-~~),
  librust-rand-0.8+default-dev,
  librust-rustls-0.21+default-dev,
  librust-rustls-native-certs-0.6+default-dev,
@@ -20,14 +20,14 @@ Build-Depends: debhelper (>= 12),
  librust-serde-1+derive-dev (>= 1.0.145-~~),
  librust-serde-json-1+default-dev,
  librust-thiserror-1+default-dev (>= 1.0.10-~~),
- librust-tokio-1+default-dev (>= 1.28-~~),
- librust-tokio-1+fs-dev (>= 1.28-~~),
- librust-tokio-1+io-std-dev (>= 1.28-~~),
- librust-tokio-1+io-util-dev (>= 1.28-~~),
- librust-tokio-1+macros-dev (>= 1.28-~~),
- librust-tokio-1+net-dev (>= 1.28-~~),
- librust-tokio-1+rt-multi-thread-dev (>= 1.28-~~),
- librust-tokio-1+sync-dev (>= 1.28-~~),
+ librust-tokio-1+default-dev (>= 1.32-~~),
+ librust-tokio-1+fs-dev (>= 1.32-~~),
+ librust-tokio-1+io-std-dev (>= 1.32-~~),
+ librust-tokio-1+io-util-dev (>= 1.32-~~),
+ librust-tokio-1+macros-dev (>= 1.32-~~),
+ librust-tokio-1+net-dev (>= 1.32-~~),
+ librust-tokio-1+rt-multi-thread-dev (>= 1.32-~~),
+ librust-tokio-1+sync-dev (>= 1.32-~~),
  librust-toml-0.7+default-dev | librust-toml-0.6+default-dev | librust-toml-0.5+default-dev,
  librust-tracing-0.1+default-dev (>= 0.1.21-~~),
  librust-tracing-subscriber-0.3+ansi-dev,
@@ -51,10 +51,10 @@ Depends:
  ${misc:Depends},
  librust-async-trait-0.1+default-dev (>= 0.1.22-~~),
  librust-libc-0.2+default-dev (>= 0.2.145-~~),
- librust-ntp-os-clock-1+default-dev,
- librust-ntp-proto-1+--internal-api-dev,
- librust-ntp-proto-1+default-dev,
- librust-ntp-udp-1+default-dev,
+ librust-ntp-os-clock-1+default-dev (>= 1.1.0-~~),
+ librust-ntp-proto-1+--internal-api-dev (>= 1.1.0-~~),
+ librust-ntp-proto-1+default-dev (>= 1.1.0-~~),
+ librust-ntp-udp-1+default-dev (>= 1.1.0-~~),
  librust-rand-0.8+default-dev,
  librust-rustls-0.21+default-dev,
  librust-rustls-native-certs-0.6+default-dev,
@@ -63,19 +63,22 @@ Depends:
  librust-serde-1+derive-dev (>= 1.0.145-~~),
  librust-serde-json-1+default-dev,
  librust-thiserror-1+default-dev (>= 1.0.10-~~),
- librust-tokio-1+default-dev (>= 1.28-~~),
- librust-tokio-1+fs-dev (>= 1.28-~~),
- librust-tokio-1+io-std-dev (>= 1.28-~~),
- librust-tokio-1+io-util-dev (>= 1.28-~~),
- librust-tokio-1+macros-dev (>= 1.28-~~),
- librust-tokio-1+net-dev (>= 1.28-~~),
- librust-tokio-1+rt-multi-thread-dev (>= 1.28-~~),
- librust-tokio-1+sync-dev (>= 1.28-~~),
+ librust-tokio-1+default-dev (>= 1.32-~~),
+ librust-tokio-1+fs-dev (>= 1.32-~~),
+ librust-tokio-1+io-std-dev (>= 1.32-~~),
+ librust-tokio-1+io-util-dev (>= 1.32-~~),
+ librust-tokio-1+macros-dev (>= 1.32-~~),
+ librust-tokio-1+net-dev (>= 1.32-~~),
+ librust-tokio-1+rt-multi-thread-dev (>= 1.32-~~),
+ librust-tokio-1+sync-dev (>= 1.32-~~),
  librust-toml-0.7+default-dev | librust-toml-0.6+default-dev | librust-toml-0.5+default-dev,
  librust-tracing-0.1+default-dev (>= 0.1.21-~~),
  librust-tracing-subscriber-0.3+ansi-dev,
  librust-tracing-subscriber-0.3+fmt-dev,
  librust-tracing-subscriber-0.3+std-dev
+Suggests:
+ librust-ntpd+unstable-ntpv5-dev (= ${binary:Version}),
+ librust-ntpd+unstable-nts-pool-dev (= ${binary:Version})
 Provides:
  librust-ntpd+--internal-fuzz-dev (= ${binary:Version}),
  librust-ntpd+default-dev (= ${binary:Version}),
@@ -84,17 +87,49 @@ Provides:
  librust-ntpd-1+--internal-fuzz-dev (= ${binary:Version}),
  librust-ntpd-1+default-dev (= ${binary:Version}),
  librust-ntpd-1+hardware-timestamping-dev (= ${binary:Version}),
- librust-ntpd-1.0-dev (= ${binary:Version}),
- librust-ntpd-1.0+--internal-fuzz-dev (= ${binary:Version}),
- librust-ntpd-1.0+default-dev (= ${binary:Version}),
- librust-ntpd-1.0+hardware-timestamping-dev (= ${binary:Version}),
- librust-ntpd-1.0.0-dev (= ${binary:Version}),
- librust-ntpd-1.0.0+--internal-fuzz-dev (= ${binary:Version}),
- librust-ntpd-1.0.0+default-dev (= ${binary:Version}),
- librust-ntpd-1.0.0+hardware-timestamping-dev (= ${binary:Version})
+ librust-ntpd-1.1-dev (= ${binary:Version}),
+ librust-ntpd-1.1+--internal-fuzz-dev (= ${binary:Version}),
+ librust-ntpd-1.1+default-dev (= ${binary:Version}),
+ librust-ntpd-1.1+hardware-timestamping-dev (= ${binary:Version}),
+ librust-ntpd-1.1.0-dev (= ${binary:Version}),
+ librust-ntpd-1.1.0+--internal-fuzz-dev (= ${binary:Version}),
+ librust-ntpd-1.1.0+default-dev (= ${binary:Version}),
+ librust-ntpd-1.1.0+hardware-timestamping-dev (= ${binary:Version})
 Description: Full-featured implementation of NTP with NTS support - Rust source code
  This package contains the source for the Rust ntpd crate, packaged by debcargo
  for use with cargo and dh-cargo.
+
+Package: librust-ntpd+unstable-ntpv5-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-ntpd-dev (= ${binary:Version}),
+ librust-ntp-proto-1+--internal-api-dev (>= 1.1.0-~~),
+ librust-ntp-proto-1+ntpv5-dev (>= 1.1.0-~~)
+Provides:
+ librust-ntpd-1+unstable-ntpv5-dev (= ${binary:Version}),
+ librust-ntpd-1.1+unstable-ntpv5-dev (= ${binary:Version}),
+ librust-ntpd-1.1.0+unstable-ntpv5-dev (= ${binary:Version})
+Description: Full-featured implementation of NTP with NTS support - feature "unstable_ntpv5"
+ This metapackage enables feature "unstable_ntpv5" for the Rust ntpd crate, by
+ pulling in any additional dependencies needed by that feature.
+
+Package: librust-ntpd+unstable-nts-pool-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-ntpd-dev (= ${binary:Version}),
+ librust-ntp-proto-1+--internal-api-dev (>= 1.1.0-~~),
+ librust-ntp-proto-1+nts-pool-dev (>= 1.1.0-~~)
+Provides:
+ librust-ntpd-1+unstable-nts-pool-dev (= ${binary:Version}),
+ librust-ntpd-1.1+unstable-nts-pool-dev (= ${binary:Version}),
+ librust-ntpd-1.1.0+unstable-nts-pool-dev (= ${binary:Version})
+Description: Full-featured implementation of NTP with NTS support - feature "unstable_nts-pool"
+ This metapackage enables feature "unstable_nts-pool" for the Rust ntpd crate,
+ by pulling in any additional dependencies needed by that feature.
 
 Package: ntpd
 Architecture: any
