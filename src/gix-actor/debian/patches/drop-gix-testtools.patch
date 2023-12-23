@@ -1,0 +1,42 @@
+remove tests that depend on gix_testtools as that isn't packaged in Debian
+
+diff --git a/src/signature/decode.rs b/src/signature/decode.rs
+index e8d14d3..4a9e422 100644
+--- a/src/signature/decode.rs
++++ b/src/signature/decode.rs
+@@ -78,7 +78,6 @@ mod tests {
+     mod parse_signature {
+         use bstr::ByteSlice;
+         use gix_date::{time::Sign, OffsetInSeconds, SecondsSinceUnixEpoch};
+-        use gix_testtools::to_bstr_err;
+         use winnow::prelude::*;
+ 
+         use crate::{signature, SignatureRef, Time};
+@@ -154,27 +153,5 @@ mod tests {
+                 signature("", "", 12345, Sign::Minus, -44100)
+             );
+         }
+-
+-        #[test]
+-        fn invalid_signature() {
+-            assert_eq!(
+-                        decode.parse_peek(b"hello < 12345 -1215")
+-                            .map_err(to_bstr_err)
+-                            .expect_err("parse fails as > is missing")
+-                            .to_string(),
+-                        "in slice at ' 12345 -1215'\n  0: expected `<email>` at ' 12345 -1215'\n  1: expected `<name> <<email>>` at ' 12345 -1215'\n  2: expected `<name> <<email>> <timestamp> <+|-><HHMM>` at ' 12345 -1215'\n"
+-                    );
+-        }
+-
+-        #[test]
+-        fn invalid_time() {
+-            assert_eq!(
+-                        decode.parse_peek(b"hello <> abc -1215")
+-                            .map_err(to_bstr_err)
+-                            .expect_err("parse fails as > is missing")
+-                            .to_string(),
+-                        "in predicate verification at 'abc -1215'\n  0: expected `<timestamp>` at 'abc -1215'\n  1: expected `<name> <<email>> <timestamp> <+|-><HHMM>` at 'abc -1215'\n"
+-                    );
+-        }
+     }
+ }
