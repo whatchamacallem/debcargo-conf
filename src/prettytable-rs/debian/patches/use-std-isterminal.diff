@@ -1,33 +1,29 @@
-this patch is based on a revert of upstream commit
-e206f7129b677f9ad9d54f5be371c904b4215ecb adapted for use in the Debian package
-by Peter Michael Green.
+Switch from the is-terminal crate to the IsTerminal trait in the
+standard library. This reduces the risk of dependency loops.
 
 Index: prettytable-rs/src/lib.rs
 ===================================================================
 --- prettytable-rs.orig/src/lib.rs
 +++ prettytable-rs/src/lib.rs
-@@ -194,8 +194,7 @@ impl<'a> TableSlice<'a> {
+@@ -194,7 +194,7 @@ impl<'a> TableSlice<'a> {
      /// # Returns
      /// A `Result` holding the number of lines printed, or an `io::Error` if any failure happens
      pub fn print_tty(&self, force_colorize: bool) -> Result<usize, Error> {
 -        use is_terminal::IsTerminal;
--        match (stdout(), io::stdout().is_terminal() || force_colorize) {
-+        match (stdout(), atty::is(atty::Stream::Stdout) || force_colorize) {
++        use std::io::IsTerminal;
+         match (stdout(), io::stdout().is_terminal() || force_colorize) {
              (Some(mut o), true) => self.print_term(&mut *o),
              _ => self.print(&mut io::stdout()),
-         }
 Index: prettytable-rs/Cargo.toml
 ===================================================================
 --- prettytable-rs.orig/Cargo.toml
 +++ prettytable-rs/Cargo.toml
-@@ -45,8 +45,8 @@ optional = true
+@@ -45,8 +45,6 @@ optional = true
  [dependencies.encode_unicode]
  version = "0.3"
  
 -[dependencies.is-terminal]
 -version = "0.4"
-+[dependencies.atty]
-+version = "0.2"
  
  [dependencies.lazy_static]
  version = "1.4"
