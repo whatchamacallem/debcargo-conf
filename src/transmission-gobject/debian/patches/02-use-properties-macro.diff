@@ -1,0 +1,2005 @@
+From 4ab39ecf91f545508218ae47493c0e5dbe24cc7b Mon Sep 17 00:00:00 2001
+From: Maximiliano Sandoval R <msandova@gnome.org>
+Date: Fri, 24 Mar 2023 13:01:34 +0100
+Subject: [PATCH] Use properties macro
+
+---
+ src/authentication.rs        |  54 +---
+ src/client.rs                | 146 +++------
+ src/session.rs               | 566 +++++++++++------------------------
+ src/session_stats.rs         | 148 ++-------
+ src/session_stats_details.rs | 105 ++-----
+ src/torrent.rs               | 362 +++-------------------
+ 6 files changed, 313 insertions(+), 1068 deletions(-)
+
+diff --git a/src/authentication.rs b/src/authentication.rs
+index 988ce70..c60c0ad 100644
+--- a/src/authentication.rs
++++ b/src/authentication.rs
+@@ -1,15 +1,17 @@
+ use glib::subclass::prelude::ObjectSubclass;
+ use glib::subclass::prelude::*;
+-use glib::{ObjectExt, ParamFlags, ParamSpec, ParamSpecString, ToValue};
+-use once_cell::sync::Lazy;
++use glib::{ObjectExt, Properties};
+ use once_cell::unsync::OnceCell;
+ 
+ mod imp {
+     use super::*;
+ 
+-    #[derive(Debug, Default)]
++    #[derive(Debug, Default, Properties)]
++    #[properties(wrapper_type = super::TrAuthentication)]
+     pub struct TrAuthentication {
++        #[property(get, set, construct_only)]
+         pub username: OnceCell<String>,
++        #[property(get, set, construct_only)]
+         pub password: OnceCell<String>,
+     }
+ 
+@@ -21,42 +23,16 @@ mod imp {
+     }
+ 
+     impl ObjectImpl for TrAuthentication {
+-        fn properties() -> &'static [ParamSpec] {
+-            static PROPERTIES: Lazy<Vec<ParamSpec>> = Lazy::new(|| {
+-                vec![
+-                    ParamSpecString::new(
+-                        "username",
+-                        "Username",
+-                        "Username",
+-                        "".into(),
+-                        ParamFlags::READWRITE | ParamFlags::CONSTRUCT_ONLY,
+-                    ),
+-                    ParamSpecString::new(
+-                        "password",
+-                        "Password",
+-                        "Password",
+-                        "".into(),
+-                        ParamFlags::READWRITE | ParamFlags::CONSTRUCT_ONLY,
+-                    ),
+-                ]
+-            });
+-            PROPERTIES.as_ref()
++        fn properties() -> &'static [glib::ParamSpec] {
++            Self::derived_properties()
+         }
+ 
+-        fn property(&self, _id: usize, pspec: &ParamSpec) -> glib::Value {
+-            match pspec.name() {
+-                "username" => self.username.get().to_value(),
+-                "password" => self.password.get().to_value(),
+-                _ => unimplemented!(),
+-            }
++        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
++            Self::derived_property(self, id, pspec)
+         }
+ 
+-        fn set_property(&self, _id: usize, value: &glib::Value, pspec: &ParamSpec) {
+-            match pspec.name() {
+-                "username" => self.username.set(value.get().unwrap()).unwrap(),
+-                "password" => self.password.set(value.get().unwrap()).unwrap(),
+-                _ => unimplemented!(),
+-            };
++        fn set_property(&self, id: usize, value: &glib::Value, pspec: &glib::ParamSpec) {
++            Self::derived_set_property(self, id, value, pspec)
+         }
+     }
+ }
+@@ -72,12 +48,4 @@ impl TrAuthentication {
+             .property("password", password)
+             .build()
+     }
+-
+-    pub fn username(&self) -> String {
+-        self.property("username")
+-    }
+-
+-    pub fn password(&self) -> String {
+-        self.property("password")
+-    }
+ }
+diff --git a/src/client.rs b/src/client.rs
+index 8fb7a13..3614e95 100644
+--- a/src/client.rs
++++ b/src/client.rs
+@@ -4,10 +4,7 @@ use gio::prelude::*;
+ use glib::subclass::prelude::ObjectSubclass;
+ use glib::subclass::prelude::*;
+ use glib::subclass::Signal;
+-use glib::{
+-    clone, ObjectExt, ParamFlags, ParamSpec, ParamSpecBoolean, ParamSpecObject, ParamSpecString,
+-    ParamSpecUInt, StaticType, ToValue,
+-};
++use glib::{clone, ObjectExt, Properties, StaticType};
+ use once_cell::sync::{Lazy, OnceCell};
+ use transmission_client::{Authentication, Client, ClientError, Torrent};
+ use url::Url;
+@@ -22,12 +19,18 @@ use crate::{TrAuthentication, TrSession, TrSessionStats, TrTorrent, TrTorrentMod
+ mod imp {
+     use super::*;
+ 
+-    #[derive(Debug)]
++    #[derive(Debug, Properties)]
++    #[properties(wrapper_type = super::TrClient)]
+     pub struct TrClient {
++        #[property(get)]
+         pub address: RefCell<String>,
++        #[property(get)]
+         pub polling_rate: RefCell<u64>,
++        #[property(get)]
+         pub torrents: TrTorrentModel,
++        #[property(get)]
+         pub session: OnceCell<TrSession>,
++        #[property(get)]
+         pub session_stats: TrSessionStats,
+ 
+         pub client: RefCell<Option<Client>>,
+@@ -38,6 +41,21 @@ mod imp {
+ 
+         pub sender: Sender<bool>,
+         pub receiver: Receiver<bool>,
++
++        #[property(get = Self::is_busy)]
++        is_busy: std::marker::PhantomData<bool>,
++        #[property(get = Self::is_connected)]
++        is_connected: std::marker::PhantomData<bool>,
++    }
++
++    impl TrClient {
++        fn is_busy(&self) -> bool {
++            *self.do_connect.borrow() || *self.do_disconnect.borrow()
++        }
++
++        fn is_connected(&self) -> bool {
++            self.client.borrow().is_some()
++        }
+     }
+ 
+     #[glib::object_subclass]
+@@ -59,6 +77,8 @@ mod imp {
+                 authentication: RefCell::default(),
+                 do_connect: RefCell::default(),
+                 do_disconnect: RefCell::default(),
++                is_busy: Default::default(),
++                is_connected: Default::default(),
+                 sender,
+                 receiver,
+             }
+@@ -81,76 +101,12 @@ mod imp {
+             SIGNALS.as_ref()
+         }
+ 
+-        fn properties() -> &'static [ParamSpec] {
+-            static PROPERTIES: Lazy<Vec<ParamSpec>> = Lazy::new(|| {
+-                vec![
+-                    ParamSpecString::new(
+-                        "address",
+-                        "Address",
+-                        "Address",
+-                        None,
+-                        ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecUInt::new(
+-                        "polling-rate",
+-                        "Polling rate",
+-                        "Polling rate",
+-                        0,
+-                        std::u32::MAX,
+-                        0,
+-                        ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecObject::new(
+-                        "torrents",
+-                        "Torrents",
+-                        "Torrents",
+-                        TrTorrentModel::static_type(),
+-                        ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecObject::new(
+-                        "session",
+-                        "Session",
+-                        "Session",
+-                        TrSession::static_type(),
+-                        ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecObject::new(
+-                        "session-stats",
+-                        "Session Stats",
+-                        "Session Stats",
+-                        TrSessionStats::static_type(),
+-                        ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecBoolean::new(
+-                        "is-busy",
+-                        "Is busy",
+-                        "Is busy",
+-                        false,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecBoolean::new(
+-                        "is-connected",
+-                        "Is Connected",
+-                        "Is Connected",
+-                        false,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                ]
+-            });
+-            PROPERTIES.as_ref()
++        fn properties() -> &'static [glib::ParamSpec] {
++            Self::derived_properties()
+         }
+ 
+-        fn property(&self, _id: usize, pspec: &ParamSpec) -> glib::Value {
+-            match pspec.name() {
+-                "address" => self.address.borrow().to_value(),
+-                "polling-rate" => self.polling_rate.borrow().to_value(),
+-                "torrents" => self.torrents.to_value(),
+-                "session" => self.session.get().unwrap().to_value(),
+-                "session-stats" => self.session_stats.to_value(),
+-                "is-busy" => (*self.do_connect.borrow() || *self.do_disconnect.borrow()).to_value(),
+-                "is-connected" => self.client.borrow().is_some().to_value(),
+-                _ => unimplemented!(),
+-            }
++        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
++            Self::derived_property(self, id, pspec)
+         }
+     }
+ }
+@@ -214,14 +170,14 @@ impl TrClient {
+         // With the do_connect/disconnect variables we avoid race conditions
+         // eg. doing another connect attempt, while the client is already busy
+         *imp.do_connect.borrow_mut() = true;
+-        self.notify("is-busy");
++        self.notify_is_busy();
+ 
+         // Do the actual connecting work
+         let result = self.connect_internal(address, polling_rate).await;
+ 
+         // Work is done -> unblock it again.
+         *imp.do_connect.borrow_mut() = false;
+-        self.notify("is-busy");
++        self.notify_is_busy();
+ 
+         result
+     }
+@@ -256,8 +212,8 @@ impl TrClient {
+         // Set properties
+         *imp.address.borrow_mut() = address.clone();
+         *imp.polling_rate.borrow_mut() = polling_rate;
+-        self.notify("address");
+-        self.notify("polling-rate");
++        self.notify_address();
++        self.notify_polling_rate();
+ 
+         // Check server version
+         let session = client.session().await?;
+@@ -269,7 +225,7 @@ impl TrClient {
+         // Make first poll
+         *imp.client.borrow_mut() = Some(client.clone());
+         self.poll_data(true).await?;
+-        self.notify("is-connected");
++        self.notify_is_connected();
+ 
+         // Start polling
+         let duration = std::time::Duration::from_millis(polling_rate);
+@@ -290,7 +246,7 @@ impl TrClient {
+                         sender.send(true).await.unwrap();
+ 
+                         *imp.do_disconnect.borrow_mut() = false;
+-                        this.notify("is-busy");
++                        this.notify_is_busy();
+                     }else{
+                         this.refresh_data().await;
+                     }
+@@ -317,11 +273,11 @@ impl TrClient {
+         }
+ 
+         let _client = imp.client.borrow_mut().take().unwrap();
+-        self.notify("is-connected");
++        self.notify_is_connected();
+ 
+         // Wait till polling loop has stopped
+         *imp.do_disconnect.borrow_mut() = true;
+-        self.notify("is-busy");
++        self.notify_is_busy();
+ 
+         // Wait from message from polling loop to ensure we're not polling anymore.
+         let r = imp.receiver.recv().await.unwrap();
+@@ -552,34 +508,6 @@ impl TrClient {
+         imp.client.borrow().clone()
+     }
+ 
+-    pub fn address(&self) -> String {
+-        self.property("address")
+-    }
+-
+-    pub fn polling_rate(&self) -> u64 {
+-        self.property("polling-rate")
+-    }
+-
+-    pub fn torrents(&self) -> TrTorrentModel {
+-        self.property("torrents")
+-    }
+-
+-    pub fn session(&self) -> TrSession {
+-        self.property("session")
+-    }
+-
+-    pub fn session_stats(&self) -> TrSessionStats {
+-        self.property("session-stats")
+-    }
+-
+-    pub fn is_busy(&self) -> bool {
+-        self.property("is-busy")
+-    }
+-
+-    pub fn is_connected(&self) -> bool {
+-        self.property("is-connected")
+-    }
+-
+     fn sorted_queue_by_status(rpc_torrents: &Vec<Torrent>, status_code: i32) -> Vec<Torrent> {
+         let mut download_queue: BTreeMap<u64, &Torrent> = BTreeMap::new();
+ 
+diff --git a/src/session.rs b/src/session.rs
+index bf37aec..5a95bad 100644
+--- a/src/session.rs
++++ b/src/session.rs
+@@ -1,11 +1,7 @@
+ use gio::prelude::FileExt;
+ use glib::subclass::prelude::ObjectSubclass;
+ use glib::subclass::prelude::*;
+-use glib::{
+-    clone, ObjectExt, ParamSpec, ParamSpecBoolean, ParamSpecEnum, ParamSpecInt, ParamSpecObject,
+-    ParamSpecString, StaticType, ToValue,
+-};
+-use once_cell::sync::Lazy;
++use glib::{clone, ObjectExt, Properties};
+ use once_cell::sync::OnceCell;
+ use transmission_client::{Session, SessionMutator};
+ 
+@@ -16,431 +12,229 @@ use crate::{TrClient, TrEncryption};
+ mod imp {
+     use super::*;
+ 
+-    #[derive(Debug, Default)]
++    #[derive(Debug, Default, Properties)]
++    #[properties(wrapper_type = super::TrSession)]
+     pub struct TrSession {
+         pub client: OnceCell<TrClient>,
+ 
++        #[property(get)]
+         pub version: RefCell<String>,
++        #[property(get, set = Self::set_download_dir)]
+         pub download_dir: RefCell<Option<gio::File>>,
++        #[property(get, set = Self::set_start_added_torrents)]
+         pub start_added_torrents: Cell<bool>,
++        #[property(get, set = Self::set_encryption, builder(Default::default()))]
+         pub encryption: Cell<TrEncryption>,
++        #[property(get, set = Self::set_incomplete_dir_enabled)]
+         pub incomplete_dir_enabled: Cell<bool>,
++        #[property(get, set = Self::set_incomplete_dir)]
+         pub incomplete_dir: RefCell<Option<gio::File>>,
++        #[property(get, set = Self::set_download_queue_enabled)]
+         pub download_queue_enabled: Cell<bool>,
++        #[property(get, set = Self::set_download_queue_size, minimum = 1, default_value = 1)]
+         pub download_queue_size: Cell<i32>,
++        #[property(get, set = Self::set_seed_queue_enabled)]
+         pub seed_queue_enabled: Cell<bool>,
++        #[property(get, set = Self::set_seed_queue_size, minimum = 1, default_value = 1)]
+         pub seed_queue_size: Cell<i32>,
++        #[property(get, set = Self::set_port_forwarding_enabled)]
+         pub port_forwarding_enabled: Cell<bool>,
++        #[property(get, set = Self::set_peer_port_random_on_start)]
+         pub peer_port_random_on_start: Cell<bool>,
++        #[property(get, set = Self::set_peer_port, minimum = 1, default_value = 1)]
+         pub peer_port: Cell<i32>,
++        #[property(get, set = Self::set_peer_limit_global, minimum = 1, default_value = 1)]
+         pub peer_limit_global: Cell<i32>,
++        #[property(get, set = Self::set_peer_limit_per_torrent, minimum = 1, default_value = 1)]
+         pub peer_limit_per_torrent: Cell<i32>,
+     }
+ 
+-    #[glib::object_subclass]
+-    impl ObjectSubclass for TrSession {
+-        const NAME: &'static str = "TrSession";
+-        type ParentType = glib::Object;
+-        type Type = super::TrSession;
+-    }
+-
+-    impl ObjectImpl for TrSession {
+-        fn properties() -> &'static [ParamSpec] {
+-            static PROPERTIES: Lazy<Vec<ParamSpec>> = Lazy::new(|| {
+-                vec![
+-                    ParamSpecString::new(
+-                        "version",
+-                        "Version",
+-                        "Version",
+-                        None,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecObject::new(
+-                        "download-dir",
+-                        "Download directory",
+-                        "Download directory",
+-                        gio::File::static_type(),
+-                        glib::ParamFlags::READWRITE,
+-                    ),
+-                    ParamSpecBoolean::new(
+-                        "start-added-torrents",
+-                        "Start added torrents",
+-                        "Start added torrents",
+-                        false,
+-                        glib::ParamFlags::READWRITE,
+-                    ),
+-                    ParamSpecEnum::new(
+-                        "encryption",
+-                        "Encryption",
+-                        "Encryption",
+-                        TrEncryption::static_type(),
+-                        TrEncryption::default() as i32,
+-                        glib::ParamFlags::READWRITE,
+-                    ),
+-                    ParamSpecBoolean::new(
+-                        "incomplete-dir-enabled",
+-                        "Incomplete directory enabled",
+-                        "Incomplete directory enabled",
+-                        false,
+-                        glib::ParamFlags::READWRITE,
+-                    ),
+-                    ParamSpecObject::new(
+-                        "incomplete-dir",
+-                        "Incomplete directory",
+-                        "Incomplete directory",
+-                        gio::File::static_type(),
+-                        glib::ParamFlags::READWRITE,
+-                    ),
+-                    ParamSpecBoolean::new(
+-                        "download-queue-enabled",
+-                        "Download queue enabled",
+-                        "Download queue enabled",
+-                        false,
+-                        glib::ParamFlags::READWRITE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "download-queue-size",
+-                        "Download queue size",
+-                        "Download queue size",
+-                        1,
+-                        std::i32::MAX,
+-                        1,
+-                        glib::ParamFlags::READWRITE,
+-                    ),
+-                    ParamSpecBoolean::new(
+-                        "seed-queue-enabled",
+-                        "Seed queue enabled",
+-                        "Seed queue enabled",
+-                        false,
+-                        glib::ParamFlags::READWRITE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "seed-queue-size",
+-                        "Seed queue size",
+-                        "Seed queue size",
+-                        1,
+-                        std::i32::MAX,
+-                        1,
+-                        glib::ParamFlags::READWRITE,
+-                    ),
+-                    ParamSpecBoolean::new(
+-                        "port-forwarding-enabled",
+-                        "Port forwarding enabled",
+-                        "Port forwarding enabled",
+-                        false,
+-                        glib::ParamFlags::READWRITE,
+-                    ),
+-                    ParamSpecBoolean::new(
+-                        "peer-port-random-on-start",
+-                        "Random peer port on startup",
+-                        "Random peer port on startup",
+-                        false,
+-                        glib::ParamFlags::READWRITE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "peer-port",
+-                        "Peer port",
+-                        "Peer port",
+-                        1,
+-                        std::i32::MAX,
+-                        1,
+-                        glib::ParamFlags::READWRITE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "peer-limit-global",
+-                        "Peer limit global",
+-                        "Peer limit global",
+-                        1,
+-                        std::i32::MAX,
+-                        1,
+-                        glib::ParamFlags::READWRITE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "peer-limit-per-torrent",
+-                        "Peer limit per torrent",
+-                        "Peer limit per torrent",
+-                        1,
+-                        std::i32::MAX,
+-                        1,
+-                        glib::ParamFlags::READWRITE,
+-                    ),
+-                ]
+-            });
+-            PROPERTIES.as_ref()
+-        }
+-
+-        fn property(&self, _id: usize, pspec: &ParamSpec) -> glib::Value {
+-            match pspec.name() {
+-                "version" => self.version.borrow().to_value(),
+-                "download-dir" => self.download_dir.borrow().to_value(),
+-                "start-added-torrents" => self.start_added_torrents.get().to_value(),
+-                "encryption" => self.encryption.get().to_value(),
+-                "incomplete-dir-enabled" => self.incomplete_dir_enabled.get().to_value(),
+-                "incomplete-dir" => self.incomplete_dir.borrow().to_value(),
+-                "download-queue-enabled" => self.download_queue_enabled.get().to_value(),
+-                "download-queue-size" => self.download_queue_size.get().to_value(),
+-                "seed-queue-enabled" => self.seed_queue_enabled.get().to_value(),
+-                "seed-queue-size" => self.seed_queue_size.get().to_value(),
+-                "port-forwarding-enabled" => self.port_forwarding_enabled.get().to_value(),
+-                "peer-port-random-on-start" => self.peer_port_random_on_start.get().to_value(),
+-                "peer-port" => self.peer_port.get().to_value(),
+-                "peer-limit-global" => self.peer_limit_global.get().to_value(),
+-                "peer-limit-per-torrent" => self.peer_limit_per_torrent.get().to_value(),
+-                _ => unimplemented!(),
+-            }
+-        }
++    impl TrSession {
++        pub fn set_download_dir(&self, value: gio::File) {
++            *self.download_dir.borrow_mut() = Some(value.clone());
+ 
+-        fn set_property(&self, _id: usize, value: &glib::Value, pspec: &ParamSpec) {
+-            let obj = self.obj();
+-            match pspec.name() {
+-                "download-dir" => obj.set_download_dir(value.get().unwrap()),
+-                "start-added-torrents" => obj.set_start_added_torrents(value.get().unwrap()),
+-                "encryption" => obj.set_encryption(value.get().unwrap()),
+-                "incomplete-dir-enabled" => obj.set_incomplete_dir_enabled(value.get().unwrap()),
+-                "incomplete-dir" => obj.set_incomplete_dir(value.get().unwrap()),
+-                "download-queue-enabled" => obj.set_download_queue_enabled(value.get().unwrap()),
+-                "download-queue-size" => obj.set_download_queue_size(value.get().unwrap()),
+-                "seed-queue-enabled" => obj.set_seed_queue_enabled(value.get().unwrap()),
+-                "seed-queue-size" => obj.set_seed_queue_size(value.get().unwrap()),
+-                "port-forwarding-enabled" => obj.set_port_forwarding_enabled(value.get().unwrap()),
+-                "peer-port-random-on-start" => {
+-                    obj.set_peer_port_random_on_start(value.get().unwrap())
+-                }
+-                "peer-port" => obj.set_peer_port(value.get().unwrap()),
+-                "peer-limit-global" => obj.set_peer_limit_global(value.get().unwrap()),
+-                "peer-limit-per-torrent" => obj.set_peer_limit_per_torrent(value.get().unwrap()),
+-                _ => unimplemented!(),
+-            }
++            let mutator = SessionMutator {
++                download_dir: Some(value.path().unwrap()),
++                ..Default::default()
++            };
++            self.obj().mutate_session(mutator.clone(), "download_dir");
+         }
+-    }
+-}
+-
+-glib::wrapper! {
+-    pub struct TrSession(ObjectSubclass<imp::TrSession>);
+-}
+-
+-impl TrSession {
+-    pub(crate) fn new(client: &TrClient) -> Self {
+-        let session: Self = glib::Object::new();
+-
+-        let imp = session.imp();
+-        imp.client.set(client.clone()).unwrap();
+-
+-        session
+-    }
+ 
+-    pub fn version(&self) -> String {
+-        self.property("version")
+-    }
+-
+-    pub fn download_dir(&self) -> Option<gio::File> {
+-        self.property("download-dir")
+-    }
+-
+-    pub fn set_download_dir(&self, value: gio::File) {
+-        let imp = self.imp();
+-        *imp.download_dir.borrow_mut() = Some(value.clone());
+-
+-        let mutator = SessionMutator {
+-            download_dir: Some(value.path().unwrap()),
+-            ..Default::default()
+-        };
+-        self.mutate_session(mutator.clone(), "download_dir");
+-    }
++        pub fn set_start_added_torrents(&self, value: bool) {
++            self.start_added_torrents.set(value);
+ 
+-    pub fn start_added_torrents(&self) -> bool {
+-        self.property("start-added-torrents")
+-    }
+-
+-    pub fn set_start_added_torrents(&self, value: bool) {
+-        let imp = self.imp();
+-        imp.start_added_torrents.set(value);
+-
+-        let mutator = SessionMutator {
+-            start_added_torrents: Some(value),
+-            ..Default::default()
+-        };
+-        self.mutate_session(mutator.clone(), "start-added-torrents");
+-    }
+-
+-    pub fn encryption(&self) -> TrEncryption {
+-        self.property("encryption")
+-    }
+-
+-    pub fn set_encryption(&self, value: TrEncryption) {
+-        let imp = self.imp();
+-        imp.encryption.set(value);
+-
+-        let mutator = SessionMutator {
+-            encryption: Some(value.into()),
+-            ..Default::default()
+-        };
+-        self.mutate_session(mutator.clone(), "encryption");
+-    }
++            let mutator = SessionMutator {
++                start_added_torrents: Some(value),
++                ..Default::default()
++            };
++            self.obj()
++                .mutate_session(mutator.clone(), "start-added-torrents");
++        }
+ 
+-    pub fn incomplete_dir_enabled(&self) -> bool {
+-        self.property("incomplete-dir-enabled")
+-    }
++        pub fn set_encryption(&self, value: TrEncryption) {
++            self.encryption.set(value);
+ 
+-    pub fn set_incomplete_dir_enabled(&self, value: bool) {
+-        let imp = self.imp();
+-        imp.incomplete_dir_enabled.set(value);
++            let mutator = SessionMutator {
++                encryption: Some(value.into()),
++                ..Default::default()
++            };
++            self.obj().mutate_session(mutator.clone(), "encryption");
++        }
+ 
+-        let mutator = SessionMutator {
+-            incomplete_dir_enabled: Some(value),
+-            ..Default::default()
+-        };
+-        self.mutate_session(mutator.clone(), "incomplete-dir-enabled");
+-    }
++        pub fn set_incomplete_dir_enabled(&self, value: bool) {
++            self.incomplete_dir_enabled.set(value);
+ 
+-    pub fn incomplete_dir(&self) -> Option<gio::File> {
+-        self.property("incomplete-dir")
+-    }
++            let mutator = SessionMutator {
++                incomplete_dir_enabled: Some(value),
++                ..Default::default()
++            };
++            self.obj()
++                .mutate_session(mutator.clone(), "incomplete-dir-enabled");
++        }
+ 
+-    pub fn set_incomplete_dir(&self, value: gio::File) {
+-        let imp = self.imp();
+-        *imp.incomplete_dir.borrow_mut() = Some(value.clone());
++        pub fn set_incomplete_dir(&self, value: gio::File) {
++            *self.incomplete_dir.borrow_mut() = Some(value.clone());
+ 
+-        let mutator = SessionMutator {
+-            incomplete_dir: Some(value.path().unwrap()),
+-            ..Default::default()
+-        };
+-        self.mutate_session(mutator.clone(), "incomplete-dir");
+-    }
++            let mutator = SessionMutator {
++                incomplete_dir: Some(value.path().unwrap()),
++                ..Default::default()
++            };
++            self.obj().mutate_session(mutator.clone(), "incomplete-dir");
++        }
+ 
+-    pub fn download_queue_enabled(&self) -> bool {
+-        self.property("download-queue-enabled")
+-    }
++        pub fn set_download_queue_enabled(&self, value: bool) {
++            self.download_queue_enabled.set(value);
+ 
+-    pub fn set_download_queue_enabled(&self, value: bool) {
+-        let imp = self.imp();
+-        imp.download_queue_enabled.set(value);
++            let mutator = SessionMutator {
++                download_queue_enabled: Some(value),
++                ..Default::default()
++            };
++            self.obj()
++                .mutate_session(mutator.clone(), "download-queue-enabled");
++        }
+ 
+-        let mutator = SessionMutator {
+-            download_queue_enabled: Some(value),
+-            ..Default::default()
+-        };
+-        self.mutate_session(mutator.clone(), "download-queue-enabled");
+-    }
++        pub fn set_download_queue_size(&self, value: i32) {
++            self.download_queue_size.set(value);
+ 
+-    pub fn download_queue_size(&self) -> i32 {
+-        self.property("download-queue-size")
+-    }
++            let mutator = SessionMutator {
++                download_queue_size: Some(value),
++                ..Default::default()
++            };
++            self.obj()
++                .mutate_session(mutator.clone(), "download-queue-size");
++        }
+ 
+-    pub fn set_download_queue_size(&self, value: i32) {
+-        let imp = self.imp();
+-        imp.download_queue_size.set(value);
++        pub fn set_seed_queue_enabled(&self, value: bool) {
++            self.seed_queue_enabled.set(value);
+ 
+-        let mutator = SessionMutator {
+-            download_queue_size: Some(value),
+-            ..Default::default()
+-        };
+-        self.mutate_session(mutator.clone(), "download-queue-size");
+-    }
++            let mutator = SessionMutator {
++                seed_queue_enabled: Some(value),
++                ..Default::default()
++            };
++            self.obj()
++                .mutate_session(mutator.clone(), "seed-queue-enabled");
++        }
+ 
+-    pub fn seed_queue_enabled(&self) -> bool {
+-        self.property("seed-queue-enabled")
+-    }
++        pub fn set_seed_queue_size(&self, value: i32) {
++            self.seed_queue_size.set(value);
+ 
+-    pub fn set_seed_queue_enabled(&self, value: bool) {
+-        let imp = self.imp();
+-        imp.seed_queue_enabled.set(value);
++            let mutator = SessionMutator {
++                seed_queue_size: Some(value),
++                ..Default::default()
++            };
++            self.obj()
++                .mutate_session(mutator.clone(), "seed-queue-size");
++        }
+ 
+-        let mutator = SessionMutator {
+-            seed_queue_enabled: Some(value),
+-            ..Default::default()
+-        };
+-        self.mutate_session(mutator.clone(), "seed-queue-enabled");
+-    }
++        pub fn set_port_forwarding_enabled(&self, value: bool) {
++            self.port_forwarding_enabled.set(value);
+ 
+-    pub fn seed_queue_size(&self) -> i32 {
+-        self.property("seed-queue-size")
+-    }
++            let mutator = SessionMutator {
++                port_forwarding_enabled: Some(value),
++                ..Default::default()
++            };
++            self.obj()
++                .mutate_session(mutator.clone(), "port-forwarding-enabled");
++        }
+ 
+-    pub fn set_seed_queue_size(&self, value: i32) {
+-        let imp = self.imp();
+-        imp.seed_queue_size.set(value);
++        pub fn set_peer_port_random_on_start(&self, value: bool) {
++            self.peer_port_random_on_start.set(value);
+ 
+-        let mutator = SessionMutator {
+-            seed_queue_size: Some(value),
+-            ..Default::default()
+-        };
+-        self.mutate_session(mutator.clone(), "seed-queue-size");
+-    }
++            let mutator = SessionMutator {
++                peer_port_random_on_start: Some(value),
++                ..Default::default()
++            };
++            self.obj()
++                .mutate_session(mutator.clone(), "peer-port-random-on-start");
++        }
+ 
+-    pub fn port_forwarding_enabled(&self) -> bool {
+-        self.property("por-forwarding-enabled")
+-    }
++        pub fn set_peer_port(&self, value: i32) {
++            self.peer_port.set(value);
+ 
+-    pub fn set_port_forwarding_enabled(&self, value: bool) {
+-        let imp = self.imp();
+-        imp.port_forwarding_enabled.set(value);
++            let mutator = SessionMutator {
++                peer_port: Some(value),
++                ..Default::default()
++            };
++            self.obj().mutate_session(mutator.clone(), "peer-port");
++        }
+ 
+-        let mutator = SessionMutator {
+-            port_forwarding_enabled: Some(value),
+-            ..Default::default()
+-        };
+-        self.mutate_session(mutator.clone(), "port-forwarding-enabled");
+-    }
++        pub fn set_peer_limit_global(&self, value: i32) {
++            self.peer_limit_global.set(value);
+ 
+-    pub fn peer_port_random_on_start(&self) -> bool {
+-        self.property("peer-port-random-on-start")
+-    }
++            let mutator = SessionMutator {
++                peer_limit_global: Some(value),
++                ..Default::default()
++            };
++            self.obj()
++                .mutate_session(mutator.clone(), "peer-limit-global");
++        }
+ 
+-    pub fn set_peer_port_random_on_start(&self, value: bool) {
+-        let imp = self.imp();
+-        imp.peer_port_random_on_start.set(value);
++        pub fn set_peer_limit_per_torrent(&self, value: i32) {
++            self.peer_limit_per_torrent.set(value);
+ 
+-        let mutator = SessionMutator {
+-            peer_port_random_on_start: Some(value),
+-            ..Default::default()
+-        };
+-        self.mutate_session(mutator.clone(), "peer-port-random-on-start");
++            let mutator = SessionMutator {
++                peer_limit_per_torrent: Some(value),
++                ..Default::default()
++            };
++            self.obj()
++                .mutate_session(mutator.clone(), "peer-limit-per-torrent");
++        }
+     }
+ 
+-    pub fn peer_port(&self) -> i32 {
+-        self.property("peer-port")
++    #[glib::object_subclass]
++    impl ObjectSubclass for TrSession {
++        const NAME: &'static str = "TrSession";
++        type ParentType = glib::Object;
++        type Type = super::TrSession;
+     }
+ 
+-    pub fn set_peer_port(&self, value: i32) {
+-        let imp = self.imp();
+-        imp.peer_port.set(value);
++    impl ObjectImpl for TrSession {
++        fn properties() -> &'static [glib::ParamSpec] {
++            Self::derived_properties()
++        }
+ 
+-        let mutator = SessionMutator {
+-            peer_port: Some(value),
+-            ..Default::default()
+-        };
+-        self.mutate_session(mutator.clone(), "peer-port");
+-    }
++        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
++            Self::derived_property(self, id, pspec)
++        }
+ 
+-    pub fn peer_limit_global(&self) -> i32 {
+-        self.property("peer-limit-global")
++        fn set_property(&self, id: usize, value: &glib::Value, pspec: &glib::ParamSpec) {
++            Self::derived_set_property(self, id, value, pspec)
++        }
+     }
++}
+ 
+-    pub fn set_peer_limit_global(&self, value: i32) {
+-        let imp = self.imp();
+-        imp.peer_limit_global.set(value);
+-
+-        let mutator = SessionMutator {
+-            peer_limit_global: Some(value),
+-            ..Default::default()
+-        };
+-        self.mutate_session(mutator.clone(), "peer-limit-global");
+-    }
++glib::wrapper! {
++    pub struct TrSession(ObjectSubclass<imp::TrSession>);
++}
+ 
+-    pub fn peer_limit_per_torrent(&self) -> i32 {
+-        self.property("peer-limit-per-torrent")
+-    }
++impl TrSession {
++    pub(crate) fn new(client: &TrClient) -> Self {
++        let session: Self = glib::Object::new();
+ 
+-    pub fn set_peer_limit_per_torrent(&self, value: i32) {
+-        let imp = self.imp();
+-        imp.peer_limit_per_torrent.set(value);
++        let imp = session.imp();
++        imp.client.set(client.clone()).unwrap();
+ 
+-        let mutator = SessionMutator {
+-            peer_limit_per_torrent: Some(value),
+-            ..Default::default()
+-        };
+-        self.mutate_session(mutator.clone(), "peer-limit-per-torrent");
++        session
+     }
+ 
+     pub(crate) fn refresh_values(&self, rpc_session: Session) {
+@@ -449,7 +243,7 @@ impl TrSession {
+         // version
+         if *imp.version.borrow() != rpc_session.version {
+             *imp.version.borrow_mut() = rpc_session.version;
+-            self.notify("version");
++            self.notify_version();
+         }
+ 
+         // download_dir
+@@ -463,27 +257,27 @@ impl TrSession {
+                 .flatten()
+         {
+             *imp.download_dir.borrow_mut() = Some(download_dir);
+-            self.notify("download-dir");
++            self.notify_download_dir();
+         }
+ 
+         // start_added_torrents
+         if imp.start_added_torrents.get() != rpc_session.start_added_torrents {
+             imp.start_added_torrents
+                 .set(rpc_session.start_added_torrents);
+-            self.notify("start-added-torrents");
++            self.notify_start_added_torrents();
+         }
+ 
+         // encryption
+         if imp.encryption.get() != rpc_session.encryption.clone().into() {
+             imp.encryption.set(rpc_session.encryption.into());
+-            self.notify("encryption");
++            self.notify_encryption();
+         }
+ 
+         // incomplete_dir_enabled
+         if imp.incomplete_dir_enabled.get() != rpc_session.incomplete_dir_enabled {
+             imp.incomplete_dir_enabled
+                 .set(rpc_session.incomplete_dir_enabled.into());
+-            self.notify("incomplete-dir-enabled");
++            self.notify_incomplete_dir_enabled();
+         }
+ 
+         // incomplete_dir
+@@ -497,65 +291,65 @@ impl TrSession {
+                 .flatten()
+         {
+             *imp.incomplete_dir.borrow_mut() = Some(incomplete_dir);
+-            self.notify("incomplete-dir");
++            self.notify_incomplete_dir();
+         }
+ 
+         // download_queue_enabled
+         if imp.download_queue_enabled.get() != rpc_session.download_queue_enabled {
+             imp.download_queue_enabled
+                 .set(rpc_session.download_queue_enabled);
+-            self.notify("download-queue-enabled");
++            self.notify_download_queue_enabled();
+         }
+ 
+         // download_queue_size
+         if imp.download_queue_size.get() != rpc_session.download_queue_size.clone() {
+             imp.download_queue_size.set(rpc_session.download_queue_size);
+-            self.notify("download-queue-size");
++            self.notify_download_queue_size();
+         }
+ 
+         // seed_queue_enabled
+         if imp.seed_queue_enabled.get() != rpc_session.seed_queue_enabled {
+             imp.seed_queue_enabled.set(rpc_session.seed_queue_enabled);
+-            self.notify("seed-queue-enabled");
++            self.notify_seed_queue_enabled();
+         }
+ 
+         // seed_queue_size
+         if imp.seed_queue_size.get() != rpc_session.seed_queue_size.clone() {
+             imp.seed_queue_size.set(rpc_session.seed_queue_size);
+-            self.notify("seed-queue-size");
++            self.notify_seed_queue_size();
+         }
+ 
+         // port_forwarding_enabled
+         if imp.port_forwarding_enabled.get() != rpc_session.port_forwarding_enabled {
+             imp.port_forwarding_enabled
+                 .set(rpc_session.port_forwarding_enabled);
+-            self.notify("port-forwarding-enabled");
++            self.notify_port_forwarding_enabled();
+         }
+ 
+         // peer_port_random_on_start
+         if imp.peer_port_random_on_start.get() != rpc_session.peer_port_random_on_start {
+             imp.peer_port_random_on_start
+                 .set(rpc_session.peer_port_random_on_start);
+-            self.notify("peer-port-random-on-start");
++            self.notify_peer_port_random_on_start();
+         }
+ 
+         // peer_port
+         if imp.peer_port.get() != rpc_session.peer_port.clone() {
+             imp.peer_port.set(rpc_session.peer_port);
+-            self.notify("peer-port");
++            self.notify_peer_port();
+         }
+ 
+         // peer_limit_global
+         if imp.peer_limit_global.get() != rpc_session.peer_limit_global.clone() {
+             imp.peer_limit_global.set(rpc_session.peer_limit_global);
+-            self.notify("peer-limit-global");
++            self.notify_peer_limit_global();
+         }
+ 
+         // peer_limit_per_torrent
+         if imp.peer_limit_per_torrent.get() != rpc_session.peer_limit_per_torrent.clone() {
+             imp.peer_limit_per_torrent
+                 .set(rpc_session.peer_limit_per_torrent);
+-            self.notify("peer-limit-per-torrent");
++            self.notify_peer_limit_per_torrent();
+         }
+     }
+ 
+diff --git a/src/session_stats.rs b/src/session_stats.rs
+index 4961c37..985625e 100644
+--- a/src/session_stats.rs
++++ b/src/session_stats.rs
+@@ -1,7 +1,6 @@
+ use glib::subclass::prelude::ObjectSubclass;
+ use glib::subclass::prelude::*;
+-use glib::{ObjectExt, ParamSpec, ParamSpecInt, ParamSpecObject, StaticType, ToValue};
+-use once_cell::sync::Lazy;
++use glib::{ObjectExt, Properties};
+ use transmission_client::SessionStats;
+ 
+ use std::cell::Cell;
+@@ -11,16 +10,25 @@ use crate::TrSessionStatsDetails;
+ mod imp {
+     use super::*;
+ 
+-    #[derive(Debug, Default)]
++    #[derive(Debug, Default, Properties)]
++    #[properties(wrapper_type = super::TrSessionStats)]
+     pub struct TrSessionStats {
++        #[property(get, minimum = 1, default_value = 1)]
+         pub torrent_count: Cell<i32>,
++        #[property(get, minimum = 1, default_value = 1)]
+         pub active_torrent_count: Cell<i32>,
++        #[property(get, minimum = 1, default_value = 1)]
+         pub paused_torrent_count: Cell<i32>,
++        #[property(get, minimum = 1, default_value = 1)]
+         pub downloaded_torrent_count: Cell<i32>,
++        #[property(get, minimum = 1, default_value = 1)]
+         pub download_speed: Cell<i32>,
++        #[property(get, minimum = 1, default_value = 1)]
+         pub upload_speed: Cell<i32>,
+ 
++        #[property(get)]
+         pub cumulative_stats: TrSessionStatsDetails,
++        #[property(get)]
+         pub current_stats: TrSessionStatsDetails,
+     }
+ 
+@@ -32,94 +40,12 @@ mod imp {
+     }
+ 
+     impl ObjectImpl for TrSessionStats {
+-        fn properties() -> &'static [ParamSpec] {
+-            static PROPERTIES: Lazy<Vec<ParamSpec>> = Lazy::new(|| {
+-                vec![
+-                    ParamSpecInt::new(
+-                        "torrent-count",
+-                        "Torrent Count",
+-                        "Torrent Count",
+-                        1,
+-                        std::i32::MAX,
+-                        1,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "active-torrent-count",
+-                        "Active Torrent Count",
+-                        "Active Torrent Count",
+-                        1,
+-                        std::i32::MAX,
+-                        1,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "paused-torrent-count",
+-                        "Paused Torrent Count",
+-                        "Paused Torrent Count",
+-                        1,
+-                        std::i32::MAX,
+-                        1,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "downloaded-torrent-count",
+-                        "Downloaded Torrent Count",
+-                        "Downloaded Torrent Count",
+-                        1,
+-                        std::i32::MAX,
+-                        1,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "download-speed",
+-                        "Download Speed",
+-                        "Download Speed",
+-                        1,
+-                        std::i32::MAX,
+-                        1,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "upload-speed",
+-                        "Upload Speed",
+-                        "Upload Speed",
+-                        1,
+-                        std::i32::MAX,
+-                        1,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecObject::new(
+-                        "cumulative-stats",
+-                        "Cumulative Stats",
+-                        "Cumulative Stats",
+-                        TrSessionStatsDetails::static_type(),
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecObject::new(
+-                        "current-stats",
+-                        "Current Stats",
+-                        "Current Stats",
+-                        TrSessionStatsDetails::static_type(),
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                ]
+-            });
+-            PROPERTIES.as_ref()
++        fn properties() -> &'static [glib::ParamSpec] {
++            Self::derived_properties()
+         }
+ 
+-        fn property(&self, _id: usize, pspec: &ParamSpec) -> glib::Value {
+-            match pspec.name() {
+-                "torrent-count" => self.torrent_count.get().to_value(),
+-                "active-torrent-count" => self.active_torrent_count.get().to_value(),
+-                "paused-torrent-count" => self.paused_torrent_count.get().to_value(),
+-                "downloaded-torrent-count" => self.downloaded_torrent_count.get().to_value(),
+-                "download-speed" => self.download_speed.get().to_value(),
+-                "upload-speed" => self.upload_speed.get().to_value(),
+-                "cumulative-stats" => self.cumulative_stats.to_value(),
+-                "current-stats" => self.current_stats.to_value(),
+-                _ => unimplemented!(),
+-            }
++        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
++            Self::derived_property(self, id, pspec)
+         }
+     }
+ }
+@@ -129,75 +55,43 @@ glib::wrapper! {
+ }
+ 
+ impl TrSessionStats {
+-    pub fn torrent_count(&self) -> i32 {
+-        self.property("torrent-count")
+-    }
+-
+-    pub fn active_torrent_count(&self) -> i32 {
+-        self.property("active-torrent-count")
+-    }
+-
+-    pub fn paused_torrent_count(&self) -> i32 {
+-        self.property("paused-torrent-count")
+-    }
+-
+-    pub fn downloaded_torrent_count(&self) -> i32 {
+-        self.property("downloaded-torrent-count")
+-    }
+-
+-    pub fn download_speed(&self) -> i32 {
+-        self.property("download-speed")
+-    }
+-
+-    pub fn upload_speed(&self) -> i32 {
+-        self.property("upload-speed")
+-    }
+-
+-    pub fn cumulative_stats(&self) -> TrSessionStatsDetails {
+-        self.property("cumulative-stats")
+-    }
+-
+-    pub fn current_stats(&self) -> TrSessionStatsDetails {
+-        self.property("current-stats")
+-    }
+-
+     pub(crate) fn refresh_values(&self, rpc_stats: SessionStats, download_count: i32) {
+         let imp = self.imp();
+ 
+         // torrent_count
+         if imp.torrent_count.get() != rpc_stats.torrent_count {
+             imp.torrent_count.set(rpc_stats.torrent_count);
+-            self.notify("torrent-count");
++            self.notify_torrent_count();
+         }
+ 
+         // active_torrent_count
+         if imp.active_torrent_count.get() != rpc_stats.active_torrent_count {
+             imp.active_torrent_count.set(rpc_stats.active_torrent_count);
+-            self.notify("active-torrent-count");
++            self.notify_active_torrent_count();
+         }
+ 
+         // paused_torrent_count
+         if imp.paused_torrent_count.get() != rpc_stats.paused_torrent_count {
+             imp.paused_torrent_count.set(rpc_stats.paused_torrent_count);
+-            self.notify("paused-torrent-count");
++            self.notify_paused_torrent_count();
+         }
+ 
+         // downloaded_torrent_count
+         if imp.downloaded_torrent_count.get() != download_count {
+             imp.downloaded_torrent_count.set(download_count);
+-            self.notify("downloaded-torrent-count");
++            self.notify_downloaded_torrent_count();
+         }
+ 
+         // download_speed
+         if imp.download_speed.get() != rpc_stats.download_speed {
+             imp.download_speed.set(rpc_stats.download_speed);
+-            self.notify("download-speed");
++            self.notify_download_speed();
+         }
+ 
+         // upload_speed
+         if imp.upload_speed.get() != rpc_stats.upload_speed {
+             imp.upload_speed.set(rpc_stats.upload_speed);
+-            self.notify("upload_speed");
++            self.notify_upload_speed();
+         }
+ 
+         imp.cumulative_stats
+diff --git a/src/session_stats_details.rs b/src/session_stats_details.rs
+index 47b2b00..d5ded94 100644
+--- a/src/session_stats_details.rs
++++ b/src/session_stats_details.rs
+@@ -1,7 +1,6 @@
+ use glib::subclass::prelude::ObjectSubclass;
+ use glib::subclass::prelude::*;
+-use glib::{ObjectExt, ParamSpec, ParamSpecInt64, ToValue};
+-use once_cell::sync::Lazy;
++use glib::{ObjectExt, Properties};
+ use transmission_client::StatsDetails;
+ 
+ use std::cell::Cell;
+@@ -9,12 +8,18 @@ use std::cell::Cell;
+ mod imp {
+     use super::*;
+ 
+-    #[derive(Debug, Default)]
++    #[derive(Debug, Default, Properties)]
++    #[properties(wrapper_type = super::TrSessionStatsDetails)]
+     pub struct TrSessionStatsDetails {
++        #[property(get)]
+         pub seconds_active: Cell<i64>,
++        #[property(get)]
+         pub downloaded_bytes: Cell<i64>,
++        #[property(get)]
+         pub uploaded_bytes: Cell<i64>,
++        #[property(get)]
+         pub files_added: Cell<i64>,
++        #[property(get)]
+         pub session_count: Cell<i64>,
+     }
+ 
+@@ -26,68 +31,12 @@ mod imp {
+     }
+ 
+     impl ObjectImpl for TrSessionStatsDetails {
+-        fn properties() -> &'static [ParamSpec] {
+-            static PROPERTIES: Lazy<Vec<ParamSpec>> = Lazy::new(|| {
+-                vec![
+-                    ParamSpecInt64::new(
+-                        "seconds-active",
+-                        "Seconds Active",
+-                        "Seconds Active",
+-                        0,
+-                        std::i64::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt64::new(
+-                        "downloaded-bytes",
+-                        "Downloaded Bytes",
+-                        "Downloaded Bytes",
+-                        0,
+-                        std::i64::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt64::new(
+-                        "uploaded-bytes",
+-                        "Uploaded Bytes",
+-                        "Uploaded Bytes",
+-                        0,
+-                        std::i64::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt64::new(
+-                        "files-added",
+-                        "Files Added",
+-                        "Uploaded Bytes",
+-                        0,
+-                        std::i64::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt64::new(
+-                        "session-count",
+-                        "Session Count",
+-                        "Session Count",
+-                        0,
+-                        std::i64::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                ]
+-            });
+-            PROPERTIES.as_ref()
++        fn properties() -> &'static [glib::ParamSpec] {
++            Self::derived_properties()
+         }
+ 
+-        fn property(&self, _id: usize, pspec: &ParamSpec) -> glib::Value {
+-            match pspec.name() {
+-                "seconds-active" => self.seconds_active.get().to_value(),
+-                "downloaded-bytes" => self.downloaded_bytes.get().to_value(),
+-                "uploaded-bytes" => self.uploaded_bytes.get().to_value(),
+-                "files-added" => self.files_added.get().to_value(),
+-                "session-count" => self.session_count.get().to_value(),
+-                _ => unimplemented!(),
+-            }
++        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
++            Self::derived_property(self, id, pspec)
+         }
+     }
+ }
+@@ -97,57 +46,37 @@ glib::wrapper! {
+ }
+ 
+ impl TrSessionStatsDetails {
+-    pub fn seconds_active(&self) -> i64 {
+-        self.property("seconds-active")
+-    }
+-
+-    pub fn downloaded_bytes(&self) -> i64 {
+-        self.property("downloaded-bytes")
+-    }
+-
+-    pub fn uploaded_bytes(&self) -> i64 {
+-        self.property("uploaded-bytes")
+-    }
+-
+-    pub fn files_added(&self) -> i64 {
+-        self.property("files-added")
+-    }
+-
+-    pub fn session_count(&self) -> i64 {
+-        self.property("session-count")
+-    }
+-
+     pub(crate) fn refresh_values(&self, rpc_details: StatsDetails) {
+         let imp = self.imp();
+ 
+         // seconds_active
+         if imp.seconds_active.get() != rpc_details.seconds_active {
+             imp.seconds_active.set(rpc_details.seconds_active);
+-            self.notify("seconds-active");
++            self.notify_seconds_active();
+         }
+ 
+         // downloaded_bytes
+         if imp.downloaded_bytes.get() != rpc_details.downloaded_bytes {
+             imp.downloaded_bytes.set(rpc_details.downloaded_bytes);
+-            self.notify("downloaded-bytes");
++            self.notify_downloaded_bytes();
+         }
+ 
+         // uploaded_bytes
+         if imp.uploaded_bytes.get() != rpc_details.uploaded_bytes {
+             imp.uploaded_bytes.set(rpc_details.uploaded_bytes);
+-            self.notify("uploaded-bytes");
++            self.notify_uploaded_bytes();
+         }
+ 
+         // files_added
+         if imp.files_added.get() != rpc_details.files_added {
+             imp.files_added.set(rpc_details.files_added);
+-            self.notify("files-added");
++            self.notify_files_added();
+         }
+ 
+         // session_count
+         if imp.session_count.get() != rpc_details.session_count {
+             imp.session_count.set(rpc_details.session_count);
+-            self.notify("session-count");
++            self.notify_session_count();
+         }
+     }
+ }
+diff --git a/src/torrent.rs b/src/torrent.rs
+index afeb6fe..0070fb8 100644
+--- a/src/torrent.rs
++++ b/src/torrent.rs
+@@ -3,11 +3,7 @@ use gio::prelude::*;
+ use gio::File;
+ use glib::subclass::prelude::ObjectSubclass;
+ use glib::subclass::prelude::*;
+-use glib::{
+-    ObjectExt, ParamSpec, ParamSpecBoolean, ParamSpecEnum, ParamSpecFloat, ParamSpecInt,
+-    ParamSpecInt64, ParamSpecString, StaticType, ToValue,
+-};
+-use once_cell::sync::Lazy;
++use glib::{ObjectExt, Properties};
+ use once_cell::sync::OnceCell;
+ use transmission_client::{ClientError, Torrent, TorrentMutator};
+ 
+@@ -21,36 +17,59 @@ use crate::torrent_status::TrTorrentStatus;
+ mod imp {
+     use super::*;
+ 
+-    #[derive(Debug, Default)]
++    #[derive(Debug, Default, Properties)]
++    #[properties(wrapper_type = super::TrTorrent)]
+     pub struct TrTorrent {
+         pub client: OnceCell<TrClient>,
+ 
+         /* Static values */
++        #[property(get)]
+         pub name: OnceCell<String>,
++        #[property(get)]
+         pub hash: OnceCell<String>,
++        #[property(get)]
+         pub primary_mime_type: OnceCell<String>,
++        #[property(get)]
+         pub magnet_link: OnceCell<String>,
+ 
+         /* Dynamic values */
++        #[property(get)]
+         pub download_dir: RefCell<String>,
++        #[property(get)]
+         pub size: RefCell<i64>,
++        #[property(get, builder(Default::default()))]
+         pub status: RefCell<TrTorrentStatus>,
++        #[property(get)]
+         pub is_stalled: RefCell<bool>,
++        #[property(get)]
+         pub eta: RefCell<i64>,
++        #[property(get)]
+         pub error: RefCell<i32>,
++        #[property(get)]
+         pub error_string: RefCell<String>,
++        #[property(get)]
+         pub progress: RefCell<f32>,
++        #[property(get)]
+         pub queue_position: RefCell<i32>,
++        #[property(get)]
+         pub download_queue_position: RefCell<i32>,
++        #[property(get)]
+         pub seed_queue_position: RefCell<i32>,
+ 
++        #[property(get)]
+         pub seeders_active: RefCell<i32>,
++        #[property(get)]
+         pub seeders: RefCell<i32>,
++        #[property(get)]
+         pub leechers: RefCell<i32>,
+ 
++        #[property(get)]
+         pub downloaded: RefCell<i64>,
++        #[property(get)]
+         pub uploaded: RefCell<i64>,
++        #[property(get)]
+         pub download_speed: RefCell<i32>,
++        #[property(get)]
+         pub upload_speed: RefCell<i32>,
+     }
+ 
+@@ -62,211 +81,12 @@ mod imp {
+     }
+ 
+     impl ObjectImpl for TrTorrent {
+-        fn properties() -> &'static [ParamSpec] {
+-            static PROPERTIES: Lazy<Vec<ParamSpec>> = Lazy::new(|| {
+-                vec![
+-                    ParamSpecString::new("name", "Name", "Name", None, glib::ParamFlags::READABLE),
+-                    ParamSpecString::new("hash", "Hash", "Hash", None, glib::ParamFlags::READABLE),
+-                    ParamSpecString::new(
+-                        "primary-mime-type",
+-                        "Primary mime type",
+-                        "Primary mime type",
+-                        None,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecString::new(
+-                        "magnet-link",
+-                        "Magnet Link",
+-                        "Magnet Link",
+-                        None,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecString::new(
+-                        "download-dir",
+-                        "Download directory",
+-                        "Download directory",
+-                        None,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt64::new(
+-                        "size",
+-                        "Size",
+-                        "Size",
+-                        0,
+-                        i64::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecEnum::new(
+-                        "status",
+-                        "Status",
+-                        "Status",
+-                        TrTorrentStatus::static_type(),
+-                        TrTorrentStatus::default() as i32,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecBoolean::new(
+-                        "is-stalled",
+-                        "Is stalled",
+-                        "Is stalled",
+-                        false,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt64::new(
+-                        "eta",
+-                        "ETA",
+-                        "ETA",
+-                        0,
+-                        i64::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "error",
+-                        "Error",
+-                        "Error",
+-                        0,
+-                        i32::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecString::new(
+-                        "error-string",
+-                        "Error String",
+-                        "Error String",
+-                        None,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecFloat::new(
+-                        "progress",
+-                        "Progress",
+-                        "Progress",
+-                        0.0,
+-                        f32::MAX,
+-                        0.0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "queue-position",
+-                        "Queue position",
+-                        "Queue position",
+-                        0,
+-                        i32::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "download-queue-position",
+-                        "Download queue position",
+-                        "Download queue position",
+-                        0,
+-                        i32::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "seed-queue-position",
+-                        "Seed queue position",
+-                        "Seed queue position",
+-                        0,
+-                        i32::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "seeders-active",
+-                        "Seeders active",
+-                        "Seeders active",
+-                        0,
+-                        i32::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "seeders",
+-                        "Seeders",
+-                        "Seeders",
+-                        0,
+-                        i32::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "leechers",
+-                        "Leechers",
+-                        "Leechers",
+-                        0,
+-                        i32::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt64::new(
+-                        "downloaded",
+-                        "Downloaded",
+-                        "Downloaded",
+-                        0,
+-                        i64::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt64::new(
+-                        "uploaded",
+-                        "Uploaded",
+-                        "Uploaded",
+-                        0,
+-                        i64::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "download-speed",
+-                        "Download speed",
+-                        "Download speed",
+-                        0,
+-                        i32::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                    ParamSpecInt::new(
+-                        "upload-speed",
+-                        "Upload speed",
+-                        "Upload speed",
+-                        0,
+-                        i32::MAX,
+-                        0,
+-                        glib::ParamFlags::READABLE,
+-                    ),
+-                ]
+-            });
+-            PROPERTIES.as_ref()
++        fn properties() -> &'static [glib::ParamSpec] {
++            Self::derived_properties()
+         }
+ 
+-        fn property(&self, _id: usize, pspec: &ParamSpec) -> glib::Value {
+-            match pspec.name() {
+-                "name" => self.name.get().unwrap().to_value(),
+-                "hash" => self.hash.get().unwrap().to_value(),
+-                "primary-mime-type" => self.primary_mime_type.get().unwrap().to_value(),
+-                "magnet-link" => self.magnet_link.get().unwrap().to_value(),
+-                "download-dir" => self.download_dir.borrow().to_value(),
+-                "size" => self.size.borrow().to_value(),
+-                "status" => self.status.borrow().to_value(),
+-                "is-stalled" => self.is_stalled.borrow().to_value(),
+-                "eta" => self.eta.borrow().to_value(),
+-                "error" => self.error.borrow().to_value(),
+-                "error-string" => self.error_string.borrow().to_value(),
+-                "progress" => self.progress.borrow().to_value(),
+-                "queue-position" => self.queue_position.borrow().to_value(),
+-                "download-queue-position" => self.download_queue_position.borrow().to_value(),
+-                "seed-queue-position" => self.seed_queue_position.borrow().to_value(),
+-                "seeders-active" => self.seeders_active.borrow().to_value(),
+-                "seeders" => self.seeders.borrow().to_value(),
+-                "leechers" => self.leechers.borrow().to_value(),
+-                "downloaded" => self.downloaded.borrow().to_value(),
+-                "uploaded" => self.uploaded.borrow().to_value(),
+-                "download-speed" => self.download_speed.borrow().to_value(),
+-                "upload-speed" => self.upload_speed.borrow().to_value(),
+-                _ => unimplemented!(),
+-            }
++        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
++            Self::derived_property(self, id, pspec)
+         }
+     }
+ }
+@@ -376,13 +196,13 @@ impl TrTorrent {
+         // download_dir
+         if *imp.download_dir.borrow() != rpc_torrent.download_dir {
+             *imp.download_dir.borrow_mut() = rpc_torrent.download_dir;
+-            self.notify("download-dir");
++            self.notify_download_dir();
+         }
+ 
+         // size
+         if *imp.size.borrow() != rpc_torrent.size_when_done {
+             *imp.size.borrow_mut() = rpc_torrent.size_when_done;
+-            self.notify("size");
++            self.notify_size();
+         }
+ 
+         // status
+@@ -401,85 +221,85 @@ impl TrTorrent {
+             }
+ 
+             *imp.status.borrow_mut() = status;
+-            self.notify("status");
++            self.notify_status();
+         }
+ 
+         // is_stalled
+         if *imp.is_stalled.borrow() as u32 != rpc_torrent.is_stalled as u32 {
+             *imp.is_stalled.borrow_mut() = rpc_torrent.is_stalled;
+-            self.notify("is-stalled");
++            self.notify_is_stalled();
+         }
+ 
+         // eta
+         if *imp.eta.borrow() != rpc_torrent.eta {
+             *imp.eta.borrow_mut() = rpc_torrent.eta;
+-            self.notify("eta");
++            self.notify_eta();
+         }
+ 
+         // error
+         if *imp.error.borrow() != rpc_torrent.error {
+             *imp.error.borrow_mut() = rpc_torrent.error;
+-            self.notify("error");
++            self.notify_error();
+         }
+ 
+         // error-string
+         if *imp.error_string.borrow() != rpc_torrent.error_string {
+             *imp.error_string.borrow_mut() = rpc_torrent.error_string.clone();
+-            self.notify("error-string");
++            self.notify_error_string();
+         }
+ 
+         // progress
+         if *imp.progress.borrow() != rpc_torrent.percent_done {
+             *imp.progress.borrow_mut() = rpc_torrent.percent_done;
+-            self.notify("progress");
++            self.notify_progress();
+         }
+ 
+         // queue_position
+         if *imp.queue_position.borrow() != rpc_torrent.queue_position {
+             *imp.queue_position.borrow_mut() = rpc_torrent.queue_position;
+-            self.notify("queue_position");
++            self.notify_queue_position();
+         }
+ 
+         // seeders_active
+         if *imp.seeders_active.borrow() != rpc_torrent.peers_sending_to_us {
+             *imp.seeders_active.borrow_mut() = rpc_torrent.peers_sending_to_us;
+-            self.notify("seeders_active");
++            self.notify_seeders_active();
+         }
+ 
+         // seeders
+         if *imp.seeders.borrow() != rpc_torrent.peers_connected {
+             *imp.seeders.borrow_mut() = rpc_torrent.peers_connected;
+-            self.notify("seeders");
++            self.notify_seeders();
+         }
+ 
+         // leechers
+         if *imp.leechers.borrow() != rpc_torrent.peers_getting_from_us {
+             *imp.leechers.borrow_mut() = rpc_torrent.peers_getting_from_us;
+-            self.notify("leechers");
++            self.notify_leechers();
+         }
+ 
+         // downloaded
+         if *imp.downloaded.borrow() != rpc_torrent.have_valid {
+             *imp.downloaded.borrow_mut() = rpc_torrent.have_valid;
+-            self.notify("downloaded");
++            self.notify_downloaded();
+         }
+ 
+         // uploaded
+         if *imp.uploaded.borrow() != rpc_torrent.uploaded_ever {
+             *imp.uploaded.borrow_mut() = rpc_torrent.uploaded_ever;
+-            self.notify("uploaded");
++            self.notify_uploaded();
+         }
+ 
+         // downloaded
+         if *imp.download_speed.borrow() != rpc_torrent.rate_download {
+             *imp.download_speed.borrow_mut() = rpc_torrent.rate_download;
+-            self.notify("download-speed");
++            self.notify_download_speed();
+         }
+ 
+         // uploaded
+         if *imp.upload_speed.borrow() != rpc_torrent.rate_upload {
+             *imp.upload_speed.borrow_mut() = rpc_torrent.rate_upload;
+-            self.notify("upload-speed");
++            self.notify_upload_speed();
+         }
+     }
+ 
+@@ -489,68 +309,16 @@ impl TrTorrent {
+         // download_queue_position
+         if *imp.download_queue_position.borrow() != download_queue_pos {
+             *imp.download_queue_position.borrow_mut() = download_queue_pos;
+-            self.notify("download-queue-position");
++            self.notify_download_queue_position();
+         }
+ 
+         // seed_queue_position
+         if *imp.seed_queue_position.borrow() != seed_queue_pos {
+             *imp.seed_queue_position.borrow_mut() = seed_queue_pos;
+-            self.notify("seed-queue-position");
++            self.notify_seed_queue_position();
+         }
+     }
+ 
+-    pub fn name(&self) -> String {
+-        self.property("name")
+-    }
+-
+-    pub fn hash(&self) -> String {
+-        self.property("hash")
+-    }
+-
+-    pub fn primary_mime_type(&self) -> String {
+-        self.property("primary-mime-type")
+-    }
+-
+-    pub fn magnet_link(&self) -> String {
+-        self.property("magnet-link")
+-    }
+-
+-    pub fn download_dir(&self) -> String {
+-        self.property("download_dir")
+-    }
+-
+-    pub fn size(&self) -> i64 {
+-        self.property("size")
+-    }
+-
+-    pub fn status(&self) -> TrTorrentStatus {
+-        self.property("status")
+-    }
+-
+-    pub fn is_stalled(&self) -> bool {
+-        self.property("is_stalled")
+-    }
+-
+-    pub fn eta(&self) -> i64 {
+-        self.property("eta")
+-    }
+-
+-    pub fn error(&self) -> i32 {
+-        self.property("error")
+-    }
+-
+-    pub fn error_string(&self) -> String {
+-        self.property("error-string")
+-    }
+-
+-    pub fn progress(&self) -> f32 {
+-        self.property("progress")
+-    }
+-
+-    pub fn queue_position(&self) -> i32 {
+-        self.property("queue_position")
+-    }
+-
+     pub async fn set_queue_position(&self, pos: i32) -> Result<(), ClientError> {
+         if let Some(client) = self.client().rpc_client() {
+             let mutator = TorrentMutator {
+@@ -565,10 +333,6 @@ impl TrTorrent {
+         Ok(())
+     }
+ 
+-    pub fn download_queue_position(&self) -> i32 {
+-        self.property("download_queue_position")
+-    }
+-
+     pub async fn set_download_queue_position(&self, pos: i32) -> Result<(), ClientError> {
+         let torrents = self.client().torrents();
+ 
+@@ -584,10 +348,6 @@ impl TrTorrent {
+         Ok(())
+     }
+ 
+-    pub fn seed_queue_position(&self) -> i32 {
+-        self.property("seed_queue_position")
+-    }
+-
+     pub async fn set_seed_queue_position(&self, pos: i32) -> Result<(), ClientError> {
+         let torrents = self.client().torrents();
+ 
+@@ -603,34 +363,6 @@ impl TrTorrent {
+         Ok(())
+     }
+ 
+-    pub fn seeders_active(&self) -> i32 {
+-        self.property("seeders_active")
+-    }
+-
+-    pub fn seeders(&self) -> i32 {
+-        self.property("seeders")
+-    }
+-
+-    pub fn leechers(&self) -> i32 {
+-        self.property("leechers")
+-    }
+-
+-    pub fn downloaded(&self) -> i64 {
+-        self.property("downloaded")
+-    }
+-
+-    pub fn uploaded(&self) -> i64 {
+-        self.property("uploaded")
+-    }
+-
+-    pub fn download_speed(&self) -> i32 {
+-        self.property("download-speed")
+-    }
+-
+-    pub fn upload_speed(&self) -> i32 {
+-        self.property("upload-speed")
+-    }
+-
+     fn client(&self) -> TrClient {
+         let imp = self.imp();
+         imp.client.get().unwrap().clone()
+-- 
+GitLab
+
