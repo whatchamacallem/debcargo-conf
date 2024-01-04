@@ -1,6 +1,16 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index b1cde33..f173266 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -41,35 +41,35 @@
+@@ -33,56 +33,14 @@ categories = [
+ license = "MIT OR Apache-2.0"
+ repository = "https://github.com/rust-itertools/itertools"
+ 
+-[profile.bench]
+-debug = 2
+-
+ [lib]
+ test = false
  bench = false
  
 -[[bench]]
@@ -34,142 +44,2064 @@
 -[[bench]]
 -name = "powerset"
 -harness = false
-+#[[bench]]
-+#name = "tuple_combinations"
-+#harness = false
-+#
-+#[[bench]]
-+#name = "tuples"
-+#harness = false
-+#
-+#[[bench]]
-+#name = "fold_specialization"
-+#harness = false
-+#
-+#[[bench]]
-+#name = "combinations_with_replacement"
-+#harness = false
-+#
-+#[[bench]]
-+#name = "tree_fold1"
-+#harness = false
-+#
-+#[[bench]]
-+#name = "bench1"
-+#harness = false
-+#
-+#[[bench]]
-+#name = "combinations"
-+#harness = false
-+#
-+#[[bench]]
-+#name = "powerset"
-+#harness = false
- 
+-
+-[[bench]]
+-name = "specializations"
+-harness = false
+-
  [dependencies.either]
-@@ -77,6 +77,6 @@
+ version = "1.0"
  default-features = false
  
 -[dev-dependencies.criterion]
--version = "0.5.0"
-+#[dev-dependencies.criterion]
-+#version = "0.5.0"
- 
+-version = "0.5"
+-
  [dev-dependencies.paste]
+ version = "1.0.0"
+ 
+diff --git a/benches/bench1.rs b/benches/bench1.rs
+deleted file mode 100644
+index 0946aff..0000000
 --- a/benches/bench1.rs
-+++ b/benches/bench1.rs
-@@ -1,3 +1,3 @@
++++ /dev/null
+@@ -1,816 +0,0 @@
 -use criterion::{black_box, criterion_group, criterion_main, Criterion};
-+/*use criterion::{black_box, criterion_group, criterion_main, Criterion};
- use itertools::Itertools;
- use itertools::free::cloned;
-@@ -875,3 +875,3 @@
-     permutations_slice,
- );
+-use itertools::free::cloned;
+-use itertools::iproduct;
+-use itertools::Itertools;
+-
+-use std::cmp;
+-use std::iter::repeat;
+-use std::ops::{Add, Range};
+-
+-mod extra;
+-
+-use crate::extra::ZipSlices;
+-
+-fn slice_iter(c: &mut Criterion) {
+-    let xs: Vec<_> = repeat(1i32).take(20).collect();
+-
+-    c.bench_function("slice iter", move |b| {
+-        b.iter(|| {
+-            for elt in xs.iter() {
+-                black_box(elt);
+-            }
+-        })
+-    });
+-}
+-
+-fn slice_iter_rev(c: &mut Criterion) {
+-    let xs: Vec<_> = repeat(1i32).take(20).collect();
+-
+-    c.bench_function("slice iter rev", move |b| {
+-        b.iter(|| {
+-            for elt in xs.iter().rev() {
+-                black_box(elt);
+-            }
+-        })
+-    });
+-}
+-
+-fn zip_default_zip(c: &mut Criterion) {
+-    let xs = vec![0; 1024];
+-    let ys = vec![0; 768];
+-    let xs = black_box(xs);
+-    let ys = black_box(ys);
+-
+-    c.bench_function("zip default zip", move |b| {
+-        b.iter(|| {
+-            for (&x, &y) in xs.iter().zip(&ys) {
+-                black_box(x);
+-                black_box(y);
+-            }
+-        })
+-    });
+-}
+-
+-fn zipdot_i32_default_zip(c: &mut Criterion) {
+-    let xs = vec![2; 1024];
+-    let ys = vec![2; 768];
+-    let xs = black_box(xs);
+-    let ys = black_box(ys);
+-
+-    c.bench_function("zipdot i32 default zip", move |b| {
+-        b.iter(|| {
+-            let mut s = 0;
+-            for (&x, &y) in xs.iter().zip(&ys) {
+-                s += x * y;
+-            }
+-            s
+-        })
+-    });
+-}
+-
+-fn zipdot_f32_default_zip(c: &mut Criterion) {
+-    let xs = vec![2f32; 1024];
+-    let ys = vec![2f32; 768];
+-    let xs = black_box(xs);
+-    let ys = black_box(ys);
+-
+-    c.bench_function("zipdot f32 default zip", move |b| {
+-        b.iter(|| {
+-            let mut s = 0.;
+-            for (&x, &y) in xs.iter().zip(&ys) {
+-                s += x * y;
+-            }
+-            s
+-        })
+-    });
+-}
+-
+-fn zip_default_zip3(c: &mut Criterion) {
+-    let xs = vec![0; 1024];
+-    let ys = vec![0; 768];
+-    let zs = vec![0; 766];
+-    let xs = black_box(xs);
+-    let ys = black_box(ys);
+-    let zs = black_box(zs);
+-
+-    c.bench_function("zip default zip3", move |b| {
+-        b.iter(|| {
+-            for ((&x, &y), &z) in xs.iter().zip(&ys).zip(&zs) {
+-                black_box(x);
+-                black_box(y);
+-                black_box(z);
+-            }
+-        })
+-    });
+-}
+-
+-fn zip_slices_ziptuple(c: &mut Criterion) {
+-    let xs = vec![0; 1024];
+-    let ys = vec![0; 768];
+-
+-    c.bench_function("zip slices ziptuple", move |b| {
+-        b.iter(|| {
+-            let xs = black_box(&xs);
+-            let ys = black_box(&ys);
+-            for (&x, &y) in itertools::multizip((xs, ys)) {
+-                black_box(x);
+-                black_box(y);
+-            }
+-        })
+-    });
+-}
+-
+-fn zipslices(c: &mut Criterion) {
+-    let xs = vec![0; 1024];
+-    let ys = vec![0; 768];
+-    let xs = black_box(xs);
+-    let ys = black_box(ys);
+-
+-    c.bench_function("zipslices", move |b| {
+-        b.iter(|| {
+-            for (&x, &y) in ZipSlices::new(&xs, &ys) {
+-                black_box(x);
+-                black_box(y);
+-            }
+-        })
+-    });
+-}
+-
+-fn zipslices_mut(c: &mut Criterion) {
+-    let xs = vec![0; 1024];
+-    let ys = vec![0; 768];
+-    let xs = black_box(xs);
+-    let mut ys = black_box(ys);
+-
+-    c.bench_function("zipslices mut", move |b| {
+-        b.iter(|| {
+-            for (&x, &mut y) in ZipSlices::from_slices(&xs[..], &mut ys[..]) {
+-                black_box(x);
+-                black_box(y);
+-            }
+-        })
+-    });
+-}
+-
+-fn zipdot_i32_zipslices(c: &mut Criterion) {
+-    let xs = vec![2; 1024];
+-    let ys = vec![2; 768];
+-    let xs = black_box(xs);
+-    let ys = black_box(ys);
+-
+-    c.bench_function("zipdot i32 zipslices", move |b| {
+-        b.iter(|| {
+-            let mut s = 0i32;
+-            for (&x, &y) in ZipSlices::new(&xs, &ys) {
+-                s += x * y;
+-            }
+-            s
+-        })
+-    });
+-}
+-
+-fn zipdot_f32_zipslices(c: &mut Criterion) {
+-    let xs = vec![2f32; 1024];
+-    let ys = vec![2f32; 768];
+-    let xs = black_box(xs);
+-    let ys = black_box(ys);
+-
+-    c.bench_function("zipdot f32 zipslices", move |b| {
+-        b.iter(|| {
+-            let mut s = 0.;
+-            for (&x, &y) in ZipSlices::new(&xs, &ys) {
+-                s += x * y;
+-            }
+-            s
+-        })
+-    });
+-}
+-
+-fn zip_checked_counted_loop(c: &mut Criterion) {
+-    let xs = vec![0; 1024];
+-    let ys = vec![0; 768];
+-    let xs = black_box(xs);
+-    let ys = black_box(ys);
+-
+-    c.bench_function("zip checked counted loop", move |b| {
+-        b.iter(|| {
+-            // Must slice to equal lengths, and then bounds checks are eliminated!
+-            let len = cmp::min(xs.len(), ys.len());
+-            let xs = &xs[..len];
+-            let ys = &ys[..len];
+-
+-            for i in 0..len {
+-                let x = xs[i];
+-                let y = ys[i];
+-                black_box(x);
+-                black_box(y);
+-            }
+-        })
+-    });
+-}
+-
+-fn zipdot_i32_checked_counted_loop(c: &mut Criterion) {
+-    let xs = vec![2; 1024];
+-    let ys = vec![2; 768];
+-    let xs = black_box(xs);
+-    let ys = black_box(ys);
+-
+-    c.bench_function("zipdot i32 checked counted loop", move |b| {
+-        b.iter(|| {
+-            // Must slice to equal lengths, and then bounds checks are eliminated!
+-            let len = cmp::min(xs.len(), ys.len());
+-            let xs = &xs[..len];
+-            let ys = &ys[..len];
+-
+-            let mut s = 0i32;
+-
+-            for i in 0..len {
+-                s += xs[i] * ys[i];
+-            }
+-            s
+-        })
+-    });
+-}
+-
+-fn zipdot_f32_checked_counted_loop(c: &mut Criterion) {
+-    let xs = vec![2f32; 1024];
+-    let ys = vec![2f32; 768];
+-    let xs = black_box(xs);
+-    let ys = black_box(ys);
+-
+-    c.bench_function("zipdot f32 checked counted loop", move |b| {
+-        b.iter(|| {
+-            // Must slice to equal lengths, and then bounds checks are eliminated!
+-            let len = cmp::min(xs.len(), ys.len());
+-            let xs = &xs[..len];
+-            let ys = &ys[..len];
+-
+-            let mut s = 0.;
+-
+-            for i in 0..len {
+-                s += xs[i] * ys[i];
+-            }
+-            s
+-        })
+-    });
+-}
+-
+-fn zipdot_f32_checked_counted_unrolled_loop(c: &mut Criterion) {
+-    let xs = vec![2f32; 1024];
+-    let ys = vec![2f32; 768];
+-    let xs = black_box(xs);
+-    let ys = black_box(ys);
+-
+-    c.bench_function("zipdot f32 checked counted unrolled loop", move |b| {
+-        b.iter(|| {
+-            // Must slice to equal lengths, and then bounds checks are eliminated!
+-            let len = cmp::min(xs.len(), ys.len());
+-            let mut xs = &xs[..len];
+-            let mut ys = &ys[..len];
+-
+-            let mut s = 0.;
+-            let (mut p0, mut p1, mut p2, mut p3, mut p4, mut p5, mut p6, mut p7) =
+-                (0., 0., 0., 0., 0., 0., 0., 0.);
+-
+-            // how to unroll and have bounds checks eliminated (by cristicbz)
+-            // split sum into eight parts to enable vectorization (by bluss)
+-            while xs.len() >= 8 {
+-                p0 += xs[0] * ys[0];
+-                p1 += xs[1] * ys[1];
+-                p2 += xs[2] * ys[2];
+-                p3 += xs[3] * ys[3];
+-                p4 += xs[4] * ys[4];
+-                p5 += xs[5] * ys[5];
+-                p6 += xs[6] * ys[6];
+-                p7 += xs[7] * ys[7];
+-
+-                xs = &xs[8..];
+-                ys = &ys[8..];
+-            }
+-            s += p0 + p4;
+-            s += p1 + p5;
+-            s += p2 + p6;
+-            s += p3 + p7;
+-
+-            for i in 0..xs.len() {
+-                s += xs[i] * ys[i];
+-            }
+-            s
+-        })
+-    });
+-}
+-
+-fn zip_unchecked_counted_loop(c: &mut Criterion) {
+-    let xs = vec![0; 1024];
+-    let ys = vec![0; 768];
+-    let xs = black_box(xs);
+-    let ys = black_box(ys);
+-
+-    c.bench_function("zip unchecked counted loop", move |b| {
+-        b.iter(|| {
+-            let len = cmp::min(xs.len(), ys.len());
+-            for i in 0..len {
+-                unsafe {
+-                    let x = *xs.get_unchecked(i);
+-                    let y = *ys.get_unchecked(i);
+-                    black_box(x);
+-                    black_box(y);
+-                }
+-            }
+-        })
+-    });
+-}
+-
+-fn zipdot_i32_unchecked_counted_loop(c: &mut Criterion) {
+-    let xs = vec![2; 1024];
+-    let ys = vec![2; 768];
+-    let xs = black_box(xs);
+-    let ys = black_box(ys);
+-
+-    c.bench_function("zipdot i32 unchecked counted loop", move |b| {
+-        b.iter(|| {
+-            let len = cmp::min(xs.len(), ys.len());
+-            let mut s = 0i32;
+-            for i in 0..len {
+-                unsafe {
+-                    let x = *xs.get_unchecked(i);
+-                    let y = *ys.get_unchecked(i);
+-                    s += x * y;
+-                }
+-            }
+-            s
+-        })
+-    });
+-}
+-
+-fn zipdot_f32_unchecked_counted_loop(c: &mut Criterion) {
+-    let xs = vec![2.; 1024];
+-    let ys = vec![2.; 768];
+-    let xs = black_box(xs);
+-    let ys = black_box(ys);
+-
+-    c.bench_function("zipdot f32 unchecked counted loop", move |b| {
+-        b.iter(|| {
+-            let len = cmp::min(xs.len(), ys.len());
+-            let mut s = 0f32;
+-            for i in 0..len {
+-                unsafe {
+-                    let x = *xs.get_unchecked(i);
+-                    let y = *ys.get_unchecked(i);
+-                    s += x * y;
+-                }
+-            }
+-            s
+-        })
+-    });
+-}
+-
+-fn zip_unchecked_counted_loop3(c: &mut Criterion) {
+-    let xs = vec![0; 1024];
+-    let ys = vec![0; 768];
+-    let zs = vec![0; 766];
+-    let xs = black_box(xs);
+-    let ys = black_box(ys);
+-    let zs = black_box(zs);
+-
+-    c.bench_function("zip unchecked counted loop3", move |b| {
+-        b.iter(|| {
+-            let len = cmp::min(xs.len(), cmp::min(ys.len(), zs.len()));
+-            for i in 0..len {
+-                unsafe {
+-                    let x = *xs.get_unchecked(i);
+-                    let y = *ys.get_unchecked(i);
+-                    let z = *zs.get_unchecked(i);
+-                    black_box(x);
+-                    black_box(y);
+-                    black_box(z);
+-                }
+-            }
+-        })
+-    });
+-}
+-
+-fn group_by_lazy_1(c: &mut Criterion) {
+-    let mut data = vec![0; 1024];
+-    for (index, elt) in data.iter_mut().enumerate() {
+-        *elt = index / 10;
+-    }
+-
+-    let data = black_box(data);
+-
+-    c.bench_function("group by lazy 1", move |b| {
+-        b.iter(|| {
+-            for (_key, group) in &data.iter().group_by(|elt| **elt) {
+-                for elt in group {
+-                    black_box(elt);
+-                }
+-            }
+-        })
+-    });
+-}
+-
+-fn group_by_lazy_2(c: &mut Criterion) {
+-    let mut data = vec![0; 1024];
+-    for (index, elt) in data.iter_mut().enumerate() {
+-        *elt = index / 2;
+-    }
+-
+-    let data = black_box(data);
+-
+-    c.bench_function("group by lazy 2", move |b| {
+-        b.iter(|| {
+-            for (_key, group) in &data.iter().group_by(|elt| **elt) {
+-                for elt in group {
+-                    black_box(elt);
+-                }
+-            }
+-        })
+-    });
+-}
+-
+-fn slice_chunks(c: &mut Criterion) {
+-    let data = vec![0; 1024];
+-
+-    let data = black_box(data);
+-    let sz = black_box(10);
+-
+-    c.bench_function("slice chunks", move |b| {
+-        b.iter(|| {
+-            for group in data.chunks(sz) {
+-                for elt in group {
+-                    black_box(elt);
+-                }
+-            }
+-        })
+-    });
+-}
+-
+-fn chunks_lazy_1(c: &mut Criterion) {
+-    let data = vec![0; 1024];
+-
+-    let data = black_box(data);
+-    let sz = black_box(10);
+-
+-    c.bench_function("chunks lazy 1", move |b| {
+-        b.iter(|| {
+-            for group in &data.iter().chunks(sz) {
+-                for elt in group {
+-                    black_box(elt);
+-                }
+-            }
+-        })
+-    });
+-}
+-
+-fn equal(c: &mut Criterion) {
+-    let data = vec![7; 1024];
+-    let l = data.len();
+-    let alpha = black_box(&data[1..]);
+-    let beta = black_box(&data[..l - 1]);
+-
+-    c.bench_function("equal", move |b| b.iter(|| itertools::equal(alpha, beta)));
+-}
+-
+-fn merge_default(c: &mut Criterion) {
+-    let mut data1 = vec![0; 1024];
+-    let mut data2 = vec![0; 800];
+-    let mut x = 0;
+-    for (_, elt) in data1.iter_mut().enumerate() {
+-        *elt = x;
+-        x += 1;
+-    }
+-
+-    let mut y = 0;
+-    for (i, elt) in data2.iter_mut().enumerate() {
+-        *elt += y;
+-        if i % 3 == 0 {
+-            y += 3;
+-        } else {
+-            y += 0;
+-        }
+-    }
+-    let data1 = black_box(data1);
+-    let data2 = black_box(data2);
+-
+-    c.bench_function("merge default", move |b| {
+-        b.iter(|| data1.iter().merge(&data2).count())
+-    });
+-}
+-
+-fn merge_by_cmp(c: &mut Criterion) {
+-    let mut data1 = vec![0; 1024];
+-    let mut data2 = vec![0; 800];
+-    let mut x = 0;
+-    for (_, elt) in data1.iter_mut().enumerate() {
+-        *elt = x;
+-        x += 1;
+-    }
+-
+-    let mut y = 0;
+-    for (i, elt) in data2.iter_mut().enumerate() {
+-        *elt += y;
+-        if i % 3 == 0 {
+-            y += 3;
+-        } else {
+-            y += 0;
+-        }
+-    }
+-    let data1 = black_box(data1);
+-    let data2 = black_box(data2);
+-
+-    c.bench_function("merge by cmp", move |b| {
+-        b.iter(|| data1.iter().merge_by(&data2, PartialOrd::le).count())
+-    });
+-}
+-
+-fn merge_by_lt(c: &mut Criterion) {
+-    let mut data1 = vec![0; 1024];
+-    let mut data2 = vec![0; 800];
+-    let mut x = 0;
+-    for (_, elt) in data1.iter_mut().enumerate() {
+-        *elt = x;
+-        x += 1;
+-    }
+-
+-    let mut y = 0;
+-    for (i, elt) in data2.iter_mut().enumerate() {
+-        *elt += y;
+-        if i % 3 == 0 {
+-            y += 3;
+-        } else {
+-            y += 0;
+-        }
+-    }
+-    let data1 = black_box(data1);
+-    let data2 = black_box(data2);
+-
+-    c.bench_function("merge by lt", move |b| {
+-        b.iter(|| data1.iter().merge_by(&data2, |a, b| a <= b).count())
+-    });
+-}
+-
+-fn kmerge_default(c: &mut Criterion) {
+-    let mut data1 = vec![0; 1024];
+-    let mut data2 = vec![0; 800];
+-    let mut x = 0;
+-    for (_, elt) in data1.iter_mut().enumerate() {
+-        *elt = x;
+-        x += 1;
+-    }
+-
+-    let mut y = 0;
+-    for (i, elt) in data2.iter_mut().enumerate() {
+-        *elt += y;
+-        if i % 3 == 0 {
+-            y += 3;
+-        } else {
+-            y += 0;
+-        }
+-    }
+-    let data1 = black_box(data1);
+-    let data2 = black_box(data2);
+-    let its = &[data1.iter(), data2.iter()];
+-
+-    c.bench_function("kmerge default", move |b| {
+-        b.iter(|| its.iter().cloned().kmerge().count())
+-    });
+-}
+-
+-fn kmerge_tenway(c: &mut Criterion) {
+-    let mut data = vec![0; 10240];
+-
+-    let mut state = 1729u16;
+-    fn rng(state: &mut u16) -> u16 {
+-        let new = state.wrapping_mul(31421).wrapping_add(6927);
+-        *state = new;
+-        new
+-    }
+-
+-    for elt in &mut data {
+-        *elt = rng(&mut state);
+-    }
+-
+-    let mut chunks = Vec::new();
+-    let mut rest = &mut data[..];
+-    while rest.len() > 0 {
+-        let chunk_len = 1 + rng(&mut state) % 512;
+-        let chunk_len = cmp::min(rest.len(), chunk_len as usize);
+-        let (fst, tail) = { rest }.split_at_mut(chunk_len);
+-        fst.sort();
+-        chunks.push(fst.iter().cloned());
+-        rest = tail;
+-    }
+-
+-    // println!("Chunk lengths: {}", chunks.iter().format_with(", ", |elt, f| f(&elt.len())));
+-
+-    c.bench_function("kmerge tenway", move |b| {
+-        b.iter(|| chunks.iter().cloned().kmerge().count())
+-    });
+-}
+-
+-fn fast_integer_sum<I>(iter: I) -> I::Item
+-where
+-    I: IntoIterator,
+-    I::Item: Default + Add<Output = I::Item>,
+-{
+-    iter.into_iter().fold(<_>::default(), |x, y| x + y)
+-}
+-
+-fn step_vec_2(c: &mut Criterion) {
+-    let v = vec![0; 1024];
+-
+-    c.bench_function("step vec 2", move |b| {
+-        b.iter(|| fast_integer_sum(cloned(v.iter().step_by(2))))
+-    });
+-}
+-
+-fn step_vec_10(c: &mut Criterion) {
+-    let v = vec![0; 1024];
+-
+-    c.bench_function("step vec 10", move |b| {
+-        b.iter(|| fast_integer_sum(cloned(v.iter().step_by(10))))
+-    });
+-}
+-
+-fn step_range_2(c: &mut Criterion) {
+-    let v = black_box(0..1024);
+-
+-    c.bench_function("step range 2", move |b| {
+-        b.iter(|| fast_integer_sum(v.clone().step_by(2)))
+-    });
+-}
+-
+-fn step_range_10(c: &mut Criterion) {
+-    let v = black_box(0..1024);
+-
+-    c.bench_function("step range 10", move |b| {
+-        b.iter(|| fast_integer_sum(v.clone().step_by(10)))
+-    });
+-}
+-
+-fn cartesian_product_iterator(c: &mut Criterion) {
+-    let xs = vec![0; 16];
+-
+-    c.bench_function("cartesian product iterator", move |b| {
+-        b.iter(|| {
+-            let mut sum = 0;
+-            for (&x, &y, &z) in iproduct!(&xs, &xs, &xs) {
+-                sum += x;
+-                sum += y;
+-                sum += z;
+-            }
+-            sum
+-        })
+-    });
+-}
+-
+-fn multi_cartesian_product_iterator(c: &mut Criterion) {
+-    let xs = [vec![0; 16], vec![0; 16], vec![0; 16]];
+-
+-    c.bench_function("multi cartesian product iterator", move |b| {
+-        b.iter(|| {
+-            let mut sum = 0;
+-            for x in xs.iter().multi_cartesian_product() {
+-                sum += x[0];
+-                sum += x[1];
+-                sum += x[2];
+-            }
+-            sum
+-        })
+-    });
+-}
+-
+-fn cartesian_product_nested_for(c: &mut Criterion) {
+-    let xs = vec![0; 16];
+-
+-    c.bench_function("cartesian product nested for", move |b| {
+-        b.iter(|| {
+-            let mut sum = 0;
+-            for &x in &xs {
+-                for &y in &xs {
+-                    for &z in &xs {
+-                        sum += x;
+-                        sum += y;
+-                        sum += z;
+-                    }
+-                }
+-            }
+-            sum
+-        })
+-    });
+-}
+-
+-fn all_equal(c: &mut Criterion) {
+-    let mut xs = vec![0; 5_000_000];
+-    xs.extend(vec![1; 5_000_000]);
+-
+-    c.bench_function("all equal", move |b| b.iter(|| xs.iter().all_equal()));
+-}
+-
+-fn all_equal_for(c: &mut Criterion) {
+-    let mut xs = vec![0; 5_000_000];
+-    xs.extend(vec![1; 5_000_000]);
+-
+-    c.bench_function("all equal for", move |b| {
+-        b.iter(|| {
+-            for &x in &xs {
+-                if x != xs[0] {
+-                    return false;
+-                }
+-            }
+-            true
+-        })
+-    });
+-}
+-
+-fn all_equal_default(c: &mut Criterion) {
+-    let mut xs = vec![0; 5_000_000];
+-    xs.extend(vec![1; 5_000_000]);
+-
+-    c.bench_function("all equal default", move |b| {
+-        b.iter(|| xs.iter().dedup().nth(1).is_none())
+-    });
+-}
+-
+-const PERM_COUNT: usize = 6;
+-
+-fn permutations_iter(c: &mut Criterion) {
+-    struct NewIterator(Range<usize>);
+-
+-    impl Iterator for NewIterator {
+-        type Item = usize;
+-
+-        fn next(&mut self) -> Option<Self::Item> {
+-            self.0.next()
+-        }
+-    }
+-
+-    c.bench_function("permutations iter", move |b| {
+-        b.iter(
+-            || {
+-                for _ in NewIterator(0..PERM_COUNT).permutations(PERM_COUNT) {}
+-            },
+-        )
+-    });
+-}
+-
+-fn permutations_range(c: &mut Criterion) {
+-    c.bench_function("permutations range", move |b| {
+-        b.iter(|| for _ in (0..PERM_COUNT).permutations(PERM_COUNT) {})
+-    });
+-}
+-
+-fn permutations_slice(c: &mut Criterion) {
+-    let v = (0..PERM_COUNT).collect_vec();
+-
+-    c.bench_function("permutations slice", move |b| {
+-        b.iter(|| for _ in v.as_slice().iter().permutations(PERM_COUNT) {})
+-    });
+-}
+-
+-criterion_group!(
+-    benches,
+-    slice_iter,
+-    slice_iter_rev,
+-    zip_default_zip,
+-    zipdot_i32_default_zip,
+-    zipdot_f32_default_zip,
+-    zip_default_zip3,
+-    zip_slices_ziptuple,
+-    zipslices,
+-    zipslices_mut,
+-    zipdot_i32_zipslices,
+-    zipdot_f32_zipslices,
+-    zip_checked_counted_loop,
+-    zipdot_i32_checked_counted_loop,
+-    zipdot_f32_checked_counted_loop,
+-    zipdot_f32_checked_counted_unrolled_loop,
+-    zip_unchecked_counted_loop,
+-    zipdot_i32_unchecked_counted_loop,
+-    zipdot_f32_unchecked_counted_loop,
+-    zip_unchecked_counted_loop3,
+-    group_by_lazy_1,
+-    group_by_lazy_2,
+-    slice_chunks,
+-    chunks_lazy_1,
+-    equal,
+-    merge_default,
+-    merge_by_cmp,
+-    merge_by_lt,
+-    kmerge_default,
+-    kmerge_tenway,
+-    step_vec_2,
+-    step_vec_10,
+-    step_range_2,
+-    step_range_10,
+-    cartesian_product_iterator,
+-    multi_cartesian_product_iterator,
+-    cartesian_product_nested_for,
+-    all_equal,
+-    all_equal_for,
+-    all_equal_default,
+-    permutations_iter,
+-    permutations_range,
+-    permutations_slice,
+-);
 -criterion_main!(benches);
-+criterion_main!(benches);*/
+diff --git a/benches/combinations.rs b/benches/combinations.rs
+deleted file mode 100644
+index 42a4521..0000000
 --- a/benches/combinations.rs
-+++ b/benches/combinations.rs
-@@ -1,3 +1,3 @@
++++ /dev/null
+@@ -1,117 +0,0 @@
 -use criterion::{black_box, criterion_group, criterion_main, Criterion};
-+/*use criterion::{black_box, criterion_group, criterion_main, Criterion};
- use itertools::Itertools;
- 
-@@ -123,3 +123,3 @@
-     comb_c14,
- );
+-use itertools::Itertools;
+-
+-// approximate 100_000 iterations for each combination
+-const N1: usize = 100_000;
+-const N2: usize = 448;
+-const N3: usize = 86;
+-const N4: usize = 41;
+-const N14: usize = 21;
+-
+-fn comb_for1(c: &mut Criterion) {
+-    c.bench_function("comb for1", move |b| {
+-        b.iter(|| {
+-            for i in 0..N1 {
+-                black_box(vec![i]);
+-            }
+-        })
+-    });
+-}
+-
+-fn comb_for2(c: &mut Criterion) {
+-    c.bench_function("comb for2", move |b| {
+-        b.iter(|| {
+-            for i in 0..N2 {
+-                for j in (i + 1)..N2 {
+-                    black_box(vec![i, j]);
+-                }
+-            }
+-        })
+-    });
+-}
+-
+-fn comb_for3(c: &mut Criterion) {
+-    c.bench_function("comb for3", move |b| {
+-        b.iter(|| {
+-            for i in 0..N3 {
+-                for j in (i + 1)..N3 {
+-                    for k in (j + 1)..N3 {
+-                        black_box(vec![i, j, k]);
+-                    }
+-                }
+-            }
+-        })
+-    });
+-}
+-
+-fn comb_for4(c: &mut Criterion) {
+-    c.bench_function("comb for4", move |b| {
+-        b.iter(|| {
+-            for i in 0..N4 {
+-                for j in (i + 1)..N4 {
+-                    for k in (j + 1)..N4 {
+-                        for l in (k + 1)..N4 {
+-                            black_box(vec![i, j, k, l]);
+-                        }
+-                    }
+-                }
+-            }
+-        })
+-    });
+-}
+-
+-fn comb_c1(c: &mut Criterion) {
+-    c.bench_function("comb c1", move |b| {
+-        b.iter(|| {
+-            for combo in (0..N1).combinations(1) {
+-                black_box(combo);
+-            }
+-        })
+-    });
+-}
+-
+-fn comb_c2(c: &mut Criterion) {
+-    c.bench_function("comb c2", move |b| {
+-        b.iter(|| {
+-            for combo in (0..N2).combinations(2) {
+-                black_box(combo);
+-            }
+-        })
+-    });
+-}
+-
+-fn comb_c3(c: &mut Criterion) {
+-    c.bench_function("comb c3", move |b| {
+-        b.iter(|| {
+-            for combo in (0..N3).combinations(3) {
+-                black_box(combo);
+-            }
+-        })
+-    });
+-}
+-
+-fn comb_c4(c: &mut Criterion) {
+-    c.bench_function("comb c4", move |b| {
+-        b.iter(|| {
+-            for combo in (0..N4).combinations(4) {
+-                black_box(combo);
+-            }
+-        })
+-    });
+-}
+-
+-fn comb_c14(c: &mut Criterion) {
+-    c.bench_function("comb c14", move |b| {
+-        b.iter(|| {
+-            for combo in (0..N14).combinations(14) {
+-                black_box(combo);
+-            }
+-        })
+-    });
+-}
+-
+-criterion_group!(
+-    benches, comb_for1, comb_for2, comb_for3, comb_for4, comb_c1, comb_c2, comb_c3, comb_c4,
+-    comb_c14,
+-);
 -criterion_main!(benches);
-+criterion_main!(benches);*/
+diff --git a/benches/combinations_with_replacement.rs b/benches/combinations_with_replacement.rs
+deleted file mode 100644
+index 8e4fa3d..0000000
 --- a/benches/combinations_with_replacement.rs
-+++ b/benches/combinations_with_replacement.rs
-@@ -1,3 +1,3 @@
++++ /dev/null
+@@ -1,40 +0,0 @@
 -use criterion::{black_box, criterion_group, criterion_main, Criterion};
-+/*use criterion::{black_box, criterion_group, criterion_main, Criterion};
- use itertools::Itertools;
- 
-@@ -38,3 +38,3 @@
-     comb_replacement_n10_k10,
- );
+-use itertools::Itertools;
+-
+-fn comb_replacement_n10_k5(c: &mut Criterion) {
+-    c.bench_function("comb replacement n10k5", move |b| {
+-        b.iter(|| {
+-            for i in (0..10).combinations_with_replacement(5) {
+-                black_box(i);
+-            }
+-        })
+-    });
+-}
+-
+-fn comb_replacement_n5_k10(c: &mut Criterion) {
+-    c.bench_function("comb replacement n5 k10", move |b| {
+-        b.iter(|| {
+-            for i in (0..5).combinations_with_replacement(10) {
+-                black_box(i);
+-            }
+-        })
+-    });
+-}
+-
+-fn comb_replacement_n10_k10(c: &mut Criterion) {
+-    c.bench_function("comb replacement n10 k10", move |b| {
+-        b.iter(|| {
+-            for i in (0..10).combinations_with_replacement(10) {
+-                black_box(i);
+-            }
+-        })
+-    });
+-}
+-
+-criterion_group!(
+-    benches,
+-    comb_replacement_n10_k5,
+-    comb_replacement_n5_k10,
+-    comb_replacement_n10_k10,
+-);
 -criterion_main!(benches);
-+criterion_main!(benches);*/
+diff --git a/benches/extra/mod.rs b/benches/extra/mod.rs
+deleted file mode 100644
+index 52fe5cc..0000000
+--- a/benches/extra/mod.rs
++++ /dev/null
+@@ -1,2 +0,0 @@
+-pub use self::zipslices::ZipSlices;
+-mod zipslices;
+diff --git a/benches/extra/zipslices.rs b/benches/extra/zipslices.rs
+deleted file mode 100644
+index 5476c0c..0000000
+--- a/benches/extra/zipslices.rs
++++ /dev/null
+@@ -1,192 +0,0 @@
+-use std::cmp;
+-
+-// Note: There are different ways to implement ZipSlices.
+-// This version performed the best in benchmarks.
+-//
+-// I also implemented a version with three pointers (tptr, tend, uptr),
+-// that mimiced slice::Iter and only checked bounds by using tptr == tend,
+-// but that was inferior to this solution.
+-
+-/// An iterator which iterates two slices simultaneously.
+-///
+-/// `ZipSlices` acts like a double-ended `.zip()` iterator.
+-///
+-/// It was intended to be more efficient than `.zip()`, and it was, then
+-/// rustc changed how it optimizes so it can not promise improved performance
+-/// at this time.
+-///
+-/// Note that elements past the end of the shortest of the two slices are ignored.
+-///
+-/// Iterator element type for `ZipSlices<T, U>` is `(T::Item, U::Item)`. For example,
+-/// for a `ZipSlices<&'a [A], &'b mut [B]>`, the element type is `(&'a A, &'b mut B)`.
+-#[derive(Clone)]
+-pub struct ZipSlices<T, U> {
+-    t: T,
+-    u: U,
+-    len: usize,
+-    index: usize,
+-}
+-
+-impl<'a, 'b, A, B> ZipSlices<&'a [A], &'b [B]> {
+-    /// Create a new `ZipSlices` from slices `a` and `b`.
+-    ///
+-    /// Act like a double-ended `.zip()` iterator, but more efficiently.
+-    ///
+-    /// Note that elements past the end of the shortest of the two slices are ignored.
+-    #[inline(always)]
+-    pub fn new(a: &'a [A], b: &'b [B]) -> Self {
+-        let minl = cmp::min(a.len(), b.len());
+-        ZipSlices {
+-            t: a,
+-            u: b,
+-            len: minl,
+-            index: 0,
+-        }
+-    }
+-}
+-
+-impl<T, U> ZipSlices<T, U>
+-where
+-    T: Slice,
+-    U: Slice,
+-{
+-    /// Create a new `ZipSlices` from slices `a` and `b`.
+-    ///
+-    /// Act like a double-ended `.zip()` iterator, but more efficiently.
+-    ///
+-    /// Note that elements past the end of the shortest of the two slices are ignored.
+-    #[inline(always)]
+-    pub fn from_slices(a: T, b: U) -> Self {
+-        let minl = cmp::min(a.len(), b.len());
+-        ZipSlices {
+-            t: a,
+-            u: b,
+-            len: minl,
+-            index: 0,
+-        }
+-    }
+-}
+-
+-impl<T, U> Iterator for ZipSlices<T, U>
+-where
+-    T: Slice,
+-    U: Slice,
+-{
+-    type Item = (T::Item, U::Item);
+-
+-    #[inline(always)]
+-    fn next(&mut self) -> Option<Self::Item> {
+-        unsafe {
+-            if self.index >= self.len {
+-                None
+-            } else {
+-                let i = self.index;
+-                self.index += 1;
+-                Some((self.t.get_unchecked(i), self.u.get_unchecked(i)))
+-            }
+-        }
+-    }
+-
+-    #[inline]
+-    fn size_hint(&self) -> (usize, Option<usize>) {
+-        let len = self.len - self.index;
+-        (len, Some(len))
+-    }
+-}
+-
+-impl<T, U> DoubleEndedIterator for ZipSlices<T, U>
+-where
+-    T: Slice,
+-    U: Slice,
+-{
+-    #[inline(always)]
+-    fn next_back(&mut self) -> Option<Self::Item> {
+-        unsafe {
+-            if self.index >= self.len {
+-                None
+-            } else {
+-                self.len -= 1;
+-                let i = self.len;
+-                Some((self.t.get_unchecked(i), self.u.get_unchecked(i)))
+-            }
+-        }
+-    }
+-}
+-
+-impl<T, U> ExactSizeIterator for ZipSlices<T, U>
+-where
+-    T: Slice,
+-    U: Slice,
+-{
+-}
+-
+-unsafe impl<T, U> Slice for ZipSlices<T, U>
+-where
+-    T: Slice,
+-    U: Slice,
+-{
+-    type Item = (T::Item, U::Item);
+-
+-    fn len(&self) -> usize {
+-        self.len - self.index
+-    }
+-
+-    unsafe fn get_unchecked(&mut self, i: usize) -> Self::Item {
+-        (self.t.get_unchecked(i), self.u.get_unchecked(i))
+-    }
+-}
+-
+-/// A helper trait to let `ZipSlices` accept both `&[T]` and `&mut [T]`.
+-///
+-/// Unsafe trait because:
+-///
+-/// - Implementors must guarantee that `get_unchecked` is valid for all indices `0..len()`.
+-pub unsafe trait Slice {
+-    /// The type of a reference to the slice's elements
+-    type Item;
+-    #[doc(hidden)]
+-    fn len(&self) -> usize;
+-    #[doc(hidden)]
+-    unsafe fn get_unchecked(&mut self, i: usize) -> Self::Item;
+-}
+-
+-unsafe impl<'a, T> Slice for &'a [T] {
+-    type Item = &'a T;
+-    #[inline(always)]
+-    fn len(&self) -> usize {
+-        (**self).len()
+-    }
+-    #[inline(always)]
+-    unsafe fn get_unchecked(&mut self, i: usize) -> &'a T {
+-        debug_assert!(i < self.len());
+-        (**self).get_unchecked(i)
+-    }
+-}
+-
+-unsafe impl<'a, T> Slice for &'a mut [T] {
+-    type Item = &'a mut T;
+-    #[inline(always)]
+-    fn len(&self) -> usize {
+-        (**self).len()
+-    }
+-    #[inline(always)]
+-    unsafe fn get_unchecked(&mut self, i: usize) -> &'a mut T {
+-        debug_assert!(i < self.len());
+-        // override the lifetime constraints of &mut &'a mut [T]
+-        (*(*self as *mut [T])).get_unchecked_mut(i)
+-    }
+-}
+-
+-#[test]
+-fn zipslices() {
+-    let xs = [1, 2, 3, 4, 5, 6];
+-    let ys = [1, 2, 3, 7];
+-    ::itertools::assert_equal(ZipSlices::new(&xs, &ys), xs.iter().zip(&ys));
+-
+-    let xs = [1, 2, 3, 4, 5, 6];
+-    let mut ys = [0; 6];
+-    for (x, y) in ZipSlices::from_slices(&xs[..], &mut ys[..]) {
+-        *y = *x;
+-    }
+-    ::itertools::assert_equal(&xs, &ys);
+-}
+diff --git a/benches/fold_specialization.rs b/benches/fold_specialization.rs
+deleted file mode 100644
+index 3a04030..0000000
 --- a/benches/fold_specialization.rs
-+++ b/benches/fold_specialization.rs
-@@ -1,3 +1,3 @@
++++ /dev/null
+@@ -1,69 +0,0 @@
+-#![allow(unstable_name_collisions)]
+-
 -use criterion::{criterion_group, criterion_main, Criterion};
-+/*use criterion::{criterion_group, criterion_main, Criterion};
- use itertools::Itertools;
- 
-@@ -71,3 +71,3 @@
-     specialization::intersperse::internal_unspecialized,
- );
+-use itertools::Itertools;
+-
+-struct Unspecialized<I>(I);
+-
+-impl<I> Iterator for Unspecialized<I>
+-where
+-    I: Iterator,
+-{
+-    type Item = I::Item;
+-
+-    #[inline(always)]
+-    fn next(&mut self) -> Option<Self::Item> {
+-        self.0.next()
+-    }
+-
+-    #[inline(always)]
+-    fn size_hint(&self) -> (usize, Option<usize>) {
+-        self.0.size_hint()
+-    }
+-}
+-
+-mod specialization {
+-    use super::*;
+-
+-    pub mod intersperse {
+-        use super::*;
+-
+-        pub fn external(c: &mut Criterion) {
+-            let arr = [1; 1024];
+-
+-            c.bench_function("external", move |b| {
+-                b.iter(|| {
+-                    let mut sum = 0;
+-                    for &x in arr.iter().intersperse(&0) {
+-                        sum += x;
+-                    }
+-                    sum
+-                })
+-            });
+-        }
+-
+-        pub fn internal_specialized(c: &mut Criterion) {
+-            let arr = [1; 1024];
+-
+-            c.bench_function("internal specialized", move |b| {
+-                b.iter(|| arr.iter().intersperse(&0).fold(0, |acc, x| acc + x))
+-            });
+-        }
+-
+-        pub fn internal_unspecialized(c: &mut Criterion) {
+-            let arr = [1; 1024];
+-
+-            c.bench_function("internal unspecialized", move |b| {
+-                b.iter(|| Unspecialized(arr.iter().intersperse(&0)).fold(0, |acc, x| acc + x))
+-            });
+-        }
+-    }
+-}
+-
+-criterion_group!(
+-    benches,
+-    specialization::intersperse::external,
+-    specialization::intersperse::internal_specialized,
+-    specialization::intersperse::internal_unspecialized,
+-);
 -criterion_main!(benches);
-+criterion_main!(benches);*/
+diff --git a/benches/powerset.rs b/benches/powerset.rs
+deleted file mode 100644
+index 018333d..0000000
 --- a/benches/powerset.rs
-+++ b/benches/powerset.rs
-@@ -1,3 +1,3 @@
++++ /dev/null
+@@ -1,97 +0,0 @@
 -use criterion::{black_box, criterion_group, criterion_main, Criterion};
-+/*use criterion::{black_box, criterion_group, criterion_main, Criterion};
- use itertools::Itertools;
- 
-@@ -42,3 +42,3 @@
-     powerset_12,
- );
+-use itertools::Itertools;
+-
+-// Keep aggregate generated elements the same, regardless of powerset length.
+-const TOTAL_ELEMENTS: usize = 1 << 12;
+-const fn calc_iters(n: usize) -> usize {
+-    TOTAL_ELEMENTS / (1 << n)
+-}
+-
+-fn powerset_n(c: &mut Criterion, n: usize) {
+-    let id = format!("powerset {}", n);
+-    c.bench_function(id.as_str(), move |b| {
+-        b.iter(|| {
+-            for _ in 0..calc_iters(n) {
+-                for elt in (0..n).powerset() {
+-                    black_box(elt);
+-                }
+-            }
+-        })
+-    });
+-}
+-
+-fn powerset_n_fold(c: &mut Criterion, n: usize) {
+-    let id = format!("powerset {} fold", n);
+-    c.bench_function(id.as_str(), move |b| {
+-        b.iter(|| {
+-            for _ in 0..calc_iters(n) {
+-                (0..n).powerset().fold(0, |s, elt| s + black_box(elt).len());
+-            }
+-        })
+-    });
+-}
+-
+-fn powerset_0(c: &mut Criterion) {
+-    powerset_n(c, 0);
+-}
+-
+-fn powerset_1(c: &mut Criterion) {
+-    powerset_n(c, 1);
+-}
+-
+-fn powerset_2(c: &mut Criterion) {
+-    powerset_n(c, 2);
+-}
+-
+-fn powerset_4(c: &mut Criterion) {
+-    powerset_n(c, 4);
+-}
+-
+-fn powerset_8(c: &mut Criterion) {
+-    powerset_n(c, 8);
+-}
+-
+-fn powerset_12(c: &mut Criterion) {
+-    powerset_n(c, 12);
+-}
+-
+-fn powerset_0_fold(c: &mut Criterion) {
+-    powerset_n_fold(c, 0);
+-}
+-
+-fn powerset_1_fold(c: &mut Criterion) {
+-    powerset_n_fold(c, 1);
+-}
+-
+-fn powerset_2_fold(c: &mut Criterion) {
+-    powerset_n_fold(c, 2);
+-}
+-
+-fn powerset_4_fold(c: &mut Criterion) {
+-    powerset_n_fold(c, 4);
+-}
+-
+-fn powerset_8_fold(c: &mut Criterion) {
+-    powerset_n_fold(c, 8);
+-}
+-
+-fn powerset_12_fold(c: &mut Criterion) {
+-    powerset_n_fold(c, 12);
+-}
+-
+-criterion_group!(
+-    benches,
+-    powerset_0,
+-    powerset_1,
+-    powerset_2,
+-    powerset_4,
+-    powerset_8,
+-    powerset_12,
+-    powerset_0_fold,
+-    powerset_1_fold,
+-    powerset_2_fold,
+-    powerset_4_fold,
+-    powerset_8_fold,
+-    powerset_12_fold,
+-);
 -criterion_main!(benches);
-\ No newline at end of file
-+criterion_main!(benches);*/
+diff --git a/benches/specializations.rs b/benches/specializations.rs
+deleted file mode 100644
+index 1392708..0000000
+--- a/benches/specializations.rs
++++ /dev/null
+@@ -1,176 +0,0 @@
+-use criterion::black_box;
+-use itertools::iproduct;
+-use itertools::Itertools;
+-
+-/// Create multiple functions each defining a benchmark group about iterator methods.
+-///
+-/// Each created group has functions with the following ids:
+-///
+-/// - `next`, `size_hint`, `count`, `last`, `nth`, `collect`, `fold`
+-/// - and when marked as `DoubleEndedIterator`: `next_back`, `rfold`
+-/// - and when marked as `ExactSizeIterator`: `len`
+-///
+-/// Note that this macro can be called only once.
+-macro_rules! bench_specializations {
+-    (
+-        $(
+-            $name:ident {
+-                $($extra:ident)*
+-                {$(
+-                    $init:stmt;
+-                )*}
+-                $iterator:expr
+-            }
+-        )*
+-    ) => {
+-        $(
+-            fn $name(c: &mut ::criterion::Criterion) {
+-                let mut bench_group = c.benchmark_group(stringify!($name));
+-                $(
+-                    $init
+-                )*
+-                let bench_first_its = {
+-                    let mut bench_idx = 0;
+-                    [0; 1000].map(|_| {
+-                        let mut it = $iterator;
+-                        if bench_idx != 0 {
+-                            it.nth(bench_idx - 1);
+-                        }
+-                        bench_idx += 1;
+-                        it
+-                    })
+-                };
+-                bench_specializations!(@Iterator bench_group bench_first_its: $iterator);
+-                $(
+-                    bench_specializations!(@$extra bench_group bench_first_its: $iterator);
+-                )*
+-                bench_group.finish();
+-            }
+-        )*
+-
+-        ::criterion::criterion_group!(benches, $($name, )*);
+-        ::criterion::criterion_main!(benches);
+-    };
+-
+-    (@Iterator $group:ident $first_its:ident: $iterator:expr) => {
+-        $group.bench_function("next", |bencher| bencher.iter(|| {
+-            let mut it = $iterator;
+-            while let Some(x) = it.next() {
+-                black_box(x);
+-            }
+-        }));
+-        $group.bench_function("size_hint", |bencher| bencher.iter(|| {
+-            $first_its.iter().for_each(|it| {
+-                black_box(it.size_hint());
+-            })
+-        }));
+-        $group.bench_function("count", |bencher| bencher.iter(|| {
+-            $iterator.count()
+-        }));
+-        $group.bench_function("last", |bencher| bencher.iter(|| {
+-            $iterator.last()
+-        }));
+-        $group.bench_function("nth", |bencher| bencher.iter(|| {
+-            for start in 0_usize..10 {
+-                for n in 0..10 {
+-                    let mut it = $iterator;
+-                    if let Some(s) = start.checked_sub(1) {
+-                        black_box(it.nth(s));
+-                    }
+-                    while let Some(x) = it.nth(n) {
+-                        black_box(x);
+-                    }
+-                }
+-            }
+-        }));
+-        $group.bench_function("collect", |bencher| bencher.iter(|| {
+-            $iterator.collect::<Vec<_>>()
+-        }));
+-        $group.bench_function("fold", |bencher| bencher.iter(|| {
+-            $iterator.fold((), |(), x| {
+-                black_box(x);
+-            })
+-        }));
+-    };
+-
+-    (@DoubleEndedIterator $group:ident $_first_its:ident: $iterator:expr) => {
+-        $group.bench_function("next_back", |bencher| bencher.iter(|| {
+-            let mut it = $iterator;
+-            while let Some(x) = it.next_back() {
+-                black_box(x);
+-            }
+-        }));
+-        $group.bench_function("nth_back", |bencher| bencher.iter(|| {
+-            for start in 0_usize..10 {
+-                for n in 0..10 {
+-                    let mut it = $iterator;
+-                    if let Some(s) = start.checked_sub(1) {
+-                        black_box(it.nth_back(s));
+-                    }
+-                    while let Some(x) = it.nth_back(n) {
+-                        black_box(x);
+-                    }
+-                }
+-            }
+-        }));
+-        $group.bench_function("rfold", |bencher| bencher.iter(|| {
+-            $iterator.rfold((), |(), x| {
+-                black_box(x);
+-            })
+-        }));
+-    };
+-
+-    (@ExactSizeIterator $group:ident $first_its:ident: $_iterator:expr) => {
+-        $group.bench_function("len", |bencher| bencher.iter(|| {
+-            $first_its.iter().for_each(|it| {
+-                black_box(it.len());
+-            })
+-        }));
+-    };
+-}
+-
+-// Example: To bench only `ZipLongest::fold`, you can do
+-//     cargo bench --bench specializations zip_longest/fold
+-bench_specializations! {
+-    cartesian_product {
+-        {
+-            let v = black_box(vec![0; 16]);
+-        }
+-        iproduct!(&v, &v, &v)
+-    }
+-    multi_cartesian_product {
+-        {
+-            let vs = black_box([0; 3].map(|_| vec![0; 16]));
+-        }
+-        vs.iter().multi_cartesian_product()
+-    }
+-    tuple_combinations {
+-        {
+-            let v = black_box((0..64).collect_vec());
+-        }
+-        v.iter().tuple_combinations::<(_, _, _, _)>()
+-    }
+-    while_some {
+-        {}
+-        (0..)
+-            .map(black_box)
+-            .map(|i| char::from_digit(i, 16))
+-            .while_some()
+-    }
+-    with_position {
+-        ExactSizeIterator
+-        {
+-            let v = black_box((0..10240).collect_vec());
+-        }
+-        v.iter().with_position()
+-    }
+-    zip_longest {
+-        DoubleEndedIterator
+-        ExactSizeIterator
+-        {
+-            let xs = black_box(vec![0; 1024]);
+-            let ys = black_box(vec![0; 768]);
+-        }
+-        xs.iter().zip_longest(ys.iter())
+-    }
+-}
+diff --git a/benches/tree_fold1.rs b/benches/tree_fold1.rs
+deleted file mode 100644
+index 5b76d54..0000000
 --- a/benches/tree_fold1.rs
-+++ b/benches/tree_fold1.rs
-@@ -1,3 +1,3 @@
++++ /dev/null
+@@ -1,150 +0,0 @@
+-#![allow(deprecated)]
+-
 -use criterion::{criterion_group, criterion_main, Criterion};
-+/*use criterion::{criterion_group, criterion_main, Criterion};
- use itertools::{Itertools, cloned};
- 
-@@ -142,3 +142,3 @@
-     tree_fold1_stack_08,
-     tree_fold1_vec_08,
+-use itertools::{cloned, Itertools};
+-
+-trait IterEx: Iterator {
+-    // Another efficient implementation against which to compare,
+-    // but needs `std` so is less desirable.
+-    fn tree_fold1_vec<F>(self, mut f: F) -> Option<Self::Item>
+-    where
+-        F: FnMut(Self::Item, Self::Item) -> Self::Item,
+-        Self: Sized,
+-    {
+-        let hint = self.size_hint().0;
+-        let cap = std::mem::size_of::<usize>() * 8 - hint.leading_zeros() as usize;
+-        let mut stack = Vec::with_capacity(cap);
+-        self.enumerate().for_each(|(mut i, mut x)| {
+-            while (i & 1) != 0 {
+-                x = f(stack.pop().unwrap(), x);
+-                i >>= 1;
+-            }
+-            stack.push(x);
+-        });
+-        stack.into_iter().fold1(f)
+-    }
+-}
+-impl<T: Iterator> IterEx for T {}
+-
+-macro_rules! def_benchs {
+-    ($N:expr,
+-     $FUN:ident,
+-     $BENCH_NAME:ident,
+-     ) => {
+-        mod $BENCH_NAME {
+-            use super::*;
+-
+-            pub fn sum(c: &mut Criterion) {
+-                let v: Vec<u32> = (0..$N).collect();
+-
+-                c.bench_function(
+-                    &(stringify!($BENCH_NAME).replace('_', " ") + " sum"),
+-                    move |b| b.iter(|| cloned(&v).$FUN(|x, y| x + y)),
+-                );
+-            }
+-
+-            pub fn complex_iter(c: &mut Criterion) {
+-                let u = (3..).take($N / 2);
+-                let v = (5..).take($N / 2);
+-                let it = u.chain(v);
+-
+-                c.bench_function(
+-                    &(stringify!($BENCH_NAME).replace('_', " ") + " complex iter"),
+-                    move |b| b.iter(|| it.clone().map(|x| x as f32).$FUN(f32::atan2)),
+-                );
+-            }
+-
+-            pub fn string_format(c: &mut Criterion) {
+-                // This goes quadratic with linear `fold1`, so use a smaller
+-                // size to not waste too much time in travis.  The allocations
+-                // in here are so expensive anyway that it'll still take
+-                // way longer per iteration than the other two benchmarks.
+-                let v: Vec<u32> = (0..($N / 4)).collect();
+-
+-                c.bench_function(
+-                    &(stringify!($BENCH_NAME).replace('_', " ") + " string format"),
+-                    move |b| {
+-                        b.iter(|| {
+-                            cloned(&v)
+-                                .map(|x| x.to_string())
+-                                .$FUN(|x, y| format!("{} + {}", x, y))
+-                        })
+-                    },
+-                );
+-            }
+-        }
+-
+-        criterion_group!(
+-            $BENCH_NAME,
+-            $BENCH_NAME::sum,
+-            $BENCH_NAME::complex_iter,
+-            $BENCH_NAME::string_format,
+-        );
+-    };
+-}
+-
+-def_benchs! {
+-    10_000,
+-    fold1,
+-    fold1_10k,
+-}
+-
+-def_benchs! {
+-    10_000,
+-    tree_fold1,
+-    tree_fold1_stack_10k,
+-}
+-
+-def_benchs! {
+-    10_000,
+-    tree_fold1_vec,
+-    tree_fold1_vec_10k,
+-}
+-
+-def_benchs! {
+-    100,
+-    fold1,
+-    fold1_100,
+-}
+-
+-def_benchs! {
+-    100,
+-    tree_fold1,
+-    tree_fold1_stack_100,
+-}
+-
+-def_benchs! {
+-    100,
+-    tree_fold1_vec,
+-    tree_fold1_vec_100,
+-}
+-
+-def_benchs! {
+-    8,
+-    fold1,
+-    fold1_08,
+-}
+-
+-def_benchs! {
+-    8,
+-    tree_fold1,
+-    tree_fold1_stack_08,
+-}
+-
+-def_benchs! {
+-    8,
+-    tree_fold1_vec,
+-    tree_fold1_vec_08,
+-}
+-
+-criterion_main!(
+-    fold1_10k,
+-    tree_fold1_stack_10k,
+-    tree_fold1_vec_10k,
+-    fold1_100,
+-    tree_fold1_stack_100,
+-    tree_fold1_vec_100,
+-    fold1_08,
+-    tree_fold1_stack_08,
+-    tree_fold1_vec_08,
 -);
-+);*/
+diff --git a/benches/tuple_combinations.rs b/benches/tuple_combinations.rs
+deleted file mode 100644
+index 4e26b28..0000000
 --- a/benches/tuple_combinations.rs
-+++ b/benches/tuple_combinations.rs
-@@ -1,3 +1,3 @@
++++ /dev/null
+@@ -1,113 +0,0 @@
 -use criterion::{black_box, criterion_group, criterion_main, Criterion};
-+/*use criterion::{black_box, criterion_group, criterion_main, Criterion};
- use itertools::Itertools;
- 
-@@ -111,3 +111,3 @@
-     tuple_comb_c4,
- );
--criterion_main!(benches);
-+criterion_main!(benches);*/
---- a/benches/tuples.rs
-+++ b/benches/tuples.rs
-@@ -1,3 +1,3 @@
--use criterion::{criterion_group, criterion_main, Criterion};
-+/*use criterion::{criterion_group, criterion_main, Criterion};
- use itertools::Itertools;
- 
-@@ -211,3 +211,3 @@
-     benches_3,
-     benches_4,
+-use itertools::Itertools;
+-
+-// approximate 100_000 iterations for each combination
+-const N1: usize = 100_000;
+-const N2: usize = 448;
+-const N3: usize = 86;
+-const N4: usize = 41;
+-
+-fn tuple_comb_for1(c: &mut Criterion) {
+-    c.bench_function("tuple comb for1", move |b| {
+-        b.iter(|| {
+-            for i in 0..N1 {
+-                black_box(i);
+-            }
+-        })
+-    });
+-}
+-
+-fn tuple_comb_for2(c: &mut Criterion) {
+-    c.bench_function("tuple comb for2", move |b| {
+-        b.iter(|| {
+-            for i in 0..N2 {
+-                for j in (i + 1)..N2 {
+-                    black_box(i + j);
+-                }
+-            }
+-        })
+-    });
+-}
+-
+-fn tuple_comb_for3(c: &mut Criterion) {
+-    c.bench_function("tuple comb for3", move |b| {
+-        b.iter(|| {
+-            for i in 0..N3 {
+-                for j in (i + 1)..N3 {
+-                    for k in (j + 1)..N3 {
+-                        black_box(i + j + k);
+-                    }
+-                }
+-            }
+-        })
+-    });
+-}
+-
+-fn tuple_comb_for4(c: &mut Criterion) {
+-    c.bench_function("tuple comb for4", move |b| {
+-        b.iter(|| {
+-            for i in 0..N4 {
+-                for j in (i + 1)..N4 {
+-                    for k in (j + 1)..N4 {
+-                        for l in (k + 1)..N4 {
+-                            black_box(i + j + k + l);
+-                        }
+-                    }
+-                }
+-            }
+-        })
+-    });
+-}
+-
+-fn tuple_comb_c1(c: &mut Criterion) {
+-    c.bench_function("tuple comb c1", move |b| {
+-        b.iter(|| {
+-            for (i,) in (0..N1).tuple_combinations() {
+-                black_box(i);
+-            }
+-        })
+-    });
+-}
+-
+-fn tuple_comb_c2(c: &mut Criterion) {
+-    c.bench_function("tuple comb c2", move |b| {
+-        b.iter(|| {
+-            for (i, j) in (0..N2).tuple_combinations() {
+-                black_box(i + j);
+-            }
+-        })
+-    });
+-}
+-
+-fn tuple_comb_c3(c: &mut Criterion) {
+-    c.bench_function("tuple comb c3", move |b| {
+-        b.iter(|| {
+-            for (i, j, k) in (0..N3).tuple_combinations() {
+-                black_box(i + j + k);
+-            }
+-        })
+-    });
+-}
+-
+-fn tuple_comb_c4(c: &mut Criterion) {
+-    c.bench_function("tuple comb c4", move |b| {
+-        b.iter(|| {
+-            for (i, j, k, l) in (0..N4).tuple_combinations() {
+-                black_box(i + j + k + l);
+-            }
+-        })
+-    });
+-}
+-
+-criterion_group!(
+-    benches,
+-    tuple_comb_for1,
+-    tuple_comb_for2,
+-    tuple_comb_for3,
+-    tuple_comb_for4,
+-    tuple_comb_c1,
+-    tuple_comb_c2,
+-    tuple_comb_c3,
+-    tuple_comb_c4,
 -);
-+);*/
+-criterion_main!(benches);
+diff --git a/benches/tuples.rs b/benches/tuples.rs
+deleted file mode 100644
+index 2eca347..0000000
+--- a/benches/tuples.rs
++++ /dev/null
+@@ -1,208 +0,0 @@
+-use criterion::{criterion_group, criterion_main, Criterion};
+-use itertools::Itertools;
+-
+-fn s1(a: u32) -> u32 {
+-    a
+-}
+-
+-fn s2(a: u32, b: u32) -> u32 {
+-    a + b
+-}
+-
+-fn s3(a: u32, b: u32, c: u32) -> u32 {
+-    a + b + c
+-}
+-
+-fn s4(a: u32, b: u32, c: u32, d: u32) -> u32 {
+-    a + b + c + d
+-}
+-
+-fn sum_s1(s: &[u32]) -> u32 {
+-    s1(s[0])
+-}
+-
+-fn sum_s2(s: &[u32]) -> u32 {
+-    s2(s[0], s[1])
+-}
+-
+-fn sum_s3(s: &[u32]) -> u32 {
+-    s3(s[0], s[1], s[2])
+-}
+-
+-fn sum_s4(s: &[u32]) -> u32 {
+-    s4(s[0], s[1], s[2], s[3])
+-}
+-
+-fn sum_t1(s: &(&u32,)) -> u32 {
+-    s1(*s.0)
+-}
+-
+-fn sum_t2(s: &(&u32, &u32)) -> u32 {
+-    s2(*s.0, *s.1)
+-}
+-
+-fn sum_t3(s: &(&u32, &u32, &u32)) -> u32 {
+-    s3(*s.0, *s.1, *s.2)
+-}
+-
+-fn sum_t4(s: &(&u32, &u32, &u32, &u32)) -> u32 {
+-    s4(*s.0, *s.1, *s.2, *s.3)
+-}
+-
+-macro_rules! def_benchs {
+-    ($N:expr;
+-     $BENCH_GROUP:ident,
+-     $TUPLE_FUN:ident,
+-     $TUPLES:ident,
+-     $TUPLE_WINDOWS:ident;
+-     $SLICE_FUN:ident,
+-     $CHUNKS:ident,
+-     $WINDOWS:ident;
+-     $FOR_CHUNKS:ident,
+-     $FOR_WINDOWS:ident
+-     ) => {
+-        fn $FOR_CHUNKS(c: &mut Criterion) {
+-            let v: Vec<u32> = (0..$N * 1_000).collect();
+-            let mut s = 0;
+-            c.bench_function(&stringify!($FOR_CHUNKS).replace('_', " "), move |b| {
+-                b.iter(|| {
+-                    let mut j = 0;
+-                    for _ in 0..1_000 {
+-                        s += $SLICE_FUN(&v[j..(j + $N)]);
+-                        j += $N;
+-                    }
+-                    s
+-                })
+-            });
+-        }
+-
+-        fn $FOR_WINDOWS(c: &mut Criterion) {
+-            let v: Vec<u32> = (0..1_000).collect();
+-            let mut s = 0;
+-            c.bench_function(&stringify!($FOR_WINDOWS).replace('_', " "), move |b| {
+-                b.iter(|| {
+-                    for i in 0..(1_000 - $N) {
+-                        s += $SLICE_FUN(&v[i..(i + $N)]);
+-                    }
+-                    s
+-                })
+-            });
+-        }
+-
+-        fn $TUPLES(c: &mut Criterion) {
+-            let v: Vec<u32> = (0..$N * 1_000).collect();
+-            let mut s = 0;
+-            c.bench_function(&stringify!($TUPLES).replace('_', " "), move |b| {
+-                b.iter(|| {
+-                    for x in v.iter().tuples() {
+-                        s += $TUPLE_FUN(&x);
+-                    }
+-                    s
+-                })
+-            });
+-        }
+-
+-        fn $CHUNKS(c: &mut Criterion) {
+-            let v: Vec<u32> = (0..$N * 1_000).collect();
+-            let mut s = 0;
+-            c.bench_function(&stringify!($CHUNKS).replace('_', " "), move |b| {
+-                b.iter(|| {
+-                    for x in v.chunks($N) {
+-                        s += $SLICE_FUN(x);
+-                    }
+-                    s
+-                })
+-            });
+-        }
+-
+-        fn $TUPLE_WINDOWS(c: &mut Criterion) {
+-            let v: Vec<u32> = (0..1_000).collect();
+-            let mut s = 0;
+-            c.bench_function(&stringify!($TUPLE_WINDOWS).replace('_', " "), move |b| {
+-                b.iter(|| {
+-                    for x in v.iter().tuple_windows() {
+-                        s += $TUPLE_FUN(&x);
+-                    }
+-                    s
+-                })
+-            });
+-        }
+-
+-        fn $WINDOWS(c: &mut Criterion) {
+-            let v: Vec<u32> = (0..1_000).collect();
+-            let mut s = 0;
+-            c.bench_function(&stringify!($WINDOWS).replace('_', " "), move |b| {
+-                b.iter(|| {
+-                    for x in v.windows($N) {
+-                        s += $SLICE_FUN(x);
+-                    }
+-                    s
+-                })
+-            });
+-        }
+-
+-        criterion_group!(
+-            $BENCH_GROUP,
+-            $FOR_CHUNKS,
+-            $FOR_WINDOWS,
+-            $TUPLES,
+-            $CHUNKS,
+-            $TUPLE_WINDOWS,
+-            $WINDOWS,
+-        );
+-    };
+-}
+-
+-def_benchs! {
+-    1;
+-    benches_1,
+-    sum_t1,
+-    tuple_chunks_1,
+-    tuple_windows_1;
+-    sum_s1,
+-    slice_chunks_1,
+-    slice_windows_1;
+-    for_chunks_1,
+-    for_windows_1
+-}
+-
+-def_benchs! {
+-    2;
+-    benches_2,
+-    sum_t2,
+-    tuple_chunks_2,
+-    tuple_windows_2;
+-    sum_s2,
+-    slice_chunks_2,
+-    slice_windows_2;
+-    for_chunks_2,
+-    for_windows_2
+-}
+-
+-def_benchs! {
+-    3;
+-    benches_3,
+-    sum_t3,
+-    tuple_chunks_3,
+-    tuple_windows_3;
+-    sum_s3,
+-    slice_chunks_3,
+-    slice_windows_3;
+-    for_chunks_3,
+-    for_windows_3
+-}
+-
+-def_benchs! {
+-    4;
+-    benches_4,
+-    sum_t4,
+-    tuple_chunks_4,
+-    tuple_windows_4;
+-    sum_s4,
+-    slice_chunks_4,
+-    slice_windows_4;
+-    for_chunks_4,
+-    for_windows_4
+-}
+-
+-criterion_main!(benches_1, benches_2, benches_3, benches_4,);
