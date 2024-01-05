@@ -1,0 +1,31 @@
+hard code the test data location to the correct place
+
+diff --git a/src/hosts.rs b/src/hosts.rs
+index 59cfc02..17a59f3 100644
+--- a/src/hosts.rs
++++ b/src/hosts.rs
+@@ -191,7 +191,7 @@ mod tests {
+ 
+     #[test]
+     fn test_read_hosts_conf() {
+-        let path = format!("{}/hosts", tests_dir());
++        let path = "tests/hosts";
+         let hosts = read_hosts_conf(path).unwrap();
+ 
+         let name = Name::from_str("localhost").unwrap();
+diff --git a/src/system_conf/unix.rs b/src/system_conf/unix.rs
+index 4439309..31d0b7b 100644
+--- a/src/system_conf/unix.rs
++++ b/src/system_conf/unix.rs
+@@ -221,8 +221,8 @@ mod tests {
+ 
+     #[test]
+     fn test_read_resolv_conf() {
+-        read_resolv_conf(format!("{}/resolv.conf-simple", tests_dir())).expect("simple failed");
+-        read_resolv_conf(format!("{}/resolv.conf-macos", tests_dir())).expect("macos failed");
+-        read_resolv_conf(format!("{}/resolv.conf-linux", tests_dir())).expect("linux failed");
++        read_resolv_conf("tests/resolv.conf-simple").expect("simple failed");
++        read_resolv_conf("tests/resolv.conf-macos").expect("macos failed");
++        read_resolv_conf("tests/resolv.conf-linux").expect("linux failed");
+     }
+ }

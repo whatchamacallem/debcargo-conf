@@ -1,0 +1,111 @@
+tweak the dependencies to the versions that are in Debian already
+
+diff --git a/Cargo.toml b/Cargo.toml
+index a9db895..9485581 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -127,7 +127,7 @@ optional = true
+ default-features = false
+ 
+ [dependencies.indexmap]
+-version = "2.0"
++version = "1"
+ optional = true
+ 
+ [dependencies.is-terminal]
+@@ -140,14 +140,14 @@ version = "1"
+ version = "0.4"
+ 
+ [dependencies.num-format]
+-version = "0.4.3"
++version = "0.4"
+ default-features = false
+ 
+ [dependencies.once_cell]
+ version = "1.12.0"
+ 
+ [dependencies.quick-xml]
+-version = "0.26"
++version = "0.27"
+ default-features = false
+ 
+ [dependencies.rgb]
+@@ -160,10 +160,10 @@ version = "0.1"
+ version = "2"
+ 
+ [dev-dependencies.criterion]
+-version = "0.4"
++version = "0.5"
+ 
+ [dev-dependencies.libflate]
+-version = "2"
++version = "0"
+ 
+ [dev-dependencies.maplit]
+ version = "1.0.1"
+diff --git a/src/bin/flamegraph.rs b/src/bin/flamegraph.rs
+index 6b7606e..0e15308 100644
+--- a/src/bin/flamegraph.rs
++++ b/src/bin/flamegraph.rs
+@@ -343,7 +343,7 @@ fn main() -> quick_xml::Result<()> {
+         )?;
+     }
+ 
+-    save_consistent_palette_if_needed(&palette_map, PALETTE_MAP_FILE).map_err(quick_xml::Error::Io)
++    save_consistent_palette_if_needed(&palette_map, PALETTE_MAP_FILE).map_err(|e| quick_xml::Error::Io(std::sync::Arc::new(e)))
+ }
+ 
+ fn fetch_consistent_palette_if_needed(
+diff --git a/src/flamegraph/merge.rs b/src/flamegraph/merge.rs
+index 83c4c42..0cda54a 100644
+--- a/src/flamegraph/merge.rs
++++ b/src/flamegraph/merge.rs
+@@ -131,7 +131,7 @@ where
+                     return Err(quick_xml::Error::Io(io::Error::new(
+                         io::ErrorKind::InvalidData,
+                         "unsorted input lines detected",
+-                    )));
++                    ).into()));
+                 }
+             }
+         }
+diff --git a/src/flamegraph/mod.rs b/src/flamegraph/mod.rs
+index fb85459..ab25d03 100644
+--- a/src/flamegraph/mod.rs
++++ b/src/flamegraph/mod.rs
+@@ -503,7 +503,7 @@ where
+         return Err(quick_xml::Error::Io(io::Error::new(
+             io::ErrorKind::InvalidData,
+             "No stack counts found",
+-        )));
++        ).into()));
+     }
+ 
+     let image_width = opt.image_width.unwrap_or(DEFAULT_IMAGE_WIDTH) as f64;
+@@ -833,7 +833,7 @@ where
+     for mut reader in readers {
+         reader
+             .read_to_string(&mut input)
+-            .map_err(quick_xml::Error::Io)?;
++            .map_err(|e| quick_xml::Error::Io(std::sync::Arc::new(e)))?;
+     }
+     from_lines(opt, input.lines(), writer)
+ }
+@@ -852,7 +852,7 @@ pub fn from_files<W: Write>(
+         let r = BufReader::with_capacity(128 * 1024, stdin.lock());
+         from_reader(opt, r, writer)
+     } else if files.len() == 1 {
+-        let r = File::open(&files[0]).map_err(quick_xml::Error::Io)?;
++        let r = File::open(&files[0]).map_err(|e| quick_xml::Error::Io(std::sync::Arc::new(e)))?;
+         from_reader(opt, r, writer)
+     } else {
+         let stdin = io::stdin();
+@@ -866,7 +866,7 @@ pub fn from_files<W: Write>(
+                     stdin_added = true;
+                 }
+             } else {
+-                let r = File::open(infile).map_err(quick_xml::Error::Io)?;
++                let r = File::open(infile).map_err(|e| quick_xml::Error::Io(std::sync::Arc::new(e)))?;
+                 readers.push(Box::new(r));
+             }
+         }

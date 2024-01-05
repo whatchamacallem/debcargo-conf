@@ -1,0 +1,74 @@
+Description: Use lmdb-sys instead of lmdb-master-sys
+ `heed` normally relies on `lmdb-master-sys`, which is a fork of `lmdb-sys`
+ tracking a more recent version of `liblmdb`. In order to avoid duplication,
+ `lmdb-sys` was extended to include the API `heed` relies on, so we can use
+ that one instead.
+Author: Arnaud Ferraris <aferraris@debian.org>
+Forwarded: not-needed
+Last-Update: 2023-12-12
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -54,8 +54,8 @@
+ [dependencies.libc]
+ version = "0.2.139"
+ 
+-[dependencies.lmdb-master-sys]
+-version = "0.1.0"
++[dependencies.lmdb-sys]
++version = "0.8.0"
+ 
+ [dependencies.once_cell]
+ version = "1.16.0"
+@@ -89,7 +89,7 @@
+     "serde-bincode",
+     "serde-json",
+ ]
+-posix-sem = ["lmdb-master-sys/posix-sem"]
++posix-sem = ["lmdb-sys/posix-sem"]
+ preserve_order = ["heed-types/preserve_order"]
+ raw_value = ["heed-types/raw_value"]
+ read-txn-no-tls = []
+--- a/src/mdb/lmdb_error.rs
++++ b/src/mdb/lmdb_error.rs
+@@ -4,7 +4,7 @@
+ use std::{fmt, str};
+ 
+ use libc::c_int;
+-use lmdb_master_sys as ffi;
++use lmdb_sys as ffi;
+ 
+ /// An LMDB error kind.
+ #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+--- a/src/mdb/lmdb_ffi.rs
++++ b/src/mdb/lmdb_ffi.rs
+@@ -10,7 +10,7 @@
+     MDB_val, MDB_APPEND, MDB_APPENDDUP, MDB_CP_COMPACT, MDB_CREATE, MDB_CURRENT, MDB_DUPSORT,
+     MDB_NODUPDATA, MDB_NOOVERWRITE, MDB_RDONLY, MDB_RESERVE,
+ };
+-use lmdb_master_sys as ffi;
++use lmdb_sys as ffi;
+ 
+ pub mod cursor_op {
+     use super::ffi::{self, MDB_cursor_op};
+--- a/src/mdb/lmdb_flags.rs
++++ b/src/mdb/lmdb_flags.rs
+@@ -1,5 +1,5 @@
+ use bitflags::bitflags;
+-use lmdb_master_sys as ffi;
++use lmdb_sys as ffi;
+ 
+ bitflags! {
+     /// LMDB environment flags (see <http://www.lmdb.tech/doc/group__mdb__env.html> for more details).
+--- a/src/env.rs
++++ b/src/env.rs
+@@ -626,7 +626,7 @@
+         unsafe {
+             mdb_result(ffi::mdb_dbi_open(raw_txn, name_ptr, flags, &mut dbi))?;
+             if TypeId::of::<C>() != TypeId::of::<DefaultComparator>() {
+-                mdb_result(ffi::mdb_set_compare(raw_txn, dbi, Some(custom_key_cmp_wrapper::<C>)))?;
++                mdb_result(ffi::mdb_set_compare(raw_txn, dbi, custom_key_cmp_wrapper::<C>))?;
+             }
+         };
+ 

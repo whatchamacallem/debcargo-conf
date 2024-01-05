@@ -1,0 +1,65 @@
+Description: Make example `rockusb` an installed executable
+ `rockusb` is actually the main reason for having this crate packaged
+ in Debian in the first place, as it provides an interesting
+ alternative to `rkdeveloptool`, although it won't be packaged by
+ default due to being an "example". Promote it to "bin" so it gets
+ packaged by debcargo.
+Author: Arnaud Ferraris <aferraris@debian.org>
+Forwarded: not-needed
+Last-Update: 2023-12-19
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -20,9 +20,11 @@
+ license = "MIT OR Apache-2.0"
+ repository = "https://github.com/collabora/rockchiprs"
+ resolver = "1"
++autoexamples = false
+ 
+-[[example]]
++[[bin]]
+ name = "rockusb"
++path = "examples/rockusb.rs"
+ required-features = ["libusb"]
+ 
+ [dependencies.bytes]
+@@ -44,31 +46,28 @@
+ [dependencies.thiserror]
+ version = "1.0.38"
+ 
+-[dev-dependencies.anyhow]
++[dependencies.anyhow]
+ version = "1.0.69"
+ 
+-[dev-dependencies.bmap-parser]
++[dependencies.bmap-parser]
+ version = "0.1.0"
+ 
+-[dev-dependencies.clap]
++[dependencies.clap]
+ version = "4.2"
+ features = ["derive"]
+ 
+-[dev-dependencies.clap-num]
++[dependencies.clap-num]
+ version = "1.0"
+ 
+-[dev-dependencies.flate2]
++[dependencies.flate2]
+ version = "1.0.25"
+ 
+-[dev-dependencies.nbd]
++[dependencies.nbd]
+ version = "0.3"
+ 
+-[dev-dependencies.rockfile]
++[dependencies.rockfile]
+ version = "0.1.1"
+ 
+-[dev-dependencies.rusb]
+-version = "0.9.1"
+-
+ [features]
+ default = ["libusb"]
+ libusb = ["dep:rusb"]

@@ -1,0 +1,302 @@
+From b717959244820e4ad28d5a858f6813604215f504 Mon Sep 17 00:00:00 2001
+From: Maximiliano Sandoval R <msandova@gnome.org>
+Date: Thu, 13 Apr 2023 13:25:45 +0200
+Subject: [PATCH] Clippy lints
+
+---
+ src/client.rs     | 14 +++++++---
+ src/encryption.rs |  6 ++---
+ src/session.rs    | 66 ++++++++++++++++-------------------------------
+ 3 files changed, 35 insertions(+), 51 deletions(-)
+
+diff --git a/src/client.rs b/src/client.rs
+index 3614e95..5048afa 100644
+--- a/src/client.rs
++++ b/src/client.rs
+@@ -115,6 +115,12 @@ glib::wrapper! {
+     pub struct TrClient(ObjectSubclass<imp::TrClient>);
+ }
+ 
++impl Default for TrClient {
++    fn default() -> Self {
++        Self::new()
++    }
++}
++
+ impl TrClient {
+     pub fn new() -> Self {
+         let client: Self = glib::Object::new();
+@@ -233,7 +239,7 @@ impl TrClient {
+             duration,
+             clone!(@weak self as this => @default-return glib::Continue(false), move ||{
+                 let imp = this.imp();
+-                let disconnect = imp.do_disconnect.borrow().clone();
++                let disconnect = imp.do_disconnect.borrow();
+ 
+                 let fut = clone!(@weak this, @strong disconnect => async move {
+                     let imp = this.imp();
+@@ -253,7 +259,7 @@ impl TrClient {
+                 });
+                 spawn!(fut);
+ 
+-                glib::Continue(!disconnect)
++                glib::Continue(!*disconnect)
+             }),
+         );
+ 
+@@ -508,7 +514,7 @@ impl TrClient {
+         imp.client.borrow().clone()
+     }
+ 
+-    fn sorted_queue_by_status(rpc_torrents: &Vec<Torrent>, status_code: i32) -> Vec<Torrent> {
++    fn sorted_queue_by_status(rpc_torrents: &[Torrent], status_code: i32) -> Vec<Torrent> {
+         let mut download_queue: BTreeMap<u64, &Torrent> = BTreeMap::new();
+ 
+         // Get all torrents with given status code
+@@ -527,7 +533,7 @@ impl TrClient {
+         result
+     }
+ 
+-    fn queue_pos(queue: &Vec<Torrent>, rpc_torrent: &Torrent) -> i32 {
++    fn queue_pos(queue: &[Torrent], rpc_torrent: &Torrent) -> i32 {
+         queue
+             .iter()
+             .position(|t| t == rpc_torrent)
+diff --git a/src/encryption.rs b/src/encryption.rs
+index f8523ae..4a9f0aa 100644
+--- a/src/encryption.rs
++++ b/src/encryption.rs
+@@ -32,9 +32,9 @@ impl From<Encryption> for TrEncryption {
+     }
+ }
+ 
+-impl Into<Encryption> for TrEncryption {
+-    fn into(self) -> Encryption {
+-        match self {
++impl From<TrEncryption> for Encryption {
++    fn from(val: TrEncryption) -> Self {
++        match val {
+             TrEncryption::Required => Encryption::Required,
+             TrEncryption::Preferred => Encryption::Preferred,
+             TrEncryption::Tolerated => Encryption::Tolerated,
+diff --git a/src/session.rs b/src/session.rs
+index 5a95bad..1dbd880 100644
+--- a/src/session.rs
++++ b/src/session.rs
+@@ -57,7 +57,7 @@ mod imp {
+                 download_dir: Some(value.path().unwrap()),
+                 ..Default::default()
+             };
+-            self.obj().mutate_session(mutator.clone(), "download_dir");
++            self.obj().mutate_session(mutator, "download_dir");
+         }
+ 
+         pub fn set_start_added_torrents(&self, value: bool) {
+@@ -67,8 +67,7 @@ mod imp {
+                 start_added_torrents: Some(value),
+                 ..Default::default()
+             };
+-            self.obj()
+-                .mutate_session(mutator.clone(), "start-added-torrents");
++            self.obj().mutate_session(mutator, "start-added-torrents");
+         }
+ 
+         pub fn set_encryption(&self, value: TrEncryption) {
+@@ -78,7 +77,7 @@ mod imp {
+                 encryption: Some(value.into()),
+                 ..Default::default()
+             };
+-            self.obj().mutate_session(mutator.clone(), "encryption");
++            self.obj().mutate_session(mutator, "encryption");
+         }
+ 
+         pub fn set_incomplete_dir_enabled(&self, value: bool) {
+@@ -88,8 +87,7 @@ mod imp {
+                 incomplete_dir_enabled: Some(value),
+                 ..Default::default()
+             };
+-            self.obj()
+-                .mutate_session(mutator.clone(), "incomplete-dir-enabled");
++            self.obj().mutate_session(mutator, "incomplete-dir-enabled");
+         }
+ 
+         pub fn set_incomplete_dir(&self, value: gio::File) {
+@@ -99,7 +97,7 @@ mod imp {
+                 incomplete_dir: Some(value.path().unwrap()),
+                 ..Default::default()
+             };
+-            self.obj().mutate_session(mutator.clone(), "incomplete-dir");
++            self.obj().mutate_session(mutator, "incomplete-dir");
+         }
+ 
+         pub fn set_download_queue_enabled(&self, value: bool) {
+@@ -109,8 +107,7 @@ mod imp {
+                 download_queue_enabled: Some(value),
+                 ..Default::default()
+             };
+-            self.obj()
+-                .mutate_session(mutator.clone(), "download-queue-enabled");
++            self.obj().mutate_session(mutator, "download-queue-enabled");
+         }
+ 
+         pub fn set_download_queue_size(&self, value: i32) {
+@@ -120,8 +117,7 @@ mod imp {
+                 download_queue_size: Some(value),
+                 ..Default::default()
+             };
+-            self.obj()
+-                .mutate_session(mutator.clone(), "download-queue-size");
++            self.obj().mutate_session(mutator, "download-queue-size");
+         }
+ 
+         pub fn set_seed_queue_enabled(&self, value: bool) {
+@@ -131,8 +127,7 @@ mod imp {
+                 seed_queue_enabled: Some(value),
+                 ..Default::default()
+             };
+-            self.obj()
+-                .mutate_session(mutator.clone(), "seed-queue-enabled");
++            self.obj().mutate_session(mutator, "seed-queue-enabled");
+         }
+ 
+         pub fn set_seed_queue_size(&self, value: i32) {
+@@ -142,8 +137,7 @@ mod imp {
+                 seed_queue_size: Some(value),
+                 ..Default::default()
+             };
+-            self.obj()
+-                .mutate_session(mutator.clone(), "seed-queue-size");
++            self.obj().mutate_session(mutator, "seed-queue-size");
+         }
+ 
+         pub fn set_port_forwarding_enabled(&self, value: bool) {
+@@ -154,7 +148,7 @@ mod imp {
+                 ..Default::default()
+             };
+             self.obj()
+-                .mutate_session(mutator.clone(), "port-forwarding-enabled");
++                .mutate_session(mutator, "port-forwarding-enabled");
+         }
+ 
+         pub fn set_peer_port_random_on_start(&self, value: bool) {
+@@ -165,7 +159,7 @@ mod imp {
+                 ..Default::default()
+             };
+             self.obj()
+-                .mutate_session(mutator.clone(), "peer-port-random-on-start");
++                .mutate_session(mutator, "peer-port-random-on-start");
+         }
+ 
+         pub fn set_peer_port(&self, value: i32) {
+@@ -175,7 +169,7 @@ mod imp {
+                 peer_port: Some(value),
+                 ..Default::default()
+             };
+-            self.obj().mutate_session(mutator.clone(), "peer-port");
++            self.obj().mutate_session(mutator, "peer-port");
+         }
+ 
+         pub fn set_peer_limit_global(&self, value: i32) {
+@@ -185,8 +179,7 @@ mod imp {
+                 peer_limit_global: Some(value),
+                 ..Default::default()
+             };
+-            self.obj()
+-                .mutate_session(mutator.clone(), "peer-limit-global");
++            self.obj().mutate_session(mutator, "peer-limit-global");
+         }
+ 
+         pub fn set_peer_limit_per_torrent(&self, value: i32) {
+@@ -196,8 +189,7 @@ mod imp {
+                 peer_limit_per_torrent: Some(value),
+                 ..Default::default()
+             };
+-            self.obj()
+-                .mutate_session(mutator.clone(), "peer-limit-per-torrent");
++            self.obj().mutate_session(mutator, "peer-limit-per-torrent");
+         }
+     }
+ 
+@@ -248,14 +240,7 @@ impl TrSession {
+ 
+         // download_dir
+         let download_dir = gio::File::for_path(rpc_session.download_dir);
+-        if download_dir.path()
+-            != imp
+-                .download_dir
+-                .borrow()
+-                .as_ref()
+-                .map(|f| f.path())
+-                .flatten()
+-        {
++        if download_dir.path() != imp.download_dir.borrow().as_ref().and_then(|f| f.path()) {
+             *imp.download_dir.borrow_mut() = Some(download_dir);
+             self.notify_download_dir();
+         }
+@@ -276,20 +261,13 @@ impl TrSession {
+         // incomplete_dir_enabled
+         if imp.incomplete_dir_enabled.get() != rpc_session.incomplete_dir_enabled {
+             imp.incomplete_dir_enabled
+-                .set(rpc_session.incomplete_dir_enabled.into());
++                .set(rpc_session.incomplete_dir_enabled);
+             self.notify_incomplete_dir_enabled();
+         }
+ 
+         // incomplete_dir
+         let incomplete_dir = gio::File::for_path(rpc_session.incomplete_dir);
+-        if incomplete_dir.path()
+-            != imp
+-                .incomplete_dir
+-                .borrow()
+-                .as_ref()
+-                .map(|f| f.path())
+-                .flatten()
+-        {
++        if incomplete_dir.path() != imp.incomplete_dir.borrow().as_ref().and_then(|f| f.path()) {
+             *imp.incomplete_dir.borrow_mut() = Some(incomplete_dir);
+             self.notify_incomplete_dir();
+         }
+@@ -302,7 +280,7 @@ impl TrSession {
+         }
+ 
+         // download_queue_size
+-        if imp.download_queue_size.get() != rpc_session.download_queue_size.clone() {
++        if imp.download_queue_size.get() != rpc_session.download_queue_size {
+             imp.download_queue_size.set(rpc_session.download_queue_size);
+             self.notify_download_queue_size();
+         }
+@@ -314,7 +292,7 @@ impl TrSession {
+         }
+ 
+         // seed_queue_size
+-        if imp.seed_queue_size.get() != rpc_session.seed_queue_size.clone() {
++        if imp.seed_queue_size.get() != rpc_session.seed_queue_size {
+             imp.seed_queue_size.set(rpc_session.seed_queue_size);
+             self.notify_seed_queue_size();
+         }
+@@ -334,19 +312,19 @@ impl TrSession {
+         }
+ 
+         // peer_port
+-        if imp.peer_port.get() != rpc_session.peer_port.clone() {
++        if imp.peer_port.get() != rpc_session.peer_port {
+             imp.peer_port.set(rpc_session.peer_port);
+             self.notify_peer_port();
+         }
+ 
+         // peer_limit_global
+-        if imp.peer_limit_global.get() != rpc_session.peer_limit_global.clone() {
++        if imp.peer_limit_global.get() != rpc_session.peer_limit_global {
+             imp.peer_limit_global.set(rpc_session.peer_limit_global);
+             self.notify_peer_limit_global();
+         }
+ 
+         // peer_limit_per_torrent
+-        if imp.peer_limit_per_torrent.get() != rpc_session.peer_limit_per_torrent.clone() {
++        if imp.peer_limit_per_torrent.get() != rpc_session.peer_limit_per_torrent {
+             imp.peer_limit_per_torrent
+                 .set(rpc_session.peer_limit_per_torrent);
+             self.notify_peer_limit_per_torrent();
+-- 
+GitLab
+

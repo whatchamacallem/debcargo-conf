@@ -1,0 +1,20 @@
+Description: Fix tests failing due to nbd API changes
+ Debian has `nbd` 0.3.0, while upstream still uses version 0.2.3, which
+ causes a failure to build the example `rockusb` binary. Fix this by
+ converting the offending call to the new `nbd` API.
+Author: Arnaud Ferraris <aferraris@debian.org>
+Forwarded: not-needed
+Last-Update: 2023-12-19
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/examples/rockusb.rs
++++ b/examples/rockusb.rs
+@@ -198,7 +198,7 @@
+ 
+     println!("Connection!");
+ 
+-    nbd::server::handshake(&mut stream, &export)?;
++    nbd::server::handshake(&mut stream, move |_| { Ok(export) })?;
+     println!("Shook hands!");
+     nbd::server::transmission(&mut stream, io)?;
+     println!("nbd client disconnected");

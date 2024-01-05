@@ -1,18 +1,104 @@
-Description: Use the newer lcms2 in debian 
-Author: Matthias Geiger <werdahias@riseup.net> 
-Forwarded: https://gitlab.gnome.org/sophie-h/glycin/-/merge_requests/16
-Last-Update: 2023-09-28
----
-This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+From b01d388347200dc22dd92fc125c17b913634c1aa Mon Sep 17 00:00:00 2001
+From: Sophie Herold <sophie@hemio.de>
+Date: Tue, 21 Nov 2023 21:39:16 +0100
+Subject: [PATCH] glycin: Update to lcms2 using &[u8] format
 
+Use the newly added flat &[u8] format to get rid of a lot of transmute
+code.
+---
+ glycin/Cargo.toml |  7 +++----
+ glycin/src/icc.rs | 44 ++++----------------------------------------
+ 3 files changed, 12 insertions(+), 49 deletions(-)
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -57,10 +57,10 @@ version = "0.18.1"
+ version = "0.1.0"
+ 
+ [dependencies.lcms2]
+-version = "5.6.0"
++version = "6.0.3"
+ 
+ [dependencies.lcms2-sys]
+-version = "4.0.1"
++version = "4.0.4"
+ 
+ [dependencies.memfd]
+ version = "0.6.3"
+@@ -75,8 +75,5 @@ version = "0.26.2"
+ [dependencies.rgb]
+ version = "0.8.36"
+ 
+-[dependencies.safe-transmute]
+-version = "0.11.2"
+-
+ [dependencies.zbus]
+ version = "3.12"
+
+diff --git a/src/icc.rs b/src/icc.rs
+index c3ca03c..703d0ac 100644
 --- a/src/icc.rs
 +++ b/src/icc.rs
-@@ -46,7 +46,7 @@ pub fn apply_transformation(frame: &Fram
+@@ -1,55 +1,19 @@
+-use glycin_utils::{Frame, MemoryFormat, MemoryFormatBytes};
+-use rgb::AsPixels;
+-use safe_transmute::error::Error as TsmErr;
++use glycin_utils::{Frame, MemoryFormat};
+ 
+ pub fn apply_transformation(frame: &Frame, mmap: &mut [u8]) -> anyhow::Result<()> {
+     if let Some(iccp) = frame.iccp.as_ref() {
+         let memory_format = frame.memory_format;
+ 
+-        let res = match memory_format.n_bytes() {
+-            MemoryFormatBytes::B1 => transform::<u8>(iccp, memory_format, mmap),
+-            MemoryFormatBytes::B2 => {
+-                let buf = safe_transmute::transmute_many_pedantic_mut(mmap)
+-                    .map_err(TsmErr::without_src)?;
+-                transform::<u16>(iccp, memory_format, buf)
+-            }
+-            MemoryFormatBytes::B3 => {
+-                transform::<rgb::RGB<u8>>(iccp, memory_format, mmap.as_pixels_mut())
+-            }
+-            MemoryFormatBytes::B4 => {
+-                transform::<rgb::RGBA<u8>>(iccp, memory_format, mmap.as_pixels_mut())
+-            }
+-            MemoryFormatBytes::B6 => {
+-                let buf = safe_transmute::transmute_many_pedantic_mut(mmap)
+-                    .map_err(TsmErr::without_src)?;
+-                transform::<rgb::RGB<u16>>(iccp, memory_format, buf.as_pixels_mut())
+-            }
+-            MemoryFormatBytes::B8 => {
+-                let buf = safe_transmute::transmute_many_pedantic_mut(mmap)
+-                    .map_err(TsmErr::without_src)?;
+-                transform::<rgb::RGBA<u16>>(iccp, memory_format, buf.as_pixels_mut())
+-            }
+-            MemoryFormatBytes::B12 => {
+-                let buf = safe_transmute::transmute_many_pedantic_mut(mmap)
+-                    .map_err(TsmErr::without_src)?;
+-                transform::<rgb::RGB<u32>>(iccp, memory_format, buf.as_pixels_mut())
+-            }
+-            MemoryFormatBytes::B16 => {
+-                let buf = safe_transmute::transmute_many_pedantic_mut(mmap)
+-                    .map_err(TsmErr::without_src)?;
+-                transform::<rgb::RGBA<u32>>(iccp, memory_format, buf.as_pixels_mut())
+-            }
+-        };
+-        res.map_err(Into::into)
++        transform(iccp, memory_format, mmap).map_err(Into::into)
+     } else {
+         Ok(())
      }
  }
  
 -fn transform<F: Copy>(
-+fn transform<F: Copy + rgb::Pod>(
++fn transform(
      icc_profile: &[u8],
      memory_format: MemoryFormat,
-     buf: &mut [F],
+-    buf: &mut [F],
++    buf: &mut [u8],
+ ) -> Result<(), lcms2::Error> {
+     let icc_pixel_format = lcms_pixel_format(memory_format);
+     let src_profile = lcms2::Profile::new_icc(icc_profile)?;
+-- 
+GitLab
+

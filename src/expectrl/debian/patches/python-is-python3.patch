@@ -1,0 +1,198 @@
+python is named python3 in debian
+
+diff --git a/examples/check.rs b/examples/check.rs
+index 9968513..255b91b 100644
+--- a/examples/check.rs
++++ b/examples/check.rs
+@@ -2,7 +2,7 @@ use expectrl::{check, spawn, Error};
+ 
+ #[cfg(not(feature = "async"))]
+ fn main() {
+-    let mut session = spawn("python ./tests/source/ansi.py").expect("Can't spawn a session");
++    let mut session = spawn("python3 ./tests/source/ansi.py").expect("Can't spawn a session");
+ 
+     loop {
+         match check!(
+@@ -25,7 +25,7 @@ fn main() {
+ #[cfg(feature = "async")]
+ fn main() {
+     futures_lite::future::block_on(async {
+-        let mut session = spawn("python ./tests/source/ansi.py").expect("Can't spawn a session");
++        let mut session = spawn("python3 ./tests/source/ansi.py").expect("Can't spawn a session");
+ 
+         loop {
+             match check!(
+diff --git a/examples/interact_with_callback.rs b/examples/interact_with_callback.rs
+index adbfb28..43a73bc 100644
+--- a/examples/interact_with_callback.rs
++++ b/examples/interact_with_callback.rs
+@@ -52,7 +52,7 @@ fn main() {
+             Ok(false)
+         });
+ 
+-    let mut session = spawn("python ./tests/source/ansi.py").expect("Can't spawn a session");
++    let mut session = spawn("python3 ./tests/source/ansi.py").expect("Can't spawn a session");
+ 
+     let mut stdin = Stdin::open().unwrap();
+     let stdout = std::io::stdout();
+@@ -119,7 +119,7 @@ fn main() {
+             Ok(false)
+         });
+ 
+-    let mut session = spawn("python ./tests/source/ansi.py").expect("Can't spawn a session");
++    let mut session = spawn("python3 ./tests/source/ansi.py").expect("Can't spawn a session");
+ 
+     let mut stdin = Stdin::open().unwrap();
+     let stdout = std::io::stdout();
+diff --git a/src/repl.rs b/src/repl.rs
+index f61d7b9..5bbe96a 100644
+--- a/src/repl.rs
++++ b/src/repl.rs
+@@ -98,9 +98,9 @@ pub async fn spawn_bash() -> Result<ReplSession, Error> {
+ #[cfg(not(feature = "async"))]
+ pub fn spawn_python() -> Result<ReplSession, Error> {
+     // todo: check windows here
+-    // If we spawn it as ProcAttr::default().commandline("python") it will spawn processes endlessly....
++    // If we spawn it as ProcAttr::default().commandline("python3") it will spawn processes endlessly....
+ 
+-    let session = spawn("python")?;
++    let session = spawn("python3")?;
+ 
+     let mut idle = ReplSession::new(session, ">>> ".to_owned(), Some("quit()".to_owned()), false);
+     idle.expect_prompt()?;
+@@ -111,9 +111,9 @@ pub fn spawn_python() -> Result<ReplSession, Error> {
+ #[cfg(feature = "async")]
+ pub async fn spawn_python() -> Result<ReplSession, Error> {
+     // todo: check windows here
+-    // If we spawn it as ProcAttr::default().commandline("python") it will spawn processes endlessly....
++    // If we spawn it as ProcAttr::default().commandline("python3") it will spawn processes endlessly....
+ 
+-    let session = spawn("python")?;
++    let session = spawn("python3")?;
+ 
+     let mut idle = ReplSession::new(session, ">>> ".to_owned(), Some("quit()".to_owned()), false);
+     idle.expect_prompt().await?;
+diff --git a/tests/expect.rs b/tests/expect.rs
+index de5c046..8f8097d 100644
+--- a/tests/expect.rs
++++ b/tests/expect.rs
+@@ -30,7 +30,7 @@ fn expect_str() {
+ #[cfg(windows)]
+ #[test]
+ fn expect_str() {
+-    let mut session = spawn(r#"pwsh -c "python ./tests/actions/cat/main.py""#).unwrap();
++    let mut session = spawn(r#"pwsh -c "python3 ./tests/actions/cat/main.py""#).unwrap();
+ 
+     #[cfg(not(feature = "async"))]
+     {
+@@ -100,7 +100,7 @@ fn expect_lazy_regex() {
+ #[cfg(windows)]
+ #[test]
+ fn expect_regex() {
+-    let mut session = spawn("python ./tests/actions/echo/main.py Hello World").unwrap();
++    let mut session = spawn("python3 ./tests/actions/echo/main.py Hello World").unwrap();
+     #[cfg(not(feature = "async"))]
+     {
+         let m = session.expect(Regex("lo.*")).unwrap();
+@@ -149,7 +149,7 @@ fn expect_n_bytes() {
+     use std::process::Command;
+ 
+     let mut session = Session::spawn(Command::new(
+-        "python ./tests/actions/echo/main.py Hello World",
++        "python3 ./tests/actions/echo/main.py Hello World",
+     ))
+     .unwrap();
+     #[cfg(not(feature = "async"))]
+diff --git a/tests/io.rs b/tests/io.rs
+index b28aabe..3a4fa9d 100644
+--- a/tests/io.rs
++++ b/tests/io.rs
+@@ -58,7 +58,7 @@ fn send() {
+ #[test]
+ #[cfg(windows)]
+ fn send() {
+-    let mut proc = Session::spawn(Command::new("python ./tests/actions/cat/main.py")).unwrap();
++    let mut proc = Session::spawn(Command::new("python3 ./tests/actions/cat/main.py")).unwrap();
+     _p_send(&mut proc, "hello cat\r\n").unwrap();
+     _p_expect(&mut proc, "hello cat").unwrap();
+     proc.get_process_mut().exit(0).unwrap();
+@@ -84,7 +84,7 @@ fn send_line() {
+ #[test]
+ #[cfg(windows)]
+ fn send_line() {
+-    let mut proc = Session::spawn(Command::new("python ./tests/actions/cat/main.py")).unwrap();
++    let mut proc = Session::spawn(Command::new("python3 ./tests/actions/cat/main.py")).unwrap();
+     _p_send_line(&mut proc, "hello cat").unwrap();
+     _p_expect(&mut proc, "hello cat").unwrap();
+     proc.get_process_mut().exit(0).unwrap();
+@@ -418,7 +418,7 @@ fn try_read_to_end() {
+ #[cfg(windows)]
+ fn try_read_to_end() {
+     let mut proc = Session::spawn(Command::new(
+-        "python ./tests/actions/echo/main.py Hello World",
++        "python3 ./tests/actions/echo/main.py Hello World",
+     ))
+     .unwrap();
+ 
+@@ -445,7 +445,7 @@ fn continues_try_reads() {
+     let mut buf = [0; 128];
+     loop {
+         if !proc.is_alive().unwrap() {
+-            panic!("Most likely python is not installed");
++            panic!("Most likely python3 is not installed");
+         }
+ 
+         match _p_try_read(&mut proc, &mut buf) {
+diff --git a/tests/log.rs b/tests/log.rs
+index d91be55..6ba9452 100644
+--- a/tests/log.rs
++++ b/tests/log.rs
+@@ -19,7 +19,7 @@ use expectrl::spawn;
+ fn log() {
+     let writer = StubWriter::default();
+     let mut session = session::log(
+-        spawn("python ./tests/actions/cat/main.py").unwrap(),
++        spawn("python3 ./tests/actions/cat/main.py").unwrap(),
+         writer.clone(),
+     )
+     .unwrap();
+@@ -46,7 +46,7 @@ fn log() {
+     futures_lite::future::block_on(async {
+         let writer = StubWriter::default();
+         let mut session = session::log(
+-            spawn("python ./tests/actions/cat/main.py").unwrap(),
++            spawn("python3 ./tests/actions/cat/main.py").unwrap(),
+             writer.clone(),
+         )
+         .unwrap();
+diff --git a/tests/session.rs b/tests/session.rs
+index d1b2238..6c398aa 100644
+--- a/tests/session.rs
++++ b/tests/session.rs
+@@ -48,7 +48,7 @@ fn send() {
+ fn send() {
+     use std::io::Write;
+ 
+-    let mut session = spawn("python ./tests/actions/cat/main.py").unwrap();
++    let mut session = spawn("python3 ./tests/actions/cat/main.py").unwrap();
+     #[cfg(not(feature = "async"))]
+     {
+         session.write(b"Hello World").unwrap();
+@@ -98,7 +98,7 @@ fn send_multiline() {
+ #[cfg(windows)]
+ #[test]
+ fn send_multiline() {
+-    let mut session = spawn("python ./tests/actions/cat/main.py").unwrap();
++    let mut session = spawn("python3 ./tests/actions/cat/main.py").unwrap();
+     #[cfg(not(feature = "async"))]
+     {
+         session.send("Hello World\r\n").unwrap();
+@@ -155,7 +155,7 @@ fn send_line() {
+ #[cfg(windows)]
+ #[test]
+ fn send_line() {
+-    let mut session = spawn("python ./tests/actions/cat/main.py").unwrap();
++    let mut session = spawn("python3 ./tests/actions/cat/main.py").unwrap();
+     #[cfg(not(feature = "async"))]
+     {
+         session.send_line("Hello World").unwrap();

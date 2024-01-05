@@ -1,0 +1,600 @@
+From d30bcf008a77dcd18984ac961ea588ecd125d8dd Mon Sep 17 00:00:00 2001
+From: Maximiliano Sandoval R <msandova@gnome.org>
+Date: Fri, 24 Mar 2023 00:01:26 +0100
+Subject: [PATCH] Update to gtk-rs-core 0.17
+
+We need 0.17.8 or newer for the `error` property to compile.
+
+Fixes: https://gitlab.gnome.org/haecker-felix/transmission-gobject/-/issues/2
+---
+ Cargo.toml                   |  4 +--
+ src/authentication.rs        | 15 +++++-------
+ src/client.rs                | 46 +++++++++++++++--------------------
+ src/session.rs               | 47 ++++++++++++++++--------------------
+ src/session_stats.rs         |  6 ++---
+ src/session_stats_details.rs |  6 ++---
+ src/torrent.rs               | 17 +++++++------
+ src/torrent_model.rs         | 22 ++++++++---------
+ 8 files changed, 74 insertions(+), 89 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 4aaa26e..401a44e 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -27,10 +27,10 @@ version = "1.6"
+ version = "1.10"
+ 
+ [dependencies.gio]
+-version = "0.15"
++version = "0.17"
+ 
+ [dependencies.glib]
+-version = "0.15"
++version = "0.17.8"
+ 
+ [dependencies.gtk-macros]
+ version = "0.3"
+diff --git a/src/authentication.rs b/src/authentication.rs
+index c5203ab..988ce70 100644
+--- a/src/authentication.rs
++++ b/src/authentication.rs
+@@ -43,7 +43,7 @@ mod imp {
+             PROPERTIES.as_ref()
+         }
+ 
+-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &ParamSpec) -> glib::Value {
++        fn property(&self, _id: usize, pspec: &ParamSpec) -> glib::Value {
+             match pspec.name() {
+                 "username" => self.username.get().to_value(),
+                 "password" => self.password.get().to_value(),
+@@ -51,13 +51,7 @@ mod imp {
+             }
+         }
+ 
+-        fn set_property(
+-            &self,
+-            _obj: &Self::Type,
+-            _id: usize,
+-            value: &glib::Value,
+-            pspec: &ParamSpec,
+-        ) {
++        fn set_property(&self, _id: usize, value: &glib::Value, pspec: &ParamSpec) {
+             match pspec.name() {
+                 "username" => self.username.set(value.get().unwrap()).unwrap(),
+                 "password" => self.password.set(value.get().unwrap()).unwrap(),
+@@ -73,7 +67,10 @@ glib::wrapper! {
+ 
+ impl TrAuthentication {
+     pub fn new(username: &str, password: &str) -> Self {
+-        glib::Object::new(&[("username", &username), ("password", &password)]).unwrap()
++        glib::Object::builder()
++            .property("username", username)
++            .property("password", password)
++            .build()
+     }
+ 
+     pub fn username(&self) -> String {
+diff --git a/src/client.rs b/src/client.rs
+index fd423a8..8fb7a13 100644
+--- a/src/client.rs
++++ b/src/client.rs
+@@ -69,19 +69,13 @@ mod imp {
+         fn signals() -> &'static [Signal] {
+             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
+                 vec![
+-                    Signal::builder("connection-failure", &[], glib::Type::UNIT.into()).build(),
+-                    Signal::builder(
+-                        "torrent-added",
+-                        &[TrTorrent::static_type().into()],
+-                        glib::Type::UNIT.into(),
+-                    )
+-                    .build(),
+-                    Signal::builder(
+-                        "torrent-downloaded",
+-                        &[TrTorrent::static_type().into()],
+-                        glib::Type::UNIT.into(),
+-                    )
+-                    .build(),
++                    Signal::builder("connection-failure").build(),
++                    Signal::builder("torrent-added")
++                        .param_types([TrTorrent::static_type()])
++                        .build(),
++                    Signal::builder("torrent-downloaded")
++                        .param_types([TrTorrent::static_type()])
++                        .build(),
+                 ]
+             });
+             SIGNALS.as_ref()
+@@ -146,7 +140,7 @@ mod imp {
+             PROPERTIES.as_ref()
+         }
+ 
+-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &ParamSpec) -> glib::Value {
++        fn property(&self, _id: usize, pspec: &ParamSpec) -> glib::Value {
+             match pspec.name() {
+                 "address" => self.address.borrow().to_value(),
+                 "polling-rate" => self.polling_rate.borrow().to_value(),
+@@ -167,10 +161,10 @@ glib::wrapper! {
+ 
+ impl TrClient {
+     pub fn new() -> Self {
+-        let client: Self = glib::Object::new::<Self>(&[]).unwrap();
++        let client: Self = glib::Object::new();
+ 
+         let session = TrSession::new(&client);
+-        let imp = imp::TrClient::from_instance(&client);
++        let imp = client.imp();
+         imp.session.set(session).unwrap();
+ 
+         client
+@@ -210,7 +204,7 @@ impl TrClient {
+     }
+ 
+     pub async fn connect(&self, address: String, polling_rate: u64) -> Result<(), ClientError> {
+-        let imp = imp::TrClient::from_instance(&self);
++        let imp = self.imp();
+ 
+         if self.is_busy() {
+             warn!("Client is currently busy, unable to connect to new address.");
+@@ -237,7 +231,7 @@ impl TrClient {
+         address: String,
+         polling_rate: u64,
+     ) -> Result<(), ClientError> {
+-        let imp = imp::TrClient::from_instance(&self);
++        let imp = self.imp();
+ 
+         if self.is_connected() {
+             self.disconnect(false).await;
+@@ -282,11 +276,11 @@ impl TrClient {
+         glib::timeout_add_local(
+             duration,
+             clone!(@weak self as this => @default-return glib::Continue(false), move ||{
+-                let imp = imp::TrClient::from_instance(&this);
++                let imp = this.imp();
+                 let disconnect = imp.do_disconnect.borrow().clone();
+ 
+                 let fut = clone!(@weak this, @strong disconnect => async move {
+-                    let imp = imp::TrClient::from_instance(&this);
++                    let imp = this.imp();
+                     if disconnect {
+                         debug!("Stop polling loop...");
+ 
+@@ -311,7 +305,7 @@ impl TrClient {
+     }
+ 
+     pub async fn disconnect(&self, close_session: bool) {
+-        let imp = imp::TrClient::from_instance(&self);
++        let imp = self.imp();
+         if !self.is_connected() {
+             warn!("Unable to disconnect, is not connected.");
+             return;
+@@ -340,13 +334,13 @@ impl TrClient {
+     }
+ 
+     pub fn set_authentication(&self, auth: TrAuthentication) {
+-        let imp = imp::TrClient::from_instance(&self);
++        let imp = self.imp();
+         *imp.authentication.borrow_mut() = Some(auth);
+         self.rpc_auth(self.rpc_client());
+     }
+ 
+     fn rpc_auth(&self, rpc_client: Option<Client>) {
+-        let imp = imp::TrClient::from_instance(&self);
++        let imp = self.imp();
+ 
+         if let Some(auth) = &*imp.authentication.borrow() {
+             if let Some(rpc_client) = rpc_client {
+@@ -427,7 +421,7 @@ impl TrClient {
+ 
+         if let Some(client) = self.rpc_client() {
+             client.torrent_start(Some(start_hashes), false).await?;
+-            
++
+             self.refresh_data().await;
+         } else {
+             warn!("Unable to start torrents, no rpc connection")
+@@ -468,7 +462,7 @@ impl TrClient {
+     }
+ 
+     async fn poll_data(&self, is_initial_poll: bool) -> Result<(), ClientError> {
+-        let imp = imp::TrClient::from_instance(self);
++        let imp = self.imp();
+ 
+         if let Some(client) = self.rpc_client() {
+             let torrents = client.torrents(None).await?;
+@@ -554,7 +548,7 @@ impl TrClient {
+     }
+ 
+     pub(crate) fn rpc_client(&self) -> Option<Client> {
+-        let imp = imp::TrClient::from_instance(self);
++        let imp = self.imp();
+         imp.client.borrow().clone()
+     }
+ 
+diff --git a/src/session.rs b/src/session.rs
+index 0abf598..bf37aec 100644
+--- a/src/session.rs
++++ b/src/session.rs
+@@ -169,7 +169,7 @@ mod imp {
+             PROPERTIES.as_ref()
+         }
+ 
+-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &ParamSpec) -> glib::Value {
++        fn property(&self, _id: usize, pspec: &ParamSpec) -> glib::Value {
+             match pspec.name() {
+                 "version" => self.version.borrow().to_value(),
+                 "download-dir" => self.download_dir.borrow().to_value(),
+@@ -190,13 +190,8 @@ mod imp {
+             }
+         }
+ 
+-        fn set_property(
+-            &self,
+-            obj: &Self::Type,
+-            _id: usize,
+-            value: &glib::Value,
+-            pspec: &ParamSpec,
+-        ) {
++        fn set_property(&self, _id: usize, value: &glib::Value, pspec: &ParamSpec) {
++            let obj = self.obj();
+             match pspec.name() {
+                 "download-dir" => obj.set_download_dir(value.get().unwrap()),
+                 "start-added-torrents" => obj.set_start_added_torrents(value.get().unwrap()),
+@@ -226,9 +221,9 @@ glib::wrapper! {
+ 
+ impl TrSession {
+     pub(crate) fn new(client: &TrClient) -> Self {
+-        let session: Self = glib::Object::new(&[]).unwrap();
++        let session: Self = glib::Object::new();
+ 
+-        let imp = imp::TrSession::from_instance(&session);
++        let imp = session.imp();
+         imp.client.set(client.clone()).unwrap();
+ 
+         session
+@@ -243,7 +238,7 @@ impl TrSession {
+     }
+ 
+     pub fn set_download_dir(&self, value: gio::File) {
+-        let imp = imp::TrSession::from_instance(&self);
++        let imp = self.imp();
+         *imp.download_dir.borrow_mut() = Some(value.clone());
+ 
+         let mutator = SessionMutator {
+@@ -258,7 +253,7 @@ impl TrSession {
+     }
+ 
+     pub fn set_start_added_torrents(&self, value: bool) {
+-        let imp = imp::TrSession::from_instance(&self);
++        let imp = self.imp();
+         imp.start_added_torrents.set(value);
+ 
+         let mutator = SessionMutator {
+@@ -273,7 +268,7 @@ impl TrSession {
+     }
+ 
+     pub fn set_encryption(&self, value: TrEncryption) {
+-        let imp = imp::TrSession::from_instance(&self);
++        let imp = self.imp();
+         imp.encryption.set(value);
+ 
+         let mutator = SessionMutator {
+@@ -288,7 +283,7 @@ impl TrSession {
+     }
+ 
+     pub fn set_incomplete_dir_enabled(&self, value: bool) {
+-        let imp = imp::TrSession::from_instance(&self);
++        let imp = self.imp();
+         imp.incomplete_dir_enabled.set(value);
+ 
+         let mutator = SessionMutator {
+@@ -303,7 +298,7 @@ impl TrSession {
+     }
+ 
+     pub fn set_incomplete_dir(&self, value: gio::File) {
+-        let imp = imp::TrSession::from_instance(&self);
++        let imp = self.imp();
+         *imp.incomplete_dir.borrow_mut() = Some(value.clone());
+ 
+         let mutator = SessionMutator {
+@@ -318,7 +313,7 @@ impl TrSession {
+     }
+ 
+     pub fn set_download_queue_enabled(&self, value: bool) {
+-        let imp = imp::TrSession::from_instance(&self);
++        let imp = self.imp();
+         imp.download_queue_enabled.set(value);
+ 
+         let mutator = SessionMutator {
+@@ -333,7 +328,7 @@ impl TrSession {
+     }
+ 
+     pub fn set_download_queue_size(&self, value: i32) {
+-        let imp = imp::TrSession::from_instance(&self);
++        let imp = self.imp();
+         imp.download_queue_size.set(value);
+ 
+         let mutator = SessionMutator {
+@@ -348,7 +343,7 @@ impl TrSession {
+     }
+ 
+     pub fn set_seed_queue_enabled(&self, value: bool) {
+-        let imp = imp::TrSession::from_instance(&self);
++        let imp = self.imp();
+         imp.seed_queue_enabled.set(value);
+ 
+         let mutator = SessionMutator {
+@@ -363,7 +358,7 @@ impl TrSession {
+     }
+ 
+     pub fn set_seed_queue_size(&self, value: i32) {
+-        let imp = imp::TrSession::from_instance(&self);
++        let imp = self.imp();
+         imp.seed_queue_size.set(value);
+ 
+         let mutator = SessionMutator {
+@@ -378,7 +373,7 @@ impl TrSession {
+     }
+ 
+     pub fn set_port_forwarding_enabled(&self, value: bool) {
+-        let imp = imp::TrSession::from_instance(&self);
++        let imp = self.imp();
+         imp.port_forwarding_enabled.set(value);
+ 
+         let mutator = SessionMutator {
+@@ -393,7 +388,7 @@ impl TrSession {
+     }
+ 
+     pub fn set_peer_port_random_on_start(&self, value: bool) {
+-        let imp = imp::TrSession::from_instance(&self);
++        let imp = self.imp();
+         imp.peer_port_random_on_start.set(value);
+ 
+         let mutator = SessionMutator {
+@@ -408,7 +403,7 @@ impl TrSession {
+     }
+ 
+     pub fn set_peer_port(&self, value: i32) {
+-        let imp = imp::TrSession::from_instance(&self);
++        let imp = self.imp();
+         imp.peer_port.set(value);
+ 
+         let mutator = SessionMutator {
+@@ -423,7 +418,7 @@ impl TrSession {
+     }
+ 
+     pub fn set_peer_limit_global(&self, value: i32) {
+-        let imp = imp::TrSession::from_instance(&self);
++        let imp = self.imp();
+         imp.peer_limit_global.set(value);
+ 
+         let mutator = SessionMutator {
+@@ -438,7 +433,7 @@ impl TrSession {
+     }
+ 
+     pub fn set_peer_limit_per_torrent(&self, value: i32) {
+-        let imp = imp::TrSession::from_instance(&self);
++        let imp = self.imp();
+         imp.peer_limit_per_torrent.set(value);
+ 
+         let mutator = SessionMutator {
+@@ -449,7 +444,7 @@ impl TrSession {
+     }
+ 
+     pub(crate) fn refresh_values(&self, rpc_session: Session) {
+-        let imp = imp::TrSession::from_instance(self);
++        let imp = self.imp();
+ 
+         // version
+         if *imp.version.borrow() != rpc_session.version {
+@@ -568,7 +563,7 @@ impl TrSession {
+         self.notify(prop_name);
+ 
+         let fut = clone!(@weak self as this => async move {
+-            let imp = imp::TrSession::from_instance(&this);
++            let imp = this.imp();
+             if let Some(rpc_client) = imp.client.get().unwrap().rpc_client() {
+                 rpc_client.session_set(mutator).await.unwrap();
+             } else {
+diff --git a/src/session_stats.rs b/src/session_stats.rs
+index 43639f7..4961c37 100644
+--- a/src/session_stats.rs
++++ b/src/session_stats.rs
+@@ -108,7 +108,7 @@ mod imp {
+             PROPERTIES.as_ref()
+         }
+ 
+-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &ParamSpec) -> glib::Value {
++        fn property(&self, _id: usize, pspec: &ParamSpec) -> glib::Value {
+             match pspec.name() {
+                 "torrent-count" => self.torrent_count.get().to_value(),
+                 "active-torrent-count" => self.active_torrent_count.get().to_value(),
+@@ -162,7 +162,7 @@ impl TrSessionStats {
+     }
+ 
+     pub(crate) fn refresh_values(&self, rpc_stats: SessionStats, download_count: i32) {
+-        let imp = imp::TrSessionStats::from_instance(self);
++        let imp = self.imp();
+ 
+         // torrent_count
+         if imp.torrent_count.get() != rpc_stats.torrent_count {
+@@ -208,6 +208,6 @@ impl TrSessionStats {
+ 
+ impl Default for TrSessionStats {
+     fn default() -> Self {
+-        glib::Object::new(&[]).unwrap()
++        glib::Object::new()
+     }
+ }
+diff --git a/src/session_stats_details.rs b/src/session_stats_details.rs
+index e7fc416..47b2b00 100644
+--- a/src/session_stats_details.rs
++++ b/src/session_stats_details.rs
+@@ -79,7 +79,7 @@ mod imp {
+             PROPERTIES.as_ref()
+         }
+ 
+-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &ParamSpec) -> glib::Value {
++        fn property(&self, _id: usize, pspec: &ParamSpec) -> glib::Value {
+             match pspec.name() {
+                 "seconds-active" => self.seconds_active.get().to_value(),
+                 "downloaded-bytes" => self.downloaded_bytes.get().to_value(),
+@@ -118,7 +118,7 @@ impl TrSessionStatsDetails {
+     }
+ 
+     pub(crate) fn refresh_values(&self, rpc_details: StatsDetails) {
+-        let imp = imp::TrSessionStatsDetails::from_instance(self);
++        let imp = self.imp();
+ 
+         // seconds_active
+         if imp.seconds_active.get() != rpc_details.seconds_active {
+@@ -154,6 +154,6 @@ impl TrSessionStatsDetails {
+ 
+ impl Default for TrSessionStatsDetails {
+     fn default() -> Self {
+-        glib::Object::new(&[]).unwrap()
++        glib::Object::new()
+     }
+ }
+diff --git a/src/torrent.rs b/src/torrent.rs
+index 1415750..afeb6fe 100644
+--- a/src/torrent.rs
++++ b/src/torrent.rs
+@@ -241,7 +241,7 @@ mod imp {
+             PROPERTIES.as_ref()
+         }
+ 
+-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &ParamSpec) -> glib::Value {
++        fn property(&self, _id: usize, pspec: &ParamSpec) -> glib::Value {
+             match pspec.name() {
+                 "name" => self.name.get().unwrap().to_value(),
+                 "hash" => self.hash.get().unwrap().to_value(),
+@@ -282,8 +282,8 @@ impl TrTorrent {
+         seed_queue_pos: i32,
+         client: TrClient,
+     ) -> Self {
+-        let torrent: Self = glib::Object::new(&[]).unwrap();
+-        let imp = imp::TrTorrent::from_instance(&torrent);
++        let torrent: Self = glib::Object::new();
++        let imp = torrent.imp();
+ 
+         imp.client.set(client).unwrap();
+ 
+@@ -359,7 +359,9 @@ impl TrTorrent {
+         let path = location.path().unwrap().to_str().unwrap().to_string();
+ 
+         if let Some(client) = self.client().rpc_client() {
+-            client.torrent_set_location(Some(vec![self.hash()]), path, move_data).await?;
++            client
++                .torrent_set_location(Some(vec![self.hash()]), path, move_data)
++                .await?;
+             self.do_poll().await;
+         } else {
+             warn!("Unable to set torrent location, no rpc connection.");
+@@ -369,7 +371,7 @@ impl TrTorrent {
+     }
+ 
+     pub(crate) fn refresh_values(&self, rpc_torrent: Torrent) {
+-        let imp = imp::TrTorrent::from_instance(self);
++        let imp = self.imp();
+ 
+         // download_dir
+         if *imp.download_dir.borrow() != rpc_torrent.download_dir {
+@@ -482,7 +484,7 @@ impl TrTorrent {
+     }
+ 
+     pub(crate) fn refresh_queue_positions(&self, download_queue_pos: i32, seed_queue_pos: i32) {
+-        let imp = imp::TrTorrent::from_instance(self);
++        let imp = self.imp();
+ 
+         // download_queue_position
+         if *imp.download_queue_position.borrow() != download_queue_pos {
+@@ -630,7 +632,7 @@ impl TrTorrent {
+     }
+ 
+     fn client(&self) -> TrClient {
+-        let imp = imp::TrTorrent::from_instance(self);
++        let imp = self.imp();
+         imp.client.get().unwrap().clone()
+     }
+ 
+@@ -638,4 +640,3 @@ impl TrTorrent {
+         self.client().refresh_data().await;
+     }
+ }
+-
+diff --git a/src/torrent_model.rs b/src/torrent_model.rs
+index 4b611c3..0eca034 100644
+--- a/src/torrent_model.rs
++++ b/src/torrent_model.rs
+@@ -25,26 +25,24 @@ mod imp {
+     impl ObjectImpl for TrTorrentModel {
+         fn signals() -> &'static [Signal] {
+             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
+-                vec![
+-                    Signal::builder("status-changed", &[], glib::Type::UNIT.into())
+-                        .flags(glib::SignalFlags::ACTION)
+-                        .build(),
+-                ]
++                vec![Signal::builder("status-changed")
++                    .flags(glib::SignalFlags::ACTION)
++                    .build()]
+             });
+             SIGNALS.as_ref()
+         }
+     }
+ 
+     impl ListModelImpl for TrTorrentModel {
+-        fn item_type(&self, _list_model: &Self::Type) -> glib::Type {
++        fn item_type(&self) -> glib::Type {
+             TrTorrent::static_type()
+         }
+ 
+-        fn n_items(&self, _list_model: &Self::Type) -> u32 {
++        fn n_items(&self) -> u32 {
+             self.vec.borrow().len() as u32
+         }
+ 
+-        fn item(&self, _list_model: &Self::Type, position: u32) -> Option<glib::Object> {
++        fn item(&self, position: u32) -> Option<glib::Object> {
+             self.vec
+                 .borrow()
+                 .get(position as usize)
+@@ -59,7 +57,7 @@ glib::wrapper! {
+ 
+ impl TrTorrentModel {
+     pub(crate) fn add_torrent(&self, torrent: &TrTorrent) {
+-        let imp = imp::TrTorrentModel::from_instance(self);
++        let imp = self.imp();
+ 
+         if self.find(torrent.hash()).is_some() {
+             warn!("Torrent {:?} already exists in model", torrent.name());
+@@ -77,7 +75,7 @@ impl TrTorrentModel {
+     }
+ 
+     pub(crate) fn remove_torrent(&self, torrent: &TrTorrent) {
+-        let imp = imp::TrTorrentModel::from_instance(self);
++        let imp = self.imp();
+ 
+         match self.find(torrent.hash()) {
+             Some(pos) => {
+@@ -107,7 +105,7 @@ impl TrTorrentModel {
+     }
+ 
+     pub(crate) fn clear(&self) {
+-        let imp = imp::TrTorrentModel::from_instance(self);
++        let imp = self.imp();
+         let len = self.n_items();
+         imp.vec.borrow_mut().clear();
+         self.items_changed(0, len, 0);
+@@ -128,6 +126,6 @@ impl TrTorrentModel {
+ 
+ impl Default for TrTorrentModel {
+     fn default() -> Self {
+-        glib::Object::new(&[]).unwrap()
++        glib::Object::new()
+     }
+ }
+-- 
+GitLab
+

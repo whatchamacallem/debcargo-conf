@@ -1,0 +1,44 @@
+Description: Add `posix-sem` feature
+ `heed` needs this feature, so let's add that as well: it's simply a (optional)
+ compile flag change.
+Author: Arnaud Ferraris <aferraris@debian.org>
+Forwarded: not-needed
+Last-Update: 2023-12-12
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -29,3 +29,6 @@
+ 
+ [build-dependencies.pkg-config]
+ version = "0.3"
++
++[features]
++posix-sem = []
+--- a/build.rs
++++ b/build.rs
+@@ -11,11 +11,18 @@
+     lmdb.push("liblmdb");
+ 
+     if !pkg_config::find_library("lmdb").is_ok() {
+-        cc::Build::new()
+-                    .file(lmdb.join("mdb.c"))
+-                    .file(lmdb.join("midl.c"))
+-                    // https://github.com/LMDB/lmdb/blob/LMDB_0.9.21/libraries/liblmdb/Makefile#L25
+-                    .opt_level(2)
+-                    .compile("liblmdb.a")
++        let mut builder = cc::Build::new();
++
++        builder
++            .file(lmdb.join("mdb.c"))
++            .file(lmdb.join("midl.c"))
++            // https://github.com/LMDB/lmdb/blob/LMDB_0.9.21/libraries/liblmdb/Makefile#L25
++            .opt_level(2);
++
++        if cfg!(feature = "posix-sem") {
++            builder.define("MDB_USE_POSIX_SEM", None);
++        }
++
++        builder.compile("liblmdb.a")
+     }
+ }

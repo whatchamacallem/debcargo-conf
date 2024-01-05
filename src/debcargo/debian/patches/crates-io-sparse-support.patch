@@ -1,0 +1,42 @@
+From c94c3dccacf56a320696f043fcfb6e8424dfcd46 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Fabian=20Gr=C3=BCnbichler?=
+ <debian@fabian.gruenbichler.email>
+Date: Tue, 19 Dec 2023 09:08:44 +0100
+Subject: [PATCH] allow crates.io sparse access
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+else, opt-in via the environment variable works with cargo but fails
+debcargo since the cache paths are different.
+
+Signed-off-by: Fabian Grünbichler <debian@fabian.gruenbichler.email>
+---
+ src/crates.rs | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/crates.rs b/src/crates.rs
+index 8865725..3807c0b 100644
+--- a/src/crates.rs
++++ b/src/crates.rs
+@@ -75,7 +75,7 @@ fn fetch_candidates(registry: &mut PackageRegistry, dep: &Dependency) -> Result<
+ pub fn invalidate_crates_io_cache() -> Result<()> {
+     let config = Config::default()?;
+     let _lock = config.acquire_package_cache_lock()?;
+-    let source_id = SourceId::crates_io(&config)?;
++    let source_id = SourceId::crates_io_maybe_sparse_http(&config)?;
+     let yanked_whitelist = HashSet::new();
+     let mut r = RegistrySource::remote(source_id, &yanked_whitelist, &config)?;
+     r.invalidate_cache();
+@@ -85,7 +85,7 @@ pub fn invalidate_crates_io_cache() -> Result<()> {
+ pub fn crate_name_ver_to_dep(crate_name: &str, version: Option<&str>) -> Result<Dependency> {
+     // note: this forces a network call
+     let config = Config::default()?;
+-    let source_id = SourceId::crates_io(&config)?;
++    let source_id = SourceId::crates_io_maybe_sparse_http(&config)?;
+     let version = version.and_then(|v| {
+         if v.is_empty() {
+             None
+-- 
+2.43.0
+

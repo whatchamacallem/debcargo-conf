@@ -1,0 +1,68 @@
+Disable tests that doesn't have it's data files present in the crate.
+
+commit 1e40a89c23a9d16dac49bc493a37e50485ab3e41
+Author: Alexander Kjäll <alexander.kjall@gmail.com>
+Date:   Thu Dec 28 11:35:24 2023 +0100
+
+    disable-test-with-missing-data
+
+diff --git a/src/collapse/dtrace.rs b/src/collapse/dtrace.rs
+index 4efc871..bd53918 100644
+--- a/src/collapse/dtrace.rs
++++ b/src/collapse/dtrace.rs
+@@ -448,7 +448,7 @@ mod tests {
+         );
+     }
+ 
+-    #[test]
++    //#[test]
+     fn test_collapse_multi_dtrace() -> io::Result<()> {
+         let mut folder = Folder::default();
+         common::testing::test_collapse_multi(&mut folder, &INPUT)
+@@ -481,7 +481,7 @@ mod tests {
+         <Folder as Collapse>::collapse(&mut folder, &input[..], io::sink()).unwrap();
+     }
+ 
+-    #[test]
++    //#[test]
+     fn test_collapse_multi_dtrace_simple() -> io::Result<()> {
+         common::testing::check_flamegraph_git_submodule_initialised();
+         let path = "./flamegraph/example-dtrace-stacks.txt";
+diff --git a/src/collapse/perf.rs b/src/collapse/perf.rs
+index 45b536d..8bb7511 100644
+--- a/src/collapse/perf.rs
++++ b/src/collapse/perf.rs
+@@ -771,13 +771,13 @@ mod tests {
+         .collect::<Vec<_>>()
+     });
+ 
+-    #[test]
++    //#[test]
+     fn test_collapse_multi_perf() -> io::Result<()> {
+         let mut folder = Folder::default();
+         common::testing::test_collapse_multi(&mut folder, &INPUT)
+     }
+ 
+-    #[test]
++    //#[test]
+     fn test_collapse_multi_perf_simple() -> io::Result<()> {
+         common::testing::check_flamegraph_git_submodule_initialised();
+         let path = "./flamegraph/test/perf-cycles-instructions-01.txt";
+@@ -788,7 +788,7 @@ mod tests {
+         <Folder as Collapse>::collapse(&mut folder, &bytes[..], io::sink())
+     }
+ 
+-    #[test]
++    //#[test]
+     fn test_one_skip_after() -> io::Result<()> {
+         let path = "./tests/data/collapse-perf/go-stacks.txt";
+         let mut file = fs::File::open(path)?;
+@@ -815,7 +815,7 @@ mod tests {
+         Ok(())
+     }
+ 
+-    #[test]
++    //#[test]
+     fn test_multiple_skip_after() -> io::Result<()> {
+         let path = "./tests/data/collapse-perf/go-stacks.txt";
+         let mut file = fs::File::open(path)?;
