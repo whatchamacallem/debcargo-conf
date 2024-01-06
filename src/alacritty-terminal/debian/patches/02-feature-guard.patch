@@ -14,34 +14,8 @@ Index: alacritty-terminal/tests/ref.rs
 ===================================================================
 --- alacritty-terminal.orig/tests/ref.rs
 +++ alacritty-terminal/tests/ref.rs
-@@ -1,4 +1,6 @@
-+#[cfg(feature = "serde")]
+@@ -1,3 +1,4 @@
++#![cfg(feature = "serde")]
  use serde::Deserialize;
-+#[cfg(feature = "serde")]
  use serde_json as json;
  
- use std::fs::{self, File};
-@@ -17,6 +19,7 @@ macro_rules! ref_tests {
-     ($($name:ident)*) => {
-         $(
-             #[test]
-+            #[cfg(feature = "serde")]
-             fn $name() {
-                 let test_dir = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/ref"));
-                 let test_path = test_dir.join(stringify!($name));
-@@ -82,6 +85,7 @@ where
-     res
- }
- 
-+#[cfg(feature = "serde")]
- #[derive(Deserialize, Default)]
- struct RefConfig {
-     history_size: u32,
-@@ -94,6 +98,7 @@ impl EventListener for Mock {
-     fn send_event(&self, _event: Event) {}
- }
- 
-+#[cfg(feature = "serde")]
- fn ref_test(dir: &Path) {
-     let recording = read_u8(dir.join("alacritty.recording"));
-     let serialized_size = fs::read_to_string(dir.join("size.json")).unwrap();
