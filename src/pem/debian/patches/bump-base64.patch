@@ -1,3 +1,5 @@
+Adapted by Peter Michael Green for use with pem 1.1.1
+
 From e3a1f22e40b7d5dd8c72388e8ef0408a18dd464e Mon Sep 17 00:00:00 2001
 From: Jeff Hiner <37913568+jeff-hiner@users.noreply.github.com>
 Date: Tue, 7 Feb 2023 19:10:24 -0700
@@ -16,15 +18,11 @@ Index: pem/Cargo.toml
 ===================================================================
 --- pem.orig/Cargo.toml
 +++ pem/Cargo.toml
-@@ -27,7 +27,7 @@ repository = "https://github.com/jcreekm
- name = "pem_benchmark"
- harness = false
+@@ -29,3 +29,3 @@
  [dependencies.base64]
 -version = "0.13.0"
 +version = "0.21.0"
- [dev-dependencies.criterion]
- version = "0.3.0"
- [badges.travis-ci]
+ 
 Index: pem/src/lib.rs
 ===================================================================
 --- pem.orig/src/lib.rs
@@ -37,18 +35,13 @@ Index: pem/src/lib.rs
  use std::str;
  
  /// The line length for PEM encoding
-@@ -169,8 +170,9 @@ impl Pem {
-         let data: String = raw_data.lines().map(str::trim_end).collect();
+@@ -171,3 +172,5 @@
+     // And decode it from Base64 into a vector of u8
+-    let contents = base64::decode_config(&data, base64::STANDARD).map_err(PemError::InvalidData)?;
++    let contents = base64::engine::general_purpose::STANDARD
++        .decode(data)
++        .map_err(PemError::InvalidData)?;
  
-         // And decode it from Base64 into a vector of u8
--        let contents =
--            base64::decode_config(&data, base64::STANDARD).map_err(PemError::InvalidData)?;
-+        let contents = base64::engine::general_purpose::STANDARD
-+            .decode(data)
-+            .map_err(PemError::InvalidData)?;
- 
-         Ok(Pem {
-             tag: tag.to_owned(),
 @@ -349,10 +351,7 @@ pub fn encode_config(pem: &Pem, config:
      let contents = if pem.contents.is_empty() {
          String::from("")
