@@ -1,0 +1,402 @@
+debci runs tests in an environment where the crate root is not writable, the testsuite
+needs some adjustments to handle this.
+Index: findutils/src/find/matchers/access.rs
+===================================================================
+--- findutils.orig/src/find/matchers/access.rs
++++ findutils/src/find/matchers/access.rs
+@@ -46,10 +46,10 @@ mod tests {
+             "file should be readable"
+         );
+ 
+-        assert!(
++        /*assert!(
+             AccessMatcher::Writable.matches(&file_info, &mut deps.new_matcher_io()),
+             "file should be writable"
+-        );
++        );*/
+ 
+         #[cfg(unix)]
+         assert!(
+Index: findutils/tests/find_cmd_tests.rs
+===================================================================
+--- findutils.orig/tests/find_cmd_tests.rs
++++ findutils/tests/find_cmd_tests.rs
+@@ -280,37 +280,41 @@ fn empty_files() {
+ #[serial(working_dir)]
+ #[test]
+ fn find_printf() {
++    let testdir = tempfile::TempDir::new().unwrap();
++    std::fs::copy("test_data/links/abbbc",testdir.path().join("abbbc"));
++    std::fs::create_dir(testdir.path().join("subdir"));
++    std::fs::copy("test_data/links/subdir/test",testdir.path().join("subdir/test"));
+     #[cfg(unix)]
+     {
+-        if let Err(e) = symlink("abbbc", "test_data/links/link-f") {
++        if let Err(e) = symlink("abbbc", testdir.path().join("link-f")) {
+             assert!(
+                 e.kind() == ErrorKind::AlreadyExists,
+                 "Failed to create sym link: {:?}",
+                 e
+             );
+         }
+-        if let Err(e) = symlink("subdir", "test_data/links/link-d") {
++        if let Err(e) = symlink("subdir", testdir.path().join("link-d")) {
+             assert!(
+                 e.kind() == ErrorKind::AlreadyExists,
+                 "Failed to create sym link: {:?}",
+                 e
+             );
+         }
+-        if let Err(e) = symlink("missing", "test_data/links/link-missing") {
++        if let Err(e) = symlink("missing", testdir.path().join("link-missing")) {
+             assert!(
+                 e.kind() == ErrorKind::AlreadyExists,
+                 "Failed to create sym link: {:?}",
+                 e
+             );
+         }
+-        if let Err(e) = symlink("abbbc/x", "test_data/links/link-notdir") {
++        if let Err(e) = symlink("abbbc/x", testdir.path().join("link-notdir")) {
+             assert!(
+                 e.kind() == ErrorKind::AlreadyExists,
+                 "Failed to create sym link: {:?}",
+                 e
+             );
+         }
+-        if let Err(e) = symlink("link-loop", "test_data/links/link-loop") {
++        if let Err(e) = symlink("link-loop", testdir.path().join("link-loop")) {
+             assert!(
+                 e.kind() == ErrorKind::AlreadyExists,
+                 "Failed to create sym link: {:?}",
+@@ -375,7 +379,7 @@ fn find_printf() {
+     Command::cargo_bin("find")
+         .expect("found binary")
+         .args([
+-            &fix_up_slashes("./test_data/links"),
++            &fix_up_slashes(testdir.path().to_str().unwrap()),
+             "-sorted",
+             "-type",
+             "l",
+@@ -493,13 +497,13 @@ fn find_accessible() {
+         .stderr(predicate::str::is_empty())
+         .stdout(predicate::str::contains("abbbc"));
+ 
+-    Command::cargo_bin("find")
++    /*Command::cargo_bin("find")
+         .expect("found binary")
+         .args(["test_data", "-writable"])
+         .assert()
+         .success()
+         .stderr(predicate::str::is_empty())
+-        .stdout(predicate::str::contains("abbbc"));
++        .stdout(predicate::str::contains("abbbc"));*/
+ 
+     #[cfg(unix)]
+     Command::cargo_bin("find")
+Index: findutils/src/find/matchers/lname.rs
+===================================================================
+--- findutils.orig/src/find/matchers/lname.rs
++++ findutils/src/find/matchers/lname.rs
+@@ -70,15 +70,18 @@ mod tests {
+     #[cfg(windows)]
+     use std::os::windows::fs::symlink_file;
+ 
+-    fn create_file_link() {
++    fn create_file_link() -> tempfile::TempDir {
+         #[cfg(unix)]
+-        if let Err(e) = symlink("abbbc", "test_data/links/link-f") {
++        let testdir = tempfile::TempDir::new().unwrap();
++        std::fs::copy("test_data/links/abbbc",testdir.path().join("abbbc"));
++        if let Err(e) = symlink("abbbc", testdir.path().join("link-f")) {
+             assert!(
+                 e.kind() == ErrorKind::AlreadyExists,
+                 "Failed to create sym link: {:?}",
+                 e
+             );
+         }
++        return testdir;
+         #[cfg(windows)]
+         if let Err(e) = symlink_file("abbbc", "test_data/links/link-f") {
+             assert!(
+@@ -91,9 +94,9 @@ mod tests {
+ 
+     #[test]
+     fn matches_against_link_target() {
+-        create_file_link();
++        let testdir = create_file_link();
+ 
+-        let link_f = get_dir_entry_for("test_data/links", "link-f");
++        let link_f = get_dir_entry_for(testdir.path().as_os_str().to_str().unwrap(), "link-f");
+         let matcher = LinkNameMatcher::new("ab?bc", false);
+         let deps = FakeDependencies::new();
+         assert!(matcher.matches(&link_f, &mut deps.new_matcher_io()));
+@@ -101,9 +104,9 @@ mod tests {
+ 
+     #[test]
+     fn caseless_matches_against_link_target() {
+-        create_file_link();
++        let testdir = create_file_link();
+ 
+-        let link_f = get_dir_entry_for("test_data/links", "link-f");
++        let link_f = get_dir_entry_for(testdir.path().as_os_str().to_str().unwrap(), "link-f");
+         let matcher = LinkNameMatcher::new("AbB?c", true);
+         let deps = FakeDependencies::new();
+         assert!(matcher.matches(&link_f, &mut deps.new_matcher_io()));
+Index: findutils/src/find/matchers/name.rs
+===================================================================
+--- findutils.orig/src/find/matchers/name.rs
++++ findutils/src/find/matchers/name.rs
+@@ -44,15 +44,18 @@ mod tests {
+     #[cfg(windows)]
+     use std::os::windows::fs::symlink_file;
+ 
+-    fn create_file_link() {
++    fn create_file_link() -> tempfile::TempDir {
+         #[cfg(unix)]
+-        if let Err(e) = symlink("abbbc", "test_data/links/link-f") {
++        let testdir = tempfile::TempDir::new().unwrap();
++        std::fs::copy("test_data/links/abbbc",testdir.path().join("abbbc"));
++        if let Err(e) = symlink("abbbc", testdir.path().join("link-f")) {
+             assert!(
+                 e.kind() == ErrorKind::AlreadyExists,
+                 "Failed to create sym link: {:?}",
+                 e
+             );
+         }
++        return testdir;
+         #[cfg(windows)]
+         if let Err(e) = symlink_file("abbbc", "test_data/links/link-f") {
+             assert!(
+@@ -89,9 +92,9 @@ mod tests {
+ 
+     #[test]
+     fn matches_against_link_file_name() {
+-        create_file_link();
++        let testdir = create_file_link();
+ 
+-        let link_f = get_dir_entry_for("test_data/links", "link-f");
++        let link_f = get_dir_entry_for(testdir.path().as_os_str().to_str().unwrap(), "link-f");
+         let matcher = NameMatcher::new("link?f", false);
+         let deps = FakeDependencies::new();
+         assert!(matcher.matches(&link_f, &mut deps.new_matcher_io()));
+@@ -123,9 +126,9 @@ mod tests {
+ 
+     #[test]
+     fn caseless_matches_against_link_file_name() {
+-        create_file_link();
++        let testdir = create_file_link();
+ 
+-        let link_f = get_dir_entry_for("test_data/links", "link-f");
++        let link_f = get_dir_entry_for(testdir.path().as_os_str().to_str().unwrap(), "link-f");
+         let matcher = NameMatcher::new("linK?f", true);
+         let deps = FakeDependencies::new();
+         assert!(matcher.matches(&link_f, &mut deps.new_matcher_io()));
+Index: findutils/src/find/matchers/printf.rs
+===================================================================
+--- findutils.orig/src/find/matchers/printf.rs
++++ findutils/src/find/matchers/printf.rs
+@@ -945,37 +945,41 @@ mod tests {
+ 
+     #[test]
+     fn test_printf_symlinks() {
++        let testdir = tempfile::TempDir::new().unwrap();
++        std::fs::copy("test_data/links/abbbc",testdir.path().join("abbbc"));
++        std::fs::create_dir(testdir.path().join("subdir"));
++        std::fs::copy("test_data/links/subdir/test",testdir.path().join("subdir/test"));
+         #[cfg(unix)]
+         {
+-            if let Err(e) = symlink("abbbc", "test_data/links/link-f") {
++            if let Err(e) = symlink("abbbc", testdir.path().join("link-f")) {
+                 assert!(
+                     e.kind() == ErrorKind::AlreadyExists,
+                     "Failed to create sym link: {:?}",
+                     e
+                 );
+             }
+-            if let Err(e) = symlink("subdir", "test_data/links/link-d") {
++            if let Err(e) = symlink("subdir", testdir.path().join("link-d")) {
+                 assert!(
+                     e.kind() == ErrorKind::AlreadyExists,
+                     "Failed to create sym link: {:?}",
+                     e
+                 );
+             }
+-            if let Err(e) = symlink("missing", "test_data/links/link-missing") {
++            if let Err(e) = symlink("missing", testdir.path().join("link-missing")) {
+                 assert!(
+                     e.kind() == ErrorKind::AlreadyExists,
+                     "Failed to create sym link: {:?}",
+                     e
+                 );
+             }
+-            if let Err(e) = symlink("abbbc/x", "test_data/links/link-notdir") {
++            if let Err(e) = symlink("abbbc/x", testdir.path().join("link-notdir")) {
+                 assert!(
+                     e.kind() == ErrorKind::AlreadyExists,
+                     "Failed to create sym link: {:?}",
+                     e
+                 );
+             }
+-            if let Err(e) = symlink("link-loop", "test_data/links/link-loop") {
++            if let Err(e) = symlink("link-loop", testdir.path().join("link-loop")) {
+                 assert!(
+                     e.kind() == ErrorKind::AlreadyExists,
+                     "Failed to create sym link: {:?}",
+@@ -1016,12 +1020,12 @@ mod tests {
+         }
+ 
+         let regular_file = get_dir_entry_for("test_data/simple", "abbbc");
+-        let link_f = get_dir_entry_for("test_data/links", "link-f");
+-        let link_d = get_dir_entry_for("test_data/links", "link-d");
+-        let link_missing = get_dir_entry_for("test_data/links", "link-missing");
+-        let link_notdir = get_dir_entry_for("test_data/links", "link-notdir");
++        let link_f = get_dir_entry_for(testdir.path().as_os_str().to_str().unwrap(), "link-f");
++        let link_d = get_dir_entry_for(testdir.path().as_os_str().to_str().unwrap(), "link-d");
++        let link_missing = get_dir_entry_for(testdir.path().as_os_str().to_str().unwrap(), "link-missing");
++        let link_notdir = get_dir_entry_for(testdir.path().as_os_str().to_str().unwrap(), "link-notdir");
+         #[cfg(unix)]
+-        let link_loop = get_dir_entry_for("test_data/links", "link-loop");
++        let link_loop = get_dir_entry_for(testdir.path().as_os_str().to_str().unwrap(), "link-loop");
+ 
+         let deps = FakeDependencies::new();
+ 
+Index: findutils/src/find/matchers/type_matcher.rs
+===================================================================
+--- findutils.orig/src/find/matchers/type_matcher.rs
++++ findutils/src/find/matchers/type_matcher.rs
+@@ -107,16 +107,22 @@ mod tests {
+     // so we have to create links in test
+     #[test]
+     fn link_type_matcher() {
++        let testdir = tempfile::TempDir::new().unwrap();
++        let linksdir = testdir.path().join("links");
++        std::fs::create_dir(&linksdir);
++        std::fs::copy("test_data/links/abbbc",linksdir.join("abbbc"));
++        std::fs::create_dir(linksdir.join("subdir"));
++        std::fs::copy("test_data/links/subdir/test",linksdir.join("subdir/test"));
+         #[cfg(unix)]
+         {
+-            if let Err(e) = symlink("abbbc", "test_data/links/link-f") {
++            if let Err(e) = symlink("abbbc", linksdir.join("link-f")) {
+                 assert!(
+                     e.kind() == ErrorKind::AlreadyExists,
+                     "Failed to create sym link: {:?}",
+                     e
+                 );
+             }
+-            if let Err(e) = symlink("subdir", "test_data/links/link-d") {
++            if let Err(e) = symlink("subdir", linksdir.join("link-d")) {
+                 assert!(
+                     e.kind() == ErrorKind::AlreadyExists,
+                     "Failed to create sym link: {:?}",
+@@ -142,10 +148,10 @@ mod tests {
+             }
+         };
+ 
+-        let link_f = get_dir_entry_for("test_data/links", "link-f");
+-        let link_d = get_dir_entry_for("test_data/links", "link-d");
+-        let file = get_dir_entry_for("test_data/links", "abbbc");
+-        let dir = get_dir_entry_for("test_data", "links");
++        let link_f = get_dir_entry_for(linksdir.as_os_str().to_str().unwrap(), "link-f");
++        let link_d = get_dir_entry_for(linksdir.as_os_str().to_str().unwrap(), "link-d");
++        let file = get_dir_entry_for(linksdir.as_os_str().to_str().unwrap(), "abbbc");
++        let dir = get_dir_entry_for(testdir.path().as_os_str().to_str().unwrap(), "links");
+         let deps = FakeDependencies::new();
+ 
+         let matcher = TypeMatcher::new("l").unwrap();
+Index: findutils/src/find/mod.rs
+===================================================================
+--- findutils.orig/src/find/mod.rs
++++ findutils/src/find/mod.rs
+@@ -335,15 +335,18 @@ mod tests {
+         }
+     }
+ 
+-    fn create_file_link() {
++    fn create_file_link() -> tempfile::TempDir {
+         #[cfg(unix)]
+-        if let Err(e) = symlink("abbbc", "test_data/links/link-f") {
++        let testdir = tempfile::TempDir::new().unwrap();
++        std::fs::copy("test_data/links/abbbc",testdir.path().join("abbbc"));
++        if let Err(e) = symlink("abbbc", testdir.path().join("link-f")) {
+             assert!(
+                 e.kind() == ErrorKind::AlreadyExists,
+                 "Failed to create sym link: {:?}",
+                 e
+             );
+         }
++        return testdir;
+         #[cfg(windows)]
+         if let Err(e) = symlink_file("abbbc", "test_data/links/link-f") {
+             assert!(
+@@ -770,13 +773,13 @@ mod tests {
+ 
+     #[test]
+     fn find_name_links() {
+-        create_file_link();
++        let testdir = create_file_link();
+ 
+         let deps = FakeDependencies::new();
+         let rc = find_main(
+             &[
+                 "find",
+-                &fix_up_slashes("./test_data/links"),
++                &fix_up_slashes(testdir.path().to_str().unwrap()),
+                 "-name",
+                 "abbbc",
+             ],
+@@ -786,19 +789,19 @@ mod tests {
+         assert_eq!(rc, 0);
+         assert_eq!(
+             deps.get_output_as_string(),
+-            fix_up_slashes("./test_data/links/abbbc\n")
++            fix_up_slashes(&(testdir.path().to_str().unwrap().to_owned()+"/abbbc\n"))
+         );
+     }
+ 
+     #[test]
+     fn find_lname_links() {
+-        create_file_link();
++        let testdir = create_file_link();
+ 
+         let deps = FakeDependencies::new();
+         let rc = find_main(
+             &[
+                 "find",
+-                &fix_up_slashes("./test_data/links"),
++                &fix_up_slashes(testdir.path().to_str().unwrap()),
+                 "-lname",
+                 "abbbc",
+                 "-sorted",
+@@ -809,19 +812,19 @@ mod tests {
+         assert_eq!(rc, 0);
+         assert_eq!(
+             deps.get_output_as_string(),
+-            fix_up_slashes("./test_data/links/link-f\n")
++            fix_up_slashes(&(testdir.path().to_str().unwrap().to_owned()+"/link-f\n"))
+         );
+     }
+ 
+     #[test]
+     fn find_ilname_links() {
+-        create_file_link();
++        let testdir = create_file_link();
+ 
+         let deps = FakeDependencies::new();
+         let rc = find_main(
+             &[
+                 "find",
+-                &fix_up_slashes("./test_data/links"),
++                &fix_up_slashes(testdir.path().to_str().unwrap()),
+                 "-ilname",
+                 "abBbc",
+             ],
+@@ -831,7 +834,7 @@ mod tests {
+         assert_eq!(rc, 0);
+         assert_eq!(
+             deps.get_output_as_string(),
+-            fix_up_slashes("./test_data/links/link-f\n")
++            fix_up_slashes(&(testdir.path().to_str().unwrap().to_owned()+"/link-f\n"))
+         );
+     }
+ 
