@@ -1,0 +1,101 @@
+Index: libheif-sys/Cargo.toml
+===================================================================
+--- libheif-sys.orig/Cargo.toml
++++ libheif-sys/Cargo.toml
+@@ -27,37 +27,10 @@ keywords = [
+ license = "MIT"
+ repository = "https://github.com/cykooz/libheif-sys"
+ 
+-[[package.metadata.release.pre-release-replacements]]
+-file = "CHANGELOG.md"
+-replace = "{{version}}"
+-search = "Unreleased"
+-
+-[[package.metadata.release.pre-release-replacements]]
+-file = "CHANGELOG.md"
+-replace = "{{date}}"
+-search = "ReleaseDate"
+-
+-[package.metadata.vcpkg]
+-dependencies = ["libheif"]
+-git = "https://github.com/microsoft/vcpkg"
+-tag = "2023.06.20"
+-
+-[package.metadata.vcpkg.target.x86_64-pc-windows-msvc]
+-dependencies = ["libheif"]
+-triplet = "x64-windows-static-md"
+ 
+ [dependencies.libc]
+ version = "0.2"
+ 
+-[build-dependencies.bindgen]
+-version = "0.66"
+-optional = true
+-
+ [build-dependencies.pkg-config]
+ version = "0.3"
+ 
+-[build-dependencies.vcpkg]
+-version = "0.2"
+-
+-[features]
+-use-bindgen = ["dep:bindgen"]
+Index: libheif-sys/build.rs
+===================================================================
+--- libheif-sys.orig/build.rs
++++ libheif-sys/build.rs
+@@ -1,51 +1,5 @@
+-fn main() {
+-    if std::env::var("DOCS_RS").is_ok() {
+-        // Don't link with libheif in case of building documentation for docs.rs.
+-        return;
+-    }
+-
+-    // Tell cargo to tell rustc to link the system heif
+-    // shared library.
+-    #[cfg(not(target_os = "windows"))]
+-    if let Err(err) = pkg_config::Config::new()
+-        .atleast_version("1.16")
+-        .probe("libheif")
+-    {
+-        println!("cargo:warning={}", err);
+-        std::process::exit(1);
+-    }
+-    #[cfg(target_os = "windows")]
+-    if let Err(err) = vcpkg::find_package("libheif") {
+-        println!("cargo:warning={}", err);
+-        std::process::exit(1);
+-    }
++extern crate pkg_config;
+ 
+-    #[cfg(feature = "use-bindgen")]
+-    {
+-        use std::env;
+-        use std::path::PathBuf;
+-        // The bindgen::Builder is the main entry point
+-        // to bindgen, and lets you build up options for
+-        // the resulting bindings.
+-        let bindings = bindgen::Builder::default()
+-            // The input header we would like to generate
+-            // bindings for.
+-            .header("wrapper.h")
+-            .generate_comments(true)
+-            .use_core()
+-            .ctypes_prefix("libc")
+-            .allowlist_function("heif_.*")
+-            .allowlist_type("heif_.*")
+-            .size_t_is_usize(true)
+-            // Finish the builder and generate the bindings.
+-            .generate()
+-            // Unwrap the Result and panic on failure.
+-            .expect("Unable to generate bindings");
+-
+-        // Write the bindings to the $OUT_DIR/bindings.rs file.
+-        let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+-        bindings
+-            .write_to_file(out_path.join("bindings.rs"))
+-            .expect("Couldn't write bindings!");
+-    }
++fn main() {
++    pkg_config::probe_library("libheif").unwrap();
+ }
