@@ -1,0 +1,57 @@
+Description: Ignore these functions when cache feature is not enabled
+ This permits the tests that don't have the cache feature to not fail on these
+Forwarded: https://github.com/pdf-rs/pdf/pull/209
+Last-Update: 2024-01-18
+
+--- a/examples/content.rs
++++ b/examples/content.rs
+@@ -7,6 +7,7 @@
+ use pdf::object::*;
+ use pdf::build::*;
+ 
++#[cfg(feature="cache")]
+ fn main() -> Result<(), PdfError> {
+     let path = PathBuf::from(env::args_os().nth(1).expect("no file given"));
+     
+--- a/examples/metadata.rs
++++ b/examples/metadata.rs
+@@ -5,6 +5,7 @@
+ use pdf::object::{FieldDictionary, FieldType, Resolve};
+ 
+ /// extract and print a PDF's metadata
++#[cfg(feature="cache")]
+ fn main() -> Result<(), PdfError> {
+     let path = args()
+         .nth(1)
+--- a/examples/names.rs
++++ b/examples/names.rs
+@@ -60,6 +60,7 @@
+     }
+ }
+ 
++#[cfg(feature="cache")]
+ fn main() {
+     let path = args().nth(1).expect("no file given");
+     println!("read: {}", path);
+--- a/examples/read.rs
++++ b/examples/read.rs
+@@ -11,7 +11,7 @@
+ use pdf::error::PdfError;
+ use pdf::enc::StreamFilter;
+ 
+-
++#[cfg(feature="cache")]
+ fn main() -> Result<(), PdfError> {
+     let path = args().nth(1).expect("no file given");
+     println!("read: {}", path);
+--- a/tests/integration.rs
++++ b/tests/integration.rs
+@@ -23,7 +23,7 @@
+ #[test]
+ fn open_file() {
+     let _ = run!(FileOptions::uncached().open(file_path!("example.pdf")));
+-    #[cfg(feature = "mmap")]
++    #[cfg(all(feature = "mmap", feature = "cache"))]
+     let _ = run!({
+         use memmap2::Mmap;
+         let file = std::fs::File::open(file_path!("example.pdf")).expect("can't open file");
