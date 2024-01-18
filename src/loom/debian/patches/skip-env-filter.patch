@@ -1,0 +1,37 @@
+Description: skip env-filter feature of tracing_subscriber. It can be
+ restored when rust-tracing-subscriber restores the env-filter, ie. when
+ bug #1053420 is fixed.
+ .
+ The packages that use "loom" are "state".
+ The packages that use "state" are "czkawka_core"
+ .
+ Neither state, nor czkawka_* use the LOOM_LOG env var
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -62,7 +62,6 @@
+ 
+ [dependencies.tracing-subscriber]
+ version = "0.3"
+-features = ["env-filter"]
+ 
+ [dev-dependencies.futures-util]
+ version = "0.3.0"
+--- a/src/model.rs
++++ b/src/model.rs
+@@ -6,7 +6,7 @@
+ use std::time::{Duration, Instant};
+ 
+ use tracing::{info, subscriber};
+-use tracing_subscriber::{fmt, EnvFilter};
++use tracing_subscriber::{fmt};
+ 
+ const DEFAULT_MAX_THREADS: usize = 4;
+ const DEFAULT_MAX_BRANCHES: usize = 1_000;
+@@ -225,7 +225,6 @@
+     F: Fn() + Sync + Send + 'static,
+ {
+     let subscriber = fmt::Subscriber::builder()
+-        .with_env_filter(EnvFilter::from_env("LOOM_LOG"))
+         .with_test_writer()
+         .without_time()
+         .finish();
