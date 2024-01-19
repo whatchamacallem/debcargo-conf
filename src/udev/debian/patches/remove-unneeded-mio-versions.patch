@@ -1,0 +1,99 @@
+Author: Maytham Alsudany <maytha8thedev@gmail.com>
+Forwarded: not-needed
+Last-Update: 2023-12-11
+Description: remove unneeded mio versions
+ The different mio features (mio06, mio07, mio08) all depend on different
+ versions of mio (by design).
+ .
+ I've patched out 0.6 and 0.7 as there's no point in having these features as
+ they're not being used by any packages. If any packages come along that need
+ mio06/07, then the patch can be modified.
+ .
+ I'm aware that librust-mio-0.6-dev exists, so if needed, I can keep the
+ mio06 feature. But I don't think its reasonable to package mio-0.7 for an
+ unused feature.
+ .
+ Discussed at https://salsa.debian.org/rust-team/debcargo-conf/-/merge_requests/568#note_447851
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -38,17 +38,6 @@
+ [dependencies.libudev-sys]
+ version = "0.1.4"
+ 
+-[dependencies.mio06]
+-version = "^0.6.21"
+-optional = true
+-package = "mio"
+-
+-[dependencies.mio07]
+-version = "0.7"
+-features = ["os-ext"]
+-optional = true
+-package = "mio"
+-
+ [dependencies.mio08]
+ version = "0.8"
+ features = ["os-ext"]
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -7,10 +7,6 @@
+ extern crate io_lifetimes;
+ extern crate libc;
+ pub extern crate libudev_sys as ffi;
+-#[cfg(feature = "mio06")]
+-extern crate mio06;
+-#[cfg(feature = "mio07")]
+-extern crate mio07;
+ #[cfg(feature = "mio08")]
+ extern crate mio08;
+ 
+--- a/src/monitor.rs
++++ b/src/monitor.rs
+@@ -7,10 +7,6 @@
+ use std::os::unix::io::{AsRawFd, RawFd};
+ 
+ use io_lifetimes::{AsFd, BorrowedFd};
+-#[cfg(feature = "mio06")]
+-use mio06::{event::Evented, unix::EventedFd, Poll, PollOpt, Ready, Token};
+-#[cfg(feature = "mio07")]
+-use mio07::{event::Source, unix::SourceFd, Interest, Registry, Token};
+ #[cfg(feature = "mio08")]
+ use mio08::{event::Source, unix::SourceFd, Interest, Registry, Token};
+ 
+@@ -307,34 +303,7 @@
+     }
+ }
+ 
+-#[cfg(feature = "mio06")]
+-impl Evented for Socket {
+-    fn register(
+-        &self,
+-        poll: &Poll,
+-        token: Token,
+-        interest: Ready,
+-        opts: PollOpt,
+-    ) -> std::io::Result<()> {
+-        EventedFd(&self.as_raw_fd()).register(poll, token, interest, opts)
+-    }
+-
+-    fn reregister(
+-        &self,
+-        poll: &Poll,
+-        token: Token,
+-        interest: Ready,
+-        opts: PollOpt,
+-    ) -> std::io::Result<()> {
+-        EventedFd(&self.as_raw_fd()).reregister(poll, token, interest, opts)
+-    }
+-
+-    fn deregister(&self, poll: &Poll) -> std::io::Result<()> {
+-        EventedFd(&self.as_raw_fd()).deregister(poll)
+-    }
+-}
+-
+-#[cfg(any(feature = "mio07", feature = "mio08"))]
++#[cfg(any(feature = "mio08"))]
+ impl Source for Socket {
+     fn register(
+         &mut self,

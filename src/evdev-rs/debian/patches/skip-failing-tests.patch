@@ -1,0 +1,76 @@
+From: Maytham Alsudany <maytha8thedev@gmail.com>
+Forwarded: no
+Description: skip failing tests
+ These tests rely on /dev/input/event0 (which does not exist in a chroot).
+
+--- a/tests/all.rs
++++ b/tests/all.rs
+@@ -8,17 +8,20 @@
+     assert!(UninitDevice::new().is_some());
+ }
+ 
++#[ignore = "broken in Debian"]
+ #[test]
+ fn context_create_with_file() {
+     let f = File::open("/dev/input/event0").unwrap();
+     let _d = Device::new_from_file(f).unwrap();
+ }
+ 
++#[ignore = "broken in Debian"]
+ #[test]
+ fn context_create_with_path() {
+     let _d = Device::new_from_path("/dev/input/event0").unwrap();
+ }
+ 
++#[ignore = "broken in Debian"]
+ #[test]
+ fn context_set_file() {
+     let d = UninitDevice::new().unwrap();
+@@ -26,6 +29,7 @@
+     let _device = d.set_file(f).unwrap();
+ }
+ 
++#[ignore = "broken in Debian"]
+ #[test]
+ fn context_change_file() {
+     let d = UninitDevice::new().unwrap();
+@@ -39,6 +43,7 @@
+     assert_eq!(d.file().as_raw_fd(), f2_fd);
+ }
+ 
++#[ignore = "broken in Debian"]
+ #[test]
+ fn context_grab() {
+     let mut d = Device::new_from_path("/dev/input/event0").unwrap();
+@@ -102,6 +107,7 @@
+     assert_eq!(d.version(), 5);
+ }
+ 
++#[ignore = "broken in Debian"]
+ #[test]
+ fn device_get_absinfo() {
+     let d = Device::new_from_path("/dev/input/event0").unwrap();
+@@ -115,6 +121,7 @@
+     }
+ }
+ 
++#[ignore = "broken in Debian"]
+ #[test]
+ fn device_has_property() {
+     let d = Device::new_from_path("/dev/input/event0").unwrap();
+@@ -154,6 +161,7 @@
+     assert!(!d.has(code));
+ }
+ 
++#[ignore = "broken in Debian"]
+ #[test]
+ fn device_has_syn() {
+     let d = UninitDevice::new().unwrap();
+@@ -165,6 +173,7 @@
+     assert!(d.has(EventCode::EV_SYN(EV_SYN::SYN_REPORT))); // SYN_REPORT
+ }
+ 
++#[ignore = "broken in Debian"]
+ #[test]
+ fn device_get_value() {
+     let d = UninitDevice::new().unwrap();
