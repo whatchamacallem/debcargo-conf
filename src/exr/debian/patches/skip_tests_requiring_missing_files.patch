@@ -1,0 +1,291 @@
+Description: Skip tests that fails because of missing files
+ The files used to run the tests are not shipped in the crate
+
+--- a/src/compression/b44/mod.rs
++++ b/src/compression/b44/mod.rs
+@@ -958,6 +958,7 @@
+         assert_eq!(decompressed.len(), 60);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn border_on_multiview() {
+         // This test is hard to reproduce, so we use the direct image.
+--- a/src/image/mod.rs
++++ b/src/image/mod.rs
+@@ -1221,6 +1221,7 @@
+             expect_valid(&lossy, &lossy, false, true);
+         }
+ 
++        #[ignore]
+         #[test]
+         fn test_error(){
+ 
+--- a/tests/across_compression.rs
++++ b/tests/across_compression.rs
+@@ -91,139 +91,166 @@
+ }
+ 
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_zip_f32() {
+     expect_eq_uncompressed("f32", "zip.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_zip_f16() {
+     expect_eq_uncompressed("f16", "zip.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_zips_f32() {
+     expect_eq_uncompressed("f32", "zips.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_zips_f16() {
+     expect_eq_uncompressed("f16", "zips.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_b44_f32() {
+     expect_eq_uncompressed("f32", "b44.exr"); // f32s are not compressed in b44 and can be compared exactly
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_b44_f16() {
+     expect_eq_other("f16", "b44.exr", "decompressed_b44.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_b44a_f32() {
+     expect_eq_uncompressed("f32", "b44a.exr"); // f32s are not compressed in b44 and can be compared exactly
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_b44a_f16() {
+     expect_eq_other("f16", "b44a.exr", "decompressed_b44a.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_dwaa_f32() {
+     expect_eq_other("f32", "dwaa.exr", "decompressed_dwaa.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_dwaa_f16() {
+     expect_eq_other("f16", "dwaa.exr", "decompressed_dwaa.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_dwab_f32() {
+     expect_eq_other("f32", "dwab.exr", "decompressed_dwab.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_dwab_f16() {
+     expect_eq_other("f16", "dwab.exr", "decompressed_dwab.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_piz_f32() {
+     expect_eq_uncompressed("f32", "piz.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_piz_f16() {
+     expect_eq_uncompressed("f16", "piz.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_rle_f32() {
+     expect_eq_uncompressed("f32", "rle.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_compression_contents_rle_f16() {
+     expect_eq_uncompressed("f16", "rle.exr");
+ }
+ 
+ 
++#[ignore]
+ #[test]
+ #[cfg(target_endian = "little")] // TODO make it work on big endian
+ fn compare_compression_contents_pxr24_f16() {
+     expect_eq_other("f16", "pxr24.exr", "decompressed_pxr24.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ #[cfg(target_endian = "little")] // TODO make it work on big endian
+ fn compare_compression_contents_pxr24_f32() {
+     expect_eq_other("f32", "pxr24.exr", "decompressed_pxr24.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_png_to_uncompressed_f16() {
+     expect_eq_png("f16_uncompressed.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_png_to_piz_f16() {
+     expect_eq_png("f16_piz.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_png_to_rle_f16() {
+     expect_eq_png("f16_rle.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_png_to_zip_f16() {
+     expect_eq_png("f16_zip.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_png_to_zips_f16() {
+     expect_eq_png("f16_zips.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_png_to_dwaa_f16() {
+     expect_eq_png("f16_dwaa.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_png_to_b44_f16() {
+     expect_eq_png("f16_b44.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_png_to_b44a_f16() {
+     expect_eq_png("f16_b44a.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ #[cfg(target_endian = "little")] // TODO make it work on big endian
+ fn compare_png_to_pxr24_f16() {
+@@ -231,31 +258,37 @@
+ }
+ 
+ 
++#[ignore]
+ #[test]
+ fn compare_png_to_uncompressed_f32() {
+     expect_eq_png("f32_uncompressed.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_png_to_piz_f32() {
+     expect_eq_png("f32_piz.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_png_to_rle_f32() {
+     expect_eq_png("f32_rle.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_png_to_zip_f32() {
+     expect_eq_png("f32_zip.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ fn compare_png_to_dwaa_f32() {
+     expect_eq_png("f32_dwaa.exr");
+ }
+ 
++#[ignore]
+ #[test]
+ #[cfg(target_endian = "little")] // TODO make it work on big endian
+ fn compare_png_to_pxr24_f32() {
+--- a/tests/fuzz.rs
++++ b/tests/fuzz.rs
+@@ -25,6 +25,7 @@
+ 
+ 
+ /// Just don't panic.
++#[ignore]
+ #[test]
+ pub fn fuzzed(){
+     for ref file in exr_files("tests/images/fuzzed", false) {
+@@ -37,6 +38,7 @@
+ }
+ 
+ /// Require an error but no panic.
++#[ignore]
+ #[test]
+ pub fn damaged(){
+     let mut passed = true;
+--- a/tests/roundtrip.rs
++++ b/tests/roundtrip.rs
+@@ -16,6 +16,7 @@
+ use rayon::iter::ParallelIterator;
+ use exr::block::samples::IntoNativeSample;
+ 
++#[ignore]
+ #[test]
+ fn roundtrip_all_files_in_repository_x4(){
+     check_all_files_in_repo(|path|{
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -38,6 +38,7 @@
+ ]
+ license = "BSD-3-Clause"
+ repository = "https://github.com/johannesvollmer/exrs"
++autobenches = false
+ 
+ [profile.bench]
+ opt-level = 3
+@@ -79,22 +80,6 @@
+ plugin = false
+ proc-macro = false
+ 
+-[[bench]]
+-name = "read"
+-harness = false
+-
+-[[bench]]
+-name = "profiling"
+-harness = false
+-
+-[[bench]]
+-name = "write"
+-harness = false
+-
+-[[bench]]
+-name = "pixel_format_conversion"
+-harness = false
+-
+ [dependencies.bit_field]
+ version = "^0.10.1"
+ 
