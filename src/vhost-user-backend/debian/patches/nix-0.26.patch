@@ -1,0 +1,37 @@
+Index: vhost-user-backend/Cargo.toml
+===================================================================
+--- vhost-user-backend.orig/Cargo.toml
++++ vhost-user-backend/Cargo.toml
+@@ -50,7 +50,7 @@ features = [
+ version = "0.12.1"
+ 
+ [dev-dependencies.nix]
+-version = "0.27"
++version = ">= 0.26, <0.28"
+ features = ["fs"]
+ 
+ [dev-dependencies.tempfile]
+Index: vhost-user-backend/tests/vhost-user-server.rs
+===================================================================
+--- vhost-user-backend.orig/tests/vhost-user-server.rs
++++ vhost-user-backend/tests/vhost-user-server.rs
+@@ -2,6 +2,7 @@ use std::ffi::CString;
+ use std::fs::File;
+ use std::io::Result;
+ use std::os::unix::io::AsRawFd;
++use std::os::fd::FromRawFd;
+ use std::os::unix::net::UnixStream;
+ use std::path::Path;
+ use std::sync::{Arc, Barrier, Mutex};
+@@ -156,7 +157,10 @@ fn vhost_user_client(path: &Path, barrie
+         nix::sys::memfd::MemFdCreateFlag::empty(),
+     )
+     .unwrap();
+-    let file = File::from(memfd);
++    // we do this conversion in a slightly roundabout way to support
++    // both nix 0.26 and nix 0.27.
++    let file = unsafe { File::from_raw_fd(memfd.as_raw_fd()) };
++    std::mem::forget(memfd); //prevent double close of file under nix 0.27.
+     file.set_len(0x100000).unwrap();
+     let file_offset = FileOffset::new(file, 0);
+     let mem = GuestMemoryMmap::<()>::from_ranges_with_files(&[(
