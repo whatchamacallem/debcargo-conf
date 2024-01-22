@@ -2,6 +2,18 @@
 %:
 	dh $@ --buildsystem cargo
 
+MANPAGES_SRC = $(wildcard extra/man/*.scd)
+MANPAGES = $(patsubst %.scd,%,$(MANPAGES_SRC))
+
+execute_before_dh_auto_clean:
+	rm -f $(MANPAGES)
+
+$(MANPAGES): %: %.scd
+	scdoc < $< > $@
+
+execute_before_dh_installman:
+	$(MAKE) -f debian/rules $(MANPAGES)
+
 override_dh_install:
 	# Rename the logo so it aligns with the desktop file
 	cp extra/logo/alacritty-term.svg extra/logo/Alacritty.svg
