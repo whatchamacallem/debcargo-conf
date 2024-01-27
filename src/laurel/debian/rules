@@ -1,0 +1,20 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo --with sysuser
+
+override_dh_auto_build:
+	dh_auto_build
+	make -C man
+
+override_dh_auto_clean:
+	dh_auto_clean
+	make -C man clean
+
+override_dh_auto_install:
+	dh_auto_install
+	mv debian/laurel/usr/bin debian/laurel/usr/sbin
+
+override_dh_install:
+	dh_install
+	sed -i 's/usr\/local/usr/' debian/laurel/etc/audit/plugins.d/laurel.conf
+	sed -i 's/^read-users/# read-users/' debian/laurel/etc/laurel/config.toml
