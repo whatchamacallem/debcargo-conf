@@ -88,7 +88,7 @@ Index: crossbeam-channel/tests/mpsc.rs
  //! Tests copied from `std::sync::mpsc`.
  //!
  //! This is a copy of tests for the `std::sync::mpsc` channels from the standard library, but
-@@ -33,16 +34,19 @@ use std::time::Duration;
+@@ -29,16 +30,19 @@ use std::time::Duration;
  
  use crossbeam_channel as cc;
  
@@ -108,7 +108,7 @@ Index: crossbeam-channel/tests/mpsc.rs
  impl<T> Clone for Sender<T> {
      fn clone(&self) -> Sender<T> {
          Sender {
-@@ -51,10 +55,12 @@ impl<T> Clone for Sender<T> {
+@@ -47,10 +51,12 @@ impl<T> Clone for Sender<T> {
      }
  }
  
@@ -121,7 +121,7 @@ Index: crossbeam-channel/tests/mpsc.rs
  impl<T> SyncSender<T> {
      pub fn send(&self, t: T) -> Result<(), SendError<T>> {
          self.inner.send(t).map_err(|cc::SendError(m)| SendError(m))
-@@ -68,6 +74,7 @@ impl<T> SyncSender<T> {
+@@ -64,6 +70,7 @@ impl<T> SyncSender<T> {
      }
  }
  
@@ -129,7 +129,7 @@ Index: crossbeam-channel/tests/mpsc.rs
  impl<T> Clone for SyncSender<T> {
      fn clone(&self) -> SyncSender<T> {
          SyncSender {
-@@ -76,10 +83,12 @@ impl<T> Clone for SyncSender<T> {
+@@ -72,10 +79,12 @@ impl<T> Clone for SyncSender<T> {
      }
  }
  
@@ -142,7 +142,7 @@ Index: crossbeam-channel/tests/mpsc.rs
  impl<T> Receiver<T> {
      pub fn try_recv(&self) -> Result<T, TryRecvError> {
          self.inner.try_recv().map_err(|err| match err {
-@@ -108,6 +117,7 @@ impl<T> Receiver<T> {
+@@ -104,6 +113,7 @@ impl<T> Receiver<T> {
      }
  }
  
@@ -150,7 +150,7 @@ Index: crossbeam-channel/tests/mpsc.rs
  impl<'a, T> IntoIterator for &'a Receiver<T> {
      type Item = T;
      type IntoIter = Iter<'a, T>;
-@@ -117,6 +127,7 @@ impl<'a, T> IntoIterator for &'a Receive
+@@ -113,6 +123,7 @@ impl<'a, T> IntoIterator for &'a Receive
      }
  }
  
@@ -158,7 +158,7 @@ Index: crossbeam-channel/tests/mpsc.rs
  impl<T> IntoIterator for Receiver<T> {
      type Item = T;
      type IntoIter = IntoIter<T>;
-@@ -126,10 +137,12 @@ impl<T> IntoIterator for Receiver<T> {
+@@ -122,10 +133,12 @@ impl<T> IntoIterator for Receiver<T> {
      }
  }
  
@@ -171,7 +171,7 @@ Index: crossbeam-channel/tests/mpsc.rs
  impl<'a, T> Iterator for TryIter<'a, T> {
      type Item = T;
  
-@@ -138,10 +151,12 @@ impl<'a, T> Iterator for TryIter<'a, T>
+@@ -134,10 +147,12 @@ impl<'a, T> Iterator for TryIter<'a, T>
      }
  }
  
@@ -184,7 +184,7 @@ Index: crossbeam-channel/tests/mpsc.rs
  impl<'a, T> Iterator for Iter<'a, T> {
      type Item = T;
  
-@@ -150,10 +165,12 @@ impl<'a, T> Iterator for Iter<'a, T> {
+@@ -146,10 +161,12 @@ impl<'a, T> Iterator for Iter<'a, T> {
      }
  }
  
@@ -197,7 +197,7 @@ Index: crossbeam-channel/tests/mpsc.rs
  impl<T> Iterator for IntoIter<T> {
      type Item = T;
  
-@@ -162,6 +179,7 @@ impl<T> Iterator for IntoIter<T> {
+@@ -158,6 +175,7 @@ impl<T> Iterator for IntoIter<T> {
      }
  }
  
@@ -205,7 +205,7 @@ Index: crossbeam-channel/tests/mpsc.rs
  pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
      let (s, r) = cc::unbounded();
      let s = Sender { inner: s };
-@@ -169,6 +187,7 @@ pub fn channel<T>() -> (Sender<T>, Recei
+@@ -165,6 +183,7 @@ pub fn channel<T>() -> (Sender<T>, Recei
      (s, r)
  }
  
@@ -213,7 +213,7 @@ Index: crossbeam-channel/tests/mpsc.rs
  pub fn sync_channel<T>(bound: usize) -> (SyncSender<T>, Receiver<T>) {
      let (s, r) = cc::bounded(bound);
      let s = SyncSender { inner: s };
-@@ -176,6 +195,7 @@ pub fn sync_channel<T>(bound: usize) ->
+@@ -172,6 +191,7 @@ pub fn sync_channel<T>(bound: usize) ->
      (s, r)
  }
  
@@ -221,7 +221,7 @@ Index: crossbeam-channel/tests/mpsc.rs
  macro_rules! select {
      (
          $($name:pat = $rx:ident.$meth:ident() => $code:expr),+
-@@ -206,6 +226,7 @@ mod channel_tests {
+@@ -202,6 +222,7 @@ mod channel_tests {
          }
      }
  
@@ -229,7 +229,7 @@ Index: crossbeam-channel/tests/mpsc.rs
      #[test]
      fn smoke() {
          let (tx, rx) = channel::<i32>();
-@@ -213,12 +234,14 @@ mod channel_tests {
+@@ -209,12 +230,14 @@ mod channel_tests {
          assert_eq!(rx.recv().unwrap(), 1);
      }
  
@@ -244,7 +244,7 @@ Index: crossbeam-channel/tests/mpsc.rs
      #[test]
      fn drop_full_shared() {
          let (tx, _rx) = channel::<Box<isize>>();
-@@ -227,6 +250,7 @@ mod channel_tests {
+@@ -223,6 +246,7 @@ mod channel_tests {
          tx.send(Box::new(1)).unwrap();
      }
  
@@ -252,7 +252,7 @@ Index: crossbeam-channel/tests/mpsc.rs
      #[test]
      fn smoke_shared() {
          let (tx, rx) = channel::<i32>();
-@@ -237,6 +261,7 @@ mod channel_tests {
+@@ -233,6 +257,7 @@ mod channel_tests {
          assert_eq!(rx.recv().unwrap(), 1);
      }
  
@@ -260,7 +260,7 @@ Index: crossbeam-channel/tests/mpsc.rs
      #[test]
      fn smoke_threads() {
          let (tx, rx) = channel::<i32>();
-@@ -247,6 +272,7 @@ mod channel_tests {
+@@ -243,6 +268,7 @@ mod channel_tests {
          t.join().unwrap();
      }
  
@@ -268,7 +268,7 @@ Index: crossbeam-channel/tests/mpsc.rs
      #[test]
      fn smoke_port_gone() {
          let (tx, rx) = channel::<i32>();
-@@ -254,6 +280,7 @@ mod channel_tests {
+@@ -250,6 +276,7 @@ mod channel_tests {
          assert!(tx.send(1).is_err());
      }
  
@@ -276,7 +276,7 @@ Index: crossbeam-channel/tests/mpsc.rs
      #[test]
      fn smoke_shared_port_gone() {
          let (tx, rx) = channel::<i32>();
-@@ -1707,6 +1734,7 @@ mod sync_channel_tests {
+@@ -1703,6 +1730,7 @@ mod sync_channel_tests {
  mod select_tests {
      use super::*;
  
@@ -303,7 +303,7 @@ Index: crossbeam-channel/tests/ready.rs
 +#![cfg(feature = "std")]
  //! Tests for channel readiness using the `Select` struct.
  
- #![allow(clippy::drop_copy)]
+ use std::any::Any;
 Index: crossbeam-channel/tests/same_channel.rs
 ===================================================================
 --- crossbeam-channel.orig/tests/same_channel.rs
@@ -321,7 +321,7 @@ Index: crossbeam-channel/tests/select.rs
 +#![cfg(feature = "std")]
  //! Tests for channel selection using the `Select` struct.
  
- #![allow(clippy::drop_copy)]
+ use std::any::Any;
 Index: crossbeam-channel/tests/select_macro.rs
 ===================================================================
 --- crossbeam-channel.orig/tests/select_macro.rs
