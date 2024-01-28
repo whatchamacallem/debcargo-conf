@@ -47,7 +47,7 @@ Index: crossbeam-epoch/src/atomic.rs
  /// use crossbeam_epoch::Owned;
  ///
  /// let o = Owned::<[MaybeUninit<i32>]>::init(10); // allocating [i32; 10]
-@@ -1590,7 +1590,7 @@ impl<T: ?Sized + Pointable> Default for
+@@ -1675,7 +1675,7 @@ impl<T: ?Sized + Pointable> Default for
  #[cfg(all(test, not(crossbeam_loom)))]
  mod tests {
      use super::{Owned, Shared};
@@ -82,7 +82,7 @@ Index: crossbeam-epoch/src/collector.rs
      #[test]
      fn pin_holds_advance() {
          #[cfg(miri)]
-@@ -420,6 +423,7 @@ mod tests {
+@@ -419,6 +422,7 @@ mod tests {
          assert_eq!(DESTROYS.load(Ordering::Relaxed), COUNT);
      }
  
@@ -94,17 +94,20 @@ Index: crossbeam-epoch/src/deferred.rs
 ===================================================================
 --- crossbeam-epoch.orig/src/deferred.rs
 +++ crossbeam-epoch/src/deferred.rs
-@@ -83,7 +83,8 @@ mod tests {
-     #![allow(clippy::drop_copy)]
- 
+@@ -90,8 +90,10 @@ impl Deferred {
+ #[cfg(all(test, not(crossbeam_loom)))]
+ mod tests {
      use super::Deferred;
 -    use std::cell::Cell;
+-    use std::convert::identity;
 +    use core::cell::Cell;
 +    use alloc::boxed::Box;
++    use core::convert::identity;
++    use alloc::vec;
  
      #[test]
      fn on_stack() {
-@@ -117,6 +118,7 @@ mod tests {
+@@ -125,6 +127,7 @@ mod tests {
  
      #[test]
      fn string() {
@@ -116,7 +119,7 @@ Index: crossbeam-epoch/src/internal.rs
 ===================================================================
 --- crossbeam-epoch.orig/src/internal.rs
 +++ crossbeam-epoch/src/internal.rs
-@@ -628,7 +628,7 @@ impl IsElement<Local> for Local {
+@@ -556,7 +556,7 @@ impl IsElement<Self> for Local {
  
  #[cfg(all(test, not(crossbeam_loom)))]
  mod tests {
@@ -125,22 +128,6 @@ Index: crossbeam-epoch/src/internal.rs
  
      use super::*;
  
-Index: crossbeam-epoch/src/lib.rs
-===================================================================
---- crossbeam-epoch.orig/src/lib.rs
-+++ crossbeam-epoch/src/lib.rs
-@@ -143,6 +143,11 @@ mod primitive {
- #[cfg(not(crossbeam_no_atomic_cas))]
- cfg_if! {
-     if #[cfg(feature = "alloc")] {
-+        #[cfg(not(feature = "std"))]
-+        #[macro_use]
-+        extern crate alloc;
-+
-+        #[cfg(feature = "std")]
-         extern crate alloc;
- 
-         mod atomic;
 Index: crossbeam-epoch/src/sync/list.rs
 ===================================================================
 --- crossbeam-epoch.orig/src/sync/list.rs
@@ -175,7 +162,7 @@ Index: crossbeam-epoch/src/sync/queue.rs
 ===================================================================
 --- crossbeam-epoch.orig/src/sync/queue.rs
 +++ crossbeam-epoch/src/sync/queue.rs
-@@ -218,7 +218,9 @@ impl<T> Drop for Queue<T> {
+@@ -217,7 +217,9 @@ impl<T> Drop for Queue<T> {
  #[cfg(all(test, not(crossbeam_loom)))]
  mod test {
      use super::*;
@@ -185,7 +172,7 @@ Index: crossbeam-epoch/src/sync/queue.rs
      use crossbeam_utils::thread;
  
      struct Queue<T> {
-@@ -232,11 +234,13 @@ mod test {
+@@ -231,11 +233,13 @@ mod test {
              }
          }
  
@@ -199,7 +186,7 @@ Index: crossbeam-epoch/src/sync/queue.rs
          pub(crate) fn is_empty(&self) -> bool {
              let guard = &pin();
              let head = self.queue.head.load(Acquire, guard);
-@@ -244,11 +248,13 @@ mod test {
+@@ -243,11 +247,13 @@ mod test {
              h.next.load(Acquire, guard).is_null()
          }
  
@@ -213,7 +200,7 @@ Index: crossbeam-epoch/src/sync/queue.rs
          pub(crate) fn pop(&self) -> T {
              loop {
                  match self.try_pop() {
-@@ -265,6 +271,7 @@ mod test {
+@@ -264,6 +270,7 @@ mod test {
      const CONC_COUNT: i64 = 1000000;
  
      #[test]
@@ -221,7 +208,7 @@ Index: crossbeam-epoch/src/sync/queue.rs
      fn push_try_pop_1() {
          let q: Queue<i64> = Queue::new();
          assert!(q.is_empty());
-@@ -275,6 +282,7 @@ mod test {
+@@ -274,6 +281,7 @@ mod test {
      }
  
      #[test]
@@ -229,7 +216,7 @@ Index: crossbeam-epoch/src/sync/queue.rs
      fn push_try_pop_2() {
          let q: Queue<i64> = Queue::new();
          assert!(q.is_empty());
-@@ -287,6 +295,7 @@ mod test {
+@@ -286,6 +294,7 @@ mod test {
      }
  
      #[test]
@@ -237,7 +224,7 @@ Index: crossbeam-epoch/src/sync/queue.rs
      fn push_try_pop_many_seq() {
          let q: Queue<i64> = Queue::new();
          assert!(q.is_empty());
-@@ -301,6 +310,7 @@ mod test {
+@@ -300,6 +309,7 @@ mod test {
      }
  
      #[test]
@@ -245,7 +232,7 @@ Index: crossbeam-epoch/src/sync/queue.rs
      fn push_pop_1() {
          let q: Queue<i64> = Queue::new();
          assert!(q.is_empty());
-@@ -311,6 +321,7 @@ mod test {
+@@ -310,6 +320,7 @@ mod test {
      }
  
      #[test]
@@ -253,7 +240,7 @@ Index: crossbeam-epoch/src/sync/queue.rs
      fn push_pop_2() {
          let q: Queue<i64> = Queue::new();
          q.push(37);
-@@ -320,6 +331,7 @@ mod test {
+@@ -319,6 +330,7 @@ mod test {
      }
  
      #[test]
@@ -261,7 +248,7 @@ Index: crossbeam-epoch/src/sync/queue.rs
      fn push_pop_many_seq() {
          let q: Queue<i64> = Queue::new();
          assert!(q.is_empty());
-@@ -334,6 +346,7 @@ mod test {
+@@ -333,6 +345,7 @@ mod test {
      }
  
      #[test]
@@ -269,7 +256,7 @@ Index: crossbeam-epoch/src/sync/queue.rs
      fn push_try_pop_many_spsc() {
          let q: Queue<i64> = Queue::new();
          assert!(q.is_empty());
-@@ -358,6 +371,7 @@ mod test {
+@@ -357,6 +370,7 @@ mod test {
      }
  
      #[test]
@@ -277,7 +264,7 @@ Index: crossbeam-epoch/src/sync/queue.rs
      fn push_try_pop_many_spmc() {
          fn recv(_t: i32, q: &Queue<i64>) {
              let mut cur = -1;
-@@ -391,6 +405,7 @@ mod test {
+@@ -390,6 +404,7 @@ mod test {
      }
  
      #[test]
@@ -285,7 +272,7 @@ Index: crossbeam-epoch/src/sync/queue.rs
      fn push_try_pop_many_mpmc() {
          enum LR {
              Left(i64),
-@@ -437,6 +452,7 @@ mod test {
+@@ -436,6 +451,7 @@ mod test {
      }
  
      #[test]
@@ -293,7 +280,7 @@ Index: crossbeam-epoch/src/sync/queue.rs
      fn push_pop_many_spsc() {
          let q: Queue<i64> = Queue::new();
  
-@@ -458,6 +474,7 @@ mod test {
+@@ -457,6 +473,7 @@ mod test {
      }
  
      #[test]
