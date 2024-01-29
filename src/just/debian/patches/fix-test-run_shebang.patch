@@ -1,0 +1,78 @@
+Description: Fix failing test run_shebang
+Origin: https://github.com/casey/just/pull/1880
+Bug: https://github.com/casey/just/issues/855
+Last-Update: 2024-01-29 
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+diff --git a/src/justfile.rs b/src/justfile.rs
+index 84e1c2be6..f8f24550a 100644
+--- a/src/justfile.rs
++++ b/src/justfile.rs
+@@ -565,36 +565,6 @@ mod tests {
+     }
+   }
+ 
+-  // This test exists to make sure that shebang recipes run correctly.  Although
+-  // this script is still executed by a shell its behavior depends on the value of
+-  // a variable and continuing even though a command fails, whereas in plain
+-  // recipes variables are not available in subsequent lines and execution stops
+-  // when a line fails.
+-  run_error! {
+-    name: run_shebang,
+-    src: "
+-      a:
+-        #!/usr/bin/env sh
+-        code=200
+-          x() { return $code; }
+-            x
+-              x
+-    ",
+-    args: ["a"],
+-    error: Code {
+-      recipe,
+-      line_number,
+-      code,
+-      print_message,
+-    },
+-    check: {
+-      assert_eq!(recipe, "a");
+-      assert_eq!(code, 200);
+-      assert_eq!(line_number, None);
+-      assert!(print_message);
+-    }
+-  }
+-
+   run_error! {
+     name: code_error,
+     src: "
+diff --git a/tests/shebang.rs b/tests/shebang.rs
+index 04451b735..986d0ca67 100644
+--- a/tests/shebang.rs
++++ b/tests/shebang.rs
+@@ -57,3 +57,26 @@ fn simple() {
+     .stdout("bar\n")
+     .run();
+ }
++
++// This test exists to make sure that shebang recipes run correctly.  Although
++// this script is still executed by a shell its behavior depends on the value of
++// a variable and continuing even though a command fails, whereas in plain
++// recipes variables are not available in subsequent lines and execution stops
++// when a line fails.
++#[test]
++fn run_shebang() {
++  Test::new()
++    .justfile(
++      "
++        a:
++          #!/usr/bin/env sh
++          code=200
++          x() { return $code; }
++          x
++          x
++      ",
++    )
++    .status(200)
++    .stderr("error: Recipe `a` failed with exit code 200\n")
++    .run();
++}
