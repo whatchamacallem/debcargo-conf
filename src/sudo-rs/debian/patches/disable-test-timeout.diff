@@ -1,8 +1,6 @@
-Index: sudo-rs/src/system/mod.rs
-===================================================================
---- sudo-rs.orig/src/system/mod.rs
-+++ sudo-rs/src/system/mod.rs
-@@ -799,7 +799,7 @@ mod tests {
+--- a/src/system/mod.rs
++++ b/src/system/mod.rs
+@@ -799,7 +799,7 @@
              .is_err_and(|err| err.raw_os_error() == Some(libc::EBADF))
      }
  
@@ -11,7 +9,7 @@ Index: sudo-rs/src/system/mod.rs
      fn close_the_universe() {
          let ForkResult::Parent(child_pid) = fork().unwrap() else {
              let should_close =
-@@ -830,7 +830,7 @@ mod tests {
+@@ -830,7 +830,7 @@
          assert_eq!(status.exit_status(), Some(0));
      }
  
@@ -20,3 +18,14 @@ Index: sudo-rs/src/system/mod.rs
      fn except_stdio_is_fine() {
          let ForkResult::Parent(child_pid) = fork().unwrap() else {
              let mut closer = super::FileCloser::new();
+--- a/src/system/term/mod.rs
++++ b/src/system/term/mod.rs
+@@ -226,7 +226,7 @@
+         assert!(path.starts_with("/dev/pts/"));
+     }
+ 
+-    #[test]
++    //#[test]
+     fn tcsetpgrp_and_tcgetpgrp_are_consistent() {
+         // Create a socket so the child can send us a byte if successful.
+         let (mut rx, mut tx) = UnixStream::pair().unwrap();
