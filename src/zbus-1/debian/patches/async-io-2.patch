@@ -1,0 +1,89 @@
+async-io 2 introduced IO safety, this resulted in some functions being marked
+as unsafe, these functions aren't any more dangerous than they were before,
+the danger is just made explicit now.
+
+We also need to add support for Asfd to the types and traits in this crate.
+Unfortunately we can't replace the local "ownedfd" with std's version because
+this crates versions upports the eq trait.
+
+Index: zbus-1/Cargo.toml
+===================================================================
+--- zbus-1.orig/Cargo.toml
++++ zbus-1/Cargo.toml
+@@ -31,7 +31,7 @@ all-features = true
+ targets = ["x86_64-unknown-linux-gnu"]
+ 
+ [dependencies.async-io]
+-version = "1.3.1"
++version = "2"
+ 
+ [dependencies.byteorder]
+ version = "1.3.1"
+Index: zbus-1/src/azync/connection.rs
+===================================================================
+--- zbus-1.orig/src/azync/connection.rs
++++ zbus-1/src/azync/connection.rs
+@@ -148,7 +148,7 @@ pub struct Connection<S> {
+ 
+ impl<S> Connection<S>
+ where
+-    S: AsRawFd + std::fmt::Debug + Unpin + Socket,
++    S: AsRawFd + std::fmt::Debug + Unpin + Socket + std::os::fd::AsFd,
+     Async<S>: Socket,
+ {
+     /// Create and open a D-Bus connection from the given `stream`.
+@@ -482,7 +482,7 @@ impl Connection<UnixStream> {
+ 
+ impl<S> Sink<Message> for Connection<S>
+ where
+-    S: AsRawFd + std::fmt::Debug + Unpin + Socket,
++    S: AsRawFd + std::fmt::Debug + Unpin + Socket + std::os::fd::AsFd,
+     Async<S>: Socket,
+ {
+     type Error = Error;
+Index: zbus-1/src/owned_fd.rs
+===================================================================
+--- zbus-1.orig/src/owned_fd.rs
++++ zbus-1/src/owned_fd.rs
+@@ -1,6 +1,7 @@
+ use std::{
+     mem::forget,
+     os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd},
++    os::fd::{AsFd,BorrowedFd},
+ };
+ 
+ /// An owned representation of a file descriptor
+@@ -27,6 +28,13 @@ impl AsRawFd for OwnedFd {
+     }
+ }
+ 
++impl AsFd for OwnedFd {
++    fn as_fd(&self) -> BorrowedFd<'_> {
++        unsafe { BorrowedFd::borrow_raw(self.inner) }
++    }
++}
++
++
+ impl IntoRawFd for OwnedFd {
+     fn into_raw_fd(self) -> RawFd {
+         let v = self.inner;
+Index: zbus-1/src/raw/socket.rs
+===================================================================
+--- zbus-1.orig/src/raw/socket.rs
++++ zbus-1/src/raw/socket.rs
+@@ -120,11 +120,15 @@ where
+     const SUPPORTS_FD_PASSING: bool = true;
+ 
+     fn recvmsg(&mut self, buffer: &mut [u8]) -> io::Result<(usize, Vec<OwnedFd>)> {
++      unsafe {
+         self.get_mut().recvmsg(buffer)
++      }
+     }
+ 
+     fn sendmsg(&mut self, buffer: &[u8], fds: &[RawFd]) -> io::Result<usize> {
++      unsafe {
+         self.get_mut().sendmsg(buffer, fds)
++      }
+     }
+ 
+     fn close(&self) -> io::Result<()> {
