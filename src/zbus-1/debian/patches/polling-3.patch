@@ -1,0 +1,43 @@
+Description: Update to polling 3
+ polling 3 introduced the "events" structure as a replacement for
+ a vec of events. It also introduced IO safety, which means that
+ the poller.add function is now marked as unsafe. Afaict it's not any
+ less safe than it was before, it's just marked differently now.
+Author: Peter Michael Green <plugwash@debian.org>
+
+Index: zbus-1/src/address.rs
+===================================================================
+--- zbus-1.orig/src/address.rs
++++ zbus-1/src/address.rs
+@@ -4,7 +4,7 @@ use crate::{Error, Result};
+ use async_io::Async;
+ use nb_connect::unix;
+ use nix::unistd::Uid;
+-use polling::{Event, Poller};
++use polling::{Event, Events, Poller};
+ use std::{env, ffi::OsString, os::unix::net::UnixStream, str::FromStr};
+ 
+ /// A bus address
+@@ -31,8 +31,11 @@ impl Address {
+                 let stream = unix(p)?;
+ 
+                 let poller = Poller::new()?;
+-                poller.add(&stream, Event::writable(0))?;
+-                poller.wait(&mut Vec::new(), None)?;
++                unsafe {
++                    poller.add(&stream, Event::writable(0))?;
++                }
++                poller.wait(&mut Events::new(), None)?;
++                poller.delete(&stream); //the documentation says events must be removed from the poller before they are dropped.
+ 
+                 stream.set_nonblocking(nonblocking)?;
+ 
+Index: zbus-1/Cargo.toml
+===================================================================
+--- zbus-1.orig/Cargo.toml
++++ zbus-1/Cargo.toml
+@@ -61,3 +61,3 @@ version = "0.3.8"
+ [dependencies.polling]
+-version = "2.0.2"
++version = "3"
+ 
