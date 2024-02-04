@@ -1,0 +1,62 @@
+Index: sqlx-core/Cargo.toml
+===================================================================
+--- sqlx-core.orig/Cargo.toml
++++ sqlx-core/Cargo.toml
+@@ -183,6 +183,14 @@ features = [
+ optional = true
+ default-features = false
+ 
++[dependencies.rustls-native-certs]
++version = "0.6.3"
++optional = true
++
++[dependencies.rustls-webpki]
++version = "0.101.7"
++optional = true
++
+ [dependencies.rustls-pemfile]
+ version = "1.0"
+ optional = true
+@@ -258,10 +266,6 @@ default-features = false
+ version = "1.1.2"
+ optional = true
+ 
+-[dependencies.webpki-roots]
+-version = "0.25"
+-optional = true
+-
+ [dev-dependencies.sqlx]
+ version = "=0.7.3"
+ features = [
+@@ -293,7 +297,8 @@ _tls-none = []
+ _tls-rustls = [
+     "rustls",
+     "rustls-pemfile",
+-    "webpki-roots",
++    "dep:rustls-native-certs",
++    "dep:rustls-webpki",
+ ]
+ any = []
+ default = []
+Index: sqlx-core/src/net/tls/tls_rustls.rs
+===================================================================
+--- sqlx-core.orig/src/net/tls/tls_rustls.rs
++++ sqlx-core/src/net/tls/tls_rustls.rs
+@@ -109,12 +109,14 @@ where
+         }
+     } else {
+         let mut cert_store = RootCertStore::empty();
+-        cert_store.add_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.iter().map(|ta| {
+-            OwnedTrustAnchor::from_subject_spki_name_constraints(
++        cert_store.add_trust_anchors(rustls_native_certs::load_native_certs()?.iter().filter_map(|cert| {
++            //we skip certs that can't be parsed, this is the same behaviour that reqwest uses.
++            let ta = webpki::TrustAnchor::try_from_cert_der(&cert.0).ok()?;
++            Some(OwnedTrustAnchor::from_subject_spki_name_constraints(
+                 ta.subject,
+                 ta.spki,
+                 ta.name_constraints,
+-            )
++            ))
+         }));
+ 
+         if let Some(ca) = tls_config.root_cert_path {
