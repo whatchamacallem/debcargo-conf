@@ -1,0 +1,22 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/pkg-info.mk
+
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_install:
+	mkdir -p debian/sequoia-chameleon-gnupg/usr/share/fish/completions/ debian/sequoia-chameleon-gnupg/usr/share/zsh/vendor-completions/ debian/sequoia-chameleon-gnupg/usr/share/bash-completion/completions/
+	cp -f debian/completions/gpg-sq.fish debian/sequoia-chameleon-gnupg/usr/share/fish/completions/gpg-sq.fish
+	chmod -x debian/sequoia-chameleon-gnupg/usr/share/fish/completions/gpg-sq.fish
+	cp -f debian/completions/_gpg-sq debian/sequoia-chameleon-gnupg/usr/share/zsh/vendor-completions/_gpg-sq
+	cp -f debian/completions/gpg-sq.bash debian/sequoia-chameleon-gnupg/usr/share/bash-completion/completions/gpg-sq
+
+	mkdir -p debian/sequoia-chameleon-gnupg/usr/share/fish/completions/ debian/sequoia-chameleon-gnupg/usr/share/zsh/vendor-completions/ debian/sequoia-chameleon-gnupg/usr/share/bash-completion/completions/
+	cp -f debian/completions/gpgv-sq.fish debian/sequoia-chameleon-gnupg/usr/share/fish/completions/gpgv-sq.fish
+	chmod -x debian/sequoia-chameleon-gnupg/usr/share/fish/completions/gpgv-sq.fish
+	cp -f debian/completions/_gpgv-sq debian/sequoia-chameleon-gnupg/usr/share/zsh/vendor-completions/_gpgv-sq
+	cp -f debian/completions/gpgv-sq.bash debian/sequoia-chameleon-gnupg/usr/share/bash-completion/completions/gpgv-sq
+
+	dh_install
+

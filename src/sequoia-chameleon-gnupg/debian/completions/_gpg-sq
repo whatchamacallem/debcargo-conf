@@ -1,0 +1,106 @@
+#compdef gpg-sq
+
+autoload -U is-at-least
+
+_gpg-sq() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" \
+'--tofu-policy=[set the TOFU policy for a key]:VALUE: ' \
+'--options=[read options from FILE]:FILE: ' \
+'--log-file=[write server mode logs to FILE]:FILE: ' \
+'--default-key=[use NAME as default secret key]:NAME: ' \
+'--encrypt-to=[encrypt to user ID NAME as well]:NAME: ' \
+'--group=[set up email aliases]:SPEC: ' \
+'-o+[write output to FILE]:FILE: ' \
+'--output=[write output to FILE]:FILE: ' \
+'-z+[set compress level to N (0 disables)]:N: ' \
+'--auto-key-locate=[use MECHANISMS to locate keys by mail address]:MECHANISMS: ' \
+'-r+[encrypt for USERID]:USERID: ' \
+'--recipient=[encrypt for USERID]:USERID: ' \
+'-u+[use USERID to sign or decrypt]:USERID: ' \
+'--local-user=[use USERID to sign or decrypt]:USERID: ' \
+'-s[make a signature]' \
+'--sign[make a signature]' \
+'--clear-sign[make a clear text signature]' \
+'-b[make a detached signature]' \
+'--detach-sign[make a detached signature]' \
+'-e[encrypt data]' \
+'--encrypt[encrypt data]' \
+'-c[encryption only with symmetric cipher]' \
+'--symmetric[encryption only with symmetric cipher]' \
+'-d[decrypt data (default)]' \
+'--decrypt[decrypt data (default)]' \
+'--verify[verify a signature]' \
+'-k[list keys]' \
+'--list-keys[list keys]' \
+'--list-signatures[list keys and signatures]' \
+'--check-signatures[list and check key signatures]' \
+'--fingerprint[list keys and fingerprints]' \
+'-K[list secret keys]' \
+'--list-secret-keys[list secret keys]' \
+'--generate-key[generate a new key pair]' \
+'--quick-generate-key[quickly generate a new key pair]' \
+'--quick-add-uid[quickly add a new user-id]' \
+'--quick-revoke-uid[quickly revoke a user-id]' \
+'--quick-set-expire[quickly set a new expiration date]' \
+'--full-generate-key[full featured key pair generation]' \
+'--generate-revocation[generate a revocation certificate]' \
+'--delete-keys[remove keys from the public keyring]' \
+'--delete-secret-keys[remove keys from the secret keyring]' \
+'--quick-sign-key[quickly sign a key]' \
+'--quick-lsign-key[quickly sign a key locally]' \
+'--quick-revoke-sig[quickly revoke a key signature]' \
+'--sign-key[sign a key]' \
+'--lsign-key[sign a key locally]' \
+'--edit-key[sign or edit a key]' \
+'--change-passphrase[change a passphrase]' \
+'--export[export keys]' \
+'--send-keys[export keys to a keyserver]' \
+'--receive-keys[import keys from a keyserver]' \
+'--search-keys[search for keys on a keyserver]' \
+'--refresh-keys[update all keys from a keyserver]' \
+'--import[import/merge keys]' \
+'--update-trustdb[update the trust database]' \
+'--print-md[print message digests]' \
+'--server[run in server mode]' \
+'-v[verbose]' \
+'--verbose[verbose]' \
+'-q[be somewhat more quiet]' \
+'--quiet[be somewhat more quiet]' \
+'--openpgp[use strict OpenPGP behavior]' \
+'-n[do not make any changes]' \
+'--dry-run[do not make any changes]' \
+'-i[prompt before overwriting]' \
+'--interactive[prompt before overwriting]' \
+'-a[create ascii armored output]' \
+'--armor[create ascii armored output]' \
+'--textmode[use canonical text mode]' \
+'--auto-key-import[import missing key from a signature]' \
+'--include-key-block[include the public key in signatures]' \
+'--disable-dirmngr[disable all access to the dirmngr]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+}
+
+(( $+functions[_gpg-sq_commands] )) ||
+_gpg-sq_commands() {
+    local commands; commands=()
+    _describe -t commands 'gpg-sq commands' commands "$@"
+}
+
+if [ "$funcstack[1]" = "_gpg-sq" ]; then
+    _gpg-sq "$@"
+else
+    compdef _gpg-sq gpg-sq
+fi
