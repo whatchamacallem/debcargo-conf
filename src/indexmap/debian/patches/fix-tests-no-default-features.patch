@@ -1,0 +1,132 @@
+Index: indexmap/src/map.rs
+===================================================================
+--- indexmap.orig/src/map.rs
++++ indexmap/src/map.rs
+@@ -9,7 +9,7 @@ mod slice;
+ #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+ pub mod serde_seq;
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature = "std"))]
+ mod tests;
+ 
+ pub use self::core::raw_entry_v1::{self, RawEntryApiV1};
+Index: indexmap/src/map/slice.rs
+===================================================================
+--- indexmap.orig/src/map/slice.rs
++++ indexmap/src/map/slice.rs
+@@ -423,7 +423,7 @@ impl_index!(
+     (Bound<usize>, Bound<usize>)
+ );
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature = "std"))]
+ mod tests {
+     use super::*;
+     use alloc::vec::Vec;
+Index: indexmap/src/set.rs
+===================================================================
+--- indexmap.orig/src/set.rs
++++ indexmap/src/set.rs
+@@ -3,7 +3,7 @@
+ mod iter;
+ mod slice;
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature = "std"))]
+ mod tests;
+ 
+ pub use self::iter::{
+Index: indexmap/src/set/slice.rs
+===================================================================
+--- indexmap.orig/src/set/slice.rs
++++ indexmap/src/set/slice.rs
+@@ -290,7 +290,7 @@ impl_index!(
+     (Bound<usize>, Bound<usize>)
+ );
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature = "std"))]
+ mod tests {
+     use super::*;
+     use alloc::vec::Vec;
+Index: indexmap/benches/bench.rs
+===================================================================
+--- indexmap.orig/benches/bench.rs
++++ indexmap/benches/bench.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "std")]
+ #![feature(test)]
+ 
+ extern crate test;
+Index: indexmap/benches/faststring.rs
+===================================================================
+--- indexmap.orig/benches/faststring.rs
++++ indexmap/benches/faststring.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "std")]
+ #![feature(test)]
+ 
+ extern crate test;
+Index: indexmap/tests/equivalent_trait.rs
+===================================================================
+--- indexmap.orig/tests/equivalent_trait.rs
++++ indexmap/tests/equivalent_trait.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "std")]
+ use indexmap::indexmap;
+ use indexmap::Equivalent;
+ 
+Index: indexmap/tests/macros_full_path.rs
+===================================================================
+--- indexmap.orig/tests/macros_full_path.rs
++++ indexmap/tests/macros_full_path.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "std")]
+ #[test]
+ fn test_create_map() {
+     let _m = indexmap::indexmap! {
+Index: indexmap/tests/quick.rs
+===================================================================
+--- indexmap.orig/tests/quick.rs
++++ indexmap/tests/quick.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "std")]
+ use indexmap::{IndexMap, IndexSet};
+ use itertools::Itertools;
+ 
+Index: indexmap/tests/tests.rs
+===================================================================
+--- indexmap.orig/tests/tests.rs
++++ indexmap/tests/tests.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "std")]
+ use indexmap::{indexmap, indexset};
+ 
+ #[test]
+Index: indexmap/src/rayon/map.rs
+===================================================================
+--- indexmap.orig/src/rayon/map.rs
++++ indexmap/src/rayon/map.rs
+@@ -571,7 +571,7 @@ where
+     }
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature = "std"))]
+ mod tests {
+     use super::*;
+     use std::string::String;
+Index: indexmap/src/rayon/set.rs
+===================================================================
+--- indexmap.orig/src/rayon/set.rs
++++ indexmap/src/rayon/set.rs
+@@ -609,7 +609,7 @@ where
+     }
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature = "std"))]
+ mod tests {
+     use super::*;
+ 
