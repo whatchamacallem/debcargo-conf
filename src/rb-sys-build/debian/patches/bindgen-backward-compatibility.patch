@@ -1,0 +1,24 @@
+Description: make the code work with bindgen << 0.69
+Author: Ananthu C V <weepingclown@disroot.org>
+Forwarded: not-needed
+Last-Update: 2024-02-06
+--- a/src/bindings.rs
++++ b/src/bindings.rs
+@@ -49,7 +49,7 @@
+         .blocklist_item("ruby_abi_version")
+         .blocklist_function("^__.*")
+         .blocklist_item("RData")
+-        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()));
++        .parse_callbacks(Box::new(bindgen::CargoCallbacks));
+ 
+     let bindings = if cfg!(feature = "bindgen-rbimpls") {
+         bindings
+@@ -145,7 +145,7 @@
+         .generate_comments(true)
+         .size_t_is_usize(env::var("CARGO_FEATURE_BINDGEN_SIZE_T_IS_USIZE").is_ok())
+         .impl_debug(cfg!(feature = "bindgen-impl-debug"))
+-        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()));
++        .parse_callbacks(Box::new(bindgen::CargoCallbacks));
+ 
+     if env::var("CARGO_FEATURE_BINDGEN_ENABLE_FUNCTION_ATTRIBUTE_DETECTION").is_ok() {
+         bindings.enable_function_attribute_detection()
