@@ -127,10 +127,7 @@ if git diff -- "$PKGDIR_REL/debian/copyright.debcargo.hint" | patch -r - --no-ba
 	git add "$PKGDIR_REL/debian/copyright.debcargo.hint" "$PKGDIR_REL/debian/copyright"
 else
 	git diff -- "$PKGDIR_REL/debian/copyright.debcargo.hint"
-	revert_git_changes
-	abort 1 \
-	  "copyright file needs updating; apply the above diff to $PKGDIR_REL/debian/copyright" \
-	  "then commit your changes, and run me again."
+	echo "copyright file should be updated; consider applying the above diff to $PKGDIR_REL/debian/copyright and commiting your changes."
 fi
 
 if ! git diff --exit-code -- "$PKGDIR_REL"; then
