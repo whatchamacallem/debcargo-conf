@@ -8,7 +8,7 @@ Index: reqwest/Cargo.toml
 ===================================================================
 --- reqwest.orig/Cargo.toml
 +++ reqwest/Cargo.toml
-@@ -348,8 +348,7 @@ optional = true
+@@ -351,8 +351,7 @@ optional = true
  default-features = false
  
  [target."cfg(not(target_arch = \"wasm32\"))".dependencies.trust-dns-resolver]
@@ -35,23 +35,24 @@ Index: reqwest/src/dns/trust_dns.rs
 ===================================================================
 --- reqwest.orig/src/dns/trust_dns.rs
 +++ reqwest/src/dns/trust_dns.rs
-@@ -1,9 +1,13 @@
+@@ -1,8 +1,14 @@
  //! DNS resolution via the [trust_dns_resolver](https://github.com/bluejekyll/trust-dns) crate
  
  use hyper::client::connect::dns::Name;
 -use once_cell::sync::OnceCell;
+-use trust_dns_resolver::{lookup_ip::LookupIpIntoIter, system_conf, TokioAsyncResolver};
 +use once_cell::sync::Lazy;
 +use tokio::sync::Mutex;
- pub use trust_dns_resolver::config::{ResolverConfig, ResolverOpts};
--use trust_dns_resolver::{lookup_ip::LookupIpIntoIter, system_conf, TokioAsyncResolver};
 +use trust_dns_resolver::{
 +    lookup_ip::LookupIpIntoIter, system_conf, AsyncResolver, TokioConnection,
 +    TokioConnectionProvider, TokioHandle,
 +};
++use trust_dns_resolver::config::ResolverOpts;
++use trust_dns_resolver::config::ResolverConfig;
  
  use std::io;
  use std::net::SocketAddr;
-@@ -11,24 +15,64 @@ use std::sync::Arc;
+@@ -10,24 +16,64 @@ use std::sync::Arc;
  
  use super::{Addrs, Resolve, Resolving};
  
@@ -122,7 +123,7 @@ Index: reqwest/src/dns/trust_dns.rs
  
              let lookup = resolver.lookup_ip(name.as_str()).await?;
              let addrs: Addrs = Box::new(SocketAddrs {
-@@ -47,14 +91,18 @@ impl Iterator for SocketAddrs {
+@@ -46,14 +92,18 @@ impl Iterator for SocketAddrs {
      }
  }
  
