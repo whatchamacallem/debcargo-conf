@@ -1,0 +1,46 @@
+Description: Remplace empty file content with content from upstream
+ paste-test-suite package is buggy on crates.io
+ This will set the content of the lib.rs file
+ Reported upstream at: https://github.com/dtolnay/paste/issues/100
+Author: Fab Stz <fabstz-it@yahoo.fr>
+Last-Update: 2024-01-16
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -18,3 +18,7 @@
+ description = "Test suite of the paste crate"
+ license = "MIT OR Apache-2.0"
+ repository = "https://github.com/dtolnay/paste"
++
++[lib]
++path = "src/lib.rs"
++proc-macro = true
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1 +1,25 @@
+-@
++extern crate proc_macro;
++
++use proc_macro::{TokenStream, TokenTree};
++
++#[proc_macro_attribute]
++pub fn paste_test(args: TokenStream, input: TokenStream) -> TokenStream {
++    let mut iter = args.clone().into_iter();
++    match iter.next() {
++        Some(TokenTree::Ident(_)) => {}
++        _ => panic!("{}", args),
++    }
++    match iter.next() {
++        Some(TokenTree::Punct(ref punct)) if punct.as_char() == '=' => {}
++        _ => panic!("{}", args),
++    }
++    match iter.next() {
++        Some(TokenTree::Literal(ref literal)) if literal.to_string().starts_with('"') => {}
++        _ => panic!("{}", args),
++    }
++    match iter.next() {
++        None => {}
++        _ => panic!("{}", args),
++    }
++    input
++}
