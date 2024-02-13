@@ -1,0 +1,146 @@
+Index: tower-http/src/compression/layer.rs
+===================================================================
+--- tower-http.orig/src/compression/layer.rs
++++ tower-http/src/compression/layer.rs
+@@ -145,6 +145,7 @@ mod tests {
+     }
+ 
+     #[tokio::test]
++    #[cfg(all(feature = "compression-br", feature = "compression-deflate"))]
+     async fn accept_encoding_configuration_works() -> Result<(), crate::BoxError> {
+         let deflate_only_layer = CompressionLayer::new()
+             .quality(CompressionLevel::Best)
+Index: tower-http/src/compression/mod.rs
+===================================================================
+--- tower-http.orig/src/compression/mod.rs
++++ tower-http/src/compression/mod.rs
+@@ -87,6 +87,7 @@ mod tests {
+     use crate::compression::predicate::SizeAbove;
+ 
+     use super::*;
++    #[cfg(feature = "compression-br")]
+     use async_compression::tokio::write::{BrotliDecoder, BrotliEncoder};
+     use bytes::BytesMut;
+     use flate2::read::GzDecoder;
+@@ -113,6 +114,7 @@ mod tests {
+     }
+ 
+     #[tokio::test]
++    #[cfg(feature = "compression-gzip")]
+     async fn gzip_works() {
+         let svc = service_fn(handle);
+         let mut svc = Compression::new(svc).compress_when(Always);
+@@ -144,6 +146,7 @@ mod tests {
+     }
+ 
+     #[tokio::test]
++    #[cfg(feature = "compression-zstd")]
+     async fn zstd_works() {
+         let svc = service_fn(handle);
+         let mut svc = Compression::new(svc).compress_when(Always);
+@@ -184,6 +187,7 @@ mod tests {
+     }
+ 
+     #[tokio::test]
++    #[cfg(feature = "compression-br")]
+     async fn no_recompress() {
+         const DATA: &str = "Hello, World! I'm already compressed with br!";
+ 
+@@ -252,6 +256,7 @@ mod tests {
+     }
+ 
+     #[tokio::test]
++    #[cfg(feature = "compression-br")]
+     async fn will_not_compress_if_filtered_out() {
+         use predicate::Predicate;
+ 
+@@ -341,6 +346,7 @@ mod tests {
+     }
+ 
+     #[tokio::test]
++    #[cfg(feature = "compression-gzip")]
+     async fn does_compress_svg() {
+         async fn handle(_req: Request<Body>) -> Result<Response<Body>, Error> {
+             let mut res = Response::new(Body::from(
+@@ -366,6 +372,7 @@ mod tests {
+     }
+ 
+     #[tokio::test]
++    #[cfg(feature = "compression-br")]
+     async fn compress_with_quality() {
+         const DATA: &str = "Check compression quality level! Check compression quality level! Check compression quality level!";
+         let level = CompressionLevel::Best;
+Index: tower-http/src/decompression/mod.rs
+===================================================================
+--- tower-http.orig/src/decompression/mod.rs
++++ tower-http/src/decompression/mod.rs
+@@ -118,6 +118,12 @@ mod tests {
+     use std::io::Write;
+ 
+     use super::*;
++    #[cfg(any(
++        feature = "compression-br",
++        feature = "compression-deflate",
++        feature = "compression-gzip",
++        feature = "compression-zstd",
++    ))]
+     use crate::compression::Compression;
+     use bytes::BytesMut;
+     use flate2::write::GzEncoder;
+@@ -127,6 +133,7 @@ mod tests {
+     use tower::{service_fn, Service, ServiceExt};
+ 
+     #[tokio::test]
++    #[cfg(feature = "compression-gzip")]
+     async fn works() {
+         let mut client = Decompression::new(Compression::new(service_fn(handle)));
+ 
+@@ -149,6 +156,7 @@ mod tests {
+     }
+ 
+     #[tokio::test]
++    #[cfg(feature = "compression-gzip")]
+     async fn decompress_multi_gz() {
+         let mut client = Decompression::new(service_fn(handle_multi_gz));
+ 
+Index: tower-http/src/decompression/request/mod.rs
+===================================================================
+--- tower-http.orig/src/decompression/request/mod.rs
++++ tower-http/src/decompression/request/mod.rs
+@@ -30,6 +30,7 @@ mod tests {
+     }
+ 
+     #[tokio::test]
++    #[cfg(feature = "decompression-gzip")]
+     async fn unaccepted_content_encoding_returns_unsupported_media_type() {
+         let req = request_gzip();
+         let mut svc = RequestDecompression::new(service_fn(should_not_be_called)).gzip(false);
+@@ -38,6 +39,7 @@ mod tests {
+     }
+ 
+     #[tokio::test]
++    #[cfg(feature = "decompression-gzip")]
+     async fn pass_through_unsupported_encoding_when_enabled() {
+         let req = request_gzip();
+         let mut svc = RequestDecompression::new(service_fn(assert_request_is_passed_through))
+Index: tower-http/src/request_id.rs
+===================================================================
+--- tower-http.orig/src/request_id.rs
++++ tower-http/src/request_id.rs
+@@ -479,7 +479,7 @@ impl MakeRequestId for MakeRequestUuid {
+     }
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature = "util"))]
+ mod tests {
+     use crate::ServiceBuilderExt as _;
+     use hyper::{Body, Response};
+@@ -496,6 +496,7 @@ mod tests {
+     use super::*;
+ 
+     #[tokio::test]
++    #[cfg(feature = "util")]
+     async fn basic() {
+         let svc = ServiceBuilder::new()
+             .set_x_request_id(Counter::default())
