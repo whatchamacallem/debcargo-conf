@@ -1,0 +1,60 @@
+Index: shadow-rs/src/git.rs
+===================================================================
+--- shadow-rs.orig/src/git.rs
++++ shadow-rs/src/git.rs
+@@ -510,6 +510,7 @@ mod tests {
+     use std::path::Path;
+ 
+     #[test]
++    #[ignore = "broken in debian"]
+     fn test_git() {
+         let env_map = get_std_env();
+         let map = new_git(Path::new("./"), CiType::Github, &env_map);
+@@ -533,6 +534,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore = "broken in debian"]
+     fn test_current_branch() {
+         if get_std_env().get("GITHUB_REF").is_some() {
+             return;
+@@ -553,6 +555,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore = "broken in debian"]
+     fn test_command_last_tag() {
+         let opt_last_tag = command_last_tag();
+         assert!(opt_last_tag.is_some())
+Index: shadow-rs/src/date_time.rs
+===================================================================
+--- shadow-rs.orig/src/date_time.rs
++++ shadow-rs/src/date_time.rs
+@@ -117,6 +117,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore = "tries to access /etc/localtime"]
+     fn test_local_now_human_format() {
+         let time = DateTime::local_now().unwrap().human_format();
+         #[cfg(unix)]
+Index: shadow-rs/src/lib.rs
+===================================================================
+--- shadow-rs.orig/src/lib.rs
++++ shadow-rs/src/lib.rs
+@@ -535,6 +535,7 @@ mod tests {
+     use std::fs;
+ 
+     #[test]
++    #[ignore = "broken in debian"]
+     fn test_build() -> SdResult<()> {
+         Shadow::build_inner("./".into(), "./".into(), Default::default())?;
+         let shadow = fs::read_to_string("./shadow.rs")?;
+@@ -545,6 +546,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore = "broken in debian"]
+     fn test_build_deny() -> SdResult<()> {
+         let mut deny = BTreeSet::new();
+         deny.insert(CARGO_TREE);

@@ -1,15 +1,24 @@
-diff --git a/Cargo.toml b/Cargo.toml
-index dd863b5..b3bbf3e 100644
+Description: remove dependency to is-wsl until it is in Debian
+ See: https://salsa.debian.org/rust-team/debcargo-conf/-/merge_requests/588
+Author: Blair Noctis <n@sail.ng>
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -38,10 +38,3 @@ doc = false
- 
- [target."cfg(all(unix, not(macos)))".dependencies.pathdiff]
- version = "0.2.0"
--
--[target."cfg(windows)".dependencies.windows-sys]
--version = "0.36"
--features = [
--    "Win32_UI_Shell",
--    "Win32_Foundation",
--]
+@@ -42,4 +42,4 @@
+
+-[target."cfg(any(target_os = \"linux\", target_os = \"android\", target_os = \"freebsd\", target_os = \"dragonfly\", target_os = \"netbsd\", target_os = \"openbsd\", target_os = \"illumos\", target_os = \"solaris\" ))".dependencies.is-wsl]
+-version = "0.4.0"
++#[target."cfg(any(target_os = \"linux\", target_os = \"android\", target_os = \"freebsd\", target_os = \"dragonfly\", target_os = \"netbsd\", target_os = \"openbsd\", target_os = \"illumos\", target_os = \"solaris\" ))".dependencies.is-wsl]
++#version = "0.4.0"
+
+--- a/src/unix.rs
++++ b/src/unix.rs
+@@ -11,6 +11,6 @@
+
+-    let wsl_path = wsl_path(path);
+-    if is_wsl::is_wsl() {
+-        commands.push(("wslview", vec![&wsl_path]));
+-    }
++    //let wsl_path = wsl_path(path);
++    //if is_wsl::is_wsl() {
++    //    commands.push(("wslview", vec![&wsl_path]));
++    //}

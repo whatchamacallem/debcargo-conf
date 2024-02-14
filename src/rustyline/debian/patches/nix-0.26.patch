@@ -1,0 +1,145 @@
+This patch is based on reverting upstream commits
+049121540400f9f0fe7bfda17358c0a7c238289c and
+92f750b08edf89b191067cc9d9694bbdecd13e7c adapted for use in the Debian package
+by Peter Michael Green.
+
+--- a/src/tty/unix.rs
++++ b/src/tty/unix.rs
+@@ -3,7 +3,7 @@
+ use std::collections::HashMap;
+ use std::fs::{File, OpenOptions};
+ use std::io::{self, BufReader, ErrorKind, Read, Write};
+-use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, IntoRawFd, RawFd};
++use std::os::unix::io::{AsRawFd, IntoRawFd, RawFd};
+ use std::os::unix::net::UnixStream;
+ use std::sync::atomic::{AtomicBool, Ordering};
+ use std::sync::mpsc::{self, SyncSender};
+@@ -184,12 +184,12 @@
+     key_map: PosixKeyMap,
+     // external print reader
+     pipe_reader: Option<PipeReader>,
++    fds: FdSet,
+ }
+ 
+-impl AsFd for PosixRawReader {
+-    fn as_fd(&self) -> BorrowedFd<'_> {
+-        let fd = self.tty_in.get_ref().fd;
+-        unsafe { BorrowedFd::borrow_raw(fd) }
++impl AsRawFd for PosixRawReader {
++    fn as_raw_fd(&self) -> RawFd {
++        self.tty_in.get_ref().fd
+     }
+ }
+ 
+@@ -238,6 +238,7 @@
+             parser: Parser::new(),
+             key_map,
+             pipe_reader,
++            fds: FdSet::new(),
+         }
+     }
+ 
+@@ -686,7 +687,7 @@
+         if n > 0 {
+             return Ok(n as i32);
+         }
+-        let mut fds = [poll::PollFd::new(self, PollFlags::POLLIN)];
++        let mut fds = [poll::PollFd::new(self.as_raw_fd(), PollFlags::POLLIN)];
+         let r = poll::poll(&mut fds, timeout_ms);
+         match r {
+             Ok(n) => Ok(n),
+@@ -702,27 +703,29 @@
+     }
+ 
+     fn select(&mut self, single_esc_abort: bool) -> Result<Event> {
+-        let tty_in = self.as_fd();
+-        let sigwinch_pipe = self
+-            .tty_in
+-            .get_ref()
+-            .sigwinch_pipe
+-            .map(|fd| unsafe { BorrowedFd::borrow_raw(fd) });
++        let tty_in = self.as_raw_fd();
++        let sigwinch_pipe = self.tty_in.get_ref().sigwinch_pipe;
+         let pipe_reader = self
+             .pipe_reader
+             .as_ref()
+-            .map(|pr| pr.lock().unwrap().0.as_raw_fd())
+-            .map(|fd| unsafe { BorrowedFd::borrow_raw(fd) });
++            .map(|pr| pr.lock().unwrap().0.as_raw_fd());
+         loop {
+-            let mut readfds = FdSet::new();
+-            if let Some(ref sigwinch_pipe) = sigwinch_pipe {
++            let mut readfds = self.fds;
++            readfds.clear();
++            if let Some(sigwinch_pipe) = sigwinch_pipe {
+                 readfds.insert(sigwinch_pipe);
+             }
+-            readfds.insert(&tty_in);
+-            if let Some(ref pipe_reader) = pipe_reader {
++            readfds.insert(tty_in);
++            if let Some(pipe_reader) = pipe_reader {
+                 readfds.insert(pipe_reader);
+             }
+-            if let Err(err) = select::select(None, Some(&mut readfds), None, None, None) {
++            if let Err(err) = select::select(
++                readfds.highest().map(|h| h + 1),
++                Some(&mut readfds),
++                None,
++                None,
++                None,
++            ) {
+                 if err == Errno::EINTR && self.tty_in.get_ref().sigwinch()? {
+                     return Err(ReadlineError::WindowResized);
+                 } else if err != Errno::EINTR {
+@@ -731,10 +734,10 @@
+                     continue;
+                 }
+             };
+-            if sigwinch_pipe.map_or(false, |fd| readfds.contains(&fd)) {
++            if sigwinch_pipe.map_or(false, |fd| readfds.contains(fd)) {
+                 self.tty_in.get_ref().sigwinch()?;
+                 return Err(ReadlineError::WindowResized);
+-            } else if readfds.contains(&tty_in) {
++            } else if readfds.contains(tty_in) {
+                 // prefer user input over external print
+                 return self.next_key(single_esc_abort).map(Event::KeyPress);
+             } else if let Some(ref pipe_reader) = self.pipe_reader {
+@@ -1489,15 +1492,16 @@
+     use nix::sys::termios::{self, SetArg, SpecialCharacterIndices as SCI, Termios};
+     use std::collections::HashMap;
+     use std::os::unix::io::{BorrowedFd, RawFd};
++    use std::os::fd::AsRawFd;
+     pub fn disable_raw_mode(tty_in: RawFd, termios: &Termios) -> Result<()> {
+         let fd = unsafe { BorrowedFd::borrow_raw(tty_in) };
+-        Ok(termios::tcsetattr(fd, SetArg::TCSADRAIN, termios)?)
++        Ok(termios::tcsetattr(fd.as_raw_fd(), SetArg::TCSADRAIN, termios)?)
+     }
+     pub fn enable_raw_mode(tty_in: RawFd) -> Result<(Termios, PosixKeyMap)> {
+         use nix::sys::termios::{ControlFlags, InputFlags, LocalFlags};
+ 
+         let fd = unsafe { BorrowedFd::borrow_raw(tty_in) };
+-        let original_mode = termios::tcgetattr(fd)?;
++        let original_mode = termios::tcgetattr(fd.as_raw_fd())?;
+         let mut raw = original_mode.clone();
+         // disable BREAK interrupt, CR to NL conversion on input,
+         // input parity check, strip high bit (bit 8), output flow control
+@@ -1524,7 +1528,7 @@
+         map_key(&mut key_map, &raw, SCI::VQUIT, "VQUIT", Cmd::Interrupt);
+         map_key(&mut key_map, &raw, SCI::VSUSP, "VSUSP", Cmd::Suspend);
+ 
+-        termios::tcsetattr(fd, SetArg::TCSADRAIN, &raw)?;
++        termios::tcsetattr(fd.as_raw_fd(), SetArg::TCSADRAIN, &raw)?;
+         Ok((original_mode, key_map))
+     }
+     fn map_key(
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -162,7 +162,7 @@
+ with-sqlite-history = ["rusqlite"]
+ 
+ [target."cfg(unix)".dependencies.nix]
+-version = "0.27"
++version = "0.26"
+ features = [
+     "fs",
+     "ioctl",

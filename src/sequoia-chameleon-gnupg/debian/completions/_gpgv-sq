@@ -1,0 +1,43 @@
+#compdef gpgv-sq
+
+autoload -U is-at-least
+
+_gpgv-sq() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" \
+'--keyring=[take the keys from the keyring FILE]:FILE: ' \
+'-o+[write output to FILE]:FILE: ' \
+'--output=[write output to FILE]:FILE: ' \
+'--status-fd=[write status info to this FD]:FD: ' \
+'--weak-digest=[reject signatures made with ALGO]:ALGO: ' \
+'-v[verbose]' \
+'--verbose[verbose]' \
+'-q[be somewhat more quiet]' \
+'--quiet[be somewhat more quiet]' \
+'--ignore-time-conflict[make timestamp conflicts only a warning]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+}
+
+(( $+functions[_gpgv-sq_commands] )) ||
+_gpgv-sq_commands() {
+    local commands; commands=()
+    _describe -t commands 'gpgv-sq commands' commands "$@"
+}
+
+if [ "$funcstack[1]" = "_gpgv-sq" ]; then
+    _gpgv-sq "$@"
+else
+    compdef _gpgv-sq gpgv-sq
+fi

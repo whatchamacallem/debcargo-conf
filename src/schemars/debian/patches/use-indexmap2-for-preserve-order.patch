@@ -1,0 +1,35 @@
+Index: schemars/Cargo.toml
+===================================================================
+--- schemars.orig/Cargo.toml
++++ schemars/Cargo.toml
+@@ -217,7 +217,7 @@ derive = ["schemars_derive"]
+ derive_json_schema = ["impl_json_schema"]
+ impl_json_schema = ["derive"]
+ indexmap1 = ["indexmap"]
+-preserve_order = ["indexmap"]
++preserve_order = ["indexmap2"]
+ raw_value = ["serde_json/raw_value"]
+ ui_test = []
+ uuid = ["uuid08"]
+Index: schemars/src/lib.rs
+===================================================================
+--- schemars.orig/src/lib.rs
++++ schemars/src/lib.rs
+@@ -9,7 +9,7 @@
+ #[cfg(not(feature = "preserve_order"))]
+ pub type Map<K, V> = std::collections::BTreeMap<K, V>;
+ #[cfg(feature = "preserve_order")]
+-pub type Map<K, V> = indexmap::IndexMap<K, V>;
++pub type Map<K, V> = indexmap2::IndexMap<K, V>;
+ /// The set type used by schemars types.
+ ///
+ /// Currently a `BTreeSet`, but this may change to a different implementation
+@@ -23,7 +23,7 @@ pub type Set<T> = std::collections::BTre
+ #[cfg(not(feature = "preserve_order"))]
+ pub type MapEntry<'a, K, V> = std::collections::btree_map::Entry<'a, K, V>;
+ #[cfg(feature = "preserve_order")]
+-pub type MapEntry<'a, K, V> = indexmap::map::Entry<'a, K, V>;
++pub type MapEntry<'a, K, V> = indexmap2::map::Entry<'a, K, V>;
+ 
+ mod flatten;
+ mod json_schema_impls;

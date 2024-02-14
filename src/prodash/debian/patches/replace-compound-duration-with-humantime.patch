@@ -1,0 +1,66 @@
+replace compound_duration with humantime that doesn't have problems on 32bit machines
+upstreamed here: https://github.com/Byron/prodash/pull/26
+
+diff --git a/Cargo.toml b/Cargo.toml
+index bc1ca4c..5230370 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -82,10 +82,6 @@ optional = true
+ version = "1.0.1"
+ optional = true
+ 
+-[dependencies.compound_duration]
+-version = "1.2.0"
+-optional = true
+-
+ [dependencies.crosstermion]
+ version = "0.11.0"
+ optional = true
+@@ -237,5 +233,5 @@ render-tui-crossterm = [
+ ]
+ render-tui-termion = ["crosstermion/tui-react-termion"]
+ unit-bytes = ["bytesize"]
+-unit-duration = ["compound_duration"]
++unit-duration = ["humantime"]
+ unit-human = ["human_format"]
+diff --git a/README.md b/README.md
+index c9fbbb5..f470fdc 100644
+--- a/README.md
++++ b/README.md
+@@ -73,7 +73,7 @@ This crate comes with various cargo features to tailor it to your needs.
+ * **unit-human**
+   * Display counts in a way that is easier to grasp for humans, using the tiny `human_format` crate.
+ * **unit-duration**
+-  * Displays time in seconds like '_5m4s_' using the tiny `compound_duration` crate.
++  * Displays time in seconds like '_5m4s_' using the tiny `humantime` crate.
+ 
+ ## Features
+ 
+diff --git a/src/unit/duration.rs b/src/unit/duration.rs
+index 0da23e8..0a464ce 100644
+--- a/src/unit/duration.rs
++++ b/src/unit/duration.rs
+@@ -1,4 +1,6 @@
+-use std::fmt;
++use std::{fmt, time::Duration as StdDuration};
++
++use humantime::format_duration;
+ 
+ use crate::{progress::Step, unit::DisplayValue};
+ 
+@@ -8,13 +10,13 @@ pub struct Duration;
+ 
+ impl DisplayValue for Duration {
+     fn display_current_value(&self, w: &mut dyn fmt::Write, value: Step, _upper: Option<Step>) -> fmt::Result {
+-        w.write_str(&compound_duration::format_dhms(value))
++        w.write_str(&format_duration(StdDuration::new(value as u64, 0)).to_string())
+     }
+     fn separator(&self, w: &mut dyn fmt::Write, _value: Step, _upper: Option<Step>) -> fmt::Result {
+         w.write_str(" of ")
+     }
+     fn display_upper_bound(&self, w: &mut dyn fmt::Write, upper_bound: Step, _value: Step) -> fmt::Result {
+-        w.write_str(&compound_duration::format_dhms(upper_bound))
++        w.write_str(&format_duration(StdDuration::new(upper_bound as u64, 0)).to_string())
+     }
+ 
+     fn dyn_hash(&self, state: &mut dyn std::hash::Hasher) {

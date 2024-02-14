@@ -1,0 +1,458 @@
+#compdef gpg-sq
+
+autoload -U is-at-least
+
+_gpg-sq() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" \
+'--tofu-policy=[set the TOFU policy for a key]:VALUE: ' \
+'--options=[read options from FILE]:FILE: ' \
+'--log-file=[write server mode logs to FILE]:FILE: ' \
+'--default-key=[use NAME as default secret key]:NAME: ' \
+'--encrypt-to=[encrypt to user ID NAME as well]:NAME: ' \
+'--group=[set up email aliases]:SPEC: ' \
+'-o+[write output to FILE]:FILE: ' \
+'--output=[write output to FILE]:FILE: ' \
+'-z+[set compress level to N (0 disables)]:N: ' \
+'--auto-key-locate=[use MECHANISMS to locate keys by mail address]:MECHANISMS: ' \
+'-r+[encrypt for USERID]:USERID: ' \
+'--recipient=[encrypt for USERID]:USERID: ' \
+'-u+[use USERID to sign or decrypt]:USERID: ' \
+'--local-user=[use USERID to sign or decrypt]:USERID: ' \
+'-s[make a signature]' \
+'--sign[make a signature]' \
+'--clear-sign[make a clear text signature]' \
+'--clearsign[@]' \
+'-b[make a detached signature]' \
+'--detach-sign[make a detached signature]' \
+'-e[encrypt data]' \
+'--encrypt[encrypt data]' \
+'--encrypt-files[@]' \
+'-c[encryption only with symmetric cipher]' \
+'--symmetric[encryption only with symmetric cipher]' \
+'--store[@]' \
+'-d[decrypt data (default)]' \
+'--decrypt[decrypt data (default)]' \
+'--decrypt-files[@]' \
+'--verify[verify a signature]' \
+'--verify-files[@]' \
+'-k[list keys]' \
+'--list-keys[list keys]' \
+'--list-public-keys[@]' \
+'--list-signatures[list keys and signatures]' \
+'--list-sigs[@]' \
+'--check-signatures[list and check key signatures]' \
+'--check-sigs[@]' \
+'--fingerprint[list keys and fingerprints]' \
+'-K[list secret keys]' \
+'--list-secret-keys[list secret keys]' \
+'--generate-key[generate a new key pair]' \
+'--gen-key[@]' \
+'--quick-generate-key[quickly generate a new key pair]' \
+'--quick-gen-key[@]' \
+'--quick-add-uid[quickly add a new user-id]' \
+'--quick-adduid[@]' \
+'--quick-add-key[@]' \
+'--quick-addkey[@]' \
+'--quick-revoke-uid[quickly revoke a user-id]' \
+'--quick-revuid[@]' \
+'--quick-set-expire[quickly set a new expiration date]' \
+'--quick-set-primary-uid[@]' \
+'--full-generate-key[full featured key pair generation]' \
+'--full-gen-key[@]' \
+'--generate-revocation[generate a revocation certificate]' \
+'--gen-revoke[@]' \
+'--delete-keys[remove keys from the public keyring]' \
+'--delete-secret-keys[remove keys from the secret keyring]' \
+'--quick-sign-key[quickly sign a key]' \
+'--quick-lsign-key[quickly sign a key locally]' \
+'--quick-revoke-sig[quickly revoke a key signature]' \
+'--sign-key[sign a key]' \
+'--lsign-key[sign a key locally]' \
+'--edit-key[sign or edit a key]' \
+'--key-edit[@]' \
+'--change-passphrase[change a passphrase]' \
+'--passwd[@]' \
+'--generate-designated-revocation[@]' \
+'--desig-revoke[@]' \
+'--export[export keys]' \
+'--send-keys[export keys to a keyserver]' \
+'--receive-keys[import keys from a keyserver]' \
+'--recv-keys[@]' \
+'--search-keys[search for keys on a keyserver]' \
+'--refresh-keys[update all keys from a keyserver]' \
+'--locate-keys[@]' \
+'--locate-external-keys[@]' \
+'--fetch-keys[@]' \
+'--show-keys[@]' \
+'--export-secret-keys[@]' \
+'--export-secret-subkeys[@]' \
+'--export-ssh-key[@]' \
+'--import[import/merge keys]' \
+'--fast-import[@]' \
+'--list-config[@]' \
+'--list-gcrypt-config[@]' \
+'--gpgconf-list[@]' \
+'--gpgconf-test[@]' \
+'--list-packets[@]' \
+'--export-ownertrust[@]' \
+'--import-ownertrust[@]' \
+'--update-trustdb[update the trust database]' \
+'--check-trustdb[@]' \
+'--fix-trustdb[@]' \
+'--list-trustdb[@]' \
+'--dearmor[@]' \
+'--dearmour[@]' \
+'--enarmor[@]' \
+'--enarmour[@]' \
+'--print-md[print message digests]' \
+'--print-mds[@]' \
+'--gen-prime[@]' \
+'--gen-random[@]' \
+'--server[run in server mode]' \
+'--delete-secret-and-public-keys[@]' \
+'--rebuild-keydb-caches[@]' \
+'--list-key[@]' \
+'--list-sig[@]' \
+'--check-sig[@]' \
+'--show-key[@]' \
+'--Monitor[Options controlling the diagnostic output]' \
+'-v[verbose]' \
+'--verbose[verbose]' \
+'--no-verbose[@]' \
+'-q[be somewhat more quiet]' \
+'--quiet[be somewhat more quiet]' \
+'--no-tty[@]' \
+'--no-greeting[@]' \
+'--debug[@]' \
+'--debug-level[@]' \
+'--debug-all[@]' \
+'--debug-iolbf[@]' \
+'--display-charset[@]' \
+'--charset[@]' \
+'--no-options[@]' \
+'--logger-fd[@]' \
+'--logger-file[@]' \
+'--debug-quick-random[@]' \
+'--Configuration[Options controlling the configuration]' \
+'--homedir[@]' \
+'--faked-system-time[@]' \
+'--no-encrypt-to[@]' \
+'--hidden-encrypt-to[@]' \
+'--encrypt-to-default-key[@]' \
+'--default-recipient[@]' \
+'--default-recipient-self[@]' \
+'--no-default-recipient[@]' \
+'--ungroup[@]' \
+'--no-groups[@]' \
+'--compliance[@]' \
+'--gnupg[@]' \
+'--no-pgp2[@]' \
+'--no-pgp6[@]' \
+'--no-pgp7[@]' \
+'--no-pgp8[@]' \
+'--rfc2440[@]' \
+'--rfc4880[@]' \
+'--rfc4880bis[@]' \
+'--openpgp[use strict OpenPGP behavior]' \
+'--pgp6[@]' \
+'--pgp7[@]' \
+'--pgp8[@]' \
+'--default-new-key-algo[@]' \
+'--min-rsa-length[@]' \
+'--always-trust[@]' \
+'--trust-model[@]' \
+'--photo-viewer[@]' \
+'--known-notation[@]' \
+'--agent-program[@]' \
+'--dirmngr-program[@]' \
+'--exit-on-status-write-error[@]' \
+'--limit-card-insert-tries[@]' \
+'--enable-progress-filter[@]' \
+'--temp-directory[@]' \
+'--exec-path[@]' \
+'--expert[@]' \
+'--no-expert[@]' \
+'--no-secmem-warning[@]' \
+'--require-secmem[@]' \
+'--no-require-secmem[@]' \
+'--no-permission-warning[@]' \
+'-n[do not make any changes]' \
+'--dry-run[do not make any changes]' \
+'-i[prompt before overwriting]' \
+'--interactive[prompt before overwriting]' \
+'--default-sig-expire[@]' \
+'--ask-sig-expire[@]' \
+'--no-ask-sig-expire[@]' \
+'--default-cert-expire[@]' \
+'--ask-cert-expire[@]' \
+'--no-ask-cert-expire[@]' \
+'--default-cert-level[@]' \
+'--min-cert-level[@]' \
+'--ask-cert-level[@]' \
+'--no-ask-cert-level[@]' \
+'--only-sign-text-ids[@]' \
+'--enable-large-rsa[@]' \
+'--disable-large-rsa[@]' \
+'--enable-dsa2[@]' \
+'--disable-dsa2[@]' \
+'--personal-cipher-preferences[@]' \
+'--personal-digest-preferences[@]' \
+'--personal-compress-preferences[@]' \
+'--default-preference-list[@]' \
+'--default-keyserver-url[@]' \
+'--no-expensive-trust-checks[@]' \
+'--allow-non-selfsigned-uid[@]' \
+'--no-allow-non-selfsigned-uid[@]' \
+'--allow-freeform-uid[@]' \
+'--no-allow-freeform-uid[@]' \
+'--preserve-permissions[@]' \
+'--default-cert-check-level[@]' \
+'--tofu-default-policy[@]' \
+'--lock-once[@]' \
+'--lock-multiple[@]' \
+'--lock-never[@]' \
+'--compress-algo[@]' \
+'--compression-algo[@]' \
+'--bzip2-decompress-lowmem[@]' \
+'--completes-needed[@]' \
+'--marginals-needed[@]' \
+'--max-cert-depth[@]' \
+'--trustdb-name[@]' \
+'--auto-check-trustdb[@]' \
+'--no-auto-check-trustdb[@]' \
+'--force-ownertrust[@]' \
+'--Input[Options controlling the input]' \
+'--multifile[@]' \
+'--input-size-hint[@]' \
+'--utf8-strings[@]' \
+'--no-utf8-strings[@]' \
+'--set-filesize[@]' \
+'--no-literal[@]' \
+'--set-notation[@]' \
+'--sig-notation[@]' \
+'--cert-notation[@]' \
+'--set-policy-url[@]' \
+'--sig-policy-url[@]' \
+'--cert-policy-url[@]' \
+'--sig-keyserver-url[@]' \
+'--Output[Options controlling the output]' \
+'-a[create ascii armored output]' \
+'--armor[create ascii armored output]' \
+'--armour[@]' \
+'--no-armor[@]' \
+'--no-armour[@]' \
+'--max-output[@]' \
+'--comment[@]' \
+'--default-comment[@]' \
+'--no-comments[@]' \
+'--emit-version[@]' \
+'--no-emit-version[@]' \
+'--no-version[@]' \
+'--not-dash-escaped[@]' \
+'--escape-from-lines[@]' \
+'--no-escape-from-lines[@]' \
+'--mimemode[@]' \
+'--textmode[use canonical text mode]' \
+'--no-textmode[@]' \
+'--set-filename[@]' \
+'--for-your-eyes-only[@]' \
+'--no-for-your-eyes-only[@]' \
+'--show-notation[@]' \
+'--no-show-notation[@]' \
+'--show-session-key[@]' \
+'--use-embedded-filename[@]' \
+'--no-use-embedded-filename[@]' \
+'--unwrap[@]' \
+'--mangle-dos-filenames[@]' \
+'--no-mangle-dos-filenames[@]' \
+'--no-symkey-cache[@]' \
+'--skip-verify[@]' \
+'--list-only[@]' \
+'--compress-level[@]' \
+'--bzip2-compress-level[@]' \
+'--disable-signer-uid[@]' \
+'--ImportExport[Options controlling key import and export]' \
+'--no-auto-key-locate[@]' \
+'--auto-key-import[import missing key from a signature]' \
+'--no-auto-key-import[@]' \
+'--auto-key-retrieve[@]' \
+'--no-auto-key-retrieve[@]' \
+'--include-key-block[include the public key in signatures]' \
+'--no-include-key-block[@]' \
+'--disable-dirmngr[disable all access to the dirmngr]' \
+'--keyserver[@]' \
+'--keyserver-options[@]' \
+'--key-origin[@]' \
+'--import-options[@]' \
+'--import-filter[@]' \
+'--export-options[@]' \
+'--export-filter[@]' \
+'--merge-only[@]' \
+'--allow-secret-key-import[@]' \
+'--Keylist[Options controlling key listings]' \
+'--list-options[@]' \
+'--show-photos[@]' \
+'--no-show-photos[@]' \
+'--show-policy-url[@]' \
+'--no-show-policy-url[@]' \
+'--with-colons[@]' \
+'--with-tofu-info[@]' \
+'--with-key-data[@]' \
+'--with-sig-list[@]' \
+'--with-sig-check[@]' \
+'--with-fingerprint[@]' \
+'--with-subkey-fingerprint[@]' \
+'--with-subkey-fingerprints[@]' \
+'--with-icao-spelling[@]' \
+'--with-keygrip[@]' \
+'--with-secret[@]' \
+'--with-wkd-hash[@]' \
+'--with-key-origin[@]' \
+'--fast-list-mode[@]' \
+'--fixed-list-mode[@]' \
+'--legacy-list-mode[@]' \
+'--print-pka-records[@]' \
+'--print-dane-records[@]' \
+'--keyid-format[@]' \
+'--show-keyring[@]' \
+'--hidden-recipient[@]' \
+'--recipient-file[@]' \
+'--hidden-recipient-file[@]' \
+'--remote-user[@]' \
+'--throw-keyids[@]' \
+'--no-throw-keyids[@]' \
+'--trusted-key[@]' \
+'--sender[@]' \
+'--try-secret-key[@]' \
+'--try-all-secrets[@]' \
+'--no-default-keyring[@]' \
+'--no-keyring[@]' \
+'--keyring[@]' \
+'--primary-keyring[@]' \
+'--secret-keyring[@]' \
+'--skip-hidden-recipients[@]' \
+'--no-skip-hidden-recipients[@]' \
+'--override-session-key[@]' \
+'--override-session-key-fd[@]' \
+'--Security[Options controlling the security]' \
+'--s2k-mode[@]' \
+'--s2k-digest-algo[@]' \
+'--s2k-cipher-algo[@]' \
+'--s2k-count[@]' \
+'--require-backsigs[@]' \
+'--require-cross-certification[@]' \
+'--no-require-backsigs[@]' \
+'--no-require-cross-certification[@]' \
+'--verify-options[@]' \
+'--enable-special-filenames[@]' \
+'--no-random-seed-file[@]' \
+'--no-sig-cache[@]' \
+'--ignore-time-conflict[@]' \
+'--ignore-valid-from[@]' \
+'--ignore-crc-error[@]' \
+'--ignore-mdc-error[@]' \
+'--disable-cipher-algo[@]' \
+'--disable-pubkey-algo[@]' \
+'--cipher-algo[@]' \
+'--digest-algo[@]' \
+'--cert-digest-algo[@]' \
+'--override-compliance-check[@]' \
+'--allow-weak-key-signatures[@]' \
+'--allow-weak-digest-algos[@]' \
+'--weak-digest[@]' \
+'--allow-multisig-verification[@]' \
+'--allow-multiple-messages[@]' \
+'--no-allow-multiple-messages[@]' \
+'--batch[@]' \
+'--no-batch[@]' \
+'--yes[@]' \
+'--no[@]' \
+'--status-fd[@]' \
+'--status-file[@]' \
+'--attribute-fd[@]' \
+'--attribute-file[@]' \
+'--command-fd[@]' \
+'--command-file[@]' \
+'--passphrase[@]' \
+'--passphrase-fd[@]' \
+'--passphrase-file[@]' \
+'--passphrase-repeat[@]' \
+'--pinentry-mode[@]' \
+'--force-sign-key[@]' \
+'--request-origin[@]' \
+'--display[@]' \
+'--ttyname[@]' \
+'--ttytype[@]' \
+'--lc-ctype[@]' \
+'--lc-messages[@]' \
+'--xauthority[@]' \
+'--no-autostart[@]' \
+'--forbid-gen-key[@]' \
+'--require-compliance[@]' \
+'--use-only-openpgp-card[@]' \
+'--rfc2440-text[@]' \
+'--no-rfc2440-text[@]' \
+'--personal-cipher-prefs[@]' \
+'--personal-digest-prefs[@]' \
+'--personal-compress-prefs[@]' \
+'--sign-with[@]' \
+'--user[@]' \
+'--use-agent[@]' \
+'--no-use-agent[@]' \
+'--gpg-agent-info[@]' \
+'--reader-port[@]' \
+'--ctapi-driver[@]' \
+'--pcsc-driver[@]' \
+'--disable-ccid[@]' \
+'--honor-http-proxy[@]' \
+'--tofu-db-format[@]' \
+'--strict[@]' \
+'--no-strict[@]' \
+'--load-extension[@]' \
+'--sk-comments[@]' \
+'--no-sk-comments[@]' \
+'--compress-keys[@]' \
+'--compress-sigs[@]' \
+'--force-v3-sigs[@]' \
+'--no-force-v3-sigs[@]' \
+'--force-v4-certs[@]' \
+'--no-force-v4-certs[@]' \
+'--no-mdc-warning[@]' \
+'--force-mdc[@]' \
+'--no-force-mdc[@]' \
+'--disable-mdc[@]' \
+'--no-disable-mdc[@]' \
+'--x-sequoia-parcimonie[continuously update certificates]' \
+'--x-sequoia-autostart-parcimonie[automatically start daemon to update certs]' \
+'--x-sequoia-parcimonie-daemonize[@]' \
+'--version[@]' \
+'--warranty[@]' \
+'--dump-option-table[@]' \
+'--dump-options[@]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+}
+
+(( $+functions[_gpg-sq_commands] )) ||
+_gpg-sq_commands() {
+    local commands; commands=()
+    _describe -t commands 'gpg-sq commands' commands "$@"
+}
+
+if [ "$funcstack[1]" = "_gpg-sq" ]; then
+    _gpg-sq "$@"
+else
+    compdef _gpg-sq gpg-sq
+fi

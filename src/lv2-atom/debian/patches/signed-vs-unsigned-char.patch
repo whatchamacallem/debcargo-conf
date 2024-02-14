@@ -1,0 +1,63 @@
+Subject: Do not make assumption about char signedness
+From: Andreas Henriksson <andreas@fatal.se>
+
+
+For example on aarch64/arm64:
+
+```
+error[E0308]: mismatched types
+  --> tests/atom_integration.rs:91:14
+   |
+91 |         URI: LV2Map::URI.as_ptr() as *const i8,
+   |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `*const u8`, found `*const i8`
+   |
+   = note: expected raw pointer `*const u8`
+              found raw pointer `*const i8`
+
+error[E0308]: mismatched types
+   --> tests/atom_integration.rs:144:13
+    |
+141 |         let plugin = (plugin_descriptor.instantiate.unwrap())(
+    |                      ---------------------------------------- arguments to this function are incorrect
+...
+144 |             b"\0".as_ptr() as *const i8,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `*const u8`, found `*const i8`
+    |
+    = note: expected raw pointer `*const u8`
+               found raw pointer `*const i8`
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `lv2-atom` due to 2 previous errors
+```
+
+Forwarded: https://github.com/RustAudio/rust-lv2/pull/115
+
+--- rust-lv2-atom-2.0.0.orig/tests/atom_integration.rs
++++ rust-lv2-atom-2.0.0/tests/atom_integration.rs
+@@ -76,7 +76,7 @@ lv2_descriptors![AtomPlugin];
+ fn main() {
+     use atom::space::*;
+     use lv2_urid::*;
+-    use std::ffi::{c_void, CStr};
++    use std::ffi::{c_char, c_void, CStr};
+     use std::mem::size_of;
+     use std::pin::Pin;
+     use urid::*;
+@@ -88,7 +88,7 @@ fn main() {
+ 
+     let mut map_feature_interface = Box::pin(mapper.as_mut().make_map_interface());
+     let map_feature = Box::pin(sys::LV2_Feature {
+-        URI: LV2Map::URI.as_ptr() as *const i8,
++        URI: LV2Map::URI.as_ptr() as *const c_char,
+         data: map_feature_interface.as_mut().get_mut() as *mut _ as *mut c_void,
+     });
+     let features_list: &[*const sys::LV2_Feature] =
+@@ -141,7 +141,7 @@ fn main() {
+         let plugin = (plugin_descriptor.instantiate.unwrap())(
+             plugin_descriptor,
+             44100.0,
+-            b"\0".as_ptr() as *const i8,
++            b"\0".as_ptr() as *const c_char,
+             features_list.as_ptr(),
+         );
+ 

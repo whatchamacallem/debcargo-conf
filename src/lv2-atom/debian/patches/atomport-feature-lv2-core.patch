@@ -1,0 +1,31 @@
+Subject: Fix use of undeclared crate or module `port`
+From: Andreas Henriksson <andreas@fatal.se>
+
+```
+ 47s error[E0432]: unresolved import `port`
+ 47s   --> src/lib.rs:86:13
+ 47s    |
+ 47s 86 |     pub use port::AtomPort;
+ 47s    |             ^^^^ use of undeclared crate or module `port`
+```
+
+
+Fixed upstream in
+https://github.com/RustAudio/rust-lv2/commit/44aac000be49216ddd00f46aa7e8a05bde4a09f7#diff-3c4ce64ba5d6bb24d9c2def58753a5b1a15961ac6ecde8db196414d026efa295R98
+
+
+Forwarded: not-needed
+
+--- rust-lv2-atom-2.0.0.orig/src/lib.rs
++++ rust-lv2-atom-2.0.0/src/lib.rs
+@@ -83,7 +83,10 @@ pub mod prelude {
+     pub use crate::{Atom, AtomURIDCollection, UnidentifiedAtom};
+     pub use chunk::Chunk;
+     pub use object::{Object, ObjectHeader, PropertyHeader};
++
++    #[cfg(feature = "lv2-core")]
+     pub use port::AtomPort;
++
+     pub use scalar::{AtomURID, Bool, Double, Float, Int, Long};
+     pub use sequence::{Sequence, TimeStamp, TimeStampURID};
+     pub use space::{FramedMutSpace, MutSpace, Space};

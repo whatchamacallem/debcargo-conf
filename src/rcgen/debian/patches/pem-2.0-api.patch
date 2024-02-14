@@ -1,0 +1,36 @@
+This patch is based on a revert of upstream commit 0aa6095703dce04646461956b8d1e9f50c65fe97
+adapted for use in the Debian package by Peter Michael Green.
+
+Index: rcgen/src/lib.rs
+===================================================================
+--- rcgen.orig/src/lib.rs
++++ rcgen/src/lib.rs
+@@ -116,12 +116,9 @@ mod sign_algo;
+ // Uses ECDSA: https://crt.sh/?asn1=607203242
+ 
+ #[cfg(feature = "pem")]
+-const ENCODE_CONFIG: pem::EncodeConfig = {
+-	let line_ending = match cfg!(target_family = "windows") {
+-		true => pem::LineEnding::CRLF,
+-		false => pem::LineEnding::LF,
+-	};
+-	pem::EncodeConfig::new().set_line_ending(line_ending)
++const ENCODE_CONFIG: pem::EncodeConfig = match cfg!(target_family = "windows") {
++	true => pem::EncodeConfig { line_ending: pem::LineEnding::CRLF },
++	false => pem::EncodeConfig { line_ending: pem::LineEnding::LF },
+ };
+ 
+ #[derive(Debug, PartialEq, Eq, Hash, Clone)]
+Index: rcgen/Cargo.toml
+===================================================================
+--- rcgen.orig/Cargo.toml
++++ rcgen/Cargo.toml
+@@ -43,7 +43,7 @@ name = "rsa-irc-openssl"
+ required-features = ["pem"]
+ 
+ [dependencies.pem]
+-version = "3.0.2"
++version = "2.0.1"
+ optional = true
+ 
+ [dependencies.ring]

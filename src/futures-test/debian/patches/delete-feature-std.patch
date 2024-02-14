@@ -1,41 +1,27 @@
-diff --git a/Cargo.toml b/Cargo.toml
-index 2d68327..d9be782 100644
+only in patch2:
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -28,14 +28,17 @@ all-features = true
- [dependencies.futures-core]
- version = "0.3"
+@@ -30,2 +30,3 @@
  default-features = false
 +features = ["std"]
  
- [dependencies.futures-executor]
- version = "0.3"
+@@ -34,2 +35,3 @@
  default-features = false
 +features = ["std"]
  
- [dependencies.futures-io]
- version = "0.3"
+@@ -38,2 +40,3 @@
  default-features = false
 +features = ["std"]
  
- [dependencies.futures-macro]
- version = "0.3"
-@@ -48,10 +51,12 @@ default-features = false
- [dependencies.futures-task]
- version = "0.3"
+@@ -50,2 +53,3 @@
  default-features = false
 +features = ["std"]
  
- [dependencies.futures-util]
- version = "0.3"
+@@ -54,2 +58,3 @@
  default-features = false
 +features = ["std", "io"]
  
- [dependencies.pin-project]
- version = "1"
-@@ -62,13 +67,3 @@ default-features = false
- 
- [dev-dependencies]
+@@ -64,11 +69 @@
  
 -[features]
 -default = ["std"]
@@ -47,13 +33,10 @@ index 2d68327..d9be782 100644
 -    "futures-util/io",
 -    "futures-executor/std",
 -]
-diff --git a/src/lib.rs b/src/lib.rs
-index dda7a45..7b6ce9b 100644
+only in patch2:
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -14,14 +14,8 @@
-     )
- ))]
+@@ -16,10 +16,4 @@
  
 -#[cfg(not(feature = "std"))]
 -compile_error!(
@@ -64,11 +47,7 @@ index dda7a45..7b6ce9b 100644
  #[doc(hidden)]
 -#[cfg(feature = "std")]
  pub mod __private {
-     pub use futures_core::{future, stream, task};
-     pub use futures_executor::block_on;
-@@ -37,22 +31,16 @@ pub mod __private {
- }
- 
+@@ -39,18 +33,12 @@
  #[macro_use]
 -#[cfg(feature = "std")]
  mod assert;
@@ -87,11 +66,7 @@ index dda7a45..7b6ce9b 100644
  
 -#[cfg(feature = "std")]
  pub mod io;
- 
- mod assert_unmoved;
-@@ -81,5 +69,4 @@ mod track_closed;
- ///     })
- /// }
+@@ -83,3 +71,2 @@
  /// ```
 -#[cfg(feature = "std")]
  pub use futures_macro::test_internal as test;

@@ -1,16 +1,35 @@
-Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-Description: Drop building for windows
-
 We don't support the crypto-cng backend on debian; it requires a
 Windows installation to build that way.
 
+diff --git a/Cargo.toml b/Cargo.toml
+index 348420b..c384dfb 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -112,7 +112,6 @@
- default-features = false
+@@ -142,10 +142,10 @@ crypto-botan2 = [
+     "sequoia-openpgp/compression",
+     "sequoia-openpgp/crypto-botan2",
+ ]
+-crypto-cng = [
+-    "sequoia-openpgp/compression",
+-    "sequoia-openpgp/crypto-cng",
+-]
++#crypto-cng = [
++#    "sequoia-openpgp/compression",
++#    "sequoia-openpgp/crypto-cng",
++#]
+ crypto-nettle = [
+     "sequoia-openpgp/compression",
+     "sequoia-openpgp/crypto-nettle",
+@@ -156,9 +156,9 @@ crypto-openssl = [
+ ]
+ default = ["sequoia-openpgp/default"]
  
- [features]
--crypto-cng = ["sequoia-openpgp/compression", "sequoia-openpgp/crypto-cng"]
- crypto-nettle = ["sequoia-openpgp/compression", "sequoia-openpgp/crypto-nettle"]
- default = ["sequoia-openpgp/default", "net"]
- net = ["sequoia-net", "tokio", "rand", "rand_distr"]
+-[target."cfg(windows)".dependencies.rusqlite]
+-version = ">=0.24, <0.31"
+-features = ["bundled"]
++#[target."cfg(windows)".dependencies.rusqlite]
++#version = ">=0.24, <0.31"
++#features = ["bundled"]
+ 
+ [badges.gitlab]
+ repository = "sequoia-pgp/sequoia-octopus-librnp"

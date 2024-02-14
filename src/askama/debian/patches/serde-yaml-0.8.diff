@@ -1,0 +1,48 @@
+Index: askama/Cargo.toml
+===================================================================
+--- askama.orig/Cargo.toml
++++ askama/Cargo.toml
+@@ -66,7 +66,7 @@ version = "1.0"
+ optional = true
+ 
+ [dependencies.serde_yaml]
+-version = "0.9"
++version = ">= 0.8, < 1.0"
+ optional = true
+ 
+ [features]
+Index: askama/src/filters/yaml.rs
+===================================================================
+--- askama.orig/src/filters/yaml.rs
++++ askama/src/filters/yaml.rs
+@@ -20,14 +20,25 @@ mod tests {
+     use super::*;
+     use askama_escape::Html;
+ 
++    fn strip_document_seperator(s: &str) -> &str {
++        // serde-yaml 0.8 includes a yaml "document seperator" at the start of
++        // the encoded yaml, this function strips it out if present so the
++        // tests pass with both serde-yaml 0.8 and 0.9
++        if s.starts_with("---\n") {
++            return &s[4..];
++        } else {
++            return s;
++        }
++    }
++
+     #[test]
+     fn test_yaml() {
+-        assert_eq!(yaml(Html, true).unwrap().to_string(), "true\n");
+-        assert_eq!(yaml(Html, "foo").unwrap().to_string(), "foo\n");
+-        assert_eq!(yaml(Html, true).unwrap().to_string(), "true\n");
+-        assert_eq!(yaml(Html, "foo").unwrap().to_string(), "foo\n");
++        assert_eq!(strip_document_seperator(&yaml(Html, true).unwrap().to_string()), "true\n");
++        assert_eq!(strip_document_seperator(&yaml(Html, "foo").unwrap().to_string()), "foo\n");
++        assert_eq!(strip_document_seperator(&yaml(Html, true).unwrap().to_string()), "true\n");
++        assert_eq!(strip_document_seperator(&yaml(Html, "foo").unwrap().to_string()), "foo\n");
+         assert_eq!(
+-            yaml(Html, &vec!["foo", "bar"]).unwrap().to_string(),
++            strip_document_seperator(&yaml(Html, &vec!["foo", "bar"]).unwrap().to_string()),
+             "- foo\n- bar\n"
+         );
+     }

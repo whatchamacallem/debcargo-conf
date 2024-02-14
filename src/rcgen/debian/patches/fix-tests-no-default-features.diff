@@ -1,45 +1,8 @@
-Index: rcgen/tests/generic.rs
-===================================================================
---- rcgen.orig/tests/generic.rs
-+++ rcgen/tests/generic.rs
-@@ -11,6 +11,7 @@ fn generate_hash<T: Hash>(subject: &T) -
- }
- 
- #[test]
-+#[cfg(feature = "pem")]
- fn test_key_params_mismatch() {
- 	let available_key_params = [
- 		&rcgen::PKCS_RSA_SHA256,
-Index: rcgen/tests/openssl.rs
-===================================================================
---- rcgen.orig/tests/openssl.rs
-+++ rcgen/tests/openssl.rs
-@@ -1,3 +1,4 @@
-+#![cfg(feature = "pem")]
- use rcgen::{Certificate, NameConstraints, GeneralSubtree, IsCa,
- 	BasicConstraints, CertificateParams, DnType, DnValue};
- use openssl::pkey::PKey;
 Index: rcgen/tests/webpki.rs
 ===================================================================
 --- rcgen.orig/tests/webpki.rs
 +++ rcgen/tests/webpki.rs
-@@ -28,6 +28,7 @@ fn sign_msg_ed25519(cert :&Certificate,
- 	signature.as_ref().to_vec()
- }
- 
-+#[cfg(feature = "pem")]
- fn sign_msg_rsa(cert :&Certificate, msg :&[u8], encoding :&'static dyn RsaEncoding) -> Vec<u8> {
- 	let pk_der = cert.serialize_private_key_der();
- 	let key_pair = RsaKeyPair::from_pkcs8(&pk_der).unwrap();
-@@ -38,6 +39,7 @@ fn sign_msg_rsa(cert :&Certificate, msg
- 	signature
- }
- 
-+#[cfg(feature = "pem")]
- fn check_cert<'a, 'b>(cert_der :&[u8], cert :&'a Certificate, alg :&SignatureAlgorithm,
- 		sign_fn :impl FnOnce(&'a Certificate, &'b [u8]) -> Vec<u8>) {
- 	println!("{}", cert.serialize_pem().unwrap());
-@@ -80,6 +82,7 @@ fn check_cert_ca<'a, 'b>(cert_der :&[u8]
+@@ -105,6 +105,7 @@ fn check_cert_ca<'a, 'b>(
  }
  
  #[test]
@@ -47,7 +10,7 @@ Index: rcgen/tests/webpki.rs
  fn test_webpki() {
  	let params = util::default_params();
  	let cert = Certificate::from_params(params).unwrap();
-@@ -93,6 +96,7 @@ fn test_webpki() {
+@@ -117,6 +118,7 @@ fn test_webpki() {
  }
  
  #[test]
@@ -55,7 +18,7 @@ Index: rcgen/tests/webpki.rs
  fn test_webpki_256() {
  	let mut params = util::default_params();
  	params.alg = &rcgen::PKCS_ECDSA_P256_SHA256;
-@@ -108,6 +112,7 @@ fn test_webpki_256() {
+@@ -131,6 +133,7 @@ fn test_webpki_256() {
  }
  
  #[test]
@@ -63,7 +26,7 @@ Index: rcgen/tests/webpki.rs
  fn test_webpki_384() {
  	let mut params = util::default_params();
  	params.alg = &rcgen::PKCS_ECDSA_P384_SHA384;
-@@ -123,6 +128,7 @@ fn test_webpki_384() {
+@@ -145,6 +148,7 @@ fn test_webpki_384() {
  }
  
  #[test]
@@ -71,39 +34,39 @@ Index: rcgen/tests/webpki.rs
  fn test_webpki_25519() {
  	let mut params = util::default_params();
  	params.alg = &rcgen::PKCS_ED25519;
-@@ -136,6 +142,7 @@ fn test_webpki_25519() {
- }
+@@ -159,6 +163,7 @@ fn test_webpki_25519() {
  
+ #[cfg(feature = "pem")]
  #[test]
 +#[cfg(feature = "pem")]
  fn test_webpki_25519_v1_given() {
  	let mut params = util::default_params();
  	params.alg = &rcgen::PKCS_ED25519;
-@@ -152,6 +159,7 @@ fn test_webpki_25519_v1_given() {
- }
+@@ -176,6 +181,7 @@ fn test_webpki_25519_v1_given() {
  
+ #[cfg(feature = "pem")]
  #[test]
 +#[cfg(feature = "pem")]
  fn test_webpki_25519_v2_given() {
  	let mut params = util::default_params();
  	params.alg = &rcgen::PKCS_ED25519;
-@@ -168,6 +176,7 @@ fn test_webpki_25519_v2_given() {
- }
+@@ -193,6 +199,7 @@ fn test_webpki_25519_v2_given() {
  
+ #[cfg(feature = "pem")]
  #[test]
 +#[cfg(feature = "pem")]
  fn test_webpki_rsa_given() {
  	let mut params = util::default_params();
  	params.alg = &rcgen::PKCS_RSA_SHA256;
-@@ -185,6 +194,7 @@ fn test_webpki_rsa_given() {
- }
+@@ -215,6 +222,7 @@ fn test_webpki_rsa_given() {
  
+ #[cfg(feature = "pem")]
  #[test]
 +#[cfg(feature = "pem")]
  fn test_webpki_rsa_combinations_given() {
- 	let configs :&[(_, _, &'static dyn signature::RsaEncoding)] = &[
- 		(&rcgen::PKCS_RSA_SHA256, &webpki::RSA_PKCS1_2048_8192_SHA256, &signature::RSA_PKCS1_SHA256),
-@@ -251,6 +261,7 @@ fn test_webpki_separate_ca_with_other_si
+ 	let configs: &[(_, _, &'static dyn signature::RsaEncoding)] = &[
+ 		(
+@@ -313,6 +321,7 @@ fn test_webpki_separate_ca_with_other_si
  }
  
  #[test]
@@ -111,14 +74,14 @@ Index: rcgen/tests/webpki.rs
  fn from_remote() {
  	struct Remote(EcdsaKeyPair);
  
-@@ -408,6 +419,7 @@ fn test_certificate_from_csr() {
+@@ -515,6 +524,7 @@ fn test_certificate_from_csr() {
  }
  
  #[test]
 +#[cfg(feature = "pem")]
  fn test_webpki_serial_number() {
  	let mut params = util::default_params();
- 	params.serial_number = Some(vec![0,1,2].into());
+ 	params.serial_number = Some(vec![0, 1, 2].into());
 Index: rcgen/examples/rsa-irc-openssl.rs
 ===================================================================
 --- rcgen.orig/examples/rsa-irc-openssl.rs
@@ -127,7 +90,7 @@ Index: rcgen/examples/rsa-irc-openssl.rs
 +#![cfg(feature = "pem")]
  #![allow(clippy::complexity, clippy::style, clippy::pedantic)]
  
- use rcgen::{Certificate, CertificateParams,
+ fn main() -> Result<(), Box<dyn std::error::Error>> {
 Index: rcgen/examples/rsa-irc.rs
 ===================================================================
 --- rcgen.orig/examples/rsa-irc.rs
@@ -136,4 +99,4 @@ Index: rcgen/examples/rsa-irc.rs
 +#![cfg(feature = "pem")]
  #![allow(clippy::complexity, clippy::style, clippy::pedantic)]
  
- use rsa::RsaPrivateKey;
+ fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -1,0 +1,251 @@
+Index: tokio-uring/Cargo.toml
+===================================================================
+--- tokio-uring.orig/Cargo.toml
++++ tokio-uring/Cargo.toml
+@@ -31,20 +31,11 @@ categories = [
+ ]
+ license = "MIT"
+ repository = "https://github.com/tokio-rs/tokio-uring"
++autobenches = false
+ 
+ [package.metadata.docs.rs]
+ all-features = true
+ 
+-[[bench]]
+-name = "lai_no_op"
+-path = "benches/lai/no_op.rs"
+-harness = false
+-
+-[[bench]]
+-name = "criterion_no_op"
+-path = "benches/criterion/no_op.rs"
+-harness = false
+-
+ [dependencies.bytes]
+ version = "1.0"
+ optional = true
+Index: tokio-uring/src/driver/noop.rs
+===================================================================
+--- tokio-uring.orig/src/driver/noop.rs
++++ tokio-uring/src/driver/noop.rs
+@@ -30,6 +30,7 @@ mod test {
+     use crate as tokio_uring;
+ 
+     #[test]
++    #[ignore]
+     fn perform_no_op() -> () {
+         tokio_uring::start(async {
+             tokio_uring::no_op().await.unwrap();
+Index: tokio-uring/src/driver/op.rs
+===================================================================
+--- tokio-uring.orig/src/driver/op.rs
++++ tokio-uring/src/driver/op.rs
+@@ -311,6 +311,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn op_stays_in_slab_on_drop() {
+         let (op, data) = init();
+         drop(op);
+@@ -322,6 +323,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn poll_op_once() {
+         let (op, data) = init();
+         let mut op = task::spawn(op);
+@@ -352,6 +354,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn poll_op_twice() {
+         {
+             let (op, ..) = init();
+@@ -371,6 +374,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn poll_change_task() {
+         {
+             let (op, ..) = init();
+@@ -393,6 +397,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn complete_before_poll() {
+         let (op, data) = init();
+         let mut op = task::spawn(op);
+@@ -411,6 +416,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn complete_after_drop() {
+         let (op, data) = init();
+         let index = op.index;
+Index: tokio-uring/src/runtime/mod.rs
+===================================================================
+--- tokio-uring.orig/src/runtime/mod.rs
++++ tokio-uring/src/runtime/mod.rs
+@@ -131,12 +131,14 @@ mod test {
+     use crate::builder;
+ 
+     #[test]
++    #[ignore]
+     fn block_on() {
+         let rt = Runtime::new(&builder()).unwrap();
+         rt.block_on(async move { () });
+     }
+ 
+     #[test]
++    #[ignore]
+     fn block_on_twice() {
+         let rt = Runtime::new(&builder()).unwrap();
+         rt.block_on(async move { () });
+Index: tokio-uring/tests/directory.rs
+===================================================================
+--- tokio-uring.orig/tests/directory.rs
++++ tokio-uring/tests/directory.rs
+@@ -1,4 +1,5 @@
+ #[test]
++#[ignore]
+ fn basic_remove_dir() {
+     tokio_uring::start(async {
+         let temp_dir = tempfile::TempDir::new().unwrap();
+Index: tokio-uring/tests/driver.rs
+===================================================================
+--- tokio-uring.orig/tests/driver.rs
++++ tokio-uring/tests/driver.rs
+@@ -7,6 +7,7 @@ use tokio_uring::{buf::IoBuf, fs::File};
+ mod future;
+ 
+ #[test]
++#[ignore]
+ fn complete_ops_on_drop() {
+     use std::sync::Arc;
+ 
+@@ -76,6 +77,7 @@ fn complete_ops_on_drop() {
+ }
+ 
+ #[test]
++#[ignore]
+ fn too_many_submissions() {
+     let tempfile = tempfile();
+ 
+@@ -91,6 +93,7 @@ fn too_many_submissions() {
+ }
+ 
+ #[test]
++#[ignore]
+ fn completion_overflow() {
+     use std::process;
+     use std::{thread, time};
+Index: tokio-uring/tests/fs_file.rs
+===================================================================
+--- tokio-uring.orig/tests/fs_file.rs
++++ tokio-uring/tests/fs_file.rs
+@@ -23,6 +23,7 @@ async fn read_hello(file: &File) {
+ }
+ 
+ #[test]
++#[ignore]
+ fn basic_read() {
+     tokio_uring::start(async {
+         let mut tempfile = tempfile();
+@@ -34,6 +35,7 @@ fn basic_read() {
+ }
+ 
+ #[test]
++#[ignore]
+ fn basic_write() {
+     tokio_uring::start(async {
+         let tempfile = tempfile();
+@@ -48,6 +50,7 @@ fn basic_write() {
+ }
+ 
+ #[test]
++#[ignore]
+ fn vectored_read() {
+     tokio_uring::start(async {
+         let mut tempfile = tempfile();
+@@ -64,6 +67,7 @@ fn vectored_read() {
+ }
+ 
+ #[test]
++#[ignore]
+ fn vectored_write() {
+     tokio_uring::start(async {
+         let tempfile = tempfile();
+@@ -81,6 +85,7 @@ fn vectored_write() {
+ }
+ 
+ #[test]
++#[ignore]
+ fn cancel_read() {
+     tokio_uring::start(async {
+         let mut tempfile = tempfile();
+@@ -96,6 +101,7 @@ fn cancel_read() {
+ }
+ 
+ #[test]
++#[ignore]
+ fn explicit_close() {
+     let mut tempfile = tempfile();
+     tempfile.write_all(HELLO).unwrap();
+@@ -111,6 +117,7 @@ fn explicit_close() {
+ }
+ 
+ #[test]
++#[ignore]
+ fn drop_open() {
+     tokio_uring::start(async {
+         let tempfile = tempfile();
+@@ -127,6 +134,7 @@ fn drop_open() {
+ }
+ 
+ #[test]
++#[ignore]
+ fn drop_off_runtime() {
+     let file = tokio_uring::start(async {
+         let tempfile = tempfile();
+@@ -140,6 +148,7 @@ fn drop_off_runtime() {
+ }
+ 
+ #[test]
++#[ignore]
+ fn sync_doesnt_kill_anything() {
+     let tempfile = tempfile();
+ 
+@@ -154,6 +163,7 @@ fn sync_doesnt_kill_anything() {
+ }
+ 
+ #[test]
++#[ignore]
+ fn rename() {
+     use std::ffi::OsStr;
+     tokio_uring::start(async {
+Index: tokio-uring/tests/runtime.rs
+===================================================================
+--- tokio-uring.orig/tests/runtime.rs
++++ tokio-uring/tests/runtime.rs
+@@ -1,6 +1,7 @@
+ use tokio::net::{TcpListener, TcpStream};
+ 
+ #[test]
++#[ignore]
+ fn use_tokio_types_from_runtime() {
+     tokio_uring::start(async {
+         let listener = TcpListener::bind("0.0.0.0:0").await.unwrap();
+@@ -19,6 +20,7 @@ fn use_tokio_types_from_runtime() {
+ }
+ 
+ #[test]
++#[ignore]
+ fn spawn_a_task() {
+     use std::cell::RefCell;
+     use std::rc::Rc;

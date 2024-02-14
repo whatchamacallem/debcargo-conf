@@ -2,34 +2,48 @@ Index: transmission-client/Cargo.toml
 ===================================================================
 --- transmission-client.orig/Cargo.toml
 +++ transmission-client/Cargo.toml
-@@ -20,7 +20,7 @@ documentation = "https://docs.rs/transmi
- license = "MIT"
+@@ -22,7 +22,7 @@ license = "MIT"
  repository = "https://gitlab.gnome.org/haecker-felix/transmission-client"
+ 
  [dependencies.base64]
 -version = "0.13"
 +version = "0.21"
  
  [dependencies.isahc]
  version = "1.3"
+@@ -43,7 +43,7 @@ version = "1.0"
+ version = "0.1"
+ 
+ [dependencies.serde_with]
+-version = "1.12"
++version = "3.4"
+ 
+ [dependencies.thiserror]
+ version = "1.0"
+
+
 Index: transmission-client/src/authentication.rs
 ===================================================================
 --- transmission-client.orig/src/authentication.rs
 +++ transmission-client/src/authentication.rs
-@@ -1,4 +1,5 @@
+@@ -1,4 +1,6 @@
 -use base64::{encode_config, CharacterSet, Config};
 +use base64::engine::general_purpose::STANDARD_NO_PAD;
 +use base64::engine::Engine as _;
++
  
  #[derive(Debug)]
  pub struct Authentication {
-@@ -8,9 +9,8 @@ pub struct Authentication {
+@@ -8,9 +10,9 @@ pub struct Authentication {
  
  impl Authentication {
      pub fn base64_encoded(&self) -> String {
 -        let config = Config::new(CharacterSet::Standard, false);
++
          let auth = format!("{}:{}", &self.username, &self.password);
  
--        format!("Basic {}=", encode_config(&auth, config))
-+        format!("Basic {}=", STANDARD_NO_PAD.encode(&auth))
+-        format!("Basic {}=", encode_config(auth, config))
++        format!("Basic {}=", STANDARD_NO_PAD.encode(&auth)) 
      }
  }
+

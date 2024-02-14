@@ -1,0 +1,74 @@
+From 35e367ecc3c16371e9e261399de8fa21b5dadebb Mon Sep 17 00:00:00 2001
+From: James McCoy <jamessan@jamessan.com>
+Date: Mon, 30 Aug 2021 21:30:58 -0400
+Subject: [PATCH] Use doc_comment for README doctests
+
+---
+ Cargo.toml |  3 +++
+ src/lib.rs | 38 ++++++--------------------------------
+ 2 files changed, 9 insertions(+), 32 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index dd38355..89dc54e 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -12,3 +12,6 @@ keywords = ["ansi", "escape", "terminal"]
+ repository = "https://github.com/luser/strip-ansi-escapes"
+ [dependencies.vte]
+ version = "0.13"
++
++[dev-dependencies]
++doc-comment = "0.3"
+diff --git a/src/lib.rs b/src/lib.rs
+index 915494e..1ef5c8f 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -151,42 +151,16 @@ where
+     }
+ }
+ 
++#[cfg(doctest)]
++extern crate doc_comment;
++
++#[cfg(doctest)]
++doc_comment::doctest!("../README.md", readme);
++
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+ 
+-    use std::env;
+-    use std::env::consts::EXE_EXTENSION;
+-    use std::path::Path;
+-    use std::process::Command;
+-
+-    #[test]
+-    fn readme_test() {
+-        let rustdoc = Path::new("rustdoc").with_extension(EXE_EXTENSION);
+-        let readme = Path::new(file!())
+-            .parent()
+-            .unwrap()
+-            .parent()
+-            .unwrap()
+-            .join("README.md");
+-        let exe = env::current_exe().unwrap();
+-        let outdir = exe.parent().unwrap();
+-        let mut cmd = Command::new(rustdoc);
+-        cmd.args(&["--verbose", "--test", "-L"])
+-            .arg(&outdir)
+-            .arg(&readme);
+-        println!("{:?}", cmd);
+-        let result = cmd
+-            .spawn()
+-            .expect("Failed to spawn process")
+-            .wait()
+-            .expect("Failed to run process");
+-        assert!(
+-            result.success(),
+-            "Failed to run rustdoc tests on README.md!"
+-        );
+-    }
+-
+     fn assert_parsed(input: &[u8], expected: &[u8]) {
+         let bytes = strip(input).expect("Failed to strip escapes");
+         assert_eq!(bytes, expected);

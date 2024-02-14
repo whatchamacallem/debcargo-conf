@@ -3,7 +3,7 @@ Index: ring/tests/ed25519_tests.rs
 --- ring.orig/tests/ed25519_tests.rs
 +++ ring/tests/ed25519_tests.rs
 @@ -24,7 +24,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
- #[cfg(target_arch = "wasm32")]
+ #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
  wasm_bindgen_test_configure!(run_in_browser);
  
 -/// Test vectors from BoringSSL.
@@ -55,7 +55,7 @@ Index: ring/src/aead/aes.rs
 ===================================================================
 --- ring.orig/src/aead/aes.rs
 +++ ring/src/aead/aes.rs
-@@ -436,7 +436,7 @@ mod tests {
+@@ -441,7 +441,7 @@ mod tests {
      use super::*;
      use crate::test;
  
@@ -64,7 +64,7 @@ Index: ring/src/aead/aes.rs
      pub fn test_aes() {
          test::run(test_file!("aes_tests.txt"), |section, test_case| {
              assert_eq!(section, "");
-@@ -451,7 +451,7 @@ mod tests {
+@@ -456,7 +456,7 @@ mod tests {
  
              Ok(())
          })
@@ -77,7 +77,7 @@ Index: ring/src/aead/chacha.rs
 ===================================================================
 --- ring.orig/src/aead/chacha.rs
 +++ ring/src/aead/chacha.rs
-@@ -226,7 +226,7 @@ mod tests {
+@@ -220,7 +220,7 @@ mod tests {
              (0, 0)
          };
  
@@ -86,7 +86,7 @@ Index: ring/src/aead/chacha.rs
      fn chacha20_test_default() {
          // Always use `MAX_OFFSET` if we hav assembly code.
          let max_offset = if cfg!(any(
-@@ -292,7 +292,7 @@ mod tests {
+@@ -286,7 +286,7 @@ mod tests {
  
              Ok(())
          });
@@ -99,7 +99,7 @@ Index: ring/src/arithmetic/bigint.rs
 ===================================================================
 --- ring.orig/src/arithmetic/bigint.rs
 +++ ring/src/arithmetic/bigint.rs
-@@ -842,7 +842,7 @@ mod tests {
+@@ -847,7 +847,7 @@ mod tests {
  
      impl PublicModulus for M {}
  
@@ -108,7 +108,7 @@ Index: ring/src/arithmetic/bigint.rs
      fn test_elem_exp_consttime() {
          let cpu_features = cpu::features();
          test::run(
-@@ -893,9 +893,9 @@ mod tests {
+@@ -898,9 +898,9 @@ mod tests {
                  Ok(())
              },
          )
@@ -120,7 +120,7 @@ Index: ring/src/arithmetic/bigint.rs
      fn test_elem_squared() {
          let cpu_features = cpu::features();
          test::run(
-@@ -915,9 +915,9 @@ mod tests {
+@@ -920,9 +920,9 @@ mod tests {
                  Ok(())
              },
          )
@@ -132,7 +132,7 @@ Index: ring/src/arithmetic/bigint.rs
      fn test_elem_reduced() {
          let cpu_features = cpu::features();
          test::run(
-@@ -942,9 +942,9 @@ mod tests {
+@@ -947,9 +947,9 @@ mod tests {
                  Ok(())
              },
          )
@@ -144,7 +144,7 @@ Index: ring/src/arithmetic/bigint.rs
      fn test_elem_reduced_once() {
          let cpu_features = cpu::features();
          test::run(
-@@ -968,7 +968,7 @@ mod tests {
+@@ -973,7 +973,7 @@ mod tests {
                  Ok(())
              },
          )
@@ -157,7 +157,7 @@ Index: ring/src/ec/suite_b/ops.rs
 ===================================================================
 --- ring.orig/src/ec/suite_b/ops.rs
 +++ ring/src/ec/suite_b/ops.rs
-@@ -460,7 +460,7 @@ mod tests {
+@@ -466,7 +466,7 @@ mod tests {
          q_minus_n_plus_n_equals_0_test(&p384::PUBLIC_SCALAR_OPS);
      }
  
@@ -166,7 +166,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_elem_add_test() {
          elem_add_test(
              &p256::PUBLIC_SCALAR_OPS,
-@@ -474,7 +474,7 @@ mod tests {
+@@ -480,7 +480,7 @@ mod tests {
              &p384::PUBLIC_SCALAR_OPS,
              test_file!("ops/p384_elem_sum_tests.txt"),
          );
@@ -175,7 +175,7 @@ Index: ring/src/ec/suite_b/ops.rs
  
      fn elem_add_test(ops: &PublicScalarOps, test_file: test::File) {
          test::run(test_file, |section, test_case| {
-@@ -500,7 +500,7 @@ mod tests {
+@@ -506,7 +506,7 @@ mod tests {
      // XXX: There's no `p256_sub` in *ring*; it's logic is inlined into
      // the point arithmetic functions. Thus, we can't test it.
  
@@ -184,7 +184,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p384_elem_sub_test() {
          prefixed_extern! {
              fn p384_elem_sub(r: *mut Limb, a: *const Limb, b: *const Limb);
-@@ -510,7 +510,7 @@ mod tests {
+@@ -516,7 +516,7 @@ mod tests {
              p384_elem_sub,
              test_file!("ops/p384_elem_sum_tests.txt"),
          );
@@ -193,7 +193,7 @@ Index: ring/src/ec/suite_b/ops.rs
  
      fn elem_sub_test(
          ops: &CommonOps,
-@@ -551,7 +551,7 @@ mod tests {
+@@ -557,7 +557,7 @@ mod tests {
      // XXX: There's no `p256_div_by_2` in *ring*; it's logic is inlined
      // into the point arithmetic functions. Thus, we can't test it.
  
@@ -202,7 +202,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p384_elem_div_by_2_test() {
          prefixed_extern! {
              fn p384_elem_div_by_2(r: *mut Limb, a: *const Limb);
-@@ -561,7 +561,7 @@ mod tests {
+@@ -567,7 +567,7 @@ mod tests {
              p384_elem_div_by_2,
              test_file!("ops/p384_elem_div_by_2_tests.txt"),
          );
@@ -211,7 +211,7 @@ Index: ring/src/ec/suite_b/ops.rs
  
      fn elem_div_by_2_test(
          ops: &CommonOps,
-@@ -585,7 +585,7 @@ mod tests {
+@@ -591,7 +591,7 @@ mod tests {
      }
  
      // There is no `ecp_nistz256_neg` on other targets.
@@ -220,7 +220,7 @@ Index: ring/src/ec/suite_b/ops.rs
      #[test]
      fn p256_elem_neg_test() {
          prefixed_extern! {
-@@ -608,7 +608,7 @@ mod tests {
+@@ -614,7 +614,7 @@ mod tests {
              p384_elem_neg,
              test_file!("ops/p384_elem_neg_tests.txt"),
          );
@@ -229,7 +229,7 @@ Index: ring/src/ec/suite_b/ops.rs
  
      fn elem_neg_test(
          ops: &CommonOps,
-@@ -643,7 +643,7 @@ mod tests {
+@@ -649,7 +649,7 @@ mod tests {
          })
      }
  
@@ -238,7 +238,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_elem_mul_test() {
          elem_mul_test(&p256::COMMON_OPS, test_file!("ops/p256_elem_mul_tests.txt"));
      }
-@@ -651,7 +651,7 @@ mod tests {
+@@ -657,7 +657,7 @@ mod tests {
      #[test]
      fn p384_elem_mul_test() {
          elem_mul_test(&p384::COMMON_OPS, test_file!("ops/p384_elem_mul_tests.txt"));
@@ -247,7 +247,7 @@ Index: ring/src/ec/suite_b/ops.rs
  
      fn elem_mul_test(ops: &CommonOps, test_file: test::File) {
          test::run(test_file, |section, test_case| {
-@@ -667,7 +667,7 @@ mod tests {
+@@ -673,7 +673,7 @@ mod tests {
          })
      }
  
@@ -256,7 +256,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_scalar_mul_test() {
          scalar_mul_test(
              &p256::SCALAR_OPS,
-@@ -681,7 +681,7 @@ mod tests {
+@@ -687,7 +687,7 @@ mod tests {
              &p384::SCALAR_OPS,
              test_file!("ops/p384_scalar_mul_tests.txt"),
          );
@@ -265,7 +265,7 @@ Index: ring/src/ec/suite_b/ops.rs
  
      fn scalar_mul_test(ops: &ScalarOps, test_file: test::File) {
          test::run(test_file, |section, test_case| {
-@@ -697,7 +697,7 @@ mod tests {
+@@ -703,7 +703,7 @@ mod tests {
          })
      }
  
@@ -274,7 +274,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_scalar_square_test() {
          prefixed_extern! {
              fn p256_scalar_sqr_rep_mont(r: *mut Limb, a: *const Limb, rep: Limb);
-@@ -707,7 +707,7 @@ mod tests {
+@@ -713,7 +713,7 @@ mod tests {
              p256_scalar_sqr_rep_mont,
              test_file!("ops/p256_scalar_square_tests.txt"),
          );
@@ -283,7 +283,7 @@ Index: ring/src/ec/suite_b/ops.rs
  
      // XXX: There's no `p384_scalar_square_test()` because there's no dedicated
      // `p384_scalar_sqr_rep_mont()`.
-@@ -756,7 +756,7 @@ mod tests {
+@@ -762,7 +762,7 @@ mod tests {
          let _ = p384::SCALAR_OPS.scalar_inv_to_mont(&ZERO_SCALAR);
      }
  
@@ -292,7 +292,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_point_sum_test() {
          point_sum_test(
              &p256::PRIVATE_KEY_OPS,
-@@ -770,7 +770,7 @@ mod tests {
+@@ -776,7 +776,7 @@ mod tests {
              &p384::PRIVATE_KEY_OPS,
              test_file!("ops/p384_point_sum_tests.txt"),
          );
@@ -301,7 +301,7 @@ Index: ring/src/ec/suite_b/ops.rs
  
      fn point_sum_test(ops: &PrivateKeyOps, test_file: test::File) {
          test::run(test_file, |section, test_case| {
-@@ -787,7 +787,7 @@ mod tests {
+@@ -793,7 +793,7 @@ mod tests {
          });
      }
  
@@ -310,7 +310,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_point_sum_mixed_test() {
          prefixed_extern! {
              fn p256_point_add_affine(
-@@ -801,7 +801,7 @@ mod tests {
+@@ -807,7 +807,7 @@ mod tests {
              p256_point_add_affine,
              test_file!("ops/p256_point_sum_mixed_tests.txt"),
          );
@@ -319,7 +319,7 @@ Index: ring/src/ec/suite_b/ops.rs
  
      // XXX: There is no `nistz384_point_add_affine()`.
  
-@@ -832,7 +832,7 @@ mod tests {
+@@ -838,7 +838,7 @@ mod tests {
          });
      }
  
@@ -328,8 +328,8 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_point_double_test() {
          prefixed_extern! {
              fn p256_point_double(
-@@ -860,7 +860,7 @@ mod tests {
-             nistz384_point_double,
+@@ -866,7 +866,7 @@ mod tests {
+             p384_point_double,
              test_file!("ops/p384_point_double_tests.txt"),
          );
 -    }
@@ -337,7 +337,7 @@ Index: ring/src/ec/suite_b/ops.rs
  
      fn point_double_test(
          ops: &PrivateKeyOps,
-@@ -887,21 +887,21 @@ mod tests {
+@@ -893,21 +893,21 @@ mod tests {
          });
      }
  
@@ -363,7 +363,7 @@ Index: ring/src/ec/suite_b/ops.rs
  
      fn point_mul_tests(ops: &PrivateKeyOps, test_file: test::File) {
          test::run(test_file, |section, test_case| {
-@@ -920,14 +920,14 @@ mod tests {
+@@ -926,14 +926,14 @@ mod tests {
          })
      }
  
@@ -380,7 +380,7 @@ Index: ring/src/ec/suite_b/ops.rs
  
      fn point_mul_serialized_test(
          priv_ops: &PrivateKeyOps,
-@@ -969,21 +969,21 @@ mod tests {
+@@ -975,23 +975,23 @@ mod tests {
          })
      }
  
@@ -389,6 +389,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_point_mul_base_test() {
          point_mul_base_tests(
              &p256::PRIVATE_KEY_OPS,
+             |s| p256::PRIVATE_KEY_OPS.point_mul_base(s),
              test_file!("ops/p256_point_mul_base_tests.txt"),
          );
 -    }
@@ -399,13 +400,14 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p384_point_mul_base_test() {
          point_mul_base_tests(
              &p384::PRIVATE_KEY_OPS,
+             |s| p384::PRIVATE_KEY_OPS.point_mul_base(s),
              test_file!("ops/p384_point_mul_base_tests.txt"),
          );
 -    }
 +    }*/
  
-     fn point_mul_base_tests(ops: &PrivateKeyOps, test_file: test::File) {
-         test::run(test_file, |section, test_case| {
+     pub(super) fn point_mul_base_tests(
+         ops: &PrivateKeyOps,
 Index: ring/src/ec/suite_b/public_key.rs
 ===================================================================
 --- ring.orig/src/ec/suite_b/public_key.rs
@@ -497,7 +499,7 @@ Index: ring/tests/aead_tests.rs
 ===================================================================
 --- ring.orig/tests/aead_tests.rs
 +++ ring/tests/aead_tests.rs
-@@ -79,11 +79,11 @@ macro_rules! test_aead {
+@@ -78,11 +78,11 @@ macro_rules! test_aead {
      }
  }
  
@@ -511,7 +513,7 @@ Index: ring/tests/aead_tests.rs
  
  struct KnownAnswerTestCase<'a> {
      key: &'a [u8],
-@@ -442,7 +442,7 @@ fn test_aead_nonce_sizes() {
+@@ -441,7 +441,7 @@ fn test_aead_nonce_sizes() {
      assert!(aead::Nonce::try_assume_unique_for_key(&nonce[..16]).is_err()); // 128 bits.
  }
  
@@ -520,7 +522,7 @@ Index: ring/tests/aead_tests.rs
  #[test]
  fn aead_chacha20_poly1305_openssh() {
      // TODO: test_aead_key_sizes(...);
-@@ -488,7 +488,7 @@ fn aead_chacha20_poly1305_openssh() {
+@@ -487,7 +487,7 @@ fn aead_chacha20_poly1305_openssh() {
              Ok(())
          },
      );
@@ -533,7 +535,7 @@ Index: ring/tests/agreement_tests.rs
 ===================================================================
 --- ring.orig/tests/agreement_tests.rs
 +++ ring/tests/agreement_tests.rs
-@@ -64,7 +64,7 @@ fn agreement_traits() {
+@@ -68,7 +68,7 @@ fn agreement_traits() {
      assert_eq!(unparsed_public_key.as_ref(), &[0x01, 0x02, 0x03]);
  }
  
@@ -542,7 +544,7 @@ Index: ring/tests/agreement_tests.rs
  fn agreement_agree_ephemeral() {
      let rng = rand::SystemRandom::new();
  
-@@ -119,7 +119,7 @@ fn agreement_agree_ephemeral() {
+@@ -123,7 +123,7 @@ fn agreement_agree_ephemeral() {
  
          Ok(())
      });
@@ -654,7 +656,7 @@ Index: ring/tests/hkdf_tests.rs
 --- ring.orig/tests/hkdf_tests.rs
 +++ ring/tests/hkdf_tests.rs
 @@ -20,7 +20,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
- #[cfg(target_arch = "wasm32")]
+ #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
  wasm_bindgen_test_configure!(run_in_browser);
  
 -#[test]
@@ -676,7 +678,7 @@ Index: ring/tests/hmac_tests.rs
 --- ring.orig/tests/hmac_tests.rs
 +++ ring/tests/hmac_tests.rs
 @@ -20,7 +20,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
- #[cfg(target_arch = "wasm32")]
+ #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
  wasm_bindgen_test_configure!(run_in_browser);
  
 -#[test]
@@ -698,7 +700,7 @@ Index: ring/tests/pbkdf2_tests.rs
 --- ring.orig/tests/pbkdf2_tests.rs
 +++ ring/tests/pbkdf2_tests.rs
 @@ -21,7 +21,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
- #[cfg(target_arch = "wasm32")]
+ #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
  wasm_bindgen_test_configure!(run_in_browser);
  
 -/// Test vectors from BoringSSL, Go, and other sources.
@@ -739,7 +741,7 @@ Index: ring/tests/rsa_tests.rs
 --- ring.orig/tests/rsa_tests.rs
 +++ ring/tests/rsa_tests.rs
 @@ -28,7 +28,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
- #[cfg(target_arch = "wasm32")]
+ #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
  wasm_bindgen_test_configure!(run_in_browser);
  
 -#[test]
@@ -864,3 +866,22 @@ Index: ring/src/ec/suite_b/ecdsa/signing.rs
 -    }
 +    }*/
  }
+Index: ring/src/ec/suite_b/ops/p256.rs
+===================================================================
+--- ring.orig/src/ec/suite_b/ops/p256.rs
++++ ring/src/ec/suite_b/ops/p256.rs
+@@ -312,7 +312,7 @@ prefixed_extern! {
+     );
+ }
+ 
+-#[cfg(test)]
++/*#[cfg(test)]
+ mod tests {
+     #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
+     #[test]
+@@ -324,4 +324,4 @@ mod tests {
+             test_file!("p256_point_mul_base_tests.txt"),
+         );
+     }
+-}
++}*/

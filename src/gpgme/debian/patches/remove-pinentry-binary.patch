@@ -1,14 +1,15 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index 6411d59..61d3ad3 100644
+index 8ca1820..ebf1f31 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -22,9 +22,6 @@ categories = ["api-bindings"]
- license = "LGPL-2.1"
- repository = "https://github.com/gpg-rs/gpgme"
+@@ -30,10 +30,6 @@ repository = "https://github.com/gpg-rs/gpgme"
+ [package.metadata.docs.rs]
+ all-features = true
  
 -[[bin]]
 -name = "pinentry"
 -test = false
+-
  [dependencies.bitflags]
  version = "1"
  
@@ -37,10 +38,10 @@ index 94cdffb..0000000
 -    }
 -}
 diff --git a/tests/common/mod.rs b/tests/common/mod.rs
-index de27c4c..0c42470 100644
+index 61c37ac..535e608 100644
 --- a/tests/common/mod.rs
 +++ b/tests/common/mod.rs
-@@ -66,7 +66,7 @@ fn import_key(key: &[u8]) {
+@@ -64,7 +64,7 @@ fn import_key(key: &[u8]) {
  fn setup_agent(dir: &Path) {
      env::set_var("GNUPGHOME", dir);
      env::set_var("GPG_AGENT_INFO", "");
@@ -51,17 +52,16 @@ index de27c4c..0c42470 100644
      }
 diff --git a/tests/context.rs b/tests/context.rs
 deleted file mode 100644
-index 4d18b72..0000000
+index edba385..0000000
 --- a/tests/context.rs
 +++ /dev/null
-@@ -1,21 +0,0 @@
--use gpgme::{require_gpgme_ver, Context, Error, PinentryMode};
+@@ -1,20 +0,0 @@
+-use gpgme::{Context, Error, PinentryMode};
 -
 -#[macro_use]
 -mod common;
 -
 -test_case! {
--    #[requires((1, 4))]
 -    test_pinentry_mode(test) {
 -        let mode = PinentryMode::Loopback;
 -        let mut ctx = test.create_context();
@@ -78,10 +78,10 @@ index 4d18b72..0000000
 -}
 diff --git a/tests/create_key.rs b/tests/create_key.rs
 deleted file mode 100644
-index 6b94886..0000000
+index 123103e..0000000
 --- a/tests/create_key.rs
 +++ /dev/null
-@@ -1,79 +0,0 @@
+@@ -1,78 +0,0 @@
 -use std::time::{Duration, SystemTime};
 -
 -use gpgme::CreateKeyFlags;
@@ -92,7 +92,6 @@ index 6b94886..0000000
 -mod common;
 -
 -test_case! {
--    #[requires((1, 7))]
 -    test_create_key(test) {
 -        let mut ctx = test.create_context().set_passphrase_provider(passphrase_cb);
 -        if !ctx.engine_info().check_version("2.1.13") {
@@ -163,10 +162,10 @@ index 6b94886..0000000
 -}
 diff --git a/tests/edit.rs b/tests/edit.rs
 deleted file mode 100644
-index 23d0758..0000000
+index 28d974b..0000000
 --- a/tests/edit.rs
 +++ /dev/null
-@@ -1,92 +0,0 @@
+@@ -1,94 +0,0 @@
 -#![allow(deprecated)]
 -use gpgme;
 -
@@ -206,7 +205,9 @@ index 23d0758..0000000
 -    type State = TestEditorState;
 -
 -    fn next_state(
--        state: Result<Self::State>, status: EditInteractionStatus<'_>, need_response: bool,
+-        state: Result<Self::State>,
+-        status: EditInteractionStatus<'_>,
+-        need_response: bool,
 -    ) -> Result<Self::State> {
 -        use self::TestEditorState as State;
 -
@@ -234,7 +235,7 @@ index 23d0758..0000000
 -        }
 -    }
 -
--    fn action<W: Write>(&self, state: Self::State, mut out: W) -> Result<()> {
+-    fn action(&self, state: Self::State, out: &mut dyn Write) -> Result<()> {
 -        use self::TestEditorState as State;
 -
 -        match state {
@@ -334,10 +335,10 @@ index f9b49a2..0000000
 -}
 diff --git a/tests/export.rs b/tests/export.rs
 deleted file mode 100644
-index db7b0eb..0000000
+index 94f5847..0000000
 --- a/tests/export.rs
 +++ /dev/null
-@@ -1,39 +0,0 @@
+@@ -1,38 +0,0 @@
 -use gpgme::{CreateKeyFlags, ExportMode};
 -
 -use self::common::passphrase_cb;
@@ -358,7 +359,6 @@ index db7b0eb..0000000
 -        assert!(!data.is_empty());
 -    }
 -
--    #[requires((1, 7))]
 -    test_export_secret(test) {
 -        let mut ctx = test.create_context();
 -        ctx.set_offline(true);
@@ -405,10 +405,10 @@ index ee3b6aa..0000000
 -}
 diff --git a/tests/keysign.rs b/tests/keysign.rs
 deleted file mode 100644
-index 5f44f17..0000000
+index 0faebc7..0000000
 --- a/tests/keysign.rs
 +++ /dev/null
-@@ -1,34 +0,0 @@
+@@ -1,33 +0,0 @@
 -use gpgme::KeyListMode;
 -
 -use self::common::passphrase_cb;
@@ -417,7 +417,6 @@ index 5f44f17..0000000
 -mod common;
 -
 -test_case! {
--    #[requires((1, 7))]
 -    test_sign_key(test) {
 -        let mut ctx = test.create_context();
 -        if !ctx.engine_info().check_version("2.1.12") {

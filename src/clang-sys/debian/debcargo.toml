@@ -6,12 +6,14 @@ uploaders = [
 ]
 excludes = ["ci/**"]
 
+# the unversioned llvm/clang packages are currently broken in mips64el testing
+# which is getting in our way.
 [source]
-build_depends = ["llvm", "clang"]
+build_depends = ["llvm | llvm-15 [mips64el]", "clang | clang-15 [mips64el]"]
 
 [packages.lib]
-depends = ["libclang-dev", "llvm", "clang"]
-extra_test_depends = ["llvm", "clang"]
+depends = ["libclang-dev | libclang-15-dev [mips64el]", "llvm | llvm-15 [mips64el]", "clang | clang-15 [mips64el]"]
+test_depends = ["llvm", "clang"]
 
 [packages."lib+@"]
 # The `runtime` and `static` features can't be combined (see build.rs)

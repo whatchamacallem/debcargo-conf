@@ -1,0 +1,31 @@
+Index: clap-3/Cargo.toml
+===================================================================
+--- clap-3.orig/Cargo.toml
++++ clap-3/Cargo.toml
+@@ -349,3 +349,3 @@ version = "=3.2.25"
+ [dependencies.clap_lex]
+-version = "0.5"
++version = "0.6"
+ 
+Index: clap-3/src/parser/parser.rs
+===================================================================
+--- clap-3.orig/src/parser/parser.rs
++++ clap-3/src/parser/parser.rs
+@@ -638,7 +638,7 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+ 
+         if self.cmd.is_allow_hyphen_values_set()
+             || self.cmd[&current_positional.id].is_allow_hyphen_values_set()
+-            || (self.cmd.is_allow_negative_numbers_set() && next.is_number())
++            || (self.cmd.is_allow_negative_numbers_set() && next.is_negative_number())
+         {
+             // If allow hyphen, this isn't a new arg.
+             debug!("Parser::is_new_arg: Allow hyphen");
+@@ -825,7 +825,7 @@ impl<'help, 'cmd> Parser<'help, 'cmd> {
+         debug!("Parser::parse_short_arg: short_arg={:?}", short_arg);
+ 
+         #[allow(clippy::blocks_in_if_conditions)]
+-        if self.cmd.is_allow_negative_numbers_set() && short_arg.is_number() {
++        if self.cmd.is_allow_negative_numbers_set() && short_arg.is_negative_number() {
+             debug!("Parser::parse_short_arg: negative number");
+             return Ok(ParseResult::MaybeHyphenValue);
+         } else if self.cmd.is_allow_hyphen_values_set()

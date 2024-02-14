@@ -1,0 +1,159 @@
+This patch is based on the upstream commit described below, adapted for use in
+the Debian package by Peter Michael Green.
+
+commit 948c3b54eae1db242c7966cfa7338001c3928c2f
+Author: Thomas Eizinger <thomas@eizinger.io>
+Date:   Tue Oct 3 12:07:36 2023 +1100
+
+    Bump to ring 0.17
+
+Index: rcgen/src/key_pair.rs
+===================================================================
+--- rcgen.orig/src/key_pair.rs
++++ rcgen/src/key_pair.rs
+@@ -106,6 +106,7 @@ impl KeyPair {
+ 		pkcs8: &[u8],
+ 		alg: &'static SignatureAlgorithm,
+ 	) -> Result<Self, RcgenError> {
++		let rng = &SystemRandom::new();
+ 		let pkcs8_vec = pkcs8.to_vec();
+ 
+ 		let kind = if alg == &PKCS_ED25519 {
+@@ -114,11 +115,13 @@ impl KeyPair {
+ 			KeyPairKind::Ec(EcdsaKeyPair::from_pkcs8(
+ 				&signature::ECDSA_P256_SHA256_ASN1_SIGNING,
+ 				pkcs8,
++				rng,
+ 			)?)
+ 		} else if alg == &PKCS_ECDSA_P384_SHA384 {
+ 			KeyPairKind::Ec(EcdsaKeyPair::from_pkcs8(
+ 				&signature::ECDSA_P384_SHA384_ASN1_SIGNING,
+ 				pkcs8,
++				rng,
+ 			)?)
+ 		} else if alg == &PKCS_RSA_SHA256 {
+ 			let rsakp = RsaKeyPair::from_pkcs8(pkcs8)?;
+@@ -146,14 +149,15 @@ impl KeyPair {
+ 	pub(crate) fn from_raw(
+ 		pkcs8: &[u8],
+ 	) -> Result<(KeyPairKind, &'static SignatureAlgorithm), RcgenError> {
++		let rng = SystemRandom::new();
+ 		let (kind, alg) = if let Ok(edkp) = Ed25519KeyPair::from_pkcs8_maybe_unchecked(pkcs8) {
+ 			(KeyPairKind::Ed(edkp), &PKCS_ED25519)
+ 		} else if let Ok(eckp) =
+-			EcdsaKeyPair::from_pkcs8(&signature::ECDSA_P256_SHA256_ASN1_SIGNING, pkcs8)
++			EcdsaKeyPair::from_pkcs8(&signature::ECDSA_P256_SHA256_ASN1_SIGNING, pkcs8, &rng)
+ 		{
+ 			(KeyPairKind::Ec(eckp), &PKCS_ECDSA_P256_SHA256)
+ 		} else if let Ok(eckp) =
+-			EcdsaKeyPair::from_pkcs8(&signature::ECDSA_P384_SHA384_ASN1_SIGNING, pkcs8)
++			EcdsaKeyPair::from_pkcs8(&signature::ECDSA_P384_SHA384_ASN1_SIGNING, pkcs8, &rng)
+ 		{
+ 			(KeyPairKind::Ec(eckp), &PKCS_ECDSA_P384_SHA384)
+ 		} else if let Ok(rsakp) = RsaKeyPair::from_pkcs8(pkcs8) {
+@@ -212,14 +216,15 @@ impl TryFrom<Vec<u8>> for KeyPair {
+ impl KeyPair {
+ 	/// Generate a new random key pair for the specified signature algorithm
+ 	pub fn generate(alg: &'static SignatureAlgorithm) -> Result<Self, RcgenError> {
+-		let system_random = SystemRandom::new();
++		let rng = &SystemRandom::new();
++
+ 		match alg.sign_alg {
+ 			SignAlgo::EcDsa(sign_alg) => {
+-				let key_pair_doc = EcdsaKeyPair::generate_pkcs8(sign_alg, &system_random)?;
++				let key_pair_doc = EcdsaKeyPair::generate_pkcs8(sign_alg, rng)?;
+ 				let key_pair_serialized = key_pair_doc.as_ref().to_vec();
+ 
+ 				let key_pair =
+-					EcdsaKeyPair::from_pkcs8(&sign_alg, &&key_pair_doc.as_ref()).unwrap();
++					EcdsaKeyPair::from_pkcs8(&sign_alg, &&key_pair_doc.as_ref(), rng).unwrap();
+ 				Ok(KeyPair {
+ 					kind: KeyPairKind::Ec(key_pair),
+ 					alg,
+@@ -227,7 +232,7 @@ impl KeyPair {
+ 				})
+ 			},
+ 			SignAlgo::EdDsa(_sign_alg) => {
+-				let key_pair_doc = Ed25519KeyPair::generate_pkcs8(&system_random)?;
++				let key_pair_doc = Ed25519KeyPair::generate_pkcs8(rng)?;
+ 				let key_pair_serialized = key_pair_doc.as_ref().to_vec();
+ 
+ 				let key_pair = Ed25519KeyPair::from_pkcs8(&&key_pair_doc.as_ref()).unwrap();
+@@ -275,7 +280,7 @@ impl KeyPair {
+ 			},
+ 			KeyPairKind::Rsa(kp, padding_alg) => {
+ 				let system_random = SystemRandom::new();
+-				let mut signature = vec![0; kp.public_modulus_len()];
++				let mut signature = vec![0; kp.public().modulus_len()];
+ 				kp.sign(*padding_alg, &system_random, msg, &mut signature)?;
+ 				let sig = &signature.as_ref();
+ 				writer.write_bitvec_bytes(&sig, &sig.len() * 8);
+Index: rcgen/src/lib.rs
+===================================================================
+--- rcgen.orig/src/lib.rs
++++ rcgen/src/lib.rs
+@@ -1489,7 +1489,8 @@ fn write_general_subtrees(writer: DERWri
+ impl Certificate {
+ 	/// Generates a new certificate from the given parameters.
+ 	///
+-	/// If there is no key pair included, then a new key pair will be generated and used.
++	/// If you want to control the [`KeyPair`] or the randomness used to generate it, set the [`CertificateParams::key_pair`]
++	/// field ahead of time before calling this function.
+ 	pub fn from_params(mut params: CertificateParams) -> Result<Self, RcgenError> {
+ 		let key_pair = if let Some(key_pair) = params.key_pair.take() {
+ 			if !key_pair.is_compatible(&params.alg) {
+Index: rcgen/tests/webpki.rs
+===================================================================
+--- rcgen.orig/tests/webpki.rs
++++ rcgen/tests/webpki.rs
+@@ -25,7 +25,8 @@ mod util;
+ 
+ fn sign_msg_ecdsa(cert: &Certificate, msg: &[u8], alg: &'static EcdsaSigningAlgorithm) -> Vec<u8> {
+ 	let pk_der = cert.serialize_private_key_der();
+-	let key_pair = EcdsaKeyPair::from_pkcs8(&alg, &pk_der).unwrap();
++	let key_pair =
++		EcdsaKeyPair::from_pkcs8(&alg, &pk_der, &ring::rand::SystemRandom::new()).unwrap();
+ 	let system_random = SystemRandom::new();
+ 	let signature = key_pair.sign(&system_random, &msg).unwrap();
+ 	signature.as_ref().to_vec()
+@@ -43,7 +44,7 @@ fn sign_msg_rsa(cert: &Certificate, msg:
+ 	let pk_der = cert.serialize_private_key_der();
+ 	let key_pair = RsaKeyPair::from_pkcs8(&pk_der).unwrap();
+ 	let system_random = SystemRandom::new();
+-	let mut signature = vec![0; key_pair.public_modulus_len()];
++	let mut signature = vec![0; key_pair.public().modulus_len()];
+ 	key_pair
+ 		.sign(encoding, &system_random, &msg, &mut signature)
+ 		.unwrap();
+@@ -343,15 +344,18 @@ fn from_remote() {
+ 		}
+ 	}
+ 
++	let rng = ring::rand::SystemRandom::new();
+ 	let key_pair = KeyPair::generate(&rcgen::PKCS_ECDSA_P256_SHA256).unwrap();
+ 	let remote = EcdsaKeyPair::from_pkcs8(
+ 		&signature::ECDSA_P256_SHA256_ASN1_SIGNING,
+ 		&key_pair.serialize_der(),
++		&rng,
+ 	)
+ 	.unwrap();
+ 	let key_pair = EcdsaKeyPair::from_pkcs8(
+ 		&signature::ECDSA_P256_SHA256_ASN1_SIGNING,
+ 		&key_pair.serialize_der(),
++		&rng,
+ 	)
+ 	.unwrap();
+ 	let remote = KeyPair::from_remote(Box::new(Remote(remote))).unwrap();
+Index: rcgen/Cargo.toml
+===================================================================
+--- rcgen.orig/Cargo.toml
++++ rcgen/Cargo.toml
+@@ -47,7 +47,7 @@ version = "1.0.0"
+ optional = true
+ 
+ [dependencies.ring]
+-version = "0.16"
++version = "0.17"
+ 
+ [dependencies.time]
+ version = "0.3.6"

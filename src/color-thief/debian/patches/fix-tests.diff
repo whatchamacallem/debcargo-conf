@@ -1,0 +1,70 @@
+Description: Fix autopkgtests with the current version of rust-image
+ rust-image is currently v0.24 in Debian, so we must patch the
+ dependency version and adapt to API changes since v0.22.
+ .
+ We can also drop the "png_codec" feature as we have patched out the
+ only test using a PNG image.
+Author: Arnaud Ferraris <aferraris@debian.org>
+Last-Update: 2023-11-29
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -38,9 +38,8 @@
+ version = "0.1"
+ 
+ [dev-dependencies.image]
+-version = "0.22"
++version = "0.24"
+ features = [
+     "jpeg",
+-    "png_codec",
+ ]
+ default-features = false
+--- a/benches/find_palette.rs
++++ b/benches/find_palette.rs
+@@ -11,13 +11,13 @@
+ 
+ fn q1(bencher: &mut Bencher) {
+     let img = image::open(&Path::new("images/photo1.jpg")).unwrap();
+-    let pixels = img.raw_pixels();
++    let pixels = img.as_bytes();
+     bencher.iter(|| color_thief::get_palette(&pixels, ColorFormat::Rgb, 1, 10))
+ }
+ 
+ fn q10(bencher: &mut Bencher) {
+     let img = image::open(&Path::new("images/photo1.jpg")).unwrap();
+-    let pixels = img.raw_pixels();
++    let pixels = img.as_bytes();
+     bencher.iter(|| color_thief::get_palette(&pixels, ColorFormat::Rgb, 10, 10))
+ }
+ 
+--- a/tests/test.rs
++++ b/tests/test.rs
+@@ -7,8 +7,8 @@
+ 
+ fn find_color(t: image::ColorType) -> ColorFormat {
+     match t {
+-        image::ColorType::RGB(8) => ColorFormat::Rgb,
+-        image::ColorType::RGBA(8) => ColorFormat::Rgba,
++        image::ColorType::Rgb8 => ColorFormat::Rgb,
++        image::ColorType::Rgba8 => ColorFormat::Rgba,
+         _ => unreachable!(),
+     }
+ }
+@@ -17,12 +17,15 @@
+ fn image1() {
+     let img = image::open(&path::Path::new("images/photo1.jpg")).unwrap();
+     let color_type = find_color(img.color());
+-    let colors = color_thief::get_palette(&img.raw_pixels(), color_type, 10, 10).unwrap();
++    let colors = color_thief::get_palette(&img.as_bytes(), color_type, 10, 10).unwrap();
+ 
+     assert_eq!(colors[0], Color::new( 54,  37,  28)); //  55,  37,  29
+     assert_eq!(colors[1], Color::new(215, 195, 134)); // 213, 193, 136
+     assert_eq!(colors[2], Color::new(109, 204, 223)); // 110, 204, 223
+     assert_eq!(colors[3], Color::new(127, 119,  58)); // 131, 122,  58
++    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
++    assert_eq!(colors[4], Color::new( 42, 125, 149)); //  43, 124, 148
++    #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+     assert_eq!(colors[4], Color::new( 43, 125, 149)); //  43, 124, 148
+     assert_eq!(colors[5], Color::new(134, 123, 107)); // 156, 175, 121
+     assert_eq!(colors[6], Color::new(160, 178, 120)); // 131, 121, 110

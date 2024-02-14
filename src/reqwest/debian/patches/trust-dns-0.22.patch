@@ -1,30 +1,58 @@
 This patch is based on a revert of upstream commits
 afc3a9364aae281012a81d2573ed29243c8eda03,
-d3d95a5b560c5cf8d87e346455011b47ab24bd8a and 
-0292486abab25914c046b71ab6d6da24206614d3 djusted for use in the Debian package
+d3d95a5b560c5cf8d87e346455011b47ab24bd8a and
+0292486abab25914c046b71ab6d6da24206614d3 adjusted for use in the Debian package
 by Peter Micheal Green.
 
+Index: reqwest/Cargo.toml
+===================================================================
+--- reqwest.orig/Cargo.toml
++++ reqwest/Cargo.toml
+@@ -351,8 +351,7 @@ optional = true
+ default-features = false
+ 
+ [target."cfg(not(target_arch = \"wasm32\"))".dependencies.trust-dns-resolver]
+-version = "0.23"
+-features = ["tokio-runtime"]
++version = "0.22"
+ optional = true
+ 
+ [target."cfg(not(target_arch = \"wasm32\"))".dev-dependencies.brotli_crate]
+Index: reqwest/src/async_impl/client.rs
+===================================================================
+--- reqwest.orig/src/async_impl/client.rs
++++ reqwest/src/async_impl/client.rs
+@@ -270,7 +270,7 @@ impl ClientBuilder {
+             let mut resolver: Arc<dyn Resolve> = match config.trust_dns {
+                 false => Arc::new(GaiResolver::new()),
+                 #[cfg(feature = "trust-dns")]
+-                true => Arc::new(TrustDnsResolver::default()),
++                true => Arc::new(TrustDnsResolver::new().map_err(crate::error::builder)?),
+                 #[cfg(not(feature = "trust-dns"))]
+                 true => unreachable!("trust-dns shouldn't be enabled unless the feature is"),
+             };
 Index: reqwest/src/dns/trust_dns.rs
 ===================================================================
 --- reqwest.orig/src/dns/trust_dns.rs
 +++ reqwest/src/dns/trust_dns.rs
-@@ -1,9 +1,13 @@
+@@ -1,8 +1,14 @@
  //! DNS resolution via the [trust_dns_resolver](https://github.com/bluejekyll/trust-dns) crate
  
  use hyper::client::connect::dns::Name;
 -use once_cell::sync::OnceCell;
+-use trust_dns_resolver::{lookup_ip::LookupIpIntoIter, system_conf, TokioAsyncResolver};
 +use once_cell::sync::Lazy;
 +use tokio::sync::Mutex;
- pub use trust_dns_resolver::config::{ResolverConfig, ResolverOpts};
--use trust_dns_resolver::{lookup_ip::LookupIpIntoIter, system_conf, TokioAsyncResolver};
 +use trust_dns_resolver::{
 +    lookup_ip::LookupIpIntoIter, system_conf, AsyncResolver, TokioConnection,
 +    TokioConnectionProvider, TokioHandle,
 +};
++use trust_dns_resolver::config::ResolverOpts;
++use trust_dns_resolver::config::ResolverConfig;
  
  use std::io;
  use std::net::SocketAddr;
-@@ -11,24 +15,64 @@ use std::sync::Arc;
+@@ -10,24 +16,64 @@ use std::sync::Arc;
  
  use super::{Addrs, Resolve, Resolving};
  
@@ -95,7 +123,7 @@ Index: reqwest/src/dns/trust_dns.rs
  
              let lookup = resolver.lookup_ip(name.as_str()).await?;
              let addrs: Addrs = Box::new(SocketAddrs {
-@@ -47,14 +91,18 @@ impl Iterator for SocketAddrs {
+@@ -46,14 +92,18 @@ impl Iterator for SocketAddrs {
      }
  }
  
@@ -124,49 +152,3 @@ Index: reqwest/src/dns/trust_dns.rs
 +    let resolver = AsyncResolver::new(config, opts, TokioHandle)?;
 +    Ok(Arc::new(resolver))
  }
-Index: reqwest/src/lib.rs
-===================================================================
---- reqwest.orig/src/lib.rs
-+++ reqwest/src/lib.rs
-@@ -160,12 +160,12 @@
- //!   [`Identity`][Identity] type.
- //! - Various parts of TLS can also be configured or even disabled on the
- //!   `ClientBuilder`.
--//!
-+//! 
- //! ## WASM
- //! The Client implementation automatically switches to the WASM one when the target_arch is wasm32,
- //! the usage is basically the same as the async api. Some of the features are disabled in wasm
- //! : [`tls`](tls) [`cookie`](cookie) [`blocking`](blocking).
--//!
-+//! 
- //!
- //! ## Optional Features
- //!
-Index: reqwest/src/async_impl/client.rs
-===================================================================
---- reqwest.orig/src/async_impl/client.rs
-+++ reqwest/src/async_impl/client.rs
-@@ -270,7 +270,7 @@ impl ClientBuilder {
-             let mut resolver: Arc<dyn Resolve> = match config.trust_dns {
-                 false => Arc::new(GaiResolver::new()),
-                 #[cfg(feature = "trust-dns")]
--                true => Arc::new(TrustDnsResolver::default()),
-+                true => Arc::new(TrustDnsResolver::new().map_err(crate::error::builder)?),
-                 #[cfg(not(feature = "trust-dns"))]
-                 true => unreachable!("trust-dns shouldn't be enabled unless the feature is"),
-             };
-Index: reqwest/Cargo.toml
-===================================================================
---- reqwest.orig/Cargo.toml
-+++ reqwest/Cargo.toml
-@@ -350,8 +350,7 @@ optional = true
- default-features = false
- 
- [target."cfg(not(target_arch = \"wasm32\"))".dependencies.trust-dns-resolver]
--version = "0.23"
--features = ["tokio-runtime"]
-+version = "0.22"
- optional = true
- 
- 

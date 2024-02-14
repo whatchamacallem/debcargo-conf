@@ -1,0 +1,99 @@
+Description: add crate testresult
+ The 'testresult' crate is just a few lines of code. It does not make sense to
+ introduce the overhead of a full blown Debian package just for this trivial
+ functionality.
+
+Author: Wiktor Kwapisiewicz <wiktor@metacode.biz>
+Last-Update: 2023-10-31
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: cryptoki/tests/basic.rs
+===================================================================
+--- cryptoki.orig/tests/basic.rs
++++ cryptoki/tests/basic.rs
+@@ -15,7 +15,70 @@ use serial_test::serial;
+ use std::collections::HashMap;
+ use std::thread;
+ 
+-use testresult::TestResult;
++/// Error with stacktrace
++///
++/// Any other type of error can be converted to this one but the
++/// conversion will always panic.
++///
++/// This type is useful only in the result of unit tests and cannot be instantiated.
++#[derive(Debug)]
++#[doc(hidden)]
++pub enum TestError {}
++
++impl<T: std::fmt::Display> From<T> for TestError {
++    #[track_caller] // Will show the location of the caller in test failure messages
++    fn from(error: T) -> Self {
++        panic!("error: {} - {}", std::any::type_name::<T>(), error);
++    }
++}
++
++/// Unit test result
++///
++/// This type allows panicking when encountering any type of
++/// failure. Thus it allows using `?` operator in unit tests but still
++/// get the complete stacktrace and exact place of failure during
++/// tests.
++///
++/// # Examples
++///
++/// ```
++/// use testresult::TestResult;
++///
++/// #[test]
++/// fn it_works() -> TestResult {
++///     // ...
++///     std::fs::File::open("this-file-does-not-exist")?;
++///     // ...
++///     Ok(())
++/// }
++/// ```
++pub type TestResult = std::result::Result<(), TestError>;
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    #[ignore] // ignored test must still compile
++              // this checks whether conversion from all errors is accomplished
++    fn compilation_works() -> TestResult {
++        std::fs::File::open("this-file-does-not-exist")?;
++        Ok(())
++    }
++
++    #[test]
++    fn check_if_panics() -> TestResult {
++        let result = std::panic::catch_unwind(|| {
++            fn test_fn() -> TestResult {
++                std::fs::File::open("this-file-does-not-exist")?;
++                Ok(())
++            }
++            let _ = test_fn();
++        });
++        assert!(result.is_err());
++        Ok(())
++    }
++}
+ 
+ #[test]
+ #[serial]
+Index: cryptoki/Cargo.toml
+===================================================================
+--- cryptoki.orig/Cargo.toml
++++ cryptoki/Cargo.toml
+@@ -64,9 +64,6 @@ version = "0.2.14"
+ [dev-dependencies.serial_test]
+ version = "2.0"
+ 
+-[dev-dependencies.testresult]
+-version = "0.2.0"
+-
+ [features]
+ generate-bindings = ["cryptoki-sys/generate-bindings"]
+ psa-crypto-conversions = ["psa-crypto"]

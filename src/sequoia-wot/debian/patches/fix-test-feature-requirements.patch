@@ -1,0 +1,192 @@
+Index: sequoia-wot/tests/gpg.rs
+===================================================================
+--- sequoia-wot.orig/tests/gpg.rs
++++ sequoia-wot/tests/gpg.rs
+@@ -15,6 +15,7 @@ mod gpg;
+ const TRACE: bool = false;
+ 
+ #[test]
++#[cfg(feature="cli")]
+ fn gpg_trust_roots() -> Result<()> {
+     let gnupghome = tempfile::tempdir()?;
+     let gnupghome: &std::path::Path = gnupghome.as_ref();
+Index: sequoia-wot/tests/tests.rs
+===================================================================
+--- sequoia-wot.orig/tests/tests.rs
++++ sequoia-wot/tests/tests.rs
+@@ -169,6 +169,7 @@ mod integration {
+     // Test authenticating a binding (User ID and certificate).
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn authenticate() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "85DAB65713B2D0ABFC5A4F28BC10C9CE4A699D8D"
+@@ -306,6 +307,7 @@ mod integration {
+     // address, not the whole User ID.
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn authenticate_email() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "85DAB65713B2D0ABFC5A4F28BC10C9CE4A699D8D"
+@@ -732,6 +734,7 @@ mod integration {
+     // Test looking up a certificate by User ID.
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn lookup() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "85DAB65713B2D0ABFC5A4F28BC10C9CE4A699D8D"
+@@ -953,6 +956,7 @@ mod integration {
+     // Test looking up a certificate by email address.
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn lookup_email() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "85DAB65713B2D0ABFC5A4F28BC10C9CE4A699D8D"
+@@ -1122,6 +1126,7 @@ mod integration {
+     // Test identifying a certificate.
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn identify() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "2A2A4A23A7EEC119BC0B46642B3825DC02A05FEA"
+@@ -1340,6 +1345,7 @@ mod integration {
+     // List all authenticated bindings.
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn list() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "85DAB65713B2D0ABFC5A4F28BC10C9CE4A699D8D"
+@@ -1517,6 +1523,7 @@ mod integration {
+     // List all authenticated bindings matching a pattern.
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn list_pattern() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "2A2A4A23A7EEC119BC0B46642B3825DC02A05FEA"
+@@ -1960,6 +1967,7 @@ mod integration {
+     // a pattern.
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn list_email_pattern() -> Result<()> {
+         // Puny code and case normalization.
+         let alice_fpr: Fingerprint =
+@@ -2113,6 +2121,7 @@ mod integration {
+ 
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn path_simple() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "85DAB65713B2D0ABFC5A4F28BC10C9CE4A699D8D"
+@@ -2337,6 +2346,7 @@ mod integration {
+ 
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn path_missing_certs() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "85DAB65713B2D0ABFC5A4F28BC10C9CE4A699D8D"
+@@ -2484,6 +2494,7 @@ mod integration {
+ 
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn path_singleton() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "85DAB65713B2D0ABFC5A4F28BC10C9CE4A699D8D"
+@@ -2583,6 +2594,7 @@ mod integration {
+ 
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn path_multiple_userids_1() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "2A2A4A23A7EEC119BC0B46642B3825DC02A05FEA"
+@@ -2678,6 +2690,7 @@ mod integration {
+ 
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn path_multiple_users_2() -> Result<()> {
+         // Note: this also tests regular expressions.
+ 
+@@ -2867,6 +2880,7 @@ mod integration {
+ 
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn path_sha1() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "B5FA089BA76FE3E17DC11660960E53286738F94C"
+@@ -3005,6 +3019,7 @@ mod integration {
+ 
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn authenticate_certification_network_simple() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "85DAB65713B2D0ABFC5A4F28BC10C9CE4A699D8D"
+@@ -3111,6 +3126,7 @@ mod integration {
+ 
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn authenticate_certification_network() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "B2B371214EF71AFD16E42C62D81360B4C0489225"
+@@ -3537,6 +3553,7 @@ mod integration {
+ 
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn path_certification_network() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "B2B371214EF71AFD16E42C62D81360B4C0489225"
+@@ -3904,6 +3921,7 @@ mod integration {
+ 
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn gossip_certification_network() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "B2B371214EF71AFD16E42C62D81360B4C0489225"
+@@ -4012,6 +4030,7 @@ mod integration {
+ 
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn target_cert_expired() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "1FA62523FB7C06E71EEFB82BB5159F3FC3EB3AC9"
+@@ -4163,6 +4182,7 @@ mod integration {
+ 
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn target_cert_hard_revoked() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "219AAB661C8AAF4526DBC31AA751A7A0532863BA"
+@@ -4243,6 +4263,7 @@ mod integration {
+ 
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn target_cert_soft_revoked() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "66037F98B444BBAFDFE98E871738DFAB86878262"
+@@ -4389,6 +4410,7 @@ mod integration {
+ 
+     #[test]
+     #[allow(unused)]
++    #[cfg(feature = "dot-writer")]
+     fn target_userid_revoked() -> Result<()> {
+         let alice_fpr: Fingerprint =
+             "01672BB67E4B4047E5A4EC0A731CEA092C465FC8"

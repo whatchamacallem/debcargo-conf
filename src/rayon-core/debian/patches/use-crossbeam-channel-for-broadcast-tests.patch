@@ -1,0 +1,71 @@
+This patch on reverting some of the changes from upstream commit
+191ade2c1f2ec27a6b8d7dc9d7e3881335ba4e91
+
+It is needed because Debian currently only has rustc 1.70, which does not
+implement the sync trait on std::sync::mpsc::channel.
+
+See discussion at https://github.com/rayon-rs/rayon/issues/1106
+
+--- rayon-core.orig/Cargo.toml
++++ rayon-core/Cargo.toml
+@@ -70,2 +70,5 @@
+ 
++[dev-dependencies.crossbeam-channel]
++version = "0.5"
++
+ [dev-dependencies.rand]
+--- rayon-core.orig/src/broadcast/test.rs
++++ rayon-core/src/broadcast/test.rs
+@@ -4,3 +4,2 @@
+ use std::sync::atomic::{AtomicUsize, Ordering};
+-use std::sync::mpsc::channel;
+ use std::sync::Arc;
+@@ -17,3 +16,3 @@
+ fn spawn_broadcast_global() {
+-    let (tx, rx) = channel();
++    let (tx, rx) = crossbeam_channel::unbounded();
+     crate::spawn_broadcast(move |ctx| tx.send(ctx.index()).unwrap());
+@@ -36,3 +35,3 @@
+ fn spawn_broadcast_pool() {
+-    let (tx, rx) = channel();
++    let (tx, rx) = crossbeam_channel::unbounded();
+     let pool = ThreadPoolBuilder::new().num_threads(7).build().unwrap();
+@@ -56,3 +55,3 @@
+ fn spawn_broadcast_self() {
+-    let (tx, rx) = channel();
++    let (tx, rx) = crossbeam_channel::unbounded();
+     let pool = ThreadPoolBuilder::new().num_threads(7).build().unwrap();
+@@ -84,3 +83,3 @@
+ fn spawn_broadcast_mutual() {
+-    let (tx, rx) = channel();
++    let (tx, rx) = crossbeam_channel::unbounded();
+     let pool1 = Arc::new(ThreadPoolBuilder::new().num_threads(3).build().unwrap());
+@@ -121,3 +120,3 @@
+ fn spawn_broadcast_mutual_sleepy() {
+-    let (tx, rx) = channel();
++    let (tx, rx) = crossbeam_channel::unbounded();
+     let pool1 = Arc::new(ThreadPoolBuilder::new().num_threads(3).build().unwrap());
+@@ -161,4 +160,4 @@
+ fn spawn_broadcast_panic_one() {
+-    let (tx, rx) = channel();
+-    let (panic_tx, panic_rx) = channel();
++    let (tx, rx) = crossbeam_channel::unbounded();
++    let (panic_tx, panic_rx) = crossbeam_channel::unbounded();
+     let pool = ThreadPoolBuilder::new()
+@@ -199,4 +198,4 @@
+ fn spawn_broadcast_panic_many() {
+-    let (tx, rx) = channel();
+-    let (panic_tx, panic_rx) = channel();
++    let (tx, rx) = crossbeam_channel::unbounded();
++    let (panic_tx, panic_rx) = crossbeam_channel::unbounded();
+     let pool = ThreadPoolBuilder::new()
+@@ -234,3 +233,3 @@
+ fn broadcast_after_spawn_broadcast() {
+-    let (tx, rx) = channel();
++    let (tx, rx) = crossbeam_channel::unbounded();
+ 
+@@ -250,3 +249,3 @@
+ fn broadcast_after_spawn() {
+-    let (tx, rx) = channel();
++    let (tx, rx) = crossbeam_channel::unbounded();
+ 

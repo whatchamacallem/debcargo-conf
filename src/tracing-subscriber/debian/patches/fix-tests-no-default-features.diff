@@ -2,7 +2,7 @@ Index: tracing-subscriber/Cargo.toml
 ===================================================================
 --- tracing-subscriber.orig/Cargo.toml
 +++ tracing-subscriber/Cargo.toml
-@@ -48,18 +48,22 @@ rustdoc-args = [
+@@ -49,18 +49,22 @@ rustdoc-args = [
  [[bench]]
  name = "filter"
  harness = false
@@ -23,13 +23,13 @@ Index: tracing-subscriber/Cargo.toml
  harness = false
 +required-features = ["fmt", "std"]
  
- [dependencies.matchers]
- version = "0.1.0"
+ [dependencies.chrono]
+ version = "0.4.26"
 Index: tracing-subscriber/src/fmt/fmt_layer.rs
 ===================================================================
 --- tracing-subscriber.orig/src/fmt/fmt_layer.rs
 +++ tracing-subscriber/src/fmt/fmt_layer.rs
-@@ -1264,6 +1264,7 @@ mod test {
+@@ -1282,6 +1282,7 @@ mod test {
          re.replace_all(s.as_str(), "timing").to_string()
      }
  
@@ -37,15 +37,15 @@ Index: tracing-subscriber/src/fmt/fmt_layer.rs
      #[test]
      fn format_error_print_to_stderr() {
          struct AlwaysError;
-@@ -1292,6 +1293,7 @@ mod test {
-         assert!(actual.as_str().starts_with(expected), "\nactual = {}\nshould start with expected = {}\n", actual, expected);
+@@ -1319,6 +1320,7 @@ mod test {
+         );
      }
  
 +    #[cfg(feature = "ansi")]
      #[test]
      fn format_error_ignore_if_log_internal_errors_is_false() {
          struct AlwaysError;
-@@ -1318,6 +1320,7 @@ mod test {
+@@ -1345,6 +1347,7 @@ mod test {
          assert_eq!("", actual.as_str());
      }
  
@@ -53,7 +53,7 @@ Index: tracing-subscriber/src/fmt/fmt_layer.rs
      #[test]
      fn synthesize_span_none() {
          let make_writer = MockMakeWriter::default();
-@@ -1337,6 +1340,7 @@ mod test {
+@@ -1364,6 +1367,7 @@ mod test {
          assert_eq!("", actual.as_str());
      }
  
@@ -61,7 +61,7 @@ Index: tracing-subscriber/src/fmt/fmt_layer.rs
      #[test]
      fn synthesize_span_active() {
          let make_writer = MockMakeWriter::default();
-@@ -1360,6 +1364,7 @@ mod test {
+@@ -1387,6 +1391,7 @@ mod test {
          );
      }
  
@@ -69,7 +69,7 @@ Index: tracing-subscriber/src/fmt/fmt_layer.rs
      #[test]
      fn synthesize_span_close() {
          let make_writer = MockMakeWriter::default();
-@@ -1382,6 +1387,7 @@ mod test {
+@@ -1409,6 +1414,7 @@ mod test {
          );
      }
  
@@ -77,7 +77,7 @@ Index: tracing-subscriber/src/fmt/fmt_layer.rs
      #[test]
      fn synthesize_span_close_no_timing() {
          let make_writer = MockMakeWriter::default();
-@@ -1405,6 +1411,7 @@ mod test {
+@@ -1432,6 +1438,7 @@ mod test {
          );
      }
  
@@ -85,7 +85,7 @@ Index: tracing-subscriber/src/fmt/fmt_layer.rs
      #[test]
      fn synthesize_span_full() {
          let make_writer = MockMakeWriter::default();
-@@ -1430,6 +1437,7 @@ mod test {
+@@ -1457,6 +1464,7 @@ mod test {
          );
      }
  
@@ -97,7 +97,7 @@ Index: tracing-subscriber/src/fmt/format/mod.rs
 ===================================================================
 --- tracing-subscriber.orig/src/fmt/format/mod.rs
 +++ tracing-subscriber/src/fmt/format/mod.rs
-@@ -1750,6 +1750,7 @@ pub(super) mod test {
+@@ -1769,6 +1769,7 @@ pub(super) mod test {
          assert_info_hello(subscriber, make_writer, "hello\n")
      }
  
@@ -105,7 +105,7 @@ Index: tracing-subscriber/src/fmt/format/mod.rs
      fn test_ansi<T>(
          is_ansi: bool,
          expected: &str,
-@@ -1772,13 +1773,14 @@ pub(super) mod test {
+@@ -1791,13 +1792,14 @@ pub(super) mod test {
          builder: crate::fmt::SubscriberBuilder<DefaultFields, Format<T>>,
      ) where
          Format<T, MockTime>: FormatEvent<crate::Registry, DefaultFields>,
@@ -122,7 +122,7 @@ Index: tracing-subscriber/src/fmt/format/mod.rs
      fn test_without_level<T>(
          expected: &str,
          builder: crate::fmt::SubscriberBuilder<DefaultFields, Format<T>>,
-@@ -1795,6 +1797,7 @@ pub(super) mod test {
+@@ -1814,6 +1816,7 @@ pub(super) mod test {
          run_test(subscriber, make_writer, expected);
      }
  
@@ -130,7 +130,7 @@ Index: tracing-subscriber/src/fmt/format/mod.rs
      #[test]
      fn with_line_number_and_file_name() {
          let make_writer = MockMakeWriter::default();
-@@ -1820,6 +1823,7 @@ pub(super) mod test {
+@@ -1839,6 +1842,7 @@ pub(super) mod test {
          assert!(expected.is_match(&res),"string {:?} did not match pattern {:?}",res,expected);
      }
  
@@ -138,7 +138,7 @@ Index: tracing-subscriber/src/fmt/format/mod.rs
      #[test]
      fn with_line_number() {
          let make_writer = MockMakeWriter::default();
-@@ -1839,6 +1843,7 @@ pub(super) mod test {
+@@ -1858,6 +1862,7 @@ pub(super) mod test {
          assert!(expected.is_match(&res));
      }
  
@@ -146,7 +146,7 @@ Index: tracing-subscriber/src/fmt/format/mod.rs
      #[test]
      fn with_filename() {
          let make_writer = MockMakeWriter::default();
-@@ -1855,6 +1860,7 @@ pub(super) mod test {
+@@ -1874,6 +1879,7 @@ pub(super) mod test {
          assert_info_hello(subscriber, make_writer, expected);
      }
  
@@ -154,7 +154,7 @@ Index: tracing-subscriber/src/fmt/format/mod.rs
      #[test]
      fn with_thread_ids() {
          let make_writer = MockMakeWriter::default();
-@@ -1869,6 +1875,7 @@ pub(super) mod test {
+@@ -1888,6 +1894,7 @@ pub(super) mod test {
          assert_info_hello_ignore_numeric(subscriber, make_writer, expected);
      }
  
@@ -162,7 +162,7 @@ Index: tracing-subscriber/src/fmt/format/mod.rs
      #[test]
      fn pretty_default() {
          let make_writer = MockMakeWriter::default();
-@@ -1913,6 +1920,7 @@ pub(super) mod test {
+@@ -1932,6 +1939,7 @@ pub(super) mod test {
          assert_eq!(expected, result_cleaned)
      }
  
@@ -170,7 +170,7 @@ Index: tracing-subscriber/src/fmt/format/mod.rs
      fn test_overridden_parents<T>(
          expected: &str,
          builder: crate::fmt::SubscriberBuilder<DefaultFields, Format<T>>,
-@@ -1936,6 +1944,7 @@ pub(super) mod test {
+@@ -1955,6 +1963,7 @@ pub(super) mod test {
          assert_eq!(expected, make_writer.get_string());
      }
  
@@ -178,7 +178,7 @@ Index: tracing-subscriber/src/fmt/format/mod.rs
      fn test_overridden_parents_in_scope<T>(
          expected1: &str,
          expected2: &str,
-@@ -1975,6 +1984,7 @@ pub(super) mod test {
+@@ -1994,6 +2003,7 @@ pub(super) mod test {
      mod default {
          use super::*;
  
@@ -186,7 +186,7 @@ Index: tracing-subscriber/src/fmt/format/mod.rs
          #[test]
          fn with_thread_ids() {
              let make_writer = MockMakeWriter::default();
-@@ -2010,18 +2020,21 @@ pub(super) mod test {
+@@ -2029,18 +2039,21 @@ pub(super) mod test {
              test_without_ansi(expected, crate::fmt::Subscriber::builder())
          }
  
@@ -208,7 +208,7 @@ Index: tracing-subscriber/src/fmt/format/mod.rs
          #[test]
          fn overridden_parents_in_scope() {
              test_overridden_parents_in_scope(
-@@ -2056,18 +2069,21 @@ pub(super) mod test {
+@@ -2075,18 +2088,21 @@ pub(super) mod test {
              test_without_ansi(expected, crate::fmt::Subscriber::builder().compact())
          }
  
@@ -230,7 +230,7 @@ Index: tracing-subscriber/src/fmt/format/mod.rs
          #[test]
          fn overridden_parents_in_scope() {
              test_overridden_parents_in_scope(
-@@ -2081,6 +2097,7 @@ pub(super) mod test {
+@@ -2100,6 +2116,7 @@ pub(super) mod test {
      mod pretty {
          use super::*;
  

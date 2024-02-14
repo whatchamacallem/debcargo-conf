@@ -1,0 +1,75 @@
+Description: Extend and modify API for use with `heed`
+ `heed` normally depends on `lmdb-master-sys`, which is just a more recent
+ version/fork of this crate. In order to avoid too much duplication, add the
+ relevant bits so we can use this crate for `heed` instead.
+Author: Arnaud Ferraris <aferraris@debian.org>
+Forwarded: not-needed
+Last-Update: 2023-11-22
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/constants.rs
++++ b/src/constants.rs
+@@ -121,5 +121,7 @@
+ pub const MDB_BAD_VALSIZE: c_int = -30781;
+ /// The specified DBI was changed unexpectedly.
+ pub const MDB_BAD_DBI: c_int = -30780;
++/// Unexpected problem - txn should abort
++pub const MDB_PROBLEM: ::libc::c_int = -30779;
+ /// The last defined error code.
+-pub const MDB_LAST_ERRCODE: c_int = MDB_BAD_DBI;
++pub const MDB_LAST_ERRCODE: c_int = MDB_PROBLEM;
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -11,6 +11,13 @@
+ #[allow(non_camel_case_types)]
+ pub type mode_t = ::libc::c_int;
+ 
++#[cfg(unix)]
++#[allow(non_camel_case_types)]
++pub type mdb_filehandle_t = ::libc::c_int;
++#[cfg(windows)]
++#[allow(non_camel_case_types)]
++pub type mdb_filehandle_t = *mut ::libc::c_void;
++
+ pub use constants::*;
+ pub use ffi::*;
+ 
+--- a/src/ffi.rs
++++ b/src/ffi.rs
+@@ -6,6 +6,7 @@
+ pub enum MDB_cursor { }
+ 
+ #[repr(C)]
++#[derive(Clone, Copy)]
+ pub struct MDB_val {
+     pub mv_size: ::libc::size_t,
+     pub mv_data: *mut ::libc::c_void,
+@@ -46,6 +47,7 @@
+ }
+ 
+ #[repr(C)]
++#[derive(Clone, Copy)]
+ pub struct MDB_envinfo {
+     pub me_mapaddr: *mut ::libc::c_void,
+     pub me_mapsize: ::libc::size_t,
+@@ -95,9 +97,9 @@
+     pub fn mdb_dbi_flags(txn: *mut MDB_txn, dbi: MDB_dbi, flags: *mut ::libc::c_uint) -> ::libc::c_int;
+     pub fn mdb_dbi_close(env: *mut MDB_env, dbi: MDB_dbi) -> ();
+     pub fn mdb_drop(txn: *mut MDB_txn, dbi: MDB_dbi, del: ::libc::c_int) -> ::libc::c_int;
+-    pub fn mdb_set_compare(txn: *mut MDB_txn, dbi: MDB_dbi, cmp: *mut MDB_cmp_func) -> ::libc::c_int;
+-    pub fn mdb_set_dupsort(txn: *mut MDB_txn, dbi: MDB_dbi, cmp: *mut MDB_cmp_func) -> ::libc::c_int;
+-    pub fn mdb_set_relfunc(txn: *mut MDB_txn, dbi: MDB_dbi, rel: *mut MDB_rel_func) -> ::libc::c_int;
++    pub fn mdb_set_compare(txn: *mut MDB_txn, dbi: MDB_dbi, cmp: MDB_cmp_func) -> ::libc::c_int;
++    pub fn mdb_set_dupsort(txn: *mut MDB_txn, dbi: MDB_dbi, cmp: MDB_cmp_func) -> ::libc::c_int;
++    pub fn mdb_set_relfunc(txn: *mut MDB_txn, dbi: MDB_dbi, rel: MDB_rel_func) -> ::libc::c_int;
+     pub fn mdb_set_relctx(txn: *mut MDB_txn, dbi: MDB_dbi, ctx: *mut ::libc::c_void) -> ::libc::c_int;
+     pub fn mdb_get(txn: *mut MDB_txn, dbi: MDB_dbi, key: *mut MDB_val, data: *mut MDB_val) -> ::libc::c_int;
+     pub fn mdb_put(txn: *mut MDB_txn, dbi: MDB_dbi, key: *mut MDB_val, data: *mut MDB_val, flags: ::libc::c_uint) -> ::libc::c_int;
+@@ -113,6 +115,6 @@
+     pub fn mdb_cursor_count(cursor: *mut MDB_cursor, countp: *mut ::libc::size_t) -> ::libc::c_int;
+     pub fn mdb_cmp(txn: *mut MDB_txn, dbi: MDB_dbi, a: *const MDB_val, b: *const MDB_val) -> ::libc::c_int;
+     pub fn mdb_dcmp(txn: *mut MDB_txn, dbi: MDB_dbi, a: *const MDB_val, b: *const MDB_val) -> ::libc::c_int;
+-    pub fn mdb_reader_list(env: *mut MDB_env, func: *mut MDB_msg_func, ctx: *mut ::libc::c_void) -> ::libc::c_int;
++    pub fn mdb_reader_list(env: *mut MDB_env, func: MDB_msg_func, ctx: *mut ::libc::c_void) -> ::libc::c_int;
+     pub fn mdb_reader_check(env: *mut MDB_env, dead: *mut ::libc::c_int) -> ::libc::c_int;
+ }

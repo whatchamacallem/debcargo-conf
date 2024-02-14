@@ -1,0 +1,33 @@
+async-io 2 introduced IO safety, this resulted in some functions being marked
+as unsafe, these functions aren't any more dangerous than they were before,
+the danger is just made explicit now.
+
+--- rust-zbus-3.14.1.orig/src/address.rs
++++ rust-zbus-3.14.1/src/address.rs
+@@ -328,2 +328,3 @@
+                     while !nonce.is_empty() {
++                      unsafe {
+                         let len = stream
+@@ -332,2 +333,3 @@
+                         nonce = &nonce[len..];
++                      }
+                     }
+--- rust-zbus-3.14.1.orig/src/raw/socket.rs
++++ rust-zbus-3.14.1/src/raw/socket.rs
+@@ -484,3 +484,3 @@
+         loop {
+-            match (*self).get_mut().read(buf) {
++            match unsafe { (*self).get_mut().read(buf) } {
+                 Err(err) if err.kind() == io::ErrorKind::WouldBlock => {}
+@@ -514,3 +514,3 @@
+         loop {
+-            match (*self).get_mut().write(buf) {
++            match unsafe { (*self).get_mut().write(buf) } {
+                 Err(err) if err.kind() == io::ErrorKind::WouldBlock => {}
+--- zbus.orig/Cargo.toml
++++ zbus/Cargo.toml
+@@ -45,3 +45,3 @@
+ [dependencies.async-io]
+-version = "1.12.0"
++version = "2"
+ optional = true

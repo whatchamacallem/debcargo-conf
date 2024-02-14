@@ -2,7 +2,7 @@ Index: rcgen/examples/rsa-irc-openssl.rs
 ===================================================================
 --- rcgen.orig/examples/rsa-irc-openssl.rs
 +++ rcgen/examples/rsa-irc-openssl.rs
-@@ -21,8 +21,7 @@ fn main() -> Result<(), Box<dyn std::err
+@@ -19,8 +19,7 @@ fn main() -> Result<(), Box<dyn std::err
  
  	let cert = Certificate::from_params(params)?;
  	let pem_serialized = cert.serialize_pem()?;
@@ -10,13 +10,13 @@ Index: rcgen/examples/rsa-irc-openssl.rs
 -	let der_serialized = pem.contents();
 +	let der_serialized = pem::parse(&pem_serialized).unwrap().contents;
  	let hash = ring::digest::digest(&ring::digest::SHA512, &der_serialized);
- 	let hash_hex :String = hash.as_ref().iter()
- 		.map(|b| format!("{b:02x}"))
+ 	let hash_hex: String = hash.as_ref().iter().map(|b| format!("{b:02x}")).collect();
+ 	println!("sha-512 fingerprint: {hash_hex}");
 Index: rcgen/examples/rsa-irc.rs
 ===================================================================
 --- rcgen.orig/examples/rsa-irc.rs
 +++ rcgen/examples/rsa-irc.rs
-@@ -27,8 +27,7 @@ fn main() -> Result<(), Box<dyn std::err
+@@ -25,8 +25,7 @@ fn main() -> Result<(), Box<dyn std::err
  
  	let cert = Certificate::from_params(params)?;
  	let pem_serialized = cert.serialize_pem()?;
@@ -24,45 +24,40 @@ Index: rcgen/examples/rsa-irc.rs
 -	let der_serialized = pem.contents();
 +	let der_serialized = pem::parse(&pem_serialized).unwrap().contents;
  	let hash = ring::digest::digest(&ring::digest::SHA512, &der_serialized);
- 	let hash_hex :String = hash.as_ref().iter()
- 		.map(|b| format!("{:02x}", b))
-Index: rcgen/src/lib.rs
+ 	let hash_hex: String = hash.as_ref().iter().map(|b| format!("{:02x}", b)).collect();
+ 	println!("sha-512 fingerprint: {hash_hex}");
+Index: rcgen/src/csr.rs
 ===================================================================
---- rcgen.orig/src/lib.rs
-+++ rcgen/src/lib.rs
-@@ -34,6 +34,7 @@ use yasna::Tag;
- use yasna::models::ObjectIdentifier;
- #[cfg(feature = "pem")]
- use pem::Pem;
-+use std::convert::TryInto;
- use ring::digest;
- use ring::signature::{EcdsaKeyPair, Ed25519KeyPair, RsaKeyPair, RsaEncoding};
- use ring::rand::SystemRandom;
-@@ -587,7 +588,7 @@ impl CertificateSigningRequest {
- 	pub fn from_pem(pem_str :&str) -> Result<Self, RcgenError> {
- 		let csr = pem::parse(pem_str)
- 			.or(Err(RcgenError::CouldNotParseCertificationRequest))?;
+--- rcgen.orig/src/csr.rs
++++ rcgen/src/csr.rs
+@@ -38,7 +38,7 @@ impl CertificateSigningRequest {
+ 	#[cfg(all(feature = "pem", feature = "x509-parser"))]
+ 	pub fn from_pem(pem_str: &str) -> Result<Self, RcgenError> {
+ 		let csr = pem::parse(pem_str).or(Err(RcgenError::CouldNotParseCertificationRequest))?;
 -		Self::from_der(csr.contents())
 +		Self::from_der(&csr.contents)
  	}
  
  	/// Parse a certificate signing request from DER-encoded bytes
-@@ -644,8 +645,10 @@ impl CertificateSigningRequest {
- 	/// *This function is only available if rcgen is built with the "pem" feature*
- 	#[cfg(feature = "pem")]
- 	pub fn serialize_pem_with_signer(&self, ca :&Certificate) -> Result<String, RcgenError> {
--		let contents = self.params.serialize_der_with_signer(&self.public_key, ca)?;
+@@ -103,7 +103,10 @@ impl CertificateSigningRequest {
+ 		let contents = self
+ 			.params
+ 			.serialize_der_with_signer(&self.public_key, ca)?;
 -		let p = Pem::new("CERTIFICATE", contents);
 +		let p = Pem {
 +			tag : "CERTIFICATE".to_string(),
-+			contents : self.params.serialize_der_with_signer(&self.public_key, ca)?,
++			contents : contents,
 +		};
- 		Ok(pem::encode_config(&p, ENCODE_CONFIG))
+ 		Ok(pem::encode_config(&p, crate::ENCODE_CONFIG))
  	}
  }
-@@ -714,7 +717,10 @@ impl CertificateRevocationList {
+Index: rcgen/src/crl.rs
+===================================================================
+--- rcgen.orig/src/crl.rs
++++ rcgen/src/crl.rs
+@@ -79,7 +79,10 @@ impl CertificateRevocationList {
  	#[cfg(feature = "pem")]
- 	pub fn serialize_pem_with_signer(&self, ca :&Certificate) -> Result<String, RcgenError> {
+ 	pub fn serialize_pem_with_signer(&self, ca: &Certificate) -> Result<String, RcgenError> {
  		let contents = self.serialize_der_with_signer(ca)?;
 -		let p = Pem::new("X509 CRL", contents);
 +		let p = Pem {
@@ -72,20 +67,24 @@ Index: rcgen/src/lib.rs
  		Ok(pem::encode_config(&p, ENCODE_CONFIG))
  	}
  }
-@@ -780,7 +786,7 @@ impl CertificateParams {
- 	pub fn from_ca_cert_pem(pem_str :&str, key_pair :KeyPair) -> Result<Self, RcgenError> {
- 		let certificate = pem::parse(pem_str)
- 			.or(Err(RcgenError::CouldNotParseCertificate))?;
+Index: rcgen/src/lib.rs
+===================================================================
+--- rcgen.orig/src/lib.rs
++++ rcgen/src/lib.rs
+@@ -570,7 +570,7 @@ impl CertificateParams {
+ 	#[cfg(all(feature = "pem", feature = "x509-parser"))]
+ 	pub fn from_ca_cert_pem(pem_str: &str, key_pair: KeyPair) -> Result<Self, RcgenError> {
+ 		let certificate = pem::parse(pem_str).or(Err(RcgenError::CouldNotParseCertificate))?;
 -		Self::from_ca_cert_der(certificate.contents(), key_pair)
 +		Self::from_ca_cert_der(&certificate.contents, key_pair)
  	}
  
  	/// Parses a ca certificate from the DER format for signing
-@@ -1861,8 +1867,10 @@ impl Certificate {
- 	/// *This function is only available if rcgen is built with the "pem" feature*
+@@ -1545,22 +1545,28 @@ impl Certificate {
+ 	/// Serializes the certificate to the ASCII PEM format
  	#[cfg(feature = "pem")]
  	pub fn serialize_pem(&self) -> Result<String, RcgenError> {
--		let contents =  self.serialize_der()?;
+-		let contents = self.serialize_der()?;
 -		let p = Pem::new("CERTIFICATE", contents);
 +		let p = Pem {
 +			tag : "CERTIFICATE".to_string(),
@@ -94,10 +93,8 @@ Index: rcgen/src/lib.rs
  		Ok(pem::encode_config(&p, ENCODE_CONFIG))
  	}
  	/// Serializes the certificate, signed with another certificate's key, to the ASCII PEM format
-@@ -1870,8 +1878,10 @@ impl Certificate {
- 	/// *This function is only available if rcgen is built with the "pem" feature*
  	#[cfg(feature = "pem")]
- 	pub fn serialize_pem_with_signer(&self, ca :&Certificate) -> Result<String, RcgenError> {
+ 	pub fn serialize_pem_with_signer(&self, ca: &Certificate) -> Result<String, RcgenError> {
 -		let contents = self.serialize_der_with_signer(ca)?;
 -		let p = Pem::new("CERTIFICATE", contents);
 +		let p = Pem {
@@ -107,8 +104,6 @@ Index: rcgen/src/lib.rs
  		Ok(pem::encode_config(&p, ENCODE_CONFIG))
  	}
  	/// Serializes the certificate signing request to the ASCII PEM format
-@@ -1879,8 +1889,10 @@ impl Certificate {
- 	/// *This function is only available if rcgen is built with the "pem" feature*
  	#[cfg(feature = "pem")]
  	pub fn serialize_request_pem(&self) -> Result<String, RcgenError> {
 -		let contents = self.serialize_request_der()?;
@@ -120,26 +115,30 @@ Index: rcgen/src/lib.rs
  		Ok(pem::encode_config(&p, ENCODE_CONFIG))
  	}
  	/// Serializes the private key in PKCS#8 format
-@@ -2001,7 +2013,7 @@ impl KeyPair {
+Index: rcgen/src/key_pair.rs
+===================================================================
+--- rcgen.orig/src/key_pair.rs
++++ rcgen/src/key_pair.rs
+@@ -66,7 +66,7 @@ impl KeyPair {
  	#[cfg(feature = "pem")]
- 	pub fn from_pem(pem_str :&str) -> Result<Self, RcgenError> {
+ 	pub fn from_pem(pem_str: &str) -> Result<Self, RcgenError> {
  		let private_key = pem::parse(pem_str)?;
--		let private_key_der :&[_] = private_key.contents();
-+		let private_key_der :&[_] = &private_key.contents;
+-		let private_key_der: &[_] = private_key.contents();
++		let private_key_der: &[_] = &private_key.contents;
  		Ok(private_key_der.try_into()?)
  	}
  
-@@ -2024,7 +2036,7 @@ impl KeyPair {
- 	#[cfg(feature = "pem")]
- 	pub fn from_pem_and_sign_algo(pem_str :&str, alg :&'static SignatureAlgorithm) -> Result<Self, RcgenError> {
+@@ -89,7 +89,7 @@ impl KeyPair {
+ 		alg: &'static SignatureAlgorithm,
+ 	) -> Result<Self, RcgenError> {
  		let private_key = pem::parse(pem_str)?;
--		let private_key_der :&[_] = private_key.contents();
-+		let private_key_der :&[_] = &private_key.contents;
+-		let private_key_der: &[_] = private_key.contents();
++		let private_key_der: &[_] = &private_key.contents;
  		Ok(Self::from_der_and_sign_algo(private_key_der, alg)?)
  	}
  
-@@ -2322,8 +2334,10 @@ impl KeyPair {
- 	/// *This function is only available if rcgen is built with the "pem" feature*
+@@ -300,8 +300,10 @@ impl KeyPair {
+ 	/// The returned string can be interpreted with `openssl pkey --inform PEM -pubout -pubin -text`
  	#[cfg(feature = "pem")]
  	pub fn public_key_pem(&self) -> String {
 -		let contents = self.public_key_der();
@@ -151,8 +150,8 @@ Index: rcgen/src/lib.rs
  		pem::encode_config(&p, ENCODE_CONFIG)
  	}
  	/// Serializes the key pair (including the private key) in PKCS#8 format in DER
-@@ -2363,8 +2377,10 @@ impl KeyPair {
- 	/// *This function is only available if rcgen is built with the "pem" feature*
+@@ -339,8 +341,10 @@ impl KeyPair {
+ 	/// Serializes the key pair (including the private key) in PKCS#8 format in PEM
  	#[cfg(feature = "pem")]
  	pub fn serialize_pem(&self) -> String {
 -		let contents = self.serialize_der();
@@ -168,7 +167,7 @@ Index: rcgen/src/main.rs
 ===================================================================
 --- rcgen.orig/src/main.rs
 +++ rcgen/src/main.rs
-@@ -18,8 +18,7 @@ fn main() -> Result<(), Box<dyn std::err
+@@ -22,8 +22,7 @@ fn main() -> Result<(), Box<dyn std::err
  	let cert = Certificate::from_params(params)?;
  
  	let pem_serialized = cert.serialize_pem()?;
@@ -182,7 +181,7 @@ Index: rcgen/Cargo.toml
 ===================================================================
 --- rcgen.orig/Cargo.toml
 +++ rcgen/Cargo.toml
-@@ -42,7 +42,7 @@ path = "src/main.rs"
+@@ -43,7 +43,7 @@ name = "rsa-irc-openssl"
  required-features = ["pem"]
  
  [dependencies.pem]

@@ -1,0 +1,24 @@
+Index: sysinfo/src/lib.rs
+===================================================================
+--- sysinfo.orig/src/lib.rs
++++ sysinfo/src/lib.rs
+@@ -485,6 +485,7 @@ mod test {
+             assert_eq!(proc_.frequency(), 0);
+         }
+         // In a VM, it'll fail.
++        #[cfg(not(target_arch = "arm"))]
+         if std::env::var("APPLE_CI").is_err() && std::env::var("FREEBSD_CI").is_err() {
+             s.refresh_cpu_specifics(CpuRefreshKind::everything());
+             for proc_ in s.cpus() {
+Index: sysinfo/tests/cpu.rs
+===================================================================
+--- sysinfo.orig/tests/cpu.rs
++++ sysinfo/tests/cpu.rs
+@@ -20,6 +20,7 @@ fn test_cpu() {
+ }
+ 
+ #[test]
++#[cfg(not(target_arch = "arm"))]
+ fn test_physical_core_numbers() {
+     use sysinfo::SystemExt;
+ 

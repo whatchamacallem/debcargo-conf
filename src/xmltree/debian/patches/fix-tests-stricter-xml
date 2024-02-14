@@ -1,0 +1,82 @@
+commit 12a7677c0a6e3fd5a17d554299dcaee7eb0f59b0
+Author: Andrew Chin <achin@eminence32.net>
+Date:   Sat Jun 24 10:49:56 2023 -0400
+
+    Fix tests, due to more strict xml-rs parsing
+    
+    The xml-rs crate is now more strict in it's parsing.  For example:
+    * CDATA is no longer allowed outside the root element
+    * There can't be whitespace before the XML prologue
+
+diff --git a/tests/data/04.xml b/tests/data/04.xml
+index bf96968..6b9cf68 100644
+--- a/tests/data/04.xml
++++ b/tests/data/04.xml
+@@ -14,7 +14,4 @@
+     <![CDATA[zzzz]]]]><![CDATA[>]]>
+ </p:data>
+ <!-- abcd &lt; &gt; &amp; -->
+-<![CDATA[
+-        <a>ddddd</b>!e3--><!-- ddckx
+-]]>
+ 
+diff --git a/tests/suite.rs b/tests/suite.rs
+index ee870f9..78134e8 100644
+--- a/tests/suite.rs
++++ b/tests/suite.rs
+@@ -53,7 +53,7 @@ fn test_04() {
+ fn test_parse_all() {
+     let nodes = Element::parse_all(File::open("tests/data/04.xml").unwrap()).unwrap();
+     println!("{:#?}", nodes);
+-    assert_eq!(nodes.len(), 4);
++    assert_eq!(nodes.len(), 3);
+     assert!(nodes[0].as_comment().is_some());
+ }
+ 
+@@ -174,8 +174,8 @@ fn test_take() {
+         </names>
+     "##;
+ 
+-    let mut data_1 = Element::parse(data_xml_1.as_bytes()).unwrap();
+-    let data_2 = Element::parse(data_xml_2.as_bytes()).unwrap();
++    let mut data_1 = Element::parse(data_xml_1.trim().as_bytes()).unwrap();
++    let data_2 = Element::parse(data_xml_2.trim().as_bytes()).unwrap();
+ 
+     if let Some(removed) = data_1.take_child("remove_me") {
+         assert_eq!(removed.children.len(), 1);
+@@ -247,7 +247,7 @@ fn test_text() {
+         <elem><inner/></elem>
+     "##;
+ 
+-    let elem = Element::parse(data.as_bytes()).unwrap();
++    let elem = Element::parse(data.trim().as_bytes()).unwrap();
+     assert!(elem.get_text().is_none());
+ 
+     let data = r##"
+@@ -255,7 +255,7 @@ fn test_text() {
+         <elem>hello world<inner/></elem>
+     "##;
+ 
+-    let elem = Element::parse(data.as_bytes()).unwrap();
++    let elem = Element::parse(data.trim().as_bytes()).unwrap();
+     assert_eq!(elem.get_text().unwrap(), Cow::Borrowed("hello world"));
+ 
+     let data = r##"
+@@ -263,7 +263,7 @@ fn test_text() {
+         <elem>hello <inner/>world</elem>
+     "##;
+ 
+-    let elem = Element::parse(data.as_bytes()).unwrap();
++    let elem = Element::parse(data.trim().as_bytes()).unwrap();
+     assert_eq!(
+         elem.get_text().unwrap(),
+         Cow::from("hello world".to_owned())
+@@ -274,7 +274,7 @@ fn test_text() {
+         <elem>hello <inner/><![CDATA[<world>]]></elem>
+     "##;
+ 
+-    let elem = Element::parse(data.as_bytes()).unwrap();
++    let elem = Element::parse(data.trim().as_bytes()).unwrap();
+     assert_eq!(
+         elem.get_text().unwrap(),
+         Cow::from("hello <world>".to_owned())

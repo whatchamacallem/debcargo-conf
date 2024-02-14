@@ -1,0 +1,56 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit b0c05664837684d74d396dae8cceb6171ea4c556
+Author: zhangjingqiang <zhangjingqiang@bytedance.com>
+Date:   Tue Oct 24 17:09:50 2023 +0800
+
+    update to use ring 0.17
+
+Index: trust-dns-client/Cargo.toml
+===================================================================
+--- trust-dns-client.orig/Cargo.toml
++++ trust-dns-client/Cargo.toml
+@@ -86,12 +85,12 @@ version = "0.2.0"
+ version = "0.8"
+ 
+ [dependencies.ring]
+-version = "0.16"
++version = "0.17"
+ features = ["std"]
+ optional = true
+ 
+ [dependencies.rustls]
+-version = "0.21.0"
++version = "0.21.8"
+ optional = true
+ 
+ [dependencies.serde]
+Index: trust-dns-client/src/rr/dnssec/key_format.rs
+===================================================================
+--- trust-dns-client.orig/src/rr/dnssec/key_format.rs
++++ trust-dns-client/src/rr/dnssec/key_format.rs
+@@ -5,6 +5,8 @@ use openssl::rsa::Rsa;
+ #[cfg(feature = "openssl")]
+ use openssl::symm::Cipher;
+ #[cfg(feature = "ring")]
++use ring::rand::SystemRandom;
++#[cfg(feature = "ring")]
+ use ring::signature::{
+     EcdsaKeyPair, Ed25519KeyPair, ECDSA_P256_SHA256_FIXED_SIGNING, ECDSA_P384_SHA384_FIXED_SIGNING,
+ };
+@@ -89,12 +91,13 @@ impl KeyFormat {
+                 }
+                 #[cfg(feature = "ring")]
+                 Self::Pkcs8 => {
++                    let rng = SystemRandom::new();
+                     let ring_algorithm = if algorithm == Algorithm::ECDSAP256SHA256 {
+                         &ECDSA_P256_SHA256_FIXED_SIGNING
+                     } else {
+                         &ECDSA_P384_SHA384_FIXED_SIGNING
+                     };
+-                    let key = EcdsaKeyPair::from_pkcs8(ring_algorithm, bytes)?;
++                    let key = EcdsaKeyPair::from_pkcs8(ring_algorithm, bytes, &rng)?;
+ 
+                     Ok(KeyPair::from_ecdsa(key))
+                 }

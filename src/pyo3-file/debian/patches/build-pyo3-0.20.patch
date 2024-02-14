@@ -1,0 +1,35 @@
+I've truncated the following patch to not touch Cargo.lock, which
+we do not use
+
+commit eb3cf4e855c211f786eb18c58e7be4abd508c45f
+Author: Jelmer Vernooĳ <jelmer@jelmer.uk>
+Date:   Mon Nov 13 02:52:18 2023 +0000
+
+    Support building against PyO3 0.20
+
+Index: pyo3-file/Cargo.toml
+===================================================================
+--- pyo3-file.orig/Cargo.toml
++++ pyo3-file/Cargo.toml
+@@ -21,7 +21,7 @@ license = "MIT/Apache-2.0"
+ repository = "https://github.com/omerbenamram/pyo3-file"
+ 
+ [dependencies.pyo3]
+-version = ">=0.18.1,<0.20"
++version = ">=0.18.1,<0.21"
+ 
+ [dev-dependencies.skeptic]
+ version = "0.13.7"
+Index: pyo3-file/README.md
+===================================================================
+--- pyo3-file.orig/README.md
++++ pyo3-file/README.md
+@@ -45,7 +45,7 @@ impl FileOrFileLike {
+     pub fn from_pyobject(path_or_file_like: PyObject) -> PyResult<FileOrFileLike> {
+         Python::with_gil(|py| {
+             // is a path
+-            if let Ok(string_ref) = path_or_file_like.cast_as::<PyString>(py) {
++            if let Ok(string_ref) = path_or_file_like.downcast::<PyString>(py) {
+                 return Ok(FileOrFileLike::File(
+                     string_ref.to_string_lossy().to_string(),
+                 ));

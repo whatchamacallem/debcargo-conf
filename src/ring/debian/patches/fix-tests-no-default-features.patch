@@ -2,7 +2,7 @@ Index: ring/src/aead/aes.rs
 ===================================================================
 --- ring.orig/src/aead/aes.rs
 +++ ring/src/aead/aes.rs
-@@ -432,6 +432,7 @@ fn detect_implementation(cpu_features: c
+@@ -437,6 +437,7 @@ fn detect_implementation(cpu_features: c
  }
  
  #[cfg(test)]
@@ -50,7 +50,7 @@ Index: ring/src/ec/suite_b/ecdsa/verification.rs
 ===================================================================
 --- ring.orig/src/ec/suite_b/ecdsa/verification.rs
 +++ ring/src/ec/suite_b/ecdsa/verification.rs
-@@ -288,6 +288,7 @@ pub static ECDSA_P384_SHA384_ASN1: Ecdsa
+@@ -276,6 +276,7 @@ pub static ECDSA_P384_SHA384_ASN1: Ecdsa
  };
  
  #[cfg(test)]
@@ -62,7 +62,7 @@ Index: ring/src/ec/suite_b/ops.rs
 ===================================================================
 --- ring.orig/src/ec/suite_b/ops.rs
 +++ ring/src/ec/suite_b/ops.rs
-@@ -465,10 +465,12 @@ mod tests {
+@@ -471,10 +471,12 @@ mod tests {
          elem_add_test(
              &p256::PUBLIC_SCALAR_OPS,
              test_file!("ops/p256_elem_sum_tests.txt"),
@@ -75,7 +75,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p384_elem_add_test() {
          elem_add_test(
              &p384::PUBLIC_SCALAR_OPS,
-@@ -476,6 +478,7 @@ mod tests {
+@@ -482,6 +484,7 @@ mod tests {
          );
      } */
  
@@ -83,7 +83,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn elem_add_test(ops: &PublicScalarOps, test_file: test::File) {
          test::run(test_file, |section, test_case| {
              assert_eq!(section, "");
-@@ -501,6 +504,7 @@ mod tests {
+@@ -507,6 +510,7 @@ mod tests {
      // the point arithmetic functions. Thus, we can't test it.
  
      /* #[test]
@@ -91,7 +91,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p384_elem_sub_test() {
          prefixed_extern! {
              fn p384_elem_sub(r: *mut Limb, a: *const Limb, b: *const Limb);
-@@ -512,6 +516,7 @@ mod tests {
+@@ -518,6 +522,7 @@ mod tests {
          );
      } */
  
@@ -99,7 +99,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn elem_sub_test(
          ops: &CommonOps,
          elem_sub: unsafe extern "C" fn(r: *mut Limb, a: *const Limb, b: *const Limb),
-@@ -552,6 +557,7 @@ mod tests {
+@@ -558,6 +563,7 @@ mod tests {
      // into the point arithmetic functions. Thus, we can't test it.
  
      /* #[test]
@@ -107,7 +107,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p384_elem_div_by_2_test() {
          prefixed_extern! {
              fn p384_elem_div_by_2(r: *mut Limb, a: *const Limb);
-@@ -563,6 +569,7 @@ mod tests {
+@@ -569,6 +575,7 @@ mod tests {
          );
      } */
  
@@ -115,7 +115,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn elem_div_by_2_test(
          ops: &CommonOps,
          elem_div_by_2: unsafe extern "C" fn(r: *mut Limb, a: *const Limb),
-@@ -587,6 +594,7 @@ mod tests {
+@@ -593,6 +600,7 @@ mod tests {
      // There is no `ecp_nistz256_neg` on other targets.
      /* #[cfg(target_arch = "x86_64")]
      #[test]
@@ -123,7 +123,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_elem_neg_test() {
          prefixed_extern! {
              fn ecp_nistz256_neg(r: *mut Limb, a: *const Limb);
-@@ -599,6 +607,7 @@ mod tests {
+@@ -605,6 +613,7 @@ mod tests {
      }
  
      #[test]
@@ -131,7 +131,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p384_elem_neg_test() {
          prefixed_extern! {
              fn p384_elem_neg(r: *mut Limb, a: *const Limb);
-@@ -610,6 +619,7 @@ mod tests {
+@@ -616,6 +625,7 @@ mod tests {
          );
      } */
  
@@ -139,7 +139,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn elem_neg_test(
          ops: &CommonOps,
          elem_neg: unsafe extern "C" fn(r: *mut Limb, a: *const Limb),
-@@ -644,15 +654,18 @@ mod tests {
+@@ -650,15 +660,18 @@ mod tests {
      }
  
      /* #[test]
@@ -158,7 +158,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn elem_mul_test(ops: &CommonOps, test_file: test::File) {
          test::run(test_file, |section, test_case| {
              assert_eq!(section, "");
-@@ -668,6 +681,7 @@ mod tests {
+@@ -674,6 +687,7 @@ mod tests {
      }
  
      /* #[test]
@@ -166,7 +166,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_scalar_mul_test() {
          scalar_mul_test(
              &p256::SCALAR_OPS,
-@@ -676,6 +690,7 @@ mod tests {
+@@ -682,6 +696,7 @@ mod tests {
      }
  
      #[test]
@@ -174,7 +174,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p384_scalar_mul_test() {
          scalar_mul_test(
              &p384::SCALAR_OPS,
-@@ -683,6 +698,7 @@ mod tests {
+@@ -689,6 +704,7 @@ mod tests {
          );
      } */
  
@@ -182,7 +182,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn scalar_mul_test(ops: &ScalarOps, test_file: test::File) {
          test::run(test_file, |section, test_case| {
              assert_eq!(section, "");
-@@ -698,6 +714,7 @@ mod tests {
+@@ -704,6 +720,7 @@ mod tests {
      }
  
      /* #[test]
@@ -190,7 +190,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_scalar_square_test() {
          prefixed_extern! {
              fn p256_scalar_sqr_rep_mont(r: *mut Limb, a: *const Limb, rep: Limb);
-@@ -712,6 +729,7 @@ mod tests {
+@@ -718,6 +735,7 @@ mod tests {
      // XXX: There's no `p384_scalar_square_test()` because there's no dedicated
      // `p384_scalar_sqr_rep_mont()`.
  
@@ -198,7 +198,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn scalar_square_test(
          ops: &ScalarOps,
          sqr_rep: unsafe extern "C" fn(r: *mut Limb, a: *const Limb, rep: Limb),
-@@ -757,6 +775,7 @@ mod tests {
+@@ -763,6 +781,7 @@ mod tests {
      }
  
      /* #[test]
@@ -206,7 +206,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_point_sum_test() {
          point_sum_test(
              &p256::PRIVATE_KEY_OPS,
-@@ -765,6 +784,7 @@ mod tests {
+@@ -771,6 +790,7 @@ mod tests {
      }
  
      #[test]
@@ -214,7 +214,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p384_point_sum_test() {
          point_sum_test(
              &p384::PRIVATE_KEY_OPS,
-@@ -772,6 +792,7 @@ mod tests {
+@@ -778,6 +798,7 @@ mod tests {
          );
      } */
  
@@ -222,7 +222,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn point_sum_test(ops: &PrivateKeyOps, test_file: test::File) {
          test::run(test_file, |section, test_case| {
              assert_eq!(section, "");
-@@ -792,6 +813,7 @@ mod tests {
+@@ -798,6 +819,7 @@ mod tests {
          prefixed_extern! {
              fn p256_point_add_affine(
                  r: *mut Limb,   // [p256::COMMON_OPS.num_limbs*3]
@@ -230,7 +230,7 @@ Index: ring/src/ec/suite_b/ops.rs
                  a: *const Limb, // [p256::COMMON_OPS.num_limbs*3]
                  b: *const Limb, // [p256::COMMON_OPS.num_limbs*2]
              );
-@@ -805,6 +827,7 @@ mod tests {
+@@ -811,6 +833,7 @@ mod tests {
  
      // XXX: There is no `nistz384_point_add_affine()`.
  
@@ -238,7 +238,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn point_sum_mixed_test(
          ops: &PrivateKeyOps,
          point_add_affine: unsafe extern "C" fn(
-@@ -833,6 +856,7 @@ mod tests {
+@@ -839,6 +862,7 @@ mod tests {
      }
  
      /* #[test]
@@ -246,15 +246,15 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_point_double_test() {
          prefixed_extern! {
              fn p256_point_double(
-@@ -848,6 +872,7 @@ mod tests {
+@@ -854,6 +878,7 @@ mod tests {
      }
  
      #[test]
 +    #[cfg(feature = "alloc")]
      fn p384_point_double_test() {
          prefixed_extern! {
-             fn nistz384_point_double(
-@@ -862,6 +887,7 @@ mod tests {
+             fn p384_point_double(
+@@ -868,6 +893,7 @@ mod tests {
          );
      } */
  
@@ -262,7 +262,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn point_double_test(
          ops: &PrivateKeyOps,
          point_double: unsafe extern "C" fn(
-@@ -888,6 +914,7 @@ mod tests {
+@@ -894,6 +920,7 @@ mod tests {
      }
  
      /* #[test]
@@ -270,7 +270,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_point_mul_test() {
          point_mul_tests(
              &p256::PRIVATE_KEY_OPS,
-@@ -896,6 +923,7 @@ mod tests {
+@@ -902,6 +929,7 @@ mod tests {
      } */
  
      /* #[test]
@@ -278,7 +278,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p384_point_mul_test() {
          point_mul_tests(
              &p384::PRIVATE_KEY_OPS,
-@@ -903,6 +931,7 @@ mod tests {
+@@ -909,6 +937,7 @@ mod tests {
          );
      } */
  
@@ -286,7 +286,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn point_mul_tests(ops: &PrivateKeyOps, test_file: test::File) {
          test::run(test_file, |section, test_case| {
              assert_eq!(section, "");
-@@ -921,6 +950,7 @@ mod tests {
+@@ -927,6 +956,7 @@ mod tests {
      }
  
      /* #[test]
@@ -294,7 +294,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_point_mul_serialized_test() {
          point_mul_serialized_test(
              &p256::PRIVATE_KEY_OPS,
-@@ -929,6 +959,7 @@ mod tests {
+@@ -935,6 +965,7 @@ mod tests {
          );
      } */
  
@@ -302,7 +302,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn point_mul_serialized_test(
          priv_ops: &PrivateKeyOps,
          pub_ops: &PublicKeyOps,
-@@ -970,6 +1001,7 @@ mod tests {
+@@ -976,6 +1007,7 @@ mod tests {
      }
  
      /* #[test]
@@ -310,7 +310,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_point_mul_base_test() {
          point_mul_base_tests(
              &p256::PRIVATE_KEY_OPS,
-@@ -978,6 +1010,7 @@ mod tests {
+@@ -985,6 +1017,7 @@ mod tests {
      }*/
  
      /* #[test]
@@ -318,15 +318,13 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p384_point_mul_base_test() {
          point_mul_base_tests(
              &p384::PRIVATE_KEY_OPS,
-@@ -985,6 +1018,7 @@ mod tests {
-         );
+@@ -994,4 +1027,5 @@ mod tests {
      }*/
  
 +    #[cfg(feature = "alloc")]
-     fn point_mul_base_tests(ops: &PrivateKeyOps, test_file: test::File) {
-         test::run(test_file, |section, test_case| {
-             assert_eq!(section, "");
-@@ -1025,6 +1059,7 @@ mod tests {
+     pub(super) fn point_mul_base_tests(
+         ops: &PrivateKeyOps,
+@@ -1037,6 +1071,7 @@ mod tests {
          }
      }
  
@@ -334,7 +332,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn consume_jacobian_point(
          ops: &PrivateKeyOps,
          test_case: &mut test::TestCase,
-@@ -1044,6 +1079,7 @@ mod tests {
+@@ -1056,6 +1091,7 @@ mod tests {
          xy: [Limb; 2 * MAX_LIMBS],
      }
  
@@ -342,7 +340,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn consume_affine_point(
          ops: &PrivateKeyOps,
          test_case: &mut test::TestCase,
-@@ -1060,6 +1096,7 @@ mod tests {
+@@ -1072,6 +1108,7 @@ mod tests {
          p
      }
  
@@ -350,7 +348,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn consume_point_elem(ops: &CommonOps, limbs_out: &mut [Limb], elems: &[&str], i: usize) {
          let bytes = test::from_hex(elems[i]).unwrap();
          let bytes = untrusted::Input::from(&bytes);
-@@ -1074,6 +1111,7 @@ mod tests {
+@@ -1086,6 +1123,7 @@ mod tests {
          Affine(Elem<R>, Elem<R>),
      }
  
@@ -358,7 +356,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn consume_point(ops: &PrivateKeyOps, test_case: &mut test::TestCase, name: &str) -> TestPoint {
          fn consume_point_elem(ops: &CommonOps, elems: &[&str], i: usize) -> Elem<R> {
              let bytes = test::from_hex(elems[i]).unwrap();
-@@ -1124,6 +1162,7 @@ mod tests {
+@@ -1136,6 +1174,7 @@ mod tests {
          }
      }
  
@@ -366,7 +364,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn consume_elem(ops: &CommonOps, test_case: &mut test::TestCase, name: &str) -> Elem<R> {
          let bytes = consume_padded_bytes(ops, test_case, name);
          let bytes = untrusted::Input::from(&bytes);
-@@ -1136,12 +1175,14 @@ mod tests {
+@@ -1148,12 +1187,14 @@ mod tests {
          }
      }
  
@@ -381,7 +379,7 @@ Index: ring/src/ec/suite_b/ops.rs
      fn consume_scalar_mont(
          ops: &CommonOps,
          test_case: &mut test::TestCase,
-@@ -1158,6 +1199,7 @@ mod tests {
+@@ -1170,6 +1211,7 @@ mod tests {
          }
      }
  
@@ -429,7 +427,7 @@ Index: ring/tests/aead_tests.rs
  macro_rules! test_aead {
      { $( { $alg:ident, $test_file:expr } ),+, } => {
          mod aead_test { // Make `cargo test aead` include these files.
-@@ -79,7 +84,8 @@ macro_rules! test_aead {
+@@ -78,7 +83,8 @@ macro_rules! test_aead {
      }
  }
  
@@ -439,7 +437,7 @@ Index: ring/tests/aead_tests.rs
      { AES_128_GCM, "aead_aes_128_gcm_tests.txt" },
      { AES_256_GCM, "aead_aes_256_gcm_tests.txt" },
      { CHACHA20_POLY1305, "aead_chacha20_poly1305_tests.txt" },
-@@ -444,6 +450,7 @@ fn test_aead_nonce_sizes() {
+@@ -443,6 +449,7 @@ fn test_aead_nonce_sizes() {
  
  /* #[allow(clippy::range_plus_one)]
  #[test]
@@ -451,7 +449,7 @@ Index: ring/tests/agreement_tests.rs
 ===================================================================
 --- ring.orig/tests/agreement_tests.rs
 +++ ring/tests/agreement_tests.rs
-@@ -16,7 +16,10 @@
+@@ -20,7 +20,10 @@ wasm_bindgen_test_configure!(run_in_brow
  
  extern crate alloc;
  
@@ -463,7 +461,7 @@ Index: ring/tests/agreement_tests.rs
  
  #[test]
  fn agreement_traits() {
-@@ -65,6 +68,7 @@ fn agreement_traits() {
+@@ -69,6 +72,7 @@ fn agreement_traits() {
  }
  
  /* #[test]
@@ -471,7 +469,7 @@ Index: ring/tests/agreement_tests.rs
  fn agreement_agree_ephemeral() {
      let rng = rand::SystemRandom::new();
  
-@@ -122,6 +126,7 @@ fn agreement_agree_ephemeral() {
+@@ -126,6 +130,7 @@ fn agreement_agree_ephemeral() {
  } */
  
  #[test]
@@ -479,7 +477,7 @@ Index: ring/tests/agreement_tests.rs
  fn test_agreement_ecdh_x25519_rfc_iterated() {
      let mut k = h("0900000000000000000000000000000000000000000000000000000000000000");
      let mut u = k.clone();
-@@ -186,6 +191,7 @@ fn x25519_(private_key: &[u8], public_ke
+@@ -190,6 +195,7 @@ fn x25519_(private_key: &[u8], public_ke
      })
  }
  
@@ -501,7 +499,7 @@ Index: ring/tests/digest_tests.rs
 +#[cfg(feature = "alloc")]
 +use ring::test_file;
  
- #[cfg(target_arch = "wasm32")]
+ #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
  use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 @@ -23,6 +26,7 @@ wasm_bindgen_test_configure!(run_in_brow
  /// Test vectors from BoringSSL, Go, and other sources.
@@ -612,7 +610,7 @@ Index: ring/tests/ed25519_tests.rs
 +#[cfg(feature = "alloc")]
 +use ring::test_file;
 +
- #[cfg(target_arch = "wasm32")]
+ #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
  use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
  
 @@ -26,6 +29,7 @@ wasm_bindgen_test_configure!(run_in_brow
@@ -653,7 +651,7 @@ Index: ring/tests/hmac_tests.rs
 +#[cfg(feature = "alloc")]
 +use ring::test_file;
  
- #[cfg(target_arch = "wasm32")]
+ #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
  use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 @@ -22,6 +25,7 @@ wasm_bindgen_test_configure!(run_in_brow
  
@@ -677,7 +675,7 @@ Index: ring/tests/pbkdf2_tests.rs
 +#[cfg(feature = "alloc")]
 +use ring::test_file;
  
- #[cfg(target_arch = "wasm32")]
+ #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
  use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 @@ -24,6 +27,7 @@ wasm_bindgen_test_configure!(run_in_brow
  /* /// Test vectors from BoringSSL, Go, and other sources.
@@ -727,7 +725,7 @@ Index: ring/src/lib.rs
 ===================================================================
 --- ring.orig/src/lib.rs
 +++ ring/src/lib.rs
-@@ -48,7 +48,7 @@
+@@ -52,7 +52,7 @@
  #![forbid(unused_results)]
  #![no_std]
  
@@ -790,7 +788,7 @@ Index: ring/tests/hkdf_tests.rs
 +#[cfg(feature = "alloc")]
 +use ring::test_file;
  
- #[cfg(target_arch = "wasm32")]
+ #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
  use wasm_bindgen_test::{wasm_bindgen_test as test, wasm_bindgen_test_configure};
 @@ -22,6 +25,7 @@ wasm_bindgen_test_configure!(run_in_brow
  

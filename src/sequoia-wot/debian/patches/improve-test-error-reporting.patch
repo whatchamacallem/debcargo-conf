@@ -1,0 +1,38 @@
+--- rust-sequoia-wot-0.8.1.orig/src/gpg.rs
++++ rust-sequoia-wot-0.8.1/src/gpg.rs
+@@ -171,7 +171,7 @@ pub fn import(data: &[u8]) -> Result<()>
+     let mut child = command
+         .stdin(Stdio::piped())
+         .stdout(Stdio::null())
+-        .stderr(Stdio::null())
++        .stderr(Stdio::inherit())
+         .arg("--import-options")
+         .arg("import-local-sigs")
+         .arg("--import")
+@@ -185,7 +185,7 @@ pub fn import(data: &[u8]) -> Result<()>
+     if ec.success() {
+         Ok(())
+     } else {
+-        Err(anyhow::anyhow!("gpg exited with non-zero exit code: {:?}",
++        Err(anyhow::anyhow!("gpg exited with non-zero exit code: {:?} in gpg::import",
+                             ec.code()))
+     }
+ }
+@@ -214,7 +214,7 @@ pub fn import_ownertrust(data: &[u8]) ->
+     let mut child = command
+         .stdin(Stdio::piped())
+         .stdout(Stdio::null())
+-        .stderr(Stdio::null())
++        .stderr(Stdio::inherit())
+         .arg("--import-ownertrust")
+         .spawn()?;
+ 
+@@ -226,7 +226,7 @@ pub fn import_ownertrust(data: &[u8]) ->
+     if ec.success() {
+         Ok(())
+     } else {
+-        Err(anyhow::anyhow!("gpg exited with non-zero exit code: {:?}",
++        Err(anyhow::anyhow!("gpg exited with non-zero exit code: {:?} in gpg::import_ownertrust",
+                             ec.code()))
+     }
+ }

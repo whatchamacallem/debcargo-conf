@@ -2,21 +2,21 @@ Index: gimli/Cargo.toml
 ===================================================================
 --- gimli.orig/Cargo.toml
 +++ gimli/Cargo.toml
-@@ -105,9 +105,6 @@ version = "1.0"
- [dev-dependencies.regex]
- version = "1"
+@@ -63,9 +63,6 @@ version = "1.1.0"
+ optional = true
+ default-features = false
  
 -[dev-dependencies.test-assembler]
 -version = "0.1.3"
 -
- [dev-dependencies.typed-arena]
- version = "2"
- 
+ [features]
+ default = [
+     "read-all",
 Index: gimli/src/read/abbrev.rs
 ===================================================================
 --- gimli.orig/src/read/abbrev.rs
 +++ gimli/src/read/abbrev.rs
-@@ -573,10 +573,10 @@ pub mod tests {
+@@ -646,10 +646,10 @@ pub mod tests {
      use crate::constants;
      use crate::endianity::LittleEndian;
      use crate::read::{EndianSlice, Error};
@@ -29,7 +29,7 @@ Index: gimli/src/read/abbrev.rs
  
      pub trait AbbrevSectionMethods {
          fn abbrev(self, code: u64, tag: constants::DwTag, children: constants::DwChildren) -> Self;
-@@ -586,7 +586,7 @@ pub mod tests {
+@@ -659,7 +659,7 @@ pub mod tests {
          fn abbrev_attr_null(self) -> Self;
      }
  
@@ -38,7 +38,7 @@ Index: gimli/src/read/abbrev.rs
          fn abbrev(self, code: u64, tag: constants::DwTag, children: constants::DwChildren) -> Self {
              self.uleb(code).uleb(tag.0.into()).D8(children.0)
          }
-@@ -608,9 +608,9 @@ pub mod tests {
+@@ -681,9 +681,9 @@ pub mod tests {
          fn abbrev_attr_null(self) -> Self {
              self.D8(0).D8(0)
          }
@@ -50,7 +50,7 @@ Index: gimli/src/read/abbrev.rs
      fn test_debug_abbrev_ok() {
          let extra_start = [1, 2, 3, 4];
          let expected_rest = [5, 6, 7, 8];
-@@ -667,7 +667,7 @@ pub mod tests {
+@@ -740,7 +740,7 @@ pub mod tests {
              .expect("Should parse abbreviations");
          assert_eq!(abbrevs.get(1), Some(&abbrev1));
          assert_eq!(abbrevs.get(2), Some(&abbrev2));
@@ -59,7 +59,7 @@ Index: gimli/src/read/abbrev.rs
  
      #[test]
      fn test_abbreviations_insert() {
-@@ -764,7 +764,7 @@ pub mod tests {
+@@ -837,7 +837,7 @@ pub mod tests {
          assert_abbrev(&abbrevs, wrap_code);
      }
  
@@ -68,7 +68,7 @@ Index: gimli/src/read/abbrev.rs
      fn test_parse_abbreviations_ok() {
          let expected_rest = [1, 2, 3, 4];
          #[rustfmt::skip]
-@@ -841,7 +841,7 @@ pub mod tests {
+@@ -914,7 +914,7 @@ pub mod tests {
              Err(Error::DuplicateAbbreviationCode) => {}
              otherwise => panic!("Unexpected result: {:?}", otherwise),
          };
@@ -77,7 +77,7 @@ Index: gimli/src/read/abbrev.rs
  
      #[test]
      fn test_parse_abbreviation_tag_ok() {
-@@ -876,7 +876,7 @@ pub mod tests {
+@@ -949,7 +949,7 @@ pub mod tests {
          };
      }
  
@@ -86,7 +86,7 @@ Index: gimli/src/read/abbrev.rs
      fn test_parse_abbreviation_ok() {
          let expected_rest = [0x01, 0x02, 0x03, 0x04];
          let buf = Section::new()
-@@ -962,7 +962,7 @@ pub mod tests {
+@@ -1035,7 +1035,7 @@ pub mod tests {
          let abbrev = Abbreviation::parse(rest).expect("Should parse null abbreviation");
          assert!(abbrev.is_none());
          assert_eq!(*rest, EndianSlice::new(&expected_rest, LittleEndian));
@@ -95,22 +95,6 @@ Index: gimli/src/read/abbrev.rs
  
      #[test]
      fn test_parse_attribute_form_ok() {
-@@ -1027,7 +1027,7 @@ pub mod tests {
-         assert!(abbrevs.get(0).is_none());
-     }
- 
--    #[test]
-+    /*#[test]
-     fn abbreviations_cache() {
-         #[rustfmt::skip]
-         let buf = Section::new()
-@@ -1085,5 +1085,5 @@ pub mod tests {
- 
-         assert!(!Arc::ptr_eq(&abbrevs1, &abbrevs2));
-         assert!(Arc::ptr_eq(&abbrevs1, &abbrevs3));
--    }
-+    }*/
- }
 Index: gimli/src/read/addr.rs
 ===================================================================
 --- gimli.orig/src/read/addr.rs
@@ -141,7 +125,7 @@ Index: gimli/src/read/cfi.rs
 ===================================================================
 --- gimli.orig/src/read/cfi.rs
 +++ gimli/src/read/cfi.rs
-@@ -3500,16 +3500,16 @@ mod tests {
+@@ -3581,16 +3581,16 @@ mod tests {
      use crate::read::{
          EndianSlice, Error, Expression, Pointer, ReaderOffsetId, Result, Section as ReadSection,
      };
@@ -161,7 +145,7 @@ Index: gimli/src/read/cfi.rs
      struct SectionKind<Section>(PhantomData<Section>);
  
      impl<T> SectionKind<T> {
-@@ -3546,7 +3546,7 @@ mod tests {
+@@ -3627,7 +3627,7 @@ mod tests {
  
      fn eh_frame_le<'a>() -> SectionKind<EhFrame<EndianSlice<'a, LittleEndian>>> {
          SectionKind(PhantomData)
@@ -170,7 +154,7 @@ Index: gimli/src/read/cfi.rs
  
      fn parse_fde<Section, O, F, R>(
          section: Section,
-@@ -3569,7 +3569,7 @@ mod tests {
+@@ -3650,7 +3650,7 @@ mod tests {
  
      // Mixin methods for `Section` to help define binary test data.
  
@@ -179,7 +163,7 @@ Index: gimli/src/read/cfi.rs
          fn cie<'aug, 'input, E, T>(
              self,
              _kind: SectionKind<T>,
-@@ -3591,9 +3591,9 @@ mod tests {
+@@ -3672,9 +3672,9 @@ mod tests {
              T: UnwindSection<EndianSlice<'input, E>>,
              T::Offset: UnwindOffset,
              L: ToLabelOrNum<'a, u64>;
@@ -191,7 +175,7 @@ Index: gimli/src/read/cfi.rs
          fn cie<'aug, 'input, E, T>(
              self,
              _kind: SectionKind<T>,
-@@ -3739,7 +3739,7 @@ mod tests {
+@@ -3820,7 +3820,7 @@ mod tests {
  
              section
          }
@@ -200,7 +184,7 @@ Index: gimli/src/read/cfi.rs
  
      trait ResultExt {
          fn map_eof(self, input: &[u8]) -> Self;
-@@ -3757,7 +3757,7 @@ mod tests {
+@@ -3838,7 +3838,7 @@ mod tests {
          }
      }
  
@@ -209,7 +193,7 @@ Index: gimli/src/read/cfi.rs
          kind: SectionKind<DebugFrame<EndianSlice<'input, E>>>,
          section: Section,
          address_size: u8,
-@@ -3849,9 +3849,9 @@ mod tests {
+@@ -3930,9 +3930,9 @@ mod tests {
          let kind = debug_frame_le();
          let section = Section::with_endian(kind.endian()).cie(kind, None, &mut cie);
          assert_parse_cie(kind, section, 4, Err(Error::UnknownVersion(99)));
@@ -221,7 +205,7 @@ Index: gimli/src/read/cfi.rs
      fn test_parse_cie_unknown_augmentation() {
          let length = Label::new();
          let start = Label::new();
-@@ -3887,9 +3887,9 @@ mod tests {
+@@ -3968,9 +3968,9 @@ mod tests {
          length.set_const(expected_length);
  
          assert_parse_cie(kind, section, 8, Err(Error::UnknownAugmentation));
@@ -233,7 +217,7 @@ Index: gimli/src/read/cfi.rs
          let expected_rest = [1, 2, 3, 4, 5, 6, 7, 8, 9];
          let expected_instrs: Vec<_> = (0..4).map(|_| constants::DW_CFA_nop.0).collect();
  
-@@ -3976,9 +3976,9 @@ mod tests {
+@@ -4057,9 +4057,9 @@ mod tests {
              .map_eof(&contents),
              Err(Error::UnexpectedEof(ReaderOffsetId(4)))
          );
@@ -245,7 +229,7 @@ Index: gimli/src/read/cfi.rs
      fn test_parse_fde_incomplete_length_32() {
          let kind = debug_frame_le();
          let section = Section::with_endian(kind.endian()).L16(5);
-@@ -4020,9 +4020,9 @@ mod tests {
+@@ -4101,9 +4101,9 @@ mod tests {
              parse_fde(debug_frame, rest, UnwindSection::cie_from_offset).map_eof(&section),
              Err(Error::UnexpectedEof(ReaderOffsetId(4)))
          );
@@ -257,7 +241,7 @@ Index: gimli/src/read/cfi.rs
      fn test_parse_fde_32_ok() {
          let expected_rest = [1, 2, 3, 4, 5, 6, 7, 8, 9];
          let cie_offset = 0xbad0_bad1;
-@@ -4171,9 +4171,9 @@ mod tests {
+@@ -4252,9 +4252,9 @@ mod tests {
  
          assert_eq!(parse_fde(debug_frame, rest, get_cie), Ok(fde));
          assert_eq!(*rest, EndianSlice::new(&expected_rest, LittleEndian));
@@ -269,7 +253,7 @@ Index: gimli/src/read/cfi.rs
      fn test_parse_cfi_entry_on_cie_32_ok() {
          let expected_rest = [1, 2, 3, 4, 5, 6, 7, 8, 9];
          let expected_instrs: Vec<_> = (0..4).map(|_| constants::DW_CFA_nop.0).collect();
-@@ -4267,7 +4267,7 @@ mod tests {
+@@ -4348,7 +4348,7 @@ mod tests {
              }
              otherwise => panic!("Unexpected result: {:#?}", otherwise),
          }
@@ -278,7 +262,7 @@ Index: gimli/src/read/cfi.rs
  
      #[test]
      fn test_cfi_entries_iter() {
-@@ -4307,7 +4307,7 @@ mod tests {
+@@ -4388,7 +4388,7 @@ mod tests {
              initial_instructions: EndianSlice::new(&expected_instrs2, BigEndian),
          };
  
@@ -287,7 +271,7 @@ Index: gimli/src/read/cfi.rs
          let cie2_location = Label::new();
  
          // Write the CIEs first so that their length gets set before we clone
-@@ -4393,10 +4393,10 @@ mod tests {
+@@ -4474,10 +4474,10 @@ mod tests {
              otherwise => panic!("Unexpected result: {:#?}", otherwise),
          }
  
@@ -300,7 +284,7 @@ Index: gimli/src/read/cfi.rs
      fn test_parse_cie_from_offset() {
          let filler = [1, 2, 3, 4, 5, 6, 7, 8, 9];
          let instrs: Vec<_> = (0..5).map(|_| constants::DW_CFA_nop.0).collect();
-@@ -4433,7 +4433,7 @@ mod tests {
+@@ -4514,7 +4514,7 @@ mod tests {
          let bases = Default::default();
  
          assert_eq!(debug_frame.cie_from_offset(&bases, cie_offset), Ok(cie));
@@ -309,8 +293,8 @@ Index: gimli/src/read/cfi.rs
  
      fn parse_cfi_instruction<R: Reader + Default>(
          input: &mut R,
-@@ -4448,7 +4448,7 @@ mod tests {
-         CallFrameInstruction::parse(input, None, parameters)
+@@ -4529,7 +4529,7 @@ mod tests {
+         CallFrameInstruction::parse(input, None, parameters, Vendor::Default)
      }
  
 -    #[test]
@@ -318,7 +302,7 @@ Index: gimli/src/read/cfi.rs
      fn test_parse_cfi_instruction_advance_loc() {
          let expected_rest = [1, 2, 3, 4];
          let expected_delta = 42;
-@@ -4812,9 +4812,9 @@ mod tests {
+@@ -4898,9 +4898,9 @@ mod tests {
              })
          );
          assert_eq!(*input, EndianSlice::new(&expected_rest, LittleEndian));
@@ -330,7 +314,7 @@ Index: gimli/src/read/cfi.rs
      fn test_parse_cfi_instruction_def_cfa_expression() {
          let expected_rest = [1, 2, 3, 4];
          let expected_expr = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
-@@ -4875,9 +4875,9 @@ mod tests {
+@@ -4961,9 +4961,9 @@ mod tests {
              })
          );
          assert_eq!(*input, EndianSlice::new(&expected_rest, LittleEndian));
@@ -342,8 +326,8 @@ Index: gimli/src/read/cfi.rs
      fn test_parse_cfi_instruction_offset_extended_sf() {
          let expected_rest = [1, 2, 3, 4];
          let expected_reg = 7;
-@@ -5015,9 +5015,9 @@ mod tests {
-             })
+@@ -5122,9 +5122,9 @@ mod tests {
+             Ok(CallFrameInstruction::NegateRaState)
          );
          assert_eq!(*input, EndianSlice::new(&expected_rest, LittleEndian));
 -    }
@@ -354,7 +338,7 @@ Index: gimli/src/read/cfi.rs
      fn test_parse_cfi_instruction_unknown_instruction() {
          let expected_rest = [1, 2, 3, 4];
          let unknown_instr = constants::DwCfa(0b0011_1111);
-@@ -5030,9 +5030,9 @@ mod tests {
+@@ -5137,9 +5137,9 @@ mod tests {
              parse_cfi_instruction(input, 8),
              Err(Error::UnknownCallFrameInstruction(unknown_instr))
          );
@@ -366,7 +350,7 @@ Index: gimli/src/read/cfi.rs
      fn test_call_frame_instruction_iter_ok() {
          let expected_reg = 50;
          let expected_expr = [2, 2, 1, 1, 5, 5];
-@@ -5083,9 +5083,9 @@ mod tests {
+@@ -5191,9 +5191,9 @@ mod tests {
          );
  
          assert_eq!(iter.next(), Ok(None));
@@ -378,7 +362,7 @@ Index: gimli/src/read/cfi.rs
      fn test_call_frame_instruction_iter_err() {
          // DW_CFA_advance_loc1 without an operand.
          let section = Section::with_endian(Endian::Big).D8(constants::DW_CFA_advance_loc1.0);
-@@ -5109,7 +5109,7 @@ mod tests {
+@@ -5218,7 +5218,7 @@ mod tests {
              Err(Error::UnexpectedEof(ReaderOffsetId(1)))
          );
          assert_eq!(iter.next(), Ok(None));
@@ -387,7 +371,7 @@ Index: gimli/src/read/cfi.rs
  
      fn assert_eval<'a, I>(
          mut initial_ctx: UnwindContext<EndianSlice<'a, LittleEndian>>,
-@@ -5588,7 +5588,7 @@ mod tests {
+@@ -5746,7 +5746,7 @@ mod tests {
          assert_eval(ctx, expected, cie, None, instructions);
      }
  
@@ -396,7 +380,7 @@ Index: gimli/src/read/cfi.rs
      fn test_unwind_table_cie_no_rule() {
          let initial_instructions = Section::with_endian(Endian::Little)
              // The CFA is -12 from register 4.
-@@ -5903,9 +5903,9 @@ mod tests {
+@@ -6153,9 +6153,9 @@ mod tests {
          // All done!
          assert_eq!(Ok(None), table.next_row());
          assert_eq!(Ok(None), table.next_row());
@@ -408,7 +392,7 @@ Index: gimli/src/read/cfi.rs
      fn test_unwind_info_for_address_ok() {
          let instrs1 = Section::with_endian(Endian::Big)
              // The CFA is -12 from register 4.
-@@ -6027,7 +6027,7 @@ mod tests {
+@@ -6277,7 +6277,7 @@ mod tests {
                  registers: [(Register(0), RegisterRule::Offset(-16))].iter().collect(),
              }
          );
@@ -417,7 +401,7 @@ Index: gimli/src/read/cfi.rs
  
      #[test]
      fn test_unwind_info_for_address_not_found() {
-@@ -6053,7 +6053,7 @@ mod tests {
+@@ -6303,7 +6303,7 @@ mod tests {
          assert_eq!(result.unwrap_err(), Error::UnknownVersion(42));
      }
  
@@ -426,7 +410,7 @@ Index: gimli/src/read/cfi.rs
      fn test_eh_frame_hdr_omit_ehptr() {
          let section = Section::with_endian(Endian::Little)
              .L8(1)
-@@ -6206,9 +6206,9 @@ mod tests {
+@@ -6456,9 +6456,9 @@ mod tests {
          assert_eq!(table.lookup(20, &bases), Ok(Pointer::Direct(2)));
          assert_eq!(table.lookup(21, &bases), Ok(Pointer::Direct(2)));
          assert_eq!(table.lookup(100_000, &bases), Ok(Pointer::Direct(2)));
@@ -438,7 +422,7 @@ Index: gimli/src/read/cfi.rs
      fn test_eh_frame_fde_for_address_good() {
          // First, setup eh_frame
          // Write the CIE first so that its length gets set before we clone it
-@@ -6349,9 +6349,9 @@ mod tests {
+@@ -6598,9 +6598,9 @@ mod tests {
              table.fde_for_address(&eh_frame, &bases, 100_000, f),
              Err(Error::NoUnwindInfoForAddress)
          );
@@ -450,7 +434,7 @@ Index: gimli/src/read/cfi.rs
      fn test_eh_frame_stops_at_zero_length() {
          let section = Section::with_endian(Endian::Little).L32(0);
          let section = section.get_contents().unwrap();
-@@ -6367,9 +6367,9 @@ mod tests {
+@@ -6616,9 +6616,9 @@ mod tests {
              EhFrame::new(&section, LittleEndian).cie_from_offset(&bases, EhFrameOffset(0)),
              Err(Error::NoEntryAtGivenOffset)
          );
@@ -462,7 +446,7 @@ Index: gimli/src/read/cfi.rs
          let mut fde = FrameDescriptionEntry {
              offset: 0,
              length: 0,
-@@ -6427,9 +6427,9 @@ mod tests {
+@@ -6676,9 +6676,9 @@ mod tests {
              resolve_cie_offset(&buf, ::core::usize::MAX),
              Err(Error::OffsetOutOfBounds)
          );
@@ -474,7 +458,7 @@ Index: gimli/src/read/cfi.rs
      fn test_eh_frame_fde_ok() {
          let mut cie = make_test_cie();
          cie.format = Format::Dwarf32;
-@@ -6482,9 +6482,9 @@ mod tests {
+@@ -6731,9 +6731,9 @@ mod tests {
              otherwise => panic!("Unexpected result {:?}", otherwise),
          }
          assert!(offset.is_some());
@@ -486,7 +470,7 @@ Index: gimli/src/read/cfi.rs
      fn test_eh_frame_fde_out_of_bounds() {
          let mut cie = make_test_cie();
          cie.version = 1;
-@@ -6520,7 +6520,7 @@ mod tests {
+@@ -6769,7 +6769,7 @@ mod tests {
              UnwindSection::cie_from_offset,
          );
          assert_eq!(result, Err(Error::OffsetOutOfBounds));
@@ -495,7 +479,7 @@ Index: gimli/src/read/cfi.rs
  
      #[test]
      fn test_augmentation_parse_not_z_augmentation() {
-@@ -6552,7 +6552,7 @@ mod tests {
+@@ -6801,7 +6801,7 @@ mod tests {
          );
      }
  
@@ -504,7 +488,7 @@ Index: gimli/src/read/cfi.rs
      fn test_augmentation_parse_unknown_part_of_z_augmentation() {
          // The 'Z' character is not defined by the z-style augmentation.
          let bases = Default::default();
-@@ -6713,9 +6713,9 @@ mod tests {
+@@ -6962,9 +6962,9 @@ mod tests {
              Ok(augmentation)
          );
          assert_eq!(*input, EndianSlice::new(&rest, LittleEndian));
@@ -516,7 +500,7 @@ Index: gimli/src/read/cfi.rs
      fn test_eh_frame_fde_no_augmentation() {
          let instrs = [1, 2, 3, 4];
          let cie_offset = 1;
-@@ -6876,9 +6876,9 @@ mod tests {
+@@ -7125,9 +7125,9 @@ mod tests {
          let result = parse_fde(section, input, |_, _, _| Ok(cie.clone()));
          assert_eq!(result, Ok(fde));
          assert_eq!(*input, EndianSlice::new(&rest, LittleEndian));
@@ -528,7 +512,7 @@ Index: gimli/src/read/cfi.rs
      fn test_eh_frame_cie_personality_function_relative_bad_context() {
          let instrs = [1, 2, 3, 4];
  
-@@ -6928,7 +6928,7 @@ mod tests {
+@@ -7177,7 +7177,7 @@ mod tests {
          let bases = BaseAddresses::default();
          let mut iter = section.entries(&bases);
          assert_eq!(iter.next(), Err(Error::FuncRelativePointerInBadContext));
@@ -537,7 +521,7 @@ Index: gimli/src/read/cfi.rs
  
      #[test]
      fn register_rule_map_eq() {
-@@ -7060,7 +7060,7 @@ mod tests {
+@@ -7309,7 +7309,7 @@ mod tests {
          );
      }
  
@@ -546,7 +530,7 @@ Index: gimli/src/read/cfi.rs
      fn test_parse_encoded_pointer_absptr() {
          let encoding = constants::DW_EH_PE_absptr;
          let expected_rest = [1, 2, 3, 4];
-@@ -7155,9 +7155,9 @@ mod tests {
+@@ -7404,9 +7404,9 @@ mod tests {
              Ok(Pointer::Direct(0x11))
          );
          assert_eq!(rest, EndianSlice::new(&expected_rest, LittleEndian));
@@ -558,7 +542,7 @@ Index: gimli/src/read/cfi.rs
      fn test_parse_encoded_pointer_textrel_undefined() {
          let encoding = constants::DW_EH_PE_textrel;
  
-@@ -7201,9 +7201,9 @@ mod tests {
+@@ -7450,9 +7450,9 @@ mod tests {
              Ok(Pointer::Direct(0x11))
          );
          assert_eq!(rest, EndianSlice::new(&expected_rest, LittleEndian));
@@ -570,7 +554,7 @@ Index: gimli/src/read/cfi.rs
      fn test_parse_encoded_pointer_datarel_undefined() {
          let encoding = constants::DW_EH_PE_datarel;
  
-@@ -7222,9 +7222,9 @@ mod tests {
+@@ -7471,9 +7471,9 @@ mod tests {
              parse_encoded_pointer(encoding, &parameters, &mut rest),
              Err(Error::DataRelativePointerButDataBaseIsUndefined)
          );
@@ -582,7 +566,7 @@ Index: gimli/src/read/cfi.rs
      fn test_parse_encoded_pointer_funcrel() {
          let encoding = constants::DW_EH_PE_funcrel;
          let expected_rest = [1, 2, 3, 4];
-@@ -7479,9 +7479,9 @@ mod tests {
+@@ -7728,9 +7728,9 @@ mod tests {
              Ok(Pointer::Direct(expected as u64))
          );
          assert_eq!(rest, EndianSlice::new(&expected_rest, LittleEndian));
@@ -594,7 +578,7 @@ Index: gimli/src/read/cfi.rs
      fn test_parse_encoded_pointer_omit() {
          let encoding = constants::DW_EH_PE_omit;
  
-@@ -7570,5 +7570,5 @@ mod tests {
+@@ -7819,5 +7819,5 @@ mod tests {
              Ok(Pointer::Indirect(0x1234_5678))
          );
          assert_eq!(rest, EndianSlice::new(&expected_rest, LittleEndian));
@@ -696,7 +680,7 @@ Index: gimli/src/read/mod.rs
 ===================================================================
 --- gimli.orig/src/read/mod.rs
 +++ gimli/src/read/mod.rs
-@@ -685,9 +685,9 @@ mod tests {
+@@ -682,9 +682,9 @@ mod tests {
      use super::*;
      use crate::common::Format;
      use crate::endianity::LittleEndian;
@@ -708,7 +692,7 @@ Index: gimli/src/read/mod.rs
      fn test_parse_initial_length_32_ok() {
          let section = Section::with_endian(Endian::Little).L32(0x7856_3412);
          let buf = section.get_contents().unwrap();
-@@ -826,5 +826,5 @@ mod tests {
+@@ -823,5 +823,5 @@ mod tests {
              Err(Error::UnsupportedOffset) => assert!(true),
              otherwise => panic!("Unexpected result: {:?}", otherwise),
          };
@@ -719,7 +703,7 @@ Index: gimli/src/read/op.rs
 ===================================================================
 --- gimli.orig/src/read/op.rs
 +++ gimli/src/read/op.rs
-@@ -2000,9 +2000,9 @@ mod tests {
+@@ -2021,9 +2021,9 @@ mod tests {
      use crate::endianity::LittleEndian;
      use crate::leb128;
      use crate::read::{EndianSlice, Error, Result, UnitOffset};
@@ -731,7 +715,7 @@ Index: gimli/src/read/op.rs
  
      fn encoding4() -> Encoding {
          Encoding {
-@@ -2072,7 +2072,7 @@ mod tests {
+@@ -2093,7 +2093,7 @@ mod tests {
          }
      }
  
@@ -740,7 +724,7 @@ Index: gimli/src/read/op.rs
          input: F,
          expect: &Operation<EndianSlice<LittleEndian>>,
          encoding: Encoding,
-@@ -2086,9 +2086,9 @@ mod tests {
+@@ -2107,9 +2107,9 @@ mod tests {
              check_op_parse_eof(&input[..i], encoding);
          }
          check_op_parse_simple(&input, expect, encoding);
@@ -752,7 +736,7 @@ Index: gimli/src/read/op.rs
      fn test_op_parse_onebyte() {
          // Doesn't matter for this test.
          let encoding = encoding4();
-@@ -2216,9 +2216,9 @@ mod tests {
+@@ -2237,9 +2237,9 @@ mod tests {
              let (opcode, ref result) = *item;
              check_op_parse(|s| s.D8(opcode.0), result, encoding);
          }
@@ -764,7 +748,7 @@ Index: gimli/src/read/op.rs
      fn test_op_parse_twobyte() {
          // Doesn't matter for this test.
          let encoding = encoding4();
-@@ -2499,7 +2499,7 @@ mod tests {
+@@ -2520,7 +2520,7 @@ mod tests {
                  ));
              }
  
@@ -773,7 +757,7 @@ Index: gimli/src/read/op.rs
                  let (op, ref expect) = *item;
                  let input = Section::with_endian(Endian::Little)
                      .D8(op.0)
-@@ -2507,7 +2507,7 @@ mod tests {
+@@ -2528,7 +2528,7 @@ mod tests {
                      .get_contents()
                      .unwrap();
                  check_op_parse_simple(&input, expect, encoding);
@@ -782,7 +766,7 @@ Index: gimli/src/read/op.rs
          }
      }
  
-@@ -2544,7 +2544,7 @@ mod tests {
+@@ -2565,7 +2565,7 @@ mod tests {
          }
      }
  
@@ -791,7 +775,7 @@ Index: gimli/src/read/op.rs
      fn test_op_parse_bit_piece() {
          // Doesn't matter for this test.
          let encoding = encoding4();
-@@ -2569,7 +2569,7 @@ mod tests {
+@@ -2590,7 +2590,7 @@ mod tests {
                  );
              }
          }
@@ -800,7 +784,7 @@ Index: gimli/src/read/op.rs
  
      #[test]
      fn test_op_parse_implicit_value() {
-@@ -2683,9 +2683,9 @@ mod tests {
+@@ -2704,9 +2704,9 @@ mod tests {
              },
              encoding,
          );
@@ -812,7 +796,7 @@ Index: gimli/src/read/op.rs
      fn test_op_convert() {
          // Doesn't matter for this test.
          let encoding = encoding4();
-@@ -2819,7 +2819,7 @@ mod tests {
+@@ -2840,7 +2840,7 @@ mod tests {
              &Operation::WasmGlobal { index: 1000 },
              encoding,
          );

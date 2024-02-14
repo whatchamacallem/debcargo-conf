@@ -1,0 +1,370 @@
+From ef13fa285e66c2346848f5283aef164adb7798af Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Felix=20H=C3=A4cker?= <haeckerfelix@gnome.org>
+Date: Mon, 11 Sep 2023 21:23:41 +0200
+Subject: [PATCH] Port to gtk-rs/glib 0.18
+
+---
+ Cargo.toml                   |  4 ++--
+ src/authentication.rs        | 18 +++---------------
+ src/client.rs                | 36 +++++++++++++++++-------------------
+ src/lib.rs                   |  1 -
+ src/session.rs               | 22 +++++-----------------
+ src/session_stats.rs         | 18 +++++-------------
+ src/session_stats_details.rs | 18 +++++-------------
+ src/torrent.rs               | 26 +++++++++-----------------
+ src/torrent_model.rs         |  3 ++-
+ 9 files changed, 48 insertions(+), 98 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 4aaa26e..401a44e 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -27,10 +27,10 @@ version = "1.6"
+ version = "1.10"
+ 
+ [dependencies.gio]
+-version = "0.17"
++version = "0.18"
+ 
+ [dependencies.glib]
+-version = "0.17.8"
++version = "0.18"
+ 
+ [dependencies.gtk-macros]
+ version = "0.3"
+
+
+
+diff --git a/src/authentication.rs b/src/authentication.rs
+index c60c0ad..4565cc8 100644
+--- a/src/authentication.rs
++++ b/src/authentication.rs
+@@ -1,5 +1,4 @@
+-use glib::subclass::prelude::ObjectSubclass;
+-use glib::subclass::prelude::*;
++use glib::subclass::prelude::{ObjectSubclass, *};
+ use glib::{ObjectExt, Properties};
+ use once_cell::unsync::OnceCell;
+ 
+@@ -22,19 +21,8 @@ mod imp {
+         type ParentType = glib::Object;
+     }
+ 
+-    impl ObjectImpl for TrAuthentication {
+-        fn properties() -> &'static [glib::ParamSpec] {
+-            Self::derived_properties()
+-        }
+-
+-        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+-            Self::derived_property(self, id, pspec)
+-        }
+-
+-        fn set_property(&self, id: usize, value: &glib::Value, pspec: &glib::ParamSpec) {
+-            Self::derived_set_property(self, id, value, pspec)
+-        }
+-    }
++    #[glib::derived_properties]
++    impl ObjectImpl for TrAuthentication {}
+ }
+ 
+ glib::wrapper! {
+diff --git a/src/client.rs b/src/client.rs
+index 5048afa..169c457 100644
+--- a/src/client.rs
++++ b/src/client.rs
+@@ -1,19 +1,18 @@
++use std::cell::RefCell;
++use std::collections::BTreeMap;
++use std::convert::TryInto;
++use std::time::Duration;
++
+ use async_channel::{Receiver, Sender};
+ use async_std::task;
+ use gio::prelude::*;
+-use glib::subclass::prelude::ObjectSubclass;
+-use glib::subclass::prelude::*;
++use glib::subclass::prelude::{ObjectSubclass, *};
+ use glib::subclass::Signal;
+ use glib::{clone, ObjectExt, Properties, StaticType};
+ use once_cell::sync::{Lazy, OnceCell};
+ use transmission_client::{Authentication, Client, ClientError, Torrent};
+ use url::Url;
+ 
+-use std::cell::RefCell;
+-use std::collections::BTreeMap;
+-use std::convert::TryInto;
+-use std::time::Duration;
+-
+ use crate::{TrAuthentication, TrSession, TrSessionStats, TrTorrent, TrTorrentModel};
+ 
+ mod imp {
+@@ -85,6 +84,7 @@ mod imp {
+         }
+     }
+ 
++    #[glib::derived_properties]
+     impl ObjectImpl for TrClient {
+         fn signals() -> &'static [Signal] {
+             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
+@@ -100,14 +100,6 @@ mod imp {
+             });
+             SIGNALS.as_ref()
+         }
+-
+-        fn properties() -> &'static [glib::ParamSpec] {
+-            Self::derived_properties()
+-        }
+-
+-        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+-            Self::derived_property(self, id, pspec)
+-        }
+     }
+ }
+ 
+@@ -201,7 +193,8 @@ impl TrClient {
+ 
+         debug!("Connect to {} ...", address);
+ 
+-        // Check if the address has changed, and delete cached auth information if needed
++        // Check if the address has changed, and delete cached auth information if
++        // needed
+         if address != self.address() {
+             *imp.authentication.borrow_mut() = None;
+         }
+@@ -237,7 +230,7 @@ impl TrClient {
+         let duration = std::time::Duration::from_millis(polling_rate);
+         glib::timeout_add_local(
+             duration,
+-            clone!(@weak self as this => @default-return glib::Continue(false), move ||{
++            clone!(@weak self as this => @default-panic, move ||{
+                 let imp = this.imp();
+                 let disconnect = imp.do_disconnect.borrow();
+ 
+@@ -259,7 +252,11 @@ impl TrClient {
+                 });
+                 spawn!(fut);
+ 
+-                glib::Continue(!*disconnect)
++                if *disconnect {
++                    glib::ControlFlow::Break
++                } else {
++                    glib::ControlFlow::Continue
++                }
+             }),
+         );
+ 
+@@ -414,7 +411,8 @@ impl TrClient {
+         Ok(())
+     }
+ 
+-    /// Polls the latest information without waiting for the next polling timeout
++    /// Polls the latest information without waiting for the next polling
++    /// timeout
+     pub async fn refresh_data(&self) {
+         if let Err(err) = self.poll_data(false).await {
+             warn!("Couldn't poll transmission data: {}", err.to_string());
+diff --git a/src/lib.rs b/src/lib.rs
+index 3e8bcb9..ca43d1d 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -22,5 +22,4 @@ pub use session_stats_details::TrSessionStatsDetails;
+ pub use torrent::TrTorrent;
+ pub use torrent_model::TrTorrentModel;
+ pub use torrent_status::TrTorrentStatus;
+-
+ pub use transmission_client::ClientError;
+diff --git a/src/session.rs b/src/session.rs
+index 1dbd880..3eeb48a 100644
+--- a/src/session.rs
++++ b/src/session.rs
+@@ -1,12 +1,11 @@
++use std::cell::{Cell, RefCell};
++
+ use gio::prelude::FileExt;
+-use glib::subclass::prelude::ObjectSubclass;
+-use glib::subclass::prelude::*;
++use glib::subclass::prelude::{ObjectSubclass, *};
+ use glib::{clone, ObjectExt, Properties};
+ use once_cell::sync::OnceCell;
+ use transmission_client::{Session, SessionMutator};
+ 
+-use std::cell::{Cell, RefCell};
+-
+ use crate::{TrClient, TrEncryption};
+ 
+ mod imp {
+@@ -200,19 +199,8 @@ mod imp {
+         type Type = super::TrSession;
+     }
+ 
+-    impl ObjectImpl for TrSession {
+-        fn properties() -> &'static [glib::ParamSpec] {
+-            Self::derived_properties()
+-        }
+-
+-        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+-            Self::derived_property(self, id, pspec)
+-        }
+-
+-        fn set_property(&self, id: usize, value: &glib::Value, pspec: &glib::ParamSpec) {
+-            Self::derived_set_property(self, id, value, pspec)
+-        }
+-    }
++    #[glib::derived_properties]
++    impl ObjectImpl for TrSession {}
+ }
+ 
+ glib::wrapper! {
+diff --git a/src/session_stats.rs b/src/session_stats.rs
+index 985625e..0c194c1 100644
+--- a/src/session_stats.rs
++++ b/src/session_stats.rs
+@@ -1,10 +1,9 @@
+-use glib::subclass::prelude::ObjectSubclass;
+-use glib::subclass::prelude::*;
++use std::cell::Cell;
++
++use glib::subclass::prelude::{ObjectSubclass, *};
+ use glib::{ObjectExt, Properties};
+ use transmission_client::SessionStats;
+ 
+-use std::cell::Cell;
+-
+ use crate::TrSessionStatsDetails;
+ 
+ mod imp {
+@@ -39,15 +38,8 @@ mod imp {
+         type Type = super::TrSessionStats;
+     }
+ 
+-    impl ObjectImpl for TrSessionStats {
+-        fn properties() -> &'static [glib::ParamSpec] {
+-            Self::derived_properties()
+-        }
+-
+-        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+-            Self::derived_property(self, id, pspec)
+-        }
+-    }
++    #[glib::derived_properties]
++    impl ObjectImpl for TrSessionStats {}
+ }
+ 
+ glib::wrapper! {
+diff --git a/src/session_stats_details.rs b/src/session_stats_details.rs
+index d5ded94..ae3c522 100644
+--- a/src/session_stats_details.rs
++++ b/src/session_stats_details.rs
+@@ -1,10 +1,9 @@
+-use glib::subclass::prelude::ObjectSubclass;
+-use glib::subclass::prelude::*;
++use std::cell::Cell;
++
++use glib::subclass::prelude::{ObjectSubclass, *};
+ use glib::{ObjectExt, Properties};
+ use transmission_client::StatsDetails;
+ 
+-use std::cell::Cell;
+-
+ mod imp {
+     use super::*;
+ 
+@@ -30,15 +29,8 @@ mod imp {
+         type Type = super::TrSessionStatsDetails;
+     }
+ 
+-    impl ObjectImpl for TrSessionStatsDetails {
+-        fn properties() -> &'static [glib::ParamSpec] {
+-            Self::derived_properties()
+-        }
+-
+-        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+-            Self::derived_property(self, id, pspec)
+-        }
+-    }
++    #[glib::derived_properties]
++    impl ObjectImpl for TrSessionStatsDetails {}
+ }
+ 
+ glib::wrapper! {
+diff --git a/src/torrent.rs b/src/torrent.rs
+index 0070fb8..ed422ec 100644
+--- a/src/torrent.rs
++++ b/src/torrent.rs
+@@ -1,16 +1,15 @@
++use std::cell::RefCell;
++use std::convert::TryFrom;
++use std::time::Duration;
++
+ use async_std::task;
+ use gio::prelude::*;
+ use gio::File;
+-use glib::subclass::prelude::ObjectSubclass;
+-use glib::subclass::prelude::*;
++use glib::subclass::prelude::{ObjectSubclass, *};
+ use glib::{ObjectExt, Properties};
+ use once_cell::sync::OnceCell;
+ use transmission_client::{ClientError, Torrent, TorrentMutator};
+ 
+-use std::cell::RefCell;
+-use std::convert::TryFrom;
+-use std::time::Duration;
+-
+ use crate::client::TrClient;
+ use crate::torrent_status::TrTorrentStatus;
+ 
+@@ -22,7 +21,7 @@ mod imp {
+     pub struct TrTorrent {
+         pub client: OnceCell<TrClient>,
+ 
+-        /* Static values */
++        // Static values
+         #[property(get)]
+         pub name: OnceCell<String>,
+         #[property(get)]
+@@ -32,7 +31,7 @@ mod imp {
+         #[property(get)]
+         pub magnet_link: OnceCell<String>,
+ 
+-        /* Dynamic values */
++        // Dynamic values
+         #[property(get)]
+         pub download_dir: RefCell<String>,
+         #[property(get)]
+@@ -80,15 +79,8 @@ mod imp {
+         type Type = super::TrTorrent;
+     }
+ 
+-    impl ObjectImpl for TrTorrent {
+-        fn properties() -> &'static [glib::ParamSpec] {
+-            Self::derived_properties()
+-        }
+-
+-        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+-            Self::derived_property(self, id, pspec)
+-        }
+-    }
++    #[glib::derived_properties]
++    impl ObjectImpl for TrTorrent {}
+ }
+ 
+ glib::wrapper! {
+diff --git a/src/torrent_model.rs b/src/torrent_model.rs
+index 0eca034..d60ee3e 100644
+--- a/src/torrent_model.rs
++++ b/src/torrent_model.rs
+@@ -6,9 +6,10 @@ use once_cell::sync::Lazy;
+ use crate::torrent::TrTorrent;
+ 
+ mod imp {
+-    use super::*;
+     use std::cell::RefCell;
+ 
++    use super::*;
++
+     #[derive(Debug, Default)]
+     pub struct TrTorrentModel {
+         pub vec: RefCell<Vec<TrTorrent>>,
+-- 
+GitLab
+

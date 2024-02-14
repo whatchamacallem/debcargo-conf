@@ -1,0 +1,33 @@
+Index: quinn/Cargo.toml
+===================================================================
+--- quinn.orig/Cargo.toml
++++ quinn/Cargo.toml
+@@ -51,7 +51,7 @@ required-features = ["tls-rustls"]
+ [[bench]]
+ name = "bench"
+ harness = false
+-required-features = ["tls-rustls"]
++required-features = ["tls-rustls", "runtime-tokio"]
+ 
+ [dependencies.async-io]
+ version = "2"
+Index: quinn/src/tests.rs
+===================================================================
+--- quinn.orig/src/tests.rs
++++ quinn/src/tests.rs
+@@ -1,4 +1,4 @@
+-#![cfg(feature = "rustls")]
++#![cfg(all(feature = "rustls", feature = "runtime-tokio"))]
+ 
+ use std::{
+     convert::TryInto,
+Index: quinn/tests/many_connections.rs
+===================================================================
+--- quinn.orig/tests/many_connections.rs
++++ quinn/tests/many_connections.rs
+@@ -1,4 +1,4 @@
+-#![cfg(feature = "rustls")]
++#![cfg(feature = "tls-rustls")]
+ use std::{
+     convert::TryInto,
+     sync::{Arc, Mutex},

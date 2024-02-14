@@ -1,0 +1,29 @@
+Description: Use system-wide `usb.ids` file
+ This file is vendored in this crate, but also distributed as a Debian package.
+ Let's just point `build.rs` to the system-wide version instead of the vendored
+ one.
+Author: Arnaud Ferraris <aferraris@debian.org>
+Forwarded: not-needed
+Last-Update: 2023-11-27
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/build.rs
++++ b/build.rs
+@@ -494,7 +494,7 @@
+ #[allow(clippy::redundant_field_names)]
+ fn main() {
+     let out_dir = env::var_os("OUT_DIR").unwrap();
+-    let src_path = Path::new("src/usb.ids");
++    let src_path = Path::new("/usr/share/misc/usb.ids");
+     let dest_path = Path::new(&out_dir).join("usb_ids.cg.rs");
+     let input = {
+         let f = fs::File::open(src_path).unwrap();
+@@ -522,7 +522,7 @@
+     parser_state.finalize(&mut output);
+ 
+     println!("cargo:rerun-if-changed=build.rs");
+-    println!("cargo:rerun-if-changed=src/usb.ids");
++    println!("cargo:rerun-if-changed=/usr/share/misc/usb.ids");
+ }
+ 
+ mod parser {

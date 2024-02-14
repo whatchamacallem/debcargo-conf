@@ -4,16 +4,19 @@ Last-Update: 2023-02-02
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/zstd.h
 +++ b/zstd.h
-@@ -1,16 +1,2 @@
+@@ -1,3 +1 @@
 -#ifdef PKG_CONFIG
 -
  /* Just use installed headers */
- #include <zstd.h>
--// Don't use experimental features like zstdmt
+@@ -7,15 +5 @@
+ #endif  // #ifdef ZSTD_RUST_BINDINGS_EXPERIMENTAL
 -
 -#else // #ifdef PKG_CONFIG
 -
 -#include "zstd/lib/zstd.h"
+-#ifdef ZSTD_RUST_BINDINGS_EXPERIMENTAL
+-#include "zstd/lib/zstd_errors.h"
+-#endif // #ifdef ZSTD_RUST_BINDINGS_EXPERIMENTAL
 -
 -#endif // #ifdef PKG_CONFIG
 -
@@ -23,9 +26,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 - * Or use the `bindgen` feature, which will create the bindings automatically. */
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -57,12 +57,6 @@
-     "runtime",
-     "which-rustfmt",
+@@ -58,8 +58,2 @@
  ]
 -optional = true
 -default-features = false
@@ -34,40 +35,24 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -version = "1.0.45"
 -features = ["parallel"]
  
- [build-dependencies.pkg-config]
- version = "0.3"
 --- a/build.rs
 +++ b/build.rs
-@@ -2,7 +2,6 @@
- use std::path::{Path, PathBuf};
- use std::{env, fmt, fs};
+@@ -4,3 +4,2 @@
  
 -#[cfg(feature = "bindgen")]
  fn generate_bindings(defs: Vec<&str>, headerpaths: Vec<PathBuf>) {
-     let bindings = bindgen::Builder::default().header("zstd.h");
-     #[cfg(feature = "zdict_builder")]
-@@ -35,9 +34,6 @@
-         .expect("Could not write bindings");
- }
+@@ -38,5 +37,2 @@
  
 -#[cfg(not(feature = "bindgen"))]
 -fn generate_bindings(_: Vec<&str>, _: Vec<PathBuf>) {}
 -
  fn pkg_config() -> (Vec<&'static str>, Vec<PathBuf>) {
-     let library = pkg_config::Config::new()
-         .statik(true)
-@@ -47,7 +43,7 @@
-     (vec!["PKG_CONFIG"], library.include_paths)
- }
+@@ -50,3 +46,3 @@
  
 -#[cfg(not(feature = "legacy"))]
 +/*#[cfg(not(feature = "legacy"))]
  fn set_legacy(_config: &mut cc::Build) {}
- 
- #[cfg(feature = "legacy")]
-@@ -83,9 +79,9 @@
-     if let Some(flag) = option {
-         config.flag(flag);
+@@ -86,5 +82,5 @@
      }
 -}
 +}*/
@@ -75,20 +60,12 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -fn compile_zstd() {
 +/*fn compile_zstd() {
      let mut config = cc::Build::new();
- 
-     // Search the following directories for C files to add to the compilation.
-@@ -233,7 +229,7 @@
-     #[cfg(feature = "zdict_builder")]
-     fs::copy(src.join("zdict.h"), include.join("zdict.h")).unwrap();
+@@ -236,3 +232,3 @@
      cargo_print(&format_args!("root={}", dst.display()));
 -}
 +}*/
  
- /// Print a line for cargo.
- ///
-@@ -256,11 +252,11 @@
-     }
- 
+@@ -259,7 +255,7 @@
      // println!("cargo:rustc-link-lib=zstd");
 -    let (defs, headerpaths) = if cfg!(feature = "pkg-config")
 +    let (defs, headerpaths) = /*if cfg!(feature = "pkg-config")
@@ -99,34 +76,22 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -    } else {
 +    /*} else {
          if !Path::new("zstd/lib").exists() {
-             panic!("Folder 'zstd/lib' does not exists. Maybe you forgot to clone the 'zstd' submodule?");
-         }
-@@ -272,7 +268,7 @@
- 
-         compile_zstd();
+@@ -275,3 +271,3 @@
          (vec![], vec![manifest_dir.join("zstd/lib")])
 -    };
 +    }*/;
  
-     let includes: Vec<_> = headerpaths
-         .iter()
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -13,9 +13,9 @@
- mod wasm_shim;
- 
+@@ -15,5 +15,5 @@
  // If running bindgen, we'll end up with the correct bindings anyway.
 -#[cfg(feature = "bindgen")]
  include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
  
 +/*
  // The bindings used depend on a few feature flags.
- 
- // No-std (libc-based)
-@@ -80,3 +80,4 @@
-     not(feature = "bindgen")
- ))]
- include!("bindings_zdict_std_experimental.rs");
+@@ -38 +38,2 @@
+ include!("bindings_zdict_experimental.rs");
 +*/
 --- a/zdict.h
 +++ b/zdict.h

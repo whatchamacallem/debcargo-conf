@@ -2,12 +2,13 @@ Index: cargo-config2/tests/test.rs
 ===================================================================
 --- cargo-config2.orig/tests/test.rs
 +++ cargo-config2/tests/test.rs
-@@ -153,12 +153,12 @@ fn assert_reference_example(de: fn(&Path
+@@ -158,13 +158,13 @@ fn assert_reference_example(de: fn(&Path
  fn easy_load(dir: &Path, options: ResolveOptions) -> Result<Config> {
      Ok(Config::load_with_options(dir, options)?)
  }
 -#[test]
 +/*#[test]
+ #[cfg_attr(miri, ignore)] // Miri doesn't support file with non-default mode: https://github.com/rust-lang/miri/pull/2720
  fn easy() {
      use easy_load as de;
  
@@ -15,18 +16,18 @@ Index: cargo-config2/tests/test.rs
 -}
 +}*/
  
+ #[test]
+ fn no_manifest_dir() {
+@@ -179,7 +179,7 @@ fn no_manifest_dir() {
  fn de_load(dir: &Path, _cx: ResolveOptions) -> Result<de::Config> {
      Ok(de::Config::load_with_options(dir, None)?)
-@@ -177,7 +177,7 @@ fn de() {
-     assert_eq!("", toml::to_string(&de::Config::default()).unwrap());
  }
- 
 -#[test]
 +/*#[test]
- fn custom_target() {
-     use easy_load as de;
-     struct IsBuiltin(bool);
-@@ -227,7 +227,7 @@ fn custom_target() {
+ #[cfg_attr(miri, ignore)] // Miri doesn't support file with non-default mode: https://github.com/rust-lang/miri/pull/2720
+ fn de() {
+     use de_load as de;
+@@ -243,7 +243,7 @@ fn custom_target() {
  
      t("avr-unknown-gnu-atmega328", IsBuiltin(true)).unwrap();
      t("avr-unknown-gnu-atmega2560", IsBuiltin(false)).unwrap();
@@ -34,4 +35,4 @@ Index: cargo-config2/tests/test.rs
 +}*/
  
  #[rustversion::attr(not(nightly), ignore)]
- #[test]
+ #[cfg_attr(miri, ignore)] // Miri doesn't support pipe2 (inside duct::Expression::read)

@@ -1,0 +1,74 @@
+Index: jpegxl-rs/Cargo.toml
+===================================================================
+--- jpegxl-rs.orig/Cargo.toml
++++ jpegxl-rs/Cargo.toml
+@@ -28,6 +28,7 @@ categories = [
+ license = "GPL-3.0-or-later"
+ repository = "https://github.com/inflation/jpegxl-rs"
+ 
++autobenches = false
+ [package.metadata.docs.rs]
+ features = ["docs"]
+ rustdoc-args = [
+@@ -35,20 +36,6 @@ rustdoc-args = [
+     "docsrs",
+ ]
+ 
+-[lib]
+-path = "src/lib.rs"
+-bench = false
+-
+-[[bench]]
+-name = "decode"
+-harness = false
+-required-features = ["bench"]
+-
+-[[bench]]
+-name = "encode"
+-harness = false
+-required-features = ["bench"]
+-
+ [dependencies.byteorder]
+ version = "1.5.0"
+ 
+@@ -56,7 +43,7 @@ version = "1.5.0"
+ version = "0.12.0"
+ 
+ [dependencies.half]
+-version = "2.3.1"
++version = "1.8"
+ 
+ [dependencies.image]
+ version = "0.24.7"
+@@ -67,7 +54,7 @@ default-features = false
+ version = "0.9.0"
+ 
+ [dependencies.thiserror]
+-version = "1.0.51"
++version = "1"
+ 
+ [dev-dependencies.image]
+ version = "0.24.7"
+@@ -80,11 +67,8 @@ default-features = false
+ [dev-dependencies.lcms2]
+ version = "6.0.3"
+ 
+-[dev-dependencies.testresult]
+-version = "0.3.0"
+-
+ [features]
+-bench = []
++
+ default = [
+     "image",
+     "threads",
+@@ -92,7 +76,7 @@ default = [
+ docs = ["jpegxl-sys/docs"]
+ image = ["dep:image"]
+ threads = ["jpegxl-sys/threads"]
+-vendored = ["jpegxl-sys/vendored"]
++
+ 
+ [target."cfg(not(target_family = \"wasm\"))".dev-dependencies.criterion]
+ version = "0.5.1"
+

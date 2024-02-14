@@ -1,0 +1,36 @@
+From 914e0b36a96083c601e95de1f044604d6b9eadcf Mon Sep 17 00:00:00 2001
+From: Justus Winter <justus@sequoia-pgp.org>
+Date: Thu, 23 Nov 2023 10:13:48 +0100
+Subject: [PATCH] Don't fail with NoSignature when decrypting.
+
+  - The spec says:
+
+    > The return code of sop decrypt is not affected by the results of
+    > signature verification. The caller MUST check the returned
+    > `VERIFICATIONS` to confirm signature status. An empty
+    > `VERIFICATIONS` output indicates that no valid signatures were
+    > found.
+
+    Change our expectations accordingly.
+
+  - Fixes #28.
+---
+ src/lib.rs | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/lib.rs b/src/lib.rs
+index 1993385..0299394 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1210,7 +1210,7 @@ impl<'s> sop::ops::Ready<(Option<sop::SessionKey>, Vec<sop::ops::Verification>)>
+             } else {
+                 Box::new(io::sink())
+             },
+-            if self.decrypt.verify.certs.is_empty() { 0 } else { 1 },
++            0,
+             self.decrypt.verify.not_before,
+             self.decrypt.verify.not_after,
+             self.decrypt.verify.certs);
+-- 
+2.42.0
+

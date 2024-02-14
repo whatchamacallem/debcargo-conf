@@ -1,0 +1,37 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -29,10 +29,10 @@
+ repository = "https://github.com/huonw/hamming"
+
+ [dev-dependencies.quickcheck]
+-version = "0.2"
++version = "1"
+
+ [dev-dependencies.rand]
+-version = "0.3"
++version = "0.8"
+
+ [features]
+ unstable = []
+--- a/src/distance_.rs
++++ b/src/distance_.rs
+@@ -244,7 +244,7 @@
+             qc::TestResult::from_bool(super::distance_fast(x, y).unwrap() == super::naive(x, y))
+         }
+         qc::QuickCheck::new()
+-            .gen(qc::StdGen::new(rand::thread_rng(), 10_000))
++            .gen(qc::Gen::new(10_000))
+             .quickcheck(prop as fn(Vec<u8>,Vec<u8>,u8) -> qc::TestResult)
+     }
+     #[test]
+--- a/src/weight_.rs
++++ b/src/weight_.rs
+@@ -119,7 +119,7 @@
+             qc::TestResult::from_bool(super::weight(data) == super::naive(data))
+         }
+         qc::QuickCheck::new()
+-            .gen(qc::StdGen::new(rand::thread_rng(), 10_000))
++            .gen(qc::Gen::new(10_000))
+             .quickcheck(prop as fn(Vec<u8>,u8) -> qc::TestResult)
+     }
+     #[test]

@@ -1,0 +1,299 @@
+Index: quinn/Cargo.toml
+===================================================================
+--- quinn.orig/Cargo.toml
++++ quinn/Cargo.toml
+@@ -136,21 +136,20 @@ features = [
+     "sync",
+ ]
+ 
+-[dev-dependencies.tracing-futures]
+-version = "0.2.0"
+-features = ["std-future"]
+-default-features = false
+-
+-[dev-dependencies.tracing-subscriber]
+-version = "0.3.0"
+-features = [
+-    "env-filter",
+-    "fmt",
+-    "ansi",
+-    "time",
+-    "local-time",
+-]
+-default-features = false
++#[dev-dependencies.tracing-futures]
++#version = "0.2.0"
++#features = ["std-future"]
++#default-features = false
++#
++#[dev-dependencies.tracing-subscriber]
++#version = "0.3.0"
++#features = [
++#    "fmt",
++#    "ansi",
++#    "time",
++#    "local-time",
++#]
++#default-features = false
+ 
+ [dev-dependencies.url]
+ version = "2"
+Index: quinn/benches/bench.rs
+===================================================================
+--- quinn.orig/benches/bench.rs
++++ quinn/benches/bench.rs
+@@ -6,8 +6,8 @@ use std::{
+ 
+ use bencher::{benchmark_group, benchmark_main, Bencher};
+ use tokio::runtime::{Builder, Runtime};
+-use tracing::error_span;
+-use tracing_futures::Instrument as _;
++//use tracing::error_span;
++//use tracing_futures::Instrument as _;
+ 
+ use quinn::{Endpoint, TokioRuntime};
+ 
+@@ -37,7 +37,7 @@ fn small_data_100_streams(bench: &mut Be
+ }
+ 
+ fn send_data(bench: &mut Bencher, data: &'static [u8], concurrent_streams: usize) {
+-    let _ = tracing_subscriber::fmt::try_init();
++    //let _ = tracing_subscriber::fmt::try_init();
+ 
+     let ctx = Context::new();
+     let (addr, thread) = ctx.spawn_server();
+@@ -130,7 +130,7 @@ impl Context {
+                         });
+                     }
+                 }
+-                .instrument(error_span!("server")),
++                //.instrument(error_span!("server")),
+             );
+             runtime.block_on(handle).unwrap();
+         });
+@@ -151,7 +151,7 @@ impl Context {
+                 endpoint
+                     .connect_with(self.client_config.clone(), server_addr, "localhost")
+                     .unwrap()
+-                    .instrument(error_span!("client"))
++                    //.instrument(error_span!("client"))
+                     .await
+             })
+             .unwrap();
+Index: quinn/examples/client.rs
+===================================================================
+--- quinn.orig/examples/client.rs
++++ quinn/examples/client.rs
+@@ -42,12 +42,12 @@ struct Opt {
+ }
+ 
+ fn main() {
+-    tracing::subscriber::set_global_default(
++    /*tracing::subscriber::set_global_default(
+         tracing_subscriber::FmtSubscriber::builder()
+             .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+             .finish(),
+     )
+-    .unwrap();
++    .unwrap();*/
+     let opt = Opt::parse();
+     let code = {
+         if let Err(e) = run(opt) {
+Index: quinn/examples/server.rs
+===================================================================
+--- quinn.orig/examples/server.rs
++++ quinn/examples/server.rs
+@@ -13,7 +13,7 @@ use std::{
+ use anyhow::{anyhow, bail, Context, Result};
+ use clap::Parser;
+ use tracing::{error, info, info_span};
+-use tracing_futures::Instrument as _;
++//use tracing_futures::Instrument as _;
+ 
+ mod common;
+ 
+@@ -40,12 +40,12 @@ struct Opt {
+ }
+ 
+ fn main() {
+-    tracing::subscriber::set_global_default(
++    /*tracing::subscriber::set_global_default(
+         tracing_subscriber::FmtSubscriber::builder()
+             .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+             .finish(),
+     )
+-    .unwrap();
++    .unwrap();*/
+     let opt = Opt::parse();
+     let code = {
+         if let Err(e) = run(opt) {
+@@ -192,11 +192,11 @@ async fn handle_connection(root: Arc<Pat
+                         error!("failed: {reason}", reason = e.to_string());
+                     }
+                 }
+-                .instrument(info_span!("request")),
++                //.instrument(info_span!("request")),
+             );
+         }
+     }
+-    .instrument(span)
++    //.instrument(span)
+     .await?;
+     Ok(())
+ }
+Index: quinn/src/tests.rs
+===================================================================
+--- quinn.orig/src/tests.rs
++++ quinn/src/tests.rs
+@@ -16,14 +16,14 @@ use tokio::{
+     time::{Duration, Instant},
+ };
+ use tracing::{info, info_span};
+-use tracing_futures::Instrument as _;
+-use tracing_subscriber::EnvFilter;
++//use tracing_futures::Instrument as _;
++//use tracing_subscriber::EnvFilter;
+ 
+ use super::{ClientConfig, Endpoint, RecvStream, SendStream, TransportConfig};
+ 
+ #[test]
+ fn handshake_timeout() {
+-    let _guard = subscribe();
++    //let _guard = subscribe();
+     let runtime = rt_threaded();
+     let client = {
+         let _guard = runtime.enter();
+@@ -61,7 +61,7 @@ fn handshake_timeout() {
+ 
+ #[tokio::test]
+ async fn close_endpoint() {
+-    let _guard = subscribe();
++    //let _guard = subscribe();
+     let mut endpoint =
+         Endpoint::client(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 0)).unwrap();
+     endpoint.set_default_client_config(ClientConfig::with_root_certificates(
+@@ -113,7 +113,7 @@ fn local_addr() {
+ 
+ #[test]
+ fn read_after_close() {
+-    let _guard = subscribe();
++    //let _guard = subscribe();
+     let runtime = rt_basic();
+     let endpoint = {
+         let _guard = runtime.enter();
+@@ -151,7 +151,7 @@ fn read_after_close() {
+ 
+ #[test]
+ fn export_keying_material() {
+-    let _guard = subscribe();
++    //let _guard = subscribe();
+     let runtime = rt_basic();
+     let endpoint = {
+         let _guard = runtime.enter();
+@@ -184,7 +184,7 @@ fn export_keying_material() {
+ 
+ #[tokio::test]
+ async fn accept_after_close() {
+-    let _guard = subscribe();
++    //let _guard = subscribe();
+     let endpoint = endpoint();
+ 
+     const MSG: &[u8] = b"goodbye!";
+@@ -251,7 +251,7 @@ fn endpoint_with_config(transport_config
+ 
+ #[tokio::test]
+ async fn zero_rtt() {
+-    let _guard = subscribe();
++    //let _guard = subscribe();
+     let endpoint = endpoint();
+ 
+     const MSG0: &[u8] = b"zero";
+@@ -416,7 +416,7 @@ fn stress_both_windows() {
+ }
+ 
+ fn run_echo(args: EchoArgs) {
+-    let _guard = subscribe();
++    //let _guard = subscribe();
+     let runtime = rt_basic();
+     let handle = {
+         // Use small receive windows
+@@ -485,7 +485,7 @@ fn run_echo(args: EchoArgs) {
+                 assert_eq!(None, incoming.local_ip());
+             }
+ 
+-            let new_conn = incoming.instrument(info_span!("server")).await.unwrap();
++            let new_conn = incoming.await.unwrap();
+             tokio::spawn(async move {
+                 while let Ok(stream) = new_conn.accept_bi().await {
+                     tokio::spawn(echo(stream));
+@@ -499,7 +499,7 @@ fn run_echo(args: EchoArgs) {
+             let new_conn = client
+                 .connect(server_addr, "localhost")
+                 .unwrap()
+-                .instrument(info_span!("client"))
++                //.instrument(info_span!("client"))
+                 .await
+                 .expect("connect");
+ 
+@@ -573,13 +573,13 @@ fn gen_data(size: usize, seed: u64) -> V
+     buf
+ }
+ 
+-fn subscribe() -> tracing::subscriber::DefaultGuard {
++/*fn subscribe() -> tracing::subscriber::DefaultGuard {
+     let sub = tracing_subscriber::FmtSubscriber::builder()
+         .with_env_filter(EnvFilter::from_default_env())
+         .with_writer(|| TestWriter)
+         .finish();
+     tracing::subscriber::set_default(sub)
+-}
++}*/
+ 
+ struct TestWriter;
+ 
+@@ -606,7 +606,7 @@ fn rt_threaded() -> Runtime {
+ 
+ #[tokio::test]
+ async fn rebind_recv() {
+-    let _guard = subscribe();
++    //let _guard = subscribe();
+ 
+     let cert = rcgen::generate_simple_self_signed(vec!["localhost".into()]).unwrap();
+     let key = rustls::PrivateKey(cert.serialize_private_key_der());
+@@ -672,7 +672,7 @@ async fn rebind_recv() {
+ 
+ #[tokio::test]
+ async fn stream_id_flow_control() {
+-    let _guard = subscribe();
++    //let _guard = subscribe();
+     let mut cfg = TransportConfig::default();
+     cfg.max_concurrent_uni_streams(1u32.into());
+     let endpoint = endpoint_with_config(cfg);
+@@ -706,7 +706,7 @@ async fn stream_id_flow_control() {
+ 
+ #[tokio::test]
+ async fn two_datagram_readers() {
+-    let _guard = subscribe();
++    //let _guard = subscribe();
+     let endpoint = endpoint();
+ 
+     let (client, server) = tokio::join!(
+Index: quinn/tests/many_connections.rs
+===================================================================
+--- quinn.orig/tests/many_connections.rs
++++ quinn/tests/many_connections.rs
+@@ -17,12 +17,11 @@ struct Shared {
+ #[test]
+ #[ignore]
+ fn connect_n_nodes_to_1_and_send_1mb_data() {
+-    tracing::subscriber::set_global_default(
++    /*tracing::subscriber::set_global_default(
+         tracing_subscriber::FmtSubscriber::builder()
+-            .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+             .finish(),
+     )
+-    .unwrap();
++    .unwrap();*/
+ 
+     let runtime = Builder::new_current_thread().enable_all().build().unwrap();
+     let _guard = runtime.enter();

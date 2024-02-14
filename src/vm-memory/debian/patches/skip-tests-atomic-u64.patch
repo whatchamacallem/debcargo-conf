@@ -1,96 +1,84 @@
-diff --git a/src/bitmap/backend/mod.rs b/src/bitmap/backend/mod.rs
-index 256585e..22f3784 100644
---- a/src/bitmap/backend/mod.rs
-+++ b/src/bitmap/backend/mod.rs
+--- vm-memory.orig/src/bitmap/backend/mod.rs
++++ vm-memory/src/bitmap/backend/mod.rs
 @@ -3,3 +3,5 @@
  
 +#[cfg(any(all(test, target_has_atomic = "64"), feature = "backend-bitmap"))]
  mod atomic_bitmap;
 +#[cfg(any(all(test, target_has_atomic = "64"), feature = "backend-bitmap"))]
  mod atomic_bitmap_arc;
-@@ -7,3 +9,5 @@ mod slice;
+@@ -7,3 +9,5 @@
  
 +#[cfg(any(all(test, target_has_atomic = "64"), feature = "backend-bitmap"))]
  pub use atomic_bitmap::AtomicBitmap;
 +#[cfg(any(all(test, target_has_atomic = "64"), feature = "backend-bitmap"))]
  pub use atomic_bitmap_arc::AtomicBitmapArc;
-diff --git a/src/bitmap/backend/slice.rs b/src/bitmap/backend/slice.rs
-index 913a2f5..b020bdc 100644
---- a/src/bitmap/backend/slice.rs
-+++ b/src/bitmap/backend/slice.rs
-@@ -96,2 +96,3 @@ pub type ArcSlice<B> = BaseSlice<Arc<B>>;
+--- vm-memory.orig/src/bitmap/backend/slice.rs
++++ vm-memory/src/bitmap/backend/slice.rs
+@@ -96,2 +96,3 @@
  #[cfg(test)]
 +#[cfg(target_has_atomic = "64")]
  mod tests {
-diff --git a/src/bitmap/mod.rs b/src/bitmap/mod.rs
-index e8c0987..96982c6 100644
---- a/src/bitmap/mod.rs
-+++ b/src/bitmap/mod.rs
-@@ -16,3 +16,5 @@ use crate::{GuestMemory, GuestMemoryRegion};
+--- vm-memory.orig/src/bitmap/mod.rs
++++ vm-memory/src/bitmap/mod.rs
+@@ -16,3 +16,5 @@
  #[cfg(any(test, feature = "backend-bitmap"))]
 -pub use backend::{ArcSlice, AtomicBitmap, RefSlice};
 +pub use backend::{ArcSlice, RefSlice};
 +#[cfg(any(all(test, target_has_atomic = "64"), feature = "backend-bitmap"))]
 +pub use backend::AtomicBitmap;
  
-diff --git a/src/mmap.rs b/src/mmap.rs
-index 4bcaf4e..c7b0746 100644
---- a/src/mmap.rs
-+++ b/src/mmap.rs
-@@ -659,2 +659,3 @@ mod tests {
+--- vm-memory.orig/src/mmap.rs
++++ vm-memory/src/mmap.rs
+@@ -664,2 +664,3 @@
      use crate::bitmap::tests::test_guest_memory_and_region;
 +    #[cfg(target_has_atomic = "64")]
      use crate::bitmap::AtomicBitmap;
-@@ -1532,3 +1533,3 @@ mod tests {
+@@ -1537,3 +1538,3 @@
      #[test]
 -    #[cfg(not(target_arch = "powerpc64"))]
 +    #[cfg(all(not(target_arch = "powerpc64"), target_has_atomic = "64"))]
      fn test_dirty_tracking() {
-diff --git a/src/mmap_unix.rs b/src/mmap_unix.rs
-index 68952a3..08fe75e 100644
---- a/src/mmap_unix.rs
-+++ b/src/mmap_unix.rs
-@@ -451,2 +451,3 @@ mod tests {
+--- vm-memory.orig/src/mmap_unix.rs
++++ vm-memory/src/mmap_unix.rs
+@@ -453,2 +453,3 @@
  
 +    #[cfg(target_has_atomic = "64")]
      use crate::bitmap::AtomicBitmap;
-@@ -601,2 +602,3 @@ mod tests {
+@@ -603,2 +604,3 @@
          let region_size = 0x10_0000;
 +        #[cfg(target_has_atomic = "64")] {
-         let bitmap = AtomicBitmap::new(region_size, 0x1000);
-@@ -610,2 +612,3 @@ mod tests {
+         let bitmap = AtomicBitmap::new(region_size, unsafe { NonZeroUsize::new_unchecked(0x1000) });
+@@ -612,2 +614,3 @@
          crate::bitmap::tests::test_volatile_memory(&(builder.build().unwrap()));
 +        }
      }
-@@ -664,3 +667,3 @@ mod tests {
+@@ -666,3 +669,3 @@
      #[test]
 -    #[cfg(not(target_arch = "powerpc64"))]
 +    #[cfg(all(not(target_arch = "powerpc64"), target_has_atomic = "64"))]
      fn test_dirty_tracking() {
-diff --git a/src/volatile_memory.rs b/src/volatile_memory.rs
-index 26950aa..bd7ba3d 100644
---- a/src/volatile_memory.rs
-+++ b/src/volatile_memory.rs
-@@ -1588,3 +1588,5 @@ mod tests {
+--- vm-memory.orig/src/volatile_memory.rs
++++ vm-memory/src/volatile_memory.rs
+@@ -1650,3 +1650,5 @@
      };
 -    use crate::bitmap::{AtomicBitmap, RefSlice};
 +    #[cfg(target_has_atomic = "64")]
 +    use crate::bitmap::AtomicBitmap;
 +    use crate::bitmap::RefSlice;
  
-@@ -2238,2 +2240,3 @@ mod tests {
+@@ -2299,2 +2301,3 @@
      #[test]
 +    #[cfg(target_has_atomic = "64")]
      fn test_volatile_slice_dirty_tracking() {
-@@ -2329,2 +2332,3 @@ mod tests {
+@@ -2389,2 +2392,3 @@
      #[test]
 +    #[cfg(target_has_atomic = "64")]
      fn test_volatile_ref_dirty_tracking() {
-@@ -2344,2 +2348,3 @@ mod tests {
+@@ -2403,2 +2407,3 @@
  
 +    #[cfg(target_has_atomic = "64")]
-     fn test_volatile_array_ref_copy_from_tracking<T>(buf: &mut [T], index: usize, page_size: usize)
-@@ -2367,2 +2372,3 @@ mod tests {
+     fn test_volatile_array_ref_copy_from_tracking<T>(
+@@ -2429,2 +2434,3 @@
      #[test]
 +    #[cfg(target_has_atomic = "64")]
      fn test_volatile_array_ref_dirty_tracking() {

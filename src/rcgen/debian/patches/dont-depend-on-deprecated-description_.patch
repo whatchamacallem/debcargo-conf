@@ -1,0 +1,32 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green, it is a prerequisite for the
+ring 0.17 patch.
+
+commit 84a305383a3d8f38e51d9b2a53d39875fc30aaa9
+Author: Thomas Eizinger <thomas@eizinger.io>
+Date:   Tue Oct 3 11:50:24 2023 +1100
+
+    Don't depend on deprecated `description_`
+
+Index: rcgen/src/error.rs
+===================================================================
+--- rcgen.orig/src/error.rs
++++ rcgen/src/error.rs
+@@ -27,7 +27,7 @@ pub enum RcgenError {
+ 	/// Unspecified `ring` error
+ 	RingUnspecified,
+ 	/// The `ring` library rejected the key upon loading
+-	RingKeyRejected(&'static str),
++	RingKeyRejected(String),
+ 	/// The provided certificate's signature algorithm
+ 	/// is incompatible with the given key pair
+ 	CertificateKeyPairMismatch,
+@@ -107,7 +107,7 @@ impl From<ring::error::Unspecified> for
+ 
+ impl From<ring::error::KeyRejected> for RcgenError {
+ 	fn from(err: ring::error::KeyRejected) -> Self {
+-		RcgenError::RingKeyRejected(err.description_())
++		RcgenError::RingKeyRejected(err.to_string())
+ 	}
+ }
+ 

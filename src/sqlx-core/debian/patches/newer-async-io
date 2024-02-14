@@ -1,0 +1,85 @@
+Index: sqlx-core/Cargo.toml
+===================================================================
+--- sqlx-core.orig/Cargo.toml
++++ sqlx-core/Cargo.toml
+@@ -30,7 +30,7 @@ features = ["offline"]
+ version = "0.8.6"
+ 
+ [dependencies.async-io]
+-version = "1.9.0"
++version = ">= 1.9.0"
+ optional = true
+ 
+ [dependencies.async-std]
+Index: sqlx-core/src/lib.rs
+===================================================================
+--- sqlx-core.orig/src/lib.rs
++++ sqlx-core/src/lib.rs
+@@ -19,7 +19,7 @@
+ #![deny(clippy::disallowed_method)]
+ // The only unsafe code in SQLx is that necessary to interact with native APIs like with SQLite,
+ // and that can live in its own separate driver crate.
+-#![forbid(unsafe_code)]
++//#![forbid(unsafe_code)] disabled due to async-io update.
+ // Allows an API be documented as only available in some specific platforms.
+ // <https://doc.rust-lang.org/unstable-book/language-features/doc-cfg.html>
+ #![cfg_attr(docsrs, feature(doc_cfg))]
+Index: sqlx-core/src/rt/rt_async_std/socket.rs
+===================================================================
+--- sqlx-core.orig/src/rt/rt_async_std/socket.rs
++++ sqlx-core/src/rt/rt_async_std/socket.rs
+@@ -11,11 +11,15 @@ use async_io::Async;
+ 
+ impl Socket for Async<TcpStream> {
+     fn try_read(&mut self, buf: &mut dyn ReadBuf) -> io::Result<usize> {
++      unsafe {
+         self.get_mut().read(buf.init_mut())
++      }
+     }
+ 
+     fn try_write(&mut self, buf: &[u8]) -> io::Result<usize> {
++      unsafe {
+         self.get_mut().write(buf)
++      }
+     }
+ 
+     fn poll_read_ready(&mut self, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+@@ -27,18 +31,24 @@ impl Socket for Async<TcpStream> {
+     }
+ 
+     fn poll_shutdown(&mut self, _cx: &mut Context<'_>) -> Poll<io::Result<()>> {
++      unsafe {
+         Poll::Ready(self.get_mut().shutdown(Shutdown::Both))
++      }
+     }
+ }
+ 
+ #[cfg(unix)]
+ impl Socket for Async<std::os::unix::net::UnixStream> {
+     fn try_read(&mut self, buf: &mut dyn ReadBuf) -> io::Result<usize> {
++      unsafe {
+         self.get_mut().read(buf.init_mut())
++      }
+     }
+ 
+     fn try_write(&mut self, buf: &[u8]) -> io::Result<usize> {
++      unsafe {
+         self.get_mut().write(buf)
++      }
+     }
+ 
+     fn poll_read_ready(&mut self, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+@@ -46,10 +56,12 @@ impl Socket for Async<std::os::unix::net
+     }
+ 
+     fn poll_write_ready(&mut self, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+-        self.poll_writable(cx)
++      self.poll_writable(cx)
+     }
+ 
+     fn poll_shutdown(&mut self, _cx: &mut Context<'_>) -> Poll<io::Result<()>> {
++      unsafe {
+         Poll::Ready(self.get_mut().shutdown(Shutdown::Both))
++      }
+     }
+ }

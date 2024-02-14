@@ -1,0 +1,81 @@
+Index: alsa/src/pcm.rs
+===================================================================
+--- alsa.orig/src/pcm.rs
++++ alsa/src/pcm.rs
+@@ -3,7 +3,7 @@
+ //! # Example
+ //! Playback a sine wave through the "default" device.
+ //!
+-//! ```
++//! ```rust,ignore
+ //! use alsa::{Direction, ValueOr};
+ //! use alsa::pcm::{PCM, HwParams, Format, Access, State};
+ //!
+@@ -1182,6 +1182,7 @@ alsa_enum!(
+ );
+ 
+ #[test]
++#[ignore = "Requires a default soundcard"]
+ fn info_from_default() {
+     use std::ffi::CString;
+     let pcm = PCM::open(&*CString::new("default").unwrap(), Direction::Capture, false).unwrap();
+@@ -1196,6 +1197,7 @@ fn info_from_default() {
+ }
+ 
+ #[test]
++#[ignore = "Requires a default soundcard"]
+ fn drop() {
+     use std::ffi::CString;
+     let pcm = PCM::open(&*CString::new("default").unwrap(), Direction::Capture, false).unwrap();
+@@ -1204,6 +1206,7 @@ fn drop() {
+ }
+ 
+ #[test]
++#[ignore = "Requires a default soundcard"]
+ fn record_from_default() {
+     use std::ffi::CString;
+     let pcm = PCM::open(&*CString::new("default").unwrap(), Direction::Capture, false).unwrap();
+@@ -1219,6 +1222,7 @@ fn record_from_default() {
+ }
+ 
+ #[test]
++#[ignore = "Requires a default soundcard"]
+ fn playback_to_default() {
+     use std::ffi::CString;
+     let pcm = PCM::open(&*CString::new("default").unwrap(), Direction::Playback, false).unwrap();
+Index: alsa/src/seq.rs
+===================================================================
+--- alsa.orig/src/seq.rs
++++ alsa/src/seq.rs
+@@ -1387,6 +1387,7 @@ impl MidiEvent {
+ }
+ 
+ #[test]
++#[ignore = "Requires a default soundcard"]
+ fn print_seqs() {
+     use std::ffi::CString;
+     let s = super::Seq::open(None, None, false).unwrap();
+@@ -1399,6 +1400,7 @@ fn print_seqs() {
+ }
+ 
+ #[test]
++#[ignore = "Requires a default soundcard"]
+ fn seq_subscribe() {
+     use std::ffi::CString;
+     let s = super::Seq::open(None, None, false).unwrap();
+@@ -1414,6 +1416,7 @@ fn seq_subscribe() {
+ }
+ 
+ #[test]
++#[ignore = "Requires a default soundcard"]
+ fn seq_loopback() {
+     use std::ffi::CString;
+     let s = super::Seq::open(Some(&CString::new("default").unwrap()), None, false).unwrap();
+@@ -1534,6 +1537,7 @@ fn seq_remove_events() -> std::result::R
+ }
+ 
+ #[test]
++#[ignore = "Requires a default soundcard"]
+ fn seq_portsubscribeiter() {
+     let s = super::Seq::open(None, None, false).unwrap();
+ 
