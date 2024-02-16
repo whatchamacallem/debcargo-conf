@@ -1,0 +1,65 @@
+Index: tower/Cargo.toml
+===================================================================
+--- tower.orig/Cargo.toml
++++ tower/Cargo.toml
+@@ -127,6 +127,11 @@ features = ["std"]
+ optional = true
+ default-features = false
+ 
++[dev-dependencies.tracing]
++version = "0.1.2"
++features = ["std"]
++default-features = false
++
+ [dev-dependencies.futures]
+ version = "0.3"
+ 
+Index: tower/src/load/peak_ewma.rs
+===================================================================
+--- tower.orig/src/load/peak_ewma.rs
++++ tower/src/load/peak_ewma.rs
+@@ -308,7 +308,7 @@ fn nanos(d: Duration) -> f64 {
+     n + s
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature="futures-util"))]
+ mod tests {
+     use futures_util::future;
+     use std::time::Duration;
+Index: tower/src/load/pending_requests.rs
+===================================================================
+--- tower.orig/src/load/pending_requests.rs
++++ tower/src/load/pending_requests.rs
+@@ -144,7 +144,7 @@ impl RefCount {
+     }
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature = "futures-util"))]
+ mod tests {
+     use super::*;
+     use futures_util::future;
+Index: tower/src/make/make_service/shared.rs
+===================================================================
+--- tower.orig/src/make/make_service/shared.rs
++++ tower/src/make/make_service/shared.rs
+@@ -102,7 +102,7 @@ opaque_future! {
+     pub type SharedFuture<S> = futures_util::future::Ready<Result<S, Infallible>>;
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature = "util"))]
+ mod tests {
+     use super::*;
+     use crate::make::MakeService;
+Index: tower/tests/steer/main.rs
+===================================================================
+--- tower.orig/tests/steer/main.rs
++++ tower/tests/steer/main.rs
+@@ -1,4 +1,4 @@
+-#![cfg(feature = "steer")]
++#![cfg(all(feature = "steer", feature = "futures-util"))]
+ #[path = "../support.rs"]
+ mod support;
+ 
