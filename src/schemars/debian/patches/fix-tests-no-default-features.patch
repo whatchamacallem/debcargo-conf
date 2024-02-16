@@ -1,0 +1,275 @@
+Index: schemars/examples/schemars_attrs.rs
+===================================================================
+--- schemars.orig/examples/schemars_attrs.rs
++++ schemars/examples/schemars_attrs.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "derive")]
+ use schemars::{schema_for, JsonSchema};
+ use serde::{Deserialize, Serialize};
+ 
+Index: schemars/Cargo.toml
+===================================================================
+--- schemars.orig/Cargo.toml
++++ schemars/Cargo.toml
+@@ -33,15 +33,15 @@ all-features = true
+ 
+ [[test]]
+ name = "chrono"
+-required-features = ["chrono"]
++required-features = ["chrono","derive"]
+ 
+ [[test]]
+ name = "indexmap"
+-required-features = ["indexmap"]
++required-features = ["indexmap","derive"]
+ 
+ [[test]]
+ name = "indexmap2"
+-required-features = ["indexmap2"]
++required-features = ["indexmap2","derive"]
+ 
+ [[test]]
+ name = "either"
+@@ -73,15 +73,15 @@ required-features = ["impl_json_schema"]
+ 
+ [[test]]
+ name = "ui"
+-required-features = ["ui_test"]
++required-features = ["ui_test","derive"]
+ 
+ [[test]]
+ name = "url"
+-required-features = ["url"]
++required-features = ["url","derive"]
+ 
+ [[test]]
+ name = "enumset"
+-required-features = ["enumset"]
++required-features = ["enumset","derive"]
+ 
+ [[test]]
+ name = "smol_str"
+@@ -89,7 +89,7 @@ required-features = ["smol_str"]
+ 
+ [[test]]
+ name = "semver"
+-required-features = ["semver"]
++required-features = ["semver","derive"]
+ 
+ [[test]]
+ name = "decimal"
+@@ -98,6 +98,130 @@ required-features = [
+     "bigdecimal03",
+ ]
+ 
++[[test]]
++name = "bound"
++required-features = ["derive"]
++
++[[test]]
++name = "crate_alias"
++required-features = ["derive"]
++
++[[test]]
++name = "default"
++required-features = ["derive"]
++
++[[test]]
++name = "deprecated"
++required-features = ["derive"]
++
++[[test]]
++name = "dereference"
++required-features = ["derive"]
++
++[[test]]
++name = "docs"
++required-features = ["derive"]
++
++[[test]]
++name = "enum"
++required-features = ["derive"]
++
++[[test]]
++name = "enum_deny_unknown_fields"
++required-features = ["derive"]
++
++[[test]]
++name = "enum_repr"
++required-features = ["derive"]
++
++[[test]]
++name = "examples"
++required-features = ["derive"]
++
++[[test]]
++name = "flatten"
++required-features = ["derive"]
++
++[[test]]
++name = "ffi"
++required-features = ["derive"]
++
++[[test]]
++name = "inline_subschemas"
++required-features = ["derive"]
++
++[[test]]
++name = "macro"
++required-features = ["derive"]
++
++[[test]]
++name = "nonzero_ints"
++required-features = ["derive"]
++
++[[test]]
++name = "property_name"
++required-features = ["derive"]
++
++[[test]]
++name = "range"
++required-features = ["derive"]
++
++[[test]]
++name = "remote_derive"
++required-features = ["derive"]
++
++[[test]]
++name = "remote_derive_generic"
++required-features = ["derive"]
++
++[[test]]
++name = "result"
++required-features = ["derive"]
++
++[[test]]
++name = "same_name"
++required-features = ["derive"]
++
++[[test]]
++name = "schema_name"
++required-features = ["derive"]
++
++[[test]]
++name = "schema_with_enum"
++required-features = ["derive"]
++
++[[test]]
++name = "schema_with_struct"
++required-features = ["derive"]
++
++[[test]]
++name = "skip"
++required-features = ["derive"]
++
++[[test]]
++name = "struct"
++required-features = ["derive"]
++
++[[test]]
++name = "struct_additional_properties"
++required-features = ["derive"]
++
++[[test]]
++name = "time"
++required-features = ["derive"]
++
++[[test]]
++name = "transparent"
++required-features = ["derive"]
++
++[[test]]
++name = "validate"
++required-features = ["derive"]
++
++[[test]]
++name = "validate_inner"
++required-features = ["derive"]
++
+ [dependencies.arrayvec07]
+ version = "0.7"
+ optional = true
+Index: schemars/examples/custom_serialization.rs
+===================================================================
+--- schemars.orig/examples/custom_serialization.rs
++++ schemars/examples/custom_serialization.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "derive")]
+ use schemars::schema::{Schema, SchemaObject};
+ use schemars::{gen::SchemaGenerator, schema_for, JsonSchema};
+ use serde::{Deserialize, Serialize};
+Index: schemars/examples/custom_settings.rs
+===================================================================
+--- schemars.orig/examples/custom_settings.rs
++++ schemars/examples/custom_settings.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "derive")]
+ use schemars::{gen::SchemaSettings, JsonSchema};
+ 
+ #[derive(JsonSchema)]
+Index: schemars/examples/doc_comments.rs
+===================================================================
+--- schemars.orig/examples/doc_comments.rs
++++ schemars/examples/doc_comments.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "derive")]
+ use schemars::{schema_for, JsonSchema};
+ 
+ /// # My Amazing Struct
+Index: schemars/examples/enum_repr.rs
+===================================================================
+--- schemars.orig/examples/enum_repr.rs
++++ schemars/examples/enum_repr.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "derive")]
+ use schemars::{schema_for, JsonSchema_repr};
+ 
+ #[derive(JsonSchema_repr)]
+Index: schemars/examples/main.rs
+===================================================================
+--- schemars.orig/examples/main.rs
++++ schemars/examples/main.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "derive")]
+ use schemars::{schema_for, JsonSchema};
+ 
+ #[derive(JsonSchema)]
+Index: schemars/examples/remote_derive.rs
+===================================================================
+--- schemars.orig/examples/remote_derive.rs
++++ schemars/examples/remote_derive.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "derive")]
+ // Pretend that this is somebody else's crate, not a module.
+ mod other_crate {
+     // Neither Schemars nor the other crate provides a JsonSchema impl
+Index: schemars/examples/serde_attrs.rs
+===================================================================
+--- schemars.orig/examples/serde_attrs.rs
++++ schemars/examples/serde_attrs.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "derive")]
+ use schemars::{schema_for, JsonSchema};
+ use serde::{Deserialize, Serialize};
+ 
+Index: schemars/examples/validate.rs
+===================================================================
+--- schemars.orig/examples/validate.rs
++++ schemars/examples/validate.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "derive")]
+ use schemars::{schema_for, JsonSchema};
+ 
+ #[derive(JsonSchema)]
+Index: schemars/src/json_schema_impls/core.rs
+===================================================================
+--- schemars.orig/src/json_schema_impls/core.rs
++++ schemars/src/json_schema_impls/core.rs
+@@ -196,6 +196,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(feature = "derive")]
+     fn schema_for_option_with_ref() {
+         use crate as schemars;
+         #[derive(JsonSchema)]

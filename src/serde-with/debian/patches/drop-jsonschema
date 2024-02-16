@@ -1,0 +1,212 @@
+Index: serde-with/Cargo.toml
+===================================================================
+--- serde-with.orig/Cargo.toml
++++ serde-with/Cargo.toml
+@@ -234,11 +234,6 @@ version = "1.0.6"
+ [dev-dependencies.glob]
+ version = "0.3.0"
+ 
+-[dev-dependencies.jsonschema]
+-version = "0.17.1"
+-features = ["resolve-file"]
+-default-features = false
+-
+ [dev-dependencies.mime]
+ version = "0.3.16"
+ 
+Index: serde-with/tests/schemars_0_8.rs
+===================================================================
+--- serde-with.orig/tests/schemars_0_8.rs
++++ serde-with/tests/schemars_0_8.rs
+@@ -1,4 +1,4 @@
+-use crate::utils::{check_matches_schema, check_valid_json_schema};
++//use crate::utils::{check_matches_schema, check_valid_json_schema};
+ use ::schemars_0_8::JsonSchema;
+ use expect_test::expect_file;
+ use serde::Serialize;
+@@ -95,7 +95,7 @@ fn schemars_basic() {
+     expected.assert_eq(&schema);
+ }
+ 
+-#[test]
++/*#[test]
+ fn schemars_custom_with() {
+     #[serde_as]
+     #[derive(JsonSchema, Serialize)]
+@@ -118,7 +118,7 @@ fn schemars_custom_with() {
+         "with_disabled": "5",
+         "always_enabled": 7,
+     }));
+-}
++}*/
+ 
+ mod test_std {
+     use super::*;
+@@ -282,10 +282,10 @@ mod derive {
+         field: u32,
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_enabled_has_correct_schema() {
+         check_valid_json_schema(&Enabled { field: 77 });
+-    }
++    }*/
+ }
+ 
+ mod array {
+@@ -298,7 +298,7 @@ mod array {
+         array: [u32; 3],
+     }
+ 
+-    #[test]
++    /* #[test]
+     fn test_serialized_is_valid() {
+         let array = FixedArray { array: [1, 2, 3] };
+ 
+@@ -341,7 +341,7 @@ mod array {
+         check_matches_schema::<FixedArray>(&json!({
+             "array": [-1, 0x1_0000_0000i64, 32]
+         }))
+-    }
++    }*/
+ }
+ 
+ mod bool_from_int {
+@@ -362,7 +362,7 @@ mod bool_from_int {
+         value: bool,
+     }
+ 
+-    #[test]
++    /* #[test]
+     fn test_serialized_strict_is_valid() {
+         check_valid_json_schema(&vec![
+             BoolStrict { value: true },
+@@ -376,9 +376,9 @@ mod bool_from_int {
+             BoolFlexible { value: true },
+             BoolFlexible { value: false },
+         ]);
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     #[should_panic]
+     fn strict_out_of_range() {
+         check_matches_schema::<BoolStrict>(&json!({
+@@ -415,7 +415,7 @@ mod bool_from_int {
+         check_matches_schema::<BoolFlexible>(&json!({
+             "value": 0.5
+         }))
+-    }
++    }*/
+ }
+ 
+ mod bytes_or_string {
+@@ -428,7 +428,7 @@ mod bytes_or_string {
+         bytes: Vec<u8>,
+     }
+ 
+-    #[test]
++    /* #[test]
+     fn test_serialized_is_valid() {
+         check_valid_json_schema(&Test {
+             bytes: b"test".to_vec(),
+@@ -455,7 +455,7 @@ mod bytes_or_string {
+         check_matches_schema::<Test>(&json!({
+             "bytes": 5
+         }));
+-    }
++    }*/
+ }
+ 
+ mod duration {
+@@ -485,7 +485,7 @@ mod duration {
+         flexible_str: Duration,
+     }
+ 
+-    #[test]
++    /* #[test]
+     fn test_serialized_is_valid() {
+         check_valid_json_schema(&DurationTest {
+             strict_u64: Duration::from_millis(2500),
+@@ -495,7 +495,7 @@ mod duration {
+             flexible_f64: Duration::from_millis(2500),
+             flexible_str: Duration::from_millis(2500),
+         });
+-    }
++    }*/
+ 
+     #[serde_as]
+     #[derive(Serialize, JsonSchema)]
+@@ -509,7 +509,7 @@ mod duration {
+     #[derive(Serialize, JsonSchema)]
+     struct FlexibleTimestamp(#[serde_as(as = "TimestampSeconds<i64, Flexible>")] SystemTime);
+ 
+-    #[test]
++    /* #[test]
+     fn test_string_as_flexible_u64() {
+         check_matches_schema::<FlexibleU64Duration>(&json!("32"));
+     }
+@@ -559,10 +559,10 @@ mod duration {
+     #[test]
+     fn test_negative_string_as_flexible_timestamp() {
+         check_matches_schema::<FlexibleTimestamp>(&json!("-50000"));
+-    }
++    }*/
+ }
+ 
+-#[test]
++/* #[test]
+ fn test_borrow_cow() {
+     use std::borrow::Cow;
+ 
+@@ -589,9 +589,9 @@ fn test_map() {
+     check_valid_json_schema(&Test {
+         map: [("a", 1), ("b", 2)],
+     });
+-}
++}*/
+ 
+-#[test]
++/*#[test]
+ fn test_set_last_value_wins_with_duplicates() {
+     #[serde_as]
+     #[derive(Serialize, JsonSchema)]
+@@ -618,4 +618,4 @@ fn test_set_prevent_duplicates_with_dupl
+     check_matches_schema::<Test>(&json!({
+         "set": [ 1, 1 ]
+     }));
+-}
++}*/
+Index: serde-with/tests/utils.rs
+===================================================================
+--- serde-with.orig/tests/utils.rs
++++ serde-with/tests/utils.rs
+@@ -78,7 +78,7 @@ where
+     )
+ }
+ 
+-#[track_caller]
++/*#[track_caller]
+ pub fn check_matches_schema<T>(value: &serde_json::Value)
+ where
+     T: schemars_0_8::JsonSchema,
+@@ -125,9 +125,9 @@ where
+             panic!("{}", message);
+         };
+     }
+-}
++}*/
+ 
+-#[track_caller]
++/*#[track_caller]
+ pub fn check_valid_json_schema<T>(value: &T)
+ where
+     T: schemars_0_8::JsonSchema + Serialize,
+@@ -135,4 +135,4 @@ where
+     let value = serde_json::to_value(value).expect("could not serialize T to json");
+ 
+     check_matches_schema::<T>(&value);
+-}
++}*/

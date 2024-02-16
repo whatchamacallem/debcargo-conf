@@ -1,0 +1,65 @@
+Index: wu-diff/Cargo.toml
+===================================================================
+--- wu-diff.orig/Cargo.toml
++++ wu-diff/Cargo.toml
+@@ -23,14 +23,11 @@ repository = "https://github.com/bokuweb
+ [[bench]]
+ name = "benches"
+ harness = false
+-[dependencies.clippy]
+-version = "0.0.209"
+-optional = true
+ [dev-dependencies.base64]
+-version = "0.9.0"
++version = "0.21"
+ 
+ [dev-dependencies.criterion]
+-version = "0.2"
++version = "0.5"
+ 
+ [dev-dependencies.image]
+-version = "0.18.0"
++version = "0.24"
+Index: wu-diff/tests/lib.rs
+===================================================================
+--- wu-diff.orig/tests/lib.rs
++++ wu-diff/tests/lib.rs
+@@ -1,4 +1,3 @@
+-#![feature(extern_prelude)]
+ extern crate base64;
+ extern crate image;
+ extern crate wu_diff;
+@@ -6,7 +5,8 @@ extern crate wu_diff;
+ #[cfg(test)]
+ mod tests {
+ 
+-    use base64::encode;
++    use base64::engine::general_purpose::STANDARD;
++    use base64::engine::Engine;
+     use image::*;
+     use wu_diff::*;
+ 
+@@ -19,8 +19,8 @@ mod tests {
+         let mut removed_indexes: Vec<usize> = Vec::new();
+         for d in diff.iter() {
+             match d {
+-                &DiffResult::Added(ref a) => added_indexes.push(a.new_index.unwrap()),
+-                &DiffResult::Removed(ref r) => removed_indexes.push(r.old_index.unwrap()),
++                DiffResult::Added(a) => added_indexes.push(a.new_index.unwrap()),
++                DiffResult::Removed(r) => removed_indexes.push(r.old_index.unwrap()),
+                 _ => (),
+             }
+         }
+@@ -37,9 +37,10 @@ mod tests {
+ 
+     fn create_encoded_rows(image: &DynamicImage) -> Vec<String> {
+         image
+-            .raw_pixels()
++            .as_bytes()
++            .to_vec()
+             .chunks(image.dimensions().0 as usize * 4)
+-            .map(|chunk| encode(chunk))
++            .map(|chunk| STANDARD.encode(chunk))
+             .collect()
+     }
+ }
