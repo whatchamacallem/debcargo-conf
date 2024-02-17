@@ -1,0 +1,41 @@
+hard code nettle as crypto backend, as that is what is used in the whole
+sequoia stack in Debian.
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 237137c..0de3250 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -51,9 +51,10 @@ version = "0.1"
+ [dependencies.sequoia-openpgp]
+ version = "1.17"
+ default-features = false
++features = ["crypto-nettle"]
+ 
+ [dev-dependencies.env_logger]
+-version = ">=0.10, <0.12"
++version = "0.10"
+ 
+ [dev-dependencies.sequoia-openpgp]
+ version = "1"
+@@ -72,21 +73,5 @@ version = "0.3"
+ features = ["env-filter"]
+ default-features = false
+ 
+-[target."cfg(not(windows))".dev-dependencies.sequoia-openpgp]
+-version = "1"
+-features = [
+-    "crypto-nettle",
+-    "__implicit-crypto-backend-for-tests",
+-]
+-default-features = false
+-
+-[target."cfg(windows)".dev-dependencies.sequoia-openpgp]
+-version = "1"
+-features = [
+-    "crypto-cng",
+-    "__implicit-crypto-backend-for-tests",
+-]
+-default-features = false
+-
+ [badges.maintenance]
+ status = "actively-developed"
