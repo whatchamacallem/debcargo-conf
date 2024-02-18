@@ -1,0 +1,62 @@
+Tweak env_logger to be the version in Debian.
+Hardcode the crypto-nettle backend, as that is used everywhere else in Debian.
+Remove env-filter as that doesn't exist in Debian.
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 79df6a3..5e44df8 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -43,7 +43,7 @@ version = "0.18"
+ version = "5"
+ 
+ [dependencies.env_logger]
+-version = ">=0.10, <0.12"
++version = "0.10"
+ 
+ [dependencies.lazy_static]
+ version = "1.4.0"
+@@ -66,6 +66,7 @@ version = "0.1"
+ [dependencies.sequoia-openpgp]
+ version = "1.17"
+ default-features = false
++features = ["crypto-nettle"]
+ 
+ [dependencies.thiserror]
+ version = "1.0.2"
+@@ -87,7 +88,7 @@ features = ["compat"]
+ version = "0.3"
+ 
+ [dev-dependencies.env_logger]
+-version = ">=0.10, <0.12"
++version = "0.10"
+ 
+ [dev-dependencies.test-log]
+ version = "0.2.10"
+@@ -98,27 +99,10 @@ default-features = false
+ 
+ [dev-dependencies.tracing-subscriber]
+ version = "0.3"
+-features = ["env-filter"]
+ default-features = false
+ 
+ [build-dependencies.capnpc]
+ version = "0.18"
+ 
+-[target."cfg(not(windows))".dev-dependencies.sequoia-openpgp]
+-version = "1"
+-features = [
+-    "crypto-nettle",
+-    "__implicit-crypto-backend-for-tests",
+-]
+-default-features = false
+-
+-[target."cfg(windows)".dev-dependencies.sequoia-openpgp]
+-version = "1"
+-features = [
+-    "crypto-cng",
+-    "__implicit-crypto-backend-for-tests",
+-]
+-default-features = false
+-
+ [badges.maintenance]
+ status = "actively-developed"
