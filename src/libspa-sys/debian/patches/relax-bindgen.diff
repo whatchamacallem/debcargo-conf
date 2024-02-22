@@ -1,0 +1,28 @@
+Index: libspa-sys/Cargo.toml
+===================================================================
+--- libspa-sys.orig/Cargo.toml
++++ libspa-sys/Cargo.toml
+@@ -50,7 +50,7 @@ doctest = false
+ [dependencies]
+ 
+ [build-dependencies.bindgen]
+-version = "0.69"
++version = "0.66"
+ features = [
+     "experimental",
+     "runtime",
+
+Index: libspa-sys/build.rs
+===================================================================
+--- libspa-sys.orig/build.rs
++++ libspa-sys/build.rs
+@@ -19,7 +19,7 @@ fn main() {
+         .header("wrapper.h")
+         // Tell cargo to invalidate the built crate whenever any of the
+         // included header files changed.
+-        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
++        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+         // Use `usize` for `size_t`. This behavior of bindgen changed because it is not
+         // *technically* correct, but is the case in all architectures supported by Rust.
+         .size_t_is_usize(true)
+

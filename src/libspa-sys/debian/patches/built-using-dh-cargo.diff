@@ -1,12 +1,13 @@
-diff --git a/build.rs b/build.rs
-index 7669d4d..8d38b2a 100644
---- a/build.rs
-+++ b/build.rs
-@@ -11,6 +11,7 @@ fn main() {
+Index: libspa-sys/build.rs
+===================================================================
+--- libspa-sys.orig/build.rs
++++ libspa-sys/build.rs
+@@ -11,7 +11,7 @@ fn main() {
  
-     run_bindgen(&libs);
-     compile_reexported_symbols(&libs);
+     // Tell cargo to invalidate the built crate whenever the wrapper changes
+     println!("cargo:rerun-if-changed=wrapper.h");
+-
 +    println!("dh-cargo:deb-built-using=libspa-rs-reexports=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
- }
+     // Write bindings files to the $OUT_DIR/ directory.
+     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
  
- fn run_bindgen(libs: &system_deps::Dependencies) {
