@@ -1,8 +1,8 @@
-Index: rust-nix-0.26.2/test/sys/test_socket.rs
+Index: nix/test/sys/test_socket.rs
 ===================================================================
---- rust-nix-0.26.2.orig/test/sys/test_socket.rs
-+++ rust-nix-0.26.2/test/sys/test_socket.rs
-@@ -890,11 +890,25 @@ pub fn test_af_alg_cipher() {
+--- nix.orig/test/sys/test_socket.rs
++++ nix/test/sys/test_socket.rs
+@@ -859,8 +859,14 @@ pub fn test_af_alg_cipher() {
          SockType::SeqPacket,
          SockFlag::empty(),
          None,
@@ -18,86 +18,46 @@ Index: rust-nix-0.26.2/test/sys/test_socket.rs
 +    let sock = sock.expect("socket failed");
  
      let sockaddr = AlgAddr::new(alg_type, alg_name);
--    bind(sock, &sockaddr).expect("bind failed");
-+    let bindresult = bind(sock, &sockaddr);
-+    // don't fail the tests on systems that don't support this functionality
-+    if let Err(e) = bindresult {
-+        if e == nix::errno::Errno::ENOENT {
-+            return;
-+        }
-+    }
-+    bindresult.expect("bind failed");
-+
- 
-     assert_eq!(sockaddr.alg_name().to_string_lossy(), alg_name);
-     assert_eq!(sockaddr.alg_type().to_string_lossy(), alg_type);
-@@ -986,11 +1000,24 @@ pub fn test_af_alg_aead() {
-         SockType::SeqPacket,
-         SockFlag::empty(),
-         None,
--    )
--    .expect("socket failed");
-+    );
-+    // don't fail the tests on systems that don't support this functionality
-+    if let Err(e) = sock {
-+        if e == nix::errno::Errno::EAFNOSUPPORT {
-+            return;
-+        }
-+    }
-+    let sock = sock.expect("socket failed");
- 
-     let sockaddr = AlgAddr::new(alg_type, alg_name);
--    bind(sock, &sockaddr).expect("bind failed");
-+    let bindresult = bind(sock, &sockaddr);
-+    // don't fail the tests on systems that don't support this functionality
-+    if let Err(e) = bindresult {
-+        if e == nix::errno::Errno::ENOENT {
-+            return;
-+        }
-+    }
-+    bindresult.expect("bind failed");
- 
-     setsockopt(sock, AlgSetAeadAuthSize, &auth_size)
-         .expect("setsockopt AlgSetAeadAuthSize");
-@@ -2190,8 +2217,14 @@ pub fn test_vsock() {
-         SockType::Stream,
-         SockFlag::empty(),
-         None,
--    )
--    .expect("socket failed");
-+    );
-+    // don't fail the tests on systems that don't support this functionality
-+    if let Err(e) = s1 {
-+        if e == nix::errno::Errno::EAFNOSUPPORT {
-+            return;
-+        }
-+    }
-+    let s1 = s1.expect("socket failed");
- 
-     // VMADDR_CID_HYPERVISOR is reserved, so we expect an EADDRNOTAVAIL error.
-     let sockaddr_hv = VsockAddr::new(libc::VMADDR_CID_HYPERVISOR, port);
-Index: rust-nix-0.26.2/test/test_fcntl.rs
+     bind(sock.as_raw_fd(), &sockaddr).expect("bind failed");
+Index: nix/test/test_fcntl.rs
 ===================================================================
---- rust-nix-0.26.2.orig/test/test_fcntl.rs
-+++ rust-nix-0.26.2/test/test_fcntl.rs
-@@ -264,14 +264,17 @@ mod linux_android {
-         tmp1.flush().unwrap();
+--- nix.orig/test/test_fcntl.rs
++++ nix/test/test_fcntl.rs
+@@ -257,14 +257,17 @@ fn test_copy_file_range() {
+     tmp1.flush().unwrap();
  
-         let mut from_offset: i64 = 3;
--        copy_file_range(
-+        let result = copy_file_range(
-             tmp1.as_raw_fd(),
-             Some(&mut from_offset),
-             tmp2.as_raw_fd(),
-             None,
-             3,
--        )
--        .unwrap();
-+        );
-+        if result == Err(nix::errno::Errno::ENOSYS) {
-+            return; //the kernel doesn't support this functionality.
+     let mut from_offset: i64 = 3;
+-    copy_file_range(
++    let result = copy_file_range(
+         tmp1.as_fd(),
+         Some(&mut from_offset),
+         tmp2.as_fd(),
+         None,
+         3,
+-    )
+-    .unwrap();
++    );
++    if result == Err(nix::errno::Errno::ENOSYS) {
++        return; //the kernel doesn't support this functionality.
++    }
++    result.unwrap();
+ 
+     let mut res: String = String::new();
+     tmp2.rewind().unwrap();
+@@ -375,8 +378,14 @@ mod linux_android {
+         let tmp = NamedTempFile::new().unwrap();
+ 
+         let fd = tmp.as_raw_fd();
+-        fallocate(fd, FallocateFlags::empty(), 0, 100).unwrap();
+-
++        let result = fallocate(fd, FallocateFlags::empty(), 0, 100);
++        // don't fail the tests on systems that don't support this functionality
++        if let Err(e) = result {
++           if e == nix::errno::Errno::EOPNOTSUPP {
++                return;
++           }
 +        }
 +        result.unwrap();
- 
-         let mut res: String = String::new();
-         tmp2.rewind().unwrap();
+         // Check if we read exactly 100 bytes
+         let mut buf = [0u8; 200];
+         assert_eq!(100, read(fd, &mut buf).unwrap());
