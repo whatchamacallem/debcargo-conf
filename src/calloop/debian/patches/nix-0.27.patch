@@ -1,0 +1,88 @@
+Index: calloop/Cargo.toml
+===================================================================
+--- calloop.orig/Cargo.toml
++++ calloop/Cargo.toml
+@@ -96,7 +96,7 @@ nightly_coverage = []
+ signals = ["nix"]
+ 
+ [target."cfg(unix)".dependencies.nix]
+-version = "0.26"
++version = ">= 0.26, < 1.0"
+ features = ["signal"]
+ optional = true
+ default-features = false
+Index: calloop/src/sources/signals.rs
+===================================================================
+--- calloop.orig/src/sources/signals.rs
++++ calloop/src/sources/signals.rs
+@@ -47,6 +47,43 @@ pub struct Signals {
+     mask: SigSet,
+ }
+ 
++trait MySetMask {
++    fn my_set_mask(&mut self, mask: &SigSet) -> nix::Result<()>;
++}
++
++trait MyFrom<T>: Sized {
++    fn myfrom(value: T) -> Self;
++}
++
++impl<T> MyFrom<T> for T {
++    fn myfrom(t: T) -> T {
++        t
++    }
++}
++
++use std::os::fd::RawFd;
++impl MyFrom<Option<BorrowedFd<'_>>> for RawFd {
++    fn myfrom(t: Option<BorrowedFd>) -> RawFd {
++        if let Some(t) = t {
++            t.as_raw_fd()
++        } else {
++            -1
++        }
++    }
++}
++
++use std::os::fd::AsRawFd;
++use std::os::fd::BorrowedFd;
++//workaround for https://github.com/nix-rust/nix/issues/2116
++impl MySetMask for SignalFd {
++    fn my_set_mask(&mut self, mask: &SigSet) -> nix::Result<()> {
++        unsafe {
++            nix::sys::signalfd::signalfd(MyFrom::myfrom(Some(BorrowedFd::borrow_raw(self.as_raw_fd()))), &mask, SfdFlags::empty())
++                .map(std::mem::forget)
++        }
++    }
++}
++
+ impl Signals {
+     /// Create a new signal event source listening on the specified list of signals
+     pub fn new(signals: &[Signal]) -> crate::Result<Signals> {
+@@ -81,7 +118,7 @@ impl Signals {
+         unsafe {
+             self.sfd
+                 .get_mut()
+-                .set_mask(&self.mask)
++                .my_set_mask(&self.mask)
+                 .map_err(IoError::from)?;
+         }
+         Ok(())
+@@ -103,7 +140,7 @@ impl Signals {
+         unsafe {
+             self.sfd
+                 .get_mut()
+-                .set_mask(&self.mask)
++                .my_set_mask(&self.mask)
+                 .map_err(IoError::from)?;
+         }
+         Ok(())
+@@ -126,7 +163,7 @@ impl Signals {
+         unsafe {
+             self.sfd
+                 .get_mut()
+-                .set_mask(&new_mask)
++                .my_set_mask(&new_mask)
+                 .map_err(IoError::from)?;
+         }
+         self.mask = new_mask;
