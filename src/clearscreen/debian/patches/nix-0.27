@@ -1,0 +1,48 @@
+Index: clearscreen/Cargo.toml
+===================================================================
+--- clearscreen.orig/Cargo.toml
++++ clearscreen/Cargo.toml
+@@ -45,7 +45,7 @@ version = "4.2"
+ windows-console = []
+ 
+ [target."cfg(unix)".dependencies.nix]
+-version = "0.26.1"
++version = "0.27"
+ features = [
+     "fs",
+     "term",
+Index: clearscreen/src/lib.rs
+===================================================================
+--- clearscreen.orig/src/lib.rs
++++ clearscreen/src/lib.rs
+@@ -717,6 +717,7 @@ mod unix {
+ 	};
+ 
+ 	use std::{fs::OpenOptions, os::unix::prelude::AsRawFd};
++	use std::os::fd::BorrowedFd;
+ 
+ 	pub(crate) fn vt_cooked() -> Result<(), Error> {
+ 		write_termios(|t| {
+@@ -760,18 +761,18 @@ mod unix {
+ 
+ 	fn write_termios(f: impl Fn(&mut Termios)) -> Result<(), Error> {
+ 		if isatty(STDIN_FILENO)? {
+-			let mut t = tcgetattr(STDIN_FILENO)?;
++			let mut t = tcgetattr(unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) })?;
+ 			reset_termios(&mut t);
+ 			f(&mut t);
+-			tcsetattr(STDIN_FILENO, TCSANOW, &t)?;
++			tcsetattr(unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) }, TCSANOW, &t)?;
+ 		} else {
+ 			let tty = OpenOptions::new().read(true).write(true).open("/dev/tty")?;
+ 			let fd = tty.as_raw_fd();
+ 
+-			let mut t = tcgetattr(fd)?;
++			let mut t = tcgetattr(unsafe { BorrowedFd::borrow_raw(fd) })?;
+ 			reset_termios(&mut t);
+ 			f(&mut t);
+-			tcsetattr(fd, TCSANOW, &t)?;
++			tcsetattr(unsafe { BorrowedFd::borrow_raw(fd) }, TCSANOW, &t)?;
+ 		}
+ 
+ 		Ok(())
