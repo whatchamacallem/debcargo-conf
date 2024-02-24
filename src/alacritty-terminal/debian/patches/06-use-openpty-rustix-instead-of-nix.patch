@@ -1,0 +1,110 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit b4130ddf24d9612cce4cb043e9b15acc086369a1
+Author: Kirill Chibisov <contact@kchibisov.com>
+Date:   Wed Oct 11 03:23:19 2023 +0400
+
+    Use openpty-rustix instead of nix
+    
+    Follow upstream libraries and use rustix to reduce the amount of
+    dependencies in the future.
+    
+    Co-authored-by: Christian Duerr <contact@christianduerr.com>
+
+Index: alacritty-terminal/src/tty/unix.rs
+===================================================================
+--- alacritty-terminal.orig/src/tty/unix.rs
++++ alacritty-terminal/src/tty/unix.rs
+@@ -10,12 +10,13 @@ use std::os::unix::process::CommandExt;
+ use std::process::{Child, Command, Stdio};
+ use std::{env, ptr};
+ 
+-use libc::{self, c_int, winsize, TIOCSCTTY};
++use libc::{self, c_int, TIOCSCTTY};
+ use log::error;
+ use mio::unix::EventedFd;
+-use nix::pty::openpty;
++use rustix_openpty::openpty;
++use rustix_openpty::rustix::termios::Winsize;
+ #[cfg(any(target_os = "linux", target_os = "macos"))]
+-use nix::sys::termios::{self, InputFlags, SetArg};
++use rustix_openpty::rustix::termios::{self, InputModes, OptionalActions};
+ use signal_hook::consts as sigconsts;
+ use signal_hook_mio::v0_6::Signals;
+ 
+@@ -31,14 +32,14 @@ macro_rules! die {
+ }
+ 
+ /// Get raw fds for master/slave ends of a new PTY.
+-fn make_pty(size: winsize) -> Result<(OwnedFd, OwnedFd)> {
++fn make_pty(size: Winsize) -> Result<(OwnedFd, OwnedFd)> {
+     let mut window_size = size;
+     window_size.ws_xpixel = 0;
+     window_size.ws_ypixel = 0;
+ 
+-    let ends = openpty(Some(&window_size), None)?;
++    let ends = openpty(None, Some(&window_size))?;
+ 
+-    Ok((ends.master, ends.slave))
++    Ok((ends.controller, ends.user))
+ }
+ 
+ /// Really only needed on BSD, but should be fine elsewhere.
+@@ -195,8 +196,8 @@ pub fn new(config: &PtyConfig, window_si
+     #[cfg(any(target_os = "linux", target_os = "macos"))]
+     if let Ok(mut termios) = termios::tcgetattr(&master) {
+         // Set character encoding to UTF-8.
+-        termios.input_flags.set(InputFlags::IUTF8, true);
+-        let _ = termios::tcsetattr(&master, SetArg::TCSANOW, &termios);
++        termios.input_modes.set(InputModes::IUTF8, true);
++        let _ = termios::tcsetattr(&master, OptionalActions::Now, &termios);
+     }
+ 
+     let user = ShellUser::from_env()?;
+@@ -407,20 +408,20 @@ impl OnResize for Pty {
+     }
+ }
+ 
+-/// Types that can produce a `libc::winsize`.
++/// Types that can produce a `Winsize`.
+ pub trait ToWinsize {
+-    /// Get a `libc::winsize`.
+-    fn to_winsize(self) -> winsize;
++    /// Get a `Winsize`.
++    fn to_winsize(self) -> Winsize;
+ }
+ 
+ impl ToWinsize for WindowSize {
+-    fn to_winsize(self) -> winsize {
++    fn to_winsize(self) -> Winsize {
+         let ws_row = self.num_lines as libc::c_ushort;
+         let ws_col = self.num_cols as libc::c_ushort;
+ 
+         let ws_xpixel = ws_col * self.cell_width as libc::c_ushort;
+         let ws_ypixel = ws_row * self.cell_height as libc::c_ushort;
+-        winsize { ws_row, ws_col, ws_xpixel, ws_ypixel }
++        Winsize { ws_row, ws_col, ws_xpixel, ws_ypixel }
+     }
+ }
+ 
+Index: alacritty-terminal/Cargo.toml
+===================================================================
+--- alacritty-terminal.orig/Cargo.toml
++++ alacritty-terminal/Cargo.toml
+@@ -77,10 +77,11 @@ default-features = false
+ [dev-dependencies.serde_json]
+ version = "1.0.0"
+ 
+-[target."cfg(unix)".dependencies.nix]
+-version = "0.27"
+-default-features = false
+-features = ["term"]
++[target."cfg(unix)".dependencies.rustix-openpty]
++version = "0.1.1"
++
++[target."cfg(unix)".dependencies.rustix]
++version = "0.38.30"
+ 
+ [target."cfg(unix)".dependencies.signal-hook]
+ version = "0.3.10"
