@@ -1,0 +1,8 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_auto_test:
+	mkdir $(CURDIR)/fakehome
+	HOME=$(CURDIR)/fakehome dh_auto_test -- test --all
+	rm -rf $(CURDIR)/fakehome
