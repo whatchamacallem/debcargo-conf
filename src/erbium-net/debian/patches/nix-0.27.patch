@@ -1,0 +1,155 @@
+Index: erbium-net/Cargo.toml
+===================================================================
+--- erbium-net.orig/Cargo.toml
++++ erbium-net/Cargo.toml
+@@ -44,8 +44,8 @@ version = "0.8"
+ features = ["tokio_socket"]
+ 
+ [dependencies.nix]
+-version = "0.26"
+-features = ["net"]
++version = "0.27"
++features = ["net", "uio"]
+ 
+ [dependencies.tokio]
+ version = "1.8.4"
+Index: erbium-net/src/raw.rs
+===================================================================
+--- erbium-net.orig/src/raw.rs
++++ erbium-net/src/raw.rs
+@@ -21,6 +21,8 @@ use nix::sys::socket;
+ use std::io;
+ use std::os::unix::io::AsRawFd;
+ use std::os::unix::io::RawFd;
++use std::os::fd::BorrowedFd;
++use std::os::fd::AsFd;
+ use tokio::io::unix::AsyncFd;
+ 
+ use crate::{addr::NetAddr, udp};
+@@ -74,6 +76,12 @@ impl AsRawFd for RawSocket {
+     }
+ }
+ 
++impl AsFd for RawSocket {
++    fn as_fd(&self) -> BorrowedFd<'_> {
++        unsafe { BorrowedFd::borrow_raw(self.fd.as_raw_fd()) }
++    }
++}
++
+ impl RawSocket {
+     pub fn new(protocol: EthProto) -> Result<Self> {
+         Ok(Self {
+@@ -113,7 +121,7 @@ impl RawSocket {
+         opt: O,
+         val: &O::Val,
+     ) -> Result<()> {
+-        nix::sys::socket::setsockopt(self.as_raw_fd(), opt, val).map_err(|e| e.into())
++        nix::sys::socket::setsockopt(self, opt, val).map_err(|e| e.into())
+     }
+ }
+ 
+@@ -128,6 +136,12 @@ impl AsRawFd for CookedRawSocket {
+     }
+ }
+ 
++impl AsFd for CookedRawSocket {
++    fn as_fd(&self) -> BorrowedFd<'_> {
++        unsafe { BorrowedFd::borrow_raw(self.fd.as_raw_fd()) }
++    }
++}
++
+ impl CookedRawSocket {
+     pub fn new(protocol: EthProto) -> Result<Self> {
+         Ok(Self {
+@@ -167,7 +181,7 @@ impl CookedRawSocket {
+         opt: O,
+         val: &O::Val,
+     ) -> Result<()> {
+-        nix::sys::socket::setsockopt(self.as_raw_fd(), opt, val).map_err(|e| e.into())
++        nix::sys::socket::setsockopt(self, opt, val).map_err(|e| e.into())
+     }
+ }
+ 
+@@ -182,6 +196,12 @@ impl AsRawFd for Raw6Socket {
+     }
+ }
+ 
++impl AsFd for Raw6Socket {
++    fn as_fd(&self) -> BorrowedFd<'_> {
++        unsafe { BorrowedFd::borrow_raw(self.fd.as_raw_fd()) }
++    }
++}
++
+ impl Raw6Socket {
+     pub fn new(protocol: IpProto) -> Result<Self> {
+         Ok(Self {
+@@ -221,7 +241,7 @@ impl Raw6Socket {
+         opt: O,
+         val: &O::Val,
+     ) -> Result<()> {
+-        nix::sys::socket::setsockopt(self.as_raw_fd(), opt, val).map_err(|e| e.into())
++        nix::sys::socket::setsockopt(self, opt, val).map_err(|e| e.into())
+     }
+ }
+ 
+@@ -236,6 +256,13 @@ impl AsRawFd for Raw4Socket {
+     }
+ }
+ 
++impl AsFd for Raw4Socket {
++    fn as_fd(&self) -> BorrowedFd<'_> {
++        unsafe { BorrowedFd::borrow_raw(self.fd.as_raw_fd()) }
++    }
++}
++
++
+ impl Raw4Socket {
+     pub fn new(protocol: IpProto) -> Result<Self> {
+         Ok(Self {
+@@ -275,6 +302,6 @@ impl Raw4Socket {
+         opt: O,
+         val: &O::Val,
+     ) -> Result<()> {
+-        nix::sys::socket::setsockopt(fd, opt, val).map_err(|e| e.into())
++        nix::sys::socket::setsockopt(unsafe { &BorrowedFd::borrow_raw(fd) }, opt, val).map_err(|e| e.into())
+     }
+ }
+Index: erbium-net/src/udp.rs
+===================================================================
+--- erbium-net.orig/src/udp.rs
++++ erbium-net/src/udp.rs
+@@ -28,6 +28,7 @@ use std::convert::TryFrom;
+ use std::io;
+ use std::net;
+ use std::os::unix::io::AsRawFd as _;
++use std::os::fd::BorrowedFd;
+ use tokio::io::unix::AsyncFd;
+ 
+ use nix::libc;
+@@ -104,7 +105,7 @@ impl UdpSocket {
+ 
+     pub fn set_opt_ipv4_packet_info(&self, b: bool) -> Result<(), io::Error> {
+         nix::sys::socket::setsockopt(
+-            self.fd.get_ref().as_raw_fd(),
++            unsafe { &BorrowedFd::borrow_raw(self.fd.get_ref().as_raw_fd()) },
+             nix::sys::socket::sockopt::Ipv4PacketInfo,
+             &b,
+         )
+@@ -113,7 +114,7 @@ impl UdpSocket {
+ 
+     pub fn set_opt_ipv6_packet_info(&self, b: bool) -> Result<(), io::Error> {
+         nix::sys::socket::setsockopt(
+-            self.fd.get_ref().as_raw_fd(),
++            unsafe { &BorrowedFd::borrow_raw(self.fd.get_ref().as_raw_fd()) },
+             nix::sys::socket::sockopt::Ipv6RecvPacketInfo,
+             &b,
+         )
+@@ -122,7 +123,7 @@ impl UdpSocket {
+ 
+     pub fn set_opt_reuse_port(&self, b: bool) -> Result<(), io::Error> {
+         nix::sys::socket::setsockopt(
+-            self.fd.get_ref().as_raw_fd(),
++            unsafe { &BorrowedFd::borrow_raw(self.fd.get_ref().as_raw_fd()) },
+             nix::sys::socket::sockopt::ReusePort,
+             &b,
+         )
