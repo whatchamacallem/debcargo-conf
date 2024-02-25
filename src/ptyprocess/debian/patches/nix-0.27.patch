@@ -1,0 +1,86 @@
+Index: ptyprocess/Cargo.toml
+===================================================================
+--- ptyprocess.orig/Cargo.toml
++++ ptyprocess/Cargo.toml
+@@ -31,4 +31,5 @@ license = "MIT"
+ repository = "https://github.com/zhiburt/ptyprocess"
+ 
+ [dependencies.nix]
+-version = "0.26"
++version = "0.27"
++features = ["signal", "fs", "term", "feature", "ioctl"]
+Index: ptyprocess/src/lib.rs
+===================================================================
+--- ptyprocess.orig/src/lib.rs
++++ ptyprocess/src/lib.rs
+@@ -53,6 +53,8 @@ use nix::{ioctl_write_ptr_bad, Result};
+ use signal::Signal::SIGKILL;
+ use std::fs::File;
+ use std::os::unix::prelude::{AsRawFd, CommandExt, FromRawFd, RawFd};
++use std::os::fd::BorrowedFd;
++use std::os::fd::AsFd;
+ use std::process::{self, Command};
+ use std::thread;
+ use std::time::{self, Duration};
+@@ -245,7 +247,7 @@ impl PtyProcess {
+ 
+     /// The function returns true if an echo setting is setup.
+     pub fn get_echo(&self) -> Result<bool> {
+-        termios::tcgetattr(self.master.as_raw_fd())
++        termios::tcgetattr(self.master.as_fd())
+             .map(|flags| flags.local_flags.contains(termios::LocalFlags::ECHO))
+     }
+ 
+@@ -467,6 +469,12 @@ impl AsRawFd for Master {
+     }
+ }
+ 
++impl AsFd for Master {
++    fn as_fd(&self) -> BorrowedFd<'_> {
++        unsafe { BorrowedFd::borrow_raw(self.fd.as_raw_fd()) }
++    }
++}
++
+ #[cfg(target_os = "linux")]
+ fn get_slave_name(fd: &PtyMaster) -> Result<String> {
+     nix::pty::ptsname_r(fd)
+@@ -584,18 +592,18 @@ fn redirect_std_streams(fd: RawFd) -> Re
+ fn set_echo(fd: RawFd, on: bool) -> Result<()> {
+     // Set echo off
+     // Even though there may be something left behind https://stackoverflow.com/a/59034084
+-    let mut flags = termios::tcgetattr(fd)?;
++    let mut flags = termios::tcgetattr(unsafe {BorrowedFd::borrow_raw(fd)})?;
+     match on {
+         true => flags.local_flags |= termios::LocalFlags::ECHO,
+         false => flags.local_flags &= !termios::LocalFlags::ECHO,
+     }
+ 
+-    termios::tcsetattr(fd, termios::SetArg::TCSANOW, &flags)?;
++    termios::tcsetattr(unsafe {BorrowedFd::borrow_raw(fd)}, termios::SetArg::TCSANOW, &flags)?;
+     Ok(())
+ }
+ 
+ pub fn set_raw(fd: RawFd) -> Result<()> {
+-    let mut flags = termios::tcgetattr(fd)?;
++    let mut flags = termios::tcgetattr(unsafe {BorrowedFd::borrow_raw(fd)})?;
+ 
+     #[cfg(not(target_os = "macos"))]
+     {
+@@ -624,7 +632,7 @@ pub fn set_raw(fd: RawFd) -> Result<()>
+         flags.control_chars[VTIME] = 0;
+     }
+ 
+-    termios::tcsetattr(fd, termios::SetArg::TCSANOW, &flags)?;
++    termios::tcsetattr(unsafe { BorrowedFd::borrow_raw(fd) }, termios::SetArg::TCSANOW, &flags)?;
+     Ok(())
+ }
+ 
+@@ -647,7 +655,7 @@ fn get_eof_char() -> u8 {
+ }
+ 
+ fn get_term_char(fd: RawFd, char: SpecialCharacterIndices) -> Result<u8> {
+-    let flags = termios::tcgetattr(fd)?;
++    let flags = termios::tcgetattr(unsafe {BorrowedFd::borrow_raw(fd)})?;
+     let b = flags.control_chars[char as usize];
+     Ok(b)
+ }
