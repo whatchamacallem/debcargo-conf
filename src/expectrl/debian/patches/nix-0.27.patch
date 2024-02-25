@@ -1,0 +1,44 @@
+Index: expectrl/Cargo.toml
+===================================================================
+--- expectrl.orig/Cargo.toml
++++ expectrl/Cargo.toml
+@@ -43,7 +43,8 @@ version = "1.6.0"
+ [features]
+ 
+ [target."cfg(unix)".dependencies.nix]
+-version = "0.26"
++version = "0.27"
++features = ["fs", "term"]
+ 
+ [target."cfg(unix)".dependencies.ptyprocess]
+ version = "0.4.1"
+Index: expectrl/src/stream/stdin.rs
+===================================================================
+--- expectrl.orig/src/stream/stdin.rs
++++ expectrl/src/stream/stdin.rs
+@@ -1,6 +1,7 @@
+ //! The module contains a nonblocking version of [std::io::Stdin].  
+ 
+ use std::io;
++use std::os::fd::BorrowedFd;
+ 
+ #[cfg(not(feature = "async"))]
+ use std::io::Read;
+@@ -153,7 +154,7 @@ mod inner {
+             if isatty_terminal {
+                 // tcgetattr issues error if a provided fd is not a tty,
+                 // but we can work with such input as it may be redirected.
+-                o_pty_flags = termios::tcgetattr(STDIN_FILENO)
++                o_pty_flags = termios::tcgetattr(unsafe { &BorrowedFd::borrow_raw(STDIN_FILENO) })
+                     .map(Some)
+                     .map_err(|e| Error::unknown("failed to call tcgetattr", e.to_string()))?;
+ 
+@@ -166,7 +167,7 @@ mod inner {
+ 
+         pub(super) fn close(&mut self) -> Result<(), Error> {
+             if let Some(origin_stdin_flags) = &self.orig_flags {
+-                termios::tcsetattr(STDIN_FILENO, termios::SetArg::TCSAFLUSH, origin_stdin_flags)
++                termios::tcsetattr(unsafe { &BorrowedFd::borrow_raw(STDIN_FILENO) }, termios::SetArg::TCSAFLUSH, origin_stdin_flags)
+                     .map_err(|e| Error::unknown("failed to call tcsetattr", e.to_string()))?;
+             }
+ 
