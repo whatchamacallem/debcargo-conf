@@ -1,0 +1,44 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 2db679eab7d15467305a0f51cb5daab353bd38f4
+Author: Sophie Herold <sophie@hemio.de>
+Date:   Sun Dec 24 20:11:32 2023 +0100
+
+    cargo: Update nix, memmap
+
+Index: glycin/src/dbus.rs
+===================================================================
+--- glycin.orig/src/dbus.rs
++++ glycin/src/dbus.rs
+@@ -169,6 +169,7 @@ impl<'a> DecoderProcess<'a> {
+ 
+         let Texture::MemFd(fd) = &frame.texture;
+         let raw_fd = fd.as_raw_fd();
++        let borrowed_fd = unsafe { std::os::fd::BorrowedFd::borrow_raw(raw_fd) };
+         let mut mmap = unsafe { memmap::MmapMut::map_mut(raw_fd) }?;
+ 
+         if mmap.len() < (frame.stride * frame.height).try_usize()? {
+@@ -199,7 +200,7 @@ impl<'a> DecoderProcess<'a> {
+             drop(mmap);
+ 
+             nix::unistd::ftruncate(
+-                raw_fd,
++                borrowed_fd,
+                 (frame.height * frame.stride)
+                     .try_into()
+                     .map_err(|_| ConversionTooLargerError)?,
+Index: glycin/Cargo.toml
+===================================================================
+--- glycin.orig/Cargo.toml
++++ glycin/Cargo.toml
+@@ -70,7 +70,8 @@ version = "0.9"
+ package = "memmap2"
+ 
+ [dependencies.nix]
+-version = "0.26.2"
++version = ">= 0.27, < 1.0"
++features = ["fs"]
+ 
+ [dependencies.rgb]
+ version = "0.8.36"
