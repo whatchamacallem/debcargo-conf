@@ -1,0 +1,66 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 2db679eab7d15467305a0f51cb5daab353bd38f4
+Author: Sophie Herold <sophie@hemio.de>
+Date:   Sun Dec 24 20:11:32 2023 +0100
+
+    cargo: Update nix, memmap
+
+Index: glycin-utils/src/lib.rs
+===================================================================
+--- glycin-utils.orig/src/lib.rs
++++ glycin-utils/src/lib.rs
+@@ -17,13 +17,13 @@ use zbus::zvariant::{self, Optional, Typ
+ use std::ffi::CString;
+ use std::ops::{Deref, DerefMut};
+ use std::os::fd::AsRawFd;
+-use std::os::fd::{FromRawFd, IntoRawFd, RawFd};
++use std::os::fd::{FromRawFd, IntoRawFd, RawFd, OwnedFd};
+ use std::sync::Mutex;
+ use std::time::Duration;
+ 
+ #[derive(Debug)]
+ pub struct SharedMemory {
+-    memfd: RawFd,
++    memfd: OwnedFd,
+     pub mmap: memmap::MmapMut,
+ }
+ 
+@@ -35,15 +35,19 @@ impl SharedMemory {
+                 | nix::sys::memfd::MemFdCreateFlag::MFD_ALLOW_SEALING,
+         )
+         .expect("Failed to create memfd");
+-        nix::unistd::ftruncate(memfd, size.try_into().expect("Required memory too large"))
++
++        nix::unistd::ftruncate(&memfd, size.try_into().expect("Required memory too large"))
+             .expect("Failed to set memfd size");
+-        let mmap = unsafe { memmap::MmapMut::map_mut(memfd) }.expect("Mailed to mmap memfd");
++
++        let raw_fd = memfd.as_raw_fd();
++        let mmap = unsafe { memmap::MmapMut::map_mut(raw_fd) }.expect("Mailed to mmap memfd");
+ 
+         Self { mmap, memfd }
+     }
+ 
+     pub fn into_texture(self) -> Texture {
+-        let owned_fd = unsafe { zvariant::OwnedFd::from_raw_fd(self.memfd) };
++        let owned_fd = unsafe { zvariant::OwnedFd::from_raw_fd(self.memfd.as_raw_fd()) };
++        std::mem::forget(self.memfd);
+         Texture::MemFd(owned_fd)
+     }
+ }
+Index: glycin-utils/Cargo.toml
+===================================================================
+--- glycin-utils.orig/Cargo.toml
++++ glycin-utils/Cargo.toml
+@@ -47,7 +47,8 @@ version = "0.9"
+ package = "memmap2"
+ 
+ [dependencies.nix]
+-version = "0.26.2"
++version = "0.27"
++features = ["fs"]
+ 
+ [dependencies.serde]
+ version = "1"
