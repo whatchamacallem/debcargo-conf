@@ -1,0 +1,83 @@
+Index: zbus-1/Cargo.toml
+===================================================================
+--- zbus-1.orig/Cargo.toml
++++ zbus-1/Cargo.toml
+@@ -53,7 +53,8 @@ version = "0.3.8"
+ version = "1.0.2"
+ 
+ [dependencies.nix]
+-version = "0.26"
++version = "0.27"
++features = ["poll", "user", "socket", "uio"]
+ 
+ [dependencies.once_cell]
+ version = "1.4.0"
+Index: zbus-1/src/azync/connection.rs
+===================================================================
+--- zbus-1.orig/src/azync/connection.rs
++++ zbus-1/src/azync/connection.rs
+@@ -180,7 +180,7 @@ where
+         use nix::sys::socket::{getsockopt, sockopt::PeerCredentials};
+ 
+         // FIXME: Could and should this be async?
+-        let creds = getsockopt(stream.as_raw_fd(), PeerCredentials)
++        let creds = getsockopt(&stream.as_fd(), PeerCredentials)
+             .map_err(|e| Error::Handshake(format!("Failed to get peer credentials: {}", e)))?;
+ 
+         let auth = Authenticated::server(Async::new(stream)?, guid.clone(), creds.uid()).await?;
+Index: zbus-1/src/connection.rs
+===================================================================
+--- zbus-1.orig/src/connection.rs
++++ zbus-1/src/connection.rs
+@@ -5,6 +5,7 @@ use std::{
+     },
+     sync::{Arc, Mutex, RwLock},
+ };
++use std::os::fd::AsFd;
+ 
+ use nix::poll::PollFlags;
+ use once_cell::sync::OnceCell;
+@@ -162,7 +163,7 @@ impl Connection {
+     pub fn new_unix_server(stream: UnixStream, guid: &Guid) -> Result<Self> {
+         use nix::sys::socket::{getsockopt, sockopt::PeerCredentials};
+ 
+-        let creds = getsockopt(stream.as_raw_fd(), PeerCredentials)
++        let creds = getsockopt(&stream.as_fd(), PeerCredentials)
+             .map_err(|e| Error::Handshake(format!("Failed to get peer credentials: {}", e)))?;
+ 
+         let handshake = ServerHandshake::new(stream, guid.clone(), creds.uid());
+Index: zbus-1/src/raw/socket.rs
+===================================================================
+--- zbus-1.orig/src/raw/socket.rs
++++ zbus-1/src/raw/socket.rs
+@@ -12,7 +12,7 @@ use nix::{
+     cmsg_space,
+     sys::{
+         socket::{recvmsg, sendmsg, ControlMessage, ControlMessageOwned, MsgFlags},
+-        uio::IoVec,
++        //uio::IoVec,
+     },
+ };
+ 
+Index: zbus-1/src/utils.rs
+===================================================================
+--- zbus-1.orig/src/utils.rs
++++ zbus-1/src/utils.rs
+@@ -3,6 +3,7 @@ use nix::{
+     poll::{poll, PollFd, PollFlags},
+ };
+ use std::os::unix::io::RawFd;
++use std::os::fd::BorrowedFd;
+ 
+ pub(crate) const FDS_MAX: usize = 1024; // this is hardcoded in sdbus - nothing in the spec
+ 
+@@ -17,7 +18,8 @@ pub(crate) fn padding_for_n_bytes(value:
+ }
+ 
+ pub(crate) fn wait_on(fd: RawFd, flags: PollFlags) -> std::io::Result<()> {
+-    let pollfd = PollFd::new(fd, flags);
++    let fd = unsafe { BorrowedFd::borrow_raw(fd) };
++    let pollfd = PollFd::new(&fd , flags);
+     loop {
+         match poll(&mut [pollfd], -1) {
+             Ok(_) => break,
