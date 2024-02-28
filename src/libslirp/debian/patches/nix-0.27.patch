@@ -1,0 +1,36 @@
+Index: libslirp/Cargo.toml
+===================================================================
+--- libslirp.orig/Cargo.toml
++++ libslirp/Cargo.toml
+@@ -75,8 +75,9 @@ version = "2.0.5"
+ optional = true
+ 
+ [dependencies.nix]
+-version = "0.26"
++version = "0.27"
+ optional = true
++features = ["fs", "sched", "ioctl"]
+ 
+ [dependencies.slab]
+ version = "0.4.0"
+Index: libslirp/src/bin/libslirp-helper/main.rs
+===================================================================
+--- libslirp.orig/src/bin/libslirp-helper/main.rs
++++ libslirp/src/bin/libslirp-helper/main.rs
+@@ -3,6 +3,7 @@ use std::error::Error;
+ use std::fs::File;
+ use std::io::{self, Cursor, Read, Write};
+ use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
++use std::os::fd::BorrowedFd;
+ use std::os::unix::net::UnixDatagram;
+ use std::path::PathBuf;
+ use std::process;
+@@ -127,7 +128,7 @@ fn print_capabilities() -> Result<(), Bo
+ }
+ 
+ fn set_netns(fd: RawFd) -> Result<(), nix::Error> {
+-    setns(fd, CloneFlags::CLONE_NEWNET)
++    setns(unsafe { BorrowedFd::borrow_raw(fd) }, CloneFlags::CLONE_NEWNET)
+ }
+ 
+ lazy_static! {
