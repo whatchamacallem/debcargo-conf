@@ -1,0 +1,67 @@
+This patch is based on the upstream commit described below, adpated for use in the Debian
+package by Peter Michael Green.
+
+commit 86e4439bf42dd7df62aa3af965604fcef38307be
+Author: Zhang Jingqiang <zh_jq@outlook.com>
+Date:   Tue May 10 11:41:34 2022 +0800
+
+    update to nix 0.24
+
+diff --git a/src/activation.rs b/src/activation.rs
+index 9a0dd9d3f..35330bb62 100644
+--- a/src/activation.rs
++++ b/src/activation.rs
+@@ -1,6 +1,6 @@
+ use crate::errors::SdError;
+ use nix::sys::socket::getsockname;
+-use nix::sys::socket::SockAddr;
++use nix::sys::socket::{AddressFamily, SockaddrLike, SockaddrStorage};
+ use nix::sys::stat::fstat;
+ use std::convert::TryFrom;
+ use std::env;
+@@ -179,14 +179,19 @@ impl IsType for RawFd {
+     }
+ 
+     fn is_inet(&self) -> bool {
+-        getsockname(*self)
+-            .map(|addr| matches!(addr, SockAddr::Inet(_)))
++        getsockname::<SockaddrStorage>(*self)
++            .map(|addr| {
++                matches!(
++                    addr.family(),
++                    Some(AddressFamily::Inet) | Some(AddressFamily::Inet6)
++                )
++            })
+             .unwrap_or(false)
+     }
+ 
+     fn is_unix(&self) -> bool {
+-        getsockname(*self)
+-            .map(|addr| matches!(addr, SockAddr::Unix(_)))
++        getsockname::<SockaddrStorage>(*self)
++            .map(|addr| matches!(addr.family(), Some(AddressFamily::Unix)))
+             .unwrap_or(false)
+     }
+ 
+diff --git a/src/logging.rs b/src/logging.rs
+index e7a032291..ce6b3d94e 100644
+--- a/src/logging.rs
++++ b/src/logging.rs
+@@ -2,7 +2,7 @@ use crate::errors::SdError;
+ use nix::fcntl::*;
+ use nix::sys::memfd::memfd_create;
+ use nix::sys::memfd::MemFdCreateFlag;
+-use nix::sys::socket::{sendmsg, ControlMessage, MsgFlags, SockAddr};
++use nix::sys::socket::{sendmsg, ControlMessage, MsgFlags, UnixAddr};
+ use once_cell::sync::OnceCell;
+ use std::collections::HashMap;
+ use std::ffi::{CString, OsStr};
+@@ -207,7 +207,7 @@ fn send_memfd_payload(sock: &UnixDatagram, data: &[u8]) -> Result<usize, SdError
+ 
+     let fds = &[memfd.as_raw_fd()];
+     let ancillary = [ControlMessage::ScmRights(fds)];
+-    let path = SockAddr::new_unix(SD_JOURNAL_SOCK_PATH).map_err(|e| e.to_string())?;
++    let path = UnixAddr::new(SD_JOURNAL_SOCK_PATH).map_err(|e| e.to_string())?;
+     sendmsg(
+         sock.as_raw_fd(),
+         &[],

@@ -1,0 +1,74 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 3037b5d110e035ff60c6f7b6fd5440aa56091b4e
+Author: Daniel Estévez <daniel@destevez.net>
+Date:   Fri Apr 28 10:03:04 2023 +0200
+
+    call memfd_create as syscall instead of through libc
+    
+    In order to support glibc < 2.27, we call memfd_create() through
+    syscall() instead of as a libc function, since memfd_create() was
+    added in glibc 2.27.
+
+Index: libsystemd/src/logging.rs
+===================================================================
+--- libsystemd.orig/src/logging.rs
++++ libsystemd/src/logging.rs
+@@ -1,12 +1,13 @@
+ use crate::errors::SdError;
+ use libc::{dev_t, ino_t};
+ use nix::fcntl::*;
+-use nix::sys::memfd::memfd_create;
++use nix::errno::Errno;
+ use nix::sys::memfd::MemFdCreateFlag;
+ use nix::sys::socket::{sendmsg, ControlMessage, MsgFlags, UnixAddr};
+ use once_cell::sync::OnceCell;
+ use std::collections::HashMap;
+-use std::ffi::{CString, OsStr};
++use std::ffi::{CStr, CString, OsStr};
++use std::os::unix::prelude::RawFd;
+ use std::fs::File;
+ use std::io::Write;
+ use std::os::unix::io::AsRawFd;
+@@ -185,6 +186,27 @@ pub fn journal_print(priority: Priority,
+     journal_send(priority, msg, map.iter())
+ }
+ 
++// Implementation of memfd_create() using a syscall instead of calling the libc
++// function.
++//
++// The memfd_create() function is only available in glibc >= 2.27 (and other
++// libc implementations). To support older versions of glibc, we perform a raw
++// syscall (this will fail in Linux < 3.17, where the syscall was not
++// available).
++//
++// nix::sys::memfd::memfd_create chooses at compile time between calling libc
++// and performing a syscall, since platforms such as Android and uclibc don't
++// have memfd_create() in libc. Here we always use the syscall.
++fn memfd_create(name: &CStr, flags: MemFdCreateFlag) -> Result<File, Errno> {
++    unsafe {
++        let res = libc::syscall(libc::SYS_memfd_create, name.as_ptr(), flags.bits());
++        Errno::result(res).map(|r| {
++            // SAFETY: `memfd_create` just returned this FD, so we own it now.
++            File::from_raw_fd(r as RawFd)
++        })
++    }
++}
++
+ /// Send an overlarge payload to systemd-journald socket.
+ ///
+ /// This is a slow-path for sending a large payload that could not otherwise fit
+@@ -193,11 +215,9 @@ pub fn journal_print(priority: Priority,
+ fn send_memfd_payload(sock: &UnixDatagram, data: &[u8]) -> Result<usize, SdError> {
+     let memfd = {
+         let fdname = &CString::new("libsystemd-rs-logging").map_err(|e| e.to_string())?;
+-        let tmpfd =
++        let mut file =
+             memfd_create(fdname, MemFdCreateFlag::MFD_ALLOW_SEALING).map_err(|e| e.to_string())?;
+ 
+-        // SAFETY: `memfd_create` just returned this FD.
+-        let mut file = unsafe { File::from_raw_fd(tmpfd) };
+         file.write_all(data).map_err(|e| e.to_string())?;
+         file
+     };
