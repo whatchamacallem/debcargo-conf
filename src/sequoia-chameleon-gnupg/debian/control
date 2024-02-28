@@ -53,6 +53,17 @@ X-Cargo-Crate: sequoia-chameleon-gnupg
 Rules-Requires-Root: no
 
 Package: sequoia-chameleon-gnupg
+Architecture: all
+Depends:
+  gpg-sq,
+  gpgv-sq
+Description: meta package for Sequoia's reimplementation of the GnuPG interface
+ This package depends on the following binaries built from the Rust crate
+ "sequoia-chameleon-gnupg":
+  - gpg-sq
+  - gpgv-sq
+
+Package: gpg-sq
 Architecture: any
 Multi-Arch: allowed
 Depends:
@@ -66,8 +77,40 @@ Suggests:
 Provides:
  ${cargo:Provides}
 Built-Using: ${cargo:Built-Using}
-Description: Sequoia's reimplementation of the GnuPG interface
- This package contains the following binaries built from the Rust crate
+Description: gpg-sq - Sequoia's reimplementation of the GnuPG interface
+ This package contains the following binary built from the Rust crate
  "sequoia-chameleon-gnupg":
   - gpg-sq
+
+Package: gpgv-sq
+Architecture: any
+Multi-Arch: allowed
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+ ${cargo:Depends}
+Recommends:
+ ${cargo:Recommends}
+Suggests:
+ ${cargo:Suggests}
+Provides:
+ ${cargo:Provides}
+Built-Using: ${cargo:Built-Using}
+Description: gpgv-sq - Sequoia's reimplementation of the GnuPG interface
+ This package contains the following binary built from the Rust crate
+ "sequoia-chameleon-gnupg":
   - gpgv-sq
+
+Package: gpg-from-sq
+Architecture: all
+Depends:
+ gpg-sq
+Description: divert package for gpg - Sequoia's reimplementation of the GnuPG interface
+ This package diverts gpg to gpg.g10 so that gpg-sq becomes gpg.
+
+Package: gpgv-from-sq
+Architecture: all
+Depends:
+ gpgv-sq
+Description: divert package for gpgv - Sequoia's reimplementation of the GnuPG interface
+ This package diverts gpgv to gpgv.g10 so that gpgv-sq becomes gpgv.
