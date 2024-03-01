@@ -1,0 +1,31 @@
+Index: ripcalc/Cargo.toml
+===================================================================
+--- ripcalc.orig/Cargo.toml
++++ ripcalc/Cargo.toml
+@@ -34,4 +34,5 @@ version = "1"
+ version = "0.2"
+ 
+ [dependencies.nix]
+-version = "0.26"
++version = "0.27"
++features = ["poll", "net", "signal"]
+Index: ripcalc/src/lib.rs
+===================================================================
+--- ripcalc.orig/src/lib.rs
++++ ripcalc/src/lib.rs
+@@ -12,6 +12,7 @@ use std::net::ToSocketAddrs;
+ use std::os::unix::io::RawFd;
+ use std::str::FromStr;
+ use std::time::Duration;
++use std::os::fd::BorrowedFd;
+ 
+ #[derive(Debug, PartialEq, PartialOrd, Hash, Eq, Clone)]
+ pub enum Addr {
+@@ -1263,6 +1264,7 @@ pub fn format_details(
+ }
+ 
+ pub fn fd_ready(fd: RawFd) -> bool {
++    let fd = unsafe { &BorrowedFd::borrow_raw(fd) };
+     let opfds: Vec<PollFd> = vec![PollFd::new(fd, PollFlags::POLLIN | PollFlags::POLLNVAL)];
+ 
+     let mut pfds = opfds;
