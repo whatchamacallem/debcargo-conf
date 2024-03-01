@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_auto_install:
+	# /usr/bin/toml2json already used by reserialize, install into /usr/lib/cargo/bin
+	DEB_CARGO_INSTALL_PREFIX=/usr/lib/cargo dh_auto_install
+
+override_dh_auto_test:
+	dh_auto_test -- test --all
+
+execute_before_dh_installman:
+	help2man \
+		--name="convert TOML to JSON" \
+		--no-info \
+		debian/rust-toml2json/usr/lib/cargo/bin/toml2json > debian/toml2json-rust.1
