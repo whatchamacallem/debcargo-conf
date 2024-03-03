@@ -1,0 +1,75 @@
+Index: wayland-server-0.29/src/rust_imp/clients.rs
+===================================================================
+--- wayland-server-0.29.orig/src/rust_imp/clients.rs
++++ wayland-server-0.29/src/rust_imp/clients.rs
+@@ -5,8 +5,12 @@ use std::rc::Rc;
+ use std::sync::atomic::Ordering;
+ use std::sync::{Arc, Mutex};
+ use std::thread::{self, ThreadId};
++use std::os::fd::AsRawFd;
++use std::os::fd::BorrowedFd;
++use nix::errno::Errno;
+ 
+ use nix::Result as NixResult;
++use nix::sys::socket;
+ 
+ use wayland_commons::debug;
+ use wayland_commons::map::{Object, ObjectMap, ObjectMetadata, SERVER_ID_LIMIT};
+@@ -76,11 +80,11 @@ impl ClientConnection {
+     }
+ 
+     pub(crate) fn write_message(&mut self, msg: &Message) -> NixResult<()> {
+-        self.socket.write_message(msg)
++        self.socket.write_message(msg).map_err(|e| Errno::from_i32(e as i32))
+     }
+ 
+     pub(crate) fn flush(&mut self) -> NixResult<()> {
+-        self.socket.flush()
++        self.socket.flush().map_err(|e| Errno::from_i32(e as i32))
+     }
+ 
+     pub(crate) fn delete_id(&mut self, id: u32) -> NixResult<()> {
+@@ -116,7 +120,7 @@ impl ClientConnection {
+             }
+             Err(MessageParseError::MissingData) | Err(MessageParseError::MissingFD) => {
+                 // missing data, read sockets and try again
+-                self.socket.fill_incoming_buffers().map_err(Error::Nix)?;
++                self.socket.fill_incoming_buffers().map_err(|e| Error::Nix(Errno::from_i32(e as i32)))?;
+ 
+                 let msg = self.socket.read_one_message(|id, opcode| {
+                     map.find(id)
+@@ -228,7 +232,7 @@ impl ClientInner {
+ 
+     pub(crate) fn flush(&self) {
+         if let Some(ref mut cx) = *self.data.lock().unwrap() {
+-            let _ = cx.socket.flush();
++            let _ = cx.socket.flush().map_err(|e| Errno::from_i32(e as i32));
+         }
+     }
+ 
+@@ -243,9 +247,10 @@ impl ClientInner {
+ 
+     pub(crate) fn credentials(&self) -> Option<Credentials> {
+         if let Some(ref mut cx) = *self.data.lock().unwrap() {
+-            cx.socket
++            let fd = cx.socket
+                 .get_socket()
+-                .opt(nix::sys::socket::sockopt::PeerCredentials)
++                .as_raw_fd();
++            socket::getsockopt(unsafe { &BorrowedFd::borrow_raw(fd) } , nix::sys::socket::sockopt::PeerCredentials)
+                 .ok()
+                 .map(Credentials::from)
+         } else {
+Index: wayland-server-0.29/Cargo.toml
+===================================================================
+--- wayland-server-0.29.orig/Cargo.toml
++++ wayland-server-0.29/Cargo.toml
+@@ -44,7 +44,7 @@ optional = true
+ version = "0.2"
+ 
+ [dependencies.nix]
+-version = "0.24.1"
++version = "0.27"
+ features = [
+     "event",
+     "socket",
