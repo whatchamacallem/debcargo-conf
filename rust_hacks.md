@@ -159,8 +159,6 @@ You can do this like that: `test_depends = ["foo"]`. That happens very rarely, s
 Sometimes debcargo marks files as suspicious, most of the time those are tests written in C for -sys crates. Whitelist them like that:
 `whitelist = [tests/foo.c"]` . (Example: lidadwaita-sys)
 
-### Allowing alpha/beta dependencies
-
 Some crates depend on a crate with an alpha/beta version strings. debcargo will emit an error if that is the case. To allow those deps, pass the following:
 `allow_prerelease_deps = true`. Do this only if you are sure this will work !
 
@@ -233,10 +231,10 @@ package can enter testing. Because arch names are different in rust, here is a h
 | s390x | powerpc64? s390x? |
 | riscv64 | riscv64 |
 | **Other official arches¹** | |
-| mipsel | mips? |
 | mips64el | mips64 |
 | **Unoffical ports with rustc/cargo (not really relevant)** | |
 |  powerpc 	| powerpc? |
+| loongarch64 | loongarch64? |
 | ppc64 	| powerpc? |
 | sparc64 | sparc64? |
 | x32 | ? |
@@ -253,8 +251,13 @@ Arches without rustc/cargo:
 Only the first seven are really relevant, I included the rest for completeness's sake. 
 If you encounter a test failure e.g. on `armel`, add this macro before the `#[test]` macro:  
  ` #[cfg(not(target_arch = "arm"))] `.  
- Then generate a patch with the changes and include it in the usual way. Also notify upstream that this arch is broken and send them your patch.  
-Footnotes:  [1] https://wiki.debian.org/SupportedArchitectures
+  Then generate a patch with the changes and include it in the usual way. Also notify upstream that this arch is broken and send them your patch.  
+
+ To skip a test on e.g. all big-endian arches you can use something like `#[cfg(not(target_endian = "big"))]`.
+
+
+
+  Footnotes:  [1] https://wiki.debian.org/SupportedArchitectures
             [2] sh4 has only one test failure for cargo
  
  
