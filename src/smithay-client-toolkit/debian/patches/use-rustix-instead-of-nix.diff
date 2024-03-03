@@ -1,0 +1,239 @@
+This patch is based on the upstream commit described below, adapted
+for use in the Debian package by Peter Michael Green.
+
+commit 4ac68534d954e4c688f5caa98183fc97f996711f
+Author: Ian Douglas Scott <idscott@system76.com>
+Date:   Fri Sep 22 15:09:36 2023 -0700
+
+    Use `rustix` instead of `nix`
+    
+    This is cleaner than `nix` due to the use of `OwnedFd`/`BorrowedFd`.
+    
+    `calloop` is already using `rustix`.
+
+Index: smithay-client-toolkit/src/data_device/offer.rs
+===================================================================
+--- smithay-client-toolkit.orig/src/data_device/offer.rs
++++ smithay-client-toolkit/src/data_device/offer.rs
+@@ -3,6 +3,7 @@ use std::{
+     os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd},
+     sync::{Arc, Mutex},
+ };
++use rustix::fd::OwnedFd;
+ 
+ use wayland_client::protocol::wl_data_device_manager::DndAction;
+ use wayland_client::protocol::wl_data_offer;
+@@ -92,18 +93,13 @@ impl DataOffer {
+     /// Fails if too many file descriptors were already open and a pipe
+     /// could not be created.
+     pub fn receive(&self, mime_type: String) -> std::io::Result<ReadPipe> {
+-        use nix::fcntl::OFlag;
+-        use nix::unistd::{close, pipe2};
++        use rustix::pipe::{pipe_with, PipeFlags};
+         // create a pipe
+-        let (readfd, writefd) = pipe2(OFlag::O_CLOEXEC)?;
++        let (readfd, writefd) = pipe_with(PipeFlags::CLOEXEC)?;
+ 
+-        self.offer.receive(mime_type, writefd);
+-
+-        if let Err(err) = close(writefd) {
+-            log::warn!("Failed to close write pipe: {}", err);
+-        }
++        unsafe { self.receive_to_fd(mime_type, writefd.into_raw_fd()); }
+ 
+-        Ok(unsafe { FromRawFd::from_raw_fd(readfd) })
++        Ok(unsafe { FromRawFd::from_raw_fd(readfd.into_raw_fd()) })
+     }
+ 
+     /// Receive data to the write end of a raw file descriptor. If you have the read end, you can read from it.
+@@ -122,13 +118,10 @@ impl DataOffer {
+     /// The provided file destructor must be a valid FD for writing, and will be closed
+     /// once the contents are written.
+     pub unsafe fn receive_to_fd(&self, mime_type: String, writefd: RawFd) {
+-        use nix::unistd::close;
+ 
+         self.offer.receive(mime_type, writefd);
+ 
+-        if let Err(err) = close(writefd) {
+-            log::warn!("Failed to close write pipe: {}", err);
+-        }
++        drop(unsafe { OwnedFd::from_raw_fd(writefd) })
+     }
+ 
+     /// Notify the send and compositor of the dnd actions you accept
+Index: smithay-client-toolkit/src/primary_selection/offer.rs
+===================================================================
+--- smithay-client-toolkit.orig/src/primary_selection/offer.rs
++++ smithay-client-toolkit/src/primary_selection/offer.rs
+@@ -1,4 +1,6 @@
+ use std::os::unix::io::FromRawFd;
++use rustix::fd::IntoRawFd;
++use rustix::fd::AsRawFd;
+ use std::sync::{Arc, Mutex};
+ 
+ use wayland_client::Main;
+@@ -36,25 +38,20 @@ impl PrimarySelectionOffer {
+     /// Note that you should **not** read the contents right away in a blocking way,
+     /// as you may deadlock your application.
+     pub fn receive(&self, mime_type: String) -> Result<ReadPipe, std::io::Error> {
+-        use nix::fcntl::OFlag;
+-        use nix::unistd::{close, pipe2};
++        use rustix::pipe::{pipe_with, PipeFlags};
+         // create a pipe
+-        let (readfd, writefd) = pipe2(OFlag::O_CLOEXEC)?;
++        let (readfd, writefd) = pipe_with(PipeFlags::CLOEXEC)?;
+ 
+         match &self.offer {
+             PrimarySelectionOfferImpl::Zwp(offer) => {
+-                offer.receive(mime_type, writefd);
++                offer.receive(mime_type, writefd.as_raw_fd());
+             }
+             PrimarySelectionOfferImpl::Gtk(offer) => {
+-                offer.receive(mime_type, writefd);
++                offer.receive(mime_type, writefd.as_raw_fd());
+             }
+         }
+ 
+-        if let Err(err) = close(writefd) {
+-            log::warn!("Failed to close write pipe: {}", err);
+-        }
+-
+-        Ok(unsafe { FromRawFd::from_raw_fd(readfd) })
++        Ok(unsafe { FromRawFd::from_raw_fd(readfd.into_raw_fd()) })
+     }
+ 
+     /// Initialize `PrimarySelectionOffer` from the `Zwp` offer.
+Index: smithay-client-toolkit/Cargo.toml
+===================================================================
+--- smithay-client-toolkit.orig/Cargo.toml
++++ smithay-client-toolkit/Cargo.toml
+@@ -44,13 +44,13 @@ version = "0.4"
+ [dependencies.memmap2]
+ version = "0.9.0"
+ 
+-[dependencies.nix]
+-version = ">= 0.24"
++[dependencies.rustix]
++version = "0.38.15"
+ features = [
+-    "mman",
+     "fs",
++    "pipe",
++    "shm",
+ ]
+-default-features = false
+ 
+ [dependencies.wayland-client]
+ version = "0.29"
+Index: smithay-client-toolkit/src/shm/mempool.rs
+===================================================================
+--- smithay-client-toolkit.orig/src/shm/mempool.rs
++++ smithay-client-toolkit/src/shm/mempool.rs
+@@ -10,14 +10,12 @@ use std::{
+     time::UNIX_EPOCH,
+ };
+ 
+-#[cfg(target_os = "linux")]
+-use nix::sys::memfd;
+-use nix::{
+-    errno::Errno,
+-    fcntl,
+-    sys::{mman, stat},
+-    unistd,
++use rustix::{
++    io::Errno,
++    shm::{Mode, ShmOFlags},
+ };
++use rustix::fd::OwnedFd;
++use rustix::fd::AsRawFd;
+ 
+ use memmap2::MmapMut;
+ 
+@@ -111,10 +109,10 @@ struct Inner {
+ impl Inner {
+     fn new(shm: Attached<wl_shm::WlShm>) -> io::Result<Self> {
+         let mem_fd = create_shm_fd()?;
+-        let mem_file = unsafe { File::from_raw_fd(mem_fd) };
++        let mem_file = File::from(mem_fd);
+         mem_file.set_len(4096)?;
+ 
+-        let pool = shm.create_pool(mem_fd, 4096);
++        let pool = shm.create_pool(mem_file.as_raw_fd(), 4096);
+ 
+         let mmap = unsafe { MmapMut::map_mut(&mem_file).unwrap() };
+ 
+@@ -457,26 +455,24 @@ impl AutoMemPool {
+     }
+ }
+ 
+-fn create_shm_fd() -> io::Result<RawFd> {
++fn create_shm_fd() -> io::Result<OwnedFd> {
+     // Only try memfd on linux
+     #[cfg(target_os = "linux")]
+     loop {
+-        match memfd::memfd_create(
++        match rustix::fs::memfd_create(
+             CStr::from_bytes_with_nul(b"smithay-client-toolkit\0").unwrap(),
+-            memfd::MemFdCreateFlag::MFD_CLOEXEC | memfd::MemFdCreateFlag::MFD_ALLOW_SEALING,
++            rustix::fs::MemfdFlags::CLOEXEC | rustix::fs::MemfdFlags::ALLOW_SEALING,
+         ) {
+             Ok(fd) => {
+                 // this is only an optimization, so ignore errors
+-                let _ = fcntl::fcntl(
+-                    fd,
+-                    fcntl::F_ADD_SEALS(
+-                        fcntl::SealFlag::F_SEAL_SHRINK | fcntl::SealFlag::F_SEAL_SEAL,
+-                    ),
++                let _ = rustix::fs::fcntl_add_seals(
++                    &fd,
++                    rustix::fs::SealFlags::SHRINK | rustix::fs::SealFlags::SEAL,
+                 );
+                 return Ok(fd);
+             }
+-            Err(Errno::EINTR) => continue,
+-            Err(Errno::ENOSYS) => break,
++            Err(Errno::INTR) => continue,
++            Err(Errno::NOSYS) => break,
+             Err(errno) => return Err(errno.into()),
+         }
+     }
+@@ -488,22 +484,18 @@ fn create_shm_fd() -> io::Result<RawFd>
+         sys_time.duration_since(UNIX_EPOCH).unwrap().subsec_nanos()
+     );
+     loop {
+-        match mman::shm_open(
++        match rustix::shm::shm_open(
+             mem_file_handle.as_str(),
+-            fcntl::OFlag::O_CREAT
+-                | fcntl::OFlag::O_EXCL
+-                | fcntl::OFlag::O_RDWR
+-                | fcntl::OFlag::O_CLOEXEC,
+-            stat::Mode::S_IRUSR | stat::Mode::S_IWUSR,
++            ShmOFlags::CREATE
++                | ShmOFlags::EXCL
++                | ShmOFlags::RDWR,
++            Mode::RUSR | Mode::WUSR,
+         ) {
+-            Ok(fd) => match mman::shm_unlink(mem_file_handle.as_str()) {
++            Ok(fd) => match rustix::shm::shm_unlink(mem_file_handle.as_str()) {
+                 Ok(_) => return Ok(fd),
+-                Err(errno) => match unistd::close(fd) {
+-                    Ok(_) => return Err(errno.into()),
+-                    Err(errno) => return Err(errno.into()),
+-                },
++                Err(errno) => return Err(errno.into()),
+             },
+-            Err(Errno::EEXIST) => {
++            Err(Errno::EXIST) => {
+                 // If a file with that handle exists then change the handle
+                 mem_file_handle = format!(
+                     "/smithay-client-toolkit-{}",
+@@ -511,7 +503,7 @@ fn create_shm_fd() -> io::Result<RawFd>
+                 );
+                 continue;
+             }
+-            Err(Errno::EINTR) => continue,
++            Err(Errno::INTR) => continue,
+             Err(errno) => return Err(errno.into()),
+         }
+     }
