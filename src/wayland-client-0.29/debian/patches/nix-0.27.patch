@@ -1,0 +1,105 @@
+Index: wayland-client-0.29/Cargo.toml
+===================================================================
+--- wayland-client-0.29.orig/Cargo.toml
++++ wayland-client-0.29/Cargo.toml
+@@ -39,7 +39,7 @@ version = "1.0"
+ version = "0.2"
+ 
+ [dependencies.nix]
+-version = "0.24.1"
++version = "0.27"
+ features = [
+     "fs",
+     "poll",
+Index: wayland-client-0.29/src/rust_imp/connection.rs
+===================================================================
+--- wayland-client-0.29.orig/src/rust_imp/connection.rs
++++ wayland-client-0.29/src/rust_imp/connection.rs
+@@ -3,6 +3,7 @@ use std::os::unix::io::{FromRawFd, RawFd
+ use std::sync::{Arc, Mutex};
+ 
+ use nix::Result as NixResult;
++use nix::errno::Errno;
+ 
+ use wayland_commons::map::{Object, ObjectMap, SERVER_ID_LIMIT};
+ use wayland_commons::socket::{BufferedSocket, Socket};
+@@ -45,11 +46,11 @@ impl Connection {
+     }
+ 
+     pub(crate) fn write_message(&mut self, msg: &Message) -> NixResult<()> {
+-        self.socket.write_message(msg)
++        self.socket.write_message(msg).map_err(|e| Errno::from_i32(e as i32))
+     }
+ 
+     pub(crate) fn flush(&mut self) -> NixResult<()> {
+-        self.socket.flush()
++        self.socket.flush().map_err(|e| Errno::from_i32(e as i32))
+     }
+ 
+     pub(crate) fn read_events(&mut self) -> Result<usize, Error> {
+@@ -169,12 +170,12 @@ impl Connection {
+                 *last_error = Some(Error::Parse(e.clone()));
+                 Err(Error::Parse(e))
+             }
+-            // non-fatal error
+-            Err(e @ nix::Error::EAGAIN) => Err(Error::Nix(e)),
+-            // fatal errors
+             Err(e) => {
+-                *last_error = Some(Error::Nix(e));
+-                Err(Error::Nix(e))
++                // non-fatal error doesn't set last_error
++                if (e as i32) != (nix::Error::EAGAIN as i32) {
++                    *last_error = Some(Error::Nix(Errno::from_i32(e as i32)));
++                }
++                Err(Error::Nix(Errno::from_i32(e as i32)))
+             }
+         }
+     }
+Index: wayland-client-0.29/src/rust_imp/queues.rs
+===================================================================
+--- wayland-client-0.29.orig/src/rust_imp/queues.rs
++++ wayland-client-0.29/src/rust_imp/queues.rs
+@@ -16,6 +16,25 @@ use super::Dispatched;
+ 
+ use crate::{AnonymousObject, DispatchData, Filter, Main, RawEvent};
+ 
++use std::os::fd::BorrowedFd;
++use std::os::fd::RawFd;
++
++trait MyFrom<T>: Sized {
++    fn from(value: T) -> Self;
++}
++
++impl<T> MyFrom<T> for T {
++    fn from(t: T) -> T {
++        t
++    }
++}
++
++impl MyFrom<&BorrowedFd<'_>> for RawFd {
++    fn from(t: &BorrowedFd) -> RawFd {
++        t.as_raw_fd()
++    }
++}
++
+ pub(crate) type QueueBuffer = Arc<Mutex<VecDeque<Message>>>;
+ 
+ pub(crate) fn create_queue_buffer() -> QueueBuffer {
+@@ -66,7 +85,7 @@ impl EventQueueInner {
+                     Ok(_) => break,
+                     Err(nix::Error::EAGAIN) => {
+                         // EAGAIN, we need to wait before writing, so we poll the socket
+-                        let poll_ret = poll(&mut [PollFd::new(socket_fd, PollFlags::POLLOUT)], -1);
++                        let poll_ret = poll(&mut [PollFd::new(MyFrom::from( unsafe { &BorrowedFd::borrow_raw(socket_fd)}), PollFlags::POLLOUT)], -1);
+                         match poll_ret {
+                             Ok(_) => continue,
+                             Err(e) => {
+@@ -88,7 +107,7 @@ impl EventQueueInner {
+         }
+ 
+         // wait for incoming messages to arrive
+-        match poll(&mut [PollFd::new(socket_fd, PollFlags::POLLIN)], -1) {
++        match poll(&mut [PollFd::new(MyFrom::from( unsafe { &BorrowedFd::borrow_raw(socket_fd)}), PollFlags::POLLIN)], -1) {
+             Ok(_) => (),
+             Err(e) => {
+                 self.cancel_read();
