@@ -1,0 +1,50 @@
+Index: wayland-commons/Cargo.toml
+===================================================================
+--- wayland-commons.orig/Cargo.toml
++++ wayland-commons/Cargo.toml
+@@ -26,7 +26,7 @@ license = "MIT"
+ repository = "https://github.com/smithay/wayland-rs"
+ 
+ [dependencies.nix]
+-version = "0.24.1"
++version = ">=0.24.1, < 1"
+ features = [
+     "fs",
+     "socket",
+Index: wayland-commons/src/socket.rs
+===================================================================
+--- wayland-commons.orig/src/socket.rs
++++ wayland-commons/src/socket.rs
+@@ -22,6 +22,23 @@ pub struct Socket {
+     fd: RawFd,
+ }
+ 
++use std::os::fd::BorrowedFd;
++trait MyFrom<T>: Sized {
++    fn from(value: T) -> Self;
++}
++
++impl<T> MyFrom<T> for T {
++    fn from(t: T) -> T {
++        t
++    }
++}
++
++impl MyFrom<&BorrowedFd<'_>> for RawFd {
++    fn from(t: &BorrowedFd) -> RawFd {
++        t.as_raw_fd()
++    }
++}
++
+ impl Socket {
+     /// Send a single message to the socket
+     ///
+@@ -81,7 +98,7 @@ impl Socket {
+ 
+     /// Retrieve the current value of the requested [socket::GetSockOpt]
+     pub fn opt<O: socket::GetSockOpt>(&self, opt: O) -> NixResult<O::Val> {
+-        socket::getsockopt(self.fd, opt)
++        socket::getsockopt(MyFrom::from(unsafe {&BorrowedFd::borrow_raw(self.fd) }), opt)
+     }
+ }
+ 
