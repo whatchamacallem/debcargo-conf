@@ -1,0 +1,25 @@
+diff --git a/build.rs b/build.rs
+index eb3e307..bd18812 100644
+--- a/build.rs
++++ b/build.rs
+@@ -1,4 +1,5 @@
+ use std::{io::prelude::*, process::Command};
++use std::path::PathBuf;
+ 
+ fn generate_man_page() -> String {
+     man::prelude::Manual::new("ripasso-cursive")
+@@ -110,13 +111,7 @@ fn generate_translation_files() {
+         println!("error: {:?}", res.err().unwrap());
+     }
+ 
+-    let mut dir = std::env::current_exe().unwrap();
+-    dir.pop();
+-    dir.pop();
+-    dir.pop();
+-    dir.pop();
+-    dir.pop();
+-    dir.push("cursive");
++    let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+     dir.push("res");
+ 
+     let translation_path_glob = dir.join("**/*.po");
