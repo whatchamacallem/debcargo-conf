@@ -13,7 +13,7 @@ Index: openssl-sys/Cargo.toml
  version = "0.2"
  
  [build-dependencies.bindgen]
--version = "0.64.0"
+-version = "0.65.0"
 -features = ["experimental"]
 +version = ">= 0.60, < 1.0"
  optional = true
@@ -23,14 +23,10 @@ Index: openssl-sys/build/run_bindgen.rs
 ===================================================================
 --- openssl-sys.orig/build/run_bindgen.rs
 +++ openssl-sys/build/run_bindgen.rs
-@@ -123,8 +123,8 @@ pub fn run_boringssl(include_dirs: &[Pat
-         .allowlist_recursively(false)
-         .blocklist_function("BIO_vsnprintf")
+@@ -125,4 +125,4 @@ pub fn run_boringssl(include_dirs: &[Pat
          .blocklist_function("OPENSSL_vasprintf")
 -        .wrap_static_fns(true)
 -        .wrap_static_fns_path(out_dir.join("boring_static_wrapper").display().to_string())
 +        //.wrap_static_fns(true)
 +        //.wrap_static_fns_path(out_dir.join("boring_static_wrapper").display().to_string())
          .layout_tests(false)
-         .header_contents("includes.h", INCLUDES);
- 
