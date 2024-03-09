@@ -1,0 +1,21 @@
+Index: debian-changelog/src/lib.rs
+===================================================================
+--- debian-changelog.orig/src/lib.rs
++++ debian-changelog/src/lib.rs
+@@ -129,15 +129,7 @@ pub fn get_maintainer_from_env(
+         }
+ 
+         if addr.is_none() {
+-            match whoami::fallible::hostname() {
+-                Ok(hostname) => {
+-                    addr = Some(hostname);
+-                }
+-                Err(e) => {
+-                    log::debug!("Failed to get hostname: {}", e);
+-                    addr = None;
+-                }
+-            }
++            addr = Some(whoami::hostname());
+         }
+ 
+         addr.map(|hostname| format!("{}@{}", whoami::username(), hostname))
