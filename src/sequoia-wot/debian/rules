@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/pkg-info.mk
+
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_install:
+	mkdir -p debian/sq-wot/usr/share/fish/completions/ debian/sq-wot/usr/share/zsh/vendor-completions/ debian/sq-wot/usr/share/bash-completion/completions/
+	cp -f debian/sq-wot.fish debian/sq-wot/usr/share/fish/completions/sq-wot.fish
+	chmod -x debian/sq-wot/usr/share/fish/completions/sq-wot.fish
+	cp -f debian/sq-wot.zsh debian/sq-wot/usr/share/zsh/vendor-completions/_sq-wot
+	cp -f debian/sq-wot.bash debian/sq-wot/usr/share/bash-completion/completions/sq-wot
+	dh_install
+
