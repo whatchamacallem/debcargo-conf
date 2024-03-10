@@ -1,13 +1,38 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 90eda14..f96d754 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -56,7 +56,7 @@ version = "0.4.2"
+ version = "0.3.5"
+ 
+ [dependencies.lalrpop-util]
+-version = ">=0.17, <0.21"
++version = "0.20"
+ 
+ [dependencies.lazy_static]
+ version = "1.4.0"
+@@ -115,7 +115,7 @@ version = "1"
+ features = ["macros"]
+ 
+ [build-dependencies.lalrpop]
+-version = ">=0.17, <0.21"
++version = "0.20"
+ default-features = false
+ 
+ [target."cfg(not(windows))".dev-dependencies.sequoia-openpgp]
 diff --git a/build.rs b/build.rs
-index b8977c5..25aa523 100644
+index b8977c5..44b9d57 100644
 --- a/build.rs
 +++ b/build.rs
-@@ -4,7 +4,7 @@ use std::io::{self, Write};
+@@ -2,9 +2,10 @@ use std::env;
+ use std::fs;
+ use std::io::{self, Write};
  use std::path::PathBuf;
++use std::env::current_dir;
  
  fn main() {
 -    lalrpop::process_root().unwrap();
-+    lalrpop::Configuration::new().process_dir(format!("{}/src/", env!("CARGO_MANIFEST_DIR"))).unwrap();
++    lalrpop::Configuration::new().process_dir(current_dir().unwrap().join("src")).unwrap();
      include_test_data().unwrap();
  }
  
