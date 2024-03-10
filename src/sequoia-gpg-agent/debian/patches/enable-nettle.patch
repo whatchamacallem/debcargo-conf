@@ -1,0 +1,52 @@
+Enable nettle as crypto backend, as that is the backend used in Debian.
+
+diff --git a/Cargo.toml b/Cargo.toml
+index b526853..8a9f2cd 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -63,7 +63,7 @@ version = "0.34.1"
+ 
+ [dependencies.sequoia-openpgp]
+ version = "1.19"
+-features = ["compression"]
++features = ["compression", "crypto-nettle"]
+ default-features = false
+ 
+ [dependencies.stfu8]
+@@ -84,21 +84,21 @@ version = "3.1"
+ [dev-dependencies.tokio-test]
+ version = "0.4"
+ 
+-[target."cfg(not(windows))".dev-dependencies.sequoia-openpgp]
+-version = "1"
+-features = [
+-    "crypto-nettle",
+-    "__implicit-crypto-backend-for-tests",
+-]
+-default-features = false
+-
+-[target."cfg(windows)".dev-dependencies.sequoia-openpgp]
+-version = "1"
+-features = [
+-    "crypto-cng",
+-    "__implicit-crypto-backend-for-tests",
+-]
+-default-features = false
++#[target."cfg(not(windows))".dev-dependencies.sequoia-openpgp]
++#version = "1"
++#features = [
++#    "crypto-nettle",
++#    "__implicit-crypto-backend-for-tests",
++#]
++#default-features = false
++
++#[target."cfg(windows)".dev-dependencies.sequoia-openpgp]
++#version = "1"
++#features = [
++#    "crypto-cng",
++#    "__implicit-crypto-backend-for-tests",
++#]
++#default-features = false
+ 
+ [badges.gitlab]
+ repository = "sequoia-pgp/sequoia-gpg-agent"
