@@ -23,7 +23,11 @@ Ready for upload (Request For Sponsor)
 
 If you do not have upload rights, simply ``touch src/$crate/debian/RFS`` in
 your crate's directory, commit and push it, and a DD or DM will get around to
-it at some point.
+it at some point. It is also a good idea to send an RFS to the Debian Rust
+Team's mailing list to briefly explain that you are looking for a sponsor and
+why you want this specific package to be added to Debian. If other details need
+to be addressed such as missing dependencies, they can be added as a note to the
+RFS file. See above for more details.
 
 Please join the IRC channel #debian-rust on OFTC to be available to answer
 to questions. Please monitor the RFS file as the sponsors can use it to

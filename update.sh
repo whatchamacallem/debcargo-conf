@@ -126,8 +126,10 @@ Then, ask a Debian Developer to run \`./release.sh $*\`. This finalises your
 changes in the changelog, and allows them to build and upload the package. If
 you're not a Debian Developer and are unable to upload, please don't run that
 script or else you will need to revert the changes that it makes to your git.
-Instead, add an empty RFS file inside the created debian directory; see
-TODO.rst's  "Ready for upload" section for more details.
+Instead, add an empty RFS file inside the created debian directory. If there
+are other issues that need to be addressed such as missing dependencies, they
+can be addressed by adding a comment into the RFS file; see CONTRIBUTING.rst's
+"Ready for upload" section for more details.
 eof
 if [ -n "$VER" ]; then
 cat >&2 <<eof
