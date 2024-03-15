@@ -1,7 +1,14 @@
 #!/usr/bin/make -f
 
+export DH_VERBOSE = 1
+
 include /usr/share/dpkg/pkg-info.mk
 
 %:
 	dh $@ --buildsystem cargo
 
+override_dh_install:
+	mkdir -p debian/gpg-sq/usr/bin/
+	mv debian/gpgv-sq/usr/bin/gpg-sq debian/gpg-sq/usr/bin/
+
+	dh_install
