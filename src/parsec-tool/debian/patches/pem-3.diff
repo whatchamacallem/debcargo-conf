@@ -1,0 +1,36 @@
+Index: parsec-tool/Cargo.toml
+===================================================================
+--- parsec-tool.orig/Cargo.toml
++++ parsec-tool/Cargo.toml
+@@ -54,7 +54,7 @@ features = ["serde_support"]
+ version = "0.16.0"
+ 
+ [dependencies.pem]
+-version = "1.1.0"
++version = "3"
+ 
+ [dependencies.picky-asn1]
+ version = "0.7.0"
+Index: parsec-tool/src/subcommands/export_public_key.rs
+===================================================================
+--- parsec-tool.orig/src/subcommands/export_public_key.rs
++++ parsec-tool/src/subcommands/export_public_key.rs
+@@ -87,13 +87,12 @@ impl ExportPublicKey {
+         };
+ 
+         let pem_encoded = pem::encode_config(
+-            &pem::Pem {
++            &pem::Pem::new (
+                 tag,
+-                contents: psa_public_key,
+-            },
+-            pem::EncodeConfig {
+-                line_ending: pem::LineEnding::LF,
+-            },
++                psa_public_key,
++            ),
++            pem::EncodeConfig::new().
++                set_line_ending(pem::LineEnding::LF),
+         );
+ 
+         print!("{}", pem_encoded);
