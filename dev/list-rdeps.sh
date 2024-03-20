@@ -18,34 +18,10 @@ type gawk >/dev/null || abort 1 "gawk not found, install gawk"
 ARCHIVE="${ARCHIVE:-unstable}"
 ARCHIVT="${ARCHIVT:-testing}"
 
-grep_sources_entry() {
-	grep '^deb[^#]*://[^#[:space:]]*[[:space:]]*'"$@"
-}
-
-if ! grep_sources_entry "$ARCHIVE" -qR /etc/apt/sources.list /etc/apt/sources.list.d/ || \
-   ! grep_sources_entry "$ARCHIVT" -qR /etc/apt/sources.list /etc/apt/sources.list.d/; then
-	cat <<-eof
-To make this script work, you will need Debian Testing *AND* Debian Unstable
-in your sources.list. If you want your system to prefer Debian Testing, be
-sure to also add these lines to your /etc/apt/apt.conf:
-
-APT::Default-Release "$ARCHIVT";
-
-After these changes, make sure to re-run \`apt-get update\`.
-eof
-	exit 1
-fi
-
-if [ $(($(date +%s) - $(stat -c %Y /var/cache/apt/pkgcache.bin))) -gt 7200 ]; then
-	read -p "APT cache is a bit old, update? [Y/n] " x
-	if [ "$x" != "n" ]; then sudo apt update; fi
-fi
-
 apt_versions() {
 	aptitude versions --disable-columns -F '%e %p %t' --group-by=none "~rnative $1" || true
 }
 
-all_rust_packages="$(apt_versions "~e^rust-")"
 quick_apt_versions() {
 	printf "%s\n" "$all_rust_packages" | gawk "\$1 ~ /$1/ && \$2 ~ /$2/ && \$3 ~ /$3/ && \$4 ~ /$4/ { ${5:-print} }"
 }
@@ -61,13 +37,35 @@ src_version() {
 	echo "${srcver[$src]}"
 }
 
+tmpdir=$(mktemp -d)
+# https://stackoverflow.com/a/14812383 inside "trap" avoids running handler twice
+trap 'excode=$?; rm -rf "'"$tmpdir"'"; trap - EXIT' EXIT HUP INT QUIT PIPE TERM
+
 if [ -n "$INST_CACHE" ]; then
 	inst_cache="$INST_CACHE"
 else
-	inst_cache=$(mktemp)
-	# https://stackoverflow.com/a/14812383 inside "trap" avoids running handler twice
-	trap 'excode=$?; rm -rf "'"$inst_cache"'"; trap - EXIT' EXIT HUP INT QUIT PIPE TERM
+	inst_cache="$tmpdir/cache"
 fi
+touch "$inst_cache"
+
+mkdir -p "$tmpdir/aptroot/etc/apt/apt.conf.d" "$tmpdir/aptroot/var/lib/apt/lists/" "$tmpdir/aptroot/etc/apt/preferences.d"
+cat << END > "$tmpdir/aptroot/apt.conf"
+Apt::Architecture "$(dpkg --print-architecture)";
+Apt::Architectures "$(dpkg --print-architecture)";
+Dir "$tmpdir/aptroot";
+Acquire::Languages "none";
+Dir::Etc::Trusted "$(eval "$(apt-config shell v Dir::Etc::Trusted/f)"; printf "$v")";
+Dir::Etc::TrustedParts "$(eval "$(apt-config shell v Dir::Etc::TrustedParts/d)"; printf "$v")";
+END
+cat << END > "$tmpdir/aptroot/etc/apt/sources.list"
+deb http://deb.debian.org/debian/ $ARCHIVE main
+deb http://deb.debian.org/debian/ $ARCHIVT main
+END
+APT_CONFIG="$tmpdir/aptroot/apt.conf"
+export APT_CONFIG
+apt-get update
+
+all_rust_packages="$(apt_versions "~e^rust-")"
 
 installability() {
 	local r=$(grep -F "$1=$2" "$inst_cache" | cut -f2)
