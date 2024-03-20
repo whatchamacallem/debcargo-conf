@@ -1,0 +1,61 @@
+From 339faec69d353103156aa6c038da3f1f57c03093 Mon Sep 17 00:00:00 2001
+From: Martin Sundhaug <martinsundhaug@gmail.com>
+Date: Fri, 29 Jul 2022 00:32:23 +0200
+Subject: [PATCH] Update dependencies and adapt to new APIs
+
+diff --git a/src/bcrypt.rs b/src/bcrypt.rs
+index e11540b..9e6401b 100644
+--- a/src/bcrypt.rs
++++ b/src/bcrypt.rs
+@@ -222,7 +222,7 @@ fn bcrypt(cost: u32, salt: &[u8], password: &[u8], output: &mut [u8]) {
+     let mut ctext = [0x4f727068, 0x65616e42, 0x65686f6c, 0x64657253, 0x63727944, 0x6f756274];
+     for i in (0..6).step_by(2) {
+         for _ in 0..64 {
+-            let (l, r) = state.bc_encrypt(ctext[i], ctext[i+1]);
++            let [l, r] = state.bc_encrypt([ctext[i], ctext[i+1]]);
+             ctext[i] = l;
+             ctext[i+1] = r;
+         }
+diff --git a/src/sha1_crypt.rs b/src/sha1_crypt.rs
+index f684ac0..3a92fb7 100644
+--- a/src/sha1_crypt.rs
++++ b/src/sha1_crypt.rs
+@@ -45,7 +45,7 @@
+ //!
+ //! * *`{checksum}`* is a 28-character Base64 encoding of the checksum.
+ 
+-use hmac::{Hmac, Mac, NewMac};
++use hmac::{Hmac, Mac};
+ use sha1::Sha1;
+ use super::{Result, HashSetup, IntoHashSetup, consteq};
+ use crate::enc_dec::{sha1crypt_hash64_encode, bcrypt_hash64_decode};
+@@ -65,11 +65,11 @@ pub const DEFAULT_SALT_LEN: usize = 8;
+ fn do_sha1_crypt(pass: &[u8], salt: &str, rounds: u32) -> Result<String> {
+     let mut dummy_buf = [0u8; 48];
+     bcrypt_hash64_decode(salt, &mut dummy_buf)?;
+-    let mut hmac = Hmac::<Sha1>::new_varkey(pass).map_err(|_| Error::InsufficientLength)?;
++    let mut hmac = Hmac::<Sha1>::new_from_slice(pass).map_err(|_| Error::InsufficientLength)?;
+     hmac.update(format!("{}$sha1${}", salt, rounds).as_bytes());
+     let mut result = hmac.finalize();
+     for _ in 1..rounds {
+-        let mut hmac = Hmac::<Sha1>::new_varkey(pass).map_err(|_| Error::InsufficientLength)?;
++        let mut hmac = Hmac::<Sha1>::new_from_slice(pass).map_err(|_| Error::InsufficientLength)?;
+         hmac.update(&result.into_bytes());
+         result = hmac.finalize();
+     }
+diff --git a/src/sha2_crypt.rs b/src/sha2_crypt.rs
+index d3c981c..57a3d19 100644
+--- a/src/sha2_crypt.rs
++++ b/src/sha2_crypt.rs
+@@ -31,7 +31,7 @@ pub fn sha2_crypt<D: Digest>(pass: &[u8], salt: &str, rounds: Option<u32>,
+     bcrypt_hash64_decode(salt, &mut dummy_buf)?;
+ 
+     let mut dgst_b = new_digest();
+-    let dsize = D::output_size();
++    let dsize = <D as Digest>::output_size();
+     dgst_b.update(pass);
+     dgst_b.update(salt.as_bytes());
+     dgst_b.update(pass);
+-- 
+2.39.2
+
