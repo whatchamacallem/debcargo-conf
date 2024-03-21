@@ -1,0 +1,221 @@
+This patch is based on the upstream commits described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 95f4f8ffe8b13d87138c704e174227ede5753fc4
+Author: Justus Winter <justus@sequoia-pgp.org>
+Date:   Tue Feb 27 14:25:38 2024 +0100
+
+    gpg: Generate and load the trust root using CertD::trust_root.
+
+commit c5fb727a7a22d48df35023fe9d2194fd60ad936c
+Author: Justus Winter <justus@sequoia-pgp.org>
+Date:   Tue Feb 27 14:28:33 2024 +0100
+
+    keydb: Port to sequoia-cert-store 0.5 and sequoia-wot 0.10.
+
+Index: sequoia-chameleon-gnupg/src/keydb.rs
+===================================================================
+--- sequoia-chameleon-gnupg.orig/src/keydb.rs
++++ sequoia-chameleon-gnupg/src/keydb.rs
+@@ -4,15 +4,12 @@ use std::{
+     fs,
+     io::Read,
+     path::{Path, PathBuf},
+-    time::{Duration, SystemTime, UNIX_EPOCH},
++    time::{SystemTime, UNIX_EPOCH},
+     sync::Arc,
+ };
+ 
+ use anyhow::{anyhow, Context, Result};
+ 
+-// XXX: Requires fallible initialization, see https://github.com/rust-lang/rust/issues/109737
+-use once_cell::unsync::OnceCell;
+-
+ use sequoia_openpgp as openpgp;
+ use openpgp::{
+     Fingerprint,
+@@ -22,7 +19,6 @@ use openpgp::{
+     KeyHandle,
+     packet::UserID,
+     parse::Parse,
+-    serialize::SerializeInto,
+     types::HashAlgorithm,
+ };
+ 
+@@ -629,8 +625,6 @@ impl<'store> KeyDB<'store> {
+ 
+ pub struct Overlay<'store> {
+     pub(crate) cert_store: CertStore<'store>,
+-    #[allow(dead_code)]
+-    trust_root: OnceCell<Cert>,
+ }
+ 
+ impl<'store> Overlay<'store> {
+@@ -667,7 +661,6 @@ impl<'store> Overlay<'store> {
+ 
+         Ok(Overlay {
+             cert_store,
+-            trust_root: Default::default(),
+         })
+     }
+ 
+@@ -679,77 +672,11 @@ impl<'store> Overlay<'store> {
+     }
+ 
+     /// Lazily reads (or creates) the trust root.
+-    pub fn trust_root(&self) -> Result<&Cert> {
+-        self.trust_root.get_or_try_init(|| self.load_trust_root())
+-    }
+-
+-    /// Eagerly loads the trust root, or generates one if none existed
+-    /// before.
+-    ///
+-    /// This is done during the insertion, while we hold the exclusive
+-    /// lock, so this is race free.
+-    fn load_trust_root(&self) -> Result<Cert> {
+-        use openpgp_cert_d::MergeResult;
+-
+-        let certd = self.certd();
+-
+-        // Acquire an exclusive lock on the certd by inserting the
+-        // trust root.  We may yet discover that one already exists,
+-        // in which case we won't generate a new one, but load the
+-        // existing one.
+-        let mut trust_root =
+-            Err(anyhow::anyhow!("merge callback not invoked"));
+-        certd.insert_special(
+-            openpgp_cert_d::TRUST_ROOT,
+-            (), false, |_new, old| {
+-                if let Some(old) = old {
+-                    trust_root = Cert::from_bytes(&old);
+-                    Ok(MergeResult::Keep)
+-                } else {
+-                    let tr = Self::generate_trust_root()?;
+-                    let d = tr.as_tsk().to_vec()?;
+-                    trust_root = Ok(tr);
+-                    Ok(MergeResult::Data(d))
+-                }
+-            })?;
+-        let trust_root = trust_root?;
+-
+-        // Also insert the public bits into the certd for the WoT
+-        // algorithm to find.
+-        certd.insert(
+-            &trust_root.fingerprint().to_string(), &trust_root, false,
+-            |new, _old| {
+-                Ok(openpgp_cert_d::MergeResult::Data(new.to_vec()?))
+-            })?;
+-
+-        Ok(trust_root)
+-    }
+-
+-    fn generate_trust_root() -> Result<Cert> {
+-        use openpgp::{
+-            cert::CertBuilder,
+-            packet::signature::SignatureBuilder,
+-            types::SignatureType,
+-        };
+-
+-        // XXX: It would be nice if the direct key signature would
+-        // also be non-exportable, but Sequoia doesn't have a way to
+-        // do that yet with the CertBuilder.
+-        let (root, _) =
+-            CertBuilder::new()
+-            // Set it in the past so that it is possible to use the CA
+-            // when the reference time is in the past.  Feb 2002.
+-            .set_creation_time(
+-                SystemTime::UNIX_EPOCH + Duration::new(1014235320, 0))
+-            // CAs should *not* expire.
+-            .set_validity_period(None)
+-            .add_userid_with(
+-                "Local Trust Root",
+-                SignatureBuilder::new(SignatureType::PositiveCertification)
+-                    .set_exportable_certification(false)?)?
+-            .generate()?;
+-
+-        Ok(root)
++    pub fn trust_root(&self) -> Result<Arc<LazyCert<'store>>> {
++        self.cert_store
++            .certd().expect("created using CertStore::open")
++            .trust_root()
++            .map(move |(cert, _created)| cert)
+     }
+ 
+     pub fn path(&self) -> &Path {
+@@ -797,14 +724,6 @@ macro_rules! forward {
+         }
+     }}
+ }
+-macro_rules! forward_mut {
+-    ( $method:ident, $self:expr $(, $args:ident)* ) => {{
+-        match $self.overlay.as_mut() {
+-            Ok(be) => be.cert_store.$method($($args),*),
+-            Err(be) => be.$method($($args),*),
+-        }
+-    }}
+-}
+ 
+ impl<'a> cert_store::store::Store<'a> for KeyDB<'a> {
+     fn lookup_by_cert(&self, kh: &KeyHandle) -> Result<Vec<Arc<LazyCert<'a>>>> {
+@@ -856,25 +775,25 @@ impl<'a> cert_store::store::Store<'a> fo
+         forward!(certs, self)
+     }
+ 
+-    fn prefetch_all(&mut self) {
+-        forward_mut!(prefetch_all, self)
++    fn prefetch_all(&self) {
++        forward!(prefetch_all, self)
+     }
+ 
+-    fn prefetch_some(&mut self, certs: &[KeyHandle]) {
+-        forward_mut!(prefetch_some, self, certs)
++    fn prefetch_some(&self, certs: &[KeyHandle]) {
++        forward!(prefetch_some, self, certs)
+     }
+ }
+ 
+ impl<'a> cert_store::store::StoreUpdate<'a> for KeyDB<'a> {
+-    fn update(&mut self, cert: Arc<LazyCert<'a>>) -> Result<()> {
+-        forward_mut!(update, self, cert)
++    fn update(&self, cert: Arc<LazyCert<'a>>) -> Result<()> {
++        forward!(update, self, cert)
+     }
+ 
+-    fn update_by(&mut self, cert: Arc<LazyCert<'a>>,
+-                      merge_strategy: &mut dyn MergeCerts<'a>)
++    fn update_by(&self, cert: Arc<LazyCert<'a>>,
++                 merge_strategy: &dyn MergeCerts<'a>)
+         -> Result<Arc<LazyCert<'a>>>
+     {
+-        forward_mut!(update_by, self, cert, merge_strategy)
++        forward!(update_by, self, cert, merge_strategy)
+     }
+ }
+ 
+Index: sequoia-chameleon-gnupg/Cargo.toml
+===================================================================
+--- sequoia-chameleon-gnupg.orig/Cargo.toml
++++ sequoia-chameleon-gnupg/Cargo.toml
+@@ -117,3 +117,3 @@ version = "0.11"
+ [dependencies.sequoia-cert-store]
+-version = "0.4"
++version = "0.5"
+ 
+@@ -137,3 +137,3 @@ version = "0.1"
+ [dependencies.sequoia-wot]
+-version = "0.9"
++version = "0.10"
+ 
+Index: sequoia-chameleon-gnupg/src/list_keys.rs
+===================================================================
+--- sequoia-chameleon-gnupg.orig/src/list_keys.rs
++++ sequoia-chameleon-gnupg/src/list_keys.rs
+@@ -256,7 +256,7 @@ pub fn cmd_list_keys(config: &crate::Con
+                     {
+                         certd.insert(
+                             &trust_root.fingerprint().to_string(),
+-                            trust_root, false,
++                            trust_root.to_cert()?, false,
+                             |new, old| {
+                                 let d = if let Some(old) = old
+                                     .and_then(|b| Cert::from_bytes(b).ok())
