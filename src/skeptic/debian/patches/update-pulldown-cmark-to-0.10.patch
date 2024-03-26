@@ -1,0 +1,106 @@
+From 0119d3a2b818f8b2341a071ca02d1e32c465335f Mon Sep 17 00:00:00 2001
+From: liushuyu <liushuyu011@gmail.com>
+Date: Tue, 26 Mar 2024 11:10:23 -0600
+Subject: [PATCH] lib: update pulldown-cmark to 0.10
+
+---
+ skeptic/src/lib.rs | 27 +++++++++++++--------------
+ 1 file changed, 13 insertions(+), 14 deletions(-)
+
+Index: skeptic/src/lib.rs
+===================================================================
+--- skeptic.orig/src/lib.rs
++++ skeptic/src/lib.rs
+@@ -5,7 +5,7 @@ use std::io::{self, Error as IoError, Re
+ use std::mem;
+ use std::path::{Path, PathBuf};
+ 
+-use pulldown_cmark::{CodeBlockKind, Event, HeadingLevel, Parser, Tag};
++use pulldown_cmark::{CodeBlockKind, Event, HeadingLevel, Parser, Tag, TagEnd};
+ 
+ pub mod rt;
+ #[cfg(test)]
+@@ -167,7 +167,7 @@ fn extract_tests(config: &Config) -> Res
+ 
+ enum Buffer {
+     None,
+-    Code(Vec<String>),
++    Code(Vec<String>, CodeBlockInfo),
+     Heading(String),
+ }
+ 
+@@ -202,10 +202,10 @@ fn extract_tests_from_string(s: &str, fi
+     for (event, range) in parser.into_offset_iter() {
+         let line_number = bytecount::count(&s.as_bytes()[0..range.start], b'\n');
+         match event {
+-            Event::Start(Tag::Heading(level, ..)) if level < HeadingLevel::H3 => {
++            Event::Start(Tag::Heading { level, .. }) if level < HeadingLevel::H3 => {
+                 buffer = Buffer::Heading(String::new());
+             }
+-            Event::End(Tag::Heading(level, ..)) if level < HeadingLevel::H3 => {
++            Event::End(TagEnd::Heading(level, ..)) if level < HeadingLevel::H3 => {
+                 let cur_buffer = mem::replace(&mut buffer, Buffer::None);
+                 if let Buffer::Heading(sect) = cur_buffer {
+                     section = Some(sanitize_test_name(&sect));
+@@ -214,11 +214,11 @@ fn extract_tests_from_string(s: &str, fi
+             Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(ref info))) => {
+                 let code_block_info = parse_code_block_info(info);
+                 if code_block_info.is_rust {
+-                    buffer = Buffer::Code(Vec::new());
++                    buffer = Buffer::Code(Vec::new(), code_block_info);
+                 }
+             }
+             Event::Text(text) => {
+-                if let Buffer::Code(ref mut buf) = buffer {
++                if let Buffer::Code(ref mut buf, _) = buffer {
+                     if buf.is_empty() {
+                         code_block_start = line_number;
+                     }
+@@ -227,9 +227,9 @@ fn extract_tests_from_string(s: &str, fi
+                     buf.push_str(&*text);
+                 }
+             }
+-            Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(ref info))) => {
+-                let code_block_info = parse_code_block_info(info);
+-                if let Buffer::Code(buf) = mem::replace(&mut buffer, Buffer::None) {
++            Event::End(TagEnd::CodeBlock) => {
++                if let Buffer::Code(buf, code_block_info) = mem::replace(&mut buffer, Buffer::None)
++                {
+                     if code_block_info.is_old_template {
+                         old_template = Some(buf.into_iter().collect())
+                     } else {
+@@ -279,17 +279,16 @@ fn load_templates(path: &Path) -> Result
+             Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(ref info))) => {
+                 let code_block_info = parse_code_block_info(info);
+                 if code_block_info.is_rust {
+-                    code_buffer = Some(Vec::new());
++                    code_buffer = Some((Vec::new(), code_block_info));
+                 }
+             }
+             Event::Text(text) => {
+-                if let Some(ref mut buf) = code_buffer {
++                if let Some((ref mut buf, _)) = code_buffer {
+                     buf.push(text.to_string());
+                 }
+             }
+-            Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(ref info))) => {
+-                let code_block_info = parse_code_block_info(info);
+-                if let Some(buf) = code_buffer.take() {
++            Event::End(TagEnd::CodeBlock) => {
++                if let Some((buf, code_block_info)) = code_buffer.take() {
+                     if let Some(t) = code_block_info.template {
+                         map.insert(t, buf.into_iter().collect());
+                     }
+Index: skeptic/Cargo.toml
+===================================================================
+--- skeptic.orig/Cargo.toml
++++ skeptic/Cargo.toml
+@@ -35,7 +35,7 @@ default-features = false
+ version = "0.3"
+ 
+ [dependencies.pulldown-cmark]
+-version = "0.9"
++version = "0.10"
+ default-features = false
+ 
+ [dependencies.tempfile]
