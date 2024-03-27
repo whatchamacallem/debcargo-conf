@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+rm_diversion() {
+  dpkg-divert --package libsequoia-octopus-librnp --rename --remove "$1"
+}
+
+if [ "$1" = "remove" -o "$1" = "abort-install" -o "$1" = "disappear" ] ; then
+  rm_diversion /usr/lib/thunderbird/librnp.so
+fi
+
+#DEBHELPER#
+
+exit 0

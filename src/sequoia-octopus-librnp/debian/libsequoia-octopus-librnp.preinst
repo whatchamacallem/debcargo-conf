@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+
+add_diversion() {
+  dpkg-divert --package libsequoia-octopus-librnp --add --rename \
+    --divert "$1-thunderbid" "$1"
+}
+
+# Add diversions for any non-upgrade operation
+if [ "$1" != "upgrade" ] ; then
+  add_diversion /usr/lib/thunderbird/librnp.so
+fi
+
+#DEBHELPER#
+
+exit 0
