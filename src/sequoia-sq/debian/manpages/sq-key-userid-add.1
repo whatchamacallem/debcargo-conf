@@ -1,0 +1,93 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq key userid add \- Add a User ID
+.SH SYNOPSIS
+.br
+\fBsq key userid add\fR [\fIOPTIONS\fR] \fIFILE\fR \fIUSERID\fR
+.SH DESCRIPTION
+Add a User ID.
+.PP
+A User ID can contain a name, like `Juliet` or an email address, like
+`<juliet@example.org>`.  Historically, a name and email address were often
+combined as a single User ID, like `Juliet <juliet@example.org>`.
+.PP
+`sq userid add` respects the reference time set by the top\-level
+`\-\-time` argument.  It sets the creation time of the User ID's
+binding signature to the specified time.
+.PP
+
+
+.SH OPTIONS
+.SS "Subcommand options"
+.TP
+\fB\-B\fR, \fB\-\-binary\fR
+Emit binary data
+.TP
+\fB\-o\fR, \fB\-\-output\fR=\fIFILE\fR
+Write to FILE or stdout if omitted
+.TP
+\fB\-\-private\-key\-store\fR=\fIKEY_STORE\fR
+Provide parameters for private key store
+.TP
+ \fIFILE\fR
+Read from FILE or stdin if FILE is '\-'
+.TP
+ \fIUSERID\fR
+User ID to add
+.SS "Global options"
+See \fBsq\fR(1) for a description of the global options.
+.SH EXAMPLES
+.PP
+
+.PP
+First, generate a key:
+.PP
+.nf
+.RS
+sq key generate \-\-userid '<juliet@example.org>' \\
+.RE
+.RS
+.RS
+\-\-output juliet.key.pgp
+.RE
+.RE
+.PP
+.fi
+
+.PP
+Then, add a User ID:
+.PP
+.nf
+.RS
+sq key userid add \-\-userid Juliet juliet.key.pgp \\
+.RE
+.RS
+.RS
+\-\-output juliet\-new.key.pgp
+.RE
+.RE
+.PP
+.fi
+
+.PP
+Or, add a User ID whose creation time is set to June 28, 2022 at
+midnight UTC:
+.PP
+.nf
+.RS
+sq key userid add \-\-userid Juliet \-\-creation\-time 20210628 \\
+.RE
+.RS
+.RS
+juliet.key.pgp \-\-output juliet\-new.key.pgp
+.RE
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-key\fR(1), \fBsq\-key\-userid\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

@@ -1,0 +1,138 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq cert export \- Export certificates from the local certificate store
+.SH SYNOPSIS
+.br
+\fBsq cert export\fR [\fIOPTIONS\fR] \fIQUERY\fR
+.SH DESCRIPTION
+Export certificates from the local certificate store.
+.PP
+If multiple predicates are specified a certificate is returned if
+at least one of them matches.
+.PP
+This does not check the authenticity of the certificates in anyway.
+Before using the certificates, be sure to validate and authenticate
+them.
+.PP
+When matching on subkeys or User IDs, the component must have a valid
+self signature according to the policy.  This is not the case when
+matching the certificate's key handle using `\-\-cert` or when exporting
+all certificates.
+.PP
+Fails if search criteria are specified and none of them matches any
+certificates.  Note: this means if the certificate store is empty and
+no search criteria are specified, then this will return success.
+.PP
+
+.SH OPTIONS
+.SS "Subcommand options"
+.TP
+\fB\-B\fR, \fB\-\-binary\fR
+Emit binary data
+.TP
+\fB\-\-all\fR
+Export all certificates
+.TP
+\fB\-\-cert\fR=\fIFINGERPRINT|KEYID\fR
+Return certificates that have the specified fingerprint or key ID
+.TP
+\fB\-\-domain\fR=\fIDOMAIN\fR
+Return certificates that have a User ID with an email address from the specified domain
+.TP
+\fB\-\-email\fR=\fIEMAIL\fR
+Return certificates that have a User ID with the specified email address, case insensitively
+.TP
+\fB\-\-grep\fR=\fIPATTERN\fR
+Return certificates that have a User ID that contains the string, case insensitively
+.TP
+\fB\-\-key\fR=\fIFINGERPRINT|KEYID\fR
+Return certificates where the primary key or a subkey has the specified fingerprint or key ID
+.TP
+\fB\-\-userid\fR=\fIUSERID\fR
+Return certificates that have a User ID that matches exactly, including case
+.TP
+ \fIQUERY\fR
+Return certificates matching QUERY. This may be a subkey fingerprint or key ID, an email address, or an User ID fragment.
+.SS "Global options"
+See \fBsq\fR(1) for a description of the global options.
+.SH EXAMPLES
+.PP
+
+.PP
+Export all certificates.
+.PP
+.nf
+.RS
+sq cert export \-\-all
+.RE
+.PP
+.fi
+
+.PP
+Export certificates with a matching User ID packet.  The binding
+signatures are checked, but the User IDs are not authenticated. Note:
+this check is case sensitive.
+.PP
+.nf
+.RS
+sq cert export \-\-userid "Alice <alice@example.org>"
+.RE
+.PP
+.fi
+
+.PP
+Export certificates with a User ID containing the email address. The
+binding signatures are checked, but the User IDs are not authenticated.
+Note: this check is case insensitive.
+.PP
+.nf
+.RS
+sq cert export \-\-email alice@example.org
+.RE
+.PP
+.fi
+
+.PP
+Export certificates where the certificate (i.e., the primary key) has
+the specified Key ID.
+.PP
+.nf
+.RS
+sq cert export \-\-cert 6F0073F60FD0CBF0
+.RE
+.PP
+.fi
+
+.PP
+Export certificates where the primary key or a subkey matches the
+specified Key ID.
+.PP
+.nf
+.RS
+sq cert export \-\-key 24F3955B0B8DECC8
+.RE
+.PP
+.fi
+
+.PP
+Export certificates that contain a User ID with *either* (not both!)
+email address.  Note: this check is case insensitive.
+.PP
+.nf
+.RS
+sq cert export \-\-email alice@example.org \-\-email \\
+.RE
+.RS
+.RS
+bob@example.org
+.RE
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-cert\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

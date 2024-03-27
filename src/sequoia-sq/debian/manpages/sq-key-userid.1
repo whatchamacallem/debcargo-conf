@@ -1,0 +1,155 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq key userid \- Manage User IDs
+.SH SYNOPSIS
+.br
+\fBsq key userid add\fR [\fIOPTIONS\fR] \fIFILE\fR \fIUSERID\fR
+.br
+\fBsq key userid revoke\fR [\fIOPTIONS\fR] \fIUSERID\fR \fIREASON\fR \fIMESSAGE\fR
+.br
+\fBsq key userid strip\fR [\fIOPTIONS\fR] \fIFILE\fR
+.SH DESCRIPTION
+Manage User IDs.
+.PP
+Add User IDs to, or strip User IDs from a key.
+.PP
+
+.SH SUBCOMMANDS
+.SS "sq key userid add"
+Add a User ID.
+.PP
+A User ID can contain a name, like `Juliet` or an email address, like
+`<juliet@example.org>`.  Historically, a name and email address were often
+combined as a single User ID, like `Juliet <juliet@example.org>`.
+.PP
+`sq userid add` respects the reference time set by the top\-level
+`\-\-time` argument.  It sets the creation time of the User ID's
+binding signature to the specified time.
+.PP
+
+
+.SS "sq key userid revoke"
+Revoke a User ID.
+.PP
+Creates a revocation certificate for a User ID.
+.PP
+If `\-\-revocation\-key` is provided, then that key is used to create the signature.  If that key is different from the certificate being revoked, this creates a third\-party revocation.  This is normally only useful if the owner of the certificate designated the key to be a designated revoker.
+.PP
+If `\-\-revocation\-key` is not provided, then the certificate must include a certification\-capable key.
+.PP
+`sq key userid revoke` respects the reference time set by the top\-level `\-\-time` argument.  When set, it uses the specified time instead of the current time, when determining what keys are valid, and it sets the revocation certificate's creation time to the reference time instead of the current time.
+.PP
+
+.SS "sq key userid strip"
+Strip a User ID.
+.PP
+Note that this operation does not reliably remove User IDs from a
+certificate that has already been disseminated! (OpenPGP software
+typically appends new information it receives about a certificate
+to its local copy of that certificate.  Systems that have obtained
+a copy of your certificate with the User ID that you are trying to
+strip will not drop that User ID from their copy.)
+.PP
+In most cases, you will want to use the 'sq key userid revoke' operation
+instead.  That issues a revocation for a User ID, which can be used to mark
+the User ID as invalidated.
+.PP
+However, this operation can be useful in very specific cases, in particular:
+to remove a mistakenly added User ID before it has been uploaded to key
+servers or otherwise shared.
+.PP
+Stripping a User ID may change how a certificate is interpreted.  This
+is because information about the certificate like algorithm preferences,
+the primary key's key flags, etc. is stored in the User ID's binding
+signature.
+.PP
+
+
+.SH EXAMPLES
+.SS "sq key userid add"
+.PP
+
+.PP
+First, generate a key:
+.PP
+.nf
+.RS
+sq key generate \-\-userid '<juliet@example.org>' \\
+.RE
+.RS
+.RS
+\-\-output juliet.key.pgp
+.RE
+.RE
+.PP
+.fi
+
+.PP
+Then, add a User ID:
+.PP
+.nf
+.RS
+sq key userid add \-\-userid Juliet juliet.key.pgp \\
+.RE
+.RS
+.RS
+\-\-output juliet\-new.key.pgp
+.RE
+.RE
+.PP
+.fi
+
+.PP
+Or, add a User ID whose creation time is set to June 28, 2022 at
+midnight UTC:
+.PP
+.nf
+.RS
+sq key userid add \-\-userid Juliet \-\-creation\-time 20210628 \\
+.RE
+.RS
+.RS
+juliet.key.pgp \-\-output juliet\-new.key.pgp
+.RE
+.RE
+.fi
+.PP
+.SS "sq key userid strip"
+.PP
+
+.PP
+First, generate a key:
+.PP
+.nf
+.RS
+sq key generate \-\-userid '<juliet@example.org>' \\
+.RE
+.RS
+.RS
+\-\-output juliet.key.pgp
+.RE
+.RE
+.PP
+.fi
+
+.PP
+Then, strip a User ID:
+.PP
+.nf
+.RS
+sq key userid strip \-\-userid '<juliet@example.org>' \\
+.RE
+.RS
+.RS
+\-\-output juliet\-new.key.pgp juliet.key.pgp
+.RE
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-key\fR(1), \fBsq\-key\-userid\-add\fR(1), \fBsq\-key\-userid\-revoke\fR(1), \fBsq\-key\-userid\-strip\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

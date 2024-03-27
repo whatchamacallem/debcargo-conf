@@ -1,0 +1,72 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq network wkd \- Retrieve and publishes certificates via Web Key Directories
+.SH SYNOPSIS
+.br
+\fBsq network wkd generate\fR [\fIOPTIONS\fR] \fIWEB\-ROOT\fR \fIFQDN\fR \fICERT\-RING\fR
+.br
+\fBsq network wkd fetch\fR [\fIOPTIONS\fR] \fIADDRESS\fR
+.br
+\fBsq network wkd direct\-url\fR [\fIOPTIONS\fR] \fIADDRESS\fR
+.br
+\fBsq network wkd url\fR [\fIOPTIONS\fR] \fIADDRESS\fR
+.SH DESCRIPTION
+Retrieve and publishes certificates via Web Key Directories.
+.PP
+The Web Key Directory (WKD) is a method for publishing and retrieving
+certificates from web servers.
+.PP
+
+.SH SUBCOMMANDS
+.SS "sq network wkd generate"
+Generate a Web Key Directory for the given domain and certs.
+.PP
+If the WKD exists, the new certificates will be inserted and existing
+ones will be updated.
+.PP
+A WKD is per domain, and can be queried using the advanced or the direct method. The advanced method uses a URL with a subdomain 'openpgpkey'. As per the specification, the advanced method is to be preferred. The direct method may only be used if the subdomain doesn't exist. The advanced method allows Web Key Directories for several domains on one web server.
+.PP
+The contents of the generated WKD must be copied to a web server so that they are accessible under https://openpgpkey.example.com/.well\-known/openpgp/... for the advanced version, and https://example.com/.well\-known/openpgp/... for the direct version. sq does not copy files to the web server.
+.PP
+
+.SS "sq network wkd fetch"
+Retrieve certificates from a Web Key Directory.
+.PP
+By default, any returned certificates are stored in the local
+certificate store.  This can be overridden by using `\-\-output`
+option.
+.PP
+When a certificate is retrieved from a WKD, and imported into the
+local certificate store, any User IDs with the email address that was
+looked up are certificated with a local WKD\-specific key.  That proxy
+certificate is in turn certified as a minimally trusted CA (trust
+amount: 1 of 120) by the local trust root.  How much the WKD proxy CA
+is trusted can be tuned using `sq pki link add` or `sq pki link retract`
+in the usual way.
+.PP
+
+.SS "sq network wkd direct-url"
+Print the direct Web Key Directory URL of an email address.
+.SS "sq network wkd url"
+Print the advanced Web Key Directory URL of an email address.
+.SH EXAMPLES
+.SS "sq network wkd generate"
+.PP
+
+.PP
+Generate a WKD in /tmp/wkdroot from certs.pgp for example.com.
+.PP
+.nf
+.RS
+sq wkd generate /tmp/wkdroot example.com certs.pgp
+.RE
+.fi
+.PP
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-network\fR(1), \fBsq\-network\-wkd\-generate\fR(1), \fBsq\-network\-wkd\-fetch\fR(1), \fBsq\-network\-wkd\-direct\-url\fR(1), \fBsq\-network\-wkd\-url\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

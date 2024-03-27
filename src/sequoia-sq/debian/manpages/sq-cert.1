@@ -1,0 +1,220 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq cert \- Manage certificates
+.SH SYNOPSIS
+.br
+\fBsq cert import\fR [\fIOPTIONS\fR] \fIFILE\fR
+.br
+\fBsq cert export\fR [\fIOPTIONS\fR] \fIQUERY\fR
+.br
+\fBsq cert lint\fR [\fIOPTIONS\fR] \fIFILE\fR
+.SH DESCRIPTION
+Manage certificates.
+.PP
+We use the term "certificate", or "cert" for short, to refer to
+OpenPGP keys that do not contain secrets.  This subcommand provides
+primitives to generate and otherwise manipulate certs.
+.PP
+Conversely, we use the term "key" to refer to OpenPGP keys that do
+contain secrets.  See `sq key` for operations on keys.
+.PP
+
+
+.SH SUBCOMMANDS
+.SS "sq cert import"
+Import certificates into the local certificate store.
+.PP
+
+
+.SS "sq cert export"
+Export certificates from the local certificate store.
+.PP
+If multiple predicates are specified a certificate is returned if
+at least one of them matches.
+.PP
+This does not check the authenticity of the certificates in anyway.
+Before using the certificates, be sure to validate and authenticate
+them.
+.PP
+When matching on subkeys or User IDs, the component must have a valid
+self signature according to the policy.  This is not the case when
+matching the certificate's key handle using `\-\-cert` or when exporting
+all certificates.
+.PP
+Fails if search criteria are specified and none of them matches any
+certificates.  Note: this means if the certificate store is empty and
+no search criteria are specified, then this will return success.
+.PP
+
+.SS "sq cert lint"
+Check certificates for issues.
+.PP
+`sq cert lint` checks the supplied certificates for the following
+SHA\-1\-related issues:
+.PP
+  \- Whether a certificate revocation uses SHA\-1.
+.PP
+  \- Whether the current self signature for a non\-revoked User ID uses
+    SHA\-1.
+.PP
+  \- Whether the current subkey binding signature for a non\-revoked,
+    live subkey uses SHA\-1.
+.PP
+  \- Whether a primary key binding signature ("backsig") for a
+    non\-revoked, live subkey uses SHA\-1.
+.PP
+Diagnostics are printed to stderr.  At the end, some statistics are
+shown.  This is useful when examining a keyring.  If `\-\-fix` is
+specified and at least one issue could be fixed, the fixed
+certificates are printed to stdout.
+.PP
+This tool does not currently support smart cards.  But, if only the
+subkeys are on a smart card, this tool may still be able to partially
+repair the certificate.  In particular, it will be able to fix any
+issues with User ID self signatures and subkey binding signatures for
+encryption\-capable subkeys, but it will not be able to generate new
+primary key binding signatures for any signing\-capable subkeys.
+.PP
+
+
+.SH EXAMPLES
+.SS "sq cert import"
+.PP
+
+.PP
+Import a certificate.
+.PP
+.nf
+.RS
+sq cert import juliet.pgp
+.RE
+.fi
+.PP
+.SS "sq cert export"
+.PP
+
+.PP
+Export all certificates.
+.PP
+.nf
+.RS
+sq cert export \-\-all
+.RE
+.PP
+.fi
+
+.PP
+Export certificates with a matching User ID packet.  The binding
+signatures are checked, but the User IDs are not authenticated. Note:
+this check is case sensitive.
+.PP
+.nf
+.RS
+sq cert export \-\-userid "Alice <alice@example.org>"
+.RE
+.PP
+.fi
+
+.PP
+Export certificates with a User ID containing the email address. The
+binding signatures are checked, but the User IDs are not authenticated.
+Note: this check is case insensitive.
+.PP
+.nf
+.RS
+sq cert export \-\-email alice@example.org
+.RE
+.PP
+.fi
+
+.PP
+Export certificates where the certificate (i.e., the primary key) has
+the specified Key ID.
+.PP
+.nf
+.RS
+sq cert export \-\-cert 6F0073F60FD0CBF0
+.RE
+.PP
+.fi
+
+.PP
+Export certificates where the primary key or a subkey matches the
+specified Key ID.
+.PP
+.nf
+.RS
+sq cert export \-\-key 24F3955B0B8DECC8
+.RE
+.PP
+.fi
+
+.PP
+Export certificates that contain a User ID with *either* (not both!)
+email address.  Note: this check is case insensitive.
+.PP
+.nf
+.RS
+sq cert export \-\-email alice@example.org \-\-email \\
+.RE
+.RS
+.RS
+bob@example.org
+.RE
+.RE
+.fi
+.PP
+.SS "sq cert lint"
+.PP
+
+.PP
+To gather statistics, simply run:
+.PP
+.nf
+.RS
+sq cert lint keyring.pgp
+.RE
+.PP
+.fi
+
+.PP
+To fix a key:
+.PP
+.nf
+.RS
+gpg \-\-export\-secret\-keys FPR \\
+.RE
+.RS
+.RS
+| sq cert lint \-\-fix \-p passw0rd \-p password123 \\
+.RE
+.RE
+.RS
+.RS
+| gpg \-\-import
+.RE
+.RE
+.PP
+.fi
+
+.PP
+To get a list of keys with issues:
+.PP
+.nf
+.RS
+sq cert lint \-\-list\-keys keyring.pgp \\
+.RE
+.RS
+.RS
+| while read FPR; do something; done
+.RE
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-cert\-import\fR(1), \fBsq\-cert\-export\fR(1), \fBsq\-cert\-lint\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

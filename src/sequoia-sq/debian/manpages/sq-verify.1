@@ -1,0 +1,108 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq verify \- Verify signed messages or detached signatures
+.SH SYNOPSIS
+.br
+\fBsq verify\fR [\fIOPTIONS\fR] \fIFILE\fR
+.SH DESCRIPTION
+Verify signed messages or detached signatures.
+.PP
+When verifying signed messages, the message is written to stdout or
+the file given to `\-\-output`.
+.PP
+When a detached message is verified, no output is produced.  Detached
+signatures are often used to sign software packages.
+.PP
+Verification is only successful if there is no bad signature, and the
+number of successfully verified signatures reaches the threshold
+configured with the `\-\-signatures` parameter.  If the verification
+fails, the program terminates with an exit status indicating failure.
+In addition to that, the last 25 MiB of the message are withheld,
+i.e. if the message is smaller than 25 MiB, no output is produced, and
+if it is larger, then the output will be truncated.
+.PP
+A signature is considered to have been authenticated if the signer can
+be authenticated.  If the signer is provided via `\-\-signer\-file`,
+then the signer is considered authenticated.  Otherwise, the signer is
+looked up and authenticated using the Web of Trust.  If at least one
+User ID can be fully authenticated, then the signature is considered
+to have been authenticated.  If the signature includes a Signer User
+ID subpacket, then only that User ID is considered.  Note: the User ID
+need not be self signed.
+.PP
+The converse operation is `sq sign`.
+.PP
+If you are looking for a standalone program to verify detached
+signatures, consider using sequoia\-sqv.
+.PP
+`sq verify` respects the reference time set by the top\-level
+`\-\-time` argument.  When set, it verifies the message as of the
+reference time instead of the current time.
+.PP
+
+
+.SH OPTIONS
+.SS "Subcommand options"
+.TP
+\fB\-\-detached\fR=\fISIG\fR
+Verify a detached signature
+.TP
+\fB\-n\fR, \fB\-\-signatures\fR=\fIN\fR
+Set the threshold of valid signatures to N. If this threshold is not reached, the message will not be considered verified.
+.TP
+\fB\-o\fR, \fB\-\-output\fR=\fIFILE\fR
+Write to FILE or stdout if omitted
+.TP
+\fB\-\-signer\-cert\fR=\fIFINGERPRINT|KEYID\fR
+Verify signatures using the specified certificate.  This reads the
+certificate from the certificate store, and considers it to be
+authenticated.  When this option is not provided, the certificate is
+still read from the certificate store, if it exists, but it is not
+considered authenticated.
+.TP
+\fB\-\-signer\-file\fR=\fICERT_FILE\fR
+Verify signatures using the certificate in CERT_FILE
+.TP
+ \fIFILE\fR
+Read from FILE or stdin if omitted
+.SS "Global options"
+See \fBsq\fR(1) for a description of the global options.
+.SH EXAMPLES
+.PP
+
+.PP
+Verify a signed message
+.PP
+.nf
+.RS
+sq verify signed\-message.pgp
+.RE
+.PP
+.fi
+
+.PP
+Verify a detached message
+.PP
+.nf
+.RS
+sq verify \-\-detached message.sig message.txt
+.RE
+.PP
+.fi
+
+.PP
+Verify a message as of June 9, 2011 at midnight UTC:
+.PP
+.nf
+.RS
+sq verify \-\-time 20130721 msg.pgp
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

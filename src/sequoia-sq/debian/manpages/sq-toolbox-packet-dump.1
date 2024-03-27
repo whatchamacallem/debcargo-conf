@@ -1,0 +1,90 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq toolbox packet dump \- List packets
+.SH SYNOPSIS
+.br
+\fBsq toolbox packet dump\fR [\fIOPTIONS\fR] \fIFILE\fR
+.SH DESCRIPTION
+List packets.
+.PP
+Creates a human\-readable description of the packet sequence.
+Additionally, it can print cryptographic artifacts, and print the raw
+octet stream similar to hexdump(1), annotating specifically which
+bytes are parsed into OpenPGP values.
+.PP
+To inspect encrypted messages, either supply the session key, or see
+`sq decrypt` with the `\-\-dump` flag, or `sq toolbox packet decrypt`.
+.PP
+
+
+.SH OPTIONS
+.SS "Subcommand options"
+.TP
+\fB\-\-mpis\fR
+Print cryptographic artifacts
+.TP
+\fB\-o\fR, \fB\-\-output\fR=\fIFILE\fR
+Write to FILE or stdout if omitted
+.TP
+\fB\-\-recipient\-file\fR=\fIKEY_FILE\fR
+Decrypt the message using the key in KEY_FILE
+.TP
+\fB\-\-session\-key\fR=\fISESSION\-KEY\fR
+Decrypt an encrypted message using SESSION\-KEY
+.TP
+\fB\-x\fR, \fB\-\-hex\fR
+Print a hexdump
+.TP
+ \fIFILE\fR
+Read from FILE or stdin if omitted
+.SS "Global options"
+See \fBsq\fR(1) for a description of the global options.
+.SH EXAMPLES
+.PP
+
+.PP
+Prints the packets of a certificate
+.PP
+.nf
+.RS
+sq toolbox packet dump juliet.pgp
+.RE
+.PP
+.fi
+
+.PP
+Prints cryptographic artifacts of a certificate
+.PP
+.nf
+.RS
+sq toolbox packet dump \-\-mpis juliet.pgp
+.RE
+.PP
+.fi
+
+.PP
+Prints a hexdump of a certificate
+.PP
+.nf
+.RS
+sq toolbox packet dump \-\-hex juliet.pgp
+.RE
+.PP
+.fi
+
+.PP
+Prints the packets of an encrypted message
+.PP
+.nf
+.RS
+sq toolbox packet dump \-\-session\-key AABBCC... ciphertext.pgp
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-toolbox\fR(1), \fBsq\-toolbox\-packet\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

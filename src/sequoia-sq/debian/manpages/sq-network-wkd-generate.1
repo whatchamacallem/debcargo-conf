@@ -1,0 +1,55 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq network wkd generate \- Generate a Web Key Directory for the given domain and certs
+.SH SYNOPSIS
+.br
+\fBsq network wkd generate\fR [\fIOPTIONS\fR] \fIWEB\-ROOT\fR \fIFQDN\fR \fICERT\-RING\fR
+.SH DESCRIPTION
+Generate a Web Key Directory for the given domain and certs.
+.PP
+If the WKD exists, the new certificates will be inserted and existing
+ones will be updated.
+.PP
+A WKD is per domain, and can be queried using the advanced or the direct method. The advanced method uses a URL with a subdomain 'openpgpkey'. As per the specification, the advanced method is to be preferred. The direct method may only be used if the subdomain doesn't exist. The advanced method allows Web Key Directories for several domains on one web server.
+.PP
+The contents of the generated WKD must be copied to a web server so that they are accessible under https://openpgpkey.example.com/.well\-known/openpgp/... for the advanced version, and https://example.com/.well\-known/openpgp/... for the direct version. sq does not copy files to the web server.
+.PP
+
+.SH OPTIONS
+.SS "Subcommand options"
+.TP
+\fB\-d\fR, \fB\-\-direct\-method\fR
+Use the direct method [default: advanced method]
+.TP
+\fB\-s\fR, \fB\-\-skip\fR
+Skip certificates that do not have User IDs for given domain.
+.TP
+ \fIWEB\-ROOT\fR
+Write the WKD to WEB\-ROOT. Transfer this directory to the webserver.
+.TP
+ \fIFQDN\fR
+Generate a WKD for a fully qualified domain name for email
+.TP
+ \fICERT\-RING\fR
+Add certificates from CERT\-RING (or stdin if omitted) to the WKD
+.SS "Global options"
+See \fBsq\fR(1) for a description of the global options.
+.SH EXAMPLES
+.PP
+
+.PP
+Generate a WKD in /tmp/wkdroot from certs.pgp for example.com.
+.PP
+.nf
+.RS
+sq wkd generate /tmp/wkdroot example.com certs.pgp
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-network\fR(1), \fBsq\-network\-wkd\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

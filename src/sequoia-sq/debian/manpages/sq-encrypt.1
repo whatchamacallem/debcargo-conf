@@ -1,0 +1,117 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq encrypt \- Encrypt a message
+.SH SYNOPSIS
+.br
+\fBsq encrypt\fR [\fIOPTIONS\fR] \fIFILE\fR
+.SH DESCRIPTION
+Encrypt a message.
+.PP
+Encrypt a message for any number of recipients and with any number of
+passwords, optionally signing the message in the process.
+.PP
+The converse operation is `sq decrypt`.
+.PP
+`sq encrypt` respects the reference time set by the top\-level
+`\-\-time` argument.  It uses the reference time when selecting
+encryption keys, and it sets the signature's creation time to the
+reference time.
+.PP
+
+
+.SH OPTIONS
+.SS "Subcommand options"
+.TP
+\fB\-B\fR, \fB\-\-binary\fR
+Emit binary data
+.TP
+\fB\-\-compression\fR=\fIKIND\fR
+Select compression scheme to use
+.TP
+\fB\-\-encrypt\-for\fR=\fIPURPOSE\fR
+Select what kind of keys are considered for encryption.  'transport' selects subkeys marked as suitable for transport encryption, 'storage' selects those for encrypting data at rest, and 'universal' selects all encryption\-capable subkeys.
+.TP
+\fB\-o\fR, \fB\-\-output\fR=\fIFILE\fR
+Write to FILE or stdout if omitted
+.TP
+\fB\-\-private\-key\-store\fR=\fIKEY_STORE\fR
+Provide parameters for private key store
+.TP
+\fB\-\-recipient\-cert\fR=\fIFINGERPRINT|KEYID\fR
+Encrypt to the named certificates
+.TP
+\fB\-\-recipient\-email\fR=\fIEMAIL\fR
+Encrypt to all certificates that can be authenticated for the specified email address
+.TP
+\fB\-\-recipient\-file\fR=\fICERT_RING_FILE\fR
+Encrypt to all certificates in CERT_RING_FILE
+.TP
+\fB\-\-recipient\-userid\fR=\fIUSERID\fR
+Encrypt to all certificates that can be authenticated for the specified User ID
+.TP
+\fB\-s\fR, \fB\-\-symmetric\fR
+Prompt to add a password to encrypt with.  When using this option, the user is asked to provide a password, which is used to encrypt the message. This option can be provided more than once to provide more than one password. The encrypted data can afterwards be decrypted with either one of the recipient's keys, or one of the provided passwords.
+.TP
+\fB\-\-set\-metadata\-filename\fR
+Set the filename of the encrypted file as metadata.  Do note, that this metadata is not signed and as such relying on it \- on sender or receiver side \- is generally considered dangerous.
+.TP
+\fB\-\-set\-metadata\-time\fR=\fITIME\fR
+Set time for encrypted file as metadata.  Allows setting TIME either as ISO 8601 formatted string or by providing custom keywords.  With `none`, the metadata is not set.  With `file\-creation`, the metadata is set to the file's creation timestamp.  With `file\-modification`, the metadata is set to the file's last modification timestamp.  With `message\-creation`, the metadata is set to the creation timestamp of the message for which the metadata is added.  Do note, that this metadata is not signed and as such relying on it \- on sender or receiver side \- is generally considered dangerous.
+.TP
+\fB\-\-signer\-file\fR=\fIKEY_FILE\fR
+Sign the message using the key in KEY_FILE
+.TP
+\fB\-\-signer\-key\fR=\fIKEYID|FINGERPRINT\fR
+Sign the message using the specified key on the key store
+.TP
+\fB\-\-use\-expired\-subkey\fR
+If a certificate has only expired encryption\-capable subkeys, fall back to using the one that expired last
+.TP
+ \fIFILE\fR
+Read from FILE or stdin if omitted
+.SS "Global options"
+See \fBsq\fR(1) for a description of the global options.
+.SH EXAMPLES
+.PP
+
+.PP
+Encrypt a file using a certificate
+.PP
+.nf
+.RS
+sq encrypt \-\-recipient\-file romeo.pgp message.txt
+.RE
+.PP
+.fi
+
+.PP
+Encrypt a file creating a signature in the process
+.PP
+.nf
+.RS
+sq encrypt \-\-recipient\-file romeo.pgp \-\-signer\-file juliet.pgp \\
+.RE
+.RS
+.RS
+message.txt
+.RE
+.RE
+.PP
+.fi
+
+.PP
+Encrypt a file using a password
+.PP
+.nf
+.RS
+sq encrypt \-\-symmetric message.txt
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

@@ -1,0 +1,74 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq autocrypt encode\-sender \- Encode a certificate into an Autocrypt header
+.SH SYNOPSIS
+.br
+\fBsq autocrypt encode\-sender\fR [\fIOPTIONS\fR] \fIFILE\fR
+.SH DESCRIPTION
+Encode a certificate into an Autocrypt header.
+.PP
+A certificate can be encoded and included in a header of an email
+message.  This command encodes the certificate, adds the senders email
+address (which must match the one used in the `From` header), and the
+senders `prefer\-encrypt` state (see the Autocrypt spec for more
+information).
+.PP
+The converse operation is `sq autocrypt decode`.
+.PP
+
+
+.SH OPTIONS
+.SS "Subcommand options"
+.TP
+\fB\-\-email\fR=\fIADDRESS\fR
+Set the address [default: primary userid]
+.TP
+\fB\-o\fR, \fB\-\-output\fR=\fIFILE\fR
+Write to FILE or stdout if omitted
+.TP
+\fB\-\-prefer\-encrypt\fR=\fIPREFER\-ENCRYPT\fR
+Set the prefer\-encrypt attribute
+.TP
+ \fIFILE\fR
+Read from FILE or stdin if omitted
+.SS "Global options"
+See \fBsq\fR(1) for a description of the global options.
+.SH EXAMPLES
+.PP
+
+.PP
+Encodes a certificate
+.PP
+.nf
+.RS
+sq autocrypt encode\-sender juliet.pgp
+.RE
+.PP
+.fi
+
+.PP
+Encodes a certificate with an explicit sender address
+.PP
+.nf
+.RS
+sq autocrypt encode\-sender \-\-email juliet@example.org juliet.pgp
+.RE
+.PP
+.fi
+
+.PP
+Encodes a certificate while indicating the willingness to encrypt
+.PP
+.nf
+.RS
+sq autocrypt encode\-sender \-\-prefer\-encrypt mutual juliet.pgp
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-autocrypt\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

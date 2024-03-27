@@ -1,0 +1,117 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq autocrypt \- Communicate certificates using Autocrypt
+.SH SYNOPSIS
+.br
+\fBsq autocrypt import\fR [\fIOPTIONS\fR] \fIFILE\fR
+.br
+\fBsq autocrypt decode\fR [\fIOPTIONS\fR] \fIFILE\fR
+.br
+\fBsq autocrypt encode\-sender\fR [\fIOPTIONS\fR] \fIFILE\fR
+.SH DESCRIPTION
+Communicate certificates using Autocrypt.
+.PP
+Autocrypt is a standard for mail user agents to provide convenient
+end\-to\-end encryption of emails.  This subcommand provides a limited
+way to produce and consume headers that are used by Autocrypt to
+communicate certificates between clients.
+.PP
+See <https://autocrypt.org/>.
+.PP
+
+.SH SUBCOMMANDS
+.SS "sq autocrypt import"
+Import Autocrypt\-encoded certificates.
+.PP
+Given a mail containing autocrypt headers (or an key\-gossip headers),
+this command extracts and imports the certificates encoded within it.
+.PP
+
+
+.SS "sq autocrypt decode"
+Read Autocrypt\-encoded certificates.
+.PP
+Given an autocrypt header (or an key\-gossip header), this command
+extracts the certificate encoded within it.
+.PP
+The converse operation is `sq autocrypt encode\-sender`.
+.PP
+
+
+.SS "sq autocrypt encode-sender"
+Encode a certificate into an Autocrypt header.
+.PP
+A certificate can be encoded and included in a header of an email
+message.  This command encodes the certificate, adds the senders email
+address (which must match the one used in the `From` header), and the
+senders `prefer\-encrypt` state (see the Autocrypt spec for more
+information).
+.PP
+The converse operation is `sq autocrypt decode`.
+.PP
+
+
+.SH EXAMPLES
+.SS "sq autocrypt import"
+.PP
+
+.PP
+Imports all certificates from a mail
+.PP
+.nf
+.RS
+sq autocrypt import autocrypt.eml
+.RE
+.fi
+.PP
+.SS "sq autocrypt decode"
+.PP
+
+.PP
+Extract all certificates from a mail
+.PP
+.nf
+.RS
+sq autocrypt decode autocrypt.eml
+.RE
+.fi
+.PP
+.SS "sq autocrypt encode-sender"
+.PP
+
+.PP
+Encodes a certificate
+.PP
+.nf
+.RS
+sq autocrypt encode\-sender juliet.pgp
+.RE
+.PP
+.fi
+
+.PP
+Encodes a certificate with an explicit sender address
+.PP
+.nf
+.RS
+sq autocrypt encode\-sender \-\-email juliet@example.org juliet.pgp
+.RE
+.PP
+.fi
+
+.PP
+Encodes a certificate while indicating the willingness to encrypt
+.PP
+.nf
+.RS
+sq autocrypt encode\-sender \-\-prefer\-encrypt mutual juliet.pgp
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-autocrypt\-import\fR(1), \fBsq\-autocrypt\-decode\fR(1), \fBsq\-autocrypt\-encode\-sender\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

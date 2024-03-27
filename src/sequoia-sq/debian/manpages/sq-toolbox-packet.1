@@ -1,0 +1,168 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq toolbox packet \- Low\-level packet manipulation
+.SH SYNOPSIS
+.br
+\fBsq toolbox packet dump\fR [\fIOPTIONS\fR] \fIFILE\fR
+.br
+\fBsq toolbox packet decrypt\fR [\fIOPTIONS\fR] \fIFILE\fR
+.br
+\fBsq toolbox packet split\fR [\fIOPTIONS\fR] \fIFILE\fR
+.br
+\fBsq toolbox packet join\fR [\fIOPTIONS\fR] \fIFILE\fR
+.SH DESCRIPTION
+Low\-level packet manipulation.
+.PP
+An OpenPGP data stream consists of packets.  These tools allow working
+with packet streams.  They are mostly of interest to developers, but
+`sq toolbox packet dump` may be helpful to a wider audience both to provide
+valuable information in bug reports to OpenPGP\-related software, and
+as a learning tool.
+.PP
+
+.SH SUBCOMMANDS
+.SS "sq toolbox packet dump"
+List packets.
+.PP
+Creates a human\-readable description of the packet sequence.
+Additionally, it can print cryptographic artifacts, and print the raw
+octet stream similar to hexdump(1), annotating specifically which
+bytes are parsed into OpenPGP values.
+.PP
+To inspect encrypted messages, either supply the session key, or see
+`sq decrypt` with the `\-\-dump` flag, or `sq toolbox packet decrypt`.
+.PP
+
+
+.SS "sq toolbox packet decrypt"
+Unwrap an encryption container.
+.PP
+Decrypts a message, dumping the content of the encryption container
+without further processing.  The result is a valid OpenPGP message
+that can, among other things, be inspected using `sq toolbox packet dump`.
+.PP
+
+
+.SS "sq toolbox packet split"
+Split a message into packets.
+.PP
+Splitting a packet sequence into individual packets, then recombining
+them freely with `sq toolbox packet join` is a great way to experiment with
+OpenPGP data.
+.PP
+The converse operation is `sq toolbox packet join`.
+.PP
+
+
+.SS "sq toolbox packet join"
+Join packets split across files.
+.PP
+Splitting a packet sequence into individual packets, then recombining
+them freely with `sq toolbox packet join` is a great way to experiment with
+OpenPGP data.
+.PP
+The converse operation is `sq toolbox packet split`.
+.PP
+
+
+.SH EXAMPLES
+.SS "sq toolbox packet dump"
+.PP
+
+.PP
+Prints the packets of a certificate
+.PP
+.nf
+.RS
+sq toolbox packet dump juliet.pgp
+.RE
+.PP
+.fi
+
+.PP
+Prints cryptographic artifacts of a certificate
+.PP
+.nf
+.RS
+sq toolbox packet dump \-\-mpis juliet.pgp
+.RE
+.PP
+.fi
+
+.PP
+Prints a hexdump of a certificate
+.PP
+.nf
+.RS
+sq toolbox packet dump \-\-hex juliet.pgp
+.RE
+.PP
+.fi
+
+.PP
+Prints the packets of an encrypted message
+.PP
+.nf
+.RS
+sq toolbox packet dump \-\-session\-key AABBCC... ciphertext.pgp
+.RE
+.fi
+.PP
+.SS "sq toolbox packet decrypt"
+.PP
+
+.PP
+Unwraps the encryption revealing the signed message
+.PP
+.nf
+.RS
+sq toolbox packet decrypt \-\-recipient\-file juliet.pgp \\
+.RE
+.RS
+.RS
+ciphertext.pgp
+.RE
+.RE
+.fi
+.PP
+.SS "sq toolbox packet split"
+.PP
+
+.PP
+Split a certificate into individual packets
+.PP
+.nf
+.RS
+sq toolbox packet split juliet.pgp
+.RE
+.fi
+.PP
+.SS "sq toolbox packet join"
+.PP
+
+.PP
+Split a certificate into individual packets
+.PP
+.nf
+.RS
+sq toolbox packet split juliet.pgp
+.RE
+.PP
+.fi
+
+.PP
+Then join only a subset of these packets
+.PP
+.nf
+.RS
+sq toolbox packet join juliet.pgp\-[0\-3]*
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-toolbox\fR(1), \fBsq\-toolbox\-packet\-dump\fR(1), \fBsq\-toolbox\-packet\-decrypt\fR(1), \fBsq\-toolbox\-packet\-split\fR(1), \fBsq\-toolbox\-packet\-join\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

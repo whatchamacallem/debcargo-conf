@@ -4,3 +4,11 @@ export ASSET_OUT_DIR := target
 
 %:
 	dh $@ --buildsystem cargo --with bash-completion
+
+override_dh_install:
+	mkdir -p debian/sq/usr/share/fish/completions/ debian/sq/usr/share/zsh/vendor-completions/ debian/sq/usr/share/bash-completion/completions/
+	cp -f debian/completion/sq.fish debian/sq/usr/share/fish/completions/sq.fish
+	chmod -x debian/sq/usr/share/fish/completions/sq.fish
+	cp -f debian/completion/_sq debian/sq/usr/share/zsh/vendor-completions/_sq
+	cp -f debian/completion/sq.bash debian/sq/usr/share/bash-completion/completions/sq
+	dh_install

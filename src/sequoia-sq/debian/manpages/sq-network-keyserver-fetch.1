@@ -1,0 +1,51 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq network keyserver fetch \- Retrieve certificates from key servers
+.SH SYNOPSIS
+.br
+\fBsq network keyserver fetch\fR [\fIOPTIONS\fR] \fIQUERY\fR
+.SH DESCRIPTION
+Retrieve certificates from key servers.
+.PP
+By default, any returned certificates are stored in the local
+certificate store.  This can be overridden by using `\-\-output`
+option.
+.PP
+When a certificate is retrieved from a verifying key server (currently,
+this is limited to a list of known servers: `hkps://keys.openpgp.org`,
+`hkps://keys.mailvelope.com`, and `hkps://mail\-api.proton.me`), and
+imported into the local certificate store, the User IDs are also
+certificated with a local server\-specific key.  That proxy certificate
+is in turn certified as a minimally trusted CA (trust amount: 1 of
+120) by the local trust root.  How much a proxy key server CA is
+trusted can be tuned using `sq pki link add` or `sq pki link retract` in
+the usual way.
+.PP
+
+.SH OPTIONS
+.SS "Subcommand options"
+.TP
+\fB\-B\fR, \fB\-\-binary\fR
+Emit binary data
+.TP
+\fB\-\-all\fR
+Fetch updates for all known certificates
+.TP
+\fB\-o\fR, \fB\-\-output\fR=\fIFILE\fR
+Write to FILE (or stdout when omitted) instead of importing into the certificate store
+.TP
+\fB\-s\fR, \fB\-\-server\fR=\fIURI\fR
+Set the key server to use.  Can be given multiple times.
+.TP
+ \fIQUERY\fR
+Retrieve certificate(s) using QUERY. This may be a fingerprint, a KeyID, or an email address.
+.SS "Global options"
+See \fBsq\fR(1) for a description of the global options.
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-network\fR(1), \fBsq\-network\-keyserver\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

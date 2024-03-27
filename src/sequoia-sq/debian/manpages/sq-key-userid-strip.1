@@ -1,0 +1,86 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq key userid strip \- Strip a User ID
+.SH SYNOPSIS
+.br
+\fBsq key userid strip\fR [\fIOPTIONS\fR] \fIFILE\fR
+.SH DESCRIPTION
+Strip a User ID.
+.PP
+Note that this operation does not reliably remove User IDs from a
+certificate that has already been disseminated! (OpenPGP software
+typically appends new information it receives about a certificate
+to its local copy of that certificate.  Systems that have obtained
+a copy of your certificate with the User ID that you are trying to
+strip will not drop that User ID from their copy.)
+.PP
+In most cases, you will want to use the 'sq key userid revoke' operation
+instead.  That issues a revocation for a User ID, which can be used to mark
+the User ID as invalidated.
+.PP
+However, this operation can be useful in very specific cases, in particular:
+to remove a mistakenly added User ID before it has been uploaded to key
+servers or otherwise shared.
+.PP
+Stripping a User ID may change how a certificate is interpreted.  This
+is because information about the certificate like algorithm preferences,
+the primary key's key flags, etc. is stored in the User ID's binding
+signature.
+.PP
+
+
+.SH OPTIONS
+.SS "Subcommand options"
+.TP
+\fB\-B\fR, \fB\-\-binary\fR
+Emit binary data
+.TP
+\fB\-o\fR, \fB\-\-output\fR=\fIFILE\fR
+Write to FILE or stdout if omitted
+.TP
+\fB\-u\fR, \fB\-\-userid\fR=\fIUSERID\fR
+The User IDs to strip.  Values must exactly match a User ID.
+.TP
+ \fIFILE\fR
+Read from FILE or stdin if omitted
+.SS "Global options"
+See \fBsq\fR(1) for a description of the global options.
+.SH EXAMPLES
+.PP
+
+.PP
+First, generate a key:
+.PP
+.nf
+.RS
+sq key generate \-\-userid '<juliet@example.org>' \\
+.RE
+.RS
+.RS
+\-\-output juliet.key.pgp
+.RE
+.RE
+.PP
+.fi
+
+.PP
+Then, strip a User ID:
+.PP
+.nf
+.RS
+sq key userid strip \-\-userid '<juliet@example.org>' \\
+.RE
+.RS
+.RS
+\-\-output juliet\-new.key.pgp juliet.key.pgp
+.RE
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-key\fR(1), \fBsq\-key\-userid\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

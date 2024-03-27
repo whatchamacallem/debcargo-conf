@@ -1,0 +1,47 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq pki link retract \- Retract links
+.SH SYNOPSIS
+.br
+\fBsq pki link retract\fR [\fIOPTIONS\fR] \fIFINGERPRINT|KEYID\fR \fIUSERID|EMAIL\fR
+.SH DESCRIPTION
+Retract links.
+.PP
+This command retracts links that were previously created using `sq
+pki link add`.  See that subcommand's documentation for more details.
+Note: this is called `retract` and not `remove`, because the
+certifications are not removed.  Instead a new certification is added,
+which says that the binding has not been authenticated.
+.PP
+`sq pki link retract` respects the reference time set by the top\-level
+`\-\-time` argument.  This causes a link to be retracted as of a
+particular time instead of the current time.
+.PP
+
+.SH OPTIONS
+.SS "Subcommand options"
+.TP
+\fB\-\-email\fR=\fIemail\fR
+An email address to unlink from the certificate.  The email address must match a User ID with the email, although, it need not be linked.
+.TP
+\fB\-\-notation\fR \fINAME\fR \fIVALUE\fR
+Add a notation to the certification.  A user\-defined notation's name must be of the form `name@a.domain.you.control.org`. If the notation's name starts with a !, then the notation is marked as being critical.  If a consumer of a signature doesn't understand a critical notation, then it will ignore the signature.  The notation is marked as being human readable.
+.TP
+\fB\-\-userid\fR=\fIUSERID\fR
+A User ID to unlink from the certificate.  This must match a known User ID, although it need not be linked.
+.TP
+ \fIFINGERPRINT|KEYID\fR
+The certificate whose acceptance is being retracted.
+.TP
+ \fIUSERID|EMAIL\fR
+A User ID or email address to unlink from the certificate.  This must match a known User ID.  Scripts should prefer to use `\-\-email` or `\-\-userid`, as `sq` does not need to guess if a value is a User ID or an email address. If no User IDs, or email addresses are provided, then all known User IDs are unlinked.
+.SS "Global options"
+See \fBsq\fR(1) for a description of the global options.
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-pki\fR(1), \fBsq\-pki\-link\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

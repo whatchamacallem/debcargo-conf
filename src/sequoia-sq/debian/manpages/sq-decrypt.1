@@ -1,0 +1,101 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq decrypt \- Decrypt a message
+.SH SYNOPSIS
+.br
+\fBsq decrypt\fR [\fIOPTIONS\fR] \fIFILE\fR
+.SH DESCRIPTION
+Decrypt a message.
+.PP
+Decrypt a message using either supplied keys, or by prompting for a
+password.  If message tampering is detected, an error is returned.
+See below for details.
+.PP
+If certificates are supplied using the `\-\-signer\-cert` option, any
+signatures that are found are checked using these certificates.
+Verification is only successful if there is no bad signature, and the
+number of successfully verified signatures reaches the threshold
+configured with the `\-\-signatures` parameter.
+.PP
+If the signature verification fails, or if message tampering is
+detected, the program terminates with an exit status indicating
+failure.  In addition to that, the last 25 MiB of the message are
+withheld, i.e. if the message is smaller than 25 MiB, no output is
+produced, and if it is larger, then the output will be truncated.
+.PP
+The converse operation is `sq encrypt`.
+.PP
+
+
+.SH OPTIONS
+.SS "Subcommand options"
+.TP
+\fB\-\-dump\-session\-key\fR
+Print the session key to stderr
+.TP
+\fB\-n\fR, \fB\-\-signatures\fR=\fIN\fR
+Set the threshold of valid signatures to N. The message will only be considered verified if this threshold is reached. [default: 1 if at least one signer cert file is given, 0 otherwise]
+.TP
+\fB\-o\fR, \fB\-\-output\fR=\fIFILE\fR
+Write to FILE or stdout if omitted
+.TP
+\fB\-\-private\-key\-store\fR=\fIKEY_STORE\fR
+Provide parameters for private key store
+.TP
+\fB\-\-recipient\-file\fR=\fIKEY_FILE\fR
+Decrypt the message using the key in KEY_FILE
+.TP
+\fB\-\-session\-key\fR=\fISESSION\-KEY\fR
+Decrypt an encrypted message using SESSION\-KEY
+.TP
+\fB\-\-signer\-file\fR=\fICERT_FILE\fR
+Verify signatures using the certificates in CERT_FILE
+.TP
+ \fIFILE\fR
+Read from FILE or stdin if omitted
+.SS "Global options"
+See \fBsq\fR(1) for a description of the global options.
+.SH EXAMPLES
+.PP
+
+.PP
+Decrypt a file using a secret key
+.PP
+.nf
+.RS
+sq decrypt \-\-recipient\-file juliet.pgp ciphertext.pgp
+.RE
+.PP
+.fi
+
+.PP
+Decrypt a file verifying signatures
+.PP
+.nf
+.RS
+sq decrypt \-\-recipient\-file juliet.pgp \-\-signer\-file romeo.pgp \\
+.RE
+.RS
+.RS
+ciphertext.pgp
+.RE
+.RE
+.PP
+.fi
+
+.PP
+Decrypt a file using a password
+.PP
+.nf
+.RS
+sq decrypt ciphertext.pgp
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

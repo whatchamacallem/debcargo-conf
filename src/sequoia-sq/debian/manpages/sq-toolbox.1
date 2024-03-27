@@ -1,0 +1,158 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq toolbox \- Tools for developers, maintainers, and forensic specialists
+.SH SYNOPSIS
+.br
+\fBsq toolbox keyring\fR [\fIOPTIONS\fR]  \fISUBCOMMAND\fR
+.br
+\fBsq toolbox extract\-cert\fR [\fIOPTIONS\fR] \fIFILE\fR
+.br
+\fBsq toolbox packet\fR [\fIOPTIONS\fR]  \fISUBCOMMAND\fR
+.br
+\fBsq toolbox armor\fR [\fIOPTIONS\fR] \fIFILE\fR
+.br
+\fBsq toolbox dearmor\fR [\fIOPTIONS\fR] \fIFILE\fR
+.SH DESCRIPTION
+Tools for developers, maintainers, and forensic specialists.
+.PP
+This is a collection of low\-level tools to inspect and manipulate
+OpenPGP data structures.
+.PP
+
+.SH SUBCOMMANDS
+.SS "sq toolbox keyring"
+Manage collections of keys or certs.
+.PP
+Collections of keys or certificates (also known as "keyrings" when
+they contain secret key material, and "certrings" when they don't) are
+any number of concatenated certificates.  This subcommand provides
+tools to list, split, merge, and filter keyrings.
+.PP
+Note: In the documentation of this subcommand, we sometimes use the
+terms keys and certs interchangeably.
+.PP
+
+.SS "sq toolbox extract-cert"
+Convert a key to a cert.
+.PP
+After generating a key, use this command to get the certificate
+corresponding to the key.  The key must be kept secure, while the
+certificate should be handed out to correspondents, e.g. by uploading
+it to a key server.
+.PP
+
+
+.SS "sq toolbox packet"
+Low\-level packet manipulation.
+.PP
+An OpenPGP data stream consists of packets.  These tools allow working
+with packet streams.  They are mostly of interest to developers, but
+`sq toolbox packet dump` may be helpful to a wider audience both to provide
+valuable information in bug reports to OpenPGP\-related software, and
+as a learning tool.
+.PP
+
+.SS "sq toolbox armor"
+Convert binary to ASCII.
+.PP
+To make encrypted data easier to handle and transport, OpenPGP data
+can be transformed to an ASCII representation called ASCII Armor.  sq
+emits armored data by default, but this subcommand can be used to
+convert existing OpenPGP data to its ASCII\-encoded representation.
+.PP
+The converse operation is `sq toolbox dearmor`.
+.PP
+
+
+.SS "sq toolbox dearmor"
+Convert ASCII to binary.
+.PP
+To make encrypted data easier to handle and transport, OpenPGP data
+can be transformed to an ASCII representation called ASCII Armor.  sq
+transparently handles armored data, but this subcommand can be used to
+explicitly convert existing ASCII\-encoded OpenPGP data to its binary
+representation.
+.PP
+The converse operation is `sq toolbox armor`.
+.PP
+
+
+.SH EXAMPLES
+.SS "sq toolbox extract-cert"
+.PP
+
+.PP
+First, generate a key
+.PP
+.nf
+.RS
+sq key generate \-\-userid '<juliet@example.org>' \\
+.RE
+.RS
+.RS
+\-\-output juliet.key.pgp
+.RE
+.RE
+.PP
+.fi
+
+.PP
+Then, extract the certificate for distribution
+.PP
+.nf
+.RS
+sq toolbox extract\-cert \-\-output juliet.cert.pgp juliet.key.pgp
+.RE
+.fi
+.PP
+.SS "sq toolbox armor"
+.PP
+
+.PP
+Convert a binary certificate to ASCII
+.PP
+.nf
+.RS
+sq toolbox armor binary\-juliet.pgp
+.RE
+.PP
+.fi
+
+.PP
+Convert a binary message to ASCII
+.PP
+.nf
+.RS
+sq toolbox armor binary\-message.pgp
+.RE
+.fi
+.PP
+.SS "sq toolbox dearmor"
+.PP
+
+.PP
+Convert a ASCII certificate to binary
+.PP
+.nf
+.RS
+sq toolbox dearmor ascii\-juliet.pgp
+.RE
+.PP
+.fi
+
+.PP
+Convert a ASCII message to binary
+.PP
+.nf
+.RS
+sq toolbox dearmor ascii\-message.pgp
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-toolbox\-keyring\fR(1), \fBsq\-toolbox\-extract\-cert\fR(1), \fBsq\-toolbox\-packet\fR(1), \fBsq\-toolbox\-armor\fR(1), \fBsq\-toolbox\-dearmor\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

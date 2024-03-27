@@ -1,0 +1,363 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq key \- Manage keys
+.SH SYNOPSIS
+.br
+\fBsq key list\fR [\fIOPTIONS\fR]  
+.br
+\fBsq key generate\fR [\fIOPTIONS\fR]  
+.br
+\fBsq key import\fR [\fIOPTIONS\fR] \fIKEY_FILE\fR
+.br
+\fBsq key password\fR [\fIOPTIONS\fR] \fIFILE\fR
+.br
+\fBsq key expire\fR [\fIOPTIONS\fR] \fIEXPIRY\fR \fIFILE\fR
+.br
+\fBsq key revoke\fR [\fIOPTIONS\fR] \fIREASON\fR \fIMESSAGE\fR
+.br
+\fBsq key userid\fR [\fIOPTIONS\fR]  \fISUBCOMMAND\fR
+.br
+\fBsq key subkey\fR [\fIOPTIONS\fR]  \fISUBCOMMAND\fR
+.br
+\fBsq key attest\-certifications\fR [\fIOPTIONS\fR] \fIKEY\fR
+.br
+\fBsq key adopt\fR [\fIOPTIONS\fR] \fITARGET\-KEY\fR
+.SH DESCRIPTION
+Manage keys.
+.PP
+We use the term "key" to refer to OpenPGP keys that do contain
+secrets.  This subcommand provides primitives to generate and
+otherwise manipulate keys.
+.PP
+Conversely, we use the term "certificate", or "cert" for short, to refer
+to OpenPGP keys that do not contain secrets.  See `sq toolbox keyring` for
+operations on certificates.
+.PP
+
+.SH SUBCOMMANDS
+.SS "sq key list"
+List keys managed by the key store.
+.PP
+
+.SS "sq key generate"
+Generate a new key.
+.PP
+Generating a key is the prerequisite to receiving encrypted messages
+and creating signatures.  There are a few parameters to this process,
+but we provide reasonable defaults for most users.
+.PP
+When generating a key, we also generate a revocation certificate.
+This can be used in case the key is superseded, lost, or compromised.
+It is a good idea to keep a copy of this in a safe place.
+.PP
+After generating a key, use `sq toolbox extract\-cert` to get the
+certificate corresponding to the key.  The key must be kept secure,
+while the certificate should be handed out to correspondents, e.g. by
+uploading it to a key server.
+.PP
+By default a key expires after 3 years.
+Using the `\-\-expiry=` argument specific validity periods may be defined.
+It allows for providing a point in time for validity to end or a validity
+duration.
+.PP
+`sq key generate` respects the reference time set by the top\-level
+`\-\-time` argument.  It sets the creation time of the key, any
+subkeys, and the binding signatures to the reference time.
+.PP
+
+
+.SS "sq key import"
+Import keys into the key store.
+.PP
+
+.SS "sq key password"
+Change password protecting secrets.
+.PP
+Secret key material in keys can be protected by a password.  This
+subcommand changes or clears this encryption password.
+.PP
+To emit the key with unencrypted secrets, either use `\-\-clear` or
+supply a zero\-length password when prompted for the new password.
+.PP
+
+
+.SS "sq key expire"
+Change expiration times.
+.PP
+Keys and their individual subkeys can expire.  This subcommand changes
+or clears the expiration times.
+.PP
+By default, the expiration time of the entire key is changed.  To
+change the expiration of only some of the subkeys, use the `\-\-subkey`
+option.
+.PP
+
+
+.SS "sq key revoke"
+Revoke a certificate.
+.PP
+Creates a revocation certificate for the certificate.
+.PP
+If `\-\-revocation\-file` is provided, then that key is used to create
+the signature.  If that key is different from the certificate being
+revoked, this creates a third\-party revocation.  This is normally only
+useful if the owner of the certificate designated the key to be a
+designated revoker.
+.PP
+If `\-\-revocation\-file` is not provided, then the certificate must
+include a certification\-capable key.
+.PP
+`sq key revoke` respects the reference time set by the top\-level `\-\-time` argument.  When set, it uses the specified time instead of the current time, when determining what keys are valid, and it sets the revocation certificate's creation time to the reference time instead of the current time.
+.PP
+
+.SS "sq key userid"
+Manage User IDs.
+.PP
+Add User IDs to, or strip User IDs from a key.
+.PP
+
+.SS "sq key subkey"
+Manage Subkeys.
+.PP
+Add new subkeys to an existing key.
+.PP
+
+.SS "sq key attest-certifications"
+Attest to third\-party certifications allowing for their distribution.
+.PP
+To prevent certificate flooding attacks, modern key servers prevent
+uncontrolled distribution of third\-party certifications on
+certificates.  To make the key holder the sovereign over the
+information over what information is distributed with the certificate,
+the key holder needs to explicitly attest to third\-party
+certifications.
+.PP
+After the attestation has been created, the certificate has to be
+distributed, e.g. by uploading it to a key server.
+.PP
+
+
+.SS "sq key adopt"
+Bind keys from one certificate to another.
+.PP
+This command allows one to transfer primary keys and subkeys into an
+existing certificate.  Say you want to transition to a new
+certificate, but have an authentication subkey on your current
+certificate.  You want to keep the authentication subkey because it
+allows access to SSH servers and updating their configuration is not
+feasible.
+.PP
+
+
+.SH EXAMPLES
+.SS "sq key list"
+.PP
+
+.PP
+List the keys managed by the keystore server.
+.PP
+.nf
+.RS
+sq key list
+.RE
+.fi
+.PP
+.SS "sq key generate"
+.PP
+
+.PP
+First, generate a key
+.PP
+.nf
+.RS
+sq key generate \-\-userid '<juliet@example.org>' \\
+.RE
+.RS
+.RS
+\-\-output juliet.key.pgp
+.RE
+.RE
+.PP
+.fi
+
+.PP
+Then, extract the certificate for distribution
+.PP
+.nf
+.RS
+sq toolbox extract\-cert \-\-output juliet.cert.pgp juliet.key.pgp
+.RE
+.PP
+.fi
+
+.PP
+Generate a key protecting it with a password
+.PP
+.nf
+.RS
+sq key generate \-\-userid '<juliet@example.org>' \-\-with\-password
+.RE
+.PP
+.fi
+
+.PP
+Generate a key with multiple userids
+.PP
+.nf
+.RS
+sq key generate \-\-userid '<juliet@example.org>' \\
+.RE
+.RS
+.RS
+\-\-userid 'Juliet Capulet'
+.RE
+.RE
+.PP
+.fi
+
+.PP
+Generate a key whose creation time is June 9, 2011 at midnight UTC
+.PP
+.nf
+.RS
+sq key generate \-\-time 20110609 \-\-userid Noam \\
+.RE
+.RS
+.RS
+\-\-output noam.pgp
+.RE
+.RE
+.fi
+.PP
+.SS "sq key import"
+.PP
+
+.PP
+Import the keys into the keystore server.
+.PP
+.nf
+.RS
+sq key import alice\-secret.pgp
+.RE
+.fi
+.PP
+.SS "sq key password"
+.PP
+
+.PP
+First, generate a key
+.PP
+.nf
+.RS
+sq key generate \-\-userid '<juliet@example.org>' \\
+.RE
+.RS
+.RS
+\-\-output juliet.key.pgp
+.RE
+.RE
+.PP
+.fi
+
+.PP
+Then, encrypt the secrets in the key with a password.
+.PP
+.nf
+.RS
+sq key password < juliet.key.pgp > juliet.encrypted_key.pgp
+.RE
+.PP
+.fi
+
+.PP
+And remove the password again.
+.PP
+.nf
+.RS
+sq key password \-\-clear < juliet.encrypted_key.pgp \\
+.RE
+.RS
+.RS
+> juliet.decrypted_key.pgp
+.RE
+.RE
+.fi
+.PP
+.SS "sq key expire"
+.PP
+
+.PP
+Make Alice's key expire in a year.
+.PP
+.nf
+.RS
+sq key expire 1y alice\-secret.pgp
+.RE
+.PP
+.fi
+
+.PP
+Make Alice's key never expire.
+.PP
+.nf
+.RS
+sq key expire never alice\-secret.pgp
+.RE
+.PP
+.fi
+
+.PP
+Make Bob's authentication subkey expire in six months.
+.PP
+.nf
+.RS
+sq key expire 6m \-\-subkey 6AEACDD24F896624 bob\-secret.pgp
+.RE
+.fi
+.PP
+.SS "sq key attest-certifications"
+.PP
+
+.PP
+Attest to all certifications present on the key
+.PP
+.nf
+.RS
+sq key attest\-certifications juliet.pgp
+.RE
+.PP
+.fi
+
+.PP
+Retract prior attestations on the key
+.PP
+.nf
+.RS
+sq key attest\-certifications \-\-none juliet.pgp
+.RE
+.fi
+.PP
+.SS "sq key adopt"
+.PP
+
+.PP
+Adopt an subkey into the new cert
+.PP
+.nf
+.RS
+sq key adopt \-\-keyring juliet\-old.pgp \-\-key 0123456789ABCDEF \\
+.RE
+.RS
+.RS
+juliet\-new.pgp
+.RE
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-key\-list\fR(1), \fBsq\-key\-generate\fR(1), \fBsq\-key\-import\fR(1), \fBsq\-key\-password\fR(1), \fBsq\-key\-expire\fR(1), \fBsq\-key\-revoke\fR(1), \fBsq\-key\-userid\fR(1), \fBsq\-key\-subkey\fR(1), \fBsq\-key\-attest\-certifications\fR(1), \fBsq\-key\-adopt\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

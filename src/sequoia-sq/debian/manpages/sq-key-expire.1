@@ -1,0 +1,76 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq key expire \- Change expiration times
+.SH SYNOPSIS
+.br
+\fBsq key expire\fR [\fIOPTIONS\fR] \fIEXPIRY\fR \fIFILE\fR
+.SH DESCRIPTION
+Change expiration times.
+.PP
+Keys and their individual subkeys can expire.  This subcommand changes
+or clears the expiration times.
+.PP
+By default, the expiration time of the entire key is changed.  To
+change the expiration of only some of the subkeys, use the `\-\-subkey`
+option.
+.PP
+
+
+.SH OPTIONS
+.SS "Subcommand options"
+.TP
+\fB\-B\fR, \fB\-\-binary\fR
+Emit binary data
+.TP
+\fB\-o\fR, \fB\-\-output\fR=\fIFILE\fR
+Write to FILE or stdout if omitted
+.TP
+\fB\-\-subkey\fR=\fISUBKEY\fR
+Change expiration of this subkey, not the entire key
+.TP
+ \fIEXPIRY\fR
+Define EXPIRY for the key as ISO 8601 formatted string or custom duration. If an ISO 8601 formatted string is provided, the validity period reaches from the reference time (may be set using `\-\-time`) to the provided time. Custom durations starting from the reference time may be set using `N[ymwds]`, for N years, months, weeks, days, or seconds. The special keyword `never` sets an unlimited expiry.
+.TP
+ \fIFILE\fR
+Read from FILE or stdin if omitted
+.SS "Global options"
+See \fBsq\fR(1) for a description of the global options.
+.SH EXAMPLES
+.PP
+
+.PP
+Make Alice's key expire in a year.
+.PP
+.nf
+.RS
+sq key expire 1y alice\-secret.pgp
+.RE
+.PP
+.fi
+
+.PP
+Make Alice's key never expire.
+.PP
+.nf
+.RS
+sq key expire never alice\-secret.pgp
+.RE
+.PP
+.fi
+
+.PP
+Make Bob's authentication subkey expire in six months.
+.PP
+.nf
+.RS
+sq key expire 6m \-\-subkey 6AEACDD24F896624 bob\-secret.pgp
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-key\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

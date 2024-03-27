@@ -1,0 +1,146 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq toolbox keyring filter \- Join keys into a keyring applying a filter
+.SH SYNOPSIS
+.br
+\fBsq toolbox keyring filter\fR [\fIOPTIONS\fR] \fIFILE\fR
+.SH DESCRIPTION
+Join keys into a keyring applying a filter.
+.PP
+This can be used to filter keys based on given predicates,
+e.g. whether they have a user id containing an email address with a
+certain domain.  Additionally, the keys can be pruned to only include
+components matching the predicates.
+.PP
+If no filters are supplied, everything matches.
+.PP
+If multiple predicates are given, they are or'ed, i.e. a key matches
+if any of the predicates match.  To require all predicates to match,
+chain multiple invocations of this command.  See EXAMPLES for
+inspiration.
+.PP
+
+
+.SH OPTIONS
+.SS "Subcommand options"
+.TP
+\fB\-B\fR, \fB\-\-binary\fR
+Emit binary data
+.TP
+\fB\-P\fR, \fB\-\-prune\-certs\fR
+Remove certificate components not matching the filter
+.TP
+\fB\-\-domain\fR=\fIFQDN\fR
+Parse user ids into name and email address and case\-sensitively matches on the domain of the email address, requiring an exact match.
+.TP
+\fB\-\-email\fR=\fIADDRESS\fR
+Parse user ids into name and email address and case\-sensitively matches on the email address, requiring an exact match.
+.TP
+\fB\-\-handle\fR=\fIFINGERPRINT|KEYID\fR
+Match on both primary keys and subkeys, including those certificates that match the given fingerprint or key id.
+.TP
+\fB\-\-name\fR=\fINAME\fR
+Parse user ids into name and email and case\-sensitively matches on the name, requiring an exact match.
+.TP
+\fB\-o\fR, \fB\-\-output\fR=\fIFILE\fR
+Write to FILE or stdout if omitted
+.TP
+\fB\-\-to\-cert\fR
+Convert any keys in the input to certificates.  Converting a key to a certificate removes secret key material from the key thereby turning it into a certificate.
+.TP
+\fB\-\-userid\fR=\fIUSERID\fR
+Case\-sensitively matches on the user id, requiring an exact match.
+.TP
+ \fIFILE\fR
+Read from FILE or stdin if omitted
+.SS "Global options"
+See \fBsq\fR(1) for a description of the global options.
+.SH EXAMPLES
+.PP
+
+.PP
+Converts a key to a cert (i.e., remove any secret key material)
+.PP
+.nf
+.RS
+sq toolbox keyring filter \-\-to\-cert cat juliet.pgp
+.RE
+.PP
+.fi
+
+.PP
+Gets the keys with a user id on example.org
+.PP
+.nf
+.RS
+sq toolbox keyring filter \-\-domain example.org keys.pgp
+.RE
+.PP
+.fi
+
+.PP
+Gets the keys with a user id on example.org or example.net
+.PP
+.nf
+.RS
+sq toolbox keyring filter \-\-domain example.org \\
+.RE
+.RS
+.RS
+\-\-domain example.net \\
+.RE
+.RE
+.RS
+.RS
+keys.pgp
+.RE
+.RE
+.PP
+.fi
+
+.PP
+Gets the keys with a user id with the name Juliet
+.PP
+.nf
+.RS
+sq toolbox keyring filter \-\-name Juliet keys.pgp
+.RE
+.PP
+.fi
+
+.PP
+Gets the keys with a user id with the name Juliet on example.org
+.PP
+.nf
+.RS
+sq toolbox keyring filter \-\-domain example.org keys.pgp | \\
+.RE
+.RS
+.RS
+sq toolbox keyring filter \-\-name Juliet
+.RE
+.RE
+.PP
+.fi
+
+.PP
+Gets the keys with a user id on example.org, pruning other userids
+.PP
+.nf
+.RS
+sq toolbox keyring filter \-\-domain example.org \-\-prune\-certs \\
+.RE
+.RS
+.RS
+certs.pgp
+.RE
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-toolbox\fR(1), \fBsq\-toolbox\-keyring\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)

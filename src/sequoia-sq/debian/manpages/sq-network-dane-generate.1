@@ -1,0 +1,59 @@
+.TH SQ 1 0.34.0 "Sequoia PGP" "User Commands"
+.SH NAME
+sq network dane generate \- Generate DANE records for the given domain and certs
+.SH SYNOPSIS
+.br
+\fBsq network dane generate\fR [\fIOPTIONS\fR] \fIFQDN\fR \fICERT\-RING\fR
+.SH DESCRIPTION
+Generate DANE records for the given domain and certs.
+.PP
+The certificates are minimized, and one record per email address is
+emitted.  If multiple user IDs map to one email address, then all
+matching user IDs are included in the emitted certificates.
+.PP
+By default, OPENPGPKEY resource records are emitted.  If your DNS
+server doesn't understand those, use `\-\-generic` to emit generic
+records instead.
+.PP
+
+.SH OPTIONS
+.SS "Subcommand options"
+.TP
+\fB\-\-generic\fR
+Emit generic resource records [default: OPENPGPKEY records]
+.TP
+\fB\-s\fR, \fB\-\-skip\fR
+Skip expired certificates and those that do not have User IDs for given domain.
+.TP
+\fB\-\-size\-limit\fR=\fIBYTES\fR
+Try to shrink the certificates to this size
+.TP
+\fB\-\-ttl\fR=\fIDURATION\fR
+Set the TTL (maximum cache duration) of the resource records
+.TP
+ \fIFQDN\fR
+Generate DANE records for this domain name
+.TP
+ \fICERT\-RING\fR
+Emit records for certificates from CERT\-RING (or stdin if omitted)
+.SS "Global options"
+See \fBsq\fR(1) for a description of the global options.
+.SH EXAMPLES
+.PP
+
+.PP
+Generate DANE records from certs.pgp for example.com.
+.PP
+.nf
+.RS
+sq dane generate example.com certs.pgp
+.RE
+.fi
+.SH "SEE ALSO"
+.nh
+\fBsq\fR(1), \fBsq\-network\fR(1), \fBsq\-network\-dane\fR(1).
+.hy
+.PP
+For the full documentation see <https://book.sequoia\-pgp.org>.
+.SH VERSION
+0.34.0 (sequoia\-openpgp 1.19.0)
