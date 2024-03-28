@@ -57,10 +57,10 @@ Architecture: all
 Depends:
   gpg-sq,
   gpgv-sq
-Description: Sequoia's reimplementation of the GnuPG cli tools (metapackage)
- This metapackage depends on the following binaries packages:
-  - gpg-sq: OpenPGP toolkit offering an interface aligned with gpg
-  - gpgv-sq: Validate OpenPGP signatures as gpgv does
+Description: Sequoia's GnuPG CLI tools (metapackage)
+ This metapackage depends on the following binary packages:
+  - gpg-sq: gpg-like OpenPGP CLI toolkit
+  - gpgv-sq: gpgv-like validator for OpenPGP signatures
  Both are drop-in replacements using the Sequoia OpenPGP implementation
  provided in the Rust crate sequoia-chameleon-gnupg.
 
@@ -78,19 +78,17 @@ Suggests:
 Provides:
  ${cargo:Provides}
 Built-Using: ${cargo:Built-Using}
-Description: OpenPGP toolkit offering a command line interface aligned with gpg
- This package provides the GnuPG interface while useing Sequoia's state.
- It follows the same interface offered by the GnuPG project's gpg, and can
- be used wherever gpg is used.
- .
- gpg-sq is drop-in replacement of gpg that is not feature-complete.
+Description: gpg-like OpenPGP CLI toolkit
+ gpg-sq is Sequoia's alternative implementation of a tool following
+ the GnuPG command line interface. It provides a drop-in but not
+ feature-complete replacement for the GnuPG project's gpg.
  .
  It currently implements a commonly used subset of the signature
  creation and verification commands, the encryption and decryption
  commands, the key listing commands, and some miscellaneous commands.
  .
- Support for trust models is limited.  Currently, the Web-of-Trust
- ('pgp') and always trust ('always') are implemented.
+ Support for trust models is limited.  Currently, the web-of-trust
+ and always-trust models are implemented (as "--pgp" and "--always").
  .
  This tool is provided by the Sequoia project via the sequoia-chameleon-gnupg
  crate.
@@ -109,29 +107,25 @@ Suggests:
 Provides:
  ${cargo:Provides}
 Built-Using: ${cargo:Built-Using}
-Description: validate OpenPGP signatures as gpgv does
- This package provides a verification-only command line interface for OpenPGP
- signatures. It follows the same interface offered by the GnuPG project's gpgv,
- and can be used wherever gpgv is used.
- .
- gpgv-sq is a feature-complete drop-in replacement of gpgv.
- .
- This tool is provided by the Sequoia project via the sequoia-chameleon-gnupg
- crate.
+Description: gpgv-like validator for OpenPGP signatures
+ gpgv-sq is Sequoia's alternative implementation of a verification-only
+ interface for OpenPGP signatures. It provides a feature-complete drop-in
+ replacement for the GnuPG project's gpgv.
 
 Package: gpg-from-sq
 Architecture: all
 Depends:
  gpg-sq
 Description: use gpg-sq for /usr/bin/gpg
- The GnuPG implementation of gpg, if installed, is diverted to gpg-g10code,
- while /usr/bin/gpg is provided by the Rust crate sequoia-chameleon-gnupg.
+ This package diverts the GnuPG implementation of gpg (if installed)
+ to gpg-g10code, while /usr/bin/gpg is provided by the Rust crate
+ sequoia-chameleon-gnupg.
 
 Package: gpgv-from-sq
 Architecture: all
 Depends:
  gpgv-sq
 Description: use gpgv-sq for /usr/bin/gpgv
- The GnuPG implementation of gpgv, if installed, is diverted to gpgv-g10code,
- while /usr/bin/gpgv is provided by the Rust crate sequoia-chameleon-gnupg.
-
+ This package diverts the GnuPG implementation of gpgv (if installed)
+ to gpgv-g10code, while /usr/bin/gpgv is provided by the Rust crate
+ sequoia-chameleon-gnupg.
