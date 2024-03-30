@@ -79,6 +79,39 @@ shouldbuild() {
 	test ! -e "$dst" -o "$src" -nt "$dst"
 }
 
+# maintain an apt cache in ./build/aptroot
+mkdir -p "./aptroot/etc/apt/apt.conf.d" "./aptroot/var/lib/apt/lists/" "./aptroot/etc/apt/preferences.d"
+cat << END > "./aptroot/apt.conf"
+Apt::Architecture "$DEB_HOST_ARCH";
+Apt::Architectures "$DEB_HOST_ARCH";
+Dir "$PWD/aptroot";
+Acquire::Languages "none";
+Dir::Etc::Trusted "$(eval "$(apt-config shell v Dir::Etc::Trusted/f)"; printf "$v")";
+Dir::Etc::TrustedParts "$(eval "$(apt-config shell v Dir::Etc::TrustedParts/d)"; printf "$v")";
+END
+{
+echo "deb http://deb.debian.org/debian/ $DISTRIBUTION main";
+case $DISTRIBUTION in
+	experimental|rc-buggy)
+		echo "deb http://deb.debian.org/debian/ unstable main"
+		;;
+	unstable|sid|testing) : ;;
+	*-backports)
+		echo "deb http://deb.debian.org/debian/ ${DISTRIBUTION%-backports} main";
+		echo "deb http://deb.debian.org/debian/ ${DISTRIBUTION%-backports}-updates main";
+		echo "deb http://security.debian.org/debian-security/ ${DISTRIBUTION%-backports}-security main";
+		;;
+	*)
+		# assume stable release
+		echo "deb http://deb.debian.org/debian/ $DISTRIBUTION-updates main";
+		echo "deb http://security.debian.org/debian-security/ $DISTRIBUTION-security main";
+		;;
+esac;
+} > "./aptroot/etc/apt/sources.list"
+APT_CONFIG="$PWD/aptroot/apt.conf"
+export APT_CONFIG
+apt-get update
+
 if shouldbuild "$SRCNAME.dsc" "$PKGNAME/debian/changelog" ]; then
 	if [ "$REUSE_EXISTING_ORIG_TARBALL" = 1 ]; then
 		UPSVER="${DEBVER%-*}"
@@ -117,7 +150,10 @@ fi
 
 check_build_deps() {
 	mkdir -p dpkg-dummy
-	if shouldbuild dpkg-dummy/status /var/cache/apt/pkgcache.bin; then
+	# Dir::State::Lists is /var/lib/apt/lists by default.
+	# Since apt replaces the files in that directory instead of rewriting
+	# existing inodes, we can rely on the directory mtime.
+	if shouldbuild dpkg-dummy/status "$(eval "$(apt-config shell v Dir::State::Lists/d)"; printf "$v")"; then
 		# pretend dpkg status file that marks all packages as installed
 		# this is because dpkg-checkbuilddeps only works on installed pkgs
 		( apt-cache dumpavail -o APT::Default-Release=$DISTRIBUTION && \
