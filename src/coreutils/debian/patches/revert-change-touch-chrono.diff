@@ -1,0 +1,41 @@
+commit aad8f7d8b5b084ab0647cf05f993df6d69cc3ac3
+Author: Daniel Hofstetter <daniel.hofstetter@42dh.com>
+Date:   Wed Mar 6 18:16:49 2024 +0100
+
+    touch: replace use of deprecated chrono functions
+
+diff --git b/src/uu/touch/src/touch.rs a/src/uu/touch/src/touch.rs
+index e4dd4076d..ebdff8d21 100644
+--- b/src/uu/touch/src/touch.rs
++++ a/src/uu/touch/src/touch.rs
+@@ -433,7 +433,7 @@ fn parse_timestamp(s: &str) -> UResult<FileTime> {
+     // only care about the timestamp anyway.
+     // Tested in gnu/tests/touch/60-seconds
+     if local.second() == 59 && ts.ends_with(".60") {
+-        local += Duration::try_seconds(1).unwrap();
++        local += Duration::seconds(1);
+     }
+ 
+     // Due to daylight saving time switch, local time can jump from 1:59 AM to
+@@ -441,7 +441,7 @@ fn parse_timestamp(s: &str) -> UResult<FileTime> {
+     // valid. If we are within this jump, chrono takes the offset from before
+     // the jump. If we then jump forward an hour, we get the new corrected
+     // offset. Jumping back will then now correctly take the jump into account.
+-    let local2 = local + Duration::try_hours(1).unwrap() - Duration::try_hours(1).unwrap();
++    let local2 = local + Duration::hours(1) - Duration::hours(1);
+     if local.hour() != local2.hour() {
+         return Err(USimpleError::new(
+             1,
+diff --git b/tests/by-util/test_touch.rs a/tests/by-util/test_touch.rs
+index eead33836..3151ca720 100644
+--- b/tests/by-util/test_touch.rs
++++ a/tests/by-util/test_touch.rs
+@@ -32,7 +32,7 @@ fn set_file_times(at: &AtPath, path: &str, atime: FileTime, mtime: FileTime) {
+ 
+ fn str_to_filetime(format: &str, s: &str) -> FileTime {
+     let tm = chrono::NaiveDateTime::parse_from_str(s, format).unwrap();
+-    FileTime::from_unix_time(tm.and_utc().timestamp(), tm.timestamp_subsec_nanos())
++    FileTime::from_unix_time(tm.timestamp(), tm.timestamp_subsec_nanos())
+ }
+ 
+ #[test]
