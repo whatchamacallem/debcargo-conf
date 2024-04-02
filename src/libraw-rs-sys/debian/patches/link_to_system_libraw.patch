@@ -1,0 +1,27 @@
+Description: Use system libraw and disable build of the shipped libraw
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -16,6 +16,7 @@
+ version = "0.0.4+libraw-0.20.1"
+ authors = ["Paolo Barbolini <paolo@paolo565.org>"]
+ build = "build.rs"
++links = "raw"
+ include = ["src/lib.rs", "src/bindings.rs", "LICENSE-*", "README.md", "libraw/libraw/*", "libraw/src/*", "libraw/internal/*", "libraw/COPYRIGHT", "libraw/LICENSE.*", "build.rs"]
+ description = "FFI bindings to LibRaw"
+ readme = "README.md"
+--- a/build.rs
++++ b/build.rs
+@@ -5,9 +5,12 @@
+     let out_dir_ = env::var_os("OUT_DIR").unwrap();
+     let out_dir = Path::new(&out_dir_);
+ 
+-    build(&out_dir);
++    //build(&out_dir);
+     #[cfg(feature = "bindgen")]
+     bindings(&out_dir);
++
++    println!("cargo:rustc-link-lib=raw");
++
+ }
+ 
+ fn build(out_dir: &Path) {
