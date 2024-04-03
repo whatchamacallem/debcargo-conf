@@ -53,6 +53,7 @@ To prepare a release
   ./release.sh <rust-crate-name>                     # or
   ./release.sh <rust-crate-name> <old-version>       # as appropriate
   DISTRO=experimental ./release.sh <rust-crate-name> # to target another distro
+  EXTRA_DEBS=build/*.deb ./release.sh <rust-crate-name> # use local dependencies
 
 This prepares the necessary Debian files in ``build/``, and creates a git
 branch to manage the packaging until it is accepted in Debian itself. You need
@@ -112,6 +113,11 @@ A, then you can run something like::
   # push pending and checkout master
   $ ./release.sh B
   $ ( cd build && ./build.sh B librust-A*.deb )
+
+Or you can use the ``EXTRA_DEBS`` environment variable, which ``build.sh`` will
+inhert, like::
+
+  $ EXTRA_DEBS=build/*.deb ./release.sh A
 
 The extra arguments after ``./build.sh B <args>`` is extra deb files to pass to
 sbuild to use as dependencies. In this case, ``librust-A*.deb`` should have
