@@ -114,6 +114,11 @@ A, then you can run something like::
   $ ./release.sh B
   $ ( cd build && ./build.sh B librust-A*.deb )
 
+Or you can use the ``EXTRA_DEBS`` environment variable, which ``build.sh`` will
+inhert, like::
+
+  $ EXTRA_DEBS=build/*.deb ./release.sh A
+
 The extra arguments after ``./build.sh B <args>`` is extra deb files to pass to
 sbuild to use as dependencies. In this case, ``librust-A*.deb`` should have
 been built by the previous step. Alternatively, use the environment variable
