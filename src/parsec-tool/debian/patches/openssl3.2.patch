@@ -1,0 +1,30 @@
+From: Mikko Rapeli <mikko.rapeli@linaro.org>
+Date: Wed, 3 Jan 2024 12:30:38 +0000
+Subject: [PATCH] parsec-cli-tests.sh: adapt to new serialNumber output
+
+openssl 3.2.0 from yocto prints serialNumber to output
+without spaces so support both that and the old with
+spaces output to pass the test. Not using regular
+expressions to work on simpler grep implementations.
+
+Signed-off-by: Mikko Rapeli <mikko.rapeli@linaro.org>
+---
+ tests/parsec-cli-tests.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/parsec-cli-tests.sh b/tests/parsec-cli-tests.sh
+index 91ec321ca0598..3fbb961ec2400 100755
+--- a/tests/parsec-cli-tests.sh
++++ b/tests/parsec-cli-tests.sh
+@@ -231,7 +231,7 @@ test_csr() {
+         run_cmd $OPENSSL req -text -noout -verify -in ${MY_TMP}/${KEY}.csr >${MY_TMP}/${KEY}.txt
+         debug cat ${MY_TMP}/${KEY}.txt
+ 
+-        if ! cat ${MY_TMP}/${KEY}.txt | grep "Subject:" | grep "serialNumber = ${TEST_SERIAL}"; then
++        if ! cat ${MY_TMP}/${KEY}.txt | grep "Subject:" | grep -e "serialNumber = ${TEST_SERIAL}" -e "serialNumber=${TEST_SERIAL}"; then
+             echo "Error: The CSR does not contain the serialNumber field of the Distinguished Name"
+             EXIT_CODE=$(($EXIT_CODE+1))
+         fi
+-- 
+2.43.0
+
