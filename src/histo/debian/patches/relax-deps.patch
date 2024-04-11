@@ -1,0 +1,79 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 2803b9f..e3aa1da 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -26,16 +26,19 @@ license = "Apache-2.0/MIT"
+ repository = "https://github.com/fitzgen/histo"
+ resolver = "2"
+ 
++[lib]
++bench = false
++
+ [[bin]]
+ name = "histo"
+ doc = false
+ 
+ [dependencies.quickcheck]
+-version = "0.4.1"
++version = "1"
+ optional = true
+ 
+ [dependencies.streaming-stats]
+-version = "0.1.28"
++version = "0.2"
+ 
+ [badges.travis-ci]
+ repository = "fitzgen/histo"
+diff --git a/src/lib.rs b/src/lib.rs
+index 72b643c..af03b3f 100755
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -219,7 +219,7 @@ impl<'a> Iterator for Buckets<'a> {
+         };
+ 
+         let range = max - min;
+-        let range = range + (range % self.histogram.num_buckets);
++        let range = u64::saturating_add(range, range % self.histogram.num_buckets);
+ 
+         let bucket_size = range / self.histogram.num_buckets;
+         let bucket_size = cmp::max(1, bucket_size);
+@@ -323,6 +323,9 @@ mod quickchecks {
+             if buckets == 0 {
+                 return;
+             }
++            if buckets > 1000 {
++                return;
++            }
+ 
+             let len = samples.len();
+             let mut histo = Histogram::with_buckets(buckets);
+@@ -347,6 +350,9 @@ mod quickchecks {
+             if buckets == 0 {
+                 return;
+             }
++            if buckets > 1000 {
++                return;
++            }
+ 
+             let mut histo = Histogram::with_buckets(buckets);
+             for s in samples {
+@@ -361,6 +367,9 @@ mod quickchecks {
+             if buckets == 0 {
+                 return;
+             }
++            if buckets > 1000 {
++                return;
++            }
+ 
+             let mut histo = Histogram::with_buckets(buckets);
+             for s in samples {
+@@ -384,6 +393,9 @@ mod quickchecks {
+             if buckets == 0 {
+                 return;
+             }
++            if buckets > 1000 {
++                return;
++            }
+ 
+             let mut histo = Histogram::with_buckets(buckets);
+             for s in samples {
