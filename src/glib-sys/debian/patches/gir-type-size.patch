@@ -1,0 +1,35 @@
+Description: Add a patch to fix GIR type size comparison
+ This adjust the structure sizes so that the sizes match the GIR
+ data. In gthread.h file, the types GStaticRWLock, GStaticMutex,
+ GStaticRecMutex have padding fields for backward-compatibility
+ purposes (mostly for memory layout/ABI stability).
+ Those padding fields are not present in the GIR data since FFI
+ calls from other languages do not need to know the padding fields
+ (since GLib internals do not read those fields).
+ However, since the size is part of the tests, we still have to
+ adjust the C result so that it matches the expected record size from
+ GIR data.
+Author: Zixing Liu <zixing.liu@canonical.com>
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/rust-glib-sys/+bug/2061202
+Forwarded: no
+Last-Update: 2024-04-12
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: rust-glib-sys/tests/layout.c
+===================================================================
+--- rust-glib-sys.orig/tests/layout.c
++++ rust-glib-sys/tests/layout.c
+@@ -83,10 +83,10 @@ int main() {
+     printf("%s;%zu;%zu\n", "GSourceFuncs", sizeof(GSourceFuncs), alignof(GSourceFuncs));
+     printf("%s;%zu;%zu\n", "GSpawnError", sizeof(GSpawnError), alignof(GSpawnError));
+     printf("%s;%zu;%zu\n", "GSpawnFlags", sizeof(GSpawnFlags), alignof(GSpawnFlags));
+-    printf("%s;%zu;%zu\n", "GStaticMutex", sizeof(GStaticMutex), alignof(GStaticMutex));
++    printf("%s;%zu;%zu\n", "GStaticMutex", sizeof(GMutex), alignof(GStaticMutex));
+     printf("%s;%zu;%zu\n", "GStaticPrivate", sizeof(GStaticPrivate), alignof(GStaticPrivate));
+-    printf("%s;%zu;%zu\n", "GStaticRWLock", sizeof(GStaticRWLock), alignof(GStaticRWLock));
+-    printf("%s;%zu;%zu\n", "GStaticRecMutex", sizeof(GStaticRecMutex), alignof(GStaticRecMutex));
++    printf("%s;%zu;%zu\n", "GStaticRWLock", sizeof(GStaticRWLock) - sizeof(pthread_mutex_t), alignof(GStaticRWLock));
++    printf("%s;%zu;%zu\n", "GStaticRecMutex", sizeof(GStaticRecMutex) - sizeof(pthread_mutex_t) - sizeof(gdouble), alignof(GStaticRecMutex));
+     printf("%s;%zu;%zu\n", "GString", sizeof(GString), alignof(GString));
+     printf("%s;%zu;%zu\n", "GStrv", sizeof(GStrv), alignof(GStrv));
+     printf("%s;%zu;%zu\n", "GTestConfig", sizeof(GTestConfig), alignof(GTestConfig));

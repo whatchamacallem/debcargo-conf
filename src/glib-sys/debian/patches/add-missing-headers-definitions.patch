@@ -1,0 +1,32 @@
+Description: Add missing glib headers and platform defines to the tests
+ This also includes adding macros and constants that present in the
+ GIR data but not present in C headers on certain platforms.
+Author: Zixing Liu <zixing.liu@canonical.com>
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/rust-glib-sys/+bug/2061202
+Forwarded: no
+Last-Update: 2024-04-12
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- rust-glib-sys-0.19.0.orig/tests/manual.h
++++ rust-glib-sys-0.19.0/tests/manual.h
+@@ -2,6 +2,20 @@
+ 
+ #include <glib.h>
+ #include <glib-object.h>
++#include <glib-unix.h>
++
++#ifndef G_TRACE_CURRENT_TIME
++#define G_TRACE_CURRENT_TIME 0
++#endif
++
++#ifndef G_PLATFORM_WIN32
++typedef enum
++{
++  G_WIN32_OS_ANY,
++  G_WIN32_OS_WORKSTATION,
++  G_WIN32_OS_SERVER,
++} GWin32OSType;
++#endif
+ 
+ // included in Gir on all platforms even though it is only present on windows
+ #ifndef G_WIN32_MSG_HANDLE
