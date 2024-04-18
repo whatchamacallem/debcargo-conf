@@ -27,15 +27,15 @@ Build-Depends: debhelper (>= 12),
  librust-reqwest-0.11+default-dev,
  librust-reqwest-0.11+socks-dev,
  librust-rpassword-7+default-dev,
+ librust-rusqlite-0.31+default-dev | librust-rusqlite-0.30+default-dev | librust-rusqlite-0.29+default-dev,
  librust-sequoia-cert-store-0.5+default-dev,
- librust-sequoia-gpg-agent-0.3+default-dev,
- librust-sequoia-ipc-0.34+default-dev,
+ librust-sequoia-gpg-agent-0.3+default-dev (>= 0.3.1-~~),
+ librust-sequoia-ipc-0.34+default-dev (>= 0.34.1-~~),
  librust-sequoia-net-0.28+default-dev,
  librust-sequoia-openpgp-1+compression-dev (>= 1.19-~~),
  librust-sequoia-openpgp-1+crypto-nettle-dev (>= 1.19-~~),
- librust-sequoia-openpgp-mt-0.1+default-dev,
  librust-sequoia-policy-config-0.6+default-dev,
- librust-sequoia-wot-0.11+default-dev,
+ librust-sequoia-wot-0.11-dev,
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev,
@@ -62,90 +62,28 @@ X-Cargo-Crate: sequoia-chameleon-gnupg
 Rules-Requires-Root: no
 
 Package: sequoia-chameleon-gnupg
-Architecture: all
-Depends:
-  gpg-sq,
-  gpgv-sq
-Description: Sequoia's GnuPG CLI tools (metapackage)
- This metapackage depends on the following binary packages:
-  - gpg-sq: gpg-like OpenPGP CLI toolkit
-  - gpgv-sq: gpgv-like validator for OpenPGP signatures
- Both are drop-in replacements using the Sequoia OpenPGP implementation
- provided in the Rust crate sequoia-chameleon-gnupg.
-
-Package: gpg-sq
 Architecture: any
 Multi-Arch: allowed
-Breaks: sequoia-chameleon-gnupg (<< 0.8.0-1)
-Replaces: sequoia-chameleon-gnupg (<< 0.8.0-1)
 Depends:
  ${misc:Depends},
  ${shlibs:Depends},
  ${cargo:Depends}
 Recommends:
- ${cargo:Recommends},
- sq
+ ${cargo:Recommends}
 Suggests:
  ${cargo:Suggests}
 Provides:
  ${cargo:Provides}
 Built-Using: ${cargo:Built-Using}
-Description: gpg-like OpenPGP CLI toolkit
- gpg-sq is Sequoia's alternative implementation of a tool following
- the GnuPG command line interface. It provides a drop-in but not
- feature-complete replacement for the GnuPG project's gpg.
+XB-X-Cargo-Built-Using: ${cargo:X-Cargo-Built-Using}
+Description: Drop-in replacement of gpg and gpgv using the Sequoia OpenPGP implementation.
+ gpgv-sq is a feature-complete drop-in replacement of gpgv.
+ .
+ gpg-sq is drop-in replacement of gpg that is not feature-complete.
  .
  It currently implements a commonly used subset of the signature
  creation and verification commands, the encryption and decryption
  commands, the key listing commands, and some miscellaneous commands.
  .
- Support for trust models is limited.  Currently, the web-of-trust
- and always-trust models are implemented (as "--pgp" and "--always").
- .
- This tool is provided by the Sequoia project via the sequoia-chameleon-gnupg
- crate.
-
-Package: gpgv-sq
-Architecture: any
-Multi-Arch: allowed
-Breaks: sequoia-chameleon-gnupg (<< 0.8.0-1)
-Replaces: sequoia-chameleon-gnupg (<< 0.8.0-1)
-Depends:
- ${misc:Depends},
- ${shlibs:Depends},
- ${cargo:Depends}
-Recommends:
- ${cargo:Recommends},
- sq
-Suggests:
- ${cargo:Suggests}
-Provides:
- ${cargo:Provides}
-Built-Using: ${cargo:Built-Using}
-Description: gpgv-like validator for OpenPGP signatures
- gpgv-sq is Sequoia's alternative implementation of a verification-only
- interface for OpenPGP signatures. It provides a feature-complete drop-in
- replacement for the GnuPG project's gpgv.
- .
- This tool is provided by the Sequoia project via the sequoia-chameleon-gnupg
- crate.
-
-Package: gpg-from-sq
-Architecture: all
-Depends:
- gpg-sq
-Provides: gpg (= 2.2.40)
-Description: use gpg-sq for /usr/bin/gpg
- This package diverts the GnuPG implementation of gpg (if installed)
- to gpg-g10code, while /usr/bin/gpg is provided by the Rust crate
- sequoia-chameleon-gnupg.
-
-Package: gpgv-from-sq
-Architecture: all
-Depends:
- gpgv-sq
-Provides: gpgv (= 2.2.40)
-Description: use gpgv-sq for /usr/bin/gpgv
- This package diverts the GnuPG implementation of gpgv (if installed)
- to gpgv-g10code, while /usr/bin/gpgv is provided by the Rust crate
- sequoia-chameleon-gnupg.
+ Support for trust models is limited.  Currently, the Web-of-Trust
+ ('pgp') and always trust ('always') are implemented.
