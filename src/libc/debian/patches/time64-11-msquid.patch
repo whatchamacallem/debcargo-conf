@@ -1,0 +1,82 @@
+commit eebc18690dc2a2173737251f09c874ef39424395
+Author: Ola x Nilsson <olani@axis.com>
+Date:   Mon Mar 27 14:15:18 2023 +0200
+
+    gnu: Update struct msqid_ds for 64-bit time
+
+diff --git a/src/unix/linux_like/linux/gnu/b32/arm/mod.rs b/src/unix/linux_like/linux/gnu/b32/arm/mod.rs
+index 3c9e572540..80d8d3b11d 100644
+--- a/src/unix/linux_like/linux/gnu/b32/arm/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/arm/mod.rs
+@@ -77,10 +77,13 @@ s! {
+     pub struct msqid_ds {
+         pub msg_perm: ::ipc_perm,
+         pub msg_stime: ::time_t,
++        #[cfg(not(gnu_time64_abi))]
+         __glibc_reserved1: ::c_ulong,
+         pub msg_rtime: ::time_t,
++        #[cfg(not(gnu_time64_abi))]
+         __glibc_reserved2: ::c_ulong,
+         pub msg_ctime: ::time_t,
++        #[cfg(not(gnu_time64_abi))]
+         __glibc_reserved3: ::c_ulong,
+         __msg_cbytes: ::c_ulong,
+         pub msg_qnum: ::msgqnum_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/mips/mod.rs b/src/unix/linux_like/linux/gnu/b32/mips/mod.rs
+index df50a49ee5..edd26c3f01 100644
+--- a/src/unix/linux_like/linux/gnu/b32/mips/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/mips/mod.rs
+@@ -165,21 +165,9 @@ s! {
+ 
+     pub struct msqid_ds {
+         pub msg_perm: ::ipc_perm,
+-        #[cfg(target_endian = "big")]
+-        __glibc_reserved1: ::c_ulong,
+         pub msg_stime: ::time_t,
+-        #[cfg(target_endian = "little")]
+-        __glibc_reserved1: ::c_ulong,
+-        #[cfg(target_endian = "big")]
+-        __glibc_reserved2: ::c_ulong,
+         pub msg_rtime: ::time_t,
+-        #[cfg(target_endian = "little")]
+-        __glibc_reserved2: ::c_ulong,
+-        #[cfg(target_endian = "big")]
+-        __glibc_reserved3: ::c_ulong,
+         pub msg_ctime: ::time_t,
+-        #[cfg(target_endian = "little")]
+-        __glibc_reserved3: ::c_ulong,
+         __msg_cbytes: ::c_ulong,
+         pub msg_qnum: ::msgqnum_t,
+         pub msg_qbytes: ::msglen_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/powerpc.rs b/src/unix/linux_like/linux/gnu/b32/powerpc.rs
+index d8d5557be7..79a26cd613 100644
+--- a/src/unix/linux_like/linux/gnu/b32/powerpc.rs
++++ b/src/unix/linux_like/linux/gnu/b32/powerpc.rs
+@@ -141,11 +141,8 @@ s! {
+ 
+     pub struct msqid_ds {
+         pub msg_perm: ::ipc_perm,
+-        __glibc_reserved1: ::c_uint,
+         pub msg_stime: ::time_t,
+-        __glibc_reserved2: ::c_uint,
+         pub msg_rtime: ::time_t,
+-        __glibc_reserved3: ::c_uint,
+         pub msg_ctime: ::time_t,
+         __msg_cbytes: ::c_ulong,
+         pub msg_qnum: ::msgqnum_t,
+diff --git a/src/unix/linux_like/linux/gnu/b32/x86/mod.rs b/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
+index 4c291c5cb1..e5a1a2afb7 100644
+--- a/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
+@@ -185,11 +185,8 @@ s! {
+     pub struct msqid_ds {
+         pub msg_perm: ::ipc_perm,
+         pub msg_stime: ::time_t,
+-        __glibc_reserved1: ::c_ulong,
+         pub msg_rtime: ::time_t,
+-        __glibc_reserved2: ::c_ulong,
+         pub msg_ctime: ::time_t,
+-        __glibc_reserved3: ::c_ulong,
+         __msg_cbytes: ::c_ulong,
+         pub msg_qnum: ::msgqnum_t,
+         pub msg_qbytes: ::msglen_t,

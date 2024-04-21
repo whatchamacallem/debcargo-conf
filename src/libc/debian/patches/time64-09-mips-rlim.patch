@@ -1,0 +1,26 @@
+commit d8a1d16f489c0b2d7064eb2863378f7e45a696c3
+Author: Ola x Nilsson <olani@axis.com>
+Date:   Mon Mar 27 14:30:10 2023 +0200
+
+    linux: Set RLIM_INFINITY for mips GNU libc with _FILE_OFFSET_BITS=64
+
+diff --git a/src/unix/linux_like/linux/arch/mips/mod.rs b/src/unix/linux_like/linux/arch/mips/mod.rs
+index 82e091f4e9..76d515311e 100644
+--- a/src/unix/linux_like/linux/arch/mips/mod.rs
++++ b/src/unix/linux_like/linux/arch/mips/mod.rs
+@@ -330,9 +330,12 @@ cfg_if! {
+ }
+ 
+ cfg_if! {
+-    if #[cfg(any(target_arch = "mips", target_arch = "mips32r6"),
+-         any(target_env = "gnu",
+-             target_env = "uclibc"))] {
++    if #[cfg(all(gnu_time64_abi, any(target_arch = "mips", target_arch = "mips32r6")))] {
++        pub const RLIM_INFINITY: ::rlim_t = !0;
++    } else if #[cfg(all(
++        any(target_arch = "mips", target_arch = "mips32r6"),
++        target_env = "uclibc"
++    ))] {
+         pub const RLIM_INFINITY: ::rlim_t = 0x7fffffff;
+     }
+ }

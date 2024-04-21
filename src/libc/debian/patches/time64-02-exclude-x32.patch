@@ -1,0 +1,27 @@
+commit 271d07eaca5f05324a9965f94e67287c31c3bc0d
+Author: Ola x Nilsson <olani@axis.com>
+Date:   Tue Sep 12 14:06:10 2023 +0200
+
+    x86_64_x32 have 64 bit time_t
+
+diff --git a/build.rs b/build.rs
+index 787c25cdd6..f5aff2024e 100644
+--- a/build.rs
++++ b/build.rs
+@@ -236,5 +236,16 @@ fn is_gnu_time64_abi() -> bool {
+         }
+         Err(_) => panic!("CARGO_CFG_TARGET_POINTER_WIDTH not set"),
+     };
++    // At this point, we _know_ it is *-*-linux-gnu* with 32 bit
++    // pointers. Some 64 bit arch still have 32 bit pointers though.
++    match env::var("TARGET") {
++        Ok(target) => {
++            // x86_64-unknown-linux-gnux32 and similar
++            if target.contains("x86_64") && target.contains("x32") {
++                return false;
++            }
++        }
++        Err(_) => panic!("TARGET not set"),
++    }
+     return true;
+ }

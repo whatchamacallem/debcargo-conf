@@ -1,0 +1,63 @@
+This patch is based on the commit described below, taken from upstream pull
+request 3175, it was adapted for use in the Debian package by Peter Michael
+Green.
+
+commit d0c905b147ad46c7e81a62199ba3c57935d66723
+Author: Ola x Nilsson <olani@axis.com>
+Date:   Thu Sep 7 15:14:34 2023 +0200
+
+    Add cfg option gnu_time64_abi
+
+diff --git a/build.rs b/build.rs
+index 562025dfdc..787c25cdd6 100644
+--- a/build.rs
++++ b/build.rs
+@@ -15,2 +15,3 @@ const ALLOWED_CFGS: &'static [&'static str] = &[
+     "freebsd15",
++    "gnu_time64_abi",
+     "libc_align",
+@@ -60,6 +61,11 @@ fn main() {
+         Some(_) | None => (),
+     }
+ 
++    // Some ABIs need to redirect time related symbols to their time64 equivalents.
++    if is_gnu_time64_abi() {
++        set_cfg("gnu_time64_abi");
++    }
++
+     // On CI: deny all warnings
+     if libc_ci {
+         set_cfg("libc_deny_warnings");
+@@ -203,3 +209,32 @@ fn set_cfg(cfg: &str) {
+     }
+     println!("cargo:rustc-cfg={}", cfg);
+ }
++
++fn is_gnu_time64_abi() -> bool {
++    match env::var("CARGO_CFG_TARGET_ENV") {
++        Ok(target_env) => {
++            if target_env != "gnu" {
++                return false;
++            }
++        }
++        Err(_) => panic!("CARGO_CFG_TARGET_ENV not set"),
++    }
++    match env::var("CARGO_CFG_TARGET_OS") {
++        Ok(target_os) => {
++            if target_os != "linux" {
++                return false;
++            }
++        }
++        Err(_) => panic!("CARGO_CFG_TARGET_OS not set"),
++    }
++    match env::var("CARGO_CFG_TARGET_POINTER_WIDTH") {
++        Ok(bits) => {
++            if bits == "64" {
++                return false;
++            }
++            bits
++        }
++        Err(_) => panic!("CARGO_CFG_TARGET_POINTER_WIDTH not set"),
++    };
++    return true;
++}

@@ -1,0 +1,736 @@
+commit 3c3c01f9e5da55f8843e5d111a430bc75af4c600
+Author: Ola x Nilsson <olani@axis.com>
+Date:   Fri Mar 17 08:44:44 2023 +0100
+
+    gnu: Use _TIME_BITS and _FILE_OFFSET_BITS=64 versions of glibc symbols
+    
+    Set the link names of relevant symbols to use be the same as when a C
+    program is built against GNU libc with -D_TIME_BITS=64 and
+    -D_FILE_OFFSET_BITS=64.
+
+diff --git a/src/unix/linux_like/linux/gnu/b32/mod.rs b/src/unix/linux_like/linux/gnu/b32/mod.rs
+index 7cc9fb08e7..63e11d131f 100644
+--- a/src/unix/linux_like/linux/gnu/b32/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b32/mod.rs
+@@ -324,6 +324,8 @@ extern "C" {
+         newp: *mut ::c_void,
+         newlen: ::size_t,
+     ) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__ntp_gettime64")]
++    pub fn ntp_gettime(buf: *mut ntptimeval) -> ::c_int;
+ }
+ 
+ cfg_if! {
+diff --git a/src/unix/linux_like/linux/gnu/b64/mod.rs b/src/unix/linux_like/linux/gnu/b64/mod.rs
+index ff394e33a2..b272ec0ca0 100644
+--- a/src/unix/linux_like/linux/gnu/b64/mod.rs
++++ b/src/unix/linux_like/linux/gnu/b64/mod.rs
+@@ -97,6 +97,11 @@ pub const __SIZEOF_PTHREAD_RWLOCKATTR_T: usize = 8;
+ 
+ pub const O_LARGEFILE: ::c_int = 0;
+ 
++extern "C" {
++    #[link_name = "ntp_gettimex"]
++    pub fn ntp_gettime(buf: *mut ntptimeval) -> ::c_int;
++}
++
+ cfg_if! {
+     if #[cfg(target_arch = "aarch64")] {
+         mod aarch64;
+diff --git a/src/unix/linux_like/linux/gnu/mod.rs b/src/unix/linux_like/linux/gnu/mod.rs
+index 4d235ba0ad..a47c7f03bf 100644
+--- a/src/unix/linux_like/linux/gnu/mod.rs
++++ b/src/unix/linux_like/linux/gnu/mod.rs
+@@ -1286,12 +1286,14 @@ extern "C" {
+         >,
+         arg: *mut ::c_void,
+     );
++    #[cfg_attr(gnu_time64_abi, link_name = "__sendmmsg64")]
+     pub fn sendmmsg(
+         sockfd: ::c_int,
+         msgvec: *mut ::mmsghdr,
+         vlen: ::c_uint,
+         flags: ::c_int,
+     ) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__recvmmsg64")]
+     pub fn recvmmsg(
+         sockfd: ::c_int,
+         msgvec: *mut ::mmsghdr,
+@@ -1302,8 +1304,11 @@ extern "C" {
+ 
+     pub fn getrlimit64(resource: ::__rlimit_resource_t, rlim: *mut ::rlimit64) -> ::c_int;
+     pub fn setrlimit64(resource: ::__rlimit_resource_t, rlim: *const ::rlimit64) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "getrlimit64")]
+     pub fn getrlimit(resource: ::__rlimit_resource_t, rlim: *mut ::rlimit) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "setrlimit64")]
+     pub fn setrlimit(resource: ::__rlimit_resource_t, rlim: *const ::rlimit) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "prlimit64")]
+     pub fn prlimit(
+         pid: ::pid_t,
+         resource: ::__rlimit_resource_t,
+@@ -1326,6 +1331,7 @@ extern "C" {
+     pub fn endutxent();
+     pub fn getpt() -> ::c_int;
+     pub fn mallopt(param: ::c_int, value: ::c_int) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__gettimeofday64")]
+     pub fn gettimeofday(tp: *mut ::timeval, tz: *mut ::timezone) -> ::c_int;
+     pub fn statx(
+         dirfd: ::c_int,
+@@ -1338,10 +1344,11 @@ extern "C" {
+     pub fn getrandom(buf: *mut ::c_void, buflen: ::size_t, flags: ::c_uint) -> ::ssize_t;
+     pub fn getauxval(type_: ::c_ulong) -> ::c_ulong;
+ 
++    #[cfg_attr(gnu_time64_abi, link_name = "___adjtimex64")]
+     pub fn adjtimex(buf: *mut timex) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "___adjtimex64")]
+     pub fn ntp_adjtime(buf: *mut timex) -> ::c_int;
+-    #[link_name = "ntp_gettimex"]
+-    pub fn ntp_gettime(buf: *mut ntptimeval) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__clock_adjtime64")]
+     pub fn clock_adjtime(clk_id: ::clockid_t, buf: *mut ::timex) -> ::c_int;
+ 
+     pub fn fanotify_mark(
+@@ -1351,6 +1358,7 @@ extern "C" {
+         dirfd: ::c_int,
+         path: *const ::c_char,
+     ) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "preadv64v2")]
+     pub fn preadv2(
+         fd: ::c_int,
+         iov: *const ::iovec,
+@@ -1358,6 +1366,7 @@ extern "C" {
+         offset: ::off_t,
+         flags: ::c_int,
+     ) -> ::ssize_t;
++    #[cfg_attr(gnu_time64_abi, link_name = "pwritev64v2")]
+     pub fn pwritev2(
+         fd: ::c_int,
+         iov: *const ::iovec,
+@@ -1393,14 +1402,17 @@ extern "C" {
+     pub fn reallocarray(ptr: *mut ::c_void, nmemb: ::size_t, size: ::size_t) -> *mut ::c_void;
+ 
+     pub fn ctermid(s: *mut ::c_char) -> *mut ::c_char;
++    #[cfg_attr(gnu_time64_abi, link_name = "__ioctl_time64")]
+     pub fn ioctl(fd: ::c_int, request: ::c_ulong, ...) -> ::c_int;
+     pub fn backtrace(buf: *mut *mut ::c_void, sz: ::c_int) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__glob64_time64")]
+     pub fn glob64(
+         pattern: *const ::c_char,
+         flags: ::c_int,
+         errfunc: ::Option<extern "C" fn(epath: *const ::c_char, errno: ::c_int) -> ::c_int>,
+         pglob: *mut glob64_t,
+     ) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__globfree64_time64")]
+     pub fn globfree64(pglob: *mut glob64_t);
+     pub fn ptrace(request: ::c_uint, ...) -> ::c_long;
+     pub fn pthread_attr_getaffinity_np(
+@@ -1468,6 +1480,7 @@ extern "C" {
+     pub fn eaccess(pathname: *const ::c_char, mode: ::c_int) -> ::c_int;
+ 
+     pub fn asctime_r(tm: *const ::tm, buf: *mut ::c_char) -> *mut ::c_char;
++    #[cfg_attr(gnu_time64_abi, link_name = "__ctime64_r")]
+     pub fn ctime_r(timep: *const time_t, buf: *mut ::c_char) -> *mut ::c_char;
+ 
+     pub fn strftime(
+diff --git a/src/unix/linux_like/linux/mod.rs b/src/unix/linux_like/linux/mod.rs
+index 125a4129ef..2ff9a7e264 100644
+--- a/src/unix/linux_like/linux/mod.rs
++++ b/src/unix/linux_like/linux/mod.rs
+@@ -5304,17 +5304,24 @@ safe_f! {
+ cfg_if! {
+     if #[cfg(all(not(target_env = "uclibc"), not(target_env = "ohos")))] {
+         extern "C" {
++            #[cfg_attr(gnu_time64_abi, link_name = "aio_read64")]
+             pub fn aio_read(aiocbp: *mut aiocb) -> ::c_int;
++            #[cfg_attr(gnu_time64_abi, link_name = "aio_write64")]
+             pub fn aio_write(aiocbp: *mut aiocb) -> ::c_int;
+             pub fn aio_fsync(op: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
++            #[cfg_attr(gnu_time64_abi, link_name = "aio_error64")]
+             pub fn aio_error(aiocbp: *const aiocb) -> ::c_int;
++            #[cfg_attr(gnu_time64_abi, link_name = "aio_return64")]
+             pub fn aio_return(aiocbp: *mut aiocb) -> ::ssize_t;
++            #[cfg_attr(gnu_time64_abi, link_name = "__aio_suspend_time64")]
+             pub fn aio_suspend(
+                 aiocb_list: *const *const aiocb,
+                 nitems: ::c_int,
+                 timeout: *const ::timespec,
+             ) -> ::c_int;
++            #[cfg_attr(gnu_time64_abi, link_name = "aio_cancel64")]
+             pub fn aio_cancel(fd: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
++            #[cfg_attr(gnu_time64_abi, link_name = "lio_listio64")]
+             pub fn lio_listio(
+                 mode: ::c_int,
+                 aiocb_list: *const *mut aiocb,
+@@ -5328,12 +5335,14 @@ cfg_if! {
+ cfg_if! {
+     if #[cfg(not(target_env = "uclibc"))] {
+         extern "C" {
++            #[cfg_attr(gnu_time64_abi, link_name = "pwritev64")]
+             pub fn pwritev(
+                 fd: ::c_int,
+                 iov: *const ::iovec,
+                 iovcnt: ::c_int,
+                 offset: ::off_t,
+             ) -> ::ssize_t;
++            #[cfg_attr(gnu_time64_abi, link_name = "preadv64")]
+             pub fn preadv(
+                 fd: ::c_int,
+                 iov: *const ::iovec,
+@@ -5369,6 +5378,7 @@ cfg_if! {
+                 riovcnt: ::c_ulong,
+                 flags: ::c_ulong,
+             ) -> isize;
++            #[cfg_attr(gnu_time64_abi, link_name = "__futimes64")]
+             pub fn futimes(
+                 fd: ::c_int,
+                 times: *const ::timeval
+@@ -5404,6 +5414,7 @@ cfg_if! {
+                 msg_len: ::size_t,
+                 msg_prio: *mut ::c_uint,
+             ) -> ::ssize_t;
++            #[cfg_attr(gnu_time64_abi, link_name = "__mq_timedreceive_time64")]
+             pub fn mq_timedreceive(
+                 mqd: ::mqd_t,
+                 msg_ptr: *mut ::c_char,
+@@ -5417,6 +5428,7 @@ cfg_if! {
+                 msg_len: ::size_t,
+                 msg_prio: ::c_uint,
+             ) -> ::c_int;
++            #[cfg_attr(gnu_time64_abi, link_name = "__mq_timedsend_time64")]
+             pub fn mq_timedsend(
+                 mqd: ::mqd_t,
+                 msg_ptr: *const ::c_char,
+@@ -5467,6 +5479,7 @@ extern "C" {
+     pub fn seed48(xseed: *mut ::c_ushort) -> *mut ::c_ushort;
+     pub fn lcong48(p: *mut ::c_ushort);
+ 
++    #[cfg_attr(gnu_time64_abi, link_name = "__lutimes64")]
+     pub fn lutimes(file: *const ::c_char, times: *const ::timeval) -> ::c_int;
+ 
+     pub fn setpwent();
+@@ -5485,11 +5498,14 @@ extern "C" {
+     pub fn shmget(key: ::key_t, size: ::size_t, shmflg: ::c_int) -> ::c_int;
+     pub fn shmat(shmid: ::c_int, shmaddr: *const ::c_void, shmflg: ::c_int) -> *mut ::c_void;
+     pub fn shmdt(shmaddr: *const ::c_void) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__shmctl64")]
+     pub fn shmctl(shmid: ::c_int, cmd: ::c_int, buf: *mut ::shmid_ds) -> ::c_int;
+     pub fn ftok(pathname: *const ::c_char, proj_id: ::c_int) -> ::key_t;
+     pub fn semget(key: ::key_t, nsems: ::c_int, semflag: ::c_int) -> ::c_int;
+     pub fn semop(semid: ::c_int, sops: *mut ::sembuf, nsops: ::size_t) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__semctl64")]
+     pub fn semctl(semid: ::c_int, semnum: ::c_int, cmd: ::c_int, ...) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__msgctl64")]
+     pub fn msgctl(msqid: ::c_int, cmd: ::c_int, buf: *mut msqid_ds) -> ::c_int;
+     pub fn msgget(key: ::key_t, msgflg: ::c_int) -> ::c_int;
+     pub fn msgrcv(
+@@ -5509,7 +5525,9 @@ extern "C" {
+     pub fn mprotect(addr: *mut ::c_void, len: ::size_t, prot: ::c_int) -> ::c_int;
+     pub fn __errno_location() -> *mut ::c_int;
+ 
++    #[cfg_attr(gnu_time64_abi, link_name = "fallocate64")]
+     pub fn fallocate(fd: ::c_int, mode: ::c_int, offset: ::off_t, len: ::off_t) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "posix_fallocate64")]
+     pub fn posix_fallocate(fd: ::c_int, offset: ::off_t, len: ::off_t) -> ::c_int;
+     pub fn readahead(fd: ::c_int, offset: ::off64_t, count: ::size_t) -> ::ssize_t;
+     pub fn getxattr(
+@@ -5559,7 +5577,9 @@ extern "C" {
+     pub fn fremovexattr(filedes: ::c_int, name: *const c_char) -> ::c_int;
+     pub fn signalfd(fd: ::c_int, mask: *const ::sigset_t, flags: ::c_int) -> ::c_int;
+     pub fn timerfd_create(clockid: ::clockid_t, flags: ::c_int) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__timerfd_gettime64")]
+     pub fn timerfd_gettime(fd: ::c_int, curr_value: *mut itimerspec) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__timerfd_settime64")]
+     pub fn timerfd_settime(
+         fd: ::c_int,
+         flags: ::c_int,
+@@ -5580,8 +5600,11 @@ extern "C" {
+         sigmask: *const ::sigset_t,
+     ) -> ::c_int;
+     pub fn dup3(oldfd: ::c_int, newfd: ::c_int, flags: ::c_int) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "mkostemp64")]
+     pub fn mkostemp(template: *mut ::c_char, flags: ::c_int) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "mkostemps64")]
+     pub fn mkostemps(template: *mut ::c_char, suffixlen: ::c_int, flags: ::c_int) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__sigtimedwait64")]
+     pub fn sigtimedwait(
+         set: *const sigset_t,
+         info: *mut siginfo_t,
+@@ -5628,12 +5651,14 @@ extern "C" {
+         ...
+     ) -> *mut ::c_void;
+ 
++    #[cfg_attr(gnu_time64_abi, link_name = "__glob64_time64")]
+     pub fn glob(
+         pattern: *const c_char,
+         flags: ::c_int,
+         errfunc: ::Option<extern "C" fn(epath: *const c_char, errno: ::c_int) -> ::c_int>,
+         pglob: *mut ::glob_t,
+     ) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__globfree64_time64")]
+     pub fn globfree(pglob: *mut ::glob_t);
+ 
+     pub fn posix_madvise(addr: *mut ::c_void, len: ::size_t, advice: ::c_int) -> ::c_int;
+@@ -5659,6 +5684,7 @@ extern "C" {
+         addr: *mut ::sockaddr,
+         addrlen: *mut ::socklen_t,
+     ) -> ::ssize_t;
++    #[cfg_attr(gnu_time64_abi, link_name = "mkstemps64")]
+     pub fn mkstemps(template: *mut ::c_char, suffixlen: ::c_int) -> ::c_int;
+ 
+     pub fn nl_langinfo(item: ::nl_item) -> *mut ::c_char;
+@@ -5695,6 +5721,7 @@ extern "C" {
+     pub fn umount(target: *const ::c_char) -> ::c_int;
+     pub fn sched_get_priority_max(policy: ::c_int) -> ::c_int;
+     pub fn tee(fd_in: ::c_int, fd_out: ::c_int, len: ::size_t, flags: ::c_uint) -> ::ssize_t;
++    #[cfg_attr(gnu_time64_abi, link_name = "__settimeofday64")]
+     pub fn settimeofday(tv: *const ::timeval, tz: *const ::timezone) -> ::c_int;
+     pub fn splice(
+         fd_in: ::c_int,
+@@ -5708,7 +5735,9 @@ extern "C" {
+     pub fn eventfd_read(fd: ::c_int, value: *mut eventfd_t) -> ::c_int;
+     pub fn eventfd_write(fd: ::c_int, value: eventfd_t) -> ::c_int;
+ 
++    #[cfg_attr(gnu_time64_abi, link_name = "__sched_rr_get_interval64")]
+     pub fn sched_rr_get_interval(pid: ::pid_t, tp: *mut ::timespec) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__sem_timedwait64")]
+     pub fn sem_timedwait(sem: *mut sem_t, abstime: *const ::timespec) -> ::c_int;
+     pub fn sem_getvalue(sem: *mut sem_t, sval: *mut ::c_int) -> ::c_int;
+     pub fn sched_setparam(pid: ::pid_t, param: *const ::sched_param) -> ::c_int;
+@@ -5728,8 +5757,10 @@ extern "C" {
+         data: *const ::c_void,
+     ) -> ::c_int;
+     pub fn personality(persona: ::c_ulong) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__prctl_time64")]
+     pub fn prctl(option: ::c_int, ...) -> ::c_int;
+     pub fn sched_getparam(pid: ::pid_t, param: *mut ::sched_param) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__ppoll64")]
+     pub fn ppoll(
+         fds: *mut ::pollfd,
+         nfds: nfds_t,
+@@ -5745,6 +5776,7 @@ extern "C" {
+         protocol: ::c_int,
+     ) -> ::c_int;
+ 
++    #[cfg_attr(gnu_time64_abi, link_name = "__pthread_mutex_timedlock64")]
+     pub fn pthread_mutex_timedlock(
+         lock: *mut pthread_mutex_t,
+         abstime: *const ::timespec,
+@@ -5779,6 +5811,14 @@ extern "C" {
+         ...
+     ) -> ::c_int;
+     pub fn sched_getscheduler(pid: ::pid_t) -> ::c_int;
++    #[cfg_attr(
++        all(
++            target_env = "gnu",
++            target_pointer_width = "32",
++            not(target_arch = "x86_64")
++        ),
++        link_name = "__clock_nanosleep_time64"
++    )]
+     pub fn clock_nanosleep(
+         clk_id: ::clockid_t,
+         flags: ::c_int,
+@@ -5830,6 +5870,7 @@ extern "C" {
+         policy: ::c_int,
+         param: *const ::sched_param,
+     ) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "sendfile64")]
+     pub fn sendfile(
+         out_fd: ::c_int,
+         in_fd: ::c_int,
+@@ -6048,7 +6089,9 @@ extern "C" {
+     ) -> ::c_int;
+     pub fn timer_delete(timerid: ::timer_t) -> ::c_int;
+     pub fn timer_getoverrun(timerid: ::timer_t) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__timer_gettime64")]
+     pub fn timer_gettime(timerid: ::timer_t, curr_value: *mut ::itimerspec) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__timer_settime64")]
+     pub fn timer_settime(
+         timerid: ::timer_t,
+         flags: ::c_int,
+diff --git a/src/unix/linux_like/mod.rs b/src/unix/linux_like/mod.rs
+index d80b00f423..1336700243 100644
+--- a/src/unix/linux_like/mod.rs
++++ b/src/unix/linux_like/mod.rs
+@@ -1675,8 +1675,11 @@ extern "C" {
+     pub fn fdatasync(fd: ::c_int) -> ::c_int;
+     pub fn mincore(addr: *mut ::c_void, len: ::size_t, vec: *mut ::c_uchar) -> ::c_int;
+ 
++    #[cfg_attr(gnu_time64_abi, link_name = "__clock_getres64")]
+     pub fn clock_getres(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__clock_gettime64")]
+     pub fn clock_gettime(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__clock_settime64")]
+     pub fn clock_settime(clk_id: ::clockid_t, tp: *const ::timespec) -> ::c_int;
+     pub fn clock_getcpuclockid(pid: ::pid_t, clk_id: *mut ::clockid_t) -> ::c_int;
+ 
+@@ -1691,11 +1694,16 @@ extern "C" {
+     pub fn memalign(align: ::size_t, size: ::size_t) -> *mut ::c_void;
+     pub fn setgroups(ngroups: ::size_t, ptr: *const ::gid_t) -> ::c_int;
+     pub fn pipe2(fds: *mut ::c_int, flags: ::c_int) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "statfs64")]
+     pub fn statfs(path: *const ::c_char, buf: *mut statfs) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "fstatfs64")]
+     pub fn fstatfs(fd: ::c_int, buf: *mut statfs) -> ::c_int;
+     pub fn memrchr(cx: *const ::c_void, c: ::c_int, n: ::size_t) -> *mut ::c_void;
++    #[cfg_attr(gnu_time64_abi, link_name = "posix_fadvise64")]
+     pub fn posix_fadvise(fd: ::c_int, offset: ::off_t, len: ::off_t, advise: ::c_int) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__futimens64")]
+     pub fn futimens(fd: ::c_int, times: *const ::timespec) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__utimensat64")]
+     pub fn utimensat(
+         dirfd: ::c_int,
+         path: *const ::c_char,
+@@ -1746,6 +1754,7 @@ extern "C" {
+     pub fn vfork() -> ::pid_t;
+     pub fn setresgid(rgid: ::gid_t, egid: ::gid_t, sgid: ::gid_t) -> ::c_int;
+     pub fn setresuid(ruid: ::uid_t, euid: ::uid_t, suid: ::uid_t) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "__wait4_time64")]
+     pub fn wait4(
+         pid: ::pid_t,
+         status: *mut ::c_int,
+@@ -1766,7 +1775,9 @@ extern "C" {
+     pub fn writev(fd: ::c_int, iov: *const ::iovec, iovcnt: ::c_int) -> ::ssize_t;
+     pub fn readv(fd: ::c_int, iov: *const ::iovec, iovcnt: ::c_int) -> ::ssize_t;
+ 
++    #[cfg_attr(gnu_time64_abi, link_name = "__sendmsg64")]
+     pub fn sendmsg(fd: ::c_int, msg: *const ::msghdr, flags: ::c_int) -> ::ssize_t;
++    #[cfg_attr(gnu_time64_abi, link_name = "__recvmsg64")]
+     pub fn recvmsg(fd: ::c_int, msg: *mut ::msghdr, flags: ::c_int) -> ::ssize_t;
+     pub fn uname(buf: *mut ::utsname) -> ::c_int;
+ 
+@@ -1785,7 +1796,9 @@ cfg_if! {
+             pub fn fstatvfs64(fd: ::c_int, buf: *mut statvfs64) -> ::c_int;
+             pub fn statfs64(path: *const ::c_char, buf: *mut statfs64) -> ::c_int;
+             pub fn creat64(path: *const c_char, mode: mode_t) -> ::c_int;
++            #[cfg_attr(gnu_time64_abi, link_name = "__fstat64_time64")]
+             pub fn fstat64(fildes: ::c_int, buf: *mut stat64) -> ::c_int;
++            #[cfg_attr(gnu_time64_abi, link_name = "__fstatat64_time64")]
+             pub fn fstatat64(
+                 dirfd: ::c_int,
+                 pathname: *const c_char,
+@@ -1794,6 +1807,7 @@ cfg_if! {
+             ) -> ::c_int;
+             pub fn ftruncate64(fd: ::c_int, length: off64_t) -> ::c_int;
+             pub fn lseek64(fd: ::c_int, offset: off64_t, whence: ::c_int) -> off64_t;
++            #[cfg_attr(gnu_time64_abi, link_name = "__lstat64_time64")]
+             pub fn lstat64(path: *const c_char, buf: *mut stat64) -> ::c_int;
+             pub fn mmap64(
+                 addr: *mut ::c_void,
+@@ -1829,6 +1843,7 @@ cfg_if! {
+                 entry: *mut ::dirent64,
+                 result: *mut *mut ::dirent64,
+             ) -> ::c_int;
++            #[cfg_attr(gnu_time64_abi, link_name = "__stat64_time64")]
+             pub fn stat64(path: *const c_char, buf: *mut stat64) -> ::c_int;
+             pub fn truncate64(path: *const c_char, length: off64_t) -> ::c_int;
+         }
+diff --git a/src/unix/mod.rs b/src/unix/mod.rs
+index 0b270c0a39..a380bf1ef8 100644
+--- a/src/unix/mod.rs
++++ b/src/unix/mod.rs
+@@ -449,17 +449,20 @@ extern "C" {
+         all(target_os = "macos", target_arch = "x86"),
+         link_name = "fopen$UNIX2003"
+     )]
++    #[cfg_attr(gnu_time64_abi, link_name = "fopen64")]
+     pub fn fopen(filename: *const c_char, mode: *const c_char) -> *mut FILE;
+     #[cfg_attr(
+         all(target_os = "macos", target_arch = "x86"),
+         link_name = "freopen$UNIX2003"
+     )]
++    #[cfg_attr(gnu_time64_abi, link_name = "freopen64")]
+     pub fn freopen(filename: *const c_char, mode: *const c_char, file: *mut FILE) -> *mut FILE;
+ 
+     pub fn fflush(file: *mut FILE) -> c_int;
+     pub fn fclose(file: *mut FILE) -> c_int;
+     pub fn remove(filename: *const c_char) -> c_int;
+     pub fn rename(oldname: *const c_char, newname: *const c_char) -> c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "tmpfile64")]
+     pub fn tmpfile() -> *mut FILE;
+     pub fn setvbuf(stream: *mut FILE, buffer: *mut c_char, mode: c_int, size: size_t) -> c_int;
+     pub fn setbuf(stream: *mut FILE, buf: *mut c_char);
+@@ -485,8 +488,10 @@ extern "C" {
+     pub fn ftell(stream: *mut FILE) -> c_long;
+     pub fn rewind(stream: *mut FILE);
+     #[cfg_attr(target_os = "netbsd", link_name = "__fgetpos50")]
++    #[cfg_attr(gnu_time64_abi, link_name = "fgetpos64")]
+     pub fn fgetpos(stream: *mut FILE, ptr: *mut fpos_t) -> c_int;
+     #[cfg_attr(target_os = "netbsd", link_name = "__fsetpos50")]
++    #[cfg_attr(gnu_time64_abi, link_name = "fsetpos64")]
+     pub fn fsetpos(stream: *mut FILE, ptr: *const fpos_t) -> c_int;
+     pub fn feof(stream: *mut FILE) -> c_int;
+     pub fn ferror(stream: *mut FILE) -> c_int;
+@@ -637,6 +642,7 @@ extern "C" {
+         address_len: *mut socklen_t,
+     ) -> ::c_int;
+     #[cfg_attr(target_os = "espidf", link_name = "lwip_setsockopt")]
++    #[cfg_attr(gnu_time64_abi, link_name = "__setsockopt64")]
+     pub fn setsockopt(
+         socket: ::c_int,
+         level: ::c_int,
+@@ -693,6 +699,7 @@ extern "C" {
+         all(target_os = "freebsd", any(freebsd11, freebsd10)),
+         link_name = "fstat@FBSD_1.0"
+     )]
++    #[cfg_attr(gnu_time64_abi, link_name = "__fstat64_time64")]
+     pub fn fstat(fildes: ::c_int, buf: *mut stat) -> ::c_int;
+ 
+     pub fn mkdir(path: *const c_char, mode: mode_t) -> ::c_int;
+@@ -706,6 +713,7 @@ extern "C" {
+         all(target_os = "freebsd", any(freebsd11, freebsd10)),
+         link_name = "stat@FBSD_1.0"
+     )]
++    #[cfg_attr(gnu_time64_abi, link_name = "__stat64_time64")]
+     pub fn stat(path: *const c_char, buf: *mut stat) -> ::c_int;
+ 
+     pub fn pclose(stream: *mut ::FILE) -> ::c_int;
+@@ -720,16 +728,19 @@ extern "C" {
+         all(target_os = "macos", target_arch = "x86"),
+         link_name = "open$UNIX2003"
+     )]
++    #[cfg_attr(gnu_time64_abi, link_name = "open64")]
+     pub fn open(path: *const c_char, oflag: ::c_int, ...) -> ::c_int;
+     #[cfg_attr(
+         all(target_os = "macos", target_arch = "x86"),
+         link_name = "creat$UNIX2003"
+     )]
++    #[cfg_attr(gnu_time64_abi, link_name = "creat64")]
+     pub fn creat(path: *const c_char, mode: mode_t) -> ::c_int;
+     #[cfg_attr(
+         all(target_os = "macos", target_arch = "x86"),
+         link_name = "fcntl$UNIX2003"
+     )]
++    #[cfg_attr(gnu_time64_abi, link_name = "__fcntl_time64")]
+     pub fn fcntl(fd: ::c_int, cmd: ::c_int, ...) -> ::c_int;
+ 
+     #[cfg_attr(
+@@ -752,6 +763,7 @@ extern "C" {
+         all(target_os = "freebsd", any(freebsd11, freebsd10)),
+         link_name = "readdir@FBSD_1.0"
+     )]
++    #[cfg_attr(gnu_time64_abi, link_name = "readdir64")]
+     pub fn readdir(dirp: *mut ::DIR) -> *mut ::dirent;
+     #[cfg_attr(
+         all(target_os = "macos", target_arch = "x86"),
+@@ -790,6 +802,7 @@ extern "C" {
+         all(target_os = "freebsd", any(freebsd11, freebsd10)),
+         link_name = "fstatat@FBSD_1.1"
+     )]
++    #[cfg_attr(gnu_time64_abi, link_name = "__fstatat64_time64")]
+     pub fn fstatat(
+         dirfd: ::c_int,
+         pathname: *const ::c_char,
+@@ -868,6 +881,7 @@ extern "C" {
+     pub fn getuid() -> uid_t;
+     pub fn isatty(fd: ::c_int) -> ::c_int;
+     pub fn link(src: *const c_char, dst: *const c_char) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "lseek64")]
+     pub fn lseek(fd: ::c_int, offset: off_t, whence: ::c_int) -> off_t;
+     pub fn pathconf(path: *const c_char, name: ::c_int) -> c_long;
+     pub fn pipe(fds: *mut ::c_int) -> ::c_int;
+@@ -896,6 +910,7 @@ extern "C" {
+         link_name = "nanosleep$UNIX2003"
+     )]
+     #[cfg_attr(target_os = "netbsd", link_name = "__nanosleep50")]
++    #[cfg_attr(gnu_time64_abi, link_name = "__nanosleep64")]
+     pub fn nanosleep(rqtp: *const timespec, rmtp: *mut timespec) -> ::c_int;
+     pub fn tcgetpgrp(fd: ::c_int) -> pid_t;
+     pub fn tcsetpgrp(fd: ::c_int, pgrp: ::pid_t) -> ::c_int;
+@@ -926,15 +941,18 @@ extern "C" {
+         all(target_os = "macos", target_arch = "x86"),
+         link_name = "pread$UNIX2003"
+     )]
++    #[cfg_attr(gnu_time64_abi, link_name = "pread64")]
+     pub fn pread(fd: ::c_int, buf: *mut ::c_void, count: ::size_t, offset: off_t) -> ::ssize_t;
+     #[cfg_attr(
+         all(target_os = "macos", target_arch = "x86"),
+         link_name = "pwrite$UNIX2003"
+     )]
++    #[cfg_attr(gnu_time64_abi, link_name = "pwrite64")]
+     pub fn pwrite(fd: ::c_int, buf: *const ::c_void, count: ::size_t, offset: off_t) -> ::ssize_t;
+     pub fn umask(mask: mode_t) -> mode_t;
+ 
+     #[cfg_attr(target_os = "netbsd", link_name = "__utime50")]
++    #[cfg_attr(gnu_time64_abi, link_name = "__utime64")]
+     pub fn utime(file: *const c_char, buf: *const utimbuf) -> ::c_int;
+ 
+     #[cfg_attr(
+@@ -957,6 +975,7 @@ extern "C" {
+         all(target_os = "macos", target_arch = "x86"),
+         link_name = "mmap$UNIX2003"
+     )]
++    #[cfg_attr(gnu_time64_abi, link_name = "mmap64")]
+     pub fn mmap(
+         addr: *mut ::c_void,
+         len: ::size_t,
+@@ -983,6 +1002,7 @@ extern "C" {
+         all(target_os = "freebsd", any(freebsd11, freebsd10)),
+         link_name = "lstat@FBSD_1.0"
+     )]
++    #[cfg_attr(gnu_time64_abi, link_name = "__lstat64_time64")]
+     pub fn lstat(path: *const c_char, buf: *mut stat) -> ::c_int;
+ 
+     #[cfg_attr(
+@@ -1005,12 +1025,15 @@ extern "C" {
+ 
+     pub fn symlink(path1: *const c_char, path2: *const c_char) -> ::c_int;
+ 
++    #[cfg_attr(gnu_time64_abi, link_name = "truncate64")]
+     pub fn truncate(path: *const c_char, length: off_t) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "ftruncate64")]
+     pub fn ftruncate(fd: ::c_int, length: off_t) -> ::c_int;
+ 
+     pub fn signal(signum: ::c_int, handler: sighandler_t) -> sighandler_t;
+ 
+     #[cfg_attr(target_os = "netbsd", link_name = "__getrusage50")]
++    #[cfg_attr(gnu_time64_abi, link_name = "__getrusage64")]
+     pub fn getrusage(resource: ::c_int, usage: *mut rusage) -> ::c_int;
+ 
+     #[cfg_attr(
+@@ -1086,6 +1109,7 @@ extern "C" {
+         all(target_os = "macos", target_arch = "x86"),
+         link_name = "pthread_cond_timedwait$UNIX2003"
+     )]
++    #[cfg_attr(gnu_time64_abi, link_name = "__pthread_cond_timedwait64")]
+     pub fn pthread_cond_timedwait(
+         cond: *mut pthread_cond_t,
+         lock: *mut pthread_mutex_t,
+@@ -1139,6 +1163,7 @@ extern "C" {
+ 
+     #[cfg_attr(target_os = "illumos", link_name = "__xnet_getsockopt")]
+     #[cfg_attr(target_os = "espidf", link_name = "lwip_getsockopt")]
++    #[cfg_attr(gnu_time64_abi, link_name = "__getsockopt64")]
+     pub fn getsockopt(
+         sockfd: ::c_int,
+         level: ::c_int,
+@@ -1149,6 +1174,7 @@ extern "C" {
+     pub fn raise(signum: ::c_int) -> ::c_int;
+ 
+     #[cfg_attr(target_os = "netbsd", link_name = "__utimes50")]
++    #[cfg_attr(gnu_time64_abi, link_name = "__utimes64")]
+     pub fn utimes(filename: *const ::c_char, times: *const ::timeval) -> ::c_int;
+     pub fn dlopen(filename: *const ::c_char, flag: ::c_int) -> *mut ::c_void;
+     pub fn dlerror() -> *mut ::c_char;
+@@ -1195,10 +1221,12 @@ extern "C" {
+     #[cfg_attr(target_os = "netbsd", link_name = "__gmtime_r50")]
+     #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+     // FIXME: for `time_t`
++    #[cfg_attr(gnu_time64_abi, link_name = "__gmtime64_r")]
+     pub fn gmtime_r(time_p: *const time_t, result: *mut tm) -> *mut tm;
+     #[cfg_attr(target_os = "netbsd", link_name = "__localtime_r50")]
+     #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+     // FIXME: for `time_t`
++    #[cfg_attr(gnu_time64_abi, link_name = "__localtime64_r")]
+     pub fn localtime_r(time_p: *const time_t, result: *mut tm) -> *mut tm;
+     #[cfg_attr(
+         all(target_os = "macos", target_arch = "x86"),
+@@ -1207,26 +1235,32 @@ extern "C" {
+     #[cfg_attr(target_os = "netbsd", link_name = "__mktime50")]
+     #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+     // FIXME: for `time_t`
++    #[cfg_attr(gnu_time64_abi, link_name = "__mktime64")]
+     pub fn mktime(tm: *mut tm) -> time_t;
+     #[cfg_attr(target_os = "netbsd", link_name = "__time50")]
+     #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+     // FIXME: for `time_t`
++    #[cfg_attr(gnu_time64_abi, link_name = "__time64")]
+     pub fn time(time: *mut time_t) -> time_t;
+     #[cfg_attr(target_os = "netbsd", link_name = "__gmtime50")]
+     #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+     // FIXME: for `time_t`
++    #[cfg_attr(gnu_time64_abi, link_name = "__gmtime64")]
+     pub fn gmtime(time_p: *const time_t) -> *mut tm;
+     #[cfg_attr(target_os = "netbsd", link_name = "__locatime50")]
+     #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+     // FIXME: for `time_t`
++    #[cfg_attr(gnu_time64_abi, link_name = "__localtime64")]
+     pub fn localtime(time_p: *const time_t) -> *mut tm;
+     #[cfg_attr(target_os = "netbsd", link_name = "__difftime50")]
+     #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+     // FIXME: for `time_t`
++    #[cfg_attr(gnu_time64_abi, link_name = "__difftime64")]
+     pub fn difftime(time1: time_t, time0: time_t) -> ::c_double;
+     #[cfg_attr(target_os = "netbsd", link_name = "__timegm50")]
+     #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+     // FIXME: for `time_t`
++    #[cfg_attr(gnu_time64_abi, link_name = "__timegm64")]
+     pub fn timegm(tm: *mut ::tm) -> time_t;
+ 
+     #[cfg_attr(target_os = "netbsd", link_name = "__mknod50")]
+@@ -1281,6 +1315,7 @@ extern "C" {
+         link_name = "select$UNIX2003"
+     )]
+     #[cfg_attr(target_os = "netbsd", link_name = "__select50")]
++    #[cfg_attr(gnu_time64_abi, link_name = "__select64")]
+     pub fn select(
+         nfds: ::c_int,
+         readfds: *mut fd_set,
+@@ -1299,7 +1334,9 @@ extern "C" {
+     pub fn sem_wait(sem: *mut sem_t) -> ::c_int;
+     pub fn sem_trywait(sem: *mut sem_t) -> ::c_int;
+     pub fn sem_post(sem: *mut sem_t) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "statvfs64")]
+     pub fn statvfs(path: *const c_char, buf: *mut statvfs) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "fstatvfs64")]
+     pub fn fstatvfs(fd: ::c_int, buf: *mut statvfs) -> ::c_int;
+ 
+     #[cfg_attr(target_os = "netbsd", link_name = "__sigemptyset14")]
+@@ -1322,7 +1359,9 @@ extern "C" {
+ 
+     pub fn mkfifo(path: *const c_char, mode: mode_t) -> ::c_int;
+ 
++    #[cfg_attr(gnu_time64_abi, link_name = "fseeko64")]
+     pub fn fseeko(stream: *mut ::FILE, offset: ::off_t, whence: ::c_int) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "ftello64")]
+     pub fn ftello(stream: *mut ::FILE) -> ::off_t;
+     #[cfg_attr(
+         all(target_os = "macos", target_arch = "x86"),
+@@ -1339,6 +1378,7 @@ extern "C" {
+     pub fn tcflush(fd: ::c_int, action: ::c_int) -> ::c_int;
+     pub fn tcgetsid(fd: ::c_int) -> ::pid_t;
+     pub fn tcsendbreak(fd: ::c_int, duration: ::c_int) -> ::c_int;
++    #[cfg_attr(gnu_time64_abi, link_name = "mkstemp64")]
+     pub fn mkstemp(template: *mut ::c_char) -> ::c_int;
+     pub fn mkdtemp(template: *mut ::c_char) -> *mut ::c_char;
+ 
+@@ -1363,6 +1403,7 @@ extern "C" {
+     pub fn strcasestr(cs: *const c_char, ct: *const c_char) -> *mut c_char;
+     pub fn getline(lineptr: *mut *mut c_char, n: *mut size_t, stream: *mut FILE) -> ssize_t;
+ 
++    #[cfg_attr(gnu_time64_abi, link_name = "lockf64")]
+     pub fn lockf(fd: ::c_int, cmd: ::c_int, len: ::off_t) -> ::c_int;
+ 
+ }
+@@ -1373,6 +1414,7 @@ cfg_if! {
+                      target_os = "haiku",
+                      target_os = "nto")))] {
+         extern "C" {
++            #[cfg_attr(gnu_time64_abi, link_name = "__adjtime64")]
+             pub fn adjtime(delta: *const timeval, olddelta: *mut timeval) -> ::c_int;
+             pub fn stpncpy(dst: *mut c_char, src: *const c_char, n: size_t) -> *mut c_char;
+         }
+@@ -1408,6 +1450,7 @@ cfg_if! {
+ 
+             pub fn mkdirat(dirfd: ::c_int, pathname: *const ::c_char,
+                           mode: ::mode_t) -> ::c_int;
++            #[cfg_attr(gnu_time64_abi, link_name = "openat64")]
+             pub fn openat(dirfd: ::c_int, pathname: *const ::c_char,
+                           flags: ::c_int, ...) -> ::c_int;
+ 
+@@ -1431,6 +1474,7 @@ cfg_if! {
+             /// https://illumos.org/man/3lib/libc
+             /// https://docs.oracle.com/cd/E36784_01/html/E36873/libc-3lib.html
+             /// https://www.unix.com/man-page/opensolaris/3LIB/libc/
++            #[cfg_attr(gnu_time64_abi, link_name = "readdir64_r")]
+             pub fn readdir_r(dirp: *mut ::DIR, entry: *mut ::dirent,
+                              result: *mut *mut ::dirent) -> ::c_int;
+         }
+@@ -1484,6 +1528,7 @@ cfg_if! {
+                 link_name = "pselect$UNIX2003"
+             )]
+             #[cfg_attr(target_os = "netbsd", link_name = "__pselect50")]
++            #[cfg_attr(gnu_time64_abi, link_name = "__pselect64")]
+             pub fn pselect(
+                 nfds: ::c_int,
+                 readfds: *mut fd_set,
