@@ -2,11 +2,12 @@ Index: nix/src/sys/socket/mod.rs
 ===================================================================
 --- nix.orig/src/sys/socket/mod.rs
 +++ nix/src/sys/socket/mod.rs
-@@ -1850,6 +1850,7 @@ mod test {
+@@ -1821,7 +1821,7 @@ mod test {
+     use std::str::FromStr;
  
      #[cfg_attr(qemu, ignore)]
+-    #[cfg(all(feature = "net",feature = "time"))]
++    #[cfg(all(feature = "net",feature = "time",not(target_arch = "s390x")))]
      #[test]
-+    #[cfg(not(target_arch = "s390x"))]
      fn test_recvmm2() -> crate::Result<()> {
          use crate::sys::socket::{
-             sendmsg, setsockopt, socket, sockopt::Timestamping, MsgFlags, SockFlag, SockType,

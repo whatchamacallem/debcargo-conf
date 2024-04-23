@@ -1,6 +1,6 @@
 --- nix.orig/test/sys/test_socket.rs
 +++ nix/test/sys/test_socket.rs
-@@ -861,4 +861,10 @@
+@@ -892,7 +892,21 @@
          None,
 -    )
 -    .expect("socket failed");
@@ -13,22 +13,71 @@
 +    }
 +    let sock = sock.expect("socket failed");
  
+     let sockaddr = AlgAddr::new(alg_type, alg_name);
+-    bind(sock, &sockaddr).expect("bind failed");
++    let bindresult = bind(sock, &sockaddr);
++    // don't fail the tests on systems that don't support this functionality
++    if let Err(e) = bindresult {
++        if e == nix::errno::Errno::ENOENT {
++            return;
++        }
++    }
++    bindresult.expect("bind failed");
++
+ 
+@@ -988,7 +1002,20 @@
+         None,
+-    )
+-    .expect("socket failed");
++    );
++    // don't fail the tests on systems that don't support this functionality
++    if let Err(e) = sock {
++        if e == nix::errno::Errno::EAFNOSUPPORT {
++            return;
++        }
++    }
++    let sock = sock.expect("socket failed");
+ 
+     let sockaddr = AlgAddr::new(alg_type, alg_name);
+-    bind(sock, &sockaddr).expect("bind failed");
++    let bindresult = bind(sock, &sockaddr);
++    // don't fail the tests on systems that don't support this functionality
++    if let Err(e) = bindresult {
++        if e == nix::errno::Errno::ENOENT {
++            return;
++        }
++    }
++    bindresult.expect("bind failed");
+ 
+@@ -2192,4 +2219,10 @@
+         None,
+-    )
+-    .expect("socket failed");
++    );
++    // don't fail the tests on systems that don't support this functionality
++    if let Err(e) = s1 {
++        if e == nix::errno::Errno::EAFNOSUPPORT {
++            return;
++        }
++    }
++    let s1 = s1.expect("socket failed");
+ 
 --- nix.orig/test/test_fcntl.rs
 +++ nix/test/test_fcntl.rs
-@@ -259,3 +259,3 @@
-     let mut from_offset: i64 = 3;
--    copy_file_range(
-+    let result = copy_file_range(
-         tmp1.as_fd(),
-@@ -265,4 +265,7 @@
-         3,
--    )
--    .unwrap();
-+    );
-+    if result == Err(nix::errno::Errno::ENOSYS) {
-+        return; //the kernel doesn't support this functionality.
-+    }
-+    result.unwrap();
+@@ -266,3 +266,3 @@
+         let mut from_offset: i64 = 3;
+-        copy_file_range(
++        let result = copy_file_range(
+             tmp1.as_raw_fd(),
+@@ -272,4 +272,7 @@
+             3,
+-        )
+-        .unwrap();
++        );
++        if result == Err(nix::errno::Errno::ENOSYS) {
++            return; //the kernel doesn't support this functionality.
++        }
++        result.unwrap();
  
 @@ -377,4 +380,10 @@
          let fd = tmp.as_raw_fd();
