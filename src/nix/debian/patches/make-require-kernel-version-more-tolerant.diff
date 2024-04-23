@@ -1,0 +1,17 @@
+Index: nix/test/common/mod.rs
+===================================================================
+--- nix.orig/test/common/mod.rs
++++ nix/test/common/mod.rs
+@@ -135,8 +135,10 @@ cfg_if! {
+                     // Fedora 33 reports version as 4.18.el8_2.x86_64 or
+                     // 5.18.200-fc33.x86_64.  Remove the underscore.
+                     .replace("_", "-")
+-                    // Cirrus-CI reports version as 4.19.112+ .  Remove the +
+-                    .replace("+", "");
++                    // Cirrus-CI reports version as 4.19.112+
++                    // Some debian test runners report versions like
++                    // 6.6.13+bpo-cloud-amd64, replace the + with a -
++                    .replace("+", "-");
+                 let mut version = Version::parse(fixed_release).unwrap();
+ 
+                 //Keep only numeric parts
