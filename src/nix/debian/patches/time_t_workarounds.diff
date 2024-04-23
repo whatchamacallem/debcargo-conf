@@ -1,0 +1,94 @@
+This patch works around a couple of issues related to time64.
+
+Firstly the current patch series for time64 in the libc crate leads to a
+missing f_flags error. The person working on the upstream PR is aware and
+hopefully we will have the fix soon, but in the meantime it's better to have a
+missing method than a build failure.
+
+Secondly, while posix says that tv_usec has type suseconds_t, glibc with
+time64 enabled is not consistent with this. This patch adds conversion
+operations (which would be implicit conversions in C/C++) to workaround this.
+
+Index: rust-nix-0.26.2/src/sys/statfs.rs
+===================================================================
+--- rust-nix-0.26.2.orig/src/sys/statfs.rs
++++ rust-nix-0.26.2/src/sys/statfs.rs
+@@ -471,7 +471,9 @@ impl Statfs {
+     /// Get the mount flags
+     // The f_flags field exists on Android and Fuchsia too, but without man
+     // pages I can't tell if it can be cast to FsFlags.
+-    #[cfg(target_os = "linux")]
++    // the libc crate with the time64 patches currently has issues with
++    // f_flags.
++    #[cfg(all(target_os = "linux", any(target_arch = "x86", target_arch = "x86_64", target_pointer_width="64")))]
+     #[cfg_attr(docsrs, doc(cfg(all())))]
+     pub fn flags(&self) -> FsFlags {
+         FsFlags::from_bits_truncate(self.0.f_flags as libc::c_ulong)
+Index: rust-nix-0.26.2/src/sys/time.rs
+===================================================================
+--- rust-nix-0.26.2.orig/src/sys/time.rs
++++ rust-nix-0.26.2/src/sys/time.rs
+@@ -529,7 +529,7 @@ impl TimeValLike for TimeVal {
+         // https://github.com/rust-lang/libc/issues/1848
+         TimeVal(timeval {
+             tv_sec: secs as time_t,
+-            tv_usec: micros as suseconds_t,
++            tv_usec: micros as _,
+         })
+     }
+ 
+@@ -547,7 +547,7 @@ impl TimeValLike for TimeVal {
+         // https://github.com/rust-lang/libc/issues/1848
+         TimeVal(timeval {
+             tv_sec: secs as time_t,
+-            tv_usec: micros as suseconds_t,
++            tv_usec: micros as _,
+         })
+     }
+ 
+@@ -584,7 +584,7 @@ impl TimeVal {
+     pub const fn new(seconds: time_t, microseconds: suseconds_t) -> Self {
+         Self(timeval {
+             tv_sec: seconds,
+-            tv_usec: microseconds,
++            tv_usec: microseconds as _,
+         })
+     }
+ 
+@@ -602,7 +602,7 @@ impl TimeVal {
+     }
+ 
+     pub const fn tv_usec(&self) -> suseconds_t {
+-        self.0.tv_usec
++        self.0.tv_usec as suseconds_t
+     }
+ }
+ 
+Index: rust-nix-0.26.2/src/lib.rs
+===================================================================
+--- rust-nix-0.26.2.orig/src/lib.rs
++++ rust-nix-0.26.2/src/lib.rs
+@@ -43,9 +43,9 @@
+ #![cfg(unix)]
+ #![cfg_attr(docsrs, doc(cfg(all())))]
+ #![allow(non_camel_case_types)]
+-#![cfg_attr(test, deny(warnings))]
++//#![cfg_attr(test, deny(warnings))]
+ #![recursion_limit = "500"]
+-#![deny(unused)]
++//#![deny(unused)]
+ #![allow(unused_macros)]
+ #![cfg_attr(not(feature = "default"), allow(unused_imports))]
+ #![deny(unstable_features)]
+Index: rust-nix-0.26.2/src/sys/resource.rs
+===================================================================
+--- rust-nix-0.26.2.orig/src/sys/resource.rs
++++ rust-nix-0.26.2/src/sys/resource.rs
+@@ -438,6 +438,6 @@ mod test {
+         let user = usage.user_time();
+         assert!(user.tv_sec() > 0 || user.tv_usec() > 0);
+         assert_eq!(user.tv_sec(), rusage.ru_utime.tv_sec);
+-        assert_eq!(user.tv_usec(), rusage.ru_utime.tv_usec);
++        assert_eq!(user.tv_usec() as u64, rusage.ru_utime.tv_usec as u64);
+     }
+ }

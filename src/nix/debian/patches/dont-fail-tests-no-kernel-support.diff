@@ -1,6 +1,18 @@
 --- nix.orig/test/sys/test_socket.rs
 +++ nix/test/sys/test_socket.rs
-@@ -892,7 +892,21 @@
+@@ -107,3 +107,10 @@
+ 
+-    setsockopt(rsock, Timestamping, &TimestampingFlag::all()).unwrap();
++    let result = setsockopt(rsock, Timestamping, &TimestampingFlag::all());
++    if let Err(e) = result {
++        use nix::errno::Errno::ENOPROTOOPT;
++        if e == ENOPROTOOPT {
++            return; // skipped due to lack of kernel support.
++        }
++    }
++    result.unwrap();
+ 
+@@ -892,7 +899,21 @@
          None,
 -    )
 -    .expect("socket failed");
@@ -92,3 +104,17 @@
 +        }
 +        result.unwrap();
          // Check if we read exactly 100 bytes
+--- nix.orig/src/sys/socket/mod.rs
++++ nix/src/sys/socket/mod.rs
+@@ -1850,3 +1850,10 @@
+ 
+-        setsockopt(rsock, Timestamping, &TimestampingFlag::all())?;
++        if let Err(e) = setsockopt(rsock, Timestamping, &TimestampingFlag::all()) {
++           use crate::Errno::ENOPROTOOPT;
++           if e != ENOPROTOOPT {
++               return Err(e);
++           } else {
++               return Ok(()); // test skipped due to lack of kernel support.
++           }
++        }
+ 
