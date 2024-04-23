@@ -1,10 +1,6 @@
-Index: nix/test/sys/test_socket.rs
-===================================================================
 --- nix.orig/test/sys/test_socket.rs
 +++ nix/test/sys/test_socket.rs
-@@ -859,8 +859,14 @@ pub fn test_af_alg_cipher() {
-         SockType::SeqPacket,
-         SockFlag::empty(),
+@@ -861,4 +861,10 @@
          None,
 -    )
 -    .expect("socket failed");
@@ -17,22 +13,14 @@ Index: nix/test/sys/test_socket.rs
 +    }
 +    let sock = sock.expect("socket failed");
  
-     let sockaddr = AlgAddr::new(alg_type, alg_name);
-     bind(sock.as_raw_fd(), &sockaddr).expect("bind failed");
-Index: nix/test/test_fcntl.rs
-===================================================================
 --- nix.orig/test/test_fcntl.rs
 +++ nix/test/test_fcntl.rs
-@@ -257,14 +257,17 @@ fn test_copy_file_range() {
-     tmp1.flush().unwrap();
- 
+@@ -259,3 +259,3 @@
      let mut from_offset: i64 = 3;
 -    copy_file_range(
 +    let result = copy_file_range(
          tmp1.as_fd(),
-         Some(&mut from_offset),
-         tmp2.as_fd(),
-         None,
+@@ -265,4 +265,7 @@
          3,
 -    )
 -    .unwrap();
@@ -42,11 +30,7 @@ Index: nix/test/test_fcntl.rs
 +    }
 +    result.unwrap();
  
-     let mut res: String = String::new();
-     tmp2.rewind().unwrap();
-@@ -375,8 +378,14 @@ mod linux_android {
-         let tmp = NamedTempFile::new().unwrap();
- 
+@@ -377,4 +380,10 @@
          let fd = tmp.as_raw_fd();
 -        fallocate(fd, FallocateFlags::empty(), 0, 100).unwrap();
 -
@@ -59,5 +43,3 @@ Index: nix/test/test_fcntl.rs
 +        }
 +        result.unwrap();
          // Check if we read exactly 100 bytes
-         let mut buf = [0u8; 200];
-         assert_eq!(100, read(fd, &mut buf).unwrap());
