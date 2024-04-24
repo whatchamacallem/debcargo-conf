@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_auto_test:
+	dh_auto_test -- test --all
+
+override_dh_fixperms:
+	dh_fixperms
+	find debian/ -type f \( -name 'README.md' -o -name 'general.yaml' -o -name '.gitignore' -o -name 'internals.rs' \) -exec chmod -x '{}' \;
