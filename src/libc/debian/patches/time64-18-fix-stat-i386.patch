@@ -3,10 +3,10 @@ in src/unix/linux_like/linux/gnu/b32/x86/mod.rs, since we don't enable time64
 on i386 this causes us problems. This patch puts back the old definitions and
 adds conditionals.
 
-Index: libc/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
+Index: rust-libc-0.2.153/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
 ===================================================================
---- libc.orig/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
-+++ libc/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
+--- rust-libc-0.2.153.orig/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
++++ rust-libc-0.2.153/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
 @@ -2,6 +2,7 @@ pub type c_char = i8;
  pub type wchar_t = i32;
  pub type greg_t = i32;
@@ -15,19 +15,14 @@ Index: libc/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
  pub type statfs64 = statfs;
  
  s! {
-@@ -12,6 +13,7 @@ s! {
-         pub sa_restorer: ::Option<extern fn()>,
+@@ -130,7 +131,50 @@ s! {
+         __unused1: ::c_ulong,
+         __unused2: ::c_ulong
      }
++}
  
-+    #[cfg(gnu_time64_abi)]
-     pub struct statfs {
-         pub f_type: ::__fsword_t,
-         pub f_bsize: ::__fsword_t,
-@@ -28,6 +30,45 @@ s! {
-         f_spare: [::__fsword_t; 5],
-     }
- 
-+    #[cfg(not(gnu_time64_abi))]
++#[cfg(not(gnu_time64_abi))]
++s! {
 +    pub struct stat64 {
 +        pub st_dev: ::dev_t,
 +        __pad1: ::c_uint,
@@ -50,7 +45,6 @@ Index: libc/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
 +        pub st_ino: ::ino64_t,
 +    }
 +
-+    #[cfg(not(gnu_time64_abi))]
 +    pub struct statfs64 {
 +        pub f_type: ::__fsword_t,
 +        pub f_bsize: ::__fsword_t,
@@ -65,7 +59,20 @@ Index: libc/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
 +        pub f_flags: ::__fsword_t,
 +        pub f_spare: [::__fsword_t; 4],
 +    }
++}
 +
-     pub struct flock {
-         pub l_type: ::c_short,
-         pub l_whence: ::c_short,
++#[cfg(gnu_time64_abi)]
++s! {
+     pub struct stat64 {
+         pub st_dev: ::dev_t,
+         pub st_ino: ::ino_t,
+@@ -152,7 +196,9 @@ s! {
+         pub st_ctime_nsec: ::c_long,
+         __pad3: i32,
+     }
++}
+ 
++s! {
+     pub struct statvfs64 {
+         pub f_bsize: ::c_ulong,
+         pub f_frsize: ::c_ulong,
