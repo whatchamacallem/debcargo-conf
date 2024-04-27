@@ -1,0 +1,39 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 21ce680a87dee438f8c676e30586516f57891b26
+Author: Daniel Watkins <daniel@daniel-watkins.co.uk>
+Date:   Mon Jun 19 12:47:25 2023 -0400
+
+    convert from failure to anyhow
+
+Index: distro-info/src/lib.rs
+===================================================================
+--- distro-info.orig/src/lib.rs
++++ distro-info/src/lib.rs
+@@ -6,11 +6,11 @@
+ extern crate chrono;
+ extern crate csv;
+ #[macro_use]
+-extern crate failure;
++extern crate anyhow;
+ 
++use anyhow::Error;
+ use chrono::naive::NaiveDate;
+ use csv::ReaderBuilder;
+-use failure::Error;
+ 
+ const UBUNTU_CSV_PATH: &str = "/usr/share/distro-info/ubuntu.csv";
+ const DEBIAN_CSV_PATH: &str = "/usr/share/distro-info/debian.csv";
+Index: distro-info/Cargo.toml
+===================================================================
+--- distro-info.orig/Cargo.toml
++++ distro-info/Cargo.toml
+@@ -25,5 +25,5 @@ version = "0.4.3"
+ [dependencies.csv]
+ version = "1"
+ 
+-[dependencies.failure]
+-version = "0.1.1"
++[dependencies.anyhow]
++version = "1.0"
