@@ -1,0 +1,2053 @@
+Index: coreutils/Cargo.toml
+===================================================================
+--- coreutils.orig/Cargo.toml
++++ coreutils/Cargo.toml
+@@ -299,7 +299,6 @@ nix = { version = "0", default-features
+ nom = "7"
+ notify = "5"
+ num-bigint = "0.4"
+-num-prime = "0.4.3"
+ num-traits = "0.2"
+ number_prefix = "0.4"
+ once_cell = "1"
+@@ -482,7 +481,6 @@ chrono = { workspace = true }
+ filetime = { workspace = true }
+ glob = { workspace = true }
+ libc = { workspace = true }
+-num-prime = { workspace = true }
+ pretty_assertions = "1"
+ rand = { workspace = true }
+ regex = { workspace = true }
+Index: coreutils/deny.toml
+===================================================================
+--- coreutils.orig/deny.toml
++++ coreutils/deny.toml
+@@ -101,8 +101,6 @@ skip = [
+   { name = "terminal_size", version = "0.2.6" },
+   # filetime, parking_lot_core
+   { name = "redox_syscall", version = "0.4.1" },
+-  # num-prime, rust-ini
+-  { name = "hashbrown", version = "0.12.3" },
+ ]
+ # spell-checker: enable
+ 
+Index: coreutils/src/uu/factor/Cargo.toml
+===================================================================
+--- coreutils.orig/src/uu/factor/Cargo.toml
++++ coreutils/src/uu/factor/Cargo.toml
+@@ -21,8 +21,6 @@ num-traits = { workspace = true }
+ rand = { workspace = true }
+ smallvec = { workspace = true }
+ uucore = { workspace = true }
+-num-bigint = { workspace = true }
+-num-prime = { workspace = true }
+ 
+ [dev-dependencies]
+ quickcheck = "1.0.3"
+@@ -32,4 +30,4 @@ name = "factor"
+ path = "src/main.rs"
+ 
+ [lib]
+-path = "src/factor.rs"
++path = "src/cli.rs"
+Index: coreutils/src/uu/factor/build.rs
+===================================================================
+--- /dev/null
++++ coreutils/src/uu/factor/build.rs
+@@ -0,0 +1,103 @@
++// This file is part of the uutils coreutils package.
++//
++// For the full copyright and license information, please view the LICENSE
++// file that was distributed with this source code.
++
++//! Generate a table of the multiplicative inverses of `p_i` mod 2^64
++//! for the first 1027 odd primes (all 13 bit and smaller primes).
++//! You can supply a command line argument to override the default
++//! value of 1027 for the number of entries in the table.
++//!
++//! 2 has no multiplicative inverse mode 2^64 because 2 | 2^64,
++//! and in any case divisibility by two is trivial by checking the LSB.
++
++#![cfg_attr(test, allow(dead_code))]
++
++use std::env::{self, args};
++use std::fs::File;
++use std::io::Write;
++use std::path::Path;
++
++use self::sieve::Sieve;
++
++#[cfg(test)]
++use miller_rabin::is_prime;
++
++#[path = "src/numeric/modular_inverse.rs"]
++mod modular_inverse;
++#[allow(unused_imports)] // imports there are used, but invisible from build.rs
++#[path = "src/numeric/traits.rs"]
++mod traits;
++use modular_inverse::modular_inverse;
++
++mod sieve;
++
++#[cfg_attr(test, allow(dead_code))]
++fn main() {
++    let out_dir = env::var("OUT_DIR").unwrap();
++    let mut file = File::create(Path::new(&out_dir).join("prime_table.rs")).unwrap();
++
++    // By default, we print the multiplicative inverses mod 2^64 of the first 1k primes
++    const DEFAULT_SIZE: usize = 320;
++    let n = args()
++        .nth(1)
++        .and_then(|s| s.parse::<usize>().ok())
++        .unwrap_or(DEFAULT_SIZE);
++
++    write!(file, "{PREAMBLE}").unwrap();
++    let mut cols = 3;
++
++    // we want a total of n + 1 values
++    let mut primes = Sieve::odd_primes().take(n + 1);
++
++    // in each iteration of the for loop, we use the value yielded
++    // by the previous iteration. This leaves one value left at the
++    // end, which we call NEXT_PRIME.
++    let mut x = primes.next().unwrap();
++    for next in primes {
++        // format the table
++        let output = format!("({}, {}, {}),", x, modular_inverse(x), std::u64::MAX / x);
++        if cols + output.len() > MAX_WIDTH {
++            write!(file, "\n    {output}").unwrap();
++            cols = 4 + output.len();
++        } else {
++            write!(file, " {output}").unwrap();
++            cols += 1 + output.len();
++        }
++
++        x = next;
++    }
++
++    write!(
++        file,
++        "\n];\n\n#[allow(dead_code)]\npub const NEXT_PRIME: u64 = {x};\n"
++    )
++    .unwrap();
++}
++
++#[test]
++fn test_generator_is_prime() {
++    assert_eq!(Sieve::odd_primes.take(10_000).all(is_prime));
++}
++
++#[test]
++fn test_generator_10001() {
++    let prime_10001 = Sieve::primes().skip(10_000).next();
++    assert_eq!(prime_10001, Some(104_743));
++}
++
++const MAX_WIDTH: usize = 102;
++const PREAMBLE: &str = r"/*
++* This file is part of the uutils coreutils package.
++*
++* For the full copyright and license information, please view the LICENSE file
++* that was distributed with this source code.
++*/
++
++// *** NOTE: this file was automatically generated.
++// Please do not edit by hand. Instead, modify and
++// re-run src/factor/gen_tables.rs.
++
++#[allow(clippy::unreadable_literal)]
++pub const PRIME_INVERSIONS_U64: &[(u64, u64, u64)] = &[
++   ";
+Index: coreutils/src/uu/factor/sieve.rs
+===================================================================
+--- /dev/null
++++ coreutils/src/uu/factor/sieve.rs
+@@ -0,0 +1,215 @@
++// This file is part of the uutils coreutils package.
++//
++// For the full copyright and license information, please view the LICENSE
++// file that was distributed with this source code.
++
++// spell-checker:ignore (ToDO) filts, minidx, minkey paridx
++
++use std::iter::{Chain, Copied, Cycle};
++use std::slice::Iter;
++
++/// A lazy Sieve of Eratosthenes.
++///
++/// This is a reasonably efficient implementation based on
++/// O'Neill, M. E. "[The Genuine Sieve of Eratosthenes.](http://dx.doi.org/10.1017%2FS0956796808007004)"
++/// Journal of Functional Programming, Volume 19, Issue 1, 2009, pp.  95--106.
++#[derive(Default)]
++pub struct Sieve {
++    inner: Wheel,
++    filts: PrimeHeap,
++}
++
++impl Iterator for Sieve {
++    type Item = u64;
++
++    #[inline]
++    fn size_hint(&self) -> (usize, Option<usize>) {
++        self.inner.size_hint()
++    }
++
++    #[inline]
++    fn next(&mut self) -> Option<u64> {
++        for n in &mut self.inner {
++            let mut prime = true;
++            while let Some((next, inc)) = self.filts.peek() {
++                // need to keep checking the min element of the heap
++                // until we've found an element that's greater than n
++                if next > n {
++                    break; // next heap element is bigger than n
++                }
++
++                if next == n {
++                    // n == next, and is composite.
++                    prime = false;
++                }
++                // Increment the element in the prime heap.
++                self.filts.replace((next + inc, inc));
++            }
++
++            if prime {
++                // this is a prime; add it to the heap
++                self.filts.insert(n);
++                return Some(n);
++            }
++        }
++        None
++    }
++}
++
++impl Sieve {
++    fn new() -> Self {
++        Self::default()
++    }
++
++    #[allow(dead_code)]
++    #[inline]
++    pub fn primes() -> PrimeSieve {
++        INIT_PRIMES.iter().copied().chain(Self::new())
++    }
++
++    #[allow(dead_code)]
++    #[inline]
++    pub fn odd_primes() -> PrimeSieve {
++        INIT_PRIMES[1..].iter().copied().chain(Self::new())
++    }
++}
++
++pub type PrimeSieve = Chain<Copied<Iter<'static, u64>>, Sieve>;
++
++/// An iterator that generates an infinite list of numbers that are
++/// not divisible by any of 2, 3, 5, or 7.
++struct Wheel {
++    next: u64,
++    increment: Cycle<Iter<'static, u64>>,
++}
++
++impl Iterator for Wheel {
++    type Item = u64;
++
++    #[inline]
++    fn size_hint(&self) -> (usize, Option<usize>) {
++        (1, None)
++    }
++
++    #[inline]
++    fn next(&mut self) -> Option<u64> {
++        let increment = self.increment.next().unwrap(); // infinite iterator, no check necessary
++        let ret = self.next;
++        self.next = ret + increment;
++        Some(ret)
++    }
++}
++
++impl Wheel {
++    #[inline]
++    fn new() -> Self {
++        Self {
++            next: 11u64,
++            increment: WHEEL_INCS.iter().cycle(),
++        }
++    }
++}
++
++impl Default for Wheel {
++    fn default() -> Self {
++        Self::new()
++    }
++}
++
++/// The increments of a wheel of circumference 210
++/// (i.e., a wheel that skips all multiples of 2, 3, 5, 7)
++const WHEEL_INCS: &[u64] = &[
++    2, 4, 2, 4, 6, 2, 6, 4, 2, 4, 6, 6, 2, 6, 4, 2, 6, 4, 6, 8, 4, 2, 4, 2, 4, 8, 6, 4, 6, 2, 4, 6,
++    2, 6, 6, 4, 2, 4, 6, 2, 6, 4, 2, 4, 2, 10, 2, 10,
++];
++const INIT_PRIMES: &[u64] = &[2, 3, 5, 7];
++
++/// A min-heap of "infinite lists" of prime multiples, where a list is
++/// represented as (head, increment).
++#[derive(Debug, Default)]
++struct PrimeHeap {
++    data: Vec<(u64, u64)>,
++}
++
++impl PrimeHeap {
++    fn peek(&self) -> Option<(u64, u64)> {
++        if let Some(&(x, y)) = self.data.first() {
++            Some((x, y))
++        } else {
++            None
++        }
++    }
++
++    fn insert(&mut self, next: u64) {
++        let mut idx = self.data.len();
++        let key = next * next;
++
++        let item = (key, next);
++        self.data.push(item);
++        loop {
++            // break if we've bubbled to the top
++            if idx == 0 {
++                break;
++            }
++
++            let paridx = (idx - 1) / 2;
++            let (k, _) = self.data[paridx];
++            if key < k {
++                // bubble up, found a smaller key
++                self.data.swap(idx, paridx);
++                idx = paridx;
++            } else {
++                // otherwise, parent is smaller, so we're done
++                break;
++            }
++        }
++    }
++
++    fn remove(&mut self) -> (u64, u64) {
++        let ret = self.data.swap_remove(0);
++
++        let mut idx = 0;
++        let len = self.data.len();
++        let (key, _) = self.data[0];
++        loop {
++            let child1 = 2 * idx + 1;
++            let child2 = 2 * idx + 2;
++
++            // no more children
++            if child1 >= len {
++                break;
++            }
++
++            // find lesser child
++            let (c1key, _) = self.data[child1];
++            let (minidx, minkey) = if child2 >= len {
++                (child1, c1key)
++            } else {
++                let (c2key, _) = self.data[child2];
++                if c1key < c2key {
++                    (child1, c1key)
++                } else {
++                    (child2, c2key)
++                }
++            };
++
++            if minkey < key {
++                self.data.swap(minidx, idx);
++                idx = minidx;
++                continue;
++            }
++
++            // smaller than both children, so done
++            break;
++        }
++
++        ret
++    }
++
++    /// More efficient than inserting and removing in two steps
++    /// because we save one traversal of the heap.
++    fn replace(&mut self, next: (u64, u64)) -> (u64, u64) {
++        self.data.push(next);
++        self.remove()
++    }
++}
+Index: coreutils/src/uu/factor/src/cli.rs
+===================================================================
+--- /dev/null
++++ coreutils/src/uu/factor/src/cli.rs
+@@ -0,0 +1,121 @@
++// This file is part of the uutils coreutils package.
++//
++// For the full copyright and license information, please view the LICENSE
++// file that was distributed with this source code.
++
++use std::io::BufRead;
++use std::io::{self, stdin, stdout, Write};
++
++mod factor;
++use clap::{crate_version, Arg, ArgAction, Command};
++pub use factor::*;
++use uucore::display::Quotable;
++use uucore::error::{set_exit_code, FromIo, UResult};
++use uucore::{format_usage, help_about, help_usage, show_error, show_warning};
++
++mod miller_rabin;
++pub mod numeric;
++mod rho;
++pub mod table;
++
++const ABOUT: &str = help_about!("factor.md");
++const USAGE: &str = help_usage!("factor.md");
++
++mod options {
++    pub static EXPONENTS: &str = "exponents";
++    pub static HELP: &str = "help";
++    pub static NUMBER: &str = "NUMBER";
++}
++
++fn print_factors_str(
++    num_str: &str,
++    w: &mut io::BufWriter<impl io::Write>,
++    print_exponents: bool,
++) -> io::Result<()> {
++    let x = match num_str.trim().parse::<u64>() {
++        Ok(x) => x,
++        Err(e) => {
++            // We return Ok() instead of Err(), because it's non-fatal and we should try the next
++            // number.
++            show_warning!("{}: {}", num_str.maybe_quote(), e);
++            set_exit_code(1);
++            return Ok(());
++        }
++    };
++
++    // If print_exponents is true, use the alternate format specifier {:#} from fmt to print the factors
++    // of x in the form of p^e.
++    if print_exponents {
++        writeln!(w, "{}:{:#}", x, factor(x))?;
++    } else {
++        writeln!(w, "{}:{}", x, factor(x))?;
++    }
++    w.flush()
++}
++
++#[uucore::main]
++pub fn uumain(args: impl uucore::Args) -> UResult<()> {
++    let matches = uu_app().try_get_matches_from(args)?;
++
++    // If matches find --exponents flag than variable print_exponents is true and p^e output format will be used.
++    let print_exponents = matches.get_flag(options::EXPONENTS);
++
++    let stdout = stdout();
++    // We use a smaller buffer here to pass a gnu test. 4KiB appears to be the default pipe size for bash.
++    let mut w = io::BufWriter::with_capacity(4 * 1024, stdout.lock());
++
++    if let Some(values) = matches.get_many::<String>(options::NUMBER) {
++        for number in values {
++            print_factors_str(number, &mut w, print_exponents)
++                .map_err_context(|| "write error".into())?;
++        }
++    } else {
++        let stdin = stdin();
++        let lines = stdin.lock().lines();
++        for line in lines {
++            match line {
++                Ok(line) => {
++                    for number in line.split_whitespace() {
++                        print_factors_str(number, &mut w, print_exponents)
++                            .map_err_context(|| "write error".into())?;
++                    }
++                }
++                Err(e) => {
++                    set_exit_code(1);
++                    show_error!("error reading input: {}", e);
++                    return Ok(());
++                }
++            }
++        }
++    }
++
++    if let Err(e) = w.flush() {
++        show_error!("{}", e);
++    }
++
++    Ok(())
++}
++
++pub fn uu_app() -> Command {
++    Command::new(uucore::util_name())
++        .version(crate_version!())
++        .about(ABOUT)
++        .override_usage(format_usage(USAGE))
++        .infer_long_args(true)
++        .disable_help_flag(true)
++        .args_override_self(true)
++        .arg(Arg::new(options::NUMBER).action(ArgAction::Append))
++        .arg(
++            Arg::new(options::EXPONENTS)
++                .short('h')
++                .long(options::EXPONENTS)
++                .help("Print factors in the form p^e")
++                .action(ArgAction::SetTrue),
++        )
++        .arg(
++            Arg::new(options::HELP)
++                .long(options::HELP)
++                .help("Print help information.")
++                .action(ArgAction::Help),
++        )
++}
+Index: coreutils/src/uu/factor/src/factor.rs
+===================================================================
+--- coreutils.orig/src/uu/factor/src/factor.rs
++++ coreutils/src/uu/factor/src/factor.rs
+@@ -3,142 +3,302 @@
+ // For the full copyright and license information, please view the LICENSE
+ // file that was distributed with this source code.
+ 
+-// spell-checker:ignore funcs
++#![allow(clippy::items_after_test_module)]
++use smallvec::SmallVec;
++use std::cell::RefCell;
++use std::fmt;
++
++use crate::numeric::{Arithmetic, Montgomery};
++use crate::{miller_rabin, rho, table};
++
++type Exponent = u8;
++
++#[derive(Clone, Debug, Default)]
++struct Decomposition(SmallVec<[(u64, Exponent); NUM_FACTORS_INLINE]>);
++
++// spell-checker:ignore (names) Erdős–Kac * Erdős Kac
++// The number of factors to inline directly into a `Decomposition` object.
++// As a consequence of the Erdős–Kac theorem, the average number of prime factors
++// of integers < 10²⁵ ≃ 2⁸³ is 4, so we can use a slightly higher value.
++const NUM_FACTORS_INLINE: usize = 5;
++
++impl Decomposition {
++    fn one() -> Self {
++        Self::default()
++    }
+ 
+-use std::collections::BTreeMap;
+-use std::io::BufRead;
+-use std::io::{self, stdin, stdout, Write};
+-
+-use clap::{crate_version, Arg, ArgAction, Command};
+-use num_bigint::BigUint;
+-use num_traits::FromPrimitive;
+-use uucore::display::Quotable;
+-use uucore::error::{set_exit_code, FromIo, UResult, USimpleError};
+-use uucore::{format_usage, help_about, help_usage, show_error, show_warning};
+-
+-const ABOUT: &str = help_about!("factor.md");
+-const USAGE: &str = help_usage!("factor.md");
+-
+-mod options {
+-    pub static EXPONENTS: &str = "exponents";
+-    pub static HELP: &str = "help";
+-    pub static NUMBER: &str = "NUMBER";
+-}
+-
+-fn print_factors_str(
+-    num_str: &str,
+-    w: &mut io::BufWriter<impl io::Write>,
+-    print_exponents: bool,
+-) -> UResult<()> {
+-    let rx = num_str.trim().parse::<num_bigint::BigUint>();
+-    let Ok(x) = rx else {
+-        // return Ok(). it's non-fatal and we should try the next number.
+-        show_warning!("{}: {}", num_str.maybe_quote(), rx.unwrap_err());
+-        set_exit_code(1);
+-        return Ok(());
+-    };
++    fn add(&mut self, factor: u64, exp: Exponent) {
++        debug_assert!(exp > 0);
+ 
+-    let (factorization, remaining) = if x > BigUint::from_u32(1).unwrap() {
+-        num_prime::nt_funcs::factors(x.clone(), None)
+-    } else {
+-        (BTreeMap::new(), None)
+-    };
++        if let Some((_, e)) = self.0.iter_mut().find(|(f, _)| *f == factor) {
++            *e += exp;
++        } else {
++            self.0.push((factor, exp));
++        }
++    }
++
++    #[cfg(test)]
++    fn product(&self) -> u64 {
++        self.0
++            .iter()
++            .fold(1, |acc, (p, exp)| acc * p.pow(*exp as u32))
++    }
++
++    fn get(&self, p: u64) -> Option<&(u64, u8)> {
++        self.0.iter().find(|(q, _)| *q == p)
++    }
++}
++
++impl PartialEq for Decomposition {
++    fn eq(&self, other: &Self) -> bool {
++        for p in &self.0 {
++            if other.get(p.0) != Some(p) {
++                return false;
++            }
++        }
++
++        for p in &other.0 {
++            if self.get(p.0) != Some(p) {
++                return false;
++            }
++        }
++
++        true
++    }
++}
++impl Eq for Decomposition {}
+ 
+-    if let Some(_remaining) = remaining {
+-        return Err(USimpleError::new(
+-            1,
+-            "Factorization incomplete. Remainders exists.",
+-        ));
+-    }
+-
+-    write_result(w, x, factorization, print_exponents).map_err_context(|| "write error".into())?;
+-
+-    Ok(())
+-}
+-
+-fn write_result(
+-    w: &mut io::BufWriter<impl Write>,
+-    x: BigUint,
+-    factorization: BTreeMap<BigUint, usize>,
+-    print_exponents: bool,
+-) -> io::Result<()> {
+-    write!(w, "{x}:")?;
+-    for (factor, n) in factorization {
+-        if print_exponents {
+-            if n > 1 {
+-                write!(w, " {}^{}", factor, n)?;
++#[derive(Clone, Debug, Eq, PartialEq)]
++pub struct Factors(RefCell<Decomposition>);
++
++impl Factors {
++    pub fn one() -> Self {
++        Self(RefCell::new(Decomposition::one()))
++    }
++
++    pub fn add(&mut self, prime: u64, exp: Exponent) {
++        debug_assert!(miller_rabin::is_prime(prime));
++        self.0.borrow_mut().add(prime, exp);
++    }
++
++    pub fn push(&mut self, prime: u64) {
++        self.add(prime, 1);
++    }
++
++    #[cfg(test)]
++    fn product(&self) -> u64 {
++        self.0.borrow().product()
++    }
++}
++
++impl fmt::Display for Factors {
++    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
++        let v = &mut (self.0).borrow_mut().0;
++        v.sort_unstable();
++
++        let include_exponents = f.alternate();
++        for (p, exp) in v {
++            if include_exponents && *exp > 1 {
++                write!(f, " {p}^{exp}")?;
+             } else {
+-                write!(w, " {}", factor)?;
++                for _ in 0..*exp {
++                    write!(f, " {p}")?;
++                }
+             }
+-        } else {
+-            w.write_all(format!(" {}", factor).repeat(n).as_bytes())?;
+         }
++
++        Ok(())
+     }
+-    writeln!(w)?;
+-    w.flush()
+ }
+ 
+-#[uucore::main]
+-pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+-    let matches = uu_app().try_get_matches_from(args)?;
++fn _factor<A: Arithmetic + miller_rabin::Basis>(num: u64, f: Factors) -> Factors {
++    use miller_rabin::Result::*;
+ 
+-    // If matches find --exponents flag than variable print_exponents is true and p^e output format will be used.
+-    let print_exponents = matches.get_flag(options::EXPONENTS);
++    // Shadow the name, so the recursion automatically goes from “Big” arithmetic to small.
++    let _factor = |n, f| {
++        if n < (1 << 32) {
++            _factor::<Montgomery<u32>>(n, f)
++        } else {
++            _factor::<A>(n, f)
++        }
++    };
+ 
+-    let stdout = stdout();
+-    // We use a smaller buffer here to pass a gnu test. 4KiB appears to be the default pipe size for bash.
+-    let mut w = io::BufWriter::with_capacity(4 * 1024, stdout.lock());
++    if num == 1 {
++        return f;
++    }
+ 
+-    if let Some(values) = matches.get_many::<String>(options::NUMBER) {
+-        for number in values {
+-            print_factors_str(number, &mut w, print_exponents)?;
++    let n = A::new(num);
++    let divisor = match miller_rabin::test::<A>(n) {
++        Prime => {
++            #[cfg(feature = "coz")]
++            coz::progress!("factor found");
++            let mut r = f;
++            r.push(num);
++            return r;
+         }
++
++        Composite(d) => d,
++        Pseudoprime => rho::find_divisor::<A>(n),
++    };
++
++    let f = _factor(divisor, f);
++    _factor(num / divisor, f)
++}
++
++pub fn factor(mut n: u64) -> Factors {
++    #[cfg(feature = "coz")]
++    coz::begin!("factorization");
++    let mut factors = Factors::one();
++
++    if n < 2 {
++        return factors;
++    }
++
++    let n_zeros = n.trailing_zeros();
++    if n_zeros > 0 {
++        factors.add(2, n_zeros as Exponent);
++        n >>= n_zeros;
++    }
++
++    if n == 1 {
++        #[cfg(feature = "coz")]
++        coz::end!("factorization");
++        return factors;
++    }
++
++    table::factor(&mut n, &mut factors);
++
++    #[allow(clippy::let_and_return)]
++    let r = if n < (1 << 32) {
++        _factor::<Montgomery<u32>>(n, factors)
+     } else {
+-        let stdin = stdin();
+-        let lines = stdin.lock().lines();
+-        for line in lines {
+-            match line {
+-                Ok(line) => {
+-                    for number in line.split_whitespace() {
+-                        print_factors_str(number, &mut w, print_exponents)?;
++        _factor::<Montgomery<u64>>(n, factors)
++    };
++
++    #[cfg(feature = "coz")]
++    coz::end!("factorization");
++
++    r
++}
++
++#[cfg(test)]
++mod tests {
++    use super::{factor, Decomposition, Exponent, Factors};
++    use quickcheck::quickcheck;
++    use smallvec::smallvec;
++    use std::cell::RefCell;
++
++    #[test]
++    fn factor_2044854919485649() {
++        let f = Factors(RefCell::new(Decomposition(smallvec![
++            (503, 1),
++            (2423, 1),
++            (40961, 2)
++        ])));
++        assert_eq!(factor(f.product()), f);
++    }
++
++    #[test]
++    fn factor_recombines_small() {
++        assert!((1..10_000)
++            .map(|i| 2 * i + 1)
++            .all(|i| factor(i).product() == i));
++    }
++
++    #[test]
++    fn factor_recombines_overflowing() {
++        assert!((0..250)
++            .map(|i| 2 * i + 2u64.pow(32) + 1)
++            .all(|i| factor(i).product() == i));
++    }
++
++    #[test]
++    fn factor_recombines_strong_pseudoprime() {
++        // This is a strong pseudoprime (wrt. miller_rabin::BASIS)
++        //  and triggered a bug in rho::factor's code path handling
++        //  miller_rabbin::Result::Composite
++        let pseudoprime = 17_179_869_183;
++        for _ in 0..20 {
++            // Repeat the test 20 times, as it only fails some fraction
++            // of the time.
++            assert!(factor(pseudoprime).product() == pseudoprime);
++        }
++    }
++
++    quickcheck! {
++        fn factor_recombines(i: u64) -> bool {
++            i == 0 || factor(i).product() == i
++        }
++
++        fn recombines_factors(f: Factors) -> () {
++            assert_eq!(factor(f.product()), f);
++        }
++
++        fn exponentiate_factors(f: Factors, e: Exponent) -> () {
++            if e == 0 { return; }
++            if let Some(fe) = f.product().checked_pow(e.into()) {
++                assert_eq!(factor(fe), f ^ e);
++            }
++        }
++    }
++}
++
++#[cfg(test)]
++use rand::{
++    distributions::{Distribution, Standard},
++    Rng,
++};
++#[cfg(test)]
++impl Distribution<Factors> for Standard {
++    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Factors {
++        let mut f = Factors::one();
++        let mut g = 1u64;
++        let mut n = u64::MAX;
++
++        // spell-checker:ignore (names) Adam Kalai * Kalai's
++        // Adam Kalai's algorithm for generating uniformly-distributed
++        // integers and their factorization.
++        //
++        // See Generating Random Factored Numbers, Easily, J. Cryptology (2003)
++        'attempt: loop {
++            while n > 1 {
++                n = rng.gen_range(1..n);
++                if miller_rabin::is_prime(n) {
++                    if let Some(h) = g.checked_mul(n) {
++                        f.push(n);
++                        g = h;
++                    } else {
++                        // We are overflowing u64, retry
++                        continue 'attempt;
+                     }
+                 }
+-                Err(e) => {
+-                    set_exit_code(1);
+-                    show_error!("error reading input: {}", e);
+-                    return Ok(());
+-                }
+             }
++
++            return f;
+         }
+     }
++}
+ 
+-    if let Err(e) = w.flush() {
+-        show_error!("{}", e);
++#[cfg(test)]
++impl quickcheck::Arbitrary for Factors {
++    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
++        factor(u64::arbitrary(g))
+     }
+-
+-    Ok(())
+ }
+ 
+-pub fn uu_app() -> Command {
+-    Command::new(uucore::util_name())
+-        .version(crate_version!())
+-        .about(ABOUT)
+-        .override_usage(format_usage(USAGE))
+-        .infer_long_args(true)
+-        .disable_help_flag(true)
+-        .args_override_self(true)
+-        .arg(Arg::new(options::NUMBER).action(ArgAction::Append))
+-        .arg(
+-            Arg::new(options::EXPONENTS)
+-                .short('h')
+-                .long(options::EXPONENTS)
+-                .help("Print factors in the form p^e")
+-                .action(ArgAction::SetTrue),
+-        )
+-        .arg(
+-            Arg::new(options::HELP)
+-                .long(options::HELP)
+-                .help("Print help information.")
+-                .action(ArgAction::Help),
+-        )
++#[cfg(test)]
++impl std::ops::BitXor<Exponent> for Factors {
++    type Output = Self;
++
++    fn bitxor(self, rhs: Exponent) -> Self {
++        debug_assert_ne!(rhs, 0);
++        let mut r = Self::one();
++        #[allow(clippy::explicit_iter_loop)]
++        for (p, e) in self.0.borrow().0.iter() {
++            r.add(*p, rhs * e);
++        }
++
++        debug_assert_eq!(r.product(), self.product().pow(rhs.into()));
++        r
++    }
+ }
+Index: coreutils/src/uu/factor/src/miller_rabin.rs
+===================================================================
+--- /dev/null
++++ coreutils/src/uu/factor/src/miller_rabin.rs
+@@ -0,0 +1,222 @@
++// This file is part of the uutils coreutils package.
++//
++// For the full copyright and license information, please view the LICENSE
++// file that was distributed with this source code.
++
++// spell-checker:ignore (URL) appspot
++
++use crate::numeric::*;
++
++pub(crate) trait Basis {
++    const BASIS: &'static [u64];
++}
++
++impl Basis for Montgomery<u64> {
++    // Small set of bases for the Miller-Rabin prime test, valid for all 64b integers;
++    //  discovered by Jim Sinclair on 2011-04-20, see miller-rabin.appspot.com
++    const BASIS: &'static [u64] = &[2, 325, 9375, 28178, 450_775, 9_780_504, 1_795_265_022];
++}
++
++impl Basis for Montgomery<u32> {
++    // spell-checker:ignore (names) Steve Worley
++    // Small set of bases for the Miller-Rabin prime test, valid for all 32b integers;
++    //  discovered by Steve Worley on 2013-05-27, see miller-rabin.appspot.com
++    const BASIS: &'static [u64] = &[
++        4_230_279_247_111_683_200,
++        14_694_767_155_120_705_706,
++        16_641_139_526_367_750_375,
++    ];
++}
++
++#[derive(Eq, PartialEq)]
++#[must_use = "Ignoring the output of a primality test."]
++pub(crate) enum Result {
++    Prime,
++    Pseudoprime,
++    Composite(u64),
++}
++
++impl Result {
++    pub(crate) fn is_prime(&self) -> bool {
++        *self == Self::Prime
++    }
++}
++
++// Deterministic Miller-Rabin primality-checking algorithm, adapted to extract
++// (some) dividers; it will fail to factor strong pseudoprimes.
++#[allow(clippy::many_single_char_names)]
++pub(crate) fn test<A: Arithmetic + Basis>(m: A) -> Result {
++    use self::Result::*;
++
++    let n = m.modulus();
++    debug_assert!(n > 1);
++    debug_assert!(n % 2 != 0);
++
++    // n-1 = r 2ⁱ
++    let i = (n - 1).trailing_zeros();
++    let r = (n - 1) >> i;
++
++    let one = m.one();
++    let minus_one = m.minus_one();
++
++    'witness: for _a in A::BASIS {
++        let _a = _a % n;
++        if _a == 0 {
++            continue;
++        }
++
++        let a = m.to_mod(_a);
++
++        // x = a^r mod n
++        let mut x = m.pow(a, r);
++
++        if x == one || x == minus_one {
++            continue;
++        }
++
++        for _ in 1..i {
++            let y = m.mul(x, x);
++            if y == one {
++                return Composite(gcd(m.to_u64(x) - 1, m.modulus()));
++            } else if y == minus_one {
++                // This basis element is not a witness of `n` being composite.
++                // Keep looking.
++                continue 'witness;
++            }
++            x = y;
++        }
++
++        return Pseudoprime;
++    }
++
++    Prime
++}
++
++// Used by build.rs' tests and debug assertions
++#[allow(dead_code)]
++pub(crate) fn is_prime(n: u64) -> bool {
++    if n < 2 {
++        false
++    } else if n % 2 == 0 {
++        n == 2
++    } else {
++        test::<Montgomery<u64>>(Montgomery::new(n)).is_prime()
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use crate::numeric::{traits::DoubleInt, Arithmetic, Montgomery};
++    use quickcheck::quickcheck;
++    use std::iter;
++    const LARGEST_U64_PRIME: u64 = 0xFFFF_FFFF_FFFF_FFC5;
++
++    fn primes() -> impl Iterator<Item = u64> {
++        iter::once(2).chain(odd_primes())
++    }
++
++    fn odd_primes() -> impl Iterator<Item = u64> {
++        use crate::table::{NEXT_PRIME, PRIME_INVERSIONS_U64};
++        PRIME_INVERSIONS_U64
++            .iter()
++            .map(|(p, _, _)| *p)
++            .chain(iter::once(NEXT_PRIME))
++    }
++
++    #[test]
++    fn largest_prime() {
++        assert!(is_prime(LARGEST_U64_PRIME));
++    }
++
++    #[test]
++    fn largest_composites() {
++        for i in LARGEST_U64_PRIME + 1..=u64::MAX {
++            assert!(!is_prime(i), "2⁶⁴ - {} reported prime", u64::MAX - i + 1);
++        }
++    }
++
++    #[test]
++    fn two() {
++        assert!(is_prime(2));
++    }
++
++    fn first_primes<A: DoubleInt>()
++    where
++        Montgomery<A>: Basis,
++    {
++        for p in odd_primes() {
++            assert!(
++                test(Montgomery::<A>::new(p)).is_prime(),
++                "{p} reported composite"
++            );
++        }
++    }
++
++    #[test]
++    fn first_primes_u32() {
++        first_primes::<u32>();
++    }
++
++    #[test]
++    fn first_primes_u64() {
++        first_primes::<u64>();
++    }
++
++    #[test]
++    fn one() {
++        assert!(!is_prime(1));
++    }
++    #[test]
++    fn zero() {
++        assert!(!is_prime(0));
++    }
++
++    #[test]
++    fn first_composites() {
++        for (p, q) in primes().zip(odd_primes()) {
++            for i in p + 1..q {
++                assert!(!is_prime(i), "{i} reported prime");
++            }
++        }
++    }
++
++    #[test]
++    fn issue_1556() {
++        // 10 425 511 = 2441 × 4271
++        assert!(!is_prime(10_425_511));
++    }
++
++    fn small_semiprimes<A: DoubleInt>()
++    where
++        Montgomery<A>: Basis,
++    {
++        for p in odd_primes() {
++            for q in odd_primes().take_while(|q| *q <= p) {
++                let n = p * q;
++                let m = Montgomery::<A>::new(n);
++                assert!(!test(m).is_prime(), "{n} = {p} × {q} reported prime");
++            }
++        }
++    }
++
++    #[test]
++    fn small_semiprimes_u32() {
++        small_semiprimes::<u32>();
++    }
++
++    #[test]
++    fn small_semiprimes_u64() {
++        small_semiprimes::<u64>();
++    }
++
++    quickcheck! {
++        fn composites(i: u64, j: u64) -> bool {
++            // TODO: #1559 factor n > 2^64 - 1
++            match i.checked_mul(j) {
++                Some(n) => i < 2 || j < 2 || !is_prime(n),
++                _ => true,
++            }
++        }
++    }
++}
+Index: coreutils/src/uu/factor/src/numeric/gcd.rs
+===================================================================
+--- /dev/null
++++ coreutils/src/uu/factor/src/numeric/gcd.rs
+@@ -0,0 +1,126 @@
++// This file is part of the uutils coreutils package.
++//
++// For the full copyright and license information, please view the LICENSE
++// file that was distributed with this source code.
++
++// spell-checker:ignore (vars) kgcdab gcdac gcdbc
++
++use std::cmp::min;
++use std::mem::swap;
++
++pub fn gcd(mut u: u64, mut v: u64) -> u64 {
++    // Stein's binary GCD algorithm
++    // Base cases: gcd(n, 0) = gcd(0, n) = n
++    if u == 0 {
++        return v;
++    } else if v == 0 {
++        return u;
++    }
++
++    // gcd(2ⁱ u, 2ʲ v) = 2ᵏ gcd(u, v) with u, v odd and k = min(i, j)
++    // 2ᵏ is the greatest power of two that divides both u and v
++    let k = {
++        let i = u.trailing_zeros();
++        let j = v.trailing_zeros();
++        u >>= i;
++        v >>= j;
++        min(i, j)
++    };
++
++    loop {
++        // Loop invariant: u and v are odd
++        debug_assert!(u % 2 == 1, "u = {u} is even");
++        debug_assert!(v % 2 == 1, "v = {v} is even");
++
++        // gcd(u, v) = gcd(|u - v|, min(u, v))
++        if u > v {
++            swap(&mut u, &mut v);
++        }
++        v -= u;
++
++        if v == 0 {
++            // Reached the base case; gcd is 2ᵏ u
++            return u << k;
++        }
++
++        // gcd(u, 2ʲ v) = gcd(u, v) as u is odd
++        v >>= v.trailing_zeros();
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use quickcheck::{quickcheck, TestResult};
++
++    quickcheck! {
++        fn euclidean(a: u64, b: u64) -> bool {
++            // Test against the Euclidean algorithm
++            let g = {
++                let (mut a, mut b) = (a, b);
++                while b > 0 {
++                    a %= b;
++                    swap(&mut a, &mut b);
++                }
++                a
++            };
++            gcd(a, b) == g
++        }
++
++        fn one(a: u64) -> bool {
++            gcd(1, a) == 1
++        }
++
++        fn zero(a: u64) -> bool {
++            gcd(0, a) == a
++        }
++
++        fn divisor(a: u64, b: u64) -> TestResult {
++            // Test that gcd(a, b) divides a and b, unless a == b == 0
++            if a == 0 && b == 0 { return TestResult::discard(); } // restrict test domain to !(a == b == 0)
++
++            let g = gcd(a, b);
++            TestResult::from_bool( g != 0 && a % g == 0 && b % g == 0 )
++        }
++
++        fn commutative(a: u64, b: u64) -> bool {
++            gcd(a, b) == gcd(b, a)
++        }
++
++        fn associative(a: u64, b: u64, c: u64) -> bool {
++            gcd(a, gcd(b, c)) == gcd(gcd(a, b), c)
++        }
++
++        fn scalar_multiplication(a: u64, b: u64, k: u64) -> bool {
++            // TODO: #1559 factor n > 2^64 - 1
++            match (k.checked_mul(a), k.checked_mul(b), k.checked_mul(gcd(a, b))) {
++                (Some(ka), Some(kb), Some(kgcdab)) => gcd(ka, kb) == kgcdab,
++                _ => true
++            }
++        }
++
++        fn multiplicative(a: u64, b: u64, c: u64) -> bool {
++            // TODO: #1559 factor n > 2^64 - 1
++            match (a.checked_mul(b), gcd(a, c).checked_mul(gcd(b, c))) {
++                (Some(ab), Some(gcdac_gcdbc)) => {
++                    // gcd(ab, c) = gcd(a, c) gcd(b, c) when a and b coprime
++                    gcd(a, b) != 1 || gcd(ab, c) == gcdac_gcdbc
++                },
++                _ => true,
++            }
++        }
++
++        fn linearity(a: u64, b: u64, k: u64) -> bool {
++            // TODO: #1559 factor n > 2^64 - 1
++            match k.checked_mul(b) {
++                Some(kb) => {
++                    match a.checked_add(kb) {
++                        Some(a_plus_kb) => gcd(a_plus_kb, b) == gcd(a, b),
++                        _ => true,
++                    }
++                }
++                _ => true,
++            }
++        }
++    }
++}
+Index: coreutils/src/uu/factor/src/numeric/mod.rs
+===================================================================
+--- /dev/null
++++ coreutils/src/uu/factor/src/numeric/mod.rs
+@@ -0,0 +1,15 @@
++// This file is part of the uutils coreutils package.
++//
++// For the full copyright and license information, please view the LICENSE
++// file that was distributed with this source code.
++
++mod gcd;
++pub use gcd::gcd;
++
++pub(crate) mod traits;
++
++mod modular_inverse;
++pub(crate) use modular_inverse::modular_inverse;
++
++mod montgomery;
++pub(crate) use montgomery::{Arithmetic, Montgomery};
+Index: coreutils/src/uu/factor/src/numeric/modular_inverse.rs
+===================================================================
+--- /dev/null
++++ coreutils/src/uu/factor/src/numeric/modular_inverse.rs
+@@ -0,0 +1,84 @@
++// This file is part of the uutils coreutils package.
++//
++// For the full copyright and license information, please view the LICENSE
++// file that was distributed with this source code.
++
++use super::traits::Int;
++
++// extended Euclid algorithm
++// precondition: a is odd
++pub(crate) fn modular_inverse<T: Int>(a: T) -> T {
++    let zero = T::zero();
++    let one = T::one();
++    debug_assert!(a % (one + one) == one, "{a:?} is not odd");
++
++    let mut t = zero;
++    let mut new_t = one;
++    let mut r = zero;
++    let mut new_r = a;
++
++    while new_r != zero {
++        let quot = if r == zero {
++            // special case when we're just starting out
++            // This works because we know that
++            // a does not divide 2^64, so floor(2^64 / a) == floor((2^64-1) / a);
++            T::max_value()
++        } else {
++            r
++        } / new_r;
++
++        let new_tp = t.wrapping_sub(&quot.wrapping_mul(&new_t));
++        t = new_t;
++        new_t = new_tp;
++
++        let new_rp = r.wrapping_sub(&quot.wrapping_mul(&new_r));
++        r = new_r;
++        new_r = new_rp;
++    }
++
++    debug_assert_eq!(r, one);
++    t
++}
++
++#[cfg(test)]
++mod tests {
++    use super::{super::traits::Int, *};
++    use quickcheck::quickcheck;
++
++    fn small_values<T: Int>() {
++        // All odd integers from 1 to 20 000
++        let one = T::from(1).unwrap();
++        let two = T::from(2).unwrap();
++        let mut test_values = (0..10_000)
++            .map(|i| T::from(i).unwrap())
++            .map(|i| two * i + one);
++
++        assert!(test_values.all(|x| x.wrapping_mul(&modular_inverse(x)) == one));
++    }
++
++    #[test]
++    fn small_values_u32() {
++        small_values::<u32>();
++    }
++
++    #[test]
++    fn small_values_u64() {
++        small_values::<u64>();
++    }
++
++    quickcheck! {
++        fn random_values_u32(n: u32) -> bool {
++            match 2_u32.checked_mul(n) {
++                Some(n) => modular_inverse(n + 1).wrapping_mul(n + 1) == 1,
++                _ => true,
++            }
++        }
++
++        fn random_values_u64(n: u64) -> bool {
++            match 2_u64.checked_mul(n) {
++                Some(n) => modular_inverse(n + 1).wrapping_mul(n + 1) == 1,
++                _ => true,
++            }
++        }
++    }
++}
+Index: coreutils/src/uu/factor/src/numeric/montgomery.rs
+===================================================================
+--- /dev/null
++++ coreutils/src/uu/factor/src/numeric/montgomery.rs
+@@ -0,0 +1,246 @@
++// This file is part of the uutils coreutils package.
++//
++// For the full copyright and license information, please view the LICENSE
++// file that was distributed with this source code.
++
++use super::*;
++
++use traits::{DoubleInt, Int, One, OverflowingAdd, Zero};
++
++pub(crate) trait Arithmetic: Copy + Sized {
++    // The type of integers mod m, in some opaque representation
++    type ModInt: Copy + Sized + Eq;
++
++    fn new(m: u64) -> Self;
++    fn modulus(&self) -> u64;
++    fn to_mod(&self, n: u64) -> Self::ModInt;
++    fn to_u64(&self, n: Self::ModInt) -> u64;
++    fn add(&self, a: Self::ModInt, b: Self::ModInt) -> Self::ModInt;
++    fn mul(&self, a: Self::ModInt, b: Self::ModInt) -> Self::ModInt;
++
++    fn pow(&self, mut a: Self::ModInt, mut b: u64) -> Self::ModInt {
++        let (_a, _b) = (a, b);
++        let mut result = self.one();
++        while b > 0 {
++            if b & 1 != 0 {
++                result = self.mul(result, a);
++            }
++            a = self.mul(a, a);
++            b >>= 1;
++        }
++
++        // Check that r (reduced back to the usual representation) equals
++        //  a^b % n, unless the latter computation overflows
++        debug_assert!(self
++            .to_u64(_a)
++            .checked_pow(_b as u32)
++            .map(|r| r % self.modulus() == self.to_u64(result))
++            .unwrap_or(true));
++
++        result
++    }
++
++    fn one(&self) -> Self::ModInt {
++        self.to_mod(1)
++    }
++
++    fn minus_one(&self) -> Self::ModInt {
++        self.to_mod(self.modulus() - 1)
++    }
++}
++
++#[derive(Clone, Copy, Debug)]
++pub(crate) struct Montgomery<T: DoubleInt> {
++    a: T,
++    n: T,
++}
++
++impl<T: DoubleInt> Montgomery<T> {
++    /// computes x/R mod n efficiently
++    fn reduce(&self, x: T::DoubleWidth) -> T {
++        let t_bits = T::zero().count_zeros() as usize;
++
++        debug_assert!(x < (self.n.as_double_width()) << t_bits);
++        // TODO: optimize
++        let Self { a, n } = self;
++        let m = T::from_double_width(x).wrapping_mul(a);
++        let nm = (n.as_double_width()) * (m.as_double_width());
++        let (xnm, overflow) = x.overflowing_add(&nm); // x + n*m
++        debug_assert_eq!(
++            xnm % (T::DoubleWidth::one() << T::zero().count_zeros() as usize),
++            T::DoubleWidth::zero()
++        );
++
++        // (x + n*m) / R
++        // in case of overflow, this is (2¹²⁸ + xnm)/2⁶⁴ - n = xnm/2⁶⁴ + (2⁶⁴ - n)
++        let y = T::from_double_width(xnm >> t_bits)
++            + if overflow {
++                n.wrapping_neg()
++            } else {
++                T::zero()
++            };
++
++        if y >= *n {
++            y - *n
++        } else {
++            y
++        }
++    }
++}
++
++impl<T: DoubleInt> Arithmetic for Montgomery<T> {
++    // Montgomery transform, R=2⁶⁴
++    // Provides fast arithmetic mod n (n odd, u64)
++    type ModInt = T;
++
++    fn new(n: u64) -> Self {
++        debug_assert!(T::zero().count_zeros() >= 64 || n < (1 << T::zero().count_zeros() as usize));
++        let n = T::from_u64(n);
++        let a = modular_inverse(n).wrapping_neg();
++        debug_assert_eq!(n.wrapping_mul(&a), T::one().wrapping_neg());
++        Self { a, n }
++    }
++
++    fn modulus(&self) -> u64 {
++        self.n.as_u64()
++    }
++
++    fn to_mod(&self, x: u64) -> Self::ModInt {
++        // TODO: optimize!
++        debug_assert!(x < self.n.as_u64());
++        let r = T::from_double_width(
++            ((T::DoubleWidth::from_u64(x)) << T::zero().count_zeros() as usize)
++                % self.n.as_double_width(),
++        );
++        debug_assert_eq!(x, self.to_u64(r));
++        r
++    }
++
++    fn to_u64(&self, n: Self::ModInt) -> u64 {
++        self.reduce(n.as_double_width()).as_u64()
++    }
++
++    fn add(&self, a: Self::ModInt, b: Self::ModInt) -> Self::ModInt {
++        let (r, overflow) = a.overflowing_add(&b);
++
++        // In case of overflow, a+b = 2⁶⁴ + r = (2⁶⁴ - n) + r (working mod n)
++        let r = if overflow {
++            r + self.n.wrapping_neg()
++        } else {
++            r
++        };
++
++        // Normalize to [0; n[
++        let r = if r < self.n { r } else { r - self.n };
++
++        // Check that r (reduced back to the usual representation) equals
++        // a+b % n
++        #[cfg(debug_assertions)]
++        {
++            let a_r = self.to_u64(a) as u128;
++            let b_r = self.to_u64(b) as u128;
++            let r_r = self.to_u64(r);
++            let r_2 = ((a_r + b_r) % self.n.as_u128()) as u64;
++            debug_assert_eq!(
++                r_r, r_2,
++                "[{}] = {} ≠ {} = {} + {} = [{}] + [{}] mod {}; a = {}",
++                r, r_r, r_2, a_r, b_r, a, b, self.n, self.a
++            );
++        }
++        r
++    }
++
++    fn mul(&self, a: Self::ModInt, b: Self::ModInt) -> Self::ModInt {
++        let r = self.reduce(a.as_double_width() * b.as_double_width());
++
++        // Check that r (reduced back to the usual representation) equals
++        // a*b % n
++        #[cfg(debug_assertions)]
++        {
++            let a_r = self.to_u64(a) as u128;
++            let b_r = self.to_u64(b) as u128;
++            let r_r = self.to_u64(r);
++            let r_2: u64 = ((a_r * b_r) % self.n.as_u128()) as u64;
++            debug_assert_eq!(
++                r_r, r_2,
++                "[{}] = {} ≠ {} = {} * {} = [{}] * [{}] mod {}; a = {}",
++                r, r_r, r_2, a_r, b_r, a, b, self.n, self.a
++            );
++        }
++        r
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    fn test_add<A: DoubleInt>() {
++        for n in 0..100 {
++            let n = 2 * n + 1;
++            let m = Montgomery::<A>::new(n);
++            for x in 0..n {
++                let m_x = m.to_mod(x);
++                for y in 0..=x {
++                    let m_y = m.to_mod(y);
++                    println!("{n:?}, {x:?}, {y:?}");
++                    assert_eq!((x + y) % n, m.to_u64(m.add(m_x, m_y)));
++                }
++            }
++        }
++    }
++
++    #[test]
++    fn add_u32() {
++        test_add::<u32>();
++    }
++
++    #[test]
++    fn add_u64() {
++        test_add::<u64>();
++    }
++
++    fn test_multiplication<A: DoubleInt>() {
++        for n in 0..100 {
++            let n = 2 * n + 1;
++            let m = Montgomery::<A>::new(n);
++            for x in 0..n {
++                let m_x = m.to_mod(x);
++                for y in 0..=x {
++                    let m_y = m.to_mod(y);
++                    assert_eq!((x * y) % n, m.to_u64(m.mul(m_x, m_y)));
++                }
++            }
++        }
++    }
++
++    #[test]
++    fn multiplication_u32() {
++        test_multiplication::<u32>();
++    }
++
++    #[test]
++    fn multiplication_u64() {
++        test_multiplication::<u64>();
++    }
++
++    fn test_roundtrip<A: DoubleInt>() {
++        for n in 0..100 {
++            let n = 2 * n + 1;
++            let m = Montgomery::<A>::new(n);
++            for x in 0..n {
++                let x_ = m.to_mod(x);
++                assert_eq!(x, m.to_u64(x_));
++            }
++        }
++    }
++
++    #[test]
++    fn roundtrip_u32() {
++        test_roundtrip::<u32>();
++    }
++
++    #[test]
++    fn roundtrip_u64() {
++        test_roundtrip::<u64>();
++    }
++}
+Index: coreutils/src/uu/factor/src/numeric/traits.rs
+===================================================================
+--- /dev/null
++++ coreutils/src/uu/factor/src/numeric/traits.rs
+@@ -0,0 +1,89 @@
++// This file is part of the uutils coreutils package.
++//
++// For the full copyright and license information, please view the LICENSE
++// file that was distributed with this source code.
++
++pub(crate) use num_traits::{
++    identities::{One, Zero},
++    ops::overflowing::OverflowingAdd,
++};
++use num_traits::{
++    int::PrimInt,
++    ops::wrapping::{WrappingMul, WrappingNeg, WrappingSub},
++};
++use std::fmt::{Debug, Display};
++
++#[allow(dead_code)] // Rust doesn't recognize the use in the macro
++pub(crate) trait Int:
++    Display + Debug + PrimInt + OverflowingAdd + WrappingNeg + WrappingSub + WrappingMul
++{
++    fn as_u64(&self) -> u64;
++    fn from_u64(n: u64) -> Self;
++
++    #[cfg(debug_assertions)]
++    fn as_u128(&self) -> u128;
++}
++
++#[allow(dead_code)] // Rust doesn't recognize the use in the macro
++pub(crate) trait DoubleInt: Int {
++    /// An integer type with twice the width of `Self`.
++    /// In particular, multiplications (of `Int` values) can be performed in
++    ///  `Self::DoubleWidth` without possibility of overflow.
++    type DoubleWidth: Int;
++
++    fn as_double_width(self) -> Self::DoubleWidth;
++    fn from_double_width(n: Self::DoubleWidth) -> Self;
++}
++
++macro_rules! int {
++    ( $x:ty ) => {
++        impl Int for $x {
++            fn as_u64(&self) -> u64 {
++                *self as u64
++            }
++            fn from_u64(n: u64) -> Self {
++                n as _
++            }
++            #[cfg(debug_assertions)]
++            fn as_u128(&self) -> u128 {
++                *self as u128
++            }
++        }
++    };
++}
++macro_rules! double_int {
++    ( $x:ty, $y:ty ) => {
++        int!($x);
++        impl DoubleInt for $x {
++            type DoubleWidth = $y;
++
++            fn as_double_width(self) -> $y {
++                self as _
++            }
++            fn from_double_width(n: $y) -> Self {
++                n as _
++            }
++        }
++    };
++}
++double_int!(u32, u64);
++double_int!(u64, u128);
++int!(u128);
++
++/// Helper macro for instantiating tests over u32 and u64
++#[cfg(test)]
++#[macro_export]
++macro_rules! parametrized_check {
++    ( $f:ident ) => {
++        paste::item! {
++            #[test]
++            fn [< $f _ u32 >]() {
++                $f::<u32>()
++            }
++            #[test]
++            fn [< $f _ u64 >]() {
++                $f::<u64>()
++            }
++        }
++    };
++}
+Index: coreutils/src/uu/factor/src/rho.rs
+===================================================================
+--- /dev/null
++++ coreutils/src/uu/factor/src/rho.rs
+@@ -0,0 +1,43 @@
++// This file is part of the uutils coreutils package.
++//
++// For the full copyright and license information, please view the LICENSE
++// file that was distributed with this source code.
++
++use rand::distributions::{Distribution, Uniform};
++use rand::rngs::SmallRng;
++use rand::{thread_rng, SeedableRng};
++use std::cmp::{max, min};
++
++use crate::numeric::*;
++
++pub(crate) fn find_divisor<A: Arithmetic>(input: A) -> u64 {
++    let mut rand = {
++        let range = Uniform::new(1, input.modulus());
++        let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
++        move || input.to_mod(range.sample(&mut rng))
++    };
++
++    let quadratic = |a, b| move |x| input.add(input.mul(a, input.mul(x, x)), b);
++
++    loop {
++        let f = quadratic(rand(), rand());
++        let mut x = rand();
++        let mut y = x;
++
++        loop {
++            x = f(x);
++            y = f(f(y));
++            let d = {
++                let _x = input.to_u64(x);
++                let _y = input.to_u64(y);
++                gcd(input.modulus(), max(_x, _y) - min(_x, _y))
++            };
++            if d == input.modulus() {
++                // Failure, retry with a different quadratic
++                break;
++            } else if d > 1 {
++                return d;
++            }
++        }
++    }
++}
+Index: coreutils/src/uu/factor/src/table.rs
+===================================================================
+--- /dev/null
++++ coreutils/src/uu/factor/src/table.rs
+@@ -0,0 +1,98 @@
++// This file is part of the uutils coreutils package.
++//
++// For the full copyright and license information, please view the LICENSE
++// file that was distributed with this source code.
++
++// spell-checker: ignore (ToDO) INVS
++
++use crate::Factors;
++
++include!(concat!(env!("OUT_DIR"), "/prime_table.rs"));
++
++pub fn factor(num: &mut u64, factors: &mut Factors) {
++    for &(prime, inv, ceil) in PRIME_INVERSIONS_U64 {
++        if *num == 1 {
++            break;
++        }
++
++        // inv = prime^-1 mod 2^64
++        // ceil = floor((2^64-1) / prime)
++        // if (num * inv) mod 2^64 <= ceil, then prime divides num
++        // See https://math.stackexchange.com/questions/1251327/
++        // for a nice explanation.
++        let mut k = 0;
++        loop {
++            let x = num.wrapping_mul(inv);
++
++            // While prime divides num
++            if x <= ceil {
++                *num = x;
++                k += 1;
++                #[cfg(feature = "coz")]
++                coz::progress!("factor found");
++            } else {
++                if k > 0 {
++                    factors.add(prime, k);
++                }
++                break;
++            }
++        }
++    }
++}
++
++pub const CHUNK_SIZE: usize = 8;
++pub fn factor_chunk(n_s: &mut [u64; CHUNK_SIZE], f_s: &mut [Factors; CHUNK_SIZE]) {
++    for &(prime, inv, ceil) in PRIME_INVERSIONS_U64 {
++        if n_s[0] == 1 && n_s[1] == 1 && n_s[2] == 1 && n_s[3] == 1 {
++            break;
++        }
++
++        for (num, factors) in n_s.iter_mut().zip(f_s.iter_mut()) {
++            if *num == 1 {
++                continue;
++            }
++            let mut k = 0;
++            loop {
++                let x = num.wrapping_mul(inv);
++
++                // While prime divides num
++                if x <= ceil {
++                    *num = x;
++                    k += 1;
++                } else {
++                    if k > 0 {
++                        factors.add(prime, k);
++                    }
++                    break;
++                }
++            }
++        }
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use crate::Factors;
++    use quickcheck::quickcheck;
++    use rand::{rngs::SmallRng, Rng, SeedableRng};
++
++    quickcheck! {
++        fn chunk_vs_iter(seed: u64) -> () {
++            let mut rng = SmallRng::seed_from_u64(seed);
++            let mut n_c: [u64; CHUNK_SIZE] = rng.gen();
++            let mut f_c: [Factors; CHUNK_SIZE] = rng.gen();
++
++            let mut n_i = n_c;
++            let mut f_i = f_c.clone();
++            for (n, f) in n_i.iter_mut().zip(f_i.iter_mut()) {
++                factor(n, f);
++            }
++
++            factor_chunk(&mut n_c, &mut f_c);
++
++            assert_eq!(n_i, n_c);
++            assert_eq!(f_i, f_c);
++        }
++    }
++}
+Index: coreutils/tests/benches/factor/benches/gcd.rs
+===================================================================
+--- /dev/null
++++ coreutils/tests/benches/factor/benches/gcd.rs
+@@ -0,0 +1,33 @@
++// This file is part of the uutils coreutils package.
++//
++// For the full copyright and license information, please view the LICENSE
++// file that was distributed with this source code.
++use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
++use uu_factor::numeric;
++
++fn gcd(c: &mut Criterion) {
++    let inputs = {
++        // Deterministic RNG; use an explicitly-named RNG to guarantee stability
++        use rand::{RngCore, SeedableRng};
++        use rand_chacha::ChaCha8Rng;
++        const SEED: u64 = 0xab4d_1dea_dead_cafe;
++        let mut rng = ChaCha8Rng::seed_from_u64(SEED);
++
++        std::iter::repeat_with(move || (rng.next_u64(), rng.next_u64()))
++    };
++
++    let mut group = c.benchmark_group("gcd");
++    for (n, m) in inputs.take(10) {
++        group.bench_with_input(
++            BenchmarkId::from_parameter(format!("{}_{}", n, m)),
++            &(n, m),
++            |b, &(n, m)| {
++                b.iter(|| numeric::gcd(n, m));
++            },
++        );
++    }
++    group.finish();
++}
++
++criterion_group!(benches, gcd);
++criterion_main!(benches);
+Index: coreutils/tests/by-util/test_factor.rs
+===================================================================
+--- coreutils.orig/tests/by-util/test_factor.rs
++++ coreutils/tests/by-util/test_factor.rs
+@@ -3,12 +3,16 @@
+ // For the full copyright and license information, please view the LICENSE
+ // file that was distributed with this source code.
+ 
+-// spell-checker:ignore (methods) hexdigest funcs nprimes
++// spell-checker:ignore (methods) hexdigest
+ 
+ use crate::common::util::TestScenario;
+ 
+ use std::time::{Duration, SystemTime};
+ 
++#[path = "../../src/uu/factor/sieve.rs"]
++mod sieve;
++
++use self::sieve::Sieve;
+ use rand::distributions::{Distribution, Uniform};
+ use rand::{rngs::SmallRng, Rng, SeedableRng};
+ 
+@@ -151,7 +155,7 @@ fn test_cli_args() {
+ #[test]
+ fn test_random() {
+     let log_num_primes = f64::from(u32::try_from(NUM_PRIMES).unwrap()).log2().ceil();
+-    let primes = num_prime::nt_funcs::nprimes(NUM_PRIMES);
++    let primes = Sieve::primes().take(NUM_PRIMES).collect::<Vec<u64>>();
+ 
+     let rng_seed = SystemTime::now()
+         .duration_since(SystemTime::UNIX_EPOCH)
+@@ -1265,53 +1269,3 @@ const PRIMES50: &[u64] = &[
+ fn fails_on_directory() {
+     new_ucmd!().pipe_in(".").fails();
+ }
+-
+-#[test]
+-fn succeeds_with_numbers_larger_than_u64() {
+-    new_ucmd!()
+-        .arg("158909489063877810457")
+-        .succeeds()
+-        .stdout_is("158909489063877810457: 3401347 3861211 12099721\n");
+-    new_ucmd!()
+-        .arg("222087527029934481871")
+-        .succeeds()
+-        .stdout_is("222087527029934481871: 15601 26449 111427 4830277\n");
+-    new_ucmd!()
+-        .arg("12847291069740315094892340035")
+-        .succeeds()
+-        .stdout_is(
+-            "12847291069740315094892340035: \
+-            5 4073 18899 522591721 63874247821\n",
+-        );
+-}
+-
+-#[test]
+-fn succeeds_with_numbers_larger_than_u128() {
+-    new_ucmd!()
+-        .arg("-h")
+-        .arg("340282366920938463463374607431768211456")
+-        .succeeds()
+-        .stdout_is("340282366920938463463374607431768211456: 2^128\n");
+-    new_ucmd!()
+-        .arg("+170141183460469231731687303715884105729")
+-        .succeeds()
+-        .stdout_is(
+-            "170141183460469231731687303715884105729: \
+-                 3 56713727820156410577229101238628035243\n",
+-        );
+-}
+-
+-#[test]
+-fn succeeds_with_numbers_larger_than_u256() {
+-    new_ucmd!()
+-        .arg("-h")
+-        .arg(
+-            "115792089237316195423570985008687907853\
+-            269984665640564039457584007913129639936",
+-        )
+-        .succeeds()
+-        .stdout_is(
+-            "115792089237316195423570985008687907853\
+-                269984665640564039457584007913129639936: 2^256\n",
+-        );
+-}
+Index: coreutils/util/build-gnu.sh
+===================================================================
+--- coreutils.orig/util/build-gnu.sh
++++ coreutils/util/build-gnu.sh
+@@ -221,7 +221,7 @@ grep -rlE '/usr/local/bin/\s?/usr/local/
+ # we should not regress our project just to match what GNU is going.
+ # So, do some changes on the fly
+ 
+-eval cat "$path_UUTILS/util/gnu-patches/*.patch" | patch -N -r - -d "$path_GNU" -p 1 -i - || true
++patch -N -r - -d "$path_GNU" -p 1 -i "`realpath \"$path_UUTILS/util/gnu-patches/tests_env_env-S.pl.patch\"`" || true
+ 
+ sed -i -e "s|rm: cannot remove 'e/slink'|rm: cannot remove 'e'|g" tests/rm/fail-eacces.sh
+ 
+Index: coreutils/util/gnu-patches/tests_factor_factor.pl.patch
+===================================================================
+--- coreutils.orig/util/gnu-patches/tests_factor_factor.pl.patch
++++ /dev/null
+@@ -1,21 +0,0 @@
+-diff --git a/tests/factor/factor.pl b/tests/factor/factor.pl
+-index 6e612e418..f19c06ca0 100755
+---- a/tests/factor/factor.pl
+-+++ b/tests/factor/factor.pl
+-@@ -61,12 +61,13 @@ my @Tests =
+-       # Map newer glibc diagnostic to expected.
+-       # Also map OpenBSD 5.1's "unknown option" to expected "invalid option".
+-       {ERR_SUBST => q!s/'1'/1/;s/unknown/invalid/!},
+--      {ERR => "$prog: invalid option -- 1\n"
+--       . "Try '$prog --help' for more information.\n"},
+-+      {ERR => "error: unexpected argument '-1' found\n\n"
+-+        . "  tip: to pass '-1' as a value, use '-- -1'\n\n"
+-+        . "Usage: factor [OPTION]... [NUMBER]...\n"},
+-       {EXIT => 1}],
+-      ['cont', 'a 4',
+-       {OUT => "4: 2 2\n"},
+--      {ERR => "$prog: 'a' is not a valid positive integer\n"},
+-+      {ERR => "$prog: warning: a: invalid digit found in string\n"},
+-       {EXIT => 1}],
+-      ['bug-2012-a', '465658903', {OUT => '15259 30517'}],
+-      ['bug-2012-b', '2242724851', {OUT => '33487 66973'}],
