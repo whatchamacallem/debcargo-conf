@@ -4,11 +4,11 @@ Date:   Wed Mar 6 18:16:49 2024 +0100
 
     touch: replace use of deprecated chrono functions
 
-diff --git b/src/uu/touch/src/touch.rs a/src/uu/touch/src/touch.rs
-index e4dd4076d..ebdff8d21 100644
---- b/src/uu/touch/src/touch.rs
-+++ a/src/uu/touch/src/touch.rs
-@@ -433,7 +433,7 @@ fn parse_timestamp(s: &str) -> UResult<FileTime> {
+Index: coreutils/src/uu/touch/src/touch.rs
+===================================================================
+--- coreutils.orig/src/uu/touch/src/touch.rs
++++ coreutils/src/uu/touch/src/touch.rs
+@@ -437,7 +437,7 @@ fn parse_timestamp(s: &str) -> UResult<F
      // only care about the timestamp anyway.
      // Tested in gnu/tests/touch/60-seconds
      if local.second() == 59 && ts.ends_with(".60") {
@@ -17,7 +17,7 @@ index e4dd4076d..ebdff8d21 100644
      }
  
      // Due to daylight saving time switch, local time can jump from 1:59 AM to
-@@ -441,7 +441,7 @@ fn parse_timestamp(s: &str) -> UResult<FileTime> {
+@@ -445,7 +445,7 @@ fn parse_timestamp(s: &str) -> UResult<F
      // valid. If we are within this jump, chrono takes the offset from before
      // the jump. If we then jump forward an hour, we get the new corrected
      // offset. Jumping back will then now correctly take the jump into account.
@@ -26,15 +26,18 @@ index e4dd4076d..ebdff8d21 100644
      if local.hour() != local2.hour() {
          return Err(USimpleError::new(
              1,
-diff --git b/tests/by-util/test_touch.rs a/tests/by-util/test_touch.rs
-index eead33836..3151ca720 100644
---- b/tests/by-util/test_touch.rs
-+++ a/tests/by-util/test_touch.rs
-@@ -32,7 +32,7 @@ fn set_file_times(at: &AtPath, path: &str, atime: FileTime, mtime: FileTime) {
+Index: coreutils/tests/by-util/test_touch.rs
+===================================================================
+--- coreutils.orig/tests/by-util/test_touch.rs
++++ coreutils/tests/by-util/test_touch.rs
+@@ -34,10 +34,7 @@ fn set_file_times(at: &AtPath, path: &st
  
  fn str_to_filetime(format: &str, s: &str) -> FileTime {
      let tm = chrono::NaiveDateTime::parse_from_str(s, format).unwrap();
--    FileTime::from_unix_time(tm.and_utc().timestamp(), tm.timestamp_subsec_nanos())
+-    FileTime::from_unix_time(
+-        tm.and_utc().timestamp(),
+-        tm.and_utc().timestamp_subsec_nanos(),
+-    )
 +    FileTime::from_unix_time(tm.timestamp(), tm.timestamp_subsec_nanos())
  }
  
