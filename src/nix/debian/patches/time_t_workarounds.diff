@@ -1,29 +1,9 @@
-This patch works around a couple of issues related to time64.
+This patch works around an issue related to time64.
 
-Firstly the current patch series for time64 in the libc crate leads to a
-missing f_flags error. The person working on the upstream PR is aware and
-hopefully we will have the fix soon, but in the meantime it's better to have a
-missing method than a build failure.
-
-Secondly, while posix says that tv_usec has type suseconds_t, glibc with
+while posix says that tv_usec has type suseconds_t, glibc with
 time64 enabled is not consistent with this. This patch adds conversion
 operations (which would be implicit conversions in C/C++) to workaround this.
 
-Index: rust-nix-0.26.2/src/sys/statfs.rs
-===================================================================
---- rust-nix-0.26.2.orig/src/sys/statfs.rs
-+++ rust-nix-0.26.2/src/sys/statfs.rs
-@@ -471,7 +471,9 @@ impl Statfs {
-     /// Get the mount flags
-     // The f_flags field exists on Android and Fuchsia too, but without man
-     // pages I can't tell if it can be cast to FsFlags.
--    #[cfg(target_os = "linux")]
-+    // the libc crate with the time64 patches currently has issues with
-+    // f_flags.
-+    #[cfg(all(target_os = "linux", any(target_arch = "x86", target_arch = "x86_64", target_pointer_width="64")))]
-     #[cfg_attr(docsrs, doc(cfg(all())))]
-     pub fn flags(&self) -> FsFlags {
-         FsFlags::from_bits_truncate(self.0.f_flags as libc::c_ulong)
 Index: rust-nix-0.26.2/src/sys/time.rs
 ===================================================================
 --- rust-nix-0.26.2.orig/src/sys/time.rs
