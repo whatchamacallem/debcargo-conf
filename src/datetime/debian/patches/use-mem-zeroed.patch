@@ -1,0 +1,19 @@
+Description: use mem::zeroed to create zero timespec.
+ The time64 patches for the libc crate add padding to struct timespec,
+ on time64 architectures. Unfortunately this means that timespecs can't
+ be created in the normal way in rust.
+
+ Instead we create the structure using std::mem::zeroed.
+Author: Peter Michael Green <plugwash@debian.org>
+
+--- rust-datetime-0.5.2.orig/src/system.rs
++++ rust-datetime-0.5.2/src/system.rs
+@@ -71,7 +71,7 @@ fn file_time_as_u64(ft: &FILETIME) -> u6
+ /// the Unix epoch, and the millisecond of the second.
+ #[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "redox", windows)))]
+ pub unsafe fn sys_time() -> (i64, i16) {
+-    let mut tv = libc::timespec { tv_sec: 0, tv_nsec: 0 };
++    let mut tv = unsafe { std::mem::zeroed() };
+     let _ = clock_gettime(libc::CLOCK_REALTIME, &mut tv);
+     (tv.tv_sec as i64, (tv.tv_nsec / 1000) as i16)
+ }
