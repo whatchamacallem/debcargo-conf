@@ -1,0 +1,23 @@
+Description: workaround glibc posix violation with regards to suseconds_t
+ According to posix tv_usec has type suseconds_t, however glibc with time64
+ violates this defining tv_usec as time_t (a 64-bit type) while defining
+ suseconds_t as a 32-bit type.
+
+ Most C programs don't care about this difference because C allows implicit
+ conversion between different sized integers but rust does not. 
+
+ This patch works around the issue by allowing the compiler to infer the type
+ to convert to rather than hardcoding suseconds_t.
+Author: Peter Michael Green <plugwash@debian.org>
+
+--- rust-socket2-0.5.5.orig/src/sys/unix.rs
++++ rust-socket2-0.5.5/src/sys/unix.rs
+@@ -1134,7 +1134,7 @@ fn into_timeval(duration: Option<Duratio
+         #[cfg_attr(target_env = "musl", allow(deprecated))]
+         Some(duration) => libc::timeval {
+             tv_sec: min(duration.as_secs(), libc::time_t::MAX as u64) as libc::time_t,
+-            tv_usec: duration.subsec_micros() as libc::suseconds_t,
++            tv_usec: duration.subsec_micros() as _,
+         },
+         None => libc::timeval {
+             tv_sec: 0,
