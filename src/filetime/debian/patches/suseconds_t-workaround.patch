@@ -1,0 +1,23 @@
+Description: workaround glibc posix violation with regards to suseconds_t
+ According to posix tv_usec has type suseconds_t, however glibc with time64
+ violates this defining tv_usec as time_t (a 64-bit type) while defining
+ suseconds_t as a 32-bit type.
+
+ Most C programs don't care about this difference because C allows implicit
+ conversion between different sized integers but rust does not..
+
+ This patch works around the issue by allowing the compiler to infer the type
+ to convert to rather than hardcoding suseconds_t.
+Author: Peter Michael Green <plugwash@debian.org>
+
+--- rust-filetime-0.2.22.orig/src/unix/utimes.rs
++++ rust-filetime-0.2.22/src/unix/utimes.rs
+@@ -114,7 +114,7 @@ pub fn set_times(
+ fn to_timeval(ft: &FileTime) -> libc::timeval {
+     libc::timeval {
+         tv_sec: ft.seconds() as libc::time_t,
+-        tv_usec: (ft.nanoseconds() / 1000) as libc::suseconds_t,
++        tv_usec: (ft.nanoseconds() / 1000) as _,
+     }
+ }
+ 
