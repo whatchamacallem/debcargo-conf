@@ -1,0 +1,33 @@
+Description: use mem::zeroed to create zero timespec.
+ The time64 patches for the libc crate add padding to struct timespec,
+ on time64 architectures. Unfortunately this means that timespecs can't
+ be created in the normal way in rust.
+
+ Instead we create the structure using std::mem::zeroed.
+Author: Peter Michael Green <plugwash@debian.org>
+
+--- rust-alsa-0.8.1.orig/src/pcm.rs
++++ rust-alsa-0.8.1/src/pcm.rs
+@@ -1110,19 +1110,19 @@ impl Status {
+     fn ptr(&self) -> *mut alsa::snd_pcm_status_t { self.0.as_ptr() as *const _ as *mut alsa::snd_pcm_status_t }
+ 
+     pub fn get_htstamp(&self) -> timespec {
+-        let mut h = timespec {tv_sec: 0, tv_nsec: 0};
++        let mut h : timespec = unsafe { std::mem::zeroed() };
+         unsafe { alsa::snd_pcm_status_get_htstamp(self.ptr(), &mut h) };
+         h
+     }
+ 
+     pub fn get_trigger_htstamp(&self) -> timespec {
+-        let mut h = timespec {tv_sec: 0, tv_nsec: 0};
++        let mut h : timespec = unsafe { std::mem::zeroed() };
+         unsafe { alsa::snd_pcm_status_get_trigger_htstamp(self.ptr(), &mut h) };
+         h
+     }
+ 
+     pub fn get_audio_htstamp(&self) -> timespec {
+-        let mut h = timespec {tv_sec: 0, tv_nsec: 0};
++        let mut h : timespec = unsafe { std::mem::zeroed() };
+         unsafe { alsa::snd_pcm_status_get_audio_htstamp(self.ptr(), &mut h) };
+         h
+     }
