@@ -1,0 +1,22 @@
+Description: workaround glibc posix violation with regards to suseconds_t
+ According to posix tv_usec has type suseconds_t, however glibc with time64
+ violates this defining tv_usec as time_t (a 64-bit type) while defining
+ suseconds_t as a 32-bit type.
+
+ Most C programs don't care about this difference because C allows implicit
+ conversion between different sized integers but rust does not..
+
+ This patch works around the issue by letting the compiler infer the type
+ to convert to.
+
+--- rust-net2-0.2.37.orig/src/ext.rs
++++ rust-net2-0.2.37/src/ext.rs
+@@ -899,7 +899,7 @@ fn ms2timeout(dur: Option<u32>) -> timev
+     match dur {
+         Some(d) => timeval {
+             tv_sec: (d / 1000) as time_t,
+-            tv_usec: (d % 1000) as suseconds_t,
++            tv_usec: (d % 1000) as _,
+         },
+         None => timeval { tv_sec: 0, tv_usec: 0 },
+     }
