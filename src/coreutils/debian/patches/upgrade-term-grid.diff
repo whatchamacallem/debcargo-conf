@@ -1,0 +1,258 @@
+Index: coreutils/Cargo.lock
+===================================================================
+--- coreutils.orig/Cargo.lock
++++ coreutils/Cargo.lock
+@@ -357,6 +357,7 @@ dependencies = [
+  "tempfile",
+  "textwrap",
+  "time",
++ "unicode-width",
+  "unindent",
+  "uu_arch",
+  "uu_base32",
+Index: coreutils/src/uu/ls/Cargo.toml
+===================================================================
+--- coreutils.orig/src/uu/ls/Cargo.toml
++++ coreutils/src/uu/ls/Cargo.toml
+@@ -17,12 +17,13 @@ path = "src/ls.rs"
+ [dependencies]
+ clap = { workspace = true, features = ["env"] }
+ chrono = { workspace = true }
+-unicode-width = { workspace = true }
+ number_prefix = { workspace = true }
+ uutils_term_grid = { workspace = true }
+ terminal_size = { workspace = true }
+ glob = { workspace = true }
+ lscolors = { workspace = true }
++ansi-width = { workspace = true }
++unicode-width = { workspace = true }
+ uucore = { workspace = true, features = [
+   "colors",
+   "entries",
+Index: coreutils/src/uu/ls/src/ls.rs
+===================================================================
+--- coreutils.orig/src/uu/ls/src/ls.rs
++++ coreutils/src/uu/ls/src/ls.rs
+@@ -14,6 +14,7 @@ use lscolors::{LsColors, Style};
+ 
+ use std::{cell::OnceCell, num::IntErrorKind};
+ use std::{collections::HashSet, io::IsTerminal};
++use ansi_width::ansi_width;
+ 
+ #[cfg(windows)]
+ use std::os::windows::fs::MetadataExt;
+@@ -33,7 +34,7 @@ use std::{
+     os::unix::fs::{FileTypeExt, MetadataExt},
+     time::Duration,
+ };
+-use term_grid::{Cell, Direction, Filling, Grid, GridOptions};
++use term_grid::{Direction, Filling, Grid, GridOptions};
+ use unicode_width::UnicodeWidthStr;
+ use uucore::error::USimpleError;
+ use uucore::format::human::{human_readable, SizeFormat};
+@@ -2527,7 +2528,7 @@ fn display_items(
+             names_vec.push(cell);
+         }
+ 
+-        let names = names_vec.into_iter();
++        let mut names = names_vec.into_iter();
+ 
+         match config.format {
+             Format::Columns => {
+@@ -2538,20 +2539,19 @@ fn display_items(
+             }
+             Format::Commas => {
+                 let mut current_col = 0;
+-                let mut names = names;
+                 if let Some(name) = names.next() {
+-                    write!(out, "{}", name.contents)?;
+-                    current_col = name.width as u16 + 2;
++                    write!(out, "{}", name)?;
++                    current_col = ansi_width(&name) as u16 + 2;
+                 }
+                 for name in names {
+-                    let name_width = name.width as u16;
++                    let name_width = ansi_width(&name) as u16;
+                     // If the width is 0 we print one single line
+                     if config.width != 0 && current_col + name_width + 1 > config.width {
+                         current_col = name_width + 2;
+-                        write!(out, ",\n{}", name.contents)?;
++                        write!(out, ",\n{}", name)?;
+                     } else {
+                         current_col += name_width + 2;
+-                        write!(out, ", {}", name.contents)?;
++                        write!(out, ", {}", name)?;
+                     }
+                 }
+                 // Current col is never zero again if names have been printed.
+@@ -2562,7 +2562,7 @@ fn display_items(
+             }
+             _ => {
+                 for name in names {
+-                    write!(out, "{}{}", name.contents, config.line_ending)?;
++                    write!(out, "{}{}", name, config.line_ending)?;
+                 }
+             }
+         };
+@@ -2596,7 +2596,7 @@ fn get_block_size(md: &Metadata, config:
+ }
+ 
+ fn display_grid(
+-    names: impl Iterator<Item = Cell>,
++    names: impl Iterator<Item = String>,
+     width: u16,
+     direction: Direction,
+     out: &mut BufWriter<Stdout>,
+@@ -2610,38 +2610,36 @@ fn display_grid(
+                 write!(out, "  ")?;
+             }
+             printed_something = true;
+-            write!(out, "{}", name.contents)?;
++            write!(out, "{name}")?;
+         }
+         if printed_something {
+             writeln!(out)?;
+         }
+     } else {
+-        // TODO: To match gnu/tests/ls/stat-dtype.sh
+-        // we might want to have Filling::Text("\t".to_string());
+-        let filling = Filling::Spaces(2);
+-        let mut grid = Grid::new(GridOptions { filling, direction });
+-
+-        for name in names {
+-            let formatted_name = Cell {
+-                contents: if quoted && !name.contents.starts_with('\'') {
+-                    format!(" {}", name.contents)
+-                } else {
+-                    name.contents
+-                },
+-                width: name.width,
+-            };
+-            grid.add(formatted_name);
+-        }
+-
+-        match grid.fit_into_width(width as usize) {
+-            Some(output) => {
+-                write!(out, "{output}")?;
+-            }
+-            // Width is too small for the grid, so we fit it in one column
+-            None => {
+-                write!(out, "{}", grid.fit_into_columns(1))?;
+-            }
+-        }
++        let names = if quoted {
++            names
++                .map(|n| {
++                    if n.starts_with('\'') {
++                        format!(" {n}")
++                    } else {
++                        n
++                    }
++                })
++                .collect()
++        } else {
++            names.collect()
++        };
++        let grid = Grid::new(
++            names,
++            GridOptions {
++                // TODO: To match gnu/tests/ls/stat-dtype.sh
++                // we might want to have Filling::Text("\t".to_string());
++                filling: Filling::Spaces(2),
++                direction,
++                width: width as usize,
++            },
++        );
++        write!(out, "{grid}")?;
+     }
+     Ok(())
+ }
+@@ -2786,8 +2784,7 @@ fn display_item_long(
+ 
+         write!(output_display, " {} ", display_date(md, config)).unwrap();
+ 
+-        let item_name =
+-            display_item_name(item, config, None, String::new(), out, style_manager).contents;
++        let item_name = display_item_name(item, config, None, String::new(), out, style_manager);
+ 
+         let displayed_item = if quoted && !item_name.starts_with('\'') {
+             format!(" {}", item_name)
+@@ -2877,7 +2874,7 @@ fn display_item_long(
+         }
+ 
+         let displayed_item =
+-            display_item_name(item, config, None, String::new(), out, style_manager).contents;
++            display_item_name(item, config, None, String::new(), out, style_manager);
+         let date_len = 12;
+ 
+         write!(
+@@ -3137,14 +3134,10 @@ fn display_item_name(
+     more_info: String,
+     out: &mut BufWriter<Stdout>,
+     style_manager: &mut StyleManager,
+-) -> Cell {
++) -> String {
+     // This is our return value. We start by `&path.display_name` and modify it along the way.
+     let mut name = escape_name(&path.display_name, &config.quoting_style);
+ 
+-    // We need to keep track of the width ourselves instead of letting term_grid
+-    // infer it because the color codes mess up term_grid's width calculation.
+-    let mut width = name.width();
+-
+     if config.hyperlink {
+         name = create_hyperlink(&name, path);
+     }
+@@ -3154,9 +3147,6 @@ fn display_item_name(
+     }
+ 
+     if config.format != Format::Long && !more_info.is_empty() {
+-        // increment width here b/c name was given colors and name.width() is now the wrong
+-        // size for display
+-        width += more_info.width();
+         name = more_info + &name;
+     }
+ 
+@@ -3184,7 +3174,6 @@ fn display_item_name(
+ 
+         if let Some(c) = char_opt {
+             name.push(c);
+-            width += 1;
+         }
+     }
+ 
+@@ -3256,14 +3245,10 @@ fn display_item_name(
+                 pad_left(&path.security_context, pad_count)
+             };
+             name = format!("{security_context} {name}");
+-            width += security_context.len() + 1;
+         }
+     }
+ 
+-    Cell {
+-        contents: name,
+-        width,
+-    }
++    name
+ }
+ 
+ fn create_hyperlink(name: &str, path: &PathData) -> String {
+Index: coreutils/Cargo.toml
+===================================================================
+--- coreutils.orig/Cargo.toml
++++ coreutils/Cargo.toml
+@@ -328,6 +328,7 @@ thiserror = "1.0"
+ time = { version = "0.3" }
+ unicode-segmentation = "1"
+ unicode-width = "0.1.11"
++ansi-width = "0.1.0"
+ utf-8 = "0.7.6"
+ walkdir = "2"
+ #winapi-util = "0.1.8"
+@@ -351,6 +352,7 @@ uu_ls = { version = ">=0.0.18", path = "
+ uu_base32 = { version = ">=0.0.18", path = "src/uu/base32" }
+ 
+ [dependencies]
++unicode-width = { workspace = true }
+ clap = { workspace = true }
+ once_cell = { workspace = true }
+ uucore = { workspace = true }

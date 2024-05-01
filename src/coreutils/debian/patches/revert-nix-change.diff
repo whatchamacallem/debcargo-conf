@@ -1,0 +1,23 @@
+Index: coreutils/src/uu/tty/src/tty.rs
+===================================================================
+--- coreutils.orig/src/uu/tty/src/tty.rs
++++ coreutils/src/uu/tty/src/tty.rs
+@@ -9,6 +9,7 @@
+ 
+ use clap::{crate_version, Arg, ArgAction, Command};
+ use std::io::{IsTerminal, Write};
++use std::os::unix::io::AsRawFd;
+ use uucore::error::{set_exit_code, UResult};
+ use uucore::{format_usage, help_about, help_usage};
+ 
+@@ -36,7 +37,9 @@ pub fn uumain(args: impl uucore::Args) -
+ 
+     let mut stdout = std::io::stdout();
+ 
+-    let name = nix::unistd::ttyname(std::io::stdin());
++
++    // Get the ttyname via nix
++    let name = nix::unistd::ttyname(std::io::stdin().as_raw_fd());
+ 
+     let write_result = match name {
+         Ok(name) => writeln!(stdout, "{}", name.display()),
