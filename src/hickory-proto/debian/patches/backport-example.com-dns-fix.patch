@@ -1,0 +1,163 @@
+Index: hickory-proto/src/h2/h2_client_stream.rs
+===================================================================
+--- hickory-proto.orig/src/h2/h2_client_stream.rs
++++ hickory-proto/src/h2/h2_client_stream.rs
+@@ -577,7 +577,7 @@ mod tests {
+             .and_then(RData::as_a)
+             .expect("Expected A record");
+ 
+-        assert_eq!(addr, &A::new(93, 184, 216, 34));
++        assert_eq!(addr, &A::new(93, 184, 215, 14));
+ 
+         //
+         // assert that the connection works for a second query
+@@ -605,7 +605,7 @@ mod tests {
+ 
+             assert_eq!(
+                 addr,
+-                &AAAA::new(0x2606, 0x2800, 0x0220, 0x0001, 0x0248, 0x1893, 0x25c8, 0x1946)
++                &AAAA::new(0x2606, 0x2800, 0x21f, 0xcb07, 0x6820, 0x80da, 0xaf6b, 0x8b2c)
+             );
+         }
+     }
+@@ -642,7 +642,7 @@ mod tests {
+             .and_then(RData::as_a)
+             .expect("Expected A record");
+ 
+-        assert_eq!(addr, &A::new(93, 184, 216, 34));
++        assert_eq!(addr, &A::new(93, 184, 215, 14));
+ 
+         //
+         // assert that the connection works for a second query
+@@ -670,7 +670,7 @@ mod tests {
+ 
+             assert_eq!(
+                 addr,
+-                &AAAA::new(0x2606, 0x2800, 0x0220, 0x0001, 0x0248, 0x1893, 0x25c8, 0x1946)
++                &AAAA::new(0x2606, 0x2800, 0x21f, 0xcb07, 0x6820, 0x80da, 0xaf6b, 0x8b2c)
+             );
+         }
+     }
+@@ -708,7 +708,7 @@ mod tests {
+             .and_then(RData::as_a)
+             .expect("invalid response, expected A record");
+ 
+-        assert_eq!(addr, &A::new(93, 184, 216, 34));
++        assert_eq!(addr, &A::new(93, 184, 215, 14));
+ 
+         //
+         // assert that the connection works for a second query
+@@ -732,7 +732,7 @@ mod tests {
+ 
+         assert_eq!(
+             addr,
+-            &AAAA::new(0x2606, 0x2800, 0x0220, 0x0001, 0x0248, 0x1893, 0x25c8, 0x1946)
++            &AAAA::new(0x2606, 0x2800, 0x21f, 0xcb07, 0x6820, 0x80da, 0xaf6b, 0x8b2c)
+         );
+     }
+ 
+Index: hickory-proto/src/h3/h3_client_stream.rs
+===================================================================
+--- hickory-proto.orig/src/h3/h3_client_stream.rs
++++ hickory-proto/src/h3/h3_client_stream.rs
+@@ -493,7 +493,7 @@ mod tests {
+             .and_then(RData::as_a)
+             .expect("Expected A record");
+ 
+-        assert_eq!(addr, &A::new(93, 184, 216, 34));
++        assert_eq!(addr, &A::new(93, 184, 215, 14));
+ 
+         //
+         // assert that the connection works for a second query
+@@ -521,7 +521,7 @@ mod tests {
+ 
+             assert_eq!(
+                 addr,
+-                &AAAA::new(0x2606, 0x2800, 0x0220, 0x0001, 0x0248, 0x1893, 0x25c8, 0x1946)
++                &AAAA::new(0x2606, 0x2800, 0x21f, 0xcb07, 0x6820, 0x80da, 0xaf6b, 0x8b2c)
+             );
+         }
+     }
+@@ -558,7 +558,7 @@ mod tests {
+             .and_then(RData::as_a)
+             .expect("Expected A record");
+ 
+-        assert_eq!(addr, &A::new(93, 184, 216, 34));
++        assert_eq!(addr, &A::new(93, 184, 215, 14));
+ 
+         //
+         // assert that the connection works for a second query
+@@ -586,7 +586,7 @@ mod tests {
+ 
+             assert_eq!(
+                 addr,
+-                &AAAA::new(0x2606, 0x2800, 0x0220, 0x0001, 0x0248, 0x1893, 0x25c8, 0x1946)
++                &AAAA::new(0x2606, 0x2800, 0x21f, 0xcb07, 0x6820, 0x80da, 0xaf6b, 0x8b2c)
+             );
+         }
+     }
+@@ -625,7 +625,7 @@ mod tests {
+             .and_then(RData::as_a)
+             .expect("invalid response, expected A record");
+ 
+-        assert_eq!(addr, &A::new(93, 184, 216, 34));
++        assert_eq!(addr, &A::new(93, 184, 215, 14));
+ 
+         //
+         // assert that the connection works for a second query
+@@ -649,7 +649,7 @@ mod tests {
+ 
+         assert_eq!(
+             addr,
+-            &AAAA::new(0x2606, 0x2800, 0x0220, 0x0001, 0x0248, 0x1893, 0x25c8, 0x1946)
++            &AAAA::new(0x2606, 0x2800, 0x21f, 0xcb07, 0x6820, 0x80da, 0xaf6b, 0x8b2c)
+         );
+     }
+ }
+Index: hickory-proto/src/xfer/dns_multiplexer.rs
+===================================================================
+--- hickory-proto.orig/src/xfer/dns_multiplexer.rs
++++ hickory-proto/src/xfer/dns_multiplexer.rs
+@@ -553,7 +553,7 @@ mod test {
+                 .set_ttl(86400)
+                 .set_rr_type(RecordType::A)
+                 .set_dns_class(DNSClass::IN)
+-                .set_data(Some(RData::A(Ipv4Addr::new(93, 184, 216, 34).into())))
++                .set_data(Some(RData::A(Ipv4Addr::new(93, 184, 215, 14).into())))
+                 .clone(),
+         );
+         (
+@@ -625,7 +625,7 @@ mod test {
+                 .set_ttl(86400)
+                 .set_rr_type(RecordType::A)
+                 .set_dns_class(DNSClass::IN)
+-                .set_data(Some(RData::A(Ipv4Addr::new(93, 184, 216, 34).into())))
++                .set_data(Some(RData::A(Ipv4Addr::new(93, 184, 215, 14).into())))
+                 .clone(),
+             Record::new()
+                 .set_name(origin)
+@@ -633,7 +633,10 @@ mod test {
+                 .set_rr_type(RecordType::AAAA)
+                 .set_dns_class(DNSClass::IN)
+                 .set_data(Some(RData::AAAA(
+-                    Ipv6Addr::new(0x2606, 0x2800, 0x220, 0x1, 0x248, 0x1893, 0x25c8, 0x1946).into(),
++                    Ipv6Addr::new(
++                        0x2606, 0x2800, 0x21f, 0xcb07, 0x6820, 0x80da, 0xaf6b, 0x8b2c
++                    )
++                    .into(),
+                 )))
+                 .clone(),
+             soa,
+Index: hickory-proto/src/op/message.rs
+===================================================================
+--- hickory-proto.orig/src/op/message.rs
++++ hickory-proto/src/op/message.rs
+@@ -1195,7 +1195,7 @@ mod tests {
+             0x00, 0x01, 0x00, 0x01, // RecordType = A, Class = IN
+             0x00, 0x00, 0x00, 0x02, // TTL = 2 seconds
+             0x00, 0x04,             // record length = 4 (ipv4 address)
+-            0x5D, 0xB8, 0xD8, 0x22, // address = 93.184.216.34
++            0x5D, 0xB8, 0xD7, 0x0E, // address = 93.184.215.14
+         ];
+ 
+         let mut decoder = BinDecoder::new(&buf);
