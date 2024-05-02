@@ -1,0 +1,78 @@
+Index: linescroll/Cargo.toml
+===================================================================
+--- linescroll.orig/Cargo.toml
++++ linescroll/Cargo.toml
+@@ -36,4 +36,5 @@ version = "0.4"
+ version = "0.2"
+ 
+ [dependencies.nix]
+-version = "0.26"
++version = ">= 0.26"
++features = ["poll","fs","signal"]
+Index: linescroll/src/main.rs
+===================================================================
+--- linescroll.orig/src/main.rs
++++ linescroll/src/main.rs
+@@ -247,6 +247,32 @@ fn line_val(u: &str) -> u64 {
+     }
+ }
+ 
++use std::os::fd::BorrowedFd;
++use std::os::fd::AsFd;
++
++trait MyFrom<T>: Sized {
++    fn myfrom(value: T) -> Self;
++}
++
++impl<T> MyFrom<T> for T {
++    fn myfrom(t: T) -> T {
++        t
++    }
++}
++
++impl MyFrom<&BorrowedFd<'_>> for RawFd {
++    fn myfrom(t: &BorrowedFd) -> RawFd {
++        t.as_raw_fd()
++    }
++}
++
++impl<'a>  MyFrom<&'a BorrowedFd<'a>> for BorrowedFd<'a> {
++    fn myfrom(t: &'a BorrowedFd<'a>) -> BorrowedFd<'a> {
++        t.as_fd()
++    }
++}
++
++
+ fn spawn_reader(count: Arc<Mutex<u64>>, path: Option<String>, settings: Settings) {
+     thread::spawn(move || {
+         let settings = settings;
+@@ -261,16 +287,16 @@ fn spawn_reader(count: Arc<Mutex<u64>>,
+                 fail_exit: bool,
+             ) {
+                 let mut counter: u64 = 0;
+-                let original_inode = match nix::sys::stat::fstat(fd) {
++                let fd = unsafe { BorrowedFd::borrow_raw(fd) };
++                let original_inode = match nix::sys::stat::fstat(MyFrom::myfrom(&fd)) {
+                     Ok(i) => Some(i.st_ino),
+                     Err(_) => None,
+                 };
+ 
+-                if fcntl(fd, FcntlArg::F_SETFL(OFlag::O_NONBLOCK)).is_err() {
++                if fcntl(MyFrom::myfrom(&fd), FcntlArg::F_SETFL(OFlag::O_NONBLOCK)).is_err() {
+                     println!("could not set fd to non-blocking");
+                 }
+-
+-                let pfds_orig = vec![PollFd::new(fd, PollFlags::POLLIN)];
++                let pfds_orig = vec![PollFd::new(MyFrom::myfrom(&fd), PollFlags::POLLIN)];
+ 
+                 loop {
+                     let now = SystemTime::now();
+@@ -286,7 +312,7 @@ fn spawn_reader(count: Arc<Mutex<u64>>,
+                             Ok(_y) => {
+                                 if let Some(x) = pfds[0].revents() {
+                                     if x | PollFlags::POLLIN == PollFlags::POLLIN {
+-                                        while let Ok(size) = nix::unistd::read(fd, &mut buffer[..])
++                                        while let Ok(size) = nix::unistd::read(MyFrom::myfrom(&fd), &mut buffer[..])
+                                         {
+                                             if raw {
+                                                 let s: String = str::from_utf8(
