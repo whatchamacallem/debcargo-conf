@@ -1,0 +1,43 @@
+Index: zbus/Cargo.toml
+===================================================================
+--- zbus.orig/Cargo.toml
++++ zbus/Cargo.toml
+@@ -144,7 +144,7 @@ features = [
+ optional = true
+ 
+ [dependencies.tokio-vsock]
+-version = "0.3.3"
++version = "0.5"
+ optional = true
+ 
+ [dependencies.tracing]
+Index: zbus/src/address.rs
+===================================================================
+--- zbus.orig/src/address.rs
++++ zbus/src/address.rs
+@@ -300,7 +300,7 @@ impl Address {
+             }
+ 
+             #[cfg(feature = "tokio-vsock")]
+-            Address::Vsock(addr) => VsockStream::connect(addr.cid, addr.port)
++            Address::Vsock(addr) => VsockStream::connect(tokio_vsock::VsockAddr::new(addr.cid, addr.port))
+                 .await
+                 .map(Stream::Vsock)
+                 .map_err(Into::into),
+Index: zbus/src/connection.rs
+===================================================================
+--- zbus.orig/src/connection.rs
++++ zbus/src/connection.rs
+@@ -1610,9 +1610,9 @@ mod tests {
+     #[cfg(feature = "tokio-vsock")]
+     async fn vsock_p2p_pipe() -> Result<(Connection, Connection)> {
+         let guid = Guid::generate();
+-
+-        let listener = tokio_vsock::VsockListener::bind(2, 42).unwrap();
+-        let client = tokio_vsock::VsockStream::connect(3, 42).await.unwrap();
++        use tokio_vsock::VsockAddr;
++        let listener = tokio_vsock::VsockListener::bind(VsockAddr::new(2, 42)).unwrap();
++        let client = tokio_vsock::VsockStream::connect(VsockAddr::new(3, 42)).await.unwrap();
+         let server = listener.incoming().next().await.unwrap().unwrap();
+ 
+         futures_util::try_join!(
