@@ -1,0 +1,25 @@
+Description: workaround glibc posix violation with regards to suseconds_t
+ According to posix tv_usec has type suseconds_t, however glibc with time64
+ violates this defining tv_usec as time_t (a 64-bit type) while defining
+ suseconds_t as a 32-bit type.
+
+ Most C programs don't care about this difference because C allows implicit
+ conversion between different sized integers but rust does not.
+
+ This patch works around the issue by allowing the compiler to infer the type
+ to convert to rather than hardcoding suseconds_t.
+
+ https://sourceware.org/bugzilla/show_bug.cgi?id=31510
+Author: Peter Michael Green <plugwash@debian.org>
+
+--- rust-vsock-0.4.0.orig/src/lib.rs
++++ rust-vsock-0.4.0/src/lib.rs
+@@ -292,7 +292,7 @@ impl VsockStream {
+                 };
+                 let mut timeout = timeval {
+                     tv_sec: secs,
+-                    tv_usec: i64::from(dur.subsec_micros()) as suseconds_t,
++                    tv_usec: i64::from(dur.subsec_micros()) as _,
+                 };
+                 if timeout.tv_sec == 0 && timeout.tv_usec == 0 {
+                     timeout.tv_usec = 1;
