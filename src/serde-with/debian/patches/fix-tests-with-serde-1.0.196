@@ -1,0 +1,84 @@
+From: James McCoy <jamessan@jamessan.com>
+Date: Thu, 2 May 2024 15:55:57 -0400
+Subject: [PATCH] Fix tests with serde >= 1.0.196
+
+In serde 1.0.196, the "invalid type" error message for floats started
+adding a trailing ".0" if no decimal point was already part of the
+formatted float, causing tests to fail like:
+
+    ---- test_chrono_timestamp_seconds_with_frac stdout ----
+
+    error: expect test failed
+       --> serde_with/tests/chrono_0_4.rs:551:9
+
+    Expect:
+    ----
+    invalid type: floating point `0`, expected a string at line 1 column 3
+    ----
+
+    Actual:
+    ----
+    invalid type: floating point `0.0`, expected a string at line 1 column 3
+    ----
+
+Change the tests to use a test value of 0.1, so the test will work both
+pre- and post-serde 1.0.196.
+---
+ tests/chrono_0_4.rs    | 8 ++++----
+ tests/serde_as/time.rs | 8 ++++----
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+Index: serde-with/tests/chrono_0_4.rs
+===================================================================
+--- serde-with.orig/tests/chrono_0_4.rs
++++ serde-with/tests/chrono_0_4.rs
+@@ -464,9 +464,9 @@ fn test_chrono_timestamp_seconds() {
+         ]],
+     );
+     check_error_deserialization::<StructStringStrict>(
+-        r#"0.0"#,
++        r#"0.1"#,
+         expect![[
+-            r#"invalid type: floating point `0`, expected a string containing a number at line 1 column 3"#
++            r#"invalid type: floating point `0.1`, expected a string containing a number at line 1 column 3"#
+         ]],
+     );
+ 
+@@ -555,8 +555,8 @@ fn test_chrono_timestamp_seconds_with_fr
+         expect![[r#"invalid type: integer `1`, expected a string at line 1 column 1"#]],
+     );
+     check_error_deserialization::<StructStringStrict>(
+-        r#"0.0"#,
+-        expect![[r#"invalid type: floating point `0`, expected a string at line 1 column 3"#]],
++        r#"0.1"#,
++        expect![[r#"invalid type: floating point `0.1`, expected a string at line 1 column 3"#]],
+     );
+ 
+     #[serde_as]
+Index: serde-with/tests/serde_as/time.rs
+===================================================================
+--- serde-with.orig/tests/serde_as/time.rs
++++ serde-with/tests/serde_as/time.rs
+@@ -324,9 +324,9 @@ fn test_timestamp_seconds_systemtime() {
+         ]],
+     );
+     check_error_deserialization::<StructStringStrict>(
+-        r#"0.0"#,
++        r#"0.1"#,
+         expect![[
+-            r#"invalid type: floating point `0`, expected a string containing a number at line 1 column 3"#
++            r#"invalid type: floating point `0.1`, expected a string containing a number at line 1 column 3"#
+         ]],
+     );
+ 
+@@ -423,8 +423,8 @@ fn test_timestamp_seconds_with_frac_syst
+         expect![[r#"invalid type: integer `1`, expected a string at line 1 column 1"#]],
+     );
+     check_error_deserialization::<StructStringStrict>(
+-        r#"0.0"#,
+-        expect![[r#"invalid type: floating point `0`, expected a string at line 1 column 3"#]],
++        r#"0.1"#,
++        expect![[r#"invalid type: floating point `0.1`, expected a string at line 1 column 3"#]],
+     );
+ 
+     #[serde_as]
