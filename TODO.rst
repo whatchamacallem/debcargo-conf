@@ -73,22 +73,6 @@ librsvg
 see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629  
 
 
-[ ] nalgebra: 4 reverse dependencies
-
-[ ] simba: 2 reverse dependencies
-
-[ ] rctree: no missing dependencies
-
-[ ] lopdf: one reverse dependency
-
-[ ] yeslogic-fontconfig-sys
-
-[x] clap v4
-
-[x] GTK related packages
-
-[x] some cairo related packages (need newer gtk)
-
 
 bench
 -----
@@ -125,10 +109,9 @@ sys crate overview
 
 * glib-sys
 * gobject-sys, cairo-sys-rs, graphene-sys, gdk4-wayland-sys -> need glib-sys
-* gio-sys, atk-sys, gstreamer-sys, pango-sys -> need gobject-sys
+* gio-sys, gstreamer-sys, pango-sys -> need gobject-sys
 * pangocairo-sys -> needs cairo-sys-rs and pango-sys
-* gdk-pixbuf-sys, gdk-sys -> need gio-sys
-* gdkx11-sys, gtk-sys -> need gdk-sys
+* gdk-pixbuf-sys  -> needs gio-sys
 * gdk4-sys -> needs gdkx11-sys
 * gdk4-x11-sys -> needs gdk-4-sys
 * gsk4-sys -> needs gdk-x11-sys
@@ -144,22 +127,15 @@ sys crate overview
 
 Non-sys crate overview
 
-* gtk3-macros
 * glib -> glib-macros, glib-sys, gobject-sys, gio-sys
 
 * gio -> glib, gio-sys
-* atk -> glib, atk-sys
 * graphene-rs -> glib, graphene-sys
 * cairo-rs -> freetype-rs, cairo-rs-sys, glib
 
 * pangocairo -> glib, cairo-rs, pango, pangocairo-sys
 * pango -> glib, gio, pango-sys
 * gdk-pixbuf -> gio, glib,  gdk-pixbuf-sys
-
-* gdk -> gdk-pixbuf, gio, glib, cairo-rs, pango, gdk-sys
-* gtk -> gtk3-macros, pango, gdk, gdk-pixbuf, cairo-rs, atk
-* gdk-x11 -> glib, gio, gdk, x11, gdkx11-sys
-
 
 * gdk4 -> cairo-rs, gio, glib, pango, gdk-pixbuf, gdk4-sys
 * gdk4-x11 -> gdk4
@@ -211,11 +187,6 @@ fractal (#900928)
 * sourceview5
 
 
-obfuscate (new)
----------
-
-
-
 podcasts (#965044)
 --------
  * can be packaged
@@ -225,14 +196,9 @@ lfs (#1006367)
 -------
 
 * termimad
- * coloor
  * minimad (merged)
 
 
-bottom
--------
-
-* in new
 
 macchina
 ------
@@ -255,8 +221,6 @@ popsicle (#1007982)
 * sys-mount (needs rustc 1.65)
 * pwd (upstream license issues :(  )
 * iso9660 (broken)
-* i18n-embed-fl
- * i18n-embed
 
 
 ==============
@@ -269,7 +233,6 @@ Binary crates worth packaging (please add if you know more):
 - asus-ctl - control asus laptops (https://gitlab.com/asus-linux/asusctl)
 - bench - simple benchmarking
 - bingrep - Grep through binaries from various OSs and architectures.
-- bottom - Cross-platform monitoring tool (https://github.com/ClementTsang/bottom)i -> in new
 - cargo-deb - Create Debian packages from Cargo projects
 - cargo-download - Download sources of a crate
 - cargo-edit - Cargo editing subcommands (add, rm, upgrade)
@@ -291,7 +254,6 @@ Binary crates worth packaging (please add if you know more):
 GUI GTK-based programs:
 
 - authenticator - 2FA program (GTK/libadwaita, https://gitlab.gnome.org/World/Authenticator)
-- amberol - simple music player (GTK/libadwaita, https://gitlab.gnome.org/World/Amberol)
 - brewstillery - Brewer's, vinter's and distiller's calculator (GTK).
 - decoder - qr code reader (GTK/libadwaita, https://apps.gnome.org/app/com.belmoussaoui.Decoder/)
 - fractal - Matrix messaging client (GTK, https://wiki.gnome.org/Apps/Fractal)
@@ -299,7 +261,6 @@ GUI GTK-based programs:
 - health - health tracking app (GTK/libadwaita, https://apps.gnome.org/de/app/dev.Cogitri.Health/)
 - kooha - screen recorder (GTK/libadwaita, https://github.com/SeaDve/Kooha)
 - mousai - song recognition (GTK/libadwaita, https://apps.gnome.org/de/app/io.github.seadve.Mousai/)
-- obfuscate - censor private information (GTK/libadwaita, https://apps.gnome.org/de/app/com.belmoussaoui.Obfuscate/) -> new
 - pika-backup - backup program (GTK/libadwaita, https://apps.gnome.org/de/app/org.gnome.World.PikaBackup/)
 - podcasts - Podcasts app (GTK, https://wiki.gnome.org/Apps/Podcasts)
 - popsicle - USB flasher (GTK, https://github.com/pop-os/popsicle)
