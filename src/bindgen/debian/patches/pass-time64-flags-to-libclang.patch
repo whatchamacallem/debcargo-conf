@@ -1,0 +1,24 @@
+Index: rust-bindgen-0.66.1/lib.rs
+===================================================================
+--- rust-bindgen-0.66.1.orig/lib.rs
++++ rust-bindgen-0.66.1/lib.rs
+@@ -746,6 +748,19 @@ impl Bindings {
+         let (effective_target, explicit_target) =
+             find_effective_target(&options.clang_args);
+ 
++        // pass time64 options for glibc to libclang
++        // we don't have to worry about 64-bit architectures as the options are
++        // no-ops there (this differs from the case in rust-libc, which does
++        // have to distinguish between "native" 64-bit time and time64
++        // extensions) we do however have to exclude i368. We also check for
++        // i468, i568 and i686. I'm not sure if it's possible for them to appear
++        // here, but it seems safer to check for them than not.
++        if (!effective_target.starts_with("i386")) && (!effective_target.starts_with("i486")) && (!effective_target.starts_with("i586")) && (!effective_target.starts_with("i686")) {
++            options
++                .clang_args
++                .extend(["-D_FILE_OFFSET_BITS=64".to_string(),"-D_TIME_BITS=64".to_string()]);
++        }
++
+         let is_host_build =
+             rust_to_clang_target(HOST_TARGET) == effective_target;
+ 
