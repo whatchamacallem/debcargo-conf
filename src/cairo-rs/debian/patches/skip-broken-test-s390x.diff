@@ -1,0 +1,16 @@
+Description: Skip broken test on s390x
+Author: Matthias Geiger <werdahias@riseup.net> 
+Forwarded:  https://github.com/gtk-rs/gtk-rs-core/issues/1391
+Last-Update: 2024-05-10
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/surface_png.rs
++++ b/src/surface_png.rs
+@@ -167,6 +167,7 @@
+     }
+ 
+     #[test]
++    #[cfg(not(target_arch = "s390x"))]
+     fn valid_png_reads_correctly() {
+         // A 1x1 PNG, RGB, no alpha, with a single pixel with (42, 42, 42) values
+         let png_data: Vec<u8> = vec![
