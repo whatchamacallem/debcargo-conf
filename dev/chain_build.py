@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-USAGE = 'Usage: dev/chain_build.py [!]<CRATE>[=<REALVER>] <CRATE2>[=<REALVER>] ...'
+USAGE = "Usage: dev/chain_build.py [!]<CRATE>[=<REALVER>] <CRATE2>[=<REALVER>] ..."
 
-HELP = f'''
+HELP = f"""
 {USAGE}
 
 Build a chain of packages, each having all previous packages as "extra
@@ -30,262 +30,282 @@ Env vars:
 Those env vars are passed to build.sh, read it for their descriptions.
 
 - REPACKAGE: Use ./repackage.sh instead of ./update.sh to prepare the source package
-'''
+"""
 
 import re
 from sys import argv, stdout
 from subprocess import run
 from os import getcwd, chdir, environ, makedirs
 from os.path import basename, exists, join
+
 try:
-	from apt.cache import Cache as AptCache
+    from apt.cache import Cache as AptCache
 except:
-	print('This scripts depends on python-apt to work, apt install python3-apt and rerun')
-	exit(1)
+    print(
+        "This scripts depends on python-apt to work, apt install python3-apt and rerun"
+    )
+    exit(1)
 
 
 aptc = AptCache()
 
 
 def _todash(crate: str) -> str:
-	return crate.replace('_', '-')
+    return crate.replace("_", "-")
 
 
 def _print(*args):
-	if stdout.isatty():
-		print('\n\x1b[34;100m[chain_build]\x1b[;m', *args)
-	else:
-		print('[chain_build]', *args, '\n')
+    if stdout.isatty():
+        print("\n\x1b[34;100m[chain_build]\x1b[;m", *args)
+    else:
+        print("[chain_build]", *args, "\n")
 
 
 # this is actually faster than os.walk
 def _find(pattern: str):
-	 return run(f'ls {pattern}', shell=True, capture_output=True, text=True).stdout.strip().split('\n')
+    return (
+        run(f"ls {pattern}", shell=True, capture_output=True, text=True)
+        .stdout.strip()
+        .split("\n")
+    )
 
 
-DCH_VER_RE = re.compile(r'\((.*?)\)')
+DCH_VER_RE = re.compile(r"\((.*?)\)")
+
+
 def _get_dch_version(crate: str) -> str:
-	# normally we check if there is a match, but a valid d/changelog should
-	# always have one
-	return DCH_VER_RE.search(open(join('src', _todash(crate), 'debian', 'changelog')).readline()).group(1)
+    # normally we check if there is a match, but a valid d/changelog should
+    # always have one
+    return DCH_VER_RE.search(
+        open(join("src", _todash(crate), "debian", "changelog")).readline()
+    ).group(1)
 
 
 def find_existing(specs: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
-	'''Find existing debs.
+    """Find existing debs.
 
-	:param specs: A list of 2-tuples, each being (name, version) of a crate
-	
-	:return: A list of 3-tuples, each being (crate_name, deb_name, source),
-	where source is either 'apt' (from apt cache) or 'build' (waiting for
-	build)
-	'''
+    :param specs: A list of 2-tuples, each being (name, version) of a crate
 
-	# get all debs first, so we needn't walk again and again
-	chdir('build')
-	debs = _find('*.deb')
-	chdir('..')
-	built = []
-	_print('Conducting search in apt cache and build/ directory for existing debs')
-	for crate, ver in specs:
-		_crate = _todash(crate)
-		pkg_re = re.compile(f'librust-{_crate}(?:\+.*?)?-dev_{ver}')
-		if ver == '*':
-			try:
-				ver = _get_dch_version(crate)
-			except:
-				pass
-		pkg = aptc.get(f'librust-{_crate}-dev')
-		if pkg is not None and pkg.candidate is not None and (ver == '*' or pkg.candidate.version.startswith(ver)):
-			built.append((crate, pkg.candidate.version, 'apt'))
-			continue
-		if ver == '*':
-			# version isn't specified, and d/changelog doesn't exist,
-			# means it's yet to be `./update.sh`d, move on
-			continue
-		for deb in debs:
-			if pkg_re.match(deb):
-				built.append((crate, deb, 'build'))
-	return built
+    :return: A list of 3-tuples, each being (crate_name, deb_name, source),
+    where source is either 'apt' (from apt cache) or 'build' (waiting for
+    build)
+    """
+
+    # get all debs first, so we needn't walk again and again
+    chdir("build")
+    debs = _find("*.deb")
+    chdir("..")
+    built = []
+    _print("Conducting search in apt cache and build/ directory for existing debs")
+    for crate, ver in specs:
+        _crate = _todash(crate)
+        pkg_re = re.compile(f"librust-{_crate}(?:\+.*?)?-dev_{ver}")
+        if ver == "*":
+            try:
+                ver = _get_dch_version(crate)
+            except:
+                pass
+        pkg = aptc.get(f"librust-{_crate}-dev")
+        if (
+            pkg is not None
+            and pkg.candidate is not None
+            and (ver == "*" or pkg.candidate.version.startswith(ver))
+        ):
+            built.append((crate, pkg.candidate.version, "apt"))
+            continue
+        if ver == "*":
+            # version isn't specified, and d/changelog doesn't exist,
+            # means it's yet to be `./update.sh`d, move on
+            continue
+        for deb in debs:
+            if pkg_re.match(deb):
+                built.append((crate, deb, "build"))
+    return built
 
 
-COLL_LINE = 'collapse_features = true'
+COLL_LINE = "collapse_features = true"
+
+
 def collapse_features(crate: str):
-	'''Write COLL_LINE into `crate`'s debcargo.toml.'''
+    """Write COLL_LINE into `crate`'s debcargo.toml."""
 
-	f = open(join('src', _todash(crate), 'debian', 'debcargo.toml'), 'r+')
-	toml = f.read()
-	if COLL_LINE not in toml:
-		_print(f'writing {COLL_LINE} for {crate}')
-		lines = toml.split('\n')
-		for i, line in enumerate(lines):
-			# avoid inserting at end ending up in [some.directive]
-			if line.startswith('['): #] to work around auto indent in my nvim
-				lines.insert(i, COLL_LINE)
-				lines.insert(i + 1, '')
-				f.seek(0)
-				f.write('\n'.join(lines))
-				f.close()
-				return True
-		f.write('\n')
-		f.write(COLL_LINE)
-		f.close()
-		return True
+    f = open(join("src", _todash(crate), "debian", "debcargo.toml"), "r+")
+    toml = f.read()
+    if COLL_LINE not in toml:
+        _print(f"writing {COLL_LINE} for {crate}")
+        lines = toml.split("\n")
+        for i, line in enumerate(lines):
+            # avoid inserting at end ending up in [some.directive]
+            if line.startswith("["):  # ] to work around auto indent in my nvim
+                lines.insert(i, COLL_LINE)
+                lines.insert(i + 1, "")
+                f.seek(0)
+                f.write("\n".join(lines))
+                f.close()
+                return True
+        f.write("\n")
+        f.write(COLL_LINE)
+        f.close()
+        return True
 
 
 def build_one(crate: str, ver: str, prev_debs: list[str]):
-	'''Build package for given crate.
+    """Build package for given crate.
 
-	:param crate: Crate name.
-	:param ver: Version to build, can be '*' or a version number. '*' means
-	latest available.
-	:param prev_debs: A list of previously built debs, passed to build process
-	to be installed as additional packages (usually dependencies).
+    :param crate: Crate name.
+    :param ver: Version to build, can be '*' or a version number. '*' means
+    latest available.
+    :param prev_debs: A list of previously built debs, passed to build process
+    to be installed as additional packages (usually dependencies).
 
-	:raises: Fails when running repackage.sh or update.sh failed.
-	'''
+    :raises: Fails when running repackage.sh or update.sh failed.
+    """
 
-	env = environ.copy()
-	if ver != '*':
-		env['REALVER'] = ver
-	# prevent git from stopping us with a pager
-	env['GIT_PAGER'] = 'cat'
-	# TODO: make repackage.sh the default
-	if 'REPACKAGE' in env:
-		run(('./repackage.sh', crate), env=env, check=True)
-	else:
-		# \n is for when update.sh stops for confirmation
-		run(('./update.sh', crate), env=env, input=b'\n', check=True)
-		# if not set before, rerun ./update.sh to enable it
-		if collapse_features(crate):
-			run(('./update.sh', crate), env=env, input=b'\n', check=True)
-	env['EXTRA_DEBS'] = ','.join(prev_debs)
-	chdir('build')
-	run(('./build.sh', crate), env=env, check=True)
-	chdir('..')
+    env = environ.copy()
+    if ver != "*":
+        env["REALVER"] = ver
+    # prevent git from stopping us with a pager
+    env["GIT_PAGER"] = "cat"
+    # TODO: make repackage.sh the default
+    if "REPACKAGE" in env:
+        run(("./repackage.sh", crate), env=env, check=True)
+    else:
+        # \n is for when update.sh stops for confirmation
+        run(("./update.sh", crate), env=env, input=b"\n", check=True)
+        # if not set before, rerun ./update.sh to enable it
+        if collapse_features(crate):
+            run(("./update.sh", crate), env=env, input=b"\n", check=True)
+    env["EXTRA_DEBS"] = ",".join(prev_debs)
+    chdir("build")
+    run(("./build.sh", crate), env=env, check=True)
+    chdir("..")
 
 
 def parse_specs(specs: list[str]) -> list[tuple[str, str]]:
-	'''Parses input specs.
+    """Parses input specs.
 
-	Each spec is a string in the format 'crate[=version]'.
+    Each spec is a string in the format 'crate[=version]'.
 
-	:param specs: A tuple of spec strings.
+    :param specs: A tuple of spec strings.
 
-	:return: A list of 2-tuples, each being (name, version) of a crate.
-	'''
+    :return: A list of 2-tuples, each being (name, version) of a crate.
+    """
 
-	recorded = []
-	versions = {}
-	for spec in specs:
-		crate, ver = (spec.split('=') + ['*'])[:2]
-		# filter out 1.2.3+surplus-version-part
-		if '+' in ver:
-			ver = ver.split('+')[0]
+    recorded = []
+    versions = {}
+    for spec in specs:
+        crate, ver = (spec.split("=") + ["*"])[:2]
+        # filter out 1.2.3+surplus-version-part
+        if "+" in ver:
+            ver = ver.split("+")[0]
 
-		if crate in recorded:
-			if versions.get(crate, '*') != '*':
-				continue
-		else:
-			recorded.append(crate)
-		versions[crate] = ver
+        if crate in recorded:
+            if versions.get(crate, "*") != "*":
+                continue
+        else:
+            recorded.append(crate)
+        versions[crate] = ver
 
-	return [(crate, versions[crate]) for crate in recorded]
+    return [(crate, versions[crate]) for crate in recorded]
 
 
 def chain_build(specs: list[str]):
-	'''Build crates in a chain.
+    """Build crates in a chain.
 
-	:param specs: A tuple of crate specs. See `parse_specs()`.
-	'''
+    :param specs: A tuple of crate specs. See `parse_specs()`.
+    """
 
-	specs = parse_specs(specs)
-	found = find_existing(specs)
-	env = environ.copy()
-	extra_debs = env.get('EXTRA_DEBS')
-	built, debs = set(), set()
-	target = specs[-1][0]
-	if found:
-		_print('Existing debs:')
-		for crate, deb_or_ver, kind in found:
-			if crate == target:
-				continue
-			built.add(crate)
-			if kind == 'build':
-				print(crate, deb_or_ver)
-				debs.add(deb_or_ver)
-			elif kind == 'apt':
-				print(crate, deb_or_ver, 'in apt repository')
-		_print('To be built:')
-		for crate, ver in specs:
-			if crate not in built:
-				if ver == '*':
-					try:
-						ver = _get_dch_version(crate)
-					except:
-						pass
-				print(crate, ver, 'FORCE BUILD' if crate[0] == '!' else '')
-	else:
-		built, debs = set(), set()
-		_print('No recently built packages')
-	if extra_debs:
-		_print('EXTRA_DEBS:')
-		for deb in extra_debs.split(' '):
-			print(deb)
-			debs.add(deb)
+    specs = parse_specs(specs)
+    found = find_existing(specs)
+    env = environ.copy()
+    extra_debs = env.get("EXTRA_DEBS")
+    built, debs = set(), set()
+    target = specs[-1][0]
+    if found:
+        _print("Existing debs:")
+        for crate, deb_or_ver, kind in found:
+            if crate == target:
+                continue
+            built.add(crate)
+            if kind == "build":
+                print(crate, deb_or_ver)
+                debs.add(deb_or_ver)
+            elif kind == "apt":
+                print(crate, deb_or_ver, "in apt repository")
+        _print("To be built:")
+        for crate, ver in specs:
+            if crate not in built:
+                if ver == "*":
+                    try:
+                        ver = _get_dch_version(crate)
+                    except:
+                        pass
+                print(crate, ver, "FORCE BUILD" if crate[0] == "!" else "")
+    else:
+        built, debs = set(), set()
+        _print("No recently built packages")
+    if extra_debs:
+        _print("EXTRA_DEBS:")
+        for deb in extra_debs.split(" "):
+            print(deb)
+            debs.add(deb)
 
-	_print('Starting chain build, press any key to continue, Ctrl+C to abort')
-	input()
+    _print("Starting chain build, press any key to continue, Ctrl+C to abort")
+    input()
 
-	def try_build(crate, ver, debs):
-		try:
-			build_one(crate, ver, debs)
-		except Exception as e:
-			print(e)
-			_print(f'Failed to build crate {crate}. Please fix it then press any key to continue.')
-			input()
-			if basename(getcwd()) == 'build':
-				chdir('..')
-			try_build(crate, ver, debs)
+    def try_build(crate, ver, debs):
+        try:
+            build_one(crate, ver, debs)
+        except Exception as e:
+            print(e)
+            _print(
+                f"Failed to build crate {crate}. Please fix it then press any key to continue."
+            )
+            input()
+            if basename(getcwd()) == "build":
+                chdir("..")
+            try_build(crate, ver, debs)
 
-	for crate, ver in specs:
-		if crate in built:
-			continue
-		if crate[0] == '!':
-			crate = crate[1:]
-		_print('Start building', crate, 'version', ver, 'with previous debs', debs)
-		try_build(crate, ver, debs)
-		built.add(crate)
-		if ver == '*':
-			# used in a glob, so
-			ver = ''
-		_crate = _todash(crate)
-		pkg_re = re.compile(f'librust-{_crate}(?:\+.*?)?-dev_{ver}')
-		chdir('build')
-		all_debs = _find('*.deb')
-		chdir('..')
-		for deb in all_debs:
-			if pkg_re.match(deb):
-				debs.add(deb)
+    for crate, ver in specs:
+        if crate in built:
+            continue
+        if crate[0] == "!":
+            crate = crate[1:]
+        _print("Start building", crate, "version", ver, "with previous debs", debs)
+        try_build(crate, ver, debs)
+        built.add(crate)
+        if ver == "*":
+            # used in a glob, so
+            ver = ""
+        _crate = _todash(crate)
+        pkg_re = re.compile(f"librust-{_crate}(?:\+.*?)?-dev_{ver}")
+        chdir("build")
+        all_debs = _find("*.deb")
+        chdir("..")
+        for deb in all_debs:
+            if pkg_re.match(deb):
+                debs.add(deb)
 
 
-if __name__ == '__main__':
-	if len(argv) <= 2:
-		print(HELP)
-		exit()
+if __name__ == "__main__":
+    if len(argv) <= 2:
+        print(HELP)
+        exit()
 
-	cwd = getcwd()
-	if not (exists(join(cwd, 'repackage.sh')) and exists(join(cwd, 'build.sh'))):
-		_print('Please run this script at root of debcargo-conf')
-		exit(1)
+    cwd = getcwd()
+    if not (exists(join(cwd, "repackage.sh")) and exists(join(cwd, "build.sh"))):
+        _print("Please run this script at root of debcargo-conf")
+        exit(1)
 
-	# Make sure build directory is present
-	makedirs('build', exist_ok=True)
+    # Make sure build directory is present
+    makedirs("build", exist_ok=True)
 
-	# flatten shell substituted args
-	i = 1
-	while i < len(argv):
-		if ' ' in argv[i]:
-			argv[i:] = list(filter(lambda a: a != '', argv[1].split(' '))) + argv[i + 1:]
-		i += 1
-	chain_build(argv[1:])
-
+    # flatten shell substituted args
+    i = 1
+    while i < len(argv):
+        if " " in argv[i]:
+            argv[i:] = (
+                list(filter(lambda a: a != "", argv[1].split(" "))) + argv[i + 1 :]
+            )
+        i += 1
+    chain_build(argv[1:])
