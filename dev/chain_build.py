@@ -37,10 +37,11 @@ from sys import argv, stdout
 from subprocess import run
 from os import getcwd, chdir, environ, makedirs
 from os.path import basename, exists, join
+from typing import Dict, List, Tuple
 
 try:
     from apt.cache import Cache as AptCache
-except:
+except Exception:
     print(
         "This scripts depends on python-apt to work, apt install python3-apt and rerun"
     )
@@ -103,7 +104,7 @@ def find_existing(specs: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
         if ver == "*":
             try:
                 ver = _get_dch_version(crate)
-            except:
+            except Exception:
                 pass
         pkg = aptc.get(f"librust-{_crate}-dev")
         if (
@@ -126,30 +127,32 @@ def find_existing(specs: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
 COLL_LINE = "collapse_features = true"
 
 
-def collapse_features(crate: str):
+def collapse_features(crate: str) -> bool:
     """Write COLL_LINE into `crate`'s debcargo.toml."""
 
     f = open(join("src", _todash(crate), "debian", "debcargo.toml"), "r+")
     toml = f.read()
-    if COLL_LINE not in toml:
-        _print(f"writing {COLL_LINE} for {crate}")
-        lines = toml.split("\n")
-        for i, line in enumerate(lines):
-            # avoid inserting at end ending up in [some.directive]
-            if line.startswith("["):  # ] to work around auto indent in my nvim
-                lines.insert(i, COLL_LINE)
-                lines.insert(i + 1, "")
-                f.seek(0)
-                f.write("\n".join(lines))
-                f.close()
-                return True
-        f.write("\n")
-        f.write(COLL_LINE)
-        f.close()
-        return True
+    if COLL_LINE in toml:
+        return False
+
+    _print(f"writing {COLL_LINE} for {crate}")
+    lines = toml.split("\n")
+    for i, line in enumerate(lines):
+        # avoid inserting at end ending up in [some.directive]
+        if line.startswith("["):  # ] to work around auto indent in my nvim
+            lines.insert(i, COLL_LINE)
+            lines.insert(i + 1, "")
+            f.seek(0)
+            f.write("\n".join(lines))
+            f.close()
+            return True
+    f.write("\n")
+    f.write(COLL_LINE)
+    f.close()
+    return True
 
 
-def build_one(crate: str, ver: str, prev_debs: list[str]):
+def build_one(crate: str, ver: str, prev_debs: list[str]) -> None:
     """Build package for given crate.
 
     :param crate: Crate name.
@@ -181,7 +184,7 @@ def build_one(crate: str, ver: str, prev_debs: list[str]):
     chdir("..")
 
 
-def parse_specs(specs: list[str]) -> list[tuple[str, str]]:
+def parse_specs(specs: List[str]) -> List[Tuple[str, str]]:
     """Parses input specs.
 
     Each spec is a string in the format 'crate[=version]'.
@@ -192,7 +195,7 @@ def parse_specs(specs: list[str]) -> list[tuple[str, str]]:
     """
 
     recorded = []
-    versions = {}
+    versions: Dict[str, str] = {}
     for spec in specs:
         crate, ver = (spec.split("=") + ["*"])[:2]
         # filter out 1.2.3+surplus-version-part
@@ -209,7 +212,7 @@ def parse_specs(specs: list[str]) -> list[tuple[str, str]]:
     return [(crate, versions[crate]) for crate in recorded]
 
 
-def chain_build(specs: list[str]):
+def chain_build(specs: List[str]) -> None:
     """Build crates in a chain.
 
     :param specs: A tuple of crate specs. See `parse_specs()`.
@@ -287,7 +290,7 @@ def chain_build(specs: list[str]):
                 debs.add(deb)
 
 
-if __name__ == "__main__":
+def main() -> None:
     if len(argv) <= 2:
         print(HELP)
         exit()
@@ -309,3 +312,7 @@ if __name__ == "__main__":
             )
         i += 1
     chain_build(argv[1:])
+
+
+if __name__ == "__main__":
+    main()
