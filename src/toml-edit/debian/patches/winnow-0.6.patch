@@ -1,0 +1,384 @@
+This patch is based on the upstream commits described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 7bc8a90178358ddb5934f8e6f78e70a1afe8bb42
+Author: Ed Page <eopage@gmail.com>
+Date:   Mon Feb 12 20:38:33 2024 -0600
+
+    chore: Update winnow
+
+commit 065b9f99524acc5c81b87222a95183ccc4c9ce72
+Author: Ed Page <eopage@gmail.com>
+Date:   Mon Feb 12 20:42:32 2024 -0600
+
+    chore: Update winnow
+
+Index: toml-edit/src/parser/array.rs
+===================================================================
+--- toml-edit.orig/src/parser/array.rs
++++ toml-edit/src/parser/array.rs
+@@ -1,8 +1,8 @@
+ use winnow::combinator::cut_err;
+ use winnow::combinator::delimited;
+ use winnow::combinator::opt;
+-use winnow::combinator::separated1;
+-use winnow::trace::trace;
++use winnow::combinator::separated;
++use winnow::combinator::trace;
+ 
+ use crate::parser::trivia::ws_comment_newline;
+ use crate::parser::value::value;
+@@ -44,16 +44,16 @@ pub(crate) fn array_values<'i>(
+     move |input: &mut Input<'i>| {
+         let check = check.recursing(input)?;
+         (
+-            opt(
+-                (separated1(array_value(check), ARRAY_SEP), opt(ARRAY_SEP)).map(
+-                    |(v, trailing): (Vec<Value>, Option<u8>)| {
+-                        (
+-                            Array::with_vec(v.into_iter().map(Item::Value).collect()),
+-                            trailing.is_some(),
+-                        )
+-                    },
+-                ),
+-            ),
++            opt((
++                separated(1.., array_value(check), ARRAY_SEP),
++                opt(ARRAY_SEP),
++            )
++                .map(|(v, trailing): (Vec<Value>, Option<u8>)| {
++                    (
++                        Array::with_vec(v.into_iter().map(Item::Value).collect()),
++                        trailing.is_some(),
++                    )
++                })),
+             ws_comment_newline.span(),
+         )
+             .try_map::<_, _, std::str::Utf8Error>(|(array, trailing)| {
+Index: toml-edit/src/parser/datetime.rs
+===================================================================
+--- toml-edit.orig/src/parser/datetime.rs
++++ toml-edit/src/parser/datetime.rs
+@@ -9,10 +9,10 @@ use winnow::combinator::alt;
+ use winnow::combinator::cut_err;
+ use winnow::combinator::opt;
+ use winnow::combinator::preceded;
++use winnow::combinator::trace;
+ use winnow::stream::Stream as _;
+ use winnow::token::one_of;
+ use winnow::token::take_while;
+-use winnow::trace::trace;
+ 
+ // ;; Date and Time (as defined in RFC 3339)
+ 
+@@ -73,7 +73,7 @@ fn full_date_(input: &mut Input<'_>) ->
+         _ => 31,
+     };
+     if max_days_in_month < day {
+-        input.reset(day_start);
++        input.reset(&day_start);
+         return Err(winnow::error::ErrMode::from_external_error(
+             input,
+             winnow::error::ErrorKind::Verify,
+Index: toml-edit/src/parser/document.rs
+===================================================================
+--- toml-edit.orig/src/parser/document.rs
++++ toml-edit/src/parser/document.rs
+@@ -5,9 +5,9 @@ use winnow::combinator::eof;
+ use winnow::combinator::opt;
+ use winnow::combinator::peek;
+ use winnow::combinator::repeat;
++use winnow::combinator::trace;
+ use winnow::token::any;
+ use winnow::token::one_of;
+-use winnow::trace::trace;
+ 
+ use crate::document::Document;
+ use crate::key::Key;
+Index: toml-edit/src/parser/inline_table.rs
+===================================================================
+--- toml-edit.orig/src/parser/inline_table.rs
++++ toml-edit/src/parser/inline_table.rs
+@@ -1,8 +1,8 @@
+ use winnow::combinator::cut_err;
+ use winnow::combinator::delimited;
+-use winnow::combinator::separated0;
++use winnow::combinator::separated;
++use winnow::combinator::trace;
+ use winnow::token::one_of;
+-use winnow::trace::trace;
+ 
+ use crate::key::Key;
+ use crate::parser::error::CustomError;
+@@ -124,7 +124,7 @@ fn inline_table_keyvals<'i>(
+     move |input: &mut Input<'i>| {
+         let check = check.recursing(input)?;
+         (
+-            separated0(keyval(check), INLINE_TABLE_SEP),
++            separated(0.., keyval(check), INLINE_TABLE_SEP),
+             ws.span().map(RawString::with_span),
+         )
+             .parse_next(input)
+Index: toml-edit/src/parser/key.rs
+===================================================================
+--- toml-edit.orig/src/parser/key.rs
++++ toml-edit/src/parser/key.rs
+@@ -1,10 +1,10 @@
+ use std::ops::RangeInclusive;
+ 
+ use winnow::combinator::peek;
+-use winnow::combinator::separated1;
++use winnow::combinator::separated;
++use winnow::combinator::trace;
+ use winnow::token::any;
+ use winnow::token::take_while;
+-use winnow::trace::trace;
+ 
+ use crate::key::Key;
+ use crate::parser::error::CustomError;
+@@ -20,7 +20,8 @@ use crate::RawString;
+ pub(crate) fn key(input: &mut Input<'_>) -> PResult<Vec<Key>> {
+     trace(
+         "dotted-key",
+-        separated1(
++        separated(
++            1..,
+             (ws.span(), simple_key, ws.span()).map(|(pre, (raw, key), suffix)| {
+                 Key::new(key)
+                     .with_repr_unchecked(Repr::new_unchecked(raw))
+Index: toml-edit/src/parser/numbers.rs
+===================================================================
+--- toml-edit.orig/src/parser/numbers.rs
++++ toml-edit/src/parser/numbers.rs
+@@ -7,10 +7,9 @@ use winnow::combinator::peek;
+ use winnow::combinator::preceded;
+ use winnow::combinator::repeat;
+ use winnow::combinator::rest;
++use winnow::combinator::trace;
+ use winnow::token::one_of;
+-use winnow::token::tag;
+ use winnow::token::take;
+-use winnow::trace::trace;
+ 
+ use crate::parser::prelude::*;
+ use crate::parser::trivia::from_utf8_unchecked;
+@@ -63,20 +62,20 @@ pub(crate) fn dec_int<'i>(input: &mut In
+                     repeat(
+                         0..,
+                         alt((
+-                            digit.value(()),
++                            digit.void(),
+                             (
+                                 one_of(b'_'),
+                                 cut_err(digit).context(StrContext::Expected(
+                                     StrContextValue::Description("digit"),
+                                 )),
+                             )
+-                                .value(()),
++                                .void(),
+                         )),
+                     )
+                     .map(|()| ()),
+                 )
+-                    .value(()),
+-                digit.value(()),
++                    .void(),
++                digit.void(),
+             )),
+         )
+             .recognize()
+@@ -101,14 +100,14 @@ pub(crate) fn hex_int<'i>(input: &mut In
+                 repeat(
+                     0..,
+                     alt((
+-                        hexdig.value(()),
++                        hexdig.void(),
+                         (
+                             one_of(b'_'),
+                             cut_err(hexdig).context(StrContext::Expected(
+                                 StrContextValue::Description("digit"),
+                             )),
+                         )
+-                            .value(()),
++                            .void(),
+                     )),
+                 )
+                 .map(|()| ()),
+@@ -134,14 +133,14 @@ pub(crate) fn oct_int<'i>(input: &mut In
+                 repeat(
+                     0..,
+                     alt((
+-                        one_of(DIGIT0_7).value(()),
++                        one_of(DIGIT0_7).void(),
+                         (
+                             one_of(b'_'),
+                             cut_err(one_of(DIGIT0_7)).context(StrContext::Expected(
+                                 StrContextValue::Description("digit"),
+                             )),
+                         )
+-                            .value(()),
++                            .void(),
+                     )),
+                 )
+                 .map(|()| ()),
+@@ -168,14 +167,14 @@ pub(crate) fn bin_int<'i>(input: &mut In
+                 repeat(
+                     0..,
+                     alt((
+-                        one_of(DIGIT0_1).value(()),
++                        one_of(DIGIT0_1).void(),
+                         (
+                             one_of(b'_'),
+                             cut_err(one_of(DIGIT0_1)).context(StrContext::Expected(
+                                 StrContextValue::Description("digit"),
+                             )),
+                         )
+-                            .value(()),
++                            .void(),
+                     )),
+                 )
+                 .map(|()| ()),
+@@ -250,13 +249,13 @@ pub(crate) fn zero_prefixable_int<'i>(in
+         repeat(
+             0..,
+             alt((
+-                digit.value(()),
++                digit.void(),
+                 (
+                     one_of(b'_'),
+                     cut_err(digit)
+                         .context(StrContext::Expected(StrContextValue::Description("digit"))),
+                 )
+-                    .value(()),
++                    .void(),
+             )),
+         )
+         .map(|()| ()),
+@@ -296,12 +295,12 @@ pub(crate) fn special_float(input: &mut
+ }
+ // inf = %x69.6e.66  ; inf
+ pub(crate) fn inf(input: &mut Input<'_>) -> PResult<f64> {
+-    tag(INF).value(f64::INFINITY).parse_next(input)
++    INF.value(f64::INFINITY).parse_next(input)
+ }
+ const INF: &[u8] = b"inf";
+ // nan = %x6e.61.6e  ; nan
+ pub(crate) fn nan(input: &mut Input<'_>) -> PResult<f64> {
+-    tag(NAN).value(f64::NAN.copysign(1.0)).parse_next(input)
++    NAN.value(f64::NAN.copysign(1.0)).parse_next(input)
+ }
+ const NAN: &[u8] = b"nan";
+ 
+Index: toml-edit/src/parser/strings.rs
+===================================================================
+--- toml-edit.orig/src/parser/strings.rs
++++ toml-edit/src/parser/strings.rs
+@@ -5,21 +5,20 @@ use std::ops::RangeInclusive;
+ use winnow::combinator::alt;
+ use winnow::combinator::cut_err;
+ use winnow::combinator::delimited;
++use winnow::combinator::empty;
+ use winnow::combinator::fail;
+ use winnow::combinator::opt;
+ use winnow::combinator::peek;
+ use winnow::combinator::preceded;
+ use winnow::combinator::repeat;
+-use winnow::combinator::success;
+ use winnow::combinator::terminated;
++use winnow::combinator::trace;
+ use winnow::prelude::*;
+ use winnow::stream::Stream;
+ use winnow::token::any;
+ use winnow::token::none_of;
+ use winnow::token::one_of;
+-use winnow::token::tag;
+ use winnow::token::take_while;
+-use winnow::trace::trace;
+ 
+ use crate::parser::error::CustomError;
+ use crate::parser::numbers::HEXDIG;
+@@ -110,15 +109,15 @@ pub(crate) const ESCAPE: u8 = b'\\';
+ // escape-seq-char =/ %x55 8HEXDIG ; UXXXXXXXX            U+XXXXXXXX
+ fn escape_seq_char(input: &mut Input<'_>) -> PResult<char> {
+     dispatch! {any;
+-        b'b' => success('\u{8}'),
+-        b'f' => success('\u{c}'),
+-        b'n' => success('\n'),
+-        b'r' => success('\r'),
+-        b't' => success('\t'),
++        b'b' => empty.value('\u{8}'),
++        b'f' => empty.value('\u{c}'),
++        b'n' => empty.value('\n'),
++        b'r' => empty.value('\r'),
++        b't' => empty.value('\t'),
+         b'u' => cut_err(hexescape::<4>).context(StrContext::Label("unicode 4-digit hex code")),
+         b'U' => cut_err(hexescape::<8>).context(StrContext::Label("unicode 8-digit hex code")),
+-        b'\\' => success('\\'),
+-        b'"' => success('"'),
++        b'\\' => empty.value('\\'),
++        b'"' => empty.value('"'),
+         _ => {
+             cut_err(fail::<_, char, _>)
+             .context(StrContext::Label("escape sequence"))
+@@ -187,7 +186,7 @@ fn ml_basic_body<'i>(input: &mut Input<'
+         }
+     }
+ 
+-    if let Some(qi) = opt(mlb_quotes(tag(ML_BASIC_STRING_DELIM).value(()))).parse_next(input)? {
++    if let Some(qi) = opt(mlb_quotes(ML_BASIC_STRING_DELIM.void())).parse_next(input)? {
+         c.to_mut().push_str(qi);
+     }
+ 
+@@ -223,7 +222,7 @@ fn mlb_quotes<'i>(
+ 
+         match res {
+             Err(winnow::error::ErrMode::Backtrack(_)) => {
+-                input.reset(start);
++                input.reset(&start);
+                 terminated(b"\"", peek(term.by_ref()))
+                     .map(|b| unsafe { from_utf8_unchecked(b, "`bytes` out non-ASCII") })
+                     .parse_next(input)
+@@ -320,7 +319,7 @@ fn ml_literal_body<'i>(input: &mut Input
+             ),
+         )
+         .map(|()| ()),
+-        opt(mll_quotes(tag(ML_LITERAL_STRING_DELIM).value(()))),
++        opt(mll_quotes(ML_LITERAL_STRING_DELIM.void())),
+     )
+         .recognize()
+         .try_map(std::str::from_utf8)
+@@ -352,7 +351,7 @@ fn mll_quotes<'i>(
+ 
+         match res {
+             Err(winnow::error::ErrMode::Backtrack(_)) => {
+-                input.reset(start);
++                input.reset(&start);
+                 terminated(b"'", peek(term.by_ref()))
+                     .map(|b| unsafe { from_utf8_unchecked(b, "`bytes` out non-ASCII") })
+                     .parse_next(input)
+Index: toml-edit/src/parser/trivia.rs
+===================================================================
+--- toml-edit.orig/src/parser/trivia.rs
++++ toml-edit/src/parser/trivia.rs
+@@ -99,7 +99,7 @@ pub(crate) fn ws_comment_newline<'i>(inp
+                 alt((take_while(1.., WSCHAR), newline.value(&b"\n"[..]))),
+             )
+             .map(|()| ()),
+-            comment.value(()),
++            comment.void(),
+         )),
+     )
+     .map(|()| ())
+Index: toml-edit/Cargo.toml
+===================================================================
+--- toml-edit.orig/Cargo.toml
++++ toml-edit/Cargo.toml
+@@ -127,7 +127,7 @@ optional = true
+ version = "0.6.5"
+ 
+ [dependencies.winnow]
+-version = "0.5.0"
++version = "0.6.0"
+ optional = true
+ 
+ [dev-dependencies.libtest-mimic]
