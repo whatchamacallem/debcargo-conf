@@ -1,0 +1,59 @@
+Index: rust-coreutils-0.0.26/src/uu/cat/src/splice.rs
+===================================================================
+--- rust-coreutils-0.0.26.orig/src/uu/cat/src/splice.rs
++++ rust-coreutils-0.0.26/src/uu/cat/src/splice.rs
+@@ -63,7 +63,7 @@ fn copy_exact(read_fd: RawFd, write_fd:
+         assert_ne!(read, 0, "unexpected end of pipe");
+         let mut written = 0;
+         while written < read {
+-            match unistd::write(write_fd, &buf[written..read])? {
++            match unistd::write(write_fd.as_fd().as_raw_fd(), &buf[written..read])? {
+                 0 => panic!(),
+                 n => written += n,
+             }
+Index: rust-coreutils-0.0.26/src/uucore/src/lib/features/pipes.rs
+===================================================================
+--- rust-coreutils-0.0.26.orig/src/uucore/src/lib/features/pipes.rs
++++ rust-coreutils-0.0.26/src/uucore/src/lib/features/pipes.rs
+@@ -13,6 +13,8 @@ use std::os::unix::io::AsRawFd;
+ use nix::fcntl::SpliceFFlags;
+ 
+ pub use nix::{Error, Result};
++use std::os::fd::IntoRawFd;
++use std::os::fd::FromRawFd;
+ 
+ /// A wrapper around [`nix::unistd::pipe`] that ensures the pipe is cleaned up.
+ ///
+@@ -20,7 +22,9 @@ pub use nix::{Error, Result};
+ /// from the first.
+ pub fn pipe() -> Result<(File, File)> {
+     let (read, write) = nix::unistd::pipe()?;
+-    Ok((File::from(read), File::from(write)))
++    let read = unsafe { File::from_raw_fd(read.into_raw_fd()) };
++    let write = unsafe { File::from_raw_fd(write.into_raw_fd()) };
++    Ok((read, write))
+ }
+ 
+ /// Less noisy wrapper around [`nix::fcntl::splice`].
+Index: rust-coreutils-0.0.26/src/uu/tty/src/tty.rs
+===================================================================
+--- rust-coreutils-0.0.26.orig/src/uu/tty/src/tty.rs
++++ rust-coreutils-0.0.26/src/uu/tty/src/tty.rs
+@@ -19,6 +19,8 @@ mod options {
+     pub const SILENT: &str = "silent";
+ }
+ 
++use std::os::fd::AsRawFd;
++
+ #[uucore::main]
+ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
+     let matches = uu_app().get_matches_from(args);
+@@ -36,7 +38,7 @@ pub fn uumain(args: impl uucore::Args) -
+ 
+     let mut stdout = std::io::stdout();
+ 
+-    let name = nix::unistd::ttyname(std::io::stdin());
++    let name = nix::unistd::ttyname(std::io::stdin().as_raw_fd());
+ 
+     let write_result = match name {
+         Ok(name) => writeln!(stdout, "{}", name.display()),
