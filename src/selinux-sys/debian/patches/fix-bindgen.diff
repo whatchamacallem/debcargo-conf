@@ -1,7 +1,7 @@
-Index: selinux-sys/Cargo.toml
+Index: rust-selinux-sys-0.6.7/Cargo.toml
 ===================================================================
---- selinux-sys.orig/Cargo.toml
-+++ selinux-sys/Cargo.toml
+--- rust-selinux-sys-0.6.7.orig/Cargo.toml
++++ rust-selinux-sys-0.6.7/Cargo.toml
 @@ -100,7 +100,7 @@ targets = [
  ]
  
@@ -11,3 +11,36 @@ Index: selinux-sys/Cargo.toml
  
  [build-dependencies.cc]
  version = "1.0"
+Index: rust-selinux-sys-0.6.7/build.rs
+===================================================================
+--- rust-selinux-sys-0.6.7.orig/build.rs
++++ rust-selinux-sys-0.6.7/build.rs
+@@ -293,6 +293,7 @@ fn find_and_output_lib_dir(link_paths: &
+     }
+ }
+ 
++use std::io::Write;
+ fn generate_bindings(out_dir: &Path, include_path: &Path) {
+     let mut builder = bindgen::Builder::default()
+         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+@@ -363,9 +364,17 @@ fn generate_bindings(out_dir: &Path, inc
+         "selinux-sys: Failed to generate Rust bindings for 'selinux/selinux.h' and other headers",
+     );
+ 
+-    bindings
+-        .write_to_file(out_dir.join("selinux-sys.rs"))
+-        .expect("selinux-sys: Failed to write 'selinux-sys.rs'")
++    // __uint64_t is excluded from the bindings, but on time64 architectures the glibc
++    // headers use it to define ino_t. Replace any reference to it in the generated
++    // bindings with u64.
++    let mut bindingstext = Vec::new();
++    bindings.write(Box::new(&mut bindingstext)).unwrap();
++    let bindingstext = str::from_utf8(&bindingstext).unwrap();
++    let bindingstext = bindingstext.replace("__uint64_t","u64");
++    let mut file = std::fs::File::create(out_dir.join("selinux-sys.rs")).expect("selinux-sys: Failed to open 'selinux-sys.rs'");
++    file.write_all(bindingstext.as_bytes()).expect("selinux-sys: Failed to write data to 'selinux-sys.rs'");
++    drop(file);
++
+ }
+ 
+ fn find_file_in_dirs(path_suffix: &str, dirs: &[PathBuf]) -> io::Result<PathBuf> {
