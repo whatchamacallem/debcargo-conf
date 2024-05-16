@@ -1,47 +1,89 @@
-Index: async-tls/Cargo.toml
-===================================================================
---- async-tls.orig/Cargo.toml
-+++ async-tls/Cargo.toml
-@@ -30,17 +30,7 @@ categories = [
- ]
- license = "MIT/Apache-2.0"
- repository = "https://github.com/async-std/async-tls"
--
--[[test]]
--name = "test"
--required-features = [
--    "client",
--    "server",
--]
--
--[[test]]
--name = "google"
--required-features = ["client"]
-+autotests = false
- 
- [dependencies.futures-core]
- version = "0.3.5"
-@@ -58,10 +48,6 @@ version = "1.0"
- version = "0.22.0"
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -48,8 +48,8 @@
+ version = "0.101.4"
  optional = true
  
 -[dependencies.webpki-roots]
 -version = "0.22.3"
--optional = true
--
++[dependencies.rustls-native-certs]
++version = "0.6.2"
+ optional = true
+ 
  [dev-dependencies.async-std]
- version = "1.11"
- features = ["unstable"]
-@@ -77,12 +63,7 @@ features = ["io"]
+@@ -67,7 +67,7 @@
  version = "1"
  
  [features]
--client = [
--    "webpki",
--    "webpki-roots",
--]
+-client = ["webpki-roots"]
++client = ["rustls-native-certs"]
  default = [
--    "client",
+     "client",
      "server",
- ]
- early-data = []
+--- a/src/connector.rs
++++ b/src/connector.rs
+@@ -3,7 +3,7 @@
+ use crate::client;
+ 
+ use futures_io::{AsyncRead, AsyncWrite};
+-use rustls::{ClientConfig, ClientConnection, OwnedTrustAnchor, RootCertStore, ServerName};
++use rustls::{ClientConfig, ClientConnection, ServerName};
+ use std::convert::TryFrom;
+ use std::future::Future;
+ use std::io;
+@@ -64,14 +64,13 @@
+ 
+ impl Default for TlsConnector {
+     fn default() -> Self {
+-        let mut root_certs = RootCertStore::empty();
+-        root_certs.add_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.0.iter().map(|ta| {
+-            OwnedTrustAnchor::from_subject_spki_name_constraints(
+-                ta.subject,
+-                ta.spki,
+-                ta.name_constraints,
+-            )
+-        }));
++            let mut root_certs = rustls::RootCertStore::empty();
++    for cert in
++        rustls_native_certs::load_native_certs().expect("Failed to load system root certificatis")
++    {
++        root_certs.add(&rustls::Certificate(cert.0)).unwrap()
++    }
++
+         let config = ClientConfig::builder()
+             .with_safe_defaults()
+             .with_root_certificates(root_certs)
+
+--- a/src/test_0rtt.rs
++++ b/src/test_0rtt.rs
+@@ -3,7 +3,7 @@
+ use async_std::sync::Arc;
+ use futures_executor::block_on;
+ use futures_util::io::{AsyncReadExt, AsyncWriteExt};
+-use rustls::{ClientConfig, OwnedTrustAnchor, RootCertStore};
++use rustls::{ClientConfig};
+ use std::io;
+ use std::net::ToSocketAddrs;
+ 
+@@ -28,14 +28,13 @@
+ 
+ #[test]
+ fn test_0rtt() {
+-    let mut root_certs = RootCertStore::empty();
+-    root_certs.add_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.0.iter().map(|ta| {
+-        OwnedTrustAnchor::from_subject_spki_name_constraints(
+-            ta.subject,
+-            ta.spki,
+-            ta.name_constraints,
+-        )
+-    }));
++        let mut root_certs = rustls::RootCertStore::empty();
++    for cert in
++        rustls_native_certs::load_native_certs().expect("Failed to load system root certificatis")
++    {
++        root_certs.add(&rustls::Certificate(cert.0)).unwrap()
++    }
++
+     let mut config = ClientConfig::builder()
+         .with_safe_defaults()
+         .with_root_certificates(root_certs)
