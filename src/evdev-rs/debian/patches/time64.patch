@@ -1,0 +1,126 @@
+--- rust-evdev-rs-0.6.1.orig/src/device.rs
++++ rust-evdev-rs-0.6.1/src/device.rs
+@@ -867,24 +867,26 @@ impl Device {
+     /// This triggers an internal sync of the device and `next_event` returns
+     /// `ReadStatus::Sync`.
+     pub fn next_event(&self, flags: ReadFlag) -> io::Result<(ReadStatus, InputEvent)> {
+-        let mut ev = raw::input_event {
+-            time: raw::timeval {
+-                tv_sec: 0,
+-                tv_usec: 0,
+-            },
+-            type_: 0,
+-            code: 0,
+-            value: 0,
+-        };
++        let mut ev = unsafe { std::mem::zeroed() };
+ 
+         let result =
+             unsafe { raw::libevdev_next_event(self.raw, flags.bits as c_uint, &mut ev) };
+ 
++        #[cfg(all(target_pointer_width = "32", not(target_arch = "x86")))]
++        // unfortunately, the current time64 patches for rust-libc provide
++        // no way to access the timestamp fields on time64 architectures
++        // so we have to do this the ugly way with pointer arithmetic.
++        let time = TimeVal {
++            tv_sec: unsafe { *(&ev as *const libc::input_event as *const u32) } as _,
++            tv_usec: unsafe { *(&ev as *const libc::input_event as *const u32).offset(1) } as _,
++        };
++        #[cfg(not(all(target_pointer_width = "32", not(target_arch = "x86"))))]
++        let time = TimeVal {
++            tv_sec: ev.time.tv_sec,
++            tv_usec: ev.time.tv_usec,
++        };
+         let event = InputEvent {
+-            time: TimeVal {
+-                tv_sec: ev.time.tv_sec,
+-                tv_usec: ev.time.tv_usec,
+-            },
++            time: time,
+             event_code: int_to_event_code(ev.type_ as u32, ev.code as u32),
+             value: ev.value,
+         };
+--- rust-evdev-rs-0.6.1.orig/src/lib.rs
++++ rust-evdev-rs-0.6.1/src/lib.rs
+@@ -206,7 +206,7 @@ impl TimeVal {
+     pub const fn new(tv_sec: time_t, tv_usec: suseconds_t) -> TimeVal {
+         const MICROS_PER_SEC: suseconds_t = 1_000_000;
+         TimeVal {
+-            tv_sec: tv_sec + tv_usec / MICROS_PER_SEC,
++            tv_sec: tv_sec + ((tv_usec / MICROS_PER_SEC) as time_t),
+             tv_usec: tv_usec % MICROS_PER_SEC,
+         }
+     }
+@@ -214,14 +214,20 @@ impl TimeVal {
+     pub const fn from_raw(timeval: &libc::timeval) -> TimeVal {
+         TimeVal {
+             tv_sec: timeval.tv_sec,
+-            tv_usec: timeval.tv_usec,
++            // glibc with time64 currently has a defintion of
++            // sueconds_t which is inconsistent with it's definition
++            // of timeval.
++            tv_usec: timeval.tv_usec as _,
+         }
+     }
+ 
+     pub const fn as_raw(&self) -> libc::timeval {
+         libc::timeval {
+             tv_sec: self.tv_sec,
+-            tv_usec: self.tv_usec,
++            // glibc with time64 currently has a defintion of
++            // sueconds_t which is inconsistent with it's definition
++            // of timeval.
++            tv_usec: self.tv_usec as _,
+         }
+     }
+ }
+@@ -252,8 +258,18 @@ impl InputEvent {
+     pub fn from_raw(event: &libc::input_event) -> InputEvent {
+         let ev_type = event.type_ as u32;
+         let event_code = int_to_event_code(ev_type, event.code as u32);
++        #[cfg(all(target_pointer_width = "32", not(target_arch = "x86")))]
++        // unfortunately, the current time64 patches for rust-libc provide
++        // no way to access the timestamp fields on time64 architectures
++        // so we have to do this the ugly way with pointer arithmetic.
++        let time = TimeVal {
++            tv_sec: unsafe { *(event as *const libc::input_event as *const u32) } as _,
++            tv_usec: unsafe { *(event as *const libc::input_event as *const u32).offset(1) } as _,
++        };
++        #[cfg(not(all(target_pointer_width = "32", not(target_arch = "x86"))))]
++        let time = TimeVal::from_raw(&event.time);
+         InputEvent {
+-            time: TimeVal::from_raw(&event.time),
++            time: time,
+             event_code,
+             value: event.value,
+         }
+@@ -261,12 +277,23 @@ impl InputEvent {
+ 
+     pub fn as_raw(&self) -> libc::input_event {
+         let (ev_type, ev_code) = event_code_to_int(&self.event_code);
+-        libc::input_event {
+-            time: self.time.as_raw(),
+-            type_: ev_type as u16,
+-            code: ev_code as u16,
+-            value: self.value,
+-        }
++        let mut result : libc::input_event = unsafe {std::mem::zeroed()};
++        #[cfg(all(target_pointer_width = "32", not(target_arch = "x86")))]
++        // unfortunately, the current time64 patches for rust-libc provide
++        // no way to access the timestamp fields on time64 architectures
++        // so we have to do this the ugly way with pointer arithmetic.
++        unsafe {
++            *(&mut result as *mut libc::input_event as *mut u32) = self.time.tv_sec as u32;
++            *(&mut result as *mut libc::input_event as *mut u32).offset(1) = self.time.tv_usec as u32;
++        }
++        #[cfg(not(all(target_pointer_width = "32", not(target_arch = "x86"))))]
++        {
++            result.time = self.time.as_raw();
++        }
++        result.type_ = ev_type as u16;
++        result.code = ev_code as u16;
++        result.value = self.value;
++        result
+     }
+ 
+     pub fn is_type(&self, ev_type: &EventType) -> bool {
