@@ -1,0 +1,52 @@
+From 04297b214eb6d2b45f886308bb03f4b99665c12f Mon Sep 17 00:00:00 2001
+From: Hilko Bengen <bengen@hilluzination.de>
+Date: Wed, 22 May 2024 19:51:36 +0200
+Subject: [PATCH] Fix sockaddr test so that the right test is run for
+ big-endian.
+
+---
+ src/sockaddr.rs | 25 +++++++++++++++----------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
+
+diff --git a/src/sockaddr.rs b/src/sockaddr.rs
+index 066a648..8c10f0b 100644
+--- a/src/sockaddr.rs
++++ b/src/sockaddr.rs
+@@ -188,19 +188,24 @@ mod test {
+     fn parse_syslog() -> Result<(), SocketAddrError> {
+         // taken from testdata/record-connect-unix-raw.txt
+         #[cfg(target_endian = "little")]
+-        let buf = b"\x01\x00\x2F\x64\x65\x76\x2F\x6C\x6F\x67\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
++        {
++            assert_eq!(
++                SocketAddr::parse(b"\x01\x00\x2F\x64\x65\x76\x2F\x6C\x6F\x67\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")?,
++                SocketAddr::Local(SocketAddrLocal {
++                    path: Vec::from(*b"/dev/log")
++                })
++            );
++        }
+ 
+         // taken from testdata/record-bind-ipv4-bigendian.txt
+         #[cfg(target_endian = "big")]
+-        let buf = b"\x00\x02\xD9\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+-
+-        let s = SocketAddr::parse(&buf[..])?;
+-        assert_eq!(
+-            s,
+-            SocketAddr::Local(SocketAddrLocal {
+-                path: Vec::from(*b"/dev/log")
+-            })
+-        );
++        {
++            assert_eq!(
++                SocketAddr::parse( b"\x00\x02\xD9\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")?,
++                SocketAddr::Inet("0.0.0.0:55555".parse().unwrap())
++            );
++        }
++
+         Ok(())
+     }
+ }
+-- 
+2.43.0
+
