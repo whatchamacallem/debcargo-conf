@@ -54,12 +54,10 @@ Apt::Architecture "$(dpkg --print-architecture)";
 Apt::Architectures "$(dpkg --print-architecture)";
 Dir "$tmpdir/aptroot";
 Acquire::Languages "none";
-Dir::Etc::Trusted "$(eval "$(apt-config shell v Dir::Etc::Trusted/f)"; printf "$v")";
-Dir::Etc::TrustedParts "$(eval "$(apt-config shell v Dir::Etc::TrustedParts/d)"; printf "$v")";
 END
 cat << END > "$tmpdir/aptroot/etc/apt/sources.list"
-deb http://deb.debian.org/debian/ $ARCHIVE main
-deb http://deb.debian.org/debian/ $ARCHIVT main
+deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ $ARCHIVE main
+deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ $ARCHIVT main
 END
 APT_CONFIG="$tmpdir/aptroot/apt.conf"
 export APT_CONFIG
