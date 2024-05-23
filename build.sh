@@ -86,25 +86,23 @@ Apt::Architecture "$DEB_HOST_ARCH";
 Apt::Architectures "$DEB_HOST_ARCH";
 Dir "$PWD/aptroot";
 Acquire::Languages "none";
-Dir::Etc::Trusted "$(eval "$(apt-config shell v Dir::Etc::Trusted/f)"; printf "$v")";
-Dir::Etc::TrustedParts "$(eval "$(apt-config shell v Dir::Etc::TrustedParts/d)"; printf "$v")";
 END
 {
-echo "deb http://deb.debian.org/debian/ $DISTRIBUTION main";
+echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ $DISTRIBUTION main";
 case $DISTRIBUTION in
 	experimental|rc-buggy)
-		echo "deb http://deb.debian.org/debian/ unstable main"
+		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ unstable main"
 		;;
 	unstable|sid|testing) : ;;
 	*-backports)
-		echo "deb http://deb.debian.org/debian/ ${DISTRIBUTION%-backports} main";
-		echo "deb http://deb.debian.org/debian/ ${DISTRIBUTION%-backports}-updates main";
-		echo "deb http://security.debian.org/debian-security/ ${DISTRIBUTION%-backports}-security main";
+		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ ${DISTRIBUTION%-backports} main";
+		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ ${DISTRIBUTION%-backports}-updates main";
+		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://security.debian.org/debian-security/ ${DISTRIBUTION%-backports}-security main";
 		;;
 	*)
 		# assume stable release
-		echo "deb http://deb.debian.org/debian/ $DISTRIBUTION-updates main";
-		echo "deb http://security.debian.org/debian-security/ $DISTRIBUTION-security main";
+		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ $DISTRIBUTION-updates main";
+		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://security.debian.org/debian-security/ $DISTRIBUTION-security main";
 		;;
 esac;
 } > "./aptroot/etc/apt/sources.list"
