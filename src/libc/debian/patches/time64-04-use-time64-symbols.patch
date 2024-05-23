@@ -124,14 +124,10 @@ index 4d235ba0ad..a47c7f03bf 100644
      pub fn globfree64(pglob: *mut glob64_t);
      pub fn ptrace(request: ::c_uint, ...) -> ::c_long;
      pub fn pthread_attr_getaffinity_np(
-@@ -1468,6 +1480,7 @@ extern "C" {
-     pub fn eaccess(pathname: *const ::c_char, mode: ::c_int) -> ::c_int;
- 
+@@ -1470,2 +1482,3 @@
      pub fn asctime_r(tm: *const ::tm, buf: *mut ::c_char) -> *mut ::c_char;
 +    #[cfg_attr(gnu_time64_abi, link_name = "__ctime64_r")]
      pub fn ctime_r(timep: *const time_t, buf: *mut ::c_char) -> *mut ::c_char;
- 
-     pub fn strftime(
 diff --git a/src/unix/linux_like/linux/mod.rs b/src/unix/linux_like/linux/mod.rs
 index 125a4129ef..2ff9a7e264 100644
 --- a/src/unix/linux_like/linux/mod.rs
@@ -702,14 +698,10 @@ index 0b270c0a39..a380bf1ef8 100644
      pub fn lockf(fd: ::c_int, cmd: ::c_int, len: ::off_t) -> ::c_int;
  
  }
-@@ -1373,6 +1414,7 @@ cfg_if! {
-                      target_os = "haiku",
-                      target_os = "nto")))] {
+@@ -1375,2 +1416,3 @@ cfg_if! {
          extern "C" {
 +            #[cfg_attr(gnu_time64_abi, link_name = "__adjtime64")]
              pub fn adjtime(delta: *const timeval, olddelta: *mut timeval) -> ::c_int;
-             pub fn stpncpy(dst: *mut c_char, src: *const c_char, n: size_t) -> *mut c_char;
-         }
 @@ -1408,6 +1450,7 @@ cfg_if! {
  
              pub fn mkdirat(dirfd: ::c_int, pathname: *const ::c_char,
