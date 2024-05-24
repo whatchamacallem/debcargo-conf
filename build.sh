@@ -20,6 +20,8 @@
 #     will pass to sbuild; for example SBUILD_OPTS=--arch=i386
 # EXTRA_DEBS
 #     Include extra dependency debs, e.g. EXTRA_DEBS=librust*.deb.
+# CHROOT_MODE=unshare
+#     Whether to build with sbuild unshare mode
 set -e
 
 SCRIPTDIR="$(dirname $(readlink -f "$0"))"
@@ -58,8 +60,18 @@ DEBDIST=$(dpkg-parsechangelog -l $PKGNAME/debian/changelog -SDistribution)
 DEB_HOST_ARCH=$(dpkg-architecture -q DEB_HOST_ARCH)
 SRCNAME="${DEBSRC}_${DEBVER}"
 BUILDNAME="${DEBSRC}_${DEBVER}_${DEB_HOST_ARCH}"
+
 if [ -z "$CHROOT" ]; then
-	if schroot -i -c "debcargo-unstable-${DEB_HOST_ARCH}-sbuild" >/dev/null 2>&1; then
+	if [ "$CHROOT_MODE" = "unshare" ]; then
+		CHROOT="$(find ~/.cache/sbuild -iname "debcargo-*" | head -n1)"
+		if [ -z "$CHROOT" ]; then
+			CHROOT="unstable-${DEB_HOST_ARCH}"
+			echo >&2 "Automatically using sbuild tarball unstable-${DEB_HOST_ARCH}; however it's"
+			echo >&2 "strongly recommended to create a separate tarball debcargo-unstable-${DEB_HOST_ARCH}"
+			echo >&2 "so your builds won't have to re-download & re-install cargo, rustc, and llvm every time."
+			echo >&2 "See README.rst section \"Build environment\" for details."
+		fi
+	elif schroot -i -c "debcargo-unstable-${DEB_HOST_ARCH}-sbuild" >/dev/null 2>&1; then
 		CHROOT="debcargo-unstable-${DEB_HOST_ARCH}-sbuild"
 	elif schroot -i -c "unstable-${DEB_HOST_ARCH}-sbuild" >/dev/null 2>&1; then
 		CHROOT="unstable-${DEB_HOST_ARCH}-sbuild"
@@ -187,7 +199,13 @@ if [ -n "${EXTRA_DEBS[*]}" ]; then
     EXTRA_DEBS_AUTOPKGTEST_OPTS=([0]=--autopkgtest-opt=--copy="$PWD/$EXTRA_DEBS_REPO_TMP/:/tmp/$EXTRA_DEBS_REPO_TMP/" [1]=--autopkgtest-opt=--add-apt-source="deb [trusted=yes] file:///tmp/$EXTRA_DEBS_REPO_TMP ./")
 fi
 
-AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=-- schroot ${CHROOT}")
+if [ "$CHROOT_MODE" = "unshare" ]; then
+	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=--apt-upgrade -- unshare -t ${CHROOT} ${DISTRIBUTION:+-r $DISTRIBUTION}")
+else
+	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=-- schroot ${CHROOT}")
+fi
+
+
 if [ "$SKIP_AUTOPKGTEST" = 1 ]; then
 	AUTOPKGTEST_OPTS=()
 	EXTRA_DEBS_AUTOPKGTEST_OPTS=()
@@ -200,6 +218,7 @@ fi
 
 SBUILD_CONFIG="$SCRIPTDIR/dev/sbuildrc" sbuild --no-source --arch-any --arch-all \
   ${CHROOT:+-c $CHROOT} \
+  ${CHROOT_MODE:+--chroot-mode "$CHROOT_MODE"} \
   ${DISTRIBUTION:+-d $DISTRIBUTION} \
   "${EXTRA_DEBS_SBUILD[@]}" \
   "${EXTRA_DEBS_AUTOPKGTEST_OPTS[@]}" \
