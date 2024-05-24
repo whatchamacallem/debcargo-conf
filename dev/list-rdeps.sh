@@ -48,16 +48,19 @@ else
 fi
 touch "$inst_cache"
 
-mkdir -p "$tmpdir/aptroot/etc/apt/apt.conf.d" "$tmpdir/aptroot/var/lib/apt/lists/" "$tmpdir/aptroot/etc/apt/preferences.d"
+mkdir -p "$tmpdir/aptroot/etc/apt/apt.conf.d" "$tmpdir/aptroot/var/lib/apt/lists/" "$tmpdir/aptroot/etc/apt/preferences.d" "$tmpdir/aptroot/etc/apt/sources.list.d"
 cat << END > "$tmpdir/aptroot/apt.conf"
 Apt::Architecture "$(dpkg --print-architecture)";
 Apt::Architectures "$(dpkg --print-architecture)";
 Dir "$tmpdir/aptroot";
 Acquire::Languages "none";
 END
-cat << END > "$tmpdir/aptroot/etc/apt/sources.list"
-deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ $ARCHIVE main
-deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ $ARCHIVT main
+cat << END > "$tmpdir/aptroot/etc/apt/sources.list.d/debian.sources"
+Types: deb deb-src
+URIs: http://deb.debian.org/debian/
+Suites: $ARCHIVE $ARCHIVT
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 END
 APT_CONFIG="$tmpdir/aptroot/apt.conf"
 export APT_CONFIG
@@ -137,7 +140,7 @@ list_rdeps() {
 		local binpkg="${binver/=*/}"
 		binpkg="$(apt-cache show "$binver" | grep-dctrl -F Package -ns Package -s Provides -e "${binpkg//\+/\\+}" | tr '\n' '|' | sed -e 's/ \+\(([^)]*)\)\?,\? */|/g' -e 's/+/\\+/g' -e 's/|\+$//g' -e 's/|{2,}/|/g')"
 		# check for bin package + all its provided virtual feature packages in one go
-		grep-dctrl -F Testsuite-Triggers -s Package,Version -w "$binpkg" /var/lib/apt/lists/*_dists_"$ARCHIVE"_*_source_Sources* \
+		grep-dctrl -F Testsuite-Triggers -s Package,Version -w "$binpkg" "$tmpdir"/aptroot/var/lib/apt/lists/*_dists_"$ARCHIVE"_*_source_Sources* \
 		  | cut -d: -f2 | cut '-d ' -f2- \
 		  | sed -z -e 's/\n\n/\t/g' -e 's/\n/ /g' -e 's/\t/\n/g' \
 		  | while read triggered ver; do
