@@ -1,0 +1,44 @@
+Index: serde-with/tests/hashbrown_0_14.rs
+===================================================================
+--- serde-with.orig/tests/hashbrown_0_14.rs
++++ serde-with/tests/hashbrown_0_14.rs
+@@ -48,6 +48,7 @@ fn test_hashmap() {
+ }
+ 
+ #[test]
++#[cfg(target_endian = "little")]
+ fn test_hashset() {
+     #[serde_as]
+     #[derive(Debug, Serialize, Deserialize, PartialEq)]
+@@ -88,6 +89,7 @@ fn test_hashset() {
+ }
+ 
+ #[test]
++#[cfg(target_endian = "little")]
+ fn test_map_as_tuple_list() {
+     let ip = "1.2.3.4".parse().unwrap();
+     let ip2 = "255.255.255.255".parse().unwrap();
+@@ -141,6 +143,7 @@ fn test_map_as_tuple_list() {
+ }
+ 
+ #[test]
++#[cfg(target_endian = "little")]
+ fn duplicate_key_first_wins_hashmap() {
+     #[derive(Debug, PartialEq, Deserialize, Serialize)]
+     struct S(#[serde(with = "::serde_with::rust::maps_first_key_wins")] HashMap<usize, usize>);
+@@ -175,6 +178,7 @@ fn duplicate_key_first_wins_hashmap() {
+ }
+ 
+ #[test]
++#[cfg(target_endian = "little")]
+ fn prohibit_duplicate_key_hashmap() {
+     #[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
+     struct S(
+@@ -211,6 +215,7 @@ fn prohibit_duplicate_key_hashmap() {
+ }
+ 
+ #[test]
++#[cfg(target_endian = "little")]
+ fn duplicate_value_last_wins_hashset() {
+     #[derive(Debug, PartialEq, Deserialize, Serialize)]
+     struct S(#[serde(with = "::serde_with::rust::sets_last_value_wins")] HashSet<W>);
