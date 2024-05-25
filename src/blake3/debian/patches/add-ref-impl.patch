@@ -1,11 +1,12 @@
-Reference implementation taken from upstream git as it is not
-included in the crates.io package.
-
-Index: blake3/reference_impl/reference_impl.rs
-===================================================================
+Description: Add reference implementation from upstream
+ as it is not included in the crates.io package.
+ Last grabbed at commit 4ec3be8bfa6574fcd30619741390847ddc037d55
+Last-Update: 2024-05-26
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- /dev/null
-+++ blake3/reference_impl/reference_impl.rs
-@@ -0,0 +1,384 @@
++++ b/reference_impl/reference_impl.rs
+@@ -0,0 +1,374 @@
 +//! This is the reference implementation of BLAKE3. It is used for testing and
 +//! as a readable example of the algorithms involved. Section 5.1 of [the BLAKE3
 +//! spec](https://github.com/BLAKE3-team/BLAKE3-specs/blob/master/blake3.pdf)
@@ -26,7 +27,6 @@ Index: blake3/reference_impl/reference_impl.rs
 +//! ```
 +
 +use core::cmp::min;
-+use core::convert::TryInto;
 +
 +const OUT_LEN: usize = 32;
 +const KEY_LEN: usize = 32;
@@ -87,23 +87,14 @@ Index: blake3/reference_impl/reference_impl.rs
 +    block_len: u32,
 +    flags: u32,
 +) -> [u32; 16] {
++    let counter_low = counter as u32;
++    let counter_high = (counter >> 32) as u32;
++    #[rustfmt::skip]
 +    let mut state = [
-+        chaining_value[0],
-+        chaining_value[1],
-+        chaining_value[2],
-+        chaining_value[3],
-+        chaining_value[4],
-+        chaining_value[5],
-+        chaining_value[6],
-+        chaining_value[7],
-+        IV[0],
-+        IV[1],
-+        IV[2],
-+        IV[3],
-+        counter as u32,
-+        (counter >> 32) as u32,
-+        block_len,
-+        flags,
++        chaining_value[0], chaining_value[1], chaining_value[2], chaining_value[3],
++        chaining_value[4], chaining_value[5], chaining_value[6], chaining_value[7],
++        IV[0],             IV[1],             IV[2],             IV[3],
++        counter_low,       counter_high,      block_len,         flags,
 +    ];
 +    let mut block = *block_words;
 +
@@ -390,11 +381,9 @@ Index: blake3/reference_impl/reference_impl.rs
 +        output.root_output_bytes(out_slice);
 +    }
 +}
-Index: blake3/reference_impl/README.md
-===================================================================
 --- /dev/null
-+++ blake3/reference_impl/README.md
-@@ -0,0 +1,9 @@
++++ b/reference_impl/README.md
+@@ -0,0 +1,14 @@
 +This is the reference implementation of BLAKE3. It is used for testing and
 +as a readable example of the algorithms involved. Section 5.1 of [the BLAKE3
 +spec](https://github.com/BLAKE3-team/BLAKE3-specs/blob/master/blake3.pdf)
@@ -404,10 +393,13 @@ Index: blake3/reference_impl/README.md
 +This implementation is a single file
 +([`reference_impl.rs`](reference_impl.rs)) with no dependencies. It is
 +not optimized for performance.
-Index: blake3/benches/bench.rs
-===================================================================
---- blake3.orig/benches/bench.rs
-+++ blake3/benches/bench.rs
++
++There are ports of this reference implementation to other languages:
++
++- [C](https://github.com/oconnor663/blake3_reference_impl_c)
++- [Python](https://github.com/oconnor663/pure_python_blake3)
+--- a/benches/bench.rs
++++ b/benches/bench.rs
 @@ -2,6 +2,9 @@
  
  extern crate test;
@@ -418,11 +410,9 @@ Index: blake3/benches/bench.rs
  use arrayref::array_ref;
  use arrayvec::ArrayVec;
  use blake3::guts::{BLOCK_LEN, CHUNK_LEN};
-Index: blake3/src/lib.rs
-===================================================================
---- blake3.orig/src/lib.rs
-+++ blake3/src/lib.rs
-@@ -70,6 +70,10 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -88,6 +88,10 @@
  #[cfg(test)]
  mod test;
  
@@ -433,11 +423,9 @@ Index: blake3/src/lib.rs
  // The guts module is for incremental use cases like the `bao` crate that need
  // to explicitly compute chunk and parent chaining values. It is semi-stable
  // and likely to keep working, but largely undocumented and not intended for
-Index: blake3/src/test.rs
-===================================================================
---- blake3.orig/src/test.rs
-+++ blake3/src/test.rs
-@@ -3,6 +3,7 @@ use arrayref::array_ref;
+--- a/src/test.rs
++++ b/src/test.rs
+@@ -3,6 +3,7 @@
  use arrayvec::ArrayVec;
  use core::usize;
  use rand::prelude::*;
