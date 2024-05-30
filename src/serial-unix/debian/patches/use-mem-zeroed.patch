@@ -1,0 +1,18 @@
+Index: rust-serial-unix-0.4.0/src/poll.rs
+===================================================================
+--- rust-serial-unix-0.4.0.orig/src/poll.rs
++++ rust-serial-unix-0.4.0/src/poll.rs
+@@ -86,10 +86,9 @@ fn do_poll(fds: &mut Vec<pollfd>, timeou
+         fn ppoll(fds: *mut pollfd, nfds: nfds_t, timeout_ts: *mut libc::timespec, sigmask: *const sigset_t) -> c_int;
+     }
+ 
+-    let mut timeout_ts = libc::timespec {
+-        tv_sec: timeout.as_secs() as libc::time_t,
+-        tv_nsec: timeout.subsec_nanos() as libc::c_long,
+-    };
++    let mut timeout_ts: libc::timespec = unsafe { std::mem::zeroed() };
++    timeout_ts.tv_sec = timeout.as_secs() as libc::time_t;
++    timeout_ts.tv_nsec = timeout.subsec_nanos() as libc::c_long;
+ 
+     unsafe {
+         ppoll((&mut fds[..]).as_mut_ptr(),
