@@ -1,0 +1,32 @@
+Index: rust-vmm-sys-util-0.12.1/src/linux/signal.rs
+===================================================================
+--- rust-vmm-sys-util-0.12.1.orig/src/linux/signal.rs
++++ rust-vmm-sys-util-0.12.1/src/linux/signal.rs
+@@ -374,10 +374,7 @@ pub fn clear_signal(num: c_int) -> Signa
+         // of libc calls.
+         unsafe {
+             let mut siginfo: siginfo_t = mem::zeroed();
+-            let ts = timespec {
+-                tv_sec: 0,
+-                tv_nsec: 0,
+-            };
++            let ts: timespec = mem::zeroed();
+             // Attempt to consume one instance of pending signal. If signal
+             // is not pending, the call will fail with EAGAIN or EINTR.
+             let ret = sigtimedwait(&sigset, &mut siginfo, &ts);
+Index: rust-vmm-sys-util-0.12.1/src/rand.rs
+===================================================================
+--- rust-vmm-sys-util-0.12.1.orig/src/rand.rs
++++ rust-vmm-sys-util-0.12.1/src/rand.rs
+@@ -26,10 +26,7 @@ pub fn timestamp_cycles() -> u64 {
+     {
+         const MONOTONIC_CLOCK_MULTPIPLIER: u64 = 1_000_000_000;
+ 
+-        let mut ts = libc::timespec {
+-            tv_sec: 0,
+-            tv_nsec: 0,
+-        };
++        let mut ts = unsafe { std::mem::zeroed() };
+         // SAFETY: We initialized the parameters correctly and we trust the function.
+         unsafe {
+             libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut ts);
