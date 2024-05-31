@@ -105,5 +105,5 @@ shouldbuild() {
 }
 
 get_existing_version() {
-	sed -nre "s/.*Package .* (.*) from crates.io.*/\1/gp" "$1/debian/changelog" | head -n1
+	head -n1 $1/debian/changelog | sed -nre "s/.*\((.*)-.*\).*/\1/gp"
 }
