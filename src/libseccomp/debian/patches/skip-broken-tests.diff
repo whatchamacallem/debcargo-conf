@@ -26,7 +26,7 @@
  }
  
  #[test]
-+#[cfg(not(arch = "s390x"))]
++#[cfg(not(target_endian = "big"))]
  fn test_arch_functions() {
      let mut ctx = ScmpFilterContext::new_filter(ScmpAction::Allow).unwrap();
      ctx.add_arch(ScmpArch::X86).unwrap();
@@ -34,7 +34,19 @@
  }
  
  #[test]
-+#[cfg(not(arch = "s390x"))]
++#[cfg(not(target_endian = "big"))]
  fn test_merge_filters() {
      let mut ctx1 = ScmpFilterContext::new_filter(ScmpAction::Allow).unwrap();
      let mut ctx2 = ScmpFilterContext::new_filter(ScmpAction::Allow).unwrap();
+
+--- a/src/api.rs
++++ b/src/api.rs
+@@ -129,6 +129,7 @@
+     use super::*;
+ 
+     #[test]
++    #[cfg(not(arch= "loong64"))]
+     fn test_ensure_supported_api() {
+         assert!(ensure_supported_api("test", 3, ScmpVersion::from((2, 4, 0))).is_ok());
+         assert!(ensure_supported_api("test", 100, ScmpVersion::from((2, 4, 0))).is_err());
+
