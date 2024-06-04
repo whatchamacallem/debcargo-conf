@@ -1,0 +1,81 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -92,5 +92,5 @@
+ 
+-[[test]]
+-name = "test_round_trip"
+-path = "tests/test_round_trip.rs"
++#[[test]]
++#name = "test_round_trip"
++#path = "tests/test_round_trip.rs"
+ 
+@@ -168,5 +168,5 @@
+ 
+-[[test]]
+-name = "test_precedence"
+-path = "tests/test_precedence.rs"
++#[[test]]
++#name = "test_precedence"
++#path = "tests/test_precedence.rs"
+ 
+@@ -219,5 +219,5 @@
+ 
+-[dev-dependencies.reqwest]
+-version = "0.12"
+-features = ["blocking"]
++#[dev-dependencies.reqwest]
++#version = "0.12"
++#features = ["blocking"]
+ 
+--- a/tests/repo/mod.rs
++++ b/tests/repo/mod.rs
+@@ -387,2 +387,3 @@
+ pub fn clone_rust() {
++    return;
+     let needs_clone = match fs::read_to_string("tests/rust/COMMIT") {
+@@ -432,3 +433,3 @@
+ fn download_and_unpack() -> Result<()> {
+-    let url = format!(
++    /*let url = format!(
+         "https://github.com/rust-lang/rust/archive/{}.tar.gz",
+@@ -458,3 +459,3 @@
+ 
+-    fs::write("tests/rust/COMMIT", REVISION)?;
++    fs::write("tests/rust/COMMIT", REVISION)?;*/
+     Ok(())
+--- a/tests/test_precedence.rs
++++ b/tests/test_precedence.rs
+@@ -57,3 +57,3 @@
+ 
+-#[test]
++//#[test]
+ fn test_rustc_precedence() {
+--- a/tests/test_round_trip.rs
++++ b/tests/test_round_trip.rs
+@@ -50,3 +50,3 @@
+ 
+-#[test]
++//#[test]
+ fn test_round_trip() {
+--- a/benches/file.rs
++++ b/benches/file.rs
+@@ -1 +1,2 @@
++/*
+ // $ cargo bench --features full,test --bench file
+@@ -56,2 +57,2 @@
+     b.iter(|| syn::parse2::<syn::File>(tokens.clone()));
+-}
++}*/
+--- a/benches/rust.rs
++++ b/benches/rust.rs
+@@ -1 +1,5 @@
++fn main() {
++    eprintln!("Debian: this bench is disabled due to dependency on reqwest.\n\
++    To run it, please unapply debian/patches/remove-reqwest.patch.");
++/*
+ // $ cargo bench --features full,test --bench rust
+@@ -180,3 +184,3 @@
+     }
+-    eprintln!();
++    eprintln!();*/
+ }
