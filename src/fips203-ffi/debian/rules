@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+include /usr/share/dpkg/pkg-info.mk
+include /usr/share/dpkg/architecture.mk
+include /usr/share/dpkg/buildflags.mk
+include /usr/share/rustc/architecture.mk
+
+export CFLAGS CXXFLAGS CPPFLAGS LDFLAGS
+export DEB_HOST_RUST_TYPE DEB_HOST_GNU_TYPE
+
+export CARGO_HOME = $(CURDIR)/debian/cargo_home
+export DEB_CARGO_CRATE = fips203-ffi_$(DEB_VERSION_UPSTREAM)
+
+CARGO = /usr/share/cargo/bin/cargo
+
+%:
+	dh $@ --with python3
+
+override_dh_auto_configure:
+	$(CARGO) prepare-debian $(CURDIR)/registry --link-from-system
+
+override_dh_auto_build:
+	$(CARGO) build --release
+	# adjust the filename built:
+	debian/scripts/post-build ${DEB_VERSION_UPSTREAM}
+
+execute_after_dh_auto_test:
+	cd tests && make

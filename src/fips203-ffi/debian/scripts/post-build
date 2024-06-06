@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+# Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+
+# Ensure that the library has a name that matches the SONAME
+
+# Pass the crate version as the first argument of this script
+UPSTREAM_VERSION=$1
+SONAME=${UPSTREAM_VERSION%%.*}
+
+find target -maxdepth 3 -name libfips203.so -exec mv \{\} \{\}."$SONAME" \;

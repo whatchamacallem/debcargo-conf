@@ -1,0 +1,81 @@
+Source: rust-fips203-ffi
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 13),
+ dh-cargo (>= 25),
+ dh-sequence-python3,
+ cargo:native,
+ rustc:native (>= 1.70),
+ python3-all,
+ libstd-rust-dev,
+ librust-fips203-0.2+default-dev (>= 0.2.1-~~),
+Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
+Uploaders:
+ Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Standards-Version: 4.7.0
+Vcs-Git: https://salsa.debian.org/rust-team/debcargo-conf.git [src/fips203-ffi]
+Vcs-Browser: https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/fips203-ffi
+X-Cargo-Crate: fips203-ffi
+Rules-Requires-Root: no
+Homepage: https://crates.io/crates/fips203-ffi
+
+Package: libfips203-0
+Section: libs
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+Description: Library for FIPS 203 (ML-KEM) IPD
+ This package contains a dynamic library (shared object) implementing
+ the Module-Lattice-Based Key-Encapsulation Mechanism, also known as
+ ML-KEM or FIPS 203.
+ .
+ It is written in pure Rust with minimal and mainstream dependencies,
+ and without any unsafe code. All three security parameter sets are
+ fully supported and tested. The implementation operates in
+ constant-time (outside of rho, which is part of the encapsulation key
+ sent across the trust boundary in the clear), and focuses on
+ correctness, simplicity, security, and a stable API.
+ .
+ See <https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.203.ipd.pdf>
+ for a full description of the target functionality.
+
+Package: libfips203-dev
+Section: libdevel
+Architecture: any
+Depends:
+ ${misc:Depends},
+ libfips203-0 (= ${binary:Version}),
+Description: Library for FIPS 203 (ML-KEM) IPD - development files
+ This package enables a C programmer to use a dynamic library (shared
+ object) implementing the Module-Lattice-Based Key-Encapsulation
+ Mechanism, also known as ML-KEM or FIPS 203.
+ .
+ The library is written in pure Rust with minimal and mainstream
+ dependencies, and without any unsafe code. All three security
+ parameter sets are fully supported and tested. The implementation
+ operates in constant-time (outside of rho, which is part of the
+ encapsulation key sent across the trust boundary in the clear), and
+ focuses on correctness, simplicity, security, and a stable API.
+ .
+ See <https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.203.ipd.pdf>
+ for a full description of the target functionality.
+
+Package: python3-fips203
+Architecture: any
+Section: python
+Provides:
+ ${python3:Provides},
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+ ${shlibs:Depends},
+ libfips203-0 (= ${binary:Version}),
+Description: FIPS 203 (ML-KEM) IPD - Python module
+ This package enables a Python programmer to easily use the
+ Module-Lattice-Based Key-Encapsulation Mechanism, also known as
+ ML-KEM or FIPS 203.
+ .
+ See <https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.203.ipd.pdf>
+ for a full description of the target functionality.
