@@ -1,0 +1,27 @@
+Index: rust-filetime-0.2.23/src/unix/linux.rs
+===================================================================
+--- rust-filetime-0.2.23.orig/src/unix/linux.rs
++++ rust-filetime-0.2.23/src/unix/linux.rs
+@@ -40,8 +40,21 @@ pub fn set_file_handle_times(
+         // Linux, the syscall itself can accept a file descriptor there).
+         #[cfg(not(target_env = "musl"))]
+         let rc = unsafe {
++            let mut syscallno = libc::SYS_utimensat;
++
++            // on 32-bit systems using 64-bit time through the "time64" mechanism
++            // we need to use a different syscall.
++            // we exclude x86_64 specifically, because "x32" systems use 64-bit
++            // time but do not use the time64 ABI
++            #[cfg(all(target_pointer_width="32",not(target_arch = "x86_64")))]
++            if std::mem::size_of::<libc::time_t>() == 8 {
++                // unfortunately the libc crate doesn't provide a constant
++                // for this.
++                syscallno = 412; // utimensat_time64
++            }
++
+             libc::syscall(
+-                libc::SYS_utimensat,
++                syscallno,
+                 f.as_raw_fd(),
+                 ptr::null::<libc::c_char>(),
+                 times.as_ptr(),
