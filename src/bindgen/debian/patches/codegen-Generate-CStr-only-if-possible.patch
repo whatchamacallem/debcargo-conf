@@ -1,0 +1,48 @@
+From 441bc7b2856b4628e9e3bcacce9c867980744689 Mon Sep 17 00:00:00 2001
+From: Emilio Cobos Álvarez <emilio@crisal.io>
+Date: Mon, 26 Jun 2023 09:53:57 +0200
+Subject: [PATCH] codegen: Generate CStr only if possible.
+
+And fix a crash when strings have interior nulls.
+
+Fixes #2566
+
+Backported from v0.68. New tests removed.
+---
+ .../tests/expectations/tests/issue-2566-cstr.rs        |  2 ++
+ bindgen-tests/tests/expectations/tests/issue-2566.rs   |  2 ++
+ bindgen-tests/tests/headers/issue-2566-cstr.h          |  4 ++++
+ bindgen-tests/tests/headers/issue-2566.h               |  1 +
+ bindgen/codegen/mod.rs                                 | 10 +++++-----
+ 5 files changed, 14 insertions(+), 5 deletions(-)
+ create mode 100644 bindgen-tests/tests/expectations/tests/issue-2566-cstr.rs
+ create mode 100644 bindgen-tests/tests/expectations/tests/issue-2566.rs
+ create mode 100644 bindgen-tests/tests/headers/issue-2566-cstr.h
+ create mode 100644 bindgen-tests/tests/headers/issue-2566.h
+
+--- a/codegen/mod.rs
++++ b/codegen/mod.rs
+@@ -714,18 +714,18 @@
+                     let len = proc_macro2::Literal::usize_unsuffixed(
+                         cstr_bytes.len(),
+                     );
+-                    let cstr = CStr::from_bytes_with_nul(&cstr_bytes).unwrap();
+ 
+                     // TODO: Here we ignore the type we just made up, probably
+                     // we should refactor how the variable type and ty ID work.
+                     let array_ty = quote! { [u8; #len] };
+                     let cstr_ty = quote! { ::#prefix::ffi::CStr };
+ 
+-                    let bytes = proc_macro2::Literal::byte_string(
+-                        cstr.to_bytes_with_nul(),
+-                    );
++                    let bytes = proc_macro2::Literal::byte_string(&cstr_bytes);
+ 
+-                    if rust_features.const_cstr && options.generate_cstr {
++                    if options.generate_cstr &&
++                        rust_features.const_cstr &&
++                        CStr::from_bytes_with_nul(&cstr_bytes).is_ok()
++                    {
+                         result.push(quote! {
+                             #(#attrs)*
+                             #[allow(unsafe_code)]
