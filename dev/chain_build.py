@@ -37,6 +37,7 @@ from sys import argv, stdout
 from subprocess import run
 from os import getcwd, chdir, environ, makedirs
 from os.path import basename, exists, join
+from glob import glob
 from typing import Dict, List, Tuple
 
 try:
@@ -62,15 +63,6 @@ def _print(*args):
         print("[chain_build]", *args, "\n")
 
 
-# this is actually faster than os.walk
-def _find(pattern: str):
-    return (
-        run(f"ls {pattern}", shell=True, capture_output=True, text=True)
-        .stdout.strip()
-        .split("\n")
-    )
-
-
 DCH_VER_RE = re.compile(r"\((.*?)\)")
 
 
@@ -94,7 +86,7 @@ def find_existing(specs: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
 
     # get all debs first, so we needn't walk again and again
     chdir("build")
-    debs = _find("*.deb")
+    debs = glob("*.deb")
     chdir("..")
     built = []
     _print("Conducting search in apt cache and build/ directory for existing debs")
@@ -283,7 +275,7 @@ def chain_build(specs: List[str]) -> None:
         _crate = _todash(crate)
         pkg_re = re.compile(f"librust-{_crate}(?:\+.*?)?-dev_{ver}")
         chdir("build")
-        all_debs = _find("*.deb")
+        all_debs = glob("*.deb")
         chdir("..")
         for deb in all_debs:
             if pkg_re.match(deb):
