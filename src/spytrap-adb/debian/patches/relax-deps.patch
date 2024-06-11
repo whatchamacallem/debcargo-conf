@@ -1,0 +1,74 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -24,7 +24,7 @@
+ version = "1.0.44"
+ 
+ [dependencies.bstr]
+-version = "1.9.1"
++version = "1.7"
+ 
+ [dependencies.chrono]
+ version = "0.4.19"
+@@ -49,7 +49,7 @@
+ version = "5.0.0"
+ 
+ [dependencies.env_logger]
+-version = "0.11"
++version = "0.10"
+ 
+ [dependencies.forensic-adb]
+ version = "0.7"
+@@ -65,13 +65,13 @@
+ version = "0.4.14"
+ 
+ [dependencies.ratatui]
+-version = "0.26"
++version = "0.23"
+ 
+ [dependencies.regex]
+ version = "1.5.4"
+ 
+ [dependencies.reqwest]
+-version = "0.12"
++version = "0.11"
+ features = [
+     "rustls-tls-native-roots",
+     "brotli",
+--- a/src/tui.rs
++++ b/src/tui.rs
+@@ -722,7 +722,7 @@
+     (Line::from(row), style)
+ }
+ 
+-pub fn ui(f: &mut Frame<'_>, app: &App) {
++pub fn ui<B: Backend>(f: &mut Frame<'_, B>, app: &App) {
+     let white = Style::default().fg(Color::White).bg(Color::Black);
+ 
+     let chunks = Layout::default()
+@@ -858,7 +858,7 @@
+         }
+ 
+         // scrolling
+-        let list = list.into_iter().skip(app.offset);
++        let list = &list[app.offset..];
+ 
+         let title = Span::styled("Findings", white.add_modifier(Modifier::BOLD));
+         List::new(list).block(
+--- a/src/http.rs
++++ b/src/http.rs
+@@ -6,7 +6,6 @@
+ const APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
+ 
+ const CONNECT_TIMEOUT: Duration = Duration::from_secs(15);
+-const READ_TIMEOUT: Duration = Duration::from_secs(30);
+ 
+ #[derive(Debug, Clone)]
+ pub struct Client {
+@@ -18,7 +17,6 @@
+         let http = reqwest::Client::builder()
+             .user_agent(APP_USER_AGENT)
+             .connect_timeout(CONNECT_TIMEOUT)
+-            .read_timeout(READ_TIMEOUT)
+             .build()
+             .context("Failed to setup http client")?;
+         Ok(Self { http })
