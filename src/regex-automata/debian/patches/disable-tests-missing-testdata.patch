@@ -1,8 +1,6 @@
-Index: regex-automata/tests/dfa/suite.rs
-===================================================================
---- regex-automata.orig/tests/dfa/suite.rs
-+++ regex-automata/tests/dfa/suite.rs
-@@ -16,12 +16,12 @@ use {
+--- a/tests/dfa/suite.rs
++++ b/tests/dfa/suite.rs
+@@ -15,12 +15,12 @@
      },
  };
  
@@ -17,7 +15,7 @@ Index: regex-automata/tests/dfa/suite.rs
  fn unminimized_default() -> Result<()> {
      let builder = Regex::builder();
      TestRunner::new()?
-@@ -30,11 +30,11 @@ fn unminimized_default() -> Result<()> {
+@@ -29,11 +29,11 @@
          .test_iter(suite()?.iter(), dense_compiler(builder))
          .assert();
      Ok(())
@@ -31,7 +29,7 @@ Index: regex-automata/tests/dfa/suite.rs
  fn unminimized_prefilter() -> Result<()> {
      let my_compiler = |test: &RegexTest, regexes: &[String]| {
          // Parse regexes as HIRs so we can get literals to build a prefilter.
-@@ -61,10 +61,10 @@ fn unminimized_prefilter() -> Result<()>
+@@ -60,10 +60,10 @@
          .test_iter(suite()?.iter(), my_compiler)
          .assert();
      Ok(())
@@ -44,7 +42,7 @@ Index: regex-automata/tests/dfa/suite.rs
  fn unminimized_specialized_start_states() -> Result<()> {
      let mut builder = Regex::builder();
      builder.dense(dense::Config::new().specialize_start_states(true));
-@@ -75,10 +75,10 @@ fn unminimized_specialized_start_states(
+@@ -74,10 +74,10 @@
          .test_iter(suite()?.iter(), dense_compiler(builder))
          .assert();
      Ok(())
@@ -57,7 +55,7 @@ Index: regex-automata/tests/dfa/suite.rs
  fn unminimized_no_byte_class() -> Result<()> {
      let mut builder = Regex::builder();
      builder.dense(dense::Config::new().byte_classes(false));
-@@ -89,10 +89,10 @@ fn unminimized_no_byte_class() -> Result
+@@ -88,10 +88,10 @@
          .test_iter(suite()?.iter(), dense_compiler(builder))
          .assert();
      Ok(())
@@ -70,7 +68,7 @@ Index: regex-automata/tests/dfa/suite.rs
  fn unminimized_nfa_shrink() -> Result<()> {
      let mut builder = Regex::builder();
      builder.thompson(thompson::Config::new().shrink(true));
-@@ -103,11 +103,11 @@ fn unminimized_nfa_shrink() -> Result<()
+@@ -102,11 +102,11 @@
          .test_iter(suite()?.iter(), dense_compiler(builder))
          .assert();
      Ok(())
@@ -84,7 +82,7 @@ Index: regex-automata/tests/dfa/suite.rs
  fn minimized_default() -> Result<()> {
      let mut builder = Regex::builder();
      builder.dense(dense::Config::new().minimize(true));
-@@ -117,10 +117,10 @@ fn minimized_default() -> Result<()> {
+@@ -116,10 +116,10 @@
          .test_iter(suite()?.iter(), dense_compiler(builder))
          .assert();
      Ok(())
@@ -97,7 +95,7 @@ Index: regex-automata/tests/dfa/suite.rs
  fn minimized_no_byte_class() -> Result<()> {
      let mut builder = Regex::builder();
      builder.dense(dense::Config::new().minimize(true).byte_classes(false));
-@@ -131,10 +131,10 @@ fn minimized_no_byte_class() -> Result<(
+@@ -130,10 +130,10 @@
          .test_iter(suite()?.iter(), dense_compiler(builder))
          .assert();
      Ok(())
@@ -110,7 +108,7 @@ Index: regex-automata/tests/dfa/suite.rs
  fn sparse_unminimized_default() -> Result<()> {
      let builder = Regex::builder();
      TestRunner::new()?
-@@ -143,10 +143,10 @@ fn sparse_unminimized_default() -> Resul
+@@ -142,10 +142,10 @@
          .test_iter(suite()?.iter(), sparse_compiler(builder))
          .assert();
      Ok(())
@@ -123,7 +121,7 @@ Index: regex-automata/tests/dfa/suite.rs
  fn sparse_unminimized_prefilter() -> Result<()> {
      let my_compiler = |test: &RegexTest, regexes: &[String]| {
          // Parse regexes as HIRs so we can get literals to build a prefilter.
-@@ -176,11 +176,11 @@ fn sparse_unminimized_prefilter() -> Res
+@@ -175,11 +175,11 @@
          .test_iter(suite()?.iter(), my_compiler)
          .assert();
      Ok(())
@@ -137,7 +135,7 @@ Index: regex-automata/tests/dfa/suite.rs
  fn serialization_unminimized_default() -> Result<()> {
      let builder = Regex::builder();
      let my_compiler = |builder| {
-@@ -205,12 +205,12 @@ fn serialization_unminimized_default() -
+@@ -204,12 +204,12 @@
          .test_iter(suite()?.iter(), my_compiler(builder))
          .assert();
      Ok(())
@@ -152,7 +150,7 @@ Index: regex-automata/tests/dfa/suite.rs
  fn sparse_serialization_unminimized_default() -> Result<()> {
      let builder = Regex::builder();
      let my_compiler = |builder| {
-@@ -234,7 +234,7 @@ fn sparse_serialization_unminimized_defa
+@@ -233,7 +233,7 @@
          .test_iter(suite()?.iter(), my_compiler(builder))
          .assert();
      Ok(())
@@ -161,11 +159,9 @@ Index: regex-automata/tests/dfa/suite.rs
  
  fn dense_compiler(
      builder: dfa::regex::Builder,
-Index: regex-automata/tests/hybrid/suite.rs
-===================================================================
---- regex-automata.orig/tests/hybrid/suite.rs
-+++ regex-automata/tests/hybrid/suite.rs
-@@ -15,12 +15,12 @@ use {
+--- a/tests/hybrid/suite.rs
++++ b/tests/hybrid/suite.rs
+@@ -15,12 +15,12 @@
      },
  };
  
@@ -180,7 +176,7 @@ Index: regex-automata/tests/hybrid/suite.rs
  fn default() -> Result<()> {
      let builder = Regex::builder();
      TestRunner::new()?
-@@ -30,10 +30,10 @@ fn default() -> Result<()> {
+@@ -30,10 +30,10 @@
          .test_iter(suite()?.iter(), compiler(builder))
          .assert();
      Ok(())
@@ -193,7 +189,7 @@ Index: regex-automata/tests/hybrid/suite.rs
  fn prefilter() -> Result<()> {
      let my_compiler = |test: &RegexTest, regexes: &[String]| {
          // Parse regexes as HIRs so we can get literals to build a prefilter.
-@@ -57,7 +57,7 @@ fn prefilter() -> Result<()> {
+@@ -57,7 +57,7 @@
          .test_iter(suite()?.iter(), my_compiler)
          .assert();
      Ok(())
@@ -202,7 +198,7 @@ Index: regex-automata/tests/hybrid/suite.rs
  
  /// Tests the hybrid NFA/DFA with NFA shrinking enabled.
  ///
-@@ -71,7 +71,7 @@ fn prefilter() -> Result<()> {
+@@ -71,7 +71,7 @@
  /// Nevertheless, we test to make sure everything is OK with NFA shrinking. As
  /// a bonus, there are some tests we don't need to skip because they now fit in
  /// the default cache capacity.
@@ -211,7 +207,7 @@ Index: regex-automata/tests/hybrid/suite.rs
  fn nfa_shrink() -> Result<()> {
      let mut builder = Regex::builder();
      builder.thompson(thompson::Config::new().shrink(true));
-@@ -80,11 +80,11 @@ fn nfa_shrink() -> Result<()> {
+@@ -80,11 +80,11 @@
          .test_iter(suite()?.iter(), compiler(builder))
          .assert();
      Ok(())
@@ -225,7 +221,7 @@ Index: regex-automata/tests/hybrid/suite.rs
  fn starts_for_each_pattern() -> Result<()> {
      let mut builder = Regex::builder();
      builder.dfa(DFA::config().starts_for_each_pattern(true));
-@@ -95,10 +95,10 @@ fn starts_for_each_pattern() -> Result<(
+@@ -95,10 +95,10 @@
          .test_iter(suite()?.iter(), compiler(builder))
          .assert();
      Ok(())
@@ -238,7 +234,7 @@ Index: regex-automata/tests/hybrid/suite.rs
  fn specialize_start_states() -> Result<()> {
      let mut builder = Regex::builder();
      builder.dfa(DFA::config().specialize_start_states(true));
-@@ -109,14 +109,14 @@ fn specialize_start_states() -> Result<(
+@@ -109,14 +109,14 @@
          .test_iter(suite()?.iter(), compiler(builder))
          .assert();
      Ok(())
@@ -255,7 +251,7 @@ Index: regex-automata/tests/hybrid/suite.rs
  fn no_byte_classes() -> Result<()> {
      let mut builder = Regex::builder();
      builder.dfa(DFA::config().byte_classes(false));
-@@ -127,7 +127,7 @@ fn no_byte_classes() -> Result<()> {
+@@ -127,7 +127,7 @@
          .test_iter(suite()?.iter(), compiler(builder))
          .assert();
      Ok(())
@@ -264,7 +260,7 @@ Index: regex-automata/tests/hybrid/suite.rs
  
  /// Tests that hybrid NFA/DFA never clears its cache for any test with the
  /// default capacity.
-@@ -135,7 +135,7 @@ fn no_byte_classes() -> Result<()> {
+@@ -135,7 +135,7 @@
  /// N.B. If a regex suite test is added that causes the cache to be cleared,
  /// then this should just skip that test. (Which can be done by calling the
  /// 'blacklist' method on 'TestRunner'.)
@@ -273,7 +269,7 @@ Index: regex-automata/tests/hybrid/suite.rs
  fn no_cache_clearing() -> Result<()> {
      let mut builder = Regex::builder();
      builder.dfa(DFA::config().minimum_cache_clear_count(Some(0)));
-@@ -146,10 +146,10 @@ fn no_cache_clearing() -> Result<()> {
+@@ -146,10 +146,10 @@
          .test_iter(suite()?.iter(), compiler(builder))
          .assert();
      Ok(())
@@ -286,7 +282,7 @@ Index: regex-automata/tests/hybrid/suite.rs
  fn min_cache_capacity() -> Result<()> {
      let mut builder = Regex::builder();
      builder
-@@ -159,7 +159,7 @@ fn min_cache_capacity() -> Result<()> {
+@@ -159,7 +159,7 @@
          .test_iter(suite()?.iter(), compiler(builder))
          .assert();
      Ok(())
@@ -295,11 +291,9 @@ Index: regex-automata/tests/hybrid/suite.rs
  
  fn compiler(
      mut builder: regex::Builder,
-Index: regex-automata/tests/lib.rs
-===================================================================
---- regex-automata.orig/tests/lib.rs
-+++ regex-automata/tests/lib.rs
-@@ -28,7 +28,7 @@ mod meta;
+--- a/tests/lib.rs
++++ b/tests/lib.rs
+@@ -28,7 +28,7 @@
  #[cfg(any(feature = "nfa-backtrack", feature = "nfa-pikevm"))]
  mod nfa;
  
@@ -308,7 +302,7 @@ Index: regex-automata/tests/lib.rs
      let _ = env_logger::try_init();
  
      let mut tests = regex_test::RegexTests::new();
-@@ -66,7 +66,7 @@ fn suite() -> anyhow::Result<regex_test:
+@@ -67,7 +67,7 @@
      load!("fowler/repetition");
  
      Ok(tests)
@@ -317,11 +311,9 @@ Index: regex-automata/tests/lib.rs
  
  /// Configure a regex_automata::Input with the given test configuration.
  fn create_input<'h>(
-Index: regex-automata/tests/meta/suite.rs
-===================================================================
---- regex-automata.orig/tests/meta/suite.rs
-+++ regex-automata/tests/meta/suite.rs
-@@ -11,7 +11,7 @@ use {
+--- a/tests/meta/suite.rs
++++ b/tests/meta/suite.rs
+@@ -11,7 +11,7 @@
      },
  };
  
@@ -330,7 +322,7 @@ Index: regex-automata/tests/meta/suite.rs
  
  const BLACKLIST: &[&str] = &[
      // These 'earliest' tests are blacklisted because the meta searcher doesn't
-@@ -27,7 +27,7 @@ const BLACKLIST: &[&str] = &[
+@@ -27,7 +27,7 @@
  ];
  
  /// Tests the default configuration of the meta regex engine.
@@ -339,7 +331,7 @@ Index: regex-automata/tests/meta/suite.rs
  fn default() -> Result<()> {
      let builder = Regex::builder();
      let mut runner = TestRunner::new()?;
-@@ -37,10 +37,10 @@ fn default() -> Result<()> {
+@@ -37,10 +37,10 @@
          .test_iter(suite()?.iter(), compiler(builder))
          .assert();
      Ok(())
@@ -352,7 +344,7 @@ Index: regex-automata/tests/meta/suite.rs
  fn no_dfa() -> Result<()> {
      let mut builder = Regex::builder();
      builder.configure(Regex::config().dfa(false));
-@@ -51,10 +51,10 @@ fn no_dfa() -> Result<()> {
+@@ -51,10 +51,10 @@
          .test_iter(suite()?.iter(), compiler(builder))
          .assert();
      Ok(())
@@ -365,7 +357,7 @@ Index: regex-automata/tests/meta/suite.rs
  fn no_dfa_hybrid() -> Result<()> {
      let mut builder = Regex::builder();
      builder.configure(Regex::config().dfa(false).hybrid(false));
-@@ -65,11 +65,11 @@ fn no_dfa_hybrid() -> Result<()> {
+@@ -65,11 +65,11 @@
          .test_iter(suite()?.iter(), compiler(builder))
          .assert();
      Ok(())
@@ -379,7 +371,7 @@ Index: regex-automata/tests/meta/suite.rs
  fn no_dfa_hybrid_onepass() -> Result<()> {
      let mut builder = Regex::builder();
      builder.configure(Regex::config().dfa(false).hybrid(false).onepass(false));
-@@ -80,11 +80,11 @@ fn no_dfa_hybrid_onepass() -> Result<()>
+@@ -80,11 +80,11 @@
          .test_iter(suite()?.iter(), compiler(builder))
          .assert();
      Ok(())
@@ -393,7 +385,7 @@ Index: regex-automata/tests/meta/suite.rs
  fn no_dfa_hybrid_onepass_backtrack() -> Result<()> {
      let mut builder = Regex::builder();
      builder.configure(
-@@ -101,7 +101,7 @@ fn no_dfa_hybrid_onepass_backtrack() ->
+@@ -101,7 +101,7 @@
          .test_iter(suite()?.iter(), compiler(builder))
          .assert();
      Ok(())
@@ -402,11 +394,9 @@ Index: regex-automata/tests/meta/suite.rs
  
  fn compiler(
      mut builder: meta::Builder,
-Index: regex-automata/tests/nfa/thompson/backtrack/suite.rs
-===================================================================
---- regex-automata.orig/tests/nfa/thompson/backtrack/suite.rs
-+++ regex-automata/tests/nfa/thompson/backtrack/suite.rs
-@@ -15,10 +15,10 @@ use {
+--- a/tests/nfa/thompson/backtrack/suite.rs
++++ b/tests/nfa/thompson/backtrack/suite.rs
+@@ -15,10 +15,10 @@
      },
  };
  
@@ -419,7 +409,7 @@ Index: regex-automata/tests/nfa/thompson/backtrack/suite.rs
  fn default() -> Result<()> {
      let builder = BoundedBacktracker::builder();
      let mut runner = TestRunner::new()?;
-@@ -34,10 +34,10 @@ fn default() -> Result<()> {
+@@ -34,10 +34,10 @@
      runner.blacklist("expensive/backtrack-blow-visited-capacity");
      runner.test_iter(suite()?.iter(), compiler(builder)).assert();
      Ok(())
@@ -432,7 +422,7 @@ Index: regex-automata/tests/nfa/thompson/backtrack/suite.rs
  fn prefilter() -> Result<()> {
      let my_compiler = |test: &RegexTest, regexes: &[String]| {
          // Parse regexes as HIRs so we can get literals to build a prefilter.
-@@ -60,11 +60,11 @@ fn prefilter() -> Result<()> {
+@@ -60,11 +60,11 @@
      runner.blacklist("expensive/backtrack-blow-visited-capacity");
      runner.test_iter(suite()?.iter(), my_compiler).assert();
      Ok(())
@@ -446,7 +436,7 @@ Index: regex-automata/tests/nfa/thompson/backtrack/suite.rs
  fn min_visited_capacity() -> Result<()> {
      let mut runner = TestRunner::new()?;
      runner.expand(&["is_match", "find", "captures"], |test| test.compiles());
-@@ -95,7 +95,7 @@ fn min_visited_capacity() -> Result<()>
+@@ -95,7 +95,7 @@
          })
          .assert();
      Ok(())
@@ -455,11 +445,9 @@ Index: regex-automata/tests/nfa/thompson/backtrack/suite.rs
  
  fn compiler(
      mut builder: backtrack::Builder,
-Index: regex-automata/tests/nfa/thompson/pikevm/suite.rs
-===================================================================
---- regex-automata.orig/tests/nfa/thompson/pikevm/suite.rs
-+++ regex-automata/tests/nfa/thompson/pikevm/suite.rs
-@@ -14,20 +14,20 @@ use {
+--- a/tests/nfa/thompson/pikevm/suite.rs
++++ b/tests/nfa/thompson/pikevm/suite.rs
+@@ -14,20 +14,20 @@
      },
  };
  
@@ -484,7 +472,7 @@ Index: regex-automata/tests/nfa/thompson/pikevm/suite.rs
  fn prefilter() -> Result<()> {
      let my_compiler = |test: &RegexTest, regexes: &[String]| {
          // Parse regexes as HIRs so we can get literals to build a prefilter.
-@@ -48,7 +48,7 @@ fn prefilter() -> Result<()> {
+@@ -48,7 +48,7 @@
      runner.expand(&["is_match", "find", "captures"], |test| test.compiles());
      runner.test_iter(suite()?.iter(), my_compiler).assert();
      Ok(())
