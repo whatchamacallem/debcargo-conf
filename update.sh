@@ -24,7 +24,6 @@ if [ ! -d "$PKGDIR/debian" ]; then
 	overlay = "."
 	uploaders = ["$DEBFULLNAME <$DEBEMAIL>"]
 	eof
-	git add "$PKGDIR"
 fi
 if [ ! -f "$PKGDIR/debian/copyright" ]; then
 	cat <<-eof > "$PKGDIR/debian/copyright"
@@ -51,7 +50,6 @@ if ! grep -q uploaders "$PKGCFG"; then
 fi
 
 run_debcargo
-git add -N "$PKGDIR"
 
 if ! git diff --quiet -- "$PKGDIR_REL"; then
 	read -p "Update wrote some changes to $PKGDIR_REL, press enter to git diff..." x || true
