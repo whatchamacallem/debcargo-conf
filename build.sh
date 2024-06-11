@@ -101,6 +101,7 @@ Acquire::Languages "none";
 END
 {
 echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ $DISTRIBUTION main";
+echo "deb-src [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ $DISTRIBUTION main";
 case $DISTRIBUTION in
 	experimental|rc-buggy)
 		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ unstable main"
