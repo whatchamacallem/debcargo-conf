@@ -1,0 +1,14 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_installman:
+	help2man \
+		--name spytrap-adb \
+		--no-info \
+		debian/spytrap-adb/usr/bin/spytrap-adb > debian/spytrap-adb.1
+	dh_installman -O--buildsystem=cargo
+
+override_dh_dwz:
+	# Don't do anything. fails because of the
+	# https://github.com/rust-lang/rust/issues/66118
