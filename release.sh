@@ -164,7 +164,7 @@ else
 
 unstable_bin_packages="$(rmadison --noconf --suite unstable --source-and-binary "${DEBSRC}" | grep -v 'source$' | cut -d ' ' -f 1 | sort -u)"
 upload_bin_packages="$(grep '^Binary' "build/${DEBSRC}_${DEBVER}.dsc" | sed -e 's/^Binary: //' -e 's/, /,/g' | tr ',' '\n' | sort -u)"
-diff_bin_packages="$(diff -u0 <(echo "$unstable_bin_packages") <(echo "$upload_bin_packages") | tail -n-2)"
+diff_bin_packages="$(diff -u0 <(echo "$unstable_bin_packages") <(echo "$upload_bin_packages") | grep '^[+-]')"
 new_bin_packages="$(echo "$diff_bin_packages" | grep '^+' | sed -e 's/^+//g')"
 rm_bin_packages="$(echo "$diff_bin_packages" | grep '^-' | sed -e 's/^-//g')"
 
