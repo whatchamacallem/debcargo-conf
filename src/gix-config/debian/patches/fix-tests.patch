@@ -1,0 +1,38 @@
+From 53e9b4e385315270b5a6d6bf8aafce76914ed84c Mon Sep 17 00:00:00 2001
+From: Sebastian Thiel <sebastian.thiel@icloud.com>
+Date: Thu, 8 Feb 2024 18:50:43 +0100
+Subject: [PATCH] adjust test expectations to work with latest Rust version
+
+---
+ src/parse/tests.rs | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+Index: gix-config/src/parse/tests.rs
+===================================================================
+--- gix-config.orig/src/parse/tests.rs
++++ gix-config/src/parse/tests.rs
+@@ -9,16 +9,16 @@ mod section {
+     fn size_of_events() {
+         assert_eq!(
+             std::mem::size_of::<Section<'_>>(),
+-            96,
++            112,
+             "this value should only ever decrease"
+         );
+-        assert_eq!(std::mem::size_of::<Events<'_>>(), 616);
+-        assert_eq!(std::mem::size_of::<Event<'_>>(), 72);
+-        assert_eq!(std::mem::size_of::<Header<'_>>(), 72);
+-        assert_eq!(std::mem::size_of::<Comment<'_>>(), 32);
+-        assert_eq!(std::mem::size_of::<Option<Cow<'_, BStr>>>(), 24);
+-        assert_eq!(std::mem::size_of::<section::Name<'_>>(), 24);
+-        assert_eq!(std::mem::size_of::<section::Key<'_>>(), 24);
++        assert_eq!(std::mem::size_of::<Events<'_>>(), 744,);
++        assert_eq!(std::mem::size_of::<Event<'_>>(), 88,);
++        assert_eq!(std::mem::size_of::<Header<'_>>(), 88,);
++        assert_eq!(std::mem::size_of::<Comment<'_>>(), 32,);
++        assert_eq!(std::mem::size_of::<Option<Cow<'_, BStr>>>(), 32,);
++        assert_eq!(std::mem::size_of::<section::Name<'_>>(), 24,);
++        assert_eq!(std::mem::size_of::<section::Key<'_>>(), 24,);
+     }
+ 
+     mod header {
