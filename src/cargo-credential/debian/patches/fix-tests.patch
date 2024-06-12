@@ -1,0 +1,15 @@
+Index: cargo-credential/src/error.rs
+===================================================================
+--- cargo-credential.orig/src/error.rs
++++ cargo-credential/src/error.rs
+@@ -169,7 +169,9 @@ mod tests {
+         assert!(matches!(e, Error::Unknown));
+     }
+ 
+-    #[test]
++    // Debian this fails because our test env captures the stack trace here as well, and that
++    // differs between created and into()-ed Errors..
++    #[test(ignore)]
+     pub fn roundtrip() {
+         // Construct an error with context
+         let e = anyhow::anyhow!("E1").context("E2").context("E3");
