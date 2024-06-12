@@ -1,0 +1,137 @@
+Index: calloop/Cargo.toml
+===================================================================
+--- calloop.orig/Cargo.toml
++++ calloop/Cargo.toml
+@@ -53,7 +53,7 @@ default-features = false
+ version = "0.4"
+ 
+ [dependencies.nix]
+-version = "0.26"
++version = "0.27"
+ features = [
+     "event",
+     "fs",
+Index: calloop/src/io.rs
+===================================================================
+--- calloop.orig/src/io.rs
++++ calloop/src/io.rs
+@@ -50,7 +50,7 @@ impl<'l, F: AsRawFd> Async<'l, F> {
+         let rawfd = fd.as_raw_fd();
+         // set non-blocking
+         let old_flags = fcntl(rawfd, FcntlArg::F_GETFL)?;
+-        let old_flags = unsafe { OFlag::from_bits_unchecked(old_flags) };
++        let old_flags = unsafe { OFlag::from_bits_retain(old_flags) };
+         fcntl(rawfd, FcntlArg::F_SETFL(old_flags | OFlag::O_NONBLOCK))?;
+         // register in the loop
+         let dispatcher = Rc::new(RefCell::new(IoDispatcher {
+Index: calloop/src/loop_logic.rs
+===================================================================
+--- calloop.orig/src/loop_logic.rs
++++ calloop/src/loop_logic.rs
+@@ -500,6 +500,7 @@ impl LoopSignal {
+ #[cfg(test)]
+ mod tests {
+     use std::time::Duration;
++    use std::os::fd::IntoRawFd;
+ 
+     use crate::{
+         generic::Generic, ping::*, Dispatcher, Interest, Mode, Poll, PostAction, Readiness,
+@@ -747,6 +748,8 @@ mod tests {
+             SockFlag::empty(), // recv with DONTWAIT will suffice for platforms without SockFlag::SOCK_NONBLOCKING such as macOS
+         )
+         .unwrap();
++        let sock1 = sock1.into_raw_fd();
++        let sock2 = sock2.into_raw_fd();
+ 
+         let source = Generic::new(sock1, Interest::READ, Mode::Level);
+         let dispatcher = Dispatcher::new(source, |_, &mut fd, dispatched| {
+Index: calloop/src/sources/ping/eventfd.rs
+===================================================================
+--- calloop.orig/src/sources/ping/eventfd.rs
++++ calloop/src/sources/ping/eventfd.rs
+@@ -19,6 +19,7 @@
+ //! only works if a close event never fires more than once.
+ 
+ use std::{os::unix::io::RawFd, sync::Arc};
++use std::os::fd::IntoRawFd;
+ 
+ use nix::sys::eventfd::{eventfd, EfdFlags};
+ use nix::unistd::{read, write};
+@@ -37,6 +38,7 @@ const INCREMENT_CLOSE: u64 = 0x1;
+ #[inline]
+ pub fn make_ping() -> std::io::Result<(Ping, PingSource)> {
+     let read = eventfd(0, EfdFlags::EFD_CLOEXEC | EfdFlags::EFD_NONBLOCK)?;
++    let read = read.into_raw_fd();
+ 
+     // We only have one fd for the eventfd. If the sending end closes it when
+     // all copies are dropped, the receiving end will be closed as well. We need
+Index: calloop/src/sources/signals.rs
+===================================================================
+--- calloop.orig/src/sources/signals.rs
++++ calloop/src/sources/signals.rs
+@@ -46,6 +46,19 @@ pub struct Signals {
+     mask: SigSet,
+ }
+ 
++trait MySetMask {
++    fn my_set_mask(&mut self, mask: &SigSet) -> nix::Result<()>;
++}
++
++use std::os::fd::AsFd;
++//workaround for https://github.com/nix-rust/nix/issues/2116
++impl MySetMask for SignalFd {
++    fn my_set_mask(&mut self, mask: &SigSet) -> nix::Result<()> {
++        nix::sys::signalfd::signalfd(Some(self.as_fd()), &mask, SfdFlags::empty())
++            .map(std::mem::forget)
++    }
++}
++
+ impl Signals {
+     /// Create a new signal event source listening on the specified list of signals
+     pub fn new(signals: &[Signal]) -> crate::Result<Signals> {
+@@ -74,7 +87,7 @@ impl Signals {
+             self.mask.add(s);
+         }
+         self.mask.thread_block()?;
+-        self.sfd.file.set_mask(&self.mask)?;
++        self.sfd.file.my_set_mask(&self.mask)?;
+         Ok(())
+     }
+ 
+@@ -89,7 +102,7 @@ impl Signals {
+             removed.add(s);
+         }
+         removed.thread_unblock()?;
+-        self.sfd.file.set_mask(&self.mask)?;
++        self.sfd.file.my_set_mask(&self.mask)?;
+         Ok(())
+     }
+ 
+@@ -105,7 +118,7 @@ impl Signals {
+ 
+         self.mask.thread_unblock()?;
+         new_mask.thread_block()?;
+-        self.sfd.file.set_mask(&new_mask)?;
++        self.sfd.file.my_set_mask(&new_mask)?;
+         self.mask = new_mask;
+ 
+         Ok(())
+Index: calloop/src/sys/epoll.rs
+===================================================================
+--- calloop.orig/src/sys/epoll.rs
++++ calloop/src/sys/epoll.rs
+@@ -1,4 +1,5 @@
+ use std::os::unix::io::{AsRawFd, RawFd};
++use std::os::fd::AsFd;
+ 
+ use super::{Interest, Mode, PollEvent, Readiness, Token};
+ 
+@@ -58,7 +59,7 @@ impl Epoll {
+             epoll_ctl(
+                 epoll_fd,
+                 EpollOp::EpollCtlAdd,
+-                timer.as_raw_fd(),
++                timer.as_fd().as_raw_fd(),
+                 &mut timer_event,
+             )?;
+             timer_fd = Some(timer);

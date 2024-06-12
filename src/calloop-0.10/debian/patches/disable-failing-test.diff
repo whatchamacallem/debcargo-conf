@@ -1,0 +1,14 @@
+Subject: Disable insert_source_no_interest test
+ If stdin is redirected/closed, as is the case on ci.debian.net, the test fails.
+Bug: https://github.com/Smithay/calloop/issues/96
+---
+--- a/src/loop_logic.rs
++++ b/src/loop_logic.rs
+@@ -587,6 +587,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn insert_source_no_interest() {
+         let event_loop = EventLoop::<()>::try_new().unwrap();
+         let ret = event_loop.handle().insert_source(
