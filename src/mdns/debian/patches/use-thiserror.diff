@@ -1,0 +1,107 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 4853b422f..6621d0158 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -31,9 +31,6 @@ version = "0.2.0"
+ [dependencies.dns-parser]
+ version = "0.8.0"
+ 
+-[dependencies.err-derive]
+-version = "0.2.1"
+-
+ [dependencies.futures-core]
+ version = "0.3.1"
+ 
+@@ -45,3 +42,6 @@ version = "0.4"
+ 
+ [dependencies.net2]
+ version = "0.2"
++
++[dependencies.thiserror]
++version = "1.0"
+diff --git a/src/errors.rs b/src/errors.rs
+index c625d8b41..cdfbff80e 100644
+--- a/src/errors.rs
++++ b/src/errors.rs
+@@ -1,11 +1,11 @@
+-use err_derive::Error;
++use thiserror::Error;
+ 
+-#[derive(Debug, Error)]
++#[derive(Error, Debug)]
+ pub enum Error {
+-    #[error(display = "_0")]
+-    Io(#[error(source)] std::io::Error),
+-    #[error(display = "_0")]
+-    Dns(#[error(source)] dns_parser::Error),
+-    #[error(display = "_0")]
+-    TimeoutError(#[error(source)] async_std::future::TimeoutError),
++    #[error("_0")]
++    Io(#[source] std::io::Error),
++    #[error("_0")]
++    Dns(#[source] dns_parser::Error),
++    #[error( "_0")]
++    TimeoutError(#[source] async_std::future::TimeoutError),
+ }
+diff --git a/src/mdns.rs b/src/mdns.rs
+index 11506864a..45d8baa38 100644
+--- a/src/mdns.rs
++++ b/src/mdns.rs
+@@ -19,10 +19,10 @@
+     service_name: String,
+     interface_addr: Ipv4Addr,
+ ) -> Result<(mDNSListener, mDNSSender), Error> {
+-    let socket = create_socket()?;
++    let socket = create_socket().expect("Socket creation failed");
+ 
+-    socket.set_multicast_loop_v4(false)?;
+-    socket.join_multicast_v4(&MULTICAST_ADDR, &interface_addr)?;
++    socket.set_multicast_loop_v4(false).expect("Setting upmulticast loop failed");
++    socket.join_multicast_v4(&MULTICAST_ADDR, &interface_addr).expect("Joining multicast     failed");
+ 
+     let socket = Arc::new(UdpSocket::from(socket));
+ 
+@@ -74,7 +74,7 @@
+ 
+         let addr = SocketAddr::new(MULTICAST_ADDR.into(), MULTICAST_PORT);
+ 
+-        self.send.send_to(&packet_data, addr).await?;
++        self.send.send_to(&packet_data, addr).await.expect("Sending of packet failed");
+         Ok(())
+     }
+ }
+@@ -91,7 +91,8 @@
+     pub fn listen(mut self) -> impl Stream<Item = Result<Response, Error>> {
+         try_stream! {
+             loop {
+-                let (count, _) = self.recv.recv_from(&mut self.recv_buffer).await?;
++                let (count, _) = self.recv.recv_from(&mut self.recv_buffer).await
++                    .expect("Could not recieve count");
+ 
+                 if count > 0 {
+                     match dns_parser::Packet::parse(&self.recv_buffer[..count]) {
+diff --git a/src/resolve.rs b/src/resolve.rs
+index 123f1e708..b3845a3f5 100644
+--- a/src/resolve.rs
++++ b/src/resolve.rs
+@@ -47,7 +47,8 @@ where
+         None
+     };
+ 
+-    async_std::future::timeout(timeout, process).map_err(|e| e.into()).await
++ async_std::future::timeout(timeout, process).await.map_err(|e| Error::TimeoutError(e))
++
+ }
+ 
+ /// Resolve multiple devices by hostname
+@@ -80,8 +81,6 @@ where
+         }
+     };
+ 
+-    match async_std::future::timeout(timeout, process).await {
+-        Ok(()) => Ok(found),
+-        Err(e) => Err(e.into())
+-    }
++    async_std::future::timeout(timeout, process).await.map_err(|e| Error::TimeoutError(e))?;
++    Ok(found)
+ }
