@@ -1,0 +1,33 @@
+Description: drop netmap feature
+ netmap_sys is a depdendency needed for netmap feature and packaging
+ that includes doing some vendoring (or packaging the whole of netmap)
+ then patching build to produce a dyn library instead of a static one
+ and much more. Dropping the feature allows not having to go through
+ this pain, at least temporarily and this dependency is optional to begin
+ with.
+Author: Ananthu C V <weepingclown@disroot.org>
+Forwarded: not-needed
+Last-Update: 2024-06-14
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -39,11 +39,6 @@
+ [dependencies.libc]
+ version = "0.2.147"
+ 
+-[dependencies.netmap_sys]
+-version = "0.1.4"
+-features = ["netmap_with_libs"]
+-optional = true
+-
+ [dependencies.pcap]
+ version = "2.0.0"
+ optional = true
+@@ -63,7 +58,6 @@
+ 
+ [features]
+ default = ["std"]
+-netmap = []
+ std = ["pnet_base/std"]
+ 
+ [target."cfg(windows)".dependencies.winapi]
