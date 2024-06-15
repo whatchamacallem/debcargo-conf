@@ -2,16 +2,12 @@
 %:
 	dh $@ --buildsystem cargo
 
-override_dh_auto_install:
-	dh_auto_install --buildsystem cargo -- --features=help4help2man
+override_dh_install:
+	debian/just/usr/bin/just --completions bash > debian/just.bash
+	debian/just/usr/bin/just --completions fish > debian/just.fish
+	debian/just/usr/bin/just --completions zsh > debian/_just
+	dh_install -O--buildsystem=cargo
 
 override_dh_installman:
-	help2man \
-		--name just \
-		--no-info \
-		debian/just/usr/bin/just > debian/just.1
+	debian/just/usr/bin/just --man > debian/just.1
 	dh_installman -O--buildsystem=cargo
-
-override_dh_dwz:
-	# Don't do anything. fails because of the
-	# https://github.com/rust-lang/rust/issues/66118
