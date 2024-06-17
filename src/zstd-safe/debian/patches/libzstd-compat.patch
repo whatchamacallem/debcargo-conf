@@ -1,0 +1,32 @@
+this is only available with libstd >= 1.5.6, before that it was experimental..
+but we don't have this information readily available here, since the bindings
+are generated in zstd-sys, and the linkage happens via that crate as well..
+
+since nothing is using the new interface yet, patch it out until libzstd 1.5.6
+is in testing, then we can revert this workaround..
+Index: zstd-safe/src/lib.rs
+===================================================================
+--- zstd-safe.orig/src/lib.rs
++++ zstd-safe/src/lib.rs
+@@ -675,9 +675,10 @@ impl<'a> CCtx<'a> {
+             SearchForExternalRepcodes(value) => {
+                 (ZSTD_c_searchForExternalRepcodes, value as c_int)
+             }
++	    /* patched out until libzstd 1.5.6 is in testing
+             TargetCBlockSize(value) => {
+                 (ZSTD_c_targetCBlockSize, value as c_int)
+-            }
++            }*/
+             CompressionLevel(level) => (ZSTD_c_compressionLevel, level),
+             WindowLog(value) => (ZSTD_c_windowLog, value as c_int),
+             HashLog(value) => (ZSTD_c_hashLog, value as c_int),
+@@ -2075,7 +2076,8 @@ pub enum CParameter {
+     /// Useful to reduce end-to-end latency in low-bandwidth environments.
+     ///
+     /// No target when the value is 0.
+-    TargetCBlockSize(u32),
++    // patched out until libzstd 1.5.6 hits testing
++    //TargetCBlockSize(u32),
+ 
+     /// Compression level to use.
+     ///
