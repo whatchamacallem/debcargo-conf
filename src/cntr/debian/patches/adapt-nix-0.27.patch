@@ -1,0 +1,98 @@
+Description: Adapt to packaged nix 0.27
+ Now enable-as-needed features, and some fd API differences.
+ Added a few unsafe invocations, but probably fine since the original code is
+ already passing raw fds around.
+Forwarded: not-needed
+Last-Update: 2024-06-18
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -63,3 +63,4 @@
+ [dependencies.nix]
+-version = "0.26.2"
++version = "0.27"
++features = ["fs", "mount", "poll", "process", "sched", "signal", "socket", "term", "user"]
+ 
+--- a/src/fs.rs
++++ b/src/fs.rs
+@@ -348,3 +348,3 @@
+         if let Some(s) = size {
+-            unistd::ftruncate(fd.raw(), s as off_t)?;
++            unistd::ftruncate(&fd.file, s as off_t)?;
+         }
+@@ -935,3 +935,3 @@
+         tryfuse!(
+-            pread(get_filehandle(fh).fd.raw(), buf, offset as off_t),
++            pread(&get_filehandle(fh).fd.file, buf, offset as off_t),
+             reply
+@@ -953,5 +953,5 @@
+         fsuid::set_root();
+-        let dst_fd = get_filehandle(fh).fd.raw();
++        let dst_fd = &get_filehandle(fh).fd;
+ 
+-        let written = tryfuse!(pwrite(dst_fd, data, offset as off_t), reply);
++        let written = tryfuse!(pwrite(&dst_fd.file, data, offset as off_t), reply);
+ 
+--- a/src/ipc.rs
++++ b/src/ipc.rs
+@@ -82,6 +82,6 @@
+         Socket {
+-            fd: unsafe { File::from_raw_fd(parent_fd) },
++            fd: unsafe { File::from_raw_fd(parent_fd.as_raw_fd()) },
+         },
+         Socket {
+-            fd: unsafe { File::from_raw_fd(child_fd) },
++            fd: unsafe { File::from_raw_fd(child_fd.as_raw_fd()) },
+         },
+--- a/src/namespace.rs
++++ b/src/namespace.rs
+@@ -82,3 +82,3 @@
+         try_with!(
+-            sched::setns(self.file.as_raw_fd(), sched::CloneFlags::empty()),
++            sched::setns(&self.file, sched::CloneFlags::empty()),
+             "setns"
+--- a/src/pty.rs
++++ b/src/pty.rs
+@@ -81,3 +81,3 @@
+     fn new(stdin: RawFd) -> Result<RawTty> {
+-        let orig_attr = try_with!(tcgetattr(stdin), "failed to get termios attributes");
++        let orig_attr = try_with!(tcgetattr(unsafe { File::from_raw_fd(stdin) }), "failed to get termios attributes");
+ 
+@@ -109,3 +109,3 @@
+         try_with!(
+-            tcsetattr(stdin, SetArg::TCSAFLUSH, &attr),
++            tcsetattr(unsafe { File::from_raw_fd(stdin) }, SetArg::TCSAFLUSH, &attr),
+             "failed to set termios attributes"
+@@ -121,3 +121,3 @@
+     fn drop(&mut self) {
+-        let _ = tcsetattr(self.fd, SetArg::TCSANOW, &self.attr);
++        let _ = tcsetattr(unsafe { File::from_raw_fd(self.fd) }, SetArg::TCSANOW, &self.attr);
+     }
+@@ -137,10 +137,10 @@
+                 FilePairState::Read => {
+-                    let raw_fd = pair.from.as_raw_fd();
+-                    read_set.insert(raw_fd);
+-                    raw_fd
++                    let fd = pair.from;
++                    read_set.insert(fd);
++                    fd.as_raw_fd()
+                 }
+                 FilePairState::Write => {
+-                    let raw_fd = pair.to.as_raw_fd();
+-                    write_set.insert(raw_fd);
+-                    raw_fd
++                    let fd = pair.to;
++                    write_set.insert(fd);
++                    fd.as_raw_fd()
+                 }
+@@ -171,3 +171,3 @@
+                 FilePairState::Read => {
+-                    if read_set.contains(pair.from.as_raw_fd()) && !pair.read() {
++                    if read_set.contains(pair.from) && !pair.read() {
+                         return;
+@@ -176,3 +176,3 @@
+                 FilePairState::Write => {
+-                    if write_set.contains(pair.to.as_raw_fd()) && !pair.write() {
++                    if write_set.contains(pair.to) && !pair.write() {
+                         return;
