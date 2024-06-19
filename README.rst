@@ -90,10 +90,20 @@ Build environment
 
 To set up a suitable build environment for ``./build.sh``::
 
+With schroot::
+
   $ sudo apt-get install devscripts reprepro debootstrap sbuild dh-cargo schroot autopkgtest quilt
   $ sudo sbuild-createchroot --include=eatmydata,ccache,gnupg,dh-cargo,cargo,lintian,perl-openssl-defaults \
       --chroot-prefix debcargo-unstable unstable \
       /srv/chroot/debcargo-unstable-amd64-sbuild http://deb.debian.org/debian
+
+With sbuild + unshare::
+
+$ sudo apt install devscripts mmdebstrap sbuild uidmap dh-cargo autopkgtest quilt
+$ mkdir -p ~/.cache/sbuild
+$ mmdebstrap --variant=buildd --include ccache,gnupg,dh-cargo,cargo,lintian,perl-openssl-defaults unstable ~/.cache/sbuild/debcargo-unstable-amd64.tar.xz
+
+Note that you need to set CHROOT_MODE=unshare to use ./build.sh with unshare.
 
 An explanation of this, plus more recipes, can be found on the `sbuild wiki
 page <https://wiki.debian.org/sbuild>`_.
