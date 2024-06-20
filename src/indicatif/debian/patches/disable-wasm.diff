@@ -1,0 +1,52 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -113,5 +113,3 @@
+ ]
+ in_memory = ["vt100"]
+ 
+-[target."cfg(target_arch = \"wasm32\")".dependencies.instant]
+-version = "0.1"
+--- a/src/multi.rs
++++ b/src/multi.rs
+@@ -7,8 +7,6 @@
+ 
+ use crate::draw_target::{DrawState, DrawStateWrapper, LineAdjust, ProgressDrawTarget};
+ use crate::progress_bar::ProgressBar;
+-#[cfg(target_arch = "wasm32")]
+-use instant::Instant;
+ 
+ /// Manages multiple progress bars from different threads
+ #[derive(Debug, Clone)]
+--- a/src/progress_bar.rs
++++ b/src/progress_bar.rs
+@@ -7,8 +7,6 @@
+ use std::time::Instant;
+ use std::{fmt, io, thread};
+ 
+-#[cfg(target_arch = "wasm32")]
+-use instant::Instant;
+ #[cfg(test)]
+ use once_cell::sync::Lazy;
+ 
+--- a/src/state.rs
++++ b/src/state.rs
+@@ -5,8 +5,6 @@
+ #[cfg(not(target_arch = "wasm32"))]
+ use std::time::Instant;
+ 
+-#[cfg(target_arch = "wasm32")]
+-use instant::Instant;
+ use portable_atomic::{AtomicU64, AtomicU8, Ordering};
+ 
+ use crate::draw_target::ProgressDrawTarget;
+--- a/src/style.rs
++++ b/src/style.rs
+@@ -5,8 +5,6 @@
+ use std::time::Instant;
+ 
+ use console::{measure_text_width, Style};
+-#[cfg(target_arch = "wasm32")]
+-use instant::Instant;
+ #[cfg(feature = "unicode-segmentation")]
+ use unicode_segmentation::UnicodeSegmentation;
+ 
