@@ -1,0 +1,54 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -48,9 +48,6 @@
+ [dependencies.getrandom]
+ version = "0.2"
+ 
+-[dependencies.instant]
+-version = "0.1"
+-
+ [dependencies.pin-project-lite]
+ version = "0.2.7"
+ optional = true
+--- a/src/clock.rs
++++ b/src/clock.rs
+@@ -1,4 +1,4 @@
+-use instant::Instant;
++use std::time::Instant;
+ 
+ /// Clock returns the current time.
+ pub trait Clock {
+--- a/src/error.rs
++++ b/src/error.rs
+@@ -1,7 +1,7 @@
+ use std::error;
+ use std::fmt;
+ 
+-use instant::Duration;
++use std::time::Duration;
+ 
+ /// Error is the error value in an operation's
+ /// result.
+--- a/src/exponential.rs
++++ b/src/exponential.rs
+@@ -1,4 +1,4 @@
+-use instant::Instant;
++use std::time::Instant;
+ use std::marker::PhantomData;
+ use std::time::Duration;
+ 
+--- a/tests/exponential.rs
++++ b/tests/exponential.rs
+@@ -1,11 +1,10 @@
+ extern crate backoff;
+-extern crate instant;
+ 
+ use backoff::backoff::Backoff;
+ use backoff::exponential::ExponentialBackoff;
+ use backoff::{Clock, SystemClock};
+ 
+-use instant::Instant;
++use std::time::Instant;
+ use std::cell::RefCell;
+ use std::time::Duration;
+ 
