@@ -1,0 +1,124 @@
+Description: rename k9_stable to k9 and remove k9_stable dep
+Author: Ananthu C V <weepingclown@disroot.org>
+Forwarded: not-needed
+Last-Update: 2024-06-19
+--- a/src/paths.rs
++++ b/src/paths.rs
+@@ -134,27 +134,27 @@
+     }
+     #[test]
+     fn remove_path_overlap_test() -> Result<()> {
+-        k9_stable::snapshot!(
++        k9::snapshot!(
+             remove_overlap_helper("hello/world", "world/hello")?,
+             r##"hello"##
+         );
+ 
+-        k9_stable::snapshot!(
++        k9::snapshot!(
+             remove_overlap_helper("a/b/c/d/e/f/g", "c/d/e/f/g/h/i")?,
+             r##"a/b"##
+         );
+ 
+-        k9_stable::snapshot!(remove_overlap_helper("a/b/c", "a/b/c")?, r##""##);
++        k9::snapshot!(remove_overlap_helper("a/b/c", "a/b/c")?, r##""##);
+ 
+         // no overlap, similar directories
+-        k9_stable::snapshot!(remove_overlap_helper("a/b/c/d", "a/b/c")?, r##"a/b/c/d"##);
++        k9::snapshot!(remove_overlap_helper("a/b/c/d", "a/b/c")?, r##"a/b/c/d"##);
+ 
+-        k9_stable::snapshot!(
++        k9::snapshot!(
+             remove_overlap_helper("/home/workspace/my_crate", "my_crate/my_file")?,
+             r##"/home/workspace"##
+         );
+ 
+-        k9_stable::snapshot!(
++        k9::snapshot!(
+             remove_overlap_helper("/Users/me/p/gull/gull", "gull/e2e/flow_codegen_test.rs")?,
+             r##"/Users/me/p/gull"##
+         );
+--- a/src/snapshot/ast.rs
++++ b/src/snapshot/ast.rs
+@@ -16,7 +16,7 @@
+     fn visit_macro(&mut self, m: &'ast Macro) {
+         let last_path_segment = m.path.segments.last();
+         if let Some(PathSegment { ident, .. }) = last_path_segment {
+-            if ident == &self.macro_name && ident.span().start().line == self.line {
++	    if ident == &self.macro_name && ident.span().start().line == self.line {
+                 self.found.replace((m.tokens.to_owned(), m.to_owned()));
+             }
+         }
+@@ -147,9 +147,9 @@
+     #[test]
+     fn no_literal() -> Result<()> {
+         let range = find_snapshot_literal_range(SOURCE, "random_macro", 4, false)?;
+-        k9_stable::assert_equal!(&range.start, &range.end);
++        k9::assert_equal!(&range.start, &range.end);
+ 
+-        k9_stable::snapshot!(
++        k9::snapshot!(
+             format!("{:?}", range),
+             r##"Range { start: LineColumn { line: 4, column: 24 }, end: LineColumn { line: 4, column: 24 } }"##
+         );
+@@ -160,7 +160,7 @@
+     fn literal() -> Result<()> {
+         let range = find_snapshot_literal_range(SOURCE, "hello_macro", 5, true)?;
+ 
+-        k9_stable::snapshot!(
++        k9::snapshot!(
+             format!("{:?}", range),
+             r##"Range { start: LineColumn { line: 5, column: 25 }, end: LineColumn { line: 5, column: 34 } }"##
+         );
+@@ -171,7 +171,7 @@
+     fn not_a_literal_error() {
+         let err = find_snapshot_literal_range(SOURCE, "wrong_macro", 6, true).unwrap_err();
+ 
+-        k9_stable::snapshot!(
++        k9::snapshot!(
+             format!("{:?}", err),
+             r#"
+ 
+--- a/src/snapshot/source_code.rs
++++ b/src/snapshot/source_code.rs
+@@ -133,7 +133,7 @@
+ 
+     #[test]
+     fn extracting_range() {
+-        k9_stable::assert_equal!(
++        k9::assert_equal!(
+             extract_range(
+                 CONTENT,
+                 &Range {
+@@ -148,7 +148,7 @@
+ 
+     #[test]
+     fn empty_range() {
+-        k9_stable::assert_equal!(
++        k9::assert_equal!(
+             extract_range(
+                 CONTENT,
+                 &Range {
+@@ -163,7 +163,7 @@
+ 
+     #[test]
+     fn overflow() {
+-        k9_stable::assert_equal!(
++        k9::assert_equal!(
+             extract_range(
+                 CONTENT,
+                 &Range {
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -58,9 +58,8 @@
+ [dev-dependencies.derive_builder]
+ version = "0.12.0"
+ 
+-[dev-dependencies.k9_stable]
+-version = "0.11.7"
+-package = "k9"
++[dev-dependencies.k9]
++version = "0.12"
+ 
+ [dev-dependencies.rand]
+ version = "0.8"
