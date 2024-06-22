@@ -1,0 +1,25 @@
+Description: fix semver comparison
+Author: Ananthu C V <weepingclown@disroot.org>
+Forwarded: not-needed
+Last-Update: 2024-06-23
+
+--- a/src/caps/mod.rs
++++ b/src/caps/mod.rs
+@@ -284,7 +284,7 @@
+                             .term_program_version
+                             .as_ref()
+                             .unwrap_or(&"0.0.0".to_owned()),
+-                    ) >= Version::parse("2.9.20150512")
++                    ).unwrap() >= Version::parse("2.9.20150512").unwrap()
+                 }
+                 Some("WezTerm") => true,
+                 _ => false,
+@@ -487,7 +487,7 @@
+         let caps = Capabilities::new_with_hints(
+             ProbeHints::default()
+                 .term_program(Some("iTerm.app".into()))
+-                .term_program_version(Some("3.2.0beta5".into())),
++                .term_program_version(Some("3.2.0-beta5".into())),
+         )
+         .unwrap();
+         assert_eq!(caps.iterm2_image(), true);

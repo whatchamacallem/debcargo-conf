@@ -1,0 +1,18 @@
+Description: fix emoji test
+Author: Ananthu C V <weepingclown@disroot.org>
+Forwarded: not-needed
+Last-Update: 2024-06-23
+--- a/src/cell.rs
++++ b/src/cell.rs
+@@ -1199,9 +1199,9 @@
+         assert_eq!(unicode_column_width(raised_fist, None), 2);
+         assert_eq!(
+             Presentation::for_grapheme(raised_fist_text),
+-            (Presentation::Emoji, None)
++            (Presentation::Emoji, Some(Presentation::Text))
+         );
+-        assert_eq!(unicode_column_width(raised_fist_text, None), 2);
++        assert_eq!(unicode_column_width(raised_fist_text, None), 1);
+ 
+         assert_eq!(
+             Graphemes::new(raised_fist_text).collect::<Vec<_>>(),

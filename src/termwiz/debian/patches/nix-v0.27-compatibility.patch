@@ -1,0 +1,38 @@
+Description: quilt version 0.27 compatibitlity
+ nix has gated functionalities behind features since v27+
+ It has also changed changes like RawFd -> OwnedFd
+Author: Ananthu C V <weepingclown@disroot.org>
+Forwarded: not-needed
+Last-Update: 2024-06-23
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -192,6 +192,7 @@
+ 
+ [target."cfg(unix)".dependencies.nix]
+ version = "0.27"
++features = ["fs", "mman"]
+ 
+ [target."cfg(unix)".dependencies.signal-hook]
+ version = "0.3"
+--- a/src/escape/apc.rs
++++ b/src/escape/apc.rs
+@@ -273,9 +273,8 @@
+ ) -> std::result::Result<std::vec::Vec<u8>, std::io::Error> {
+     use nix::sys::mman::{shm_open, shm_unlink};
+     use std::fs::File;
+-    use std::os::unix::io::FromRawFd;
+ 
+-    let raw_fd = shm_open(
++    let owned_fd = shm_open(
+         name,
+         nix::fcntl::OFlag::O_RDONLY,
+         nix::sys::stat::Mode::empty(),
+@@ -287,7 +286,7 @@
+             format!("shm_open {} failed: {:#}", name, err),
+         )
+     })?;
+-    let mut f = unsafe { File::from_raw_fd(raw_fd) };
++    let mut f = File::from(owned_fd);
+     if let Some(offset) = data_offset {
+         f.seek(std::io::SeekFrom::Start(offset.into()))?;
+     }
