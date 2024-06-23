@@ -1,0 +1,27 @@
+Description: Fix test binary_output requiring compiled bin
+ by directly running cargo run; otherwise the binary has to be found by an
+ entire crate. Also remove dependency on that crate.
+Forwarded: not-needed
+Last-Update: 2024-06-23 <YYYY-MM-DD, last update of the meta-information, optional>
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/tests/binary.rs
++++ b/tests/binary.rs
+@@ -1,4 +1,2 @@
+-extern crate executable_path;
+-
+-use {executable_path::executable_path, std::process::Command};
++use std::process::Command;
+ 
+@@ -50,3 +48,3 @@
+ fn binary_output() {
+-  let output = Command::new(executable_path("target"))
++  let output = Command::new("cargo").arg("run")
+     .output()
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -19,4 +19,2 @@
+ license = "CC0-1.0"
+-[dev-dependencies.executable-path]
+-version = "1.0.0"
+ 
