@@ -1,0 +1,19 @@
+From: Reinhard Tartler <siretart@tauware.de>
+Description:Disable test nla::tests::network_byteorder
+Bug-Upstream: https://github.com/rust-netlink/netlink-packet-utils/issues/8
+
+Test never worked on big-endian, and is probably wrong.
+
+Index: netlink-packet-utils/src/nla.rs
+===================================================================
+--- netlink-packet-utils.orig/src/nla.rs
++++ netlink-packet-utils/src/nla.rs
+@@ -341,7 +341,7 @@ impl<'buffer, T: AsRef<[u8]> + ?Sized +
+ mod tests {
+     use super::*;
+ 
+-    #[test]
++    // #[test] -- cf. https://github.com/rust-netlink/netlink-packet-utils/issues/8
+     fn network_byteorder() {
+         // The IPSET_ATTR_TIMEOUT attribute should have the network byte order
+         // flag set. IPSET_ATTR_TIMEOUT(3600)
