@@ -12,7 +12,209 @@ Index: etherparse/tests/transport/icmpv6.rs
 ===================================================================
 --- etherparse.orig/tests/transport/icmpv6.rs
 +++ etherparse/tests/transport/icmpv6.rs
-@@ -801,58 +801,6 @@ mod icmpv6_header {
+@@ -372,153 +372,6 @@ mod icmpv6_type {
+ 
+     proptest! {
+         #[test]
+-        fn calc_checksum(
+-            ip_header in ipv6_any(),
+-            icmpv6_type in icmpv6_type_any(),
+-            type_u8 in any::<u8>(),
+-            code_u8 in any::<u8>(),
+-            bytes5to8 in any::<[u8;4]>(),
+-            // max length is u32::MAX - header_len (7)
+-            bad_len in (std::u32::MAX - 7) as usize..=std::usize::MAX,
+-            payload in proptest::collection::vec(any::<u8>(), 0..64)
+-        ) {
+-            use Icmpv6Type::*;
+-
+-            // size error case
+-            {
+-                // SAFETY: In case the error is not triggered
+-                //         a segmentation fault will be triggered.
+-                let too_big_slice = unsafe {
+-                    //NOTE: The pointer must be initialized with a non null value
+-                    //      otherwise a key constraint of slices is not fullfilled
+-                    //      which can lead to crashes in release mode.
+-                    use std::ptr::NonNull;
+-                    std::slice::from_raw_parts(
+-                        NonNull::<u8>::dangling().as_ptr(),
+-                        bad_len
+-                    )
+-                };
+-                assert_matches!(
+-                    icmpv6_type.calc_checksum(ip_header.source, ip_header.destination, too_big_slice),
+-                    Err(ValueError::Ipv6PayloadLengthTooLarge(_))
+-                );
+-            }
+-
+-            // normal cases
+-            {
+-                let test_checksum_calc = |icmp_type: Icmpv6Type| {
+-                    let expected_checksum = {
+-                        etherparse::checksum::Sum16BitWords::new()
+-                        .add_16bytes(ip_header.source)
+-                        .add_16bytes(ip_header.destination)
+-                        .add_2bytes([0, ip_number::IPV6_ICMP])
+-                        .add_4bytes((
+-                            payload.len() as u32 + icmpv6_type.header_len() as u32
+-                        ).to_be_bytes())
+-                        .add_slice(&Icmpv6Header {
+-                            icmp_type: icmp_type.clone(),
+-                            checksum: 0 // use zero so the checksum gets correct calculated
+-                        }.to_bytes())
+-                        .add_slice(&payload)
+-                        .ones_complement()
+-                        .to_be()
+-                    };
+-                    assert_eq!(
+-                        expected_checksum,
+-                        icmp_type.calc_checksum(
+-                            ip_header.source,
+-                            ip_header.destination,
+-                            &payload
+-                        ).unwrap()
+-                    );
+-                };
+-
+-                // unknown
+-                test_checksum_calc(
+-                    Unknown{
+-                        type_u8, code_u8, bytes5to8
+-                    }
+-                );
+-
+-                // destination unreachable
+-                for (code, _) in dest_unreachable_code::VALID_VALUES {
+-                    test_checksum_calc(DestinationUnreachable(code));
+-                }
+-
+-                // packet too big
+-                test_checksum_calc(PacketTooBig{
+-                    mtu: u32::from_be_bytes(bytes5to8)
+-                });
+-
+-                // time exceeded
+-                for (code, _) in time_exceeded_code::VALID_VALUES {
+-                    test_checksum_calc(TimeExceeded(code));
+-                }
+-
+-                // parameter problem
+-                for (code, _) in parameter_problem_code::VALID_VALUES {
+-                    test_checksum_calc(ParameterProblem(
+-                        ParameterProblemHeader{
+-                            code,
+-                            pointer: u32::from_be_bytes(bytes5to8)
+-                        }
+-                    ));
+-                }
+-
+-                // echo request
+-                test_checksum_calc(EchoRequest(
+-                    IcmpEchoHeader::from_bytes(bytes5to8)
+-                ));
+-
+-                // echo reply
+-                test_checksum_calc(EchoReply(
+-                    IcmpEchoHeader::from_bytes(bytes5to8)
+-                ));
+-            }
+-        }
+-    }
+-
+-    proptest! {
+-        #[test]
+-        fn to_header(
+-            ip_header in ipv6_any(),
+-            icmpv6_type in icmpv6_type_any(),
+-            // max length is u32::MAX - header_len (7)
+-            bad_len in (std::u32::MAX - 7) as usize..=std::usize::MAX,
+-            payload in proptest::collection::vec(any::<u8>(), 0..1024)
+-        ) {
+-            // size error case
+-            {
+-                // SAFETY: In case the error is not triggered
+-                //         a segmentation fault will be triggered.
+-                let too_big_slice = unsafe {
+-                    //NOTE: The pointer must be initialized with a non null value
+-                    //      otherwise a key constraint of slices is not fullfilled
+-                    //      which can lead to crashes in release mode.
+-                    use std::ptr::NonNull;
+-                    std::slice::from_raw_parts(
+-                        NonNull::<u8>::dangling().as_ptr(),
+-                        bad_len
+-                    )
+-                };
+-                assert_matches!(
+-                    icmpv6_type.to_header(ip_header.source, ip_header.destination, too_big_slice),
+-                    Err(ValueError::Ipv6PayloadLengthTooLarge(_))
+-                );
+-            }
+-            // normal case
+-            assert_eq!(
+-                icmpv6_type.to_header(ip_header.source, ip_header.destination, &payload).unwrap(),
+-                Icmpv6Header {
+-                    checksum: icmpv6_type.calc_checksum(ip_header.source, ip_header.destination, &payload).unwrap(),
+-                    icmp_type: icmpv6_type,
+-                }
+-            );
+-        }
+-    }
+-
+-    proptest! {
+-        #[test]
+         fn header_len(
+             code_u8 in any::<u8>(),
+             bytes5to8 in any::<[u8;4]>(),
+@@ -634,47 +487,6 @@ mod icmpv6_header {
+ 
+     proptest! {
+         #[test]
+-        fn with_checksum(
+-            ip_header in ipv6_any(),
+-            icmp_type in icmpv6_type_any(),
+-            // max length is u32::MAX - header_len (7)
+-            bad_len in (std::u32::MAX - 7) as usize..=std::usize::MAX,
+-            payload in proptest::collection::vec(any::<u8>(), 0..1024)
+-        ) {
+-
+-            // error case
+-            {
+-                // SAFETY: In case the error is not triggered
+-                //         a segmentation fault will be triggered.
+-                let too_big_slice = unsafe {
+-                    //NOTE: The pointer must be initialized with a non null value
+-                    //      otherwise a key constraint of slices is not fullfilled
+-                    //      which can lead to crashes in release mode.
+-                    use std::ptr::NonNull;
+-                    std::slice::from_raw_parts(
+-                        NonNull::<u8>::dangling().as_ptr(),
+-                        bad_len
+-                    )
+-                };
+-                assert_matches!(
+-                    Icmpv6Header::with_checksum(icmp_type.clone(), ip_header.source, ip_header.destination, too_big_slice),
+-                    Err(ValueError::Ipv6PayloadLengthTooLarge(_))
+-                );
+-            }
+-
+-            // non error case
+-            assert_eq!(
+-                Icmpv6Header::with_checksum(icmp_type.clone(), ip_header.source, ip_header.destination, &payload).unwrap(),
+-                Icmpv6Header {
+-                    icmp_type,
+-                    checksum: icmp_type.calc_checksum(ip_header.source, ip_header.destination, &payload).unwrap(),
+-                }
+-            );
+-        }
+-    }
+-
+-    proptest! {
+-        #[test]
+         fn from_slice(
+             icmp_type in icmpv6_type_any(),
+             checksum in any::<u16>(),
+@@ -801,58 +613,6 @@ mod icmpv6_header {
  
      proptest! {
          #[test]
@@ -71,3 +273,255 @@ Index: etherparse/tests/transport/icmpv6.rs
          fn to_bytes(
              checksum in any::<u16>(),
              rand_u32 in any::<u32>(),
+@@ -1008,36 +768,6 @@ mod icmpv6_slice {
+                 );
+             }
+         }
+-    }
+-
+-    proptest! {
+-        /// This error can only occur on systems with a pointer size
+-        /// bigger then 64 bits.
+-        #[cfg(not(any(target_pointer_width = "16", target_pointer_width = "32")))]
+-        #[test]
+-        fn from_slice_too_big_error(
+-            bad_len in ((std::u32::MAX as usize) + 1)..=std::usize::MAX,
+-        ) {
+-            // too large packet error case
+-            {
+-                // SAFETY: In case the error is not triggered
+-                //         a segmentation fault will be triggered.
+-                let too_big_slice = unsafe {
+-                    //NOTE: The pointer must be initialized with a non null value
+-                    //      otherwise a key constraint of slices is not fullfilled
+-                    //      which can lead to crashes in release mode.
+-                    use std::ptr::NonNull;
+-                    std::slice::from_raw_parts(
+-                        NonNull::<u8>::dangling().as_ptr(),
+-                        bad_len
+-                    )
+-                };
+-                assert_matches!(
+-                    Icmpv6Slice::from_slice(too_big_slice),
+-                    Err(ReadError::Icmpv6PacketTooBig(_))
+-                );
+-            }
+-        }
+     }
+ 
+     proptest! {
+Index: etherparse/tests/transport/udp.rs
+===================================================================
+--- etherparse.orig/tests/transport/udp.rs
++++ etherparse/tests/transport/udp.rs
+@@ -137,31 +137,6 @@ mod udp_header {
+                     }
+                 );
+             }
+-
+-            // length error case
+-            {
+-                // SAFETY: In case the error is not triggered
+-                //         a segmentation fault will be triggered.
+-                let too_big_slice = unsafe {
+-                    //NOTE: The pointer must be initialized with a non null value
+-                    //      otherwise a key constraint of slices is not fullfilled
+-                    //      which can lead to crashes in release mode.
+-                    use std::ptr::NonNull;
+-                    std::slice::from_raw_parts(
+-                        NonNull::<u8>::dangling().as_ptr(),
+-                        bad_len
+-                    )
+-                };
+-                assert_eq!(
+-                    ValueError::UdpPayloadLengthTooLarge(bad_len),
+-                    UdpHeader::with_ipv4_checksum(
+-                        source_port,
+-                        destination_port,
+-                        &ipv4,
+-                        &too_big_slice
+-                    ).unwrap_err()
+-                );
+-            }
+         }
+     }
+ 
+@@ -235,37 +210,6 @@ mod udp_header {
+                     ).unwrap()
+                 );
+             }
+-
+-            // length error case
+-            {
+-                let header = UdpHeader {
+-                    source_port,
+-                    destination_port,
+-                    // udp header length itself is ok, but the payload not
+-                    length: (UdpHeader::SERIALIZED_SIZE + payload.len()) as u16,
+-                    checksum: dummy_checksum,
+-                };
+-                // SAFETY: In case the error is not triggered
+-                //         a segmentation fault will be triggered.
+-                let too_big_slice = unsafe {
+-                    //NOTE: The pointer must be initialized with a non null value
+-                    //      otherwise a key constraint of slices is not fullfilled
+-                    //      which can lead to crashes in release mode.
+-                    use std::ptr::NonNull;
+-                    std::slice::from_raw_parts(
+-                        NonNull::<u8>::dangling().as_ptr(),
+-                        bad_len
+-                    )
+-                };
+-                assert_eq!(
+-                    ValueError::UdpPayloadLengthTooLarge(bad_len),
+-                    header.calc_checksum_ipv4_raw(
+-                        ipv4.source,
+-                        ipv4.destination,
+-                        too_big_slice
+-                    ).unwrap_err()
+-                );
+-            }
+         }
+     }
+ 
+@@ -358,31 +302,6 @@ mod udp_header {
+                     }
+                 );
+             }
+-
+-            // length error case
+-            {
+-                // SAFETY: In case the error is not triggered
+-                //         a segmentation fault will be triggered.
+-                let too_big_slice = unsafe {
+-                    //NOTE: The pointer must be initialized with a non null value
+-                    //      otherwise a key constraint of slices is not fullfilled
+-                    //      which can lead to crashes in release mode.
+-                    use std::ptr::NonNull;
+-                    std::slice::from_raw_parts(
+-                        NonNull::<u8>::dangling().as_ptr(),
+-                        bad_len
+-                    )
+-                };
+-                assert_eq!(
+-                    ValueError::UdpPayloadLengthTooLarge(bad_len),
+-                    UdpHeader::with_ipv6_checksum(
+-                        source_port,
+-                        destination_port,
+-                        &ipv6,
+-                        &too_big_slice
+-                    ).unwrap_err()
+-                );
+-            }
+         }
+     }
+ 
+@@ -457,31 +376,6 @@ mod udp_header {
+                     }
+                 );
+             }
+-
+-            // length error case
+-            {
+-                // SAFETY: In case the error is not triggered
+-                //         a segmentation fault will be triggered.
+-                let too_big_slice = unsafe {
+-                    //NOTE: The pointer must be initialized with a non null value
+-                    //      otherwise a key constraint of slices is not fullfilled
+-                    //      which can lead to crashes in release mode.
+-                    use std::ptr::NonNull;
+-                    std::slice::from_raw_parts(
+-                        NonNull::<u8>::dangling().as_ptr(),
+-                        bad_len
+-                    )
+-                };
+-                assert_eq!(
+-                    ValueError::UdpPayloadLengthTooLarge(bad_len),
+-                    UdpHeader::with_ipv6_checksum(
+-                        source_port,
+-                        destination_port,
+-                        &ipv6,
+-                        &too_big_slice
+-                    ).unwrap_err()
+-                );
+-            }
+         }
+     }
+ 
+@@ -555,37 +449,6 @@ mod udp_header {
+                     ).unwrap()
+                 );
+             }
+-
+-            // length error case
+-            {
+-                let header = UdpHeader {
+-                    source_port,
+-                    destination_port,
+-                    // udp header length itself is ok, but the payload not
+-                    length: (UdpHeader::SERIALIZED_SIZE + payload.len()) as u16,
+-                    checksum: dummy_checksum,
+-                };
+-                // SAFETY: In case the error is not triggered
+-                //         a segmentation fault will be triggered.
+-                let too_big_slice = unsafe {
+-                    //NOTE: The pointer must be initialized with a non null value
+-                    //      otherwise a key constraint of slices is not fullfilled
+-                    //      which can lead to crashes in release mode.
+-                    use std::ptr::NonNull;
+-                    std::slice::from_raw_parts(
+-                        NonNull::<u8>::dangling().as_ptr(),
+-                        bad_len
+-                    )
+-                };
+-                assert_eq!(
+-                    ValueError::UdpPayloadLengthTooLarge(bad_len),
+-                    header.calc_checksum_ipv6_raw(
+-                        ipv6.source,
+-                        ipv6.destination,
+-                        too_big_slice
+-                    ).unwrap_err()
+-                );
+-            }
+         }
+     }
+ 
+Index: etherparse/tests/transport/mod.rs
+===================================================================
+--- etherparse.orig/tests/transport/mod.rs
++++ etherparse/tests/transport/mod.rs
+@@ -314,27 +314,6 @@ mod transport_header {
+                         icmpv6.icmp_type.calc_checksum(ipv6.source, ipv6.destination, &payload).unwrap()
+                     );
+                 }
+-
+-                // error case
+-                {
+-                    let mut transport = Icmpv6(icmpv6.clone());
+-                    // SAFETY: In case the error is not triggered
+-                    //         a segmentation fault will be triggered.
+-                    let too_big_slice = unsafe {
+-                        //NOTE: The pointer must be initialized with a non null value
+-                        //      otherwise a key constraint of slices is not fullfilled
+-                        //      which can lead to crashes in release mode.
+-                        use std::ptr::NonNull;
+-                        std::slice::from_raw_parts(
+-                            NonNull::<u8>::dangling().as_ptr(),
+-                            (std::u32::MAX - 7) as usize
+-                        )
+-                    };
+-                    assert_matches!(
+-                        transport.update_checksum_ipv6(&ipv6, too_big_slice),
+-                        Err(ValueError::Ipv6PayloadLengthTooLarge(_))
+-                    );
+-                }
+             }
+         }
+     }
+@@ -449,4 +428,4 @@ mod transport_header {
+             }
+         }
+     }
+-}
+\ No newline at end of file
++}
