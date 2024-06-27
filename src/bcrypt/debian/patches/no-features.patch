@@ -1,0 +1,43 @@
+Origin: https://github.com/Keats/rust-bcrypt/pull/85
+From: Bastian Germann <bage@debian.org>
+Date: Thu, 27 Jun 2024 13:06:33 +0200
+Subject: Allow testing/example with no features
+
+---
+ examples/hash.rs | 6 ++++++
+ src/lib.rs       | 2 +-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/examples/hash.rs b/examples/hash.rs
+index 999a3b5..97bdac0 100644
+--- a/examples/hash.rs
++++ b/examples/hash.rs
+@@ -1,9 +1,15 @@
+ extern crate bcrypt;
+ 
++#[cfg(any(feature = "alloc", feature = "std"))]
+ use bcrypt::{hash, verify, DEFAULT_COST};
+ 
++#[cfg(any(feature = "alloc", feature = "std"))]
+ fn main() {
+     let hashed = hash("hunter2", DEFAULT_COST).unwrap();
+     let valid = verify("hunter2", &hashed).unwrap();
+     println!("{:?}", valid);
+ }
++
++#[cfg(not(any(feature = "alloc", feature = "std")))]
++fn main() {
++}
+diff --git a/src/lib.rs b/src/lib.rs
+index c42f77a..1b4e70e 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -219,7 +219,7 @@ pub fn verify<P: AsRef<[u8]>>(password: P, hash: &str) -> BcryptResult<bool> {
+     Ok(source_decoded.ct_eq(&generated_decoded).into())
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test, any(feature = "alloc", feature = "std")))]
+ mod tests {
+     use super::{
+         _hash_password,
