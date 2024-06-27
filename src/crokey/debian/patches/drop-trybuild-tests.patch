@@ -1,0 +1,34 @@
+Description: drop trybuild dependency and tests that use it
+ trybuild compiles crokey, fetching upstream crates. Adn it
+ does not seem to respect setting .cargo/config.toml, thanks
+ to which patching crates.io source to debian cargo registry
+ does not work.
+Author: Ananthu C V <weepingclown@disroot.org>
+Forwarded: not-needed
+Last-Update: 2024-06-28
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -48,8 +48,5 @@
+ [dev-dependencies.deser-hjson]
+ version = "2"
+ 
+-[dev-dependencies.trybuild]
+-version = "1.0.55"
+-
+ [features]
+ default = ["serde"]
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -349,8 +349,8 @@
+         assert!(!matches!(key!(ctrl-alt-b), key!(ctrl-b)));
+     }
+ 
+-    #[test]
+-    fn ui() {
+-        trybuild::TestCases::new().compile_fail("tests/ui/*.rs");
+-    }
++    // #[test]
++    // fn ui() {
++    //     trybuild::TestCases::new().compile_fail("tests/ui/*.rs");
++    // }
+ }
