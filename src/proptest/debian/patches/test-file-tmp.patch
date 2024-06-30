@@ -1,0 +1,17 @@
+Description: Move persistence test file path to /tmp
+ Due to the purpose ofthe tests, it can't use tempfile.
+Last-Update: 2024-06-30
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/test_runner/runner.rs
++++ b/src/test_runner/runner.rs
+@@ -1112,3 +1112,3 @@
+     fn persisted_cases_do_not_count_towards_total_cases() {
+-        const FILE: &'static str = "persistence-test.txt";
++        const FILE: &'static str = "/tmp/proptest-test-persistence-test.txt";
+         let _ = fs::remove_file(FILE);
+@@ -1155,3 +1155,3 @@
+     fn failing_cases_persisted_and_reloaded() {
+-        const FILE: &'static str = "persistence-test.txt";
++        const FILE: &'static str = "/tmp/proptest-test-persistence-test.txt";
+         let _ = fs::remove_file(FILE);
