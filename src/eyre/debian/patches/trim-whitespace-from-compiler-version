@@ -1,0 +1,11 @@
+Index: eyre/build.rs
+===================================================================
+--- eyre.orig/build.rs
++++ eyre/build.rs
+@@ -115,5 +115,5 @@
+     let rustc = env::var_os("RUSTC").unwrap_or_else(|| OsString::from("rustc"));
+     let output = Command::new(rustc).arg("--version").output().ok()?;
+-    let version = str::from_utf8(&output.stdout).ok()?;
++    let version = str::from_utf8(&output.stdout).ok()?.trim();
+     let mut pieces = version.split(['.', ' ', '-']);
+     if pieces.next() != Some("rustc") {
