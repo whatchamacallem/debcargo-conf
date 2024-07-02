@@ -63,8 +63,8 @@ Index: fastrand/tests/smoke.rs
 +
  #[test]
  fn fill() {
--    let r = fastrand::Rng::new();
-+    let r = getrng();
+-    let mut r = fastrand::Rng::new();
++    let mut r = getrng();
      let mut a = [0u8; 64];
      let mut b = [0u8; 64];
  
@@ -72,8 +72,8 @@ Index: fastrand/tests/smoke.rs
  
  #[test]
  fn rng() {
--    let r = fastrand::Rng::new();
-+    let r = getrng();
+-    let mut r = fastrand::Rng::new();
++    let mut r = getrng();
  
      assert_ne!(r.u64(..), r.u64(..));
  
@@ -83,17 +83,35 @@ Index: fastrand/tests/smoke.rs
  #[test]
 +#[cfg(feature="std")]
  fn rng_init() {
-     let a = fastrand::Rng::new();
-     let b = fastrand::Rng::new();
-@@ -114,7 +128,7 @@ fn rng_init() {
+     let mut a = fastrand::Rng::new();
+     let mut b = fastrand::Rng::new();
+@@ -114,14 +128,15 @@ fn rng_init() {
  #[test]
  fn with_seed() {
-     let a = fastrand::Rng::with_seed(7);
--    let b = fastrand::Rng::new();
-+    let b = getrng();
+     let mut a = fastrand::Rng::with_seed(7);
+-    let mut b = fastrand::Rng::new();
++    let mut b = getrng();
      b.seed(7);
      assert_eq!(a.u64(..), b.u64(..));
  }
+ 
+ #[test]
++#[cfg(feature = "alloc")]
+ fn choose_multiple() {
+-    let mut a = fastrand::Rng::new();
++    let mut a = getrng();
+     let mut elements = (0..20).collect::<Vec<_>>();
+ 
+     while !elements.is_empty() {
+@@ -135,7 +150,7 @@ fn choose_multiple() {
+ #[test]
+ fn choice() {
+     let items = [1, 4, 9, 5, 2, 3, 6, 7, 8, 0];
+-    let mut r = fastrand::Rng::new();
++    let mut r = getrng();
+ 
+     for item in &items {
+         while r.choice(&items).unwrap() != item {}
 Index: fastrand/benches/bench.rs
 ===================================================================
 --- fastrand.orig/benches/bench.rs
@@ -116,8 +134,8 @@ Index: fastrand/benches/bench.rs
  
  #[bench]
  fn shuffle_fastrand(b: &mut Bencher) {
--    let rng = fastrand::Rng::new();
-+    let rng = getrng();
+-    let mut rng = fastrand::Rng::new();
++    let mut rng = getrng();
      let mut x = (0..100).collect::<Vec<usize>>();
      b.iter(|| {
          rng.shuffle(&mut x);
@@ -125,8 +143,8 @@ Index: fastrand/benches/bench.rs
  
  #[bench]
  fn u8_fastrand(b: &mut Bencher) {
--    let rng = fastrand::Rng::new();
-+    let rng = getrng();
+-    let mut rng = fastrand::Rng::new();
++    let mut rng = getrng();
      b.iter(|| {
          let mut sum = 0u8;
          for _ in 0..10_000 {
@@ -134,7 +152,7 @@ Index: fastrand/benches/bench.rs
  
  #[bench]
  fn u32_fastrand(b: &mut Bencher) {
--    let rng = fastrand::Rng::new();
+-    let mut rng = fastrand::Rng::new();
 +    let mut rng = getrng();
      b.iter(|| {
          let mut sum = 0u32;
@@ -143,8 +161,8 @@ Index: fastrand/benches/bench.rs
  
  #[bench]
  fn fill(b: &mut Bencher) {
--    let rng = fastrand::Rng::new();
-+    let rng = getrng();
+-    let mut rng = fastrand::Rng::new();
++    let mut rng = getrng();
      b.iter(|| {
          // Pick a size that isn't divisble by 8.
          let mut bytes = [0u8; 367];
@@ -152,8 +170,8 @@ Index: fastrand/benches/bench.rs
  
  #[bench]
  fn fill_naive(b: &mut Bencher) {
--    let rng = fastrand::Rng::new();
-+    let rng = getrng();
+-    let mut rng = fastrand::Rng::new();
++    let mut rng = getrng();
      b.iter(|| {
          let mut bytes = [0u8; 367];
          for item in &mut bytes {
