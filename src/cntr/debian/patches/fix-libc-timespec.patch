@@ -1,0 +1,29 @@
+--- a/src/sys_ext/internal/utime.rs
++++ b/src/sys_ext/internal/utime.rs
+@@ -17,15 +17,19 @@
+ impl<'a> From<&'a UtimeSpec> for libc::timespec {
+     fn from(time: &'a UtimeSpec) -> libc::timespec {
++		// Debian: In Debian packaged rust-libc 0.2.153-2, a private pad field
++		// was added to libc::timespec for specific architectures, failing the
++		// origianl struct literal syntax.
++		// SAFETY: The pad should be 0, and .tv_sec was 0 in original code.
++		let mut spec: libc::timespec = unsafe { std::mem::zeroed() };
+         match time {
+-            UtimeSpec::Now => libc::timespec {
+-                tv_sec: 0,
+-                tv_nsec: libc::UTIME_NOW,
++            UtimeSpec::Now => {
++				spec.tv_nsec = libc::UTIME_NOW;
+             },
+-            UtimeSpec::Omit => libc::timespec {
+-                tv_sec: 0,
+-                tv_nsec: libc::UTIME_OMIT,
++            UtimeSpec::Omit => {
++                spec.tv_nsec = libc::UTIME_OMIT;
+             },
+-            UtimeSpec::Time(spec) => *spec.as_ref(),
++            UtimeSpec::Time(spec) => return *spec.as_ref(),
+         }
++		spec
+     }
+ }
