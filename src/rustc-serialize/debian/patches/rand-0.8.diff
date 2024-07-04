@@ -1,0 +1,28 @@
+Index: rustc-serialize/Cargo.toml
+===================================================================
+--- rustc-serialize.orig/Cargo.toml
++++ rustc-serialize/Cargo.toml
+@@ -27,4 +27,4 @@ license = "MIT/Apache-2.0"
+ repository = "https://github.com/rust-lang/rustc-serialize"
+ 
+ [dev-dependencies.rand]
+-version = "0.3"
++version = "0.8"
+Index: rustc-serialize/src/base64.rs
+===================================================================
+--- rustc-serialize.orig/src/base64.rs
++++ rustc-serialize/src/base64.rs
+@@ -475,10 +475,11 @@ mod tests {
+     #[test]
+     fn test_base64_random() {
+         use rand::{thread_rng, Rng};
++        use rand::distributions::Uniform;
+ 
+         for _ in 0..1000 {
+-            let times = thread_rng().gen_range(1, 100);
+-            let v = thread_rng().gen_iter::<u8>().take(times)
++            let times = thread_rng().gen_range(1.. 100);
++            let v = thread_rng().sample_iter(Uniform::new_inclusive(0, 255)).take(times)
+                                 .collect::<Vec<_>>();
+             assert_eq!(v.to_base64(STANDARD)
+                         .from_base64()
