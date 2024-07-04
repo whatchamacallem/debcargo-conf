@@ -1,0 +1,11 @@
+--- rusb-0.9.3/src/context.rs
++++ rusb-0.9.3/src/context.rs
+@@ -159,7 +159,7 @@
+                 Some(t) => {
+                     let tv = timeval {
+                         tv_sec: t.as_secs() as Seconds,
+-                        tv_usec: t.subsec_nanos() as MicroSeconds / 1000,
++                        tv_usec: (t.subsec_nanos() as MicroSeconds / 1000) as _,
+                     };
+                     libusb_handle_events_timeout_completed(self.as_raw(), &tv, ptr::null_mut())
+                 }
