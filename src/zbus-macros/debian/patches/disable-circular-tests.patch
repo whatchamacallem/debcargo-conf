@@ -1,0 +1,41 @@
+Description: Disable tests that use zbus
+ which are basically all. Annoying, but necessary, since zbus depends on
+ zvariant, a newer, incompatible version of which this depends on.
+Last-Update: 2024-07-04
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/tests/tests.rs
++++ b/tests/tests.rs
+@@ -1,3 +1,3 @@
+-use futures_util::{
++/*use futures_util::{
+     future::{select, Either},
+     stream::StreamExt,
+@@ -365,3 +365,3 @@
+             .expect_err("Message does not have correct data");
+     }
+-}
++}*/
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -110,5 +110,5 @@
+ /// # Example
+ ///
+-/// ```no_run
++/// ```ignore
+ /// # use std::error::Error;
+ /// use zbus_macros::proxy;
+@@ -304,5 +304,5 @@
+ /// # Example
+ ///
+-/// ```
++/// ```ignore
+ /// # use std::error::Error;
+ /// use zbus_macros::interface;
+@@ -406,5 +406,5 @@
+ /// # Example
+ ///
+-/// ```
++/// ```ignore
+ /// use zbus_macros::DBusError;
+ ///
