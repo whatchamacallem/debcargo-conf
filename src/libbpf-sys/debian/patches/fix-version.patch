@@ -1,0 +1,67 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 7247a6b..6b20201 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -43,40 +43,21 @@ crate-type = [
+ ]
+ 
+ [build-dependencies.bindgen]
+-version = "^0.69.4"
++version = "^0.66.1"
+ optional = true
+ 
+ [build-dependencies.cc]
+-version = "^1.0.90"
++version = "^1.0.83"
+ 
+ [build-dependencies.nix]
+-version = "^0.28.0"
++version = "^0.27"
+ features = ["fs"]
+ default-features = false
+ 
+ [build-dependencies.pkg-config]
+-version = "^0.3.30"
++version = "^0.3.27"
+ 
+ [features]
+-bindgen-source = ["bindgen"]
+-default = ["vendored-libbpf"]
+-novendor = []
+-static = [
+-    "static-libbpf",
+-    "static-libelf",
+-    "static-zlib",
+-]
+-static-libbpf = []
+-static-libelf = ["static-libbpf"]
+-static-zlib = ["static-libbpf"]
+-vendored = [
+-    "vendored-libbpf",
+-    "vendored-libelf",
+-    "vendored-zlib",
+-]
+-vendored-libbpf = ["static-libbpf"]
+-vendored-libelf = ["static-libelf"]
+-vendored-zlib = ["static-zlib"]
+ 
+ [badges.github]
+ repository = "libbpf/libbpf-sys"
+diff --git a/bindings.h b/bindings.h
+index a5a3a98..5d203af 100644
+--- a/bindings.h
++++ b/bindings.h
+@@ -1,13 +1,5 @@
+-#ifdef __LIBBPF_SYS_NOVENDOR
+ #include <linux/if_link.h>
+ #include <linux/perf_event.h>
+ #include <bpf/bpf.h>
+ #include <bpf/btf.h>
+ #include <bpf/libbpf.h>
+-#else
+-#include "libbpf/include/uapi/linux/if_link.h"
+-#include "libbpf/include/uapi/linux/perf_event.h"
+-#include "libbpf/src/bpf.h"
+-#include "libbpf/src/btf.h"
+-#include "libbpf/src/libbpf.h"
+-#endif /* __LIBBPF_SYS_NOVENDOR */
