@@ -1,21 +1,8 @@
 Description: fix compilation with libmbedtls-dev
 Author: Emanuele Rocca <ema@debian.org>
-Last-Update: 2023-01-26
+Last-Update: 2024-07-07 by Peter Michael Green.
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
-Index: psa-crypto-sys/src/c/shim.h
-===================================================================
---- psa-crypto-sys.orig/src/c/shim.h
-+++ psa-crypto-sys/src/c/shim.h
-@@ -1,7 +1,7 @@
- // Copyright 2020 Contributors to the Parsec project.
- // SPDX-License-Identifier: Apache-2.0
- 
--#include "mbedtls/build_info.h"
-+#include "mbedtls/config.h"
- 
- #include <psa/crypto.h>
- #include <psa/crypto_se_driver.h>
 Index: psa-crypto-sys/build.rs
 ===================================================================
 --- psa-crypto-sys.orig/build.rs
@@ -68,21 +55,19 @@ Index: psa-crypto-sys/build.rs
          Ok(())
      }
  
-@@ -91,7 +64,7 @@ mod common {
+@@ -91,7 +64,6 @@ mod common {
  
          let shim_bindings = bindgen::Builder::default()
              .clang_arg(format!("-I{}", out_dir))
 -            .clang_arg("-DMBEDTLS_CONFIG_FILE=<config.h>")
-+            .clang_arg("-DMBEDTLS_CONFIG_FILE=<mbedtls/config.h>")
              .clang_arg(format!("-I{}", mbed_include_dir))
              .rustfmt_bindings(true)
              .header("src/c/shim.h")
-@@ -117,7 +90,7 @@ mod common {
+@@ -117,7 +90,6 @@ mod common {
          // Compile and package the shim library
          cc::Build::new()
              .include(&out_dir)
 -            .define("MBEDTLS_CONFIG_FILE", "<config.h>")
-+            .define("MBEDTLS_CONFIG_FILE", "<mbedtls/config.h>")
              .include(include_dir)
              .file("./src/c/shim.c")
              .warnings(true)
