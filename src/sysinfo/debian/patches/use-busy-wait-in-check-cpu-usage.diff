@@ -14,10 +14,10 @@ Index: sysinfo/src/lib.rs
          for _ in 0..10 {
              s.refresh_cpu();
              // Wait a bit to update CPU usage values
--            std::thread::sleep(std::time::Duration::from_millis(100));
-+            //std::thread::sleep(std::time::Duration::from_millis(100));
+-            std::thread::sleep(System::MINIMUM_CPU_UPDATE_INTERVAL);
++            //std::thread::sleep(System::MINIMUM_CPU_UPDATE_INTERVAL);
 +            let now = Instant::now();
-+            while now.elapsed() < std::time::Duration::from_millis(100) {}
++            while now.elapsed() < System::MINIMUM_CPU_UPDATE_INTERVAL {}
              if s.cpus().iter().any(|c| c.cpu_usage() > 0.0) {
                  // All good!
                  return;
