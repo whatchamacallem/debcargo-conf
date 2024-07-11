@@ -1,0 +1,127 @@
+From 1689a3b7d2212a1fec813249461841b168072404 Mon Sep 17 00:00:00 2001
+From: Reinhard Tartler <siretart@gmail.com>
+Date: Sat, 6 Jul 2024 14:48:26 +0000
+Subject: [PATCH] Use Rust 1.78
+
+Follow suggestsions from the compiler.
+
+Disable clippy::all lints for now
+
+https://github.com/parallaxsecond/parsec-interface-rs/pull/151/commits
+
+Signed-off-by: Reinhard Tartler <siretart@gmail.com>
+---
+ Cargo.toml                                            | 2 +-
+ src/operations/psa_asymmetric_decrypt.rs              | 2 +-
+ src/operations/psa_import_key.rs                      | 2 +-
+ src/operations/psa_raw_key_agreement.rs               | 2 +-
+ src/operations_protobuf/convert_psa_cipher_decrypt.rs | 2 +-
+ src/operations_protobuf/convert_psa_cipher_encrypt.rs | 2 +-
+ src/operations_protobuf/convert_psa_export_key.rs     | 2 +-
+ tests/ci.sh                                           | 2 +-
+ 8 files changed, 8 insertions(+), 8 deletions(-)
+
+Index: parsec-interface/Cargo.toml
+===================================================================
+--- parsec-interface.orig/Cargo.toml
++++ parsec-interface/Cargo.toml
+@@ -11,7 +11,7 @@
+ 
+ [package]
+ edition = "2018"
+-rust-version = "1.66.0"
++rust-version = "1.78.0"
+ name = "parsec-interface"
+ version = "0.29.1"
+ authors = ["Parsec Project Contributors"]
+Index: parsec-interface/src/operations/psa_asymmetric_decrypt.rs
+===================================================================
+--- parsec-interface.orig/src/operations/psa_asymmetric_decrypt.rs
++++ parsec-interface/src/operations/psa_asymmetric_decrypt.rs
+@@ -147,7 +147,7 @@ mod tests {
+                 key_name: String::from("some key"),
+                 alg: AsymmetricEncryption::RsaPkcs1v15Crypt,
+                 ciphertext: Zeroizing::new(vec![0xff, 32]),
+-                salt: Some(zeroize::Zeroizing::new(vec![0xff, 32])),
++                salt: Some(Zeroizing::new(vec![0xff, 32])),
+             })
+             .validate(get_attrs())
+             .unwrap_err(),
+Index: parsec-interface/src/operations/psa_import_key.rs
+===================================================================
+--- parsec-interface.orig/src/operations/psa_import_key.rs
++++ parsec-interface/src/operations/psa_import_key.rs
+@@ -22,7 +22,7 @@ pub struct Operation {
+     // Debug is not derived for this because it could expose secrets if printed or logged
+     // somewhere
+     #[derivative(Debug = "ignore")]
+-    pub data: crate::secrecy::Secret<Vec<u8>>,
++    pub data: secrecy::Secret<Vec<u8>>,
+ }
+ 
+ /// Native object for the result of a cryptographic key import operation.
+Index: parsec-interface/src/operations/psa_raw_key_agreement.rs
+===================================================================
+--- parsec-interface.orig/src/operations/psa_raw_key_agreement.rs
++++ parsec-interface/src/operations/psa_raw_key_agreement.rs
+@@ -29,7 +29,7 @@ pub struct Result {
+     /// `data` holds the bytes defining the key, formatted as specified
+     /// by the provider for which the request was made.
+     #[derivative(Debug = "ignore")]
+-    pub shared_secret: crate::secrecy::Secret<Vec<u8>>,
++    pub shared_secret: secrecy::Secret<Vec<u8>>,
+ }
+ 
+ impl Operation {
+Index: parsec-interface/src/operations_protobuf/convert_psa_cipher_decrypt.rs
+===================================================================
+--- parsec-interface.orig/src/operations_protobuf/convert_psa_cipher_decrypt.rs
++++ parsec-interface/src/operations_protobuf/convert_psa_cipher_decrypt.rs
+@@ -72,7 +72,7 @@ mod test {
+         let mut proto: OperationProto = Default::default();
+         let message = vec![0x11, 0x22, 0x33];
+         let key_name = "test name".to_string();
+-        let proto_alg = psa_crypto::types::algorithm::Cipher::StreamCipher;
++        let proto_alg = Cipher::StreamCipher;
+         proto.ciphertext = message.clone();
+         proto.alg = convert_psa_algorithm::cipher_to_i32(proto_alg);
+         proto.key_name = key_name.clone();
+Index: parsec-interface/src/operations_protobuf/convert_psa_cipher_encrypt.rs
+===================================================================
+--- parsec-interface.orig/src/operations_protobuf/convert_psa_cipher_encrypt.rs
++++ parsec-interface/src/operations_protobuf/convert_psa_cipher_encrypt.rs
+@@ -71,7 +71,7 @@ mod test {
+         let mut proto: OperationProto = Default::default();
+         let message = vec![0x11, 0x22, 0x33];
+         let key_name = "test name".to_string();
+-        let proto_alg = psa_crypto::types::algorithm::Cipher::StreamCipher;
++        let proto_alg = Cipher::StreamCipher;
+         proto.plaintext = message.clone();
+         proto.alg = convert_psa_algorithm::cipher_to_i32(proto_alg);
+         proto.key_name = key_name.clone();
+Index: parsec-interface/src/operations_protobuf/convert_psa_export_key.rs
+===================================================================
+--- parsec-interface.orig/src/operations_protobuf/convert_psa_export_key.rs
++++ parsec-interface/src/operations_protobuf/convert_psa_export_key.rs
+@@ -124,7 +124,7 @@ mod test {
+     #[test]
+     fn resp_export_pk_e2e() {
+         let result = Result {
+-            data: secrecy::Secret::new(vec![0x11, 0x22, 0x33]),
++            data: Secret::new(vec![0x11, 0x22, 0x33]),
+         };
+         let body = CONVERTER
+             .result_to_body(NativeResult::PsaExportKey(result))
+Index: parsec-interface/tests/ci.sh
+===================================================================
+--- parsec-interface.orig/tests/ci.sh
++++ parsec-interface/tests/ci.sh
+@@ -31,7 +31,7 @@ then
+ fi
+ if cargo clippy -h
+ then
+-	cargo clippy --all-targets -- -D clippy::all -D clippy::cargo
++	cargo clippy --all-targets -- -D clippy::cargo
+ fi
+ 
+ ############################
