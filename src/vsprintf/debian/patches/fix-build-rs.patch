@@ -1,0 +1,16 @@
+Description: Debianize build.rs
+
+Last-Update: 2024-07-05
+---
+
+--- rust-vsprintf-2.0.0.orig/build.rs
++++ rust-vsprintf-2.0.0/build.rs
+@@ -1,5 +1,8 @@
++use std::env;
++
+ fn main() {
+     println!("cargo:rerun-if-changed=src/lib.c");
++    println!("dh-cargo:deb-built-using=vsprintf=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
+ 
+     cc::Build::new()
+         .file("src/lib.c")
