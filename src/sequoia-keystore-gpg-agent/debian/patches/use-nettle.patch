@@ -1,0 +1,37 @@
+Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Description: use nettle as crypto backend for Debian
+
+(modeled off of Alexander Kjäll's modifications to sequoia-keystore-softkeys) 
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -59,6 +59,7 @@
+ [dependencies.sequoia-openpgp]
+ version = "1.17"
+ default-features = false
++features = [ "crypto-nettle" ]
+ 
+ [dependencies.tokio]
+ version = "1.19"
+@@ -85,21 +86,5 @@
+ features = ["env-filter"]
+ default-features = false
+ 
+-[target."cfg(not(windows))".dev-dependencies.sequoia-openpgp]
+-version = "1"
+-features = [
+-    "crypto-nettle",
+-    "__implicit-crypto-backend-for-tests",
+-]
+-default-features = false
+-
+-[target."cfg(windows)".dev-dependencies.sequoia-openpgp]
+-version = "1"
+-features = [
+-    "crypto-cng",
+-    "__implicit-crypto-backend-for-tests",
+-]
+-default-features = false
+-
+ [badges.maintenance]
+ status = "actively-developed"
