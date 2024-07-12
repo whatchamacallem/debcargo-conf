@@ -91,6 +91,15 @@ Index: debcargo/src/crates.rs
              };
  
              (package, crate_file)
+@@ -229,7 +229,7 @@ impl CrateInfo {
+             )?;
+         }
+ 
+-        let source_id = dependency.source_id();
++        let source_id = SourceId::crates_io_maybe_sparse_http(&config)?;
+         let registry_name = format!(
+             "{}-{:016x}",
+             source_id.url().host_str().unwrap_or(""),
 @@ -232,7 +234,7 @@ impl CrateInfo {
              hash(&source_id).swap_bytes()
          );
