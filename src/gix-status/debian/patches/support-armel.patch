@@ -12,3 +12,42 @@ Index: gix-status/Cargo.toml
  [dependencies.thiserror]
  version = "1.0.26"
  
+Index: gix-status/src/index_as_worktree/function.rs
+===================================================================
+--- gix-status.orig/src/index_as_worktree/function.rs
++++ gix-status/src/index_as_worktree/function.rs
+@@ -2,9 +2,15 @@ use std::{
+     io,
+     path::Path,
+     slice::Chunks,
+-    sync::atomic::{AtomicU64, AtomicUsize, Ordering},
++    sync::atomic::{AtomicUsize, Ordering},
+ };
+ 
++#[cfg(target_has_atomic = "64")]
++use std::sync::atomic::AtomicU64;
++
++#[cfg(not(target_has_atomic = "64"))]
++use portable_atomic::AtomicU64;
++
+ use bstr::BStr;
+ use filetime::FileTime;
+ use gix_features::parallel::{in_parallel_if, Reduce};
+Index: gix-status/src/index_as_worktree/traits.rs
+===================================================================
+--- gix-status.orig/src/index_as_worktree/traits.rs
++++ gix-status/src/index_as_worktree/traits.rs
+@@ -52,7 +52,12 @@ pub trait ReadData<'a> {
+ ///
+ #[allow(clippy::empty_docs)]
+ pub mod read_data {
+-    use std::sync::atomic::{AtomicU64, Ordering};
++    use std::sync::atomic::Ordering;
++    #[cfg(target_has_atomic = "64")]
++    use std::sync::atomic::AtomicU64;
++
++    #[cfg(not(target_has_atomic = "64"))]
++    use portable_atomic::AtomicU64;
+ 
+     use gix_filter::pipeline::convert::ToGitOutcome;
+ 
