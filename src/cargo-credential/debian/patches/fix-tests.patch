@@ -9,7 +9,31 @@ Index: cargo-credential/src/error.rs
 -    #[test]
 +    // Debian this fails because our test env captures the stack trace here as well, and that
 +    // differs between created and into()-ed Errors..
-+    #[test(ignore)]
++    #[allow(dead_code)]
      pub fn roundtrip() {
          // Construct an error with context
          let e = anyhow::anyhow!("E1").context("E2").context("E3");
+Index: cargo-credential/tests/examples.rs
+===================================================================
+--- cargo-credential.orig/tests/examples.rs
++++ cargo-credential/tests/examples.rs
+@@ -2,7 +2,8 @@ use std::path::Path;
+ 
+ use snapbox::cmd::Command;
+ 
+-#[test]
++// Debian: requires writable crate dir
++#[allow(dead_code)]
+ fn stdout_redirected() {
+     let bin = snapbox::cmd::compile_example("stdout-redirected", []).unwrap();
+ 
+@@ -19,7 +20,8 @@ fn stdout_redirected() {
+         .success();
+ }
+ 
+-#[test]
++// Debian: requires writable crate dir
++#[allow(dead_code)]
+ fn file_provider() {
+     let bin = snapbox::cmd::compile_example("file-provider", []).unwrap();
+ 
