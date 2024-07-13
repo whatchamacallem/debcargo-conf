@@ -1,0 +1,65 @@
+Description: Update to aes 0.8
+Forwarded: https://github.com/rrrodzilla/rusty_paseto/pull/44
+Last-Update: 2024-07-13
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/core/common/cipher_text_impl/v1_local.rs
++++ b/src/core/common/cipher_text_impl/v1_local.rs
+@@ -2,5 +2,4 @@
+ use std::marker::PhantomData;
+-use ::Aes256Ctr;
++use ::cipher::{KeyIvInit, StreamCipher};
+ use ::cipher::generic_array::GenericArray;
+-use ::cipher::{NewCipher, StreamCipher};
+ use crate::core::common::cipher_text::CipherText;
+@@ -9,2 +8,4 @@
+ 
++type 256Ctr = ctr::Ctr64BE<aes::Aes256>;
++
+ impl CipherText<V1, Local> {
+@@ -26,2 +27,2 @@
+     }
+-}
+\ No newline at end of file
++}
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -44,4 +44,7 @@
+ [dependencies.]
+-version = "0.7.5"
+-features = ["ctr"]
++version = "0.8"
++optional = true
++
++[dependencies.ctr]
++version = "0.9"
+ optional = true
+@@ -178,3 +181,3 @@
+     "core",
+-    "",
++    "", "ctr",
+     "chacha20",
+@@ -210,3 +213,3 @@
+     "core",
+-    "",
++    "", "ctr",
+     "hmac",
+--- a/src/core/common/cipher_text_impl/v3_local.rs
++++ b/src/core/common/cipher_text_impl/v3_local.rs
+@@ -2,5 +2,4 @@
+ use std::marker::PhantomData;
+-use ::Aes256Ctr;
++use ::cipher::{KeyIvInit, StreamCipher};
+ use ::cipher::generic_array::GenericArray;
+-use ::cipher::{NewCipher, StreamCipher};
+ use crate::core::common::{CipherText, EncryptionKey};
+@@ -8,2 +7,4 @@
+ 
++type 256Ctr = ctr::Ctr64BE<aes::Aes256>;
++
+ impl CipherText<V3, Local> {
+@@ -25,2 +26,2 @@
+     }
+-}
+\ No newline at end of file
++}

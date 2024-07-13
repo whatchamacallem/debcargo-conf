@@ -1,0 +1,15 @@
+overlay = "."
+uploaders = ["Blair Noctis <n@sail.ng>"]
+
+collapse_features = true
+
+[packages."lib+@"]
+# v3 depends on p384 and v4 depends on ed25519-dalek, which seem to both have
+# an error type ultimately imported from signature. They are then derived into
+# this crate's error type using thiserror, which prohibits two variants being
+# #[from] the same source error type.
+#
+# See https://github.com/rrrodzilla/rusty_paseto/issues/36, though the author
+# asked why one would enable v3 and v4 at the same time, more or less implying
+# that one should not, without expressing intent to fix or wontfix.
+test_is_broken = true
