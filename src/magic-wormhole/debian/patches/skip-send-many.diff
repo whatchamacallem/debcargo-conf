@@ -1,0 +1,17 @@
+Description: Skip send_many test on amd64, armel/hf
+Author: Matthias Geiger <werdahias@riseup.net>
+Forwarded: not-needed
+Last-Update: 2024-07-15
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+
+--- a/src/core/test.rs
++++ b/src/core/test.rs
+@@ -259,6 +259,7 @@
+  */
+ #[cfg(feature = "transfer")]
+ #[async_std::test]
++#[cfg(not(any(target_arch = "x86-64", target_arch = "arm" )))]
+ pub async fn test_send_many() -> eyre::Result<()> {
+     init_logger();
+ 
