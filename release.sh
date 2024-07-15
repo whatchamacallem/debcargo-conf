@@ -143,11 +143,11 @@ if ! ( cd build && SOURCEONLY=1 ./build.sh "$CRATE" $VER ); then
 		"- packaged version is out-of-date => run \`./update.sh $*\`"
 fi
 
-git commit -m "$PKGNAME: release $REALVER"
-
 DEBVER=$(dpkg-parsechangelog -l $BUILDDIR/debian/changelog -SVersion)
 DEBSRC=$(dpkg-parsechangelog -l $BUILDDIR/debian/changelog -SSource)
 DEB_HOST_ARCH=$(dpkg-architecture -q DEB_HOST_ARCH)
+
+git commit -m "$PKGNAME: release $DEBVER"
 
 if [ "$RERELEASE" = 1 ]; then
 
