@@ -1,9 +1,26 @@
 #!/usr/bin/make -f
+CARGO = /usr/share/cargo/bin/cargo
+
+RUSTC_ARGS += -C codegen-units=1 -C debuginfo=full
+# these lto-related options seem to cause build errors that i don't understand
+# see https://salsa.debian.org/rust-team/rust/-/merge_requests/41
+#RUSTC_ARGS += -C lto=true -C linker-plugin-lto=true -C embed-bitcode=true
+
+CARGO_BUILD_ARGS = build --release --verbose --offline
+
 %:
 	dh $@ --buildsystem cargo --with bash-completion
 
-override_dh_auto_install:
-	dh_auto_install -O--buildsystem=cargo -- --features=cli
+execute_after_dh_auto_install:
+	mkdir -p debian/sqopv/usr/bin debian/sqop/usr/bin debian/sqopv-out debian/sqop-out
+	$(CARGO) clean
+	env RUSTFLAGS="$(RUSTC_ARGS)" $(CARGO) $(CARGO_BUILD_ARGS) --bin sqopv  --features=cliv,sequoia-openpgp/crypto-nettle --no-default-features
+	cp target/release/sqopv debian/sqopv/usr/bin/
+	cp target/release/build/sequoia-sop-*/out/shell-completions/* debian/sqopv-out
+	$(CARGO) clean
+	env RUSTFLAGS="$(RUSTC_ARGS)" $(CARGO) $(CARGO_BUILD_ARGS) --bin sqop  --features=cli
+	cp target/release/sqop debian/sqop/usr/bin/
+	cp target/release/build/sequoia-sop-*/out/shell-completions/* debian/sqop-out
 
 override_dh_auto_test:
 	dh_auto_test -- test --all
