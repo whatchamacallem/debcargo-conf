@@ -6,20 +6,11 @@ The tempdir crate has been deprecated in favour of tempfile.
 
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -73,11 +73,9 @@
- [dev-dependencies.libc]
- version = "0.2"
- 
--[dev-dependencies.smol-potat]
--version = "1.1"
- 
+@@ -73,2 +73,2 @@
 -[dev-dependencies.tempdir]
 -version = "0.3"
 +[dev-dependencies.tempfile]
 +version = "3"
- 
- [dev-dependencies.tokio]
- version = "1"
 --- a/src/file_ext/async_impl/async_std_impl.rs
 +++ b/src/file_ext/async_impl/async_std_impl.rs
 @@ -9,7 +9,7 @@
@@ -36,7 +27,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[async_std::test]
      async fn lock_shared() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)
@@ -45,7 +36,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[async_std::test]
      async fn lock_exclusive() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)
@@ -54,7 +45,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[async_std::test]
      async fn lock_cleanup() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)
@@ -63,7 +54,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[async_std::test]
      async fn allocate() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file = fs::OpenOptions::new()
              .write(true)
@@ -72,7 +63,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[async_std::test]
      async fn filesystem_space() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let total_space = total_space(tempdir.path()).unwrap();
          let free_space = free_space(tempdir.path()).unwrap();
          let available_space = available_space(tempdir.path()).unwrap();
@@ -92,7 +83,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[smol_potat::test]
      async fn lock_shared() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)
@@ -101,7 +92,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[smol_potat::test]
      async fn lock_exclusive() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)
@@ -110,7 +101,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[smol_potat::test]
      async fn lock_cleanup() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)
@@ -119,7 +110,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[smol_potat::test]
      async fn allocate() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file = fs::OpenOptions::new()
              .write(true)
@@ -128,7 +119,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[smol_potat::test]
      async fn filesystem_space() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let total_space = total_space(tempdir.path()).unwrap();
          let free_space = free_space(tempdir.path()).unwrap();
          let available_space = available_space(tempdir.path()).unwrap();
@@ -148,7 +139,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[tokio::test]
      async fn lock_shared() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)
@@ -157,7 +148,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[tokio::test]
      async fn lock_exclusive() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)
@@ -166,7 +157,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[tokio::test]
      async fn lock_cleanup() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)
@@ -175,7 +166,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[tokio::test]
      async fn allocate() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file = fs::OpenOptions::new()
              .write(true)
@@ -184,7 +175,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[tokio::test]
      async fn filesystem_space() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let total_space = total_space(tempdir.path()).unwrap();
          let free_space = free_space(tempdir.path()).unwrap();
          let available_space = available_space(tempdir.path()).unwrap();
@@ -204,7 +195,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[test]
      fn lock_shared() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)
@@ -213,7 +204,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[test]
      fn lock_exclusive() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)
@@ -222,7 +213,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[test]
      fn lock_cleanup() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)
@@ -231,7 +222,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[test]
      fn allocate() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file = fs::OpenOptions::new()
              .write(true)
@@ -240,7 +231,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[test]
      fn filesystem_space() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let FsStats {
              free_space,
              available_space,
@@ -249,7 +240,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[bench]
      fn bench_file_create(b: &mut test::Bencher) {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("file");
  
          b.iter(|| {
@@ -258,7 +249,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      fn bench_file_truncate(b: &mut test::Bencher) {
          let size = 32 * 1024 * 1024;
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("file");
  
          b.iter(|| {
@@ -267,7 +258,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      fn bench_file_allocate(b: &mut test::Bencher) {
          let size = 32 * 1024 * 1024;
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("file");
  
          b.iter(|| {
@@ -276,7 +267,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      fn bench_allocated_size(b: &mut test::Bencher) {
          let size = 32 * 1024 * 1024;
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("file");
          let file = fs::OpenOptions::new()
              .read(true)
@@ -285,7 +276,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[bench]
      fn bench_lock_unlock(b: &mut test::Bencher) {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file = fs::OpenOptions::new()
              .read(true)
@@ -294,7 +285,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[bench]
      fn bench_free_space(b: &mut test::Bencher) {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          b.iter(|| {
              test::black_box(free_space(tempdir.path()).unwrap());
          });
@@ -303,7 +294,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[bench]
      fn bench_available_space(b: &mut test::Bencher) {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          b.iter(|| {
              test::black_box(available_space(tempdir.path()).unwrap());
          });
@@ -312,7 +303,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[bench]
      fn bench_total_space(b: &mut test::Bencher) {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          b.iter(|| {
              test::black_box(total_space(tempdir.path()).unwrap());
          });
@@ -332,7 +323,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[async_std::test]
      async fn lock_replace() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .write(true)
@@ -352,7 +343,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[smol_potat::test]
      async fn lock_replace() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .write(true)
@@ -372,7 +363,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[tokio::test]
      async fn lock_replace() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .write(true)
@@ -392,7 +383,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[test]
      fn lock_replace() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .write(true)
@@ -412,7 +403,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[async_std::test]
      async fn lock_non_reentrant() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file = fs::OpenOptions::new()
              .read(true)
@@ -421,7 +412,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[async_std::test]
      async fn lock_layering() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file = fs::OpenOptions::new()
              .read(true)
@@ -430,7 +421,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[async_std::test]
      async fn lock_layering_cleanup() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)
@@ -450,7 +441,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[smol_potat::test]
      async fn lock_non_reentrant() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file = fs::OpenOptions::new()
              .read(true)
@@ -459,7 +450,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[smol_potat::test]
      async fn lock_layering() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file = fs::OpenOptions::new()
              .read(true)
@@ -468,7 +459,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[smol_potat::test]
      async fn lock_layering_cleanup() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)
@@ -488,7 +479,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[tokio::test]
      async fn lock_non_reentrant() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file = fs::OpenOptions::new()
              .read(true)
@@ -497,7 +488,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[tokio::test]
      async fn lock_layering() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file = fs::OpenOptions::new()
              .read(true)
@@ -506,7 +497,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[tokio::test]
      async fn lock_layering_cleanup() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)
@@ -526,7 +517,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[test]
      fn lock_non_reentrant() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file = fs::OpenOptions::new()
              .read(true)
@@ -535,7 +526,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[test]
      fn lock_layering() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file = fs::OpenOptions::new()
              .read(true)
@@ -544,7 +535,7 @@ The tempdir crate has been deprecated in favour of tempfile.
      #[test]
      fn lock_layering_cleanup() {
 -        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempdir::tempdir().unwrap();
++        let tempdir = tempfile::tempdir().unwrap();
          let path = tempdir.path().join("fs4");
          let file1 = fs::OpenOptions::new()
              .read(true)

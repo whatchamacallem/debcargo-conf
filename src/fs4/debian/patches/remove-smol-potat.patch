@@ -1,0 +1,76 @@
+Index: fs4/Cargo.toml
+===================================================================
+--- fs4.orig/Cargo.toml
++++ fs4/Cargo.toml
+@@ -73,9 +73,6 @@ features = ["attributes"]
+ [dev-dependencies.libc]
+ version = "0.2"
+ 
+-[dev-dependencies.smol-potat]
+-version = "1.1"
+-
+ [dev-dependencies.tempfile]
+ version = "3"
+ 
+Index: fs4/src/file_ext/async_impl/smol_impl.rs
+===================================================================
+--- fs4.orig/src/file_ext/async_impl/smol_impl.rs
++++ fs4/src/file_ext/async_impl/smol_impl.rs
+@@ -19,7 +19,7 @@ mod test {
+     use smol::fs;
+ 
+     /// Tests shared file lock operations.
+-    #[smol_potat::test]
++    #[tokio::test]
+     async fn lock_shared() {
+         let tempdir = tempfile::tempdir().unwrap();
+         let path = tempdir.path().join("fs4");
+@@ -64,7 +64,7 @@ mod test {
+     }
+ 
+     /// Tests exclusive file lock operations.
+-    #[smol_potat::test]
++    #[tokio::test]
+     async fn lock_exclusive() {
+         let tempdir = tempfile::tempdir().unwrap();
+         let path = tempdir.path().join("fs4");
+@@ -100,7 +100,7 @@ mod test {
+     }
+ 
+     /// Tests that a lock is released after the file that owns it is dropped.
+-    #[smol_potat::test]
++    #[tokio::test]
+     async fn lock_cleanup() {
+         let tempdir = tempfile::tempdir().unwrap();
+         let path = tempdir.path().join("fs4");
+@@ -131,7 +131,7 @@ mod test {
+     }
+ 
+     /// Tests file allocation.
+-    #[smol_potat::test]
++    #[tokio::test]
+     async fn allocate() {
+         let tempdir = tempfile::tempdir().unwrap();
+         let path = tempdir.path().join("fs4");
+@@ -169,7 +169,7 @@ mod test {
+     }
+ 
+     /// Checks filesystem space methods.
+-    #[smol_potat::test]
++    #[tokio::test]
+     async fn filesystem_space() {
+         let tempdir = tempfile::tempdir().unwrap();
+         let total_space = total_space(tempdir.path()).unwrap();
+Index: fs4/src/unix/async_impl/smol_impl.rs
+===================================================================
+--- fs4.orig/src/unix/async_impl/smol_impl.rs
++++ fs4/src/unix/async_impl/smol_impl.rs
+@@ -16,7 +16,7 @@ mod test {
+ 
+     /// Tests that locking a file descriptor will replace any existing locks
+     /// held on the file descriptor.
+-    #[smol_potat::test]
++    #[tokio::test]
+     async fn lock_replace() {
+         let tempdir = tempfile::tempdir().unwrap();
+         let path = tempdir.path().join("fs4");

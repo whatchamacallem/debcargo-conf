@@ -1,0 +1,106 @@
+Index: fs4/src/file_ext/async_impl/async_std_impl.rs
+===================================================================
+--- fs4.orig/src/file_ext/async_impl/async_std_impl.rs
++++ fs4/src/file_ext/async_impl/async_std_impl.rs
+@@ -150,7 +150,13 @@ mod test {
+         // Allocate space for the file, checking that the allocated size steps
+         // up by block size, and the file length matches the allocated size.
+ 
+-        file.allocate(2 * blksize - 1).await.unwrap();
++        let result = file.allocate(2 * blksize - 1).await;
++        if let Err(ref e) = result {
++             if e.raw_os_error() == Some(95) {
++                 return; // tolerate operation not supported.
++             }
++        }
++        result.unwrap();
+         assert_eq!(2 * blksize, file.allocated_size().await.unwrap());
+         assert_eq!(2 * blksize - 1, file.metadata().await.unwrap().len());
+ 
+Index: fs4/src/file_ext/async_impl/smol_impl.rs
+===================================================================
+--- fs4.orig/src/file_ext/async_impl/smol_impl.rs
++++ fs4/src/file_ext/async_impl/smol_impl.rs
+@@ -150,7 +150,13 @@ mod test {
+         // Allocate space for the file, checking that the allocated size steps
+         // up by block size, and the file length matches the allocated size.
+ 
+-        file.allocate(2 * blksize - 1).await.unwrap();
++        let result = file.allocate(2 * blksize - 1).await;
++        if let Err(ref e) = result {
++             if e.raw_os_error() == Some(95) {
++                 return; // tolerate operation not supported.
++             }
++        }
++        result.unwrap();
+         assert_eq!(2 * blksize, file.allocated_size().await.unwrap());
+         assert_eq!(2 * blksize - 1, file.metadata().await.unwrap().len());
+ 
+Index: fs4/src/file_ext/async_impl/tokio_impl.rs
+===================================================================
+--- fs4.orig/src/file_ext/async_impl/tokio_impl.rs
++++ fs4/src/file_ext/async_impl/tokio_impl.rs
+@@ -158,7 +158,13 @@ mod test {
+         // Allocate space for the file, checking that the allocated size steps
+         // up by block size, and the file length matches the allocated size.
+ 
+-        file.allocate(2 * blksize - 1).await.unwrap();
++        let result = file.allocate(2 * blksize - 1).await;
++        if let Err(ref e) = result {
++             if e.raw_os_error() == Some(95) {
++                 return; // tolerate operation not supported.
++             }
++        }
++        result.unwrap();
+         assert_eq!(2 * blksize, file.allocated_size().await.unwrap());
+         assert_eq!(2 * blksize - 1, file.metadata().await.unwrap().len());
+ 
+Index: fs4/src/file_ext/sync_impl.rs
+===================================================================
+--- fs4.orig/src/file_ext/sync_impl.rs
++++ fs4/src/file_ext/sync_impl.rs
+@@ -230,7 +230,13 @@ mod test {
+         // Allocate space for the file, checking that the allocated size steps
+         // up by block size, and the file length matches the allocated size.
+ 
+-        file.allocate(2 * blksize - 1).unwrap();
++        let result = file.allocate(2 * blksize - 1);
++        if let Err(ref e) = result {
++             if e.raw_os_error() == Some(95) {
++                 return; // tolerate operation not supported.
++             }
++        }
++        result.unwrap();
+         assert_eq!(2 * blksize, file.allocated_size().unwrap());
+         assert_eq!(2 * blksize - 1, file.metadata().unwrap().len());
+ 
+@@ -312,7 +319,13 @@ mod test {
+                 .truncate(true)
+                 .open(&path)
+                 .unwrap();
+-            file.allocate(size).unwrap();
++            let result = file.allocate(size);
++            if let Err(ref e) = result {
++                 if e.raw_os_error() == Some(95) {
++                     return; // tolerate operation not supported.
++                 }
++            }
++            result.unwrap();
+             fs::remove_file(&path).unwrap();
+         });
+     }
+@@ -330,7 +343,13 @@ mod test {
+             .truncate(true)
+             .open(path)
+             .unwrap();
+-        file.allocate(size).unwrap();
++        let result = file.allocate(size);
++        if let Err(ref e) = result {
++            if e.raw_os_error() == Some(95) {
++                return; // tolerate operation not supported.
++            }
++        }
++        result.unwrap();
+ 
+         b.iter(|| {
+             file.allocated_size().unwrap();
