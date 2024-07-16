@@ -1,0 +1,80 @@
+Index: zbus/Cargo.toml
+===================================================================
+--- zbus.orig/Cargo.toml
++++ zbus/Cargo.toml
+@@ -119,7 +119,7 @@ features = [
+ optional = true
+ 
+ [dependencies.tokio-vsock]
+-version = "0.4"
++version = "0.5"
+ optional = true
+ 
+ [dependencies.tracing]
+Index: zbus/src/address/transport/mod.rs
+===================================================================
+--- zbus.orig/src/address/transport/mod.rs
++++ zbus/src/address/transport/mod.rs
+@@ -143,7 +143,7 @@ impl Transport {
+             }
+ 
+             #[cfg(feature = "tokio-vsock")]
+-            Transport::Vsock(addr) => VsockStream::connect(addr.cid(), addr.port())
++            Transport::Vsock(addr) => VsockStream::connect(tokio_vsock::VsockAddr::new(addr.cid(), addr.port()))
+                 .await
+                 .map(Stream::Vsock)
+                 .map_err(Into::into),
+Index: zbus/src/connection/mod.rs
+===================================================================
+--- zbus.orig/src/connection/mod.rs
++++ zbus/src/connection/mod.rs
+@@ -1606,9 +1606,9 @@ mod p2p_tests {
+     #[cfg(feature = "tokio-vsock")]
+     async fn vsock_p2p_pipe() -> Result<(Connection, Connection)> {
+         let guid = Guid::generate();
+-
+-        let listener = tokio_vsock::VsockListener::bind(2, 42).unwrap();
+-        let client = tokio_vsock::VsockStream::connect(3, 42).await.unwrap();
++        use tokio_vsock::VsockAddr;
++        let listener = tokio_vsock::VsockListener::bind(VsockAddr::new(2, 42)).unwrap();
++        let client = tokio_vsock::VsockStream::connect(VsockAddr::new(3, 42)).await.unwrap();
+         let server = listener.incoming().next().await.unwrap().unwrap();
+ 
+         futures_util::try_join!(
+Index: zbus/src/connection/socket/vsock.rs
+===================================================================
+--- zbus.orig/src/connection/socket/vsock.rs
++++ zbus/src/connection/socket/vsock.rs
+@@ -51,11 +51,11 @@ impl super::WriteHalf for std::sync::Arc
+ 
+ #[cfg(feature = "tokio-vsock")]
+ impl Socket for tokio_vsock::VsockStream {
+-    type ReadHalf = tokio_vsock::ReadHalf;
+-    type WriteHalf = tokio_vsock::WriteHalf;
++    type ReadHalf = tokio_vsock::OwnedReadHalf;
++    type WriteHalf = tokio_vsock::OwnedWriteHalf;
+ 
+     fn split(self) -> Split<Self::ReadHalf, Self::WriteHalf> {
+-        let (read, write) = self.split();
++        let (read, write) = self.into_split();
+ 
+         Split { read, write }
+     }
+@@ -63,7 +63,7 @@ impl Socket for tokio_vsock::VsockStream
+ 
+ #[cfg(feature = "tokio-vsock")]
+ #[async_trait::async_trait]
+-impl super::ReadHalf for tokio_vsock::ReadHalf {
++impl super::ReadHalf for tokio_vsock::OwnedReadHalf {
+     async fn recvmsg(&mut self, buf: &mut [u8]) -> super::RecvmsgResult {
+         use tokio::io::{AsyncReadExt, ReadBuf};
+ 
+@@ -80,7 +80,7 @@ impl super::ReadHalf for tokio_vsock::Re
+ 
+ #[cfg(feature = "tokio-vsock")]
+ #[async_trait::async_trait]
+-impl super::WriteHalf for tokio_vsock::WriteHalf {
++impl super::WriteHalf for tokio_vsock::OwnedWriteHalf {
+     async fn sendmsg(
+         &mut self,
+         buf: &[u8],
