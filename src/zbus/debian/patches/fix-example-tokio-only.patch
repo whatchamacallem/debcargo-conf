@@ -1,0 +1,54 @@
+Description: <short summary of the patch>
+ TODO: Put a short summary on the line above and replace this paragraph
+ with a longer explanation of this change. Complete the meta-information
+ with other relevant fields (see below for details). To make it easier, the
+ information below has been extracted from the changelog. Adjust it or drop
+ it.
+ .
+ rust-zbus (4.3.1-4) unstable; urgency=medium
+ .
+   * Team upload.
+   * Package zbus 4.3.1 from crates.io using debcargo 2.6.1
+   * Stop patching async-io dependency.
+   * Ignore tests that fail with file-not-found error.
+   * Reinstate tokio-vsock 0.5 patch and extend/update it for new upstream.
+   * Disable tests which require zbus_xml crate which is not in Debian.
+   * Stop marking all tests as broken, reestablish previous baseline.
+Author: Peter Michael Green <plugwash@debian.org>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout https://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: (upstream|backport|vendor|other), (<patch-url>|commit:<commit-id>)
+Bug: <upstream-bugtracker-url>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: (no|not-needed|<patch-forwarded-url>)
+Applied-Upstream: <version>, (<commit-url>|commit:<commid-id>)
+Reviewed-By: <name and email of someone who approved/reviewed the patch>
+Last-Update: 2024-07-16
+
+Index: zbus/examples/watch-systemd-jobs.rs
+===================================================================
+--- zbus.orig/examples/watch-systemd-jobs.rs
++++ zbus/examples/watch-systemd-jobs.rs
+@@ -9,10 +9,17 @@ use zbus::Connection;
+ use zbus_macros::proxy;
+ use zvariant::OwnedObjectPath;
+ 
++#[cfg(feature="async-io")]
+ fn main() {
+     async_io::block_on(watch_systemd_jobs()).expect("Error listening to signal");
+ }
+ 
++#[cfg(not(feature="async-io"))]
++fn main() {
++    let runtime = tokio::runtime::Runtime::new().unwrap();
++    runtime.block_on(watch_systemd_jobs()).expect("Error listening to signal");
++}
++
+ #[proxy(
+     default_service = "org.freedesktop.systemd1",
+     default_path = "/org/freedesktop/systemd1",
