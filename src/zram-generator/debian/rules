@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 
 export SYSTEMD_UTIL_DIR := $(shell pkg-config --variable=systemdutildir systemd)
+SYSTEMD_SYSTEM_GENERATOR_DIR := $(shell pkg-config --variable=systemdsystemgeneratordir systemd)
 
 %:
 	dh $@ --buildsystem cargo
@@ -10,9 +11,9 @@ override_dh_install:
 	dh_install -O--buildsystem=cargo
 
 execute_after_dh_auto_install:
-	mkdir -p debian/systemd-zram-generator/lib/systemd/system-generators
+	mkdir -p debian/systemd-zram-generator/$(SYSTEMD_SYSTEM_GENERATOR_DIR)
 	mv debian/systemd-zram-generator/usr/bin/zram-generator \
-		debian/systemd-zram-generator/lib/systemd/system-generators
+		debian/systemd-zram-generator/$(SYSTEMD_SYSTEM_GENERATOR_DIR)
 	rm -rf debian/systemd-zram-generator/usr/bin
 
 override_dh_dwz:
