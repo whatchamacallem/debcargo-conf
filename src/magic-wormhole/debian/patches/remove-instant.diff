@@ -1,0 +1,31 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -77,9 +77,6 @@
+ [dependencies.hkdf]
+ version = "0.12.2"
+ 
+-[dependencies.instant]
+-version = "0.1.12"
+-features = ["wasm-bindgen"]
+ 
+ [dependencies.log]
+ version = "0.4.13"
+--- a/src/transit.rs
++++ b/src/transit.rs
+@@ -31,6 +31,7 @@
+     collections::HashSet,
+     net::{IpAddr, SocketAddr},
+     sync::Arc,
++    time::Instant,
+ };
+ 
+ mod crypto;
+@@ -985,7 +986,7 @@
+         } = self;
+         let transit_key = Arc::new(transit_key);
+ 
+-        let start = instant::Instant::now();
++        let start = Instant::now();
+         let mut connection_stream = Box::pin(
+             Self::connect_inner(
+                 true,
