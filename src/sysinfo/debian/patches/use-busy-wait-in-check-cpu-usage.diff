@@ -10,14 +10,10 @@ Index: sysinfo/src/lib.rs
  
      #[cfg(feature = "unknown-ci")]
      #[test]
-@@ -281,7 +282,9 @@ mod test {
-         for _ in 0..10 {
-             s.refresh_cpu();
+@@ -283,3 +284,5 @@ mod test {
              // Wait a bit to update CPU usage values
--            std::thread::sleep(System::MINIMUM_CPU_UPDATE_INTERVAL);
-+            //std::thread::sleep(System::MINIMUM_CPU_UPDATE_INTERVAL);
+-            std::thread::sleep(MINIMUM_CPU_UPDATE_INTERVAL);
++            //std::thread::sleep(MINIMUM_CPU_UPDATE_INTERVAL);
 +            let now = Instant::now();
-+            while now.elapsed() < System::MINIMUM_CPU_UPDATE_INTERVAL {}
++            while now.elapsed() < MINIMUM_CPU_UPDATE_INTERVAL {}
              if s.cpus().iter().any(|c| c.cpu_usage() > 0.0) {
-                 // All good!
-                 return;
