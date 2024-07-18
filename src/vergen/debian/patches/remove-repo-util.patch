@@ -1,0 +1,180 @@
+Index: vergen/src/feature/git/cmd.rs
+===================================================================
+--- vergen.orig/src/feature/git/cmd.rs
++++ vergen/src/feature/git/cmd.rs
+@@ -874,7 +874,7 @@ mod test {
+     use super::{add_git_cmd_entry, check_git, check_inside_git_worktree};
+     use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
+     use anyhow::Result;
+-    use repo_util::TestRepos;
++    //use repo_util::TestRepos;
+     use std::{collections::BTreeMap, env};
+ 
+     #[test]
+@@ -945,7 +945,7 @@ mod test {
+         Ok(())
+     }
+ 
+-    #[test]
++    /*#[test]
+     #[serial_test::serial]
+     fn git_all_at_path() -> Result<()> {
+         let repo = TestRepos::new(false, false, false)?;
+@@ -956,7 +956,7 @@ mod test {
+         assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
+         assert_eq!(0, config.warnings.len());
+         Ok(())
+-    }
++    }*/
+ 
+     #[test]
+     #[serial_test::serial]
+@@ -968,7 +968,7 @@ mod test {
+         Ok(())
+     }
+ 
+-    #[test]
++    /*#[test]
+     #[serial_test::serial]
+     fn git_all_shallow_clone() -> Result<()> {
+         let repo = TestRepos::new(false, false, true)?;
+@@ -980,7 +980,7 @@ mod test {
+         assert_eq!(0, emitter.warnings.len());
+ 
+         Ok(())
+-    }
++    }*/
+ 
+     #[test]
+     #[serial_test::serial]
+Index: vergen/src/lib.rs
+===================================================================
+--- vergen.orig/src/lib.rs
++++ vergen/src/lib.rs
+@@ -530,7 +530,7 @@ cfg_if::cfg_if! {
+ 
+ // This is here to appease the `unused_crate_dependencies` lint
+ #[cfg(test)]
+-use {gix as _, lazy_static as _, regex as _, repo_util as _, serial_test as _, temp_env as _};
++use {gix as _, lazy_static as _, regex as _, serial_test as _, temp_env as _};
+ 
+ pub use crate::emitter::EmitBuilder;
+ #[cfg(feature = "cargo")]
+Index: vergen/tests/git_output.rs
+===================================================================
+--- vergen.orig/tests/git_output.rs
++++ vergen/tests/git_output.rs
+@@ -9,7 +9,7 @@ mod test_git_git2 {
+     use std::env;
+     use vergen::EmitBuilder;
+ 
+-    use repo_util::TestRepos;
++    //use repo_util::TestRepos;
+ 
+     lazy_static! {
+         static ref GIT_BRANCH_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_GIT_BRANCH=.*";
+@@ -187,7 +187,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_E
+         Ok(())
+     }
+ 
+-    #[test]
++    /*#[test]
+     #[serial_test::serial]
+     fn git_all_flags_test_repo() -> Result<()> {
+         let repo = TestRepos::new(true, false, false)?;
+@@ -201,9 +201,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_E
+         let output = String::from_utf8_lossy(&stdout_buf);
+         assert!(GIT_REGEX_SHORT_INST.is_match(&output));
+         Ok(())
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     #[serial_test::serial]
+     fn git_all_flags_test_repo_local() -> Result<()> {
+         let repo = TestRepos::new(true, false, false)?;
+@@ -217,7 +217,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_E
+             .emit_to_at(&mut stdout_buf, Some(repo.path()));
+         check_local_result(result, &stdout_buf);
+         Ok(())
+-    }
++    }*/
+ 
+     #[cfg(target_os = "windows")]
+     fn check_local_result(result: Result<bool>, stdout_buf: &[u8]) {
+@@ -231,7 +231,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_E
+         assert!(result.is_err());
+     }
+ 
+-    #[test]
++    /*#[test]
+     #[serial_test::serial]
+     fn git_all_output_test_repo() -> Result<()> {
+         let repo = TestRepos::new(true, true, false)?;
+@@ -244,7 +244,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_E
+         let output = String::from_utf8_lossy(&stdout_buf);
+         assert!(GIT_REGEX_INST.is_match(&output));
+         Ok(())
+-    }
++    }*/
+ 
+     #[test]
+     #[serial_test::serial]
+@@ -259,7 +259,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_E
+         Ok(())
+     }
+ 
+-    #[test]
++    /*#[test]
+     #[serial_test::serial]
+     fn git_emit_at_test_repo() -> Result<()> {
+         let repo = TestRepos::new(true, false, false)?;
+@@ -270,7 +270,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_E
+             .emit_at(repo.path())
+             .is_ok());
+         Ok(())
+-    }
++    }*/
+ 
+     #[cfg(all(feature = "git", any(feature = "gitcl", feature = "git2")))]
+     #[cfg(test)]
+@@ -278,7 +278,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_E
+         use anyhow::Result;
+         use vergen::EmitBuilder;
+ 
+-        use repo_util::TestRepos;
++        //use repo_util::TestRepos;
+ 
+         const GIT_DIRTY_TRUE_OUTPUT: &str = r"cargo:rustc-env=VERGEN_GIT_DIRTY=true";
+         const GIT_DIRTY_FALSE_OUTPUT: &str = r"cargo:rustc-env=VERGEN_GIT_DIRTY=false";
+@@ -292,7 +292,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_E
+             lines.join("\n")
+         }
+ 
+-        #[test]
++        /*#[test]
+         #[serial_test::serial]
+         fn git_dirty_ignore_untracked_no_modified_no_untracked() -> Result<()> {
+             // On a repository with no modified files and no untracked files,
+@@ -362,9 +362,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_E
+             let stripped_output = strip_reruns(&output);
+             assert_eq!(GIT_DIRTY_TRUE_OUTPUT, stripped_output);
+             Ok(())
+-        }
++        }*/
+ 
+-        #[test]
++        /*#[test]
+         #[serial_test::serial]
+         fn git_dirty_ignore_untracked_no_modified_untracked() -> Result<()> {
+             // On a repository with no modified files and untracked files,
+@@ -434,7 +434,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_E
+             let stripped_output = strip_reruns(&output);
+             assert_eq!(GIT_DIRTY_TRUE_OUTPUT, stripped_output);
+             Ok(())
+-        }
++        } */
+     }
+ 
+     #[test]

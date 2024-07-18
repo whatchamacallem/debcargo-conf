@@ -1,0 +1,43 @@
+Index: vergen/Cargo.toml
+===================================================================
+--- vergen.orig/Cargo.toml
++++ vergen/Cargo.toml
+@@ -142,3 +142,0 @@
+-[dev-dependencies.temp-env]
+-version = "0.3.6"
+-
+Index: vergen/src/feature/git/cmd.rs
+===================================================================
+--- vergen.orig/src/feature/git/cmd.rs
++++ vergen/src/feature/git/cmd.rs
+@@ -905,7 +905,7 @@ mod test {
+         Ok(())
+     }
+ 
+-    #[cfg(not(target_family = "windows"))]
++    /*#[cfg(not(target_family = "windows"))]
+     #[test]
+     #[serial_test::serial]
+     fn shell_env_works() -> Result<()> {
+@@ -916,7 +916,7 @@ mod test {
+             );
+         });
+         Ok(())
+-    }
++    }*/
+ 
+     #[test]
+     #[serial_test::serial]
+Index: vergen/src/lib.rs
+===================================================================
+--- vergen.orig/src/lib.rs
++++ vergen/src/lib.rs
+@@ -526,7 +526,7 @@ cfg_if::cfg_if! {
+ 
+ // This is here to appease the `unused_crate_dependencies` lint
+ #[cfg(test)]
+-use {lazy_static as _, regex as _, serial_test as _, temp_env as _};
++use {lazy_static as _, regex as _, serial_test as _};
+ 
+ pub use crate::emitter::EmitBuilder;
+ #[cfg(feature = "cargo")]
