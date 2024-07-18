@@ -2,12 +2,10 @@
 %:
 	dh $@ --buildsystem cargo
 
-override_dh_install:
+execute_before_dh_install:
 	debian/just/usr/bin/just --completions bash > debian/just.bash
 	debian/just/usr/bin/just --completions fish > debian/just.fish
 	debian/just/usr/bin/just --completions zsh > debian/_just
-	dh_install -O--buildsystem=cargo
 
-override_dh_installman:
+execute_before_dh_installman:
 	debian/just/usr/bin/just --man > debian/just.1
-	dh_installman -O--buildsystem=cargo
