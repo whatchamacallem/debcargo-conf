@@ -1,0 +1,84 @@
+.TH WORMHOLE-RS "1" "May 2024" "wormhole-rs 0.7.0" "User Commands"
+.SH NAME
+wormhole-rs \- send files to another computer, securely
+.SH DESCRIPTION
+wormhole\-rs 0.7.0
+.SS "USAGE:"
+.IP
+wormhole\-rs [OPTIONS] <SUBCOMMAND>
+.SS "GENERAL OPTIONS:"
+.TP
+\fB\-\-relay\-server\fR <tcp://HOSTNAME:PORT>
+Use a custom relay server (specify multiple times for multiple relays) [aliases: relay]
+.TP   
+\fB\-\-rendezvous\-server\fR <ws://example.org>
+Use a custom rendezvous server. Both sides need to use the same value in order to find each other
+.TP
+\fB\-\-force\-direct\fR
+Disable the relay server support and force a direct connection
+.TP
+\fB\-\-force\-relay\fR
+Always route traffic over a relay server. This hides your IP address from the peer (but not from the server operators. Use Tor for that)
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print this help message
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+Enable logging to stdout, for debugging purposes
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print version information
+.SS "SUBCOMMANDS:"
+.TP
+forward
+Forward ports from one machine to another
+.TP
+receive
+Receive a file or a folder [aliases: rx]
+.TP
+send
+Send a file or a folder [aliases: tx]
+.SS "SEND OPTIONS:"
+.TP
+\fB\-\-code\fR <CODE>
+Enter a code instead of generating one automatically
+.TP
+\fB\-c\fR, \fB\-\-code\-length\fR <NUMWORDS>
+Length of code (in bytes/words) [default: 2]
+.TP 
+\fB\-\-rename\fB <FILE_NAME>
+ Suggest a different name to the receiver to keep the file's actual name secret. Not allowed when sending more than one file [aliases: name]
+.TP
+send\-many
+Send a file to many recipients.
+.SS "send-many OPTIONS:"
+.TP
+\fB\-n\fR, \fB\-\-tries\fR <N>
+Only send the file up to n times, limiting the number of people that may receive it. These are also the number of tries a potential attacker gets at guessing the password [default: 30]
+.TP
+\fB\-\-timeout\fR <MINUTES>
+Automatically stop providing the file after a certain amount of time [default: 60]
+.TP
+\fB\-\-code\fR <CODE>
+Enter a code instead of generating one automatically
+.TP
+\fB\-c\fR, \fB\-\-code\-length\fR <NUMWORDS>
+Length of code (in bytes/words) [default: 2]
+.TP 
+\fB\-\-rename\fB <FILE_NAME>
+ Suggest a different name to the receiver to keep the file's actual name secret. Not allowed when sending more than one file [aliases: name]
+.PP
+To send files, use `wormhole send <PATH>`.
+To receive files, use `wormhole receive <CODE>`.
+.SH AUTHOR
+.TP
+Matthias Geiger <werdahias@riseup.net>
+.SH COPYRIGHT
+.PP
+Copyright \[co] 2024 Matthias Geiger
+.PP
+This manual page was written for the Debian system (and may be used by
+others).
+.PP
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the EUPL 1.2, or, at your option, any later version.
