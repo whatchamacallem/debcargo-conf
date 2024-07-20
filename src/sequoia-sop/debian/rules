@@ -6,7 +6,10 @@ export DEB_HOST_RUST_TYPE
 
 CARGO = /usr/share/cargo/bin/cargo
 
+ifneq (,$(filter $(DEB_TARGET_ARCH),mips64el))
+# mips64el: see https://bugs.debian.org/1076650
 RUSTFLAGS += -C codegen-units=1
+endif
 # these lto-related options seem to cause build errors that i don't understand
 # see https://salsa.debian.org/rust-team/rust/-/merge_requests/41
 #RUSTC_ARGS += -C lto=true -C linker-plugin-lto=true -C embed-bitcode=true
