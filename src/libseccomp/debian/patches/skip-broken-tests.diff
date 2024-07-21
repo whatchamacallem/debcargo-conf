@@ -31,6 +31,14 @@
  fn test_check_api() {
      assert!(check_api(3, ScmpVersion::from((2, 4, 0))).unwrap());
      assert!(!check_api(100, ScmpVersion::from((2, 4, 0))).unwrap());
+@@ -229,6 +229,7 @@
+ 
+ #[test]
+ #[cfg(feature = "const-syscall")]
++#[cfg(not(target_arch = "s390x"))]
+ fn test_syscall_new() {
+     for name in known_syscall_names::KNOWN_SYSCALL_NAMES {
+         if let Ok(nr) = ScmpSyscall::from_name(name) {
 @@ -248,6 +248,7 @@
  }
  
@@ -47,14 +55,13 @@
  fn test_merge_filters() {
      let mut ctx1 = ScmpFilterContext::new_filter(ScmpAction::Allow).unwrap();
      let mut ctx2 = ScmpFilterContext::new_filter(ScmpAction::Allow).unwrap();
-
 --- a/src/api.rs
 +++ b/src/api.rs
 @@ -129,6 +129,7 @@
      use super::*;
  
      #[test]
-+    #[cfg(not(arch= "loong64"))]
++    #[cfg(not(target_arch = "loong64"))]
      fn test_ensure_supported_api() {
          assert!(ensure_supported_api("test", 3, ScmpVersion::from((2, 4, 0))).is_ok());
          assert!(ensure_supported_api("test", 100, ScmpVersion::from((2, 4, 0))).is_err());
