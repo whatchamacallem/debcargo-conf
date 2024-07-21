@@ -1,0 +1,49 @@
+Index: serde-html-form/Cargo.toml
+===================================================================
+--- serde-html-form.orig/Cargo.toml
++++ serde-html-form/Cargo.toml
+@@ -52,9 +52,6 @@ optional = true
+ [dependencies.serde]
+ version = "1.0.136"
+ 
+-[dev-dependencies.assert_matches2]
+-version = "0.1.0"
+-
+ [dev-dependencies.divan]
+ version = "0.1.11"
+ 
+Index: serde-html-form/src/de/val_or_vec.rs
+===================================================================
+--- serde-html-form.orig/src/de/val_or_vec.rs
++++ serde-html-form/src/de/val_or_vec.rs
+@@ -234,30 +234,3 @@ where
+         deserialize_map,
+     }
+ }
+-
+-#[cfg(test)]
+-mod tests {
+-    use std::borrow::Cow;
+-
+-    use assert_matches2::assert_matches;
+-
+-    use super::ValOrVec;
+-
+-    #[test]
+-    fn cow_borrowed() {
+-        let mut x = ValOrVec::Val(Cow::Borrowed("a"));
+-        x.push(Cow::Borrowed("b"));
+-        x.push(Cow::Borrowed("c"));
+-        assert_matches!(x, ValOrVec::Vec(v));
+-        assert_eq!(v, vec!["a", "b", "c"]);
+-    }
+-
+-    #[test]
+-    fn cow_owned() {
+-        let mut x = ValOrVec::Val(Cow::from("a".to_owned()));
+-        x.push(Cow::from("b".to_owned()));
+-        x.push(Cow::from("c".to_owned()));
+-        assert_matches!(x, ValOrVec::Vec(v));
+-        assert_eq!(v, vec!["a".to_owned(), "b".to_owned(), "c".to_owned()]);
+-    }
+-}
