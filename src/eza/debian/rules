@@ -5,6 +5,9 @@ include /usr/share/dpkg/pkg-info.mk
 %:
 	dh $@ --buildsystem cargo --with bash-completion
 
+override_dh_install:
+	FISH_COMPDIR=$$(pkg-config --variable completionsdir fish) dh_install
+
 override_dh_installman:
 	pandoc --standalone -f markdown -t man man/eza.1.md        > debian/eza.1
 	pandoc --standalone -f markdown -t man man/eza_colors.5.md > debian/eza_colors.5
