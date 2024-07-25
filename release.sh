@@ -93,9 +93,6 @@ if [ "$CHANGEDBY" != "$UPLOADER" ]; then
 	cat <<eof
 Changes by $CHANGEDBY to be sponsored by $UPLOADER.
 eof
-	if ! test -e $PKGDIR/debian/RFS; then
-		abort 1 "Sponsored upload, but $PKGDIR/debian/RFS does not exist"
-	fi
 fi
 
 ( cd "$PKGDIR"
