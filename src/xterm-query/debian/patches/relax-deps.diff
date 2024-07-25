@@ -1,0 +1,25 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -33,5 +33,5 @@
+ version = "0.21"
+ 
+ [target."cfg(unix)".dependencies.nix]
+-version = "0.28"
++version = "0.27"
+ features = ["poll"]
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -56,10 +56,10 @@
+ 
+ #[cfg(not(target_os = "macos"))]
+ fn wait_for_input<MS: Into<u64>>(fd: BorrowedFd<'_>, timeout_ms: MS) -> Result<i32, Errno> {
+-    use nix::poll::{poll, PollFd, PollFlags, PollTimeout};
++    use nix::poll::{poll, PollFd, PollFlags};
+ 
+-    let poll_fd = PollFd::new(fd, PollFlags::POLLIN);
+-    let timeout = PollTimeout::try_from(timeout_ms.into()).map_err(|_| Errno::EOVERFLOW)?;
++    let poll_fd = PollFd::new(&fd, PollFlags::POLLIN);
++    let timeout = timeout_ms.into() as i32;
+ 
+     poll(&mut [poll_fd], timeout)
+ }
