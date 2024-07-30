@@ -1,8 +1,8 @@
 Description: Fix test binary_output requiring compiled bin
- by directly running cargo run; otherwise the binary has to be found by an
- entire crate. Also remove dependency on that crate.
+ by effectively embedding it; what it does is so simple, yet has to be "found"
+ by an entire crate. Also remove dependency on that crate.
 Forwarded: not-needed
-Last-Update: 2024-06-23 <YYYY-MM-DD, last update of the meta-information, optional>
+Last-Update: 2024-07-30
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/tests/binary.rs
@@ -13,11 +13,23 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -use {executable_path::executable_path, std::process::Command};
 +use std::process::Command;
  
-@@ -50,3 +48,3 @@
+@@ -50,7 +48,11 @@
  fn binary_output() {
 -  let output = Command::new(executable_path("target"))
-+  let output = Command::new("cargo").arg("run")
-     .output()
+-    .output()
+-    .unwrap()
+-    .stdout;
+-  let output = std::str::from_utf8(&output).unwrap();
++  let output = format!(r#"arch: {}
++os: {}
++family: {}
++env: {}
++endian: {}
++pointer_width: {}
++vendor: {}
++feature: {:?}
++"#, target::arch(), target::os(), target::family(), target::env(), target::endian(), target::pointer_width(), target::vendor(), target::features());
+   pretty_assertions::assert_eq!(output, EXPECTED);
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -19,4 +19,2 @@
