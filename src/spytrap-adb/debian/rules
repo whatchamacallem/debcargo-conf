@@ -2,12 +2,16 @@
 %:
 	dh $@ --buildsystem cargo
 
-override_dh_installman:
+execute_before_dh_install:
+	debian/spytrap-adb/usr/bin/spytrap-adb completions bash > debian/spytrap-adb.bash
+	debian/spytrap-adb/usr/bin/spytrap-adb completions fish > debian/spytrap-adb.fish
+	debian/spytrap-adb/usr/bin/spytrap-adb completions zsh > debian/_spytrap-adb
+
+execute_before_dh_installman:
 	help2man \
 		--name spytrap-adb \
 		--no-info \
 		debian/spytrap-adb/usr/bin/spytrap-adb > debian/spytrap-adb.1
-	dh_installman -O--buildsystem=cargo
 
 override_dh_dwz:
 	# Don't do anything. fails because of the

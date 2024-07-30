@@ -1,6 +1,6 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -24,7 +24,7 @@
+@@ -29,7 +29,7 @@
  version = "1.0.44"
  
  [dependencies.bstr]
@@ -9,7 +9,7 @@
  
  [dependencies.chrono]
  version = "0.4.19"
-@@ -49,7 +49,7 @@
+@@ -54,7 +54,7 @@
  version = "5.0.0"
  
  [dependencies.env_logger]
@@ -18,12 +18,12 @@
  
  [dependencies.forensic-adb]
  version = "0.7"
-@@ -65,13 +65,13 @@
+@@ -70,13 +70,13 @@
  version = "0.4.14"
  
  [dependencies.ratatui]
--version = "0.26"
-+version = "0.23"
+-version = "0.27"
++version = "0.25"
  
  [dependencies.regex]
  version = "1.5.4"
@@ -34,26 +34,6 @@
  features = [
      "rustls-tls-native-roots",
      "brotli",
---- a/src/tui.rs
-+++ b/src/tui.rs
-@@ -722,7 +722,7 @@
-     (Line::from(row), style)
- }
- 
--pub fn ui(f: &mut Frame<'_>, app: &App) {
-+pub fn ui<B: Backend>(f: &mut Frame<'_, B>, app: &App) {
-     let white = Style::default().fg(Color::White).bg(Color::Black);
- 
-     let chunks = Layout::default()
-@@ -858,7 +858,7 @@
-         }
- 
-         // scrolling
--        let list = list.into_iter().skip(app.offset);
-+        let list = &list[app.offset..];
- 
-         let title = Span::styled("Findings", white.add_modifier(Modifier::BOLD));
-         List::new(list).block(
 --- a/src/http.rs
 +++ b/src/http.rs
 @@ -6,7 +6,6 @@
