@@ -1,0 +1,125 @@
+Index: debian-analyzer/Cargo.toml
+===================================================================
+--- debian-analyzer.orig/Cargo.toml
++++ debian-analyzer/Cargo.toml
+@@ -42,7 +42,6 @@ required-features = ["cli"]
+ 
+ [dependencies.breezyshim]
+ version = ">=0.1.138"
+-features = ["dirty-tracker"]
+ 
+ [dependencies.chrono]
+ version = ">=0.4"
+Index: debian-analyzer/src/lib.rs
+===================================================================
+--- debian-analyzer.orig/src/lib.rs
++++ debian-analyzer/src/lib.rs
+@@ -1,8 +1,7 @@
+ use breezyshim::branch::Branch;
+-use breezyshim::dirty_tracker::DirtyTreeTracker;
+ use breezyshim::error::Error;
+ use breezyshim::tree::{MutableTree, Tree, TreeChange, WorkingTree};
+-use breezyshim::workspace::reset_tree_with_dirty_tracker;
++use breezyshim::workspace::reset_tree;
+ use debian_changelog::ChangeLog;
+ use pyo3::prelude::*;
+ #[cfg(feature = "python")]
+@@ -50,7 +49,6 @@ impl<R, E> From<Error> for ApplyError<R,
+ /// * `local_tree` - Local tree
+ /// * `subpath` - Subpath to apply changes to
+ /// * `basis_tree` - Basis tree to reset to
+-/// * `dirty_tracker` - Dirty tracker
+ /// * `applier` - Callback to apply changes
+ ///
+ /// # Returns
+@@ -60,50 +58,17 @@ pub fn apply_or_revert<R, E>(
+     local_tree: &WorkingTree,
+     subpath: &std::path::Path,
+     basis_tree: &dyn Tree,
+-    dirty_tracker: Option<&mut DirtyTreeTracker>,
+     applier: impl FnOnce(&std::path::Path) -> Result<R, E>,
+ ) -> Result<(R, Vec<TreeChange>, Option<Vec<std::path::PathBuf>>), ApplyError<R, E>> {
+     let r = match applier(local_tree.abspath(subpath).unwrap().as_path()) {
+         Ok(r) => r,
+         Err(e) => {
+-            reset_tree_with_dirty_tracker(
+-                local_tree,
+-                Some(basis_tree),
+-                Some(subpath),
+-                dirty_tracker,
+-            )
+-            .unwrap();
++            reset_tree(local_tree, Some(basis_tree), Some(subpath)).unwrap();
+             return Err(ApplyError::CallbackError(e));
+         }
+     };
+ 
+-    let specific_files = if let Some(relpaths) = dirty_tracker.and_then(|x| x.relpaths()) {
+-        let mut relpaths: Vec<_> = relpaths.into_iter().collect();
+-        relpaths.sort();
+-        // Sort paths so that directories get added before the files they
+-        // contain (on VCSes where it matters)
+-        local_tree.add(
+-            relpaths
+-                .iter()
+-                .filter_map(|p| {
+-                    if local_tree.has_filename(p) && local_tree.is_ignored(p).is_some() {
+-                        Some(p.as_path())
+-                    } else {
+-                        None
+-                    }
+-                })
+-                .collect::<Vec<_>>()
+-                .as_slice(),
+-        )?;
+-        let specific_files = relpaths
+-            .into_iter()
+-            .filter(|p| local_tree.is_versioned(p))
+-            .collect::<Vec<_>>();
+-        if specific_files.is_empty() {
+-            return Err(ApplyError::NoChanges(r));
+-        }
+-        Some(specific_files)
+-    } else {
++    let specific_files = {
+         local_tree.smart_add(&[local_tree.abspath(subpath).unwrap().as_path()])?;
+         if subpath.as_os_str().is_empty() {
+             None
+Index: debian-analyzer/src/patches.rs
+===================================================================
+--- debian-analyzer.orig/src/patches.rs
++++ debian-analyzer/src/patches.rs
+@@ -3,7 +3,7 @@ use breezyshim::delta::filter_excluded;
+ use breezyshim::error::Error as BrzError;
+ use breezyshim::patches::AppliedPatches;
+ use breezyshim::tree::{MutableTree, Tree, WorkingTree};
+-use breezyshim::workspace::reset_tree_with_dirty_tracker;
++use breezyshim::workspace::reset_tree;
+ use breezyshim::RevisionId;
+ use debian_changelog::ChangeLog;
+ use patchkit::patch::UnifiedPatch;
+@@ -448,7 +448,6 @@ pub fn move_upstream_changes_to_patch(
+     subpath: &std::path::Path,
+     patch_name: &str,
+     description: &str,
+-    dirty_tracker: Option<&mut breezyshim::dirty_tracker::DirtyTreeTracker>,
+     timestamp: Option<chrono::NaiveDate>,
+ ) -> Result<(Vec<std::path::PathBuf>, String), String> {
+     let timestamp = if let Some(timestamp) = timestamp {
+@@ -459,7 +458,7 @@ pub fn move_upstream_changes_to_patch(
+     let mut diff = Vec::new();
+     breezyshim::diff::show_diff_trees(basis_tree, local_tree, &mut diff, None, None)
+         .map_err(|e| format!("Failed to generate diff: {}", e))?;
+-    reset_tree_with_dirty_tracker(local_tree, Some(basis_tree), Some(subpath), dirty_tracker)
++    reset_tree(local_tree, Some(basis_tree), Some(subpath))
+         .map_err(|e| format!("Failed to reset tree: {}", e))?;
+     // See https://dep-team.pages.debian.net/deps/dep3/ for fields.
+     let mut dep3_header = dep3::PatchHeader::new();
+@@ -501,7 +500,6 @@ mod move_upstream_changes_to_patch_tests
+             std::path::Path::new(""),
+             "patch",
+             "This is a description",
+-            None,
+             Some(chrono::NaiveDate::from_ymd(2020, 1, 1)),
+         )
+         .unwrap();
