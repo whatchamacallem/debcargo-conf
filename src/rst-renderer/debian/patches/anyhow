@@ -1,0 +1,68 @@
+Index: rst-renderer/src/html.rs
+===================================================================
+--- rst-renderer.orig/src/html.rs
++++ rst-renderer/src/html.rs
+@@ -3,7 +3,7 @@ pub mod tests;
+ 
+ use std::io::Write;
+ 
+-use failure::Error;
++use anyhow::Error;
+ 
+ // use crate::url::Url;
+ use document_tree::{
+Index: rst-renderer/src/lib.rs
+===================================================================
+--- rst-renderer.orig/src/lib.rs
++++ rst-renderer/src/lib.rs
+@@ -1,21 +1,26 @@
+ mod html;
+ 
+-
+ use std::io::Write;
+ 
+-use failure::Error;
++use anyhow::{anyhow, Error};
+ 
+ use document_tree::Document;
+ 
+-
+-pub fn render_json<W>(document: &Document, stream: W) -> Result<(), Error> where W: Write {
+-	serde_json::to_writer(stream, &document)?;
+-	Ok(())
++pub fn render_json<W>(document: &Document, stream: W) -> Result<(), Error>
++where
++    W: Write,
++{
++    serde_json::to_writer(stream, &document)?;
++    Ok(())
+ }
+ 
+-pub fn render_xml<W>(document: &Document, stream: W) -> Result<(), Error> where W: Write {
+-	serde_xml_rs::to_writer(stream, &document).map_err(failure::SyncFailure::new)?;
+-	Ok(())
++pub fn render_xml<W>(document: &Document, stream: W) -> Result<(), Error>
++where
++    W: Write,
++{
++    serde_xml_rs::to_writer(stream, &document)
++        .map_err(|e| anyhow!("Failed to serialize XML: {}", e))?;
++    Ok(())
+ }
+ 
+ pub use html::render_html;
+Index: rst-renderer/Cargo.toml
+===================================================================
+--- rst-renderer.orig/Cargo.toml
++++ rst-renderer/Cargo.toml
+@@ -24,8 +24,8 @@ repository = "https://github.com/flying-
+ [dependencies.document_tree]
+ version = "0.4.0"
+ 
+-[dependencies.failure]
+-version = "0.1.6"
++[dependencies.anyhow]
++version = "1"
+ 
+ [dependencies.serde-xml-rs]
+ version = "0.3.1"
