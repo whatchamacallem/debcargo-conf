@@ -330,11 +330,6 @@ should mark the relevant tests as broken.
 These tests are going to be marked as flaky in autopkgtest, still executed but
 won't fail the autopkgtest run.
 
-Currently, using debcargo, it is not possible to add new dependencies as part
-of an autopkgtest run. See https://salsa.debian.org/rust-team/debcargo/-/merge_requests/24
-Instead, just override ``debian/tests/control``. See ``src/cbindgen/`` as
-example.
-
 Please note that ``[packages.lib]\ntest_is_broken = true`` will transitively
 disable tests for all combinations of features. Sometimes this is correct e.g.
 if the test actually breaks for all features. Sometimes this is *not* correct,
