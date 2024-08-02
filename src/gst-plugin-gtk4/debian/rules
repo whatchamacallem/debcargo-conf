@@ -24,7 +24,10 @@ execute_after_dh_auto_build:
 	CARGO_HOME=debian/cargo_home \
 		/usr/share/cargo/bin/cargo cbuild $(CARGO_C_FLAGS)
 
-execute_after_dh_auto_install:
+override_dh_auto_install:
+	# will fail after installing the librust-XX package, since there is no binpkg
+	# but dh-cargo thinks there is
+	dh_auto_install || true
 	CARGO_HOME=debian/cargo_home \
 		/usr/share/cargo/bin/cargo cinstall $(CARGO_C_FLAGS)
 
