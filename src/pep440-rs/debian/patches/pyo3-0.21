@@ -1,0 +1,36 @@
+This patch is based on the upstream commit described below, adapted for use in
+the debian package by Peter Michael Green.
+
+commit 1835a0a67cd7b18142ca080b20e4d088f24752dd
+Author: konstin <konstin@mailbox.org>
+Date:   Mon Apr 1 15:46:25 2024 +0200
+
+    Updates
+
+index 699abf6af..326dfc1ea 100644
+Index: pep440-rs/src/lib.rs
+===================================================================
+--- pep440-rs.orig/src/lib.rs
++++ pep440-rs/src/lib.rs
+@@ -82,7 +82,7 @@ impl Error for Pep440Error {}
+ #[cfg(feature = "pyo3")]
+ #[pymodule]
+ #[pyo3(name = "_pep440_rs")]
+-pub fn python_module(_py: Python, module: &PyModule) -> PyResult<()> {
++pub fn python_module(module: &pyo3::Bound<'_, pyo3::types::PyModule>) -> pyo3::PyResult<()> {
+     module.add_class::<PyVersion>()?;
+     module.add_class::<Operator>()?;
+     module.add_class::<VersionSpecifier>()?;
+Index: pep440-rs/Cargo.toml
+===================================================================
+--- pep440-rs.orig/Cargo.toml
++++ pep440-rs/Cargo.toml
+@@ -37,7 +37,7 @@ crate-type = [
+ version = "1.4.0"
+ 
+ [dependencies.pyo3]
+-version = "0.20"
++version = "0.21"
+ features = [
+     "extension-module",
+     "abi3-py37",

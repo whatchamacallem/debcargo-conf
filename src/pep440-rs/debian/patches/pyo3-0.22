@@ -1,0 +1,77 @@
+This patch is based on the upstream commit described below, adapted for use in
+the Debian package by Peter Michael Green.
+
+commit 878e379ccda7d6d9c3b3ebf914cea60015bbf64e
+Author: Jelmer Vernooij <jelmer@jelmer.uk>
+Date:   Tue Jul 30 00:04:34 2024 +0000
+
+    Update to pyo3 0.22
+
+Index: pep440-rs/src/lib.rs
+===================================================================
+--- pep440-rs.orig/src/lib.rs
++++ pep440-rs/src/lib.rs
+@@ -83,6 +83,7 @@ impl Error for Pep440Error {}
+ #[pymodule]
+ #[pyo3(name = "_pep440_rs")]
+ pub fn python_module(module: &pyo3::Bound<'_, pyo3::types::PyModule>) -> pyo3::PyResult<()> {
++    use pyo3::prelude::*;
+     module.add_class::<PyVersion>()?;
+     module.add_class::<Operator>()?;
+     module.add_class::<VersionSpecifier>()?;
+Index: pep440-rs/src/version.rs
+===================================================================
+--- pep440-rs.orig/src/version.rs
++++ pep440-rs/src/version.rs
+@@ -1,8 +1,8 @@
+ use lazy_static::lazy_static;
+ #[cfg(feature = "pyo3")]
+ use pyo3::{
+-    basic::CompareOp, exceptions::PyValueError, pyclass, pymethods, FromPyObject, IntoPy, PyAny,
+-    PyObject, PyResult, Python,
++    basic::CompareOp, exceptions::PyValueError, pyclass, pymethods, Bound, FromPyObject, IntoPy,
++    PyAny, PyObject, PyResult, Python,
+ };
+ use regex::Captures;
+ use regex::Regex;
+@@ -62,7 +62,7 @@ lazy_static! {
+ 
+ /// One of `~=` `==` `!=` `<=` `>=` `<` `>` `===`
+ #[derive(Eq, PartialEq, Debug, Hash, Clone)]
+-#[cfg_attr(feature = "pyo3", pyclass)]
++#[cfg_attr(feature = "pyo3", pyclass(eq, eq_int))]
+ pub enum Operator {
+     /// `== 1.2.3`
+     Equal,
+@@ -162,7 +162,7 @@ impl Operator {
+ ///
+ /// <https://peps.python.org/pep-0440/#pre-releases>
+ #[derive(PartialEq, Eq, Debug, Hash, Clone, Ord, PartialOrd)]
+-#[cfg_attr(feature = "pyo3", pyclass)]
++#[cfg_attr(feature = "pyo3", pyclass(eq, eq_int))]
+ pub enum PreRelease {
+     /// alpha prerelease
+     Alpha,
+@@ -306,7 +306,8 @@ impl IntoPy<PyObject> for Version {
+ 
+ #[cfg(feature = "pyo3")]
+ impl<'source> FromPyObject<'source> for Version {
+-    fn extract(ob: &'source PyAny) -> PyResult<Self> {
++    fn extract_bound(ob: &Bound<'source, PyAny>) -> PyResult<Self> {
++        use pyo3::prelude::*;
+         Ok(ob.extract::<PyVersion>()?.0)
+     }
+ }
+Index: pep440-rs/Cargo.toml
+===================================================================
+--- pep440-rs.orig/Cargo.toml
++++ pep440-rs/Cargo.toml
+@@ -37,7 +37,7 @@ crate-type = [
+ version = "1.4.0"
+ 
+ [dependencies.pyo3]
+-version = "0.21"
++version = "0.22"
+ features = [
+     "extension-module",
+     "abi3-py37",
