@@ -6,7 +6,7 @@ Index: sysinfo/src/lib.rs
              assert_eq!(proc_.frequency(), 0);
          }
          // In a VM, it'll fail.
-+        #[cfg(not(target_arch = "arm"))]
++        #[cfg(not(any(target_arch = "arm", target_arch = "riscv64")))]
          if std::env::var("APPLE_CI").is_err() && std::env::var("FREEBSD_CI").is_err() {
              s.refresh_cpu_specifics(CpuRefreshKind::everything());
              for proc_ in s.cpus() {

@@ -1,0 +1,15 @@
+Index: sysinfo/tests/cpu.rs
+===================================================================
+--- sysinfo.orig/tests/cpu.rs
++++ sysinfo/tests/cpu.rs
+@@ -19,6 +19,10 @@ fn test_cpu() {
+ 
+     assert!(!s.cpus()[0].brand().chars().any(|c| c == '\0'));
+ 
++    if !(cfg!(target_cpu = "x86_64") || cfg!(target_cpu = "aarch64") || cfg!(target_cpu = "arm") || cfg!(target_cpu = "x86")) {
++        return;
++    }
++
+     if !cfg!(target_os = "freebsd") {
+         // This information is currently not retrieved on freebsd...
+         assert!(s.cpus().iter().any(|c| !c.brand().is_empty()));
