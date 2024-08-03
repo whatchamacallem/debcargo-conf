@@ -1,0 +1,173 @@
+This patch is based on the upstream commit described below, adapted for use in
+the Debian package by Peter Michael Green.
+
+commit e5dea4d041a2a7863074a60b667d04989ba84dcc
+Author: konstin <konstin@mailbox.org>
+Date:   Thu Apr 18 20:50:09 2024 +0200
+
+    pyo3 0.21 (w/ patch section)
+
+Index: pep508-rs/src/lib.rs
+===================================================================
+--- pep508-rs.orig/src/lib.rs
++++ pep508-rs/src/lib.rs
+@@ -29,10 +29,12 @@ use pep440_rs::{Version, VersionSpecifie
+ #[cfg(feature = "pyo3")]
+ use pyo3::{
+     basic::CompareOp, create_exception, exceptions::PyNotImplementedError, pyclass, pymethods,
+-    pymodule, types::PyModule, IntoPy, PyObject, PyResult, Python,
++    pymodule, types::PyModule, Bound, IntoPy, PyObject, PyResult, Python,
+ };
+ #[cfg(feature = "serde")]
+ use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
++use std::borrow::Cow;
++use std::path::Path;
+ #[cfg(feature = "pyo3")]
+ use std::collections::hash_map::DefaultHasher;
+ use std::collections::HashSet;
+@@ -838,7 +840,7 @@ fn parse(chars: &mut CharIter) -> Result
+ #[cfg(feature = "pyo3")]
+ #[pymodule]
+ #[pyo3(name = "pep508_rs")]
+-pub fn python_module(py: Python<'_>, m: &PyModule) -> PyResult<()> {
++pub fn python_module(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
+     // Allowed to fail if we embed this module in another
+     #[allow(unused_must_use)]
+     {
+@@ -850,7 +852,7 @@ pub fn python_module(py: Python<'_>, m:
+ 
+     m.add_class::<Requirement>()?;
+     m.add_class::<MarkerEnvironment>()?;
+-    m.add("Pep508Error", py.get_type::<PyPep508Error>())?;
++    m.add("Pep508Error", py.get_type_bound::<PyPep508Error>())?;
+     Ok(())
+ }
+ 
+Index: pep508-rs/src/marker.rs
+===================================================================
+--- pep508-rs.orig/src/marker.rs
++++ pep508-rs/src/marker.rs
+@@ -13,7 +13,7 @@ use crate::{CharIter, Pep508Error, Pep50
+ use pep440_rs::{Version, VersionSpecifier};
+ #[cfg(feature = "pyo3")]
+ use pyo3::{
+-    basic::CompareOp, exceptions::PyValueError, pyclass, pymethods, PyAny, PyResult, Python,
++    basic::CompareOp, exceptions::PyValueError, pyclass, pymethods, PyResult, Python, prelude::PyAnyMethods,
+ };
+ #[cfg(feature = "serde")]
+ use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+@@ -256,17 +256,17 @@ impl FromStr for MarkerOperator {
+             "~=" => Self::TildeEqual,
+             "in" => Self::In,
+             not_space_in
+-                if not_space_in
+-                    // start with not
+-                    .strip_prefix("not")
+-                    // ends with in
+-                    .and_then(|space_in| space_in.strip_suffix("in"))
+-                    // and has only whitespace in between
+-                    .map(|space| !space.is_empty() && space.trim().is_empty())
+-                    .unwrap_or_default() =>
+-            {
+-                Self::NotIn
+-            }
++            if not_space_in
++                // start with not
++                .strip_prefix("not")
++                // ends with in
++                .and_then(|space_in| space_in.strip_suffix("in"))
++                // and has only whitespace in between
++                .map(|space| !space.is_empty() && space.trim().is_empty())
++                .unwrap_or_default() =>
++                {
++                    Self::NotIn
++                }
+             other => return Err(format!("Invalid comparator: {}", other)),
+         };
+         Ok(value)
+@@ -313,8 +313,8 @@ impl FromStr for StringVersion {
+ #[cfg(feature = "serde")]
+ impl Serialize for StringVersion {
+     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+-    where
+-        S: Serializer,
++        where
++            S: Serializer,
+     {
+         serializer.serialize_str(&self.string)
+     }
+@@ -323,8 +323,8 @@ impl Serialize for StringVersion {
+ #[cfg(feature = "serde")]
+ impl<'de> Deserialize<'de> for StringVersion {
+     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+-    where
+-        D: Deserializer<'de>,
++        where
++            D: Deserializer<'de>,
+     {
+         let string = String::deserialize(deserializer)?;
+         Self::from_str(&string).map_err(de::Error::custom)
+@@ -402,17 +402,17 @@ impl MarkerEnvironment {
+     /// Construct your own marker environment
+     #[new]
+     #[pyo3(signature = (*,
+-        implementation_name,
+-        implementation_version,
+-        os_name,
+-        platform_machine,
+-        platform_python_implementation,
+-        platform_release,
+-        platform_system,
+-        platform_version,
+-        python_full_version,
+-        python_version,
+-        sys_platform
++    implementation_name,
++    implementation_version,
++    os_name,
++    platform_machine,
++    platform_python_implementation,
++    platform_release,
++    platform_system,
++    platform_version,
++    python_full_version,
++    python_version,
++    sys_platform
+     ))]
+     #[allow(clippy::too_many_arguments)]
+     fn py_new(
+@@ -465,9 +465,9 @@ impl MarkerEnvironment {
+     /// Query the current python interpreter to get the correct marker value
+     #[staticmethod]
+     fn current(py: Python<'_>) -> PyResult<Self> {
+-        let os = py.import("os")?;
+-        let platform = py.import("platform")?;
+-        let sys = py.import("sys")?;
++        let os = py.import_bound("os")?;
++        let platform = py.import_bound("platform")?;
++        let sys = py.import_bound("sys")?;
+         let python_version_tuple: (String, String, String) = platform
+             .getattr("python_version_tuple")?
+             .call0()?
+@@ -476,7 +476,7 @@ impl MarkerEnvironment {
+         // See pseudocode at
+         // https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers
+         let name = sys.getattr("implementation")?.getattr("name")?.extract()?;
+-        let info: &PyAny = sys.getattr("implementation")?.getattr("version")?;
++        let info = sys.getattr("implementation")?.getattr("version")?;
+         let kind = info.getattr("releaselevel")?.extract::<String>()?;
+         let implementation_version: String = format!(
+             "{}.{}.{}{}",
+Index: pep508-rs/Cargo.toml
+===================================================================
+--- pep508-rs.orig/Cargo.toml
++++ pep508-rs/Cargo.toml
+@@ -51,7 +51,7 @@ version = "1.18.0"
+ version = "0.3.11"
+ 
+ [dependencies.pyo3]
+-version = ">=0.18, <0.21"
++version = "0.21"
+ features = [
+     "abi3",
+     "extension-module",

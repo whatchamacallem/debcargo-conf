@@ -1,0 +1,91 @@
+This patch is based on the upstream commit described below, adapted for use in
+the Debian package by Peter Michael Green.
+
+commit 2a08f5b08654b74cafa0d2fc4e49cf70544c67dd
+Author: Jelmer Vernooij <jelmer@jelmer.uk>
+Date:   Tue Jul 30 00:27:54 2024 +0000
+
+    Update pyo3 to 0.22
+
+Index: pep508-rs/src/lib.rs
+===================================================================
+--- pep508-rs.orig/src/lib.rs
++++ pep508-rs/src/lib.rs
+@@ -841,6 +841,7 @@ fn parse(chars: &mut CharIter) -> Result
+ #[pymodule]
+ #[pyo3(name = "pep508_rs")]
+ pub fn python_module(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
++    use pyo3::prelude::*;
+     // Allowed to fail if we embed this module in another
+     #[allow(unused_must_use)]
+     {
+Index: pep508-rs/src/marker.rs
+===================================================================
+--- pep508-rs.orig/src/marker.rs
++++ pep508-rs/src/marker.rs
+@@ -12,9 +12,7 @@
+ use crate::{CharIter, Pep508Error, Pep508ErrorSource};
+ use pep440_rs::{Version, VersionSpecifier};
+ #[cfg(feature = "pyo3")]
+-use pyo3::{
+-    basic::CompareOp, exceptions::PyValueError, pyclass, pymethods, PyResult, Python, prelude::PyAnyMethods,
+-};
++use pyo3::{exceptions::PyValueError, prelude::PyAnyMethods, pyclass, pymethods, PyResult, Python};
+ #[cfg(feature = "serde")]
+ use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+ use std::collections::HashSet;
+@@ -24,7 +22,10 @@ use std::str::FromStr;
+ use tracing::warn;
+ 
+ /// Ways in which marker evaluation can fail
+-#[cfg_attr(feature = "pyo3", pyclass(module = "pep508"))]
++#[cfg_attr(
++    feature = "pyo3",
++    pyclass(module = "pep508", frozen, hash, ord, eq, eq_int)
++)]
+ #[derive(Debug, Eq, Hash, Ord, PartialOrd, PartialEq, Clone, Copy)]
+ pub enum MarkerWarningKind {
+     /// Using an old name from PEP 345 instead of the modern equivalent
+@@ -43,17 +44,6 @@ pub enum MarkerWarningKind {
+     StringStringComparison,
+ }
+ 
+-#[cfg(feature = "pyo3")]
+-#[pymethods]
+-impl MarkerWarningKind {
+-    fn __hash__(&self) -> u8 {
+-        *self as u8
+-    }
+-
+-    fn __richcmp__(&self, other: &Self, op: CompareOp) -> bool {
+-        op.matches(self.cmp(other))
+-    }
+-}
+ 
+ /// Those environment markers with a PEP 440 version as value such as `python_version`
+ #[derive(Clone, Debug, Eq, Hash, PartialEq)]
+Index: pep508-rs/Cargo.toml
+===================================================================
+--- pep508-rs.orig/Cargo.toml
++++ pep508-rs/Cargo.toml
+@@ -49,9 +49,10 @@ version = "1.18.0"
+ 
+ [dependencies.pep440_rs]
+ version = "0.3.11"
++#path = "../pep440-rs"
+ 
+ [dependencies.pyo3]
+-version = "0.21"
++version = "0.22"
+ features = [
+     "abi3",
+     "extension-module",
+@@ -59,7 +60,7 @@ features = [
+ optional = true
+ 
+ [dependencies.pyo3-log]
+-version = ">0.8, <0.10"
++version = "0.11"
+ optional = true
+ 
+ [dependencies.regex]
