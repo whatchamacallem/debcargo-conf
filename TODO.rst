@@ -192,14 +192,6 @@ podcasts (#965044)
  * can be packaged
 
 
-lfs (#1006367)
--------
-
-* termimad
- * minimad (merged)
-
-
-
 macchina
 ------
 * color-to-tui (merged)
