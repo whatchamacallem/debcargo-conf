@@ -1,0 +1,206 @@
+diff --git a/src/dumps.rs b/src/dumps.rs
+index 6a06212..7a6a4c3 100644
+--- a/src/dumps.rs
++++ b/src/dumps.rs
+@@ -163,7 +163,7 @@ impl ThemeSet {
+ 
+ #[cfg(test)]
+ mod tests {
+-    #[cfg(all(feature = "yaml-load", any(feature = "dump-create", feature = "dump-create-rs"), any(feature = "dump-load", feature = "dump-load-rs")))]
++    /* #[cfg(all(feature = "yaml-load", any(feature = "dump-create", feature = "dump-create-rs"), any(feature = "dump-load", feature = "dump-load-rs")))]
+     #[test]
+     fn can_dump_and_load() {
+         use super::*;
+@@ -197,7 +197,7 @@ mod tests {
+         // vector, so check the length first to fail faster.
+         assert_eq!(bin1.len(), bin2.len());
+         assert_eq!(bin1, bin2);
+-    }
++    } */
+ 
+     #[cfg(all(feature = "assets", any(feature = "dump-load", feature = "dump-load-rs")))]
+     #[test]
+diff --git a/src/easy.rs b/src/easy.rs
+index 023a83e..ca72100 100644
+--- a/src/easy.rs
++++ b/src/easy.rs
+@@ -271,14 +271,14 @@ mod tests {
+     }
+ 
+     #[test]
+-    fn can_highlight_file() {
++    /* fn can_highlight_file() {
+         let ss = SyntaxSet::load_defaults_nonewlines();
+         let ts = ThemeSet::load_defaults();
+         HighlightFile::new("testdata/highlight_test.erb",
+                            &ss,
+                            &ts.themes["base16-ocean.dark"])
+             .unwrap();
+-    }
++    } */
+ 
+     #[test]
+     fn can_find_regions() {
+diff --git a/src/highlighting/highlighter.rs b/src/highlighting/highlighter.rs
+index 2ebe50e..2e6f63c 100644
+--- a/src/highlighting/highlighter.rs
++++ b/src/highlighting/highlighter.rs
+@@ -377,7 +377,7 @@ mod tests {
+     use crate::highlighting::{ThemeSet, Style, Color, FontStyle};
+     use crate::parsing::{ SyntaxSet, ScopeStack, ParseState};
+ 
+-    #[test]
++    /* #[test]
+     fn can_parse() {
+         let ps = SyntaxSet::load_from_folder("testdata/Packages").unwrap();
+         let mut state = {
+@@ -457,7 +457,7 @@ mod tests {
+                        font_style: FontStyle::empty(),
+                    },
+                     "multiline comment"));
+-    }
++    } */
+ 
+     // see issues #133 and #203, this test tests the fixes for those issues
+     #[test]
+@@ -536,7 +536,7 @@ mod tests {
+         assert_eq!(full_mod, StyleModifier { foreground: Some(c1), background: None, font_style: Some(FontStyle::ITALIC) });
+     }
+ 
+-    #[test]
++    /* #[test]
+     fn test_ranges() {
+         let ps = SyntaxSet::load_from_folder("testdata/Packages").unwrap();
+         let mut state = {
+@@ -569,5 +569,5 @@ mod tests {
+                        font_style: FontStyle::empty(),
+                    },
+                     "5", Range { start: 30, end: 31 }));
+-    }
++    } */
+ }
+diff --git a/src/highlighting/theme_set.rs b/src/highlighting/theme_set.rs
+index 419e874..75f926c 100644
+--- a/src/highlighting/theme_set.rs
++++ b/src/highlighting/theme_set.rs
+@@ -71,7 +71,7 @@ impl ThemeSet {
+ }
+ 
+ 
+-#[cfg(test)]
++/* #[cfg(test)]
+ mod tests {
+     use crate::highlighting::{ThemeSet, Color};
+     #[cfg(feature = "plist-load")]
+@@ -101,4 +101,4 @@ mod tests {
+                    });
+         // unreachable!();
+     }
+-}
++} */
+diff --git a/src/html.rs b/src/html.rs
+index 4e564c9..ba08802 100644
+--- a/src/html.rs
++++ b/src/html.rs
+@@ -530,7 +530,7 @@ mod tests {
+     use crate::highlighting::{HighlightIterator, HighlightState, Highlighter, Style, ThemeSet};
+     use crate::parsing::{ParseState, ScopeStack, SyntaxDefinition, SyntaxSet, SyntaxSetBuilder};
+     use crate::util::LinesWithEndings;
+-    #[test]
++    /* #[test]
+     fn tokens() {
+         let ss = SyntaxSet::load_defaults_newlines();
+         let syntax = ss.find_syntax_by_name("Markdown").unwrap();
+@@ -623,7 +623,7 @@ mod tests {
+             html_generator.parse_html_for_line_which_includes_newline(line);
+         }
+         html_generator.finalize();
+-    }
++    } */
+ 
+     #[test]
+     fn test_classed_html_generator() {
+diff --git a/src/parsing/metadata.rs b/src/parsing/metadata.rs
+index ea1e466..61f72ff 100644
+--- a/src/parsing/metadata.rs
++++ b/src/parsing/metadata.rs
+@@ -408,7 +408,7 @@ impl<'de> Deserialize<'de> for MetadataSet {
+ }
+ 
+ 
+-#[cfg(test)]
++/* #[cfg(test)]
+ mod tests {
+     use std::path::Path;
+     use super::*;
+@@ -494,4 +494,4 @@ mod tests {
+         assert_eq!(indent_ctx.increase_indent("struct This {}"), false);
+ 
+     }
+-}
++} */
+diff --git a/src/parsing/parser.rs b/src/parsing/parser.rs
+index d71947c..ea439e0 100644
+--- a/src/parsing/parser.rs
++++ b/src/parsing/parser.rs
+@@ -688,7 +688,7 @@ mod tests {
+     use crate::parsing::ScopeStackOp::{Push, Pop, Clear, Restore};
+     use crate::util::debug_print_ops;
+ 
+-    const TEST_SYNTAX: &str = include_str!("../../testdata/parser_tests.sublime-syntax");
++    /* const TEST_SYNTAX: &str = include_str!("../../testdata/parser_tests.sublime-syntax");
+ 
+     #[test]
+     fn can_parse_simple() {
+@@ -941,7 +941,7 @@ mod tests {
+             "<source.test>, <test>, <keyword.control.test>",
+         ];
+         expect_scope_stacks(line, &expect, TEST_SYNTAX);
+-    }
++    } */
+ 
+     #[test]
+     fn can_parse_prototype_that_pops_main() {
+@@ -990,7 +990,7 @@ contexts:
+         expect_scope_stacks(line, &expect, syntax);
+     }
+ 
+-    #[test]
++    /* #[test]
+     fn can_parse_issue120() {
+         let syntax = SyntaxDefinition::load_from_str(
+             include_str!("../../testdata/embed_escape_test.sublime-syntax"),
+@@ -1016,7 +1016,7 @@ contexts:
+             "<top-level.test>",
+         ];
+         expect_scope_stacks_with_syntax(line2, &expect2, syntax);
+-    }
++    } */
+ 
+     #[test]
+     fn can_parse_non_consuming_pop_that_would_loop() {
+diff --git a/src/parsing/syntax_set.rs b/src/parsing/syntax_set.rs
+index 04d8224..1ebf6f3 100644
+--- a/src/parsing/syntax_set.rs
++++ b/src/parsing/syntax_set.rs
+@@ -773,7 +773,7 @@ mod tests {
+     use crate::parsing::{ParseState, Scope, syntax_definition};
+     use std::collections::HashMap;
+ 
+-    #[test]
++    /* #[test]
+     fn can_load() {
+         let mut builder = SyntaxSetBuilder::new();
+         builder.add_from_folder("testdata/Packages", false).unwrap();
+@@ -826,7 +826,7 @@ mod tests {
+         let main_context = ps.get_context(&syntax.context_ids["main"]);
+         let count = syntax_definition::context_iter(&ps, main_context).count();
+         assert_eq!(count, 109);
+-    }
++    } */
+ 
+     #[test]
+     fn can_clone() {
+-- 
+2.46.0
+
