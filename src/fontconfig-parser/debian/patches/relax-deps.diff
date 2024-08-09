@@ -1,0 +1,34 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -46,9 +46,6 @@
+ [dev-dependencies.glob]
+ version = "0.3"
+ 
+-[dev-dependencies.k9]
+-version = "0.12"
+-
+ [dev-dependencies.serde_json]
+ version = "1"
+ 
+--- a/src/parser.rs
++++ b/src/parser.rs
+@@ -348,7 +348,7 @@
+                 let node = doc.root_element();
+                 let ret = $test_fn(node).expect("Run parse");
+                 let expected = $value;
+-                k9::assert_equal!(expected, ret);
++                assert_eq!(expected, ret);
+             }
+         };
+     }
+--- a/tests/parse.rs
++++ b/tests/parse.rs
+@@ -16,7 +16,7 @@
+ 
+     let expected = std::fs::read_to_string(json_path)?;
+     let actual = serde_json::to_string(&parts).unwrap();
+-    k9::assert_equal!(expected, actual);
++    assert_eq!(expected, actual);
+ 
+     Ok(())
+ }
