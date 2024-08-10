@@ -1,0 +1,48 @@
+Index: tokio/Cargo.toml
+===================================================================
+--- tokio.orig/Cargo.toml
++++ tokio/Cargo.toml
+@@ -184,7 +184,7 @@ optional = true
+ version = "0.2.149"
+ 
+ [target."cfg(unix)".dev-dependencies.nix]
+-version = "0.29.0"
++version = "0.27"
+ features = [
+     "aio",
+     "fs",
+Index: tokio/tests/io_async_fd.rs
+===================================================================
+--- tokio.orig/tests/io_async_fd.rs
++++ tokio/tests/io_async_fd.rs
+@@ -81,7 +81,7 @@ impl Read for FileDescriptor {
+ 
+ impl Write for &FileDescriptor {
+     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+-        write(&self.fd, buf).map_err(io::Error::from)
++        write(self.fd.as_raw_fd(), buf).map_err(io::Error::from)
+     }
+ 
+     fn flush(&mut self) -> io::Result<()> {
+Index: tokio/tests/net_unix_pipe.rs
+===================================================================
+--- tokio.orig/tests/net_unix_pipe.rs
++++ tokio/tests/net_unix_pipe.rs
+@@ -489,10 +489,17 @@ async fn anon_pipe_spawn_echo() -> std::
+ #[cfg(target_os = "linux")]
+ async fn anon_pipe_from_owned_fd() -> std::io::Result<()> {
+     use nix::fcntl::OFlag;
++    use std::os::fd::OwnedFd;
++    use std::os::fd::IntoRawFd;
++    use std::os::fd::FromRawFd;
+ 
+     const DATA: &[u8] = b"this is some data to write to the pipe";
+ 
+     let (rx_fd, tx_fd) = nix::unistd::pipe2(OFlag::O_CLOEXEC | OFlag::O_NONBLOCK)?;
++    let rx_fd = rx_fd.into_raw_fd();
++    let rx_fd = unsafe { OwnedFd::from_raw_fd(rx_fd) };
++    let tx_fd = tx_fd.into_raw_fd();
++    let tx_fd = unsafe { OwnedFd::from_raw_fd(tx_fd) };
+ 
+     let mut rx = pipe::Receiver::from_owned_fd(rx_fd)?;
+     let mut tx = pipe::Sender::from_owned_fd(tx_fd)?;

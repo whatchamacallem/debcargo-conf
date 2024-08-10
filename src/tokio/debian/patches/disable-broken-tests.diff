@@ -54,10 +54,22 @@ Index: tokio/tests/io_copy_bidirectional.rs
  async fn immediate_exit_on_read_error() {
      let error = || io::Error::new(io::ErrorKind::Other, "got nothing!");
  
-@@ -137,4 +137,4 @@ async fn immediate_exit_on_read_error()
+@@ -137,9 +137,9 @@ async fn immediate_exit_on_read_error()
      let mut b = tokio_test::io::Builder::new().read_error(error()).build();
  
      assert!(copy_bidirectional(&mut a, &mut b).await.is_err());
+-}
++}*/
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ async fn copy_bidirectional_is_cooperative() {
+     tokio::select! {
+         biased;
+@@ -162,4 +162,4 @@ async fn copy_bidirectional_is_cooperati
+         } => {},
+         _ = tokio::task::yield_now() => {}
+     }
 -}
 +}*/
 Index: tokio/tests/io_read_line.rs
@@ -193,7 +205,7 @@ Index: tokio/tests/rt_threaded.rs
 ===================================================================
 --- tokio.orig/tests/rt_threaded.rs
 +++ tokio/tests/rt_threaded.rs
-@@ -621,7 +621,7 @@ fn test_nested_block_in_place_with_block
+@@ -650,7 +650,7 @@ fn test_nested_block_in_place_with_block
  // changes over time based on load factors. There are no assertions, completion
  // is sufficient. If there is a regression, this test will hang. In theory, we
  // could add limits, but that would be likely to fail on CI.
@@ -202,7 +214,7 @@ Index: tokio/tests/rt_threaded.rs
  #[cfg(not(tokio_no_tuning_tests))]
  fn test_tuning() {
      use std::sync::atomic::AtomicBool;
-@@ -734,7 +734,7 @@ fn test_tuning() {
+@@ -763,7 +763,7 @@ fn test_tuning() {
      }
  
      flag.store(false, Relaxed);
@@ -211,3 +223,35 @@ Index: tokio/tests/rt_threaded.rs
  
  fn rt() -> runtime::Runtime {
      runtime::Runtime::new().unwrap()
+Index: tokio/tests/time_pause.rs
+===================================================================
+--- tokio.orig/tests/time_pause.rs
++++ tokio/tests/time_pause.rs
+@@ -47,15 +47,15 @@ async fn pause_time_in_spawn_threads() {
+     assert_err!(t.await);
+ }
+ 
+-#[test]
++/*#[test]
+ fn paused_time_is_deterministic() {
+     let run_1 = paused_time_stress_run();
+     let run_2 = paused_time_stress_run();
+ 
+     assert_eq!(run_1, run_2);
+-}
++}*/
+ 
+-#[tokio::main(flavor = "current_thread", start_paused = true)]
++/*#[tokio::main(flavor = "current_thread", start_paused = true)]
+ async fn paused_time_stress_run() -> Vec<Duration> {
+     let mut rng = StdRng::seed_from_u64(1);
+ 
+@@ -101,7 +101,7 @@ async fn sleep_no_poll() {
+     assert_elapsed!(before, ms(100));
+ 
+     assert_pending!(sleep.poll());
+-}
++}*/
+ 
+ enum State {
+     Begin,

@@ -2,31 +2,30 @@ Index: tokio/tests/task_join_set.rs
 ===================================================================
 --- tokio.orig/tests/task_join_set.rs
 +++ tokio/tests/task_join_set.rs
-@@ -10,7 +10,7 @@ fn rt() -> tokio::runtime::Runtime {
-         .build()
-         .unwrap()
+@@ -14,6 +14,7 @@ fn rt() -> tokio::runtime::Runtime {
  }
--
-+#[cfg(feature = "test-util")]
+ 
  #[tokio::test(start_paused = true)]
++#[cfg(feature = "test-util")]
  async fn test_with_sleep() {
      let mut set = JoinSet::new();
-@@ -104,6 +104,7 @@ async fn alternating() {
-     }
+ 
+@@ -107,6 +108,7 @@ async fn alternating() {
  }
  
-+#[cfg(feature = "test-util")]
  #[tokio::test(start_paused = true)]
++#[cfg(feature = "test-util")]
  async fn abort_tasks() {
      let mut set = JoinSet::new();
-@@ -154,6 +155,7 @@ fn runtime_gone() {
-         .is_cancelled());
+     let mut num_canceled = 0;
+@@ -157,6 +159,7 @@ fn runtime_gone() {
  }
  
-+#[cfg(feature = "test-util")]
  #[tokio::test(start_paused = true)]
++#[cfg(feature = "test-util")]
  async fn abort_all() {
      let mut set: JoinSet<()> = JoinSet::new();
+ 
 Index: tokio/tests/test_clock.rs
 ===================================================================
 --- tokio.orig/tests/test_clock.rs
@@ -82,7 +81,7 @@ Index: tokio/src/runtime/time/tests/mod.rs
  fn reset_future() {
      model(|| {
          let finished_early = Arc::new(AtomicBool::new(false));
-@@ -211,6 +216,7 @@ fn normal_or_miri<T>(normal: T, miri: T)
+@@ -213,6 +218,7 @@ fn normal_or_miri<T>(normal: T, miri: T)
  
  #[test]
  #[cfg(not(loom))]
@@ -90,7 +89,7 @@ Index: tokio/src/runtime/time/tests/mod.rs
  fn poll_process_levels() {
      let rt = rt(true);
      let handle = rt.handle();
-@@ -246,6 +252,7 @@ fn poll_process_levels() {
+@@ -248,6 +254,7 @@ fn poll_process_levels() {
  
  #[test]
  #[cfg(not(loom))]
@@ -98,11 +97,19 @@ Index: tokio/src/runtime/time/tests/mod.rs
  fn poll_process_levels_targeted() {
      let mut context = Context::from_waker(noop_waker_ref());
  
+@@ -270,6 +277,7 @@ fn poll_process_levels_targeted() {
+ 
+ #[test]
+ #[cfg(not(loom))]
++#[cfg(feature = "test-util")]
+ fn instant_to_tick_max() {
+     use crate::runtime::time::entry::MAX_SAFE_MILLIS_DURATION;
+ 
 Index: tokio/tests/async_send_sync.rs
 ===================================================================
 --- tokio.orig/tests/async_send_sync.rs
 +++ tokio/tests/async_send_sync.rs
-@@ -544,6 +544,7 @@ assert_value!(tokio::time::Timeout<BoxFu
+@@ -550,6 +550,7 @@ assert_value!(tokio::time::Timeout<BoxFu
  assert_value!(tokio::time::Timeout<BoxFuture<()>>: !Send & !Sync & !Unpin);
  assert_value!(tokio::time::error::Elapsed: Send & Sync & Unpin);
  assert_value!(tokio::time::error::Error: Send & Sync & Unpin);
@@ -115,7 +122,7 @@ Index: tokio/tests/rt_time_start_paused.rs
 --- tokio.orig/tests/rt_time_start_paused.rs
 +++ tokio/tests/rt_time_start_paused.rs
 @@ -1,4 +1,4 @@
--#![cfg(all(feature = "full"))]
+-#![cfg(feature = "full")]
 +#![cfg(all(feature = "full", feature = "test_util"))]
  
  use tokio::time::{Duration, Instant};
@@ -124,14 +131,15 @@ Index: tokio/tests/sync_mpsc.rs
 ===================================================================
 --- tokio.orig/tests/sync_mpsc.rs
 +++ tokio/tests/sync_mpsc.rs
-@@ -621,6 +621,7 @@ fn try_recv_close_while_empty_unbounded(
-     assert_eq!(Err(TryRecvError::Disconnected), rx.try_recv());
+@@ -964,7 +964,7 @@ fn try_recv_close_while_empty_unbounded(
  }
  
-+#[cfg(feature = "test-util")]
  #[tokio::test(start_paused = true)]
- #[cfg(feature = "full")]
+-#[cfg(feature = "full")]
++#[cfg(all(feature = "test-util",feature = "full"))]
  async fn recv_timeout() {
+     use tokio::sync::mpsc::error::SendTimeoutError::{Closed, Timeout};
+     use tokio::time::Duration;
 Index: tokio/tests/sync_once_cell.rs
 ===================================================================
 --- tokio.orig/tests/sync_once_cell.rs
@@ -142,7 +150,7 @@ Index: tokio/tests/sync_once_cell.rs
 +#![cfg(all(feature = "full", feature = "test-util"))]
  
  use std::mem;
- use std::ops::Drop;
+ use std::sync::atomic::{AtomicU32, Ordering};
 Index: tokio/tests/time_interval.rs
 ===================================================================
 --- tokio.orig/tests/time_interval.rs
@@ -158,14 +166,22 @@ Index: tokio/tests/time_panic.rs
 ===================================================================
 --- tokio.orig/tests/time_panic.rs
 +++ tokio/tests/time_panic.rs
-@@ -15,2 +15,3 @@ mod support {
+@@ -14,6 +14,7 @@ mod support {
+ use support::panic::test_panic;
+ 
  #[test]
 +#[cfg(feature = "test-util")]
  fn pause_panic_caller() -> Result<(), Box<dyn Error>> {
-@@ -32,2 +33,3 @@ fn pause_panic_caller() -> Result<(), Bo
+     let panic_location_file = test_panic(|| {
+         let rt = current_thread();
+@@ -31,6 +32,7 @@ fn pause_panic_caller() -> Result<(), Bo
+ }
+ 
  #[test]
 +#[cfg(feature = "test-util")]
  fn resume_panic_caller() -> Result<(), Box<dyn Error>> {
+     let panic_location_file = test_panic(|| {
+         let rt = current_thread();
 Index: tokio/tests/time_pause.rs
 ===================================================================
 --- tokio.orig/tests/time_pause.rs
