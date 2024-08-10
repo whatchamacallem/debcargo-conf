@@ -1,0 +1,73 @@
+Index: cargo-credential/Cargo.toml
+===================================================================
+--- cargo-credential.orig/Cargo.toml
++++ cargo-credential/Cargo.toml
+@@ -55,23 +55,13 @@ version = "1.0.116"
+ version = "1.0.59"
+ 
+ [dependencies.time]
+-version = "0.3.36"
++version = "0.3.31"
+ features = [
+     "parsing",
+     "formatting",
+     "serde",
+ ]
+ 
+-[dev-dependencies.snapbox]
+-version = "0.6.7"
+-features = [
+-    "diff",
+-    "dir",
+-    "term-svg",
+-    "regex",
+-    "examples",
+-]
+-
+ [target."cfg(unix)".dependencies.libc]
+ version = "0.2.154"
+ 
+Index: cargo-credential/tests/examples.rs
+===================================================================
+--- cargo-credential.orig/tests/examples.rs
++++ cargo-credential/tests/examples.rs
+@@ -1,10 +1,10 @@
+ use std::path::Path;
+ 
+-use snapbox::cmd::Command;
+-use snapbox::prelude::*;
++//use snapbox::cmd::Command;
++//use snapbox::prelude::*;
+ 
+ // Debian: requires writable crate dir
+-#[allow(dead_code)]
++/*#[allow(dead_code)]
+ fn stdout_redirected() {
+     let bin = snapbox::cmd::compile_example("stdout-redirected", []).unwrap();
+ 
+@@ -45,4 +45,4 @@ fn file_provider() {
+         .stderr_eq("".raw())
+         .success();
+     std::fs::remove_dir_all(&dir).unwrap();
+-}
++}*/
+Index: cargo-credential/src/stdio.rs
+===================================================================
+--- cargo-credential.orig/src/stdio.rs
++++ cargo-credential/src/stdio.rs
+@@ -141,7 +141,7 @@ mod test {
+     use super::imp::ReplacementGuard;
+     use super::Stdio;
+ 
+-    #[test]
++    /*#[test]
+     fn stdin() {
+         let tempdir = snapbox::dir::DirRoot::mutable_temp().unwrap();
+         let file = tempdir.path().unwrap().join("stdin");
+@@ -159,5 +159,5 @@ mod test {
+             let line = std::io::stdin().lines().next().unwrap().unwrap();
+             assert_eq!(line, "hello");
+         }
+-    }
++    }*/
+ }
