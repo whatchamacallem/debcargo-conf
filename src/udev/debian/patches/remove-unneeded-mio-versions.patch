@@ -14,10 +14,14 @@ Description: remove unneeded mio versions
  unused feature.
  .
  Discussed at https://salsa.debian.org/rust-team/debcargo-conf/-/merge_requests/568#note_447851
+ ,
+ Modified by Peter Michael Green to also disable mio 1.0 feature.
 
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -38,17 +38,6 @@
+Index: udev/Cargo.toml
+===================================================================
+--- udev.orig/Cargo.toml
++++ udev/Cargo.toml
+@@ -38,32 +38,14 @@ version = "0.2"
  [dependencies.libudev-sys]
  version = "0.1.4"
  
@@ -35,8 +39,25 @@ Description: remove unneeded mio versions
  [dependencies.mio08]
  version = "0.8"
  features = ["os-ext"]
---- a/src/lib.rs
-+++ b/src/lib.rs
+ optional = true
+ package = "mio"
+ 
+-[dependencies.mio10]
+-version = "1.0"
+-features = ["os-ext"]
+-optional = true
+-package = "mio"
+-
+ [build-dependencies.pkg-config]
+ version = "0.3.3"
+ 
+ [features]
+ hwdb = []
+-mio = ["mio10"]
+Index: udev/src/lib.rs
+===================================================================
+--- udev.orig/src/lib.rs
++++ udev/src/lib.rs
 @@ -7,10 +7,6 @@
  extern crate io_lifetimes;
  extern crate libc;
@@ -47,10 +68,12 @@ Description: remove unneeded mio versions
 -extern crate mio07;
  #[cfg(feature = "mio08")]
  extern crate mio08;
- 
---- a/src/monitor.rs
-+++ b/src/monitor.rs
-@@ -7,10 +7,6 @@
+ #[cfg(feature = "mio10")]
+Index: udev/src/monitor.rs
+===================================================================
+--- udev.orig/src/monitor.rs
++++ udev/src/monitor.rs
+@@ -7,10 +7,6 @@ use std::ops::Deref;
  use std::os::unix::io::{AsRawFd, RawFd};
  
  use io_lifetimes::{AsFd, BorrowedFd};
@@ -60,8 +83,8 @@ Description: remove unneeded mio versions
 -use mio07::{event::Source, unix::SourceFd, Interest, Registry, Token};
  #[cfg(feature = "mio08")]
  use mio08::{event::Source, unix::SourceFd, Interest, Registry, Token};
- 
-@@ -307,34 +303,7 @@
+ #[cfg(feature = "mio10")]
+@@ -309,32 +305,6 @@ impl Event {
      }
  }
  
@@ -91,9 +114,6 @@ Description: remove unneeded mio versions
 -        EventedFd(&self.as_raw_fd()).deregister(poll)
 -    }
 -}
--
--#[cfg(any(feature = "mio07", feature = "mio08"))]
-+#[cfg(any(feature = "mio08"))]
+ 
+ #[cfg(any(feature = "mio07", feature = "mio08", feature = "mio10"))]
  impl Source for Socket {
-     fn register(
-         &mut self,
