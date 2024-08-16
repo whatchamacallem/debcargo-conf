@@ -1,0 +1,41 @@
+--- a/src/time.rs
++++ b/src/time.rs
+@@ -15,13 +15,18 @@
+ timeval
+ );
+ 
++#[cfg(not(any(target_arch = "arm", target_arch = "powerpc")))]
++pub type TvUsecT = suseconds_t;
++#[cfg(any(target_arch = "arm", target_arch = "powerpc"))]
++pub type TvUsecT = i64;
++
+ #[cfg(feature = "serde")]
+ #[derive(Serialize, Deserialize)]
+ #[serde(remote = "timeval")]
+ #[allow(dead_code)]
+ struct TimevalDef {
+-	tv_sec: i64,
+-	tv_usec: i64,
++	tv_sec: time_t,
++	tv_usec: TvUsecT,
+ }
+ 
+ impl EventTime {
+@@ -29,7 +34,7 @@
+ 	pub const fn new(secs: i64, usecs: i64) -> Self {
+ 		EventTime(timeval {
+ 			tv_sec: secs as time_t,
+-			tv_usec: usecs as suseconds_t,
++			tv_usec: usecs as TvUsecT,
+ 		})
+ 	}
+ 
+@@ -58,7 +63,7 @@
+ 
+ 	/// Set the microseconds component of the timestamp.
+ 	pub fn set_microseconds(&mut self, value: i64) {
+-		(self.0).tv_usec = value as suseconds_t
++		(self.0).tv_usec = value as TvUsecT
+ 	}
+ 
+ 	/// The inner `libc` [`timeval`].
