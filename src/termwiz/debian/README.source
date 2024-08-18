@@ -1,0 +1,17 @@
+The files src/emoji_variation.rs, src/nerdfonts_data.rs, and src/emoji_presentation.rs are
+pregenerated, so they are regenerated at build time after removing them.
+
+The files under vendor/nerd-fonts are originally fetched by upstream via internet to generate the
+src/emoji_variation.rs and src/nerdfonts_data.rs files. They are vendored to prevent
+network access during build.
+
+The files are stored the following way:
+
+if ! [ -d debian/vendor/nerd-fonts ]; then mkdir -p debian/vendor; fi
+for i in 'cod' 'dev' 'fa' 'fae' 'iec' 'logos' 'md' 'oct' 'ple' 'pom' 'seti' 'weather'; do
+    url="https://raw.githubusercontent.com/ryanoasis/nerd-fonts/master/bin/scripts/lib/i_$i.sh"
+    filename="termwiz-data-fa-$i.sh"
+    curl $url > debian/vendor/nerd-fonts/$filename
+done
+
+All vendor/nerd-fonts/* files are under MIT license.
