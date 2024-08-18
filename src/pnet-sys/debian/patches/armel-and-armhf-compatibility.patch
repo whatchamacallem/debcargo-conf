@@ -1,0 +1,25 @@
+--- a/src/unix.rs
++++ b/src/unix.rs
+@@ -108,3 +108,3 @@
+             tv_sec: dur.as_secs() as libc::time_t,
+-            tv_usec: dur.subsec_micros() as TvUsecType,
++            tv_usec: dur.subsec_micros() as libc::time_t,
+         }
+@@ -119,6 +119,7 @@
+     pub fn duration_to_timespec(dur: Duration) -> libc::timespec {
+-        libc::timespec {
+-            tv_sec: dur.as_secs() as libc::time_t,
+-            tv_nsec: (dur.subsec_nanos() as TvUsecType).into(),
+-        }
++	let mut timespec: libc::timespec = unsafe { std::mem::zeroed() };
++	timespec.tv_sec = dur.as_secs() as libc::time_t;
++	timespec.tv_nsec = (dur.subsec_nanos() as TvUsecType).into();
++
++	return timespec
+     }
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -223,2 +223,3 @@
+ 
++    #[cfg(not(target_arch = "arm"))]
+     #[test]

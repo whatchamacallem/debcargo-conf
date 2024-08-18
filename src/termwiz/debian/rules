@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+execute_before_dh_auto_build:
+	ln -s /usr/share/unicode/PropList.txt ${CURDIR}/data/PropList.txt
+	ln -s /usr/share/unicode/DerivedCoreProperties.txt ${CURDIR}/data/DerivedCoreProperties.txt
+	ln -s /usr/share/unicode/UnicodeData.txt ${CURDIR}/data/UnicodeData.txt
+	ln -s /usr/share/unicode/emoji/emoji-data.txt ${CURDIR}/data/emoji-data.txt
+	ln -s /usr/share/unicode/PropertyAliases.txt ${CURDIR}/data/PropertyAliases.txt
+	ln -s /usr/share/unicode/emoji/emoji-variation-sequences.txt ${CURDIR}/data/emoji-variation-sequences.txt
+	cp ${CURDIR}/debian/vendor/nerd-fonts/* /tmp
+	cp -r ${CURDIR}/debian/missing-sources/codegen ${CURDIR}
+	ucd-generate property-bool data --include Emoji_Presentation --trie-set > src/emoji_presentation.rs
+	cd codegen && cargo run > ../src/emoji_variation.rs && cd -
+
+execute_after_dh_auto_build:
+	rm -rf ${CURDIR}/codegen
+	find data -type l -delete

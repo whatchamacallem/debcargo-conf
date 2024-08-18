@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+execute_before_dh_auto_build:
+	cp -r ${CURDIR}/debian/missing-sources/data ${CURDIR}
+	ln -s /usr/share/unicode/BidiBrackets.txt ${CURDIR}/data/BidiBrackets.txt
+	cp -r ${CURDIR}/debian/missing-sources/generate ${CURDIR}
+	cd generate && cargo run && cd -
+
+execute_after_dh_auto_build:
+	rm -rf ${CURDIR}/data ${CURDIR}/generate
