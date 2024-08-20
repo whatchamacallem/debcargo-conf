@@ -1,0 +1,69 @@
+--- rust-ripasso-cursive-0.6.5.orig/src/helpers.rs
++++ rust-ripasso-cursive-0.6.5/src/helpers.rs
+@@ -75,7 +75,7 @@ pub fn set_clipboard(content: String) ->
+     Ok(())
+ }
+ 
+-pub fn get_value_from_input(s: &mut Cursive, input_name: &str) -> Option<std::rc::Rc<String>> {
++pub fn get_value_from_input(s: &mut Cursive, input_name: &str) -> Option<std::sync::Arc<String>> {
+     let mut password = None;
+     s.call_on_name(input_name, |e: &mut EditView| {
+         password = Some(e.get_content());
+--- rust-ripasso-cursive-0.6.5.orig/src/main.rs
++++ rust-ripasso-cursive-0.6.5/src/main.rs
+@@ -19,7 +19,6 @@ use std::{
+     collections::HashMap,
+     path::{Path, PathBuf},
+     process,
+-    rc::Rc,
+     sync::{Arc, Mutex},
+     thread, time,
+ };
+@@ -276,7 +275,7 @@ fn delete(ui: &mut Cursive, store: Passw
+ }
+ 
+ fn get_selected_password_entry(ui: &mut Cursive) -> Option<ripasso::pass::PasswordEntry> {
+-    let password_entry_option: Option<Option<std::rc::Rc<ripasso::pass::PasswordEntry>>> = ui
++    let password_entry_option: Option<Option<std::sync::Arc<ripasso::pass::PasswordEntry>>> = ui
+         .call_on_name("results", |l: &mut SelectView<pass::PasswordEntry>| {
+             l.selection()
+         });
+@@ -579,7 +578,7 @@ fn create_save(s: &mut Cursive, store: P
+ 
+     let note = s.call_on_name("note_input", |e: &mut TextArea| e.get_content().to_string());
+     if let Some(note) = note {
+-        password = Rc::from(format!("{password}\n{note}"));
++        password = std::sync::Arc::from(format!("{password}\n{note}"));
+     }
+ 
+     if password.contains("otpauth://") {
+--- rust-ripasso-cursive-0.6.5.orig/src/tests/helpers.rs
++++ rust-ripasso-cursive-0.6.5/src/tests/helpers.rs
+@@ -1,4 +1,4 @@
+-use std::rc::Rc;
++use std::sync::Arc;
+ 
+ use cursive::{
+     view::Nameable,
+@@ -19,7 +19,7 @@ fn test_get_value_from_input() {
+     siv.add_layer(ev);
+ 
+     assert_eq!(
+-        Some(Rc::new(String::from("unit test content"))),
++        Some(Arc::new(String::from("unit test content"))),
+         get_value_from_input(&mut siv, "input")
+     );
+ }
+Index: ripasso-cursive/Cargo.toml
+===================================================================
+--- ripasso-cursive.orig/Cargo.toml
++++ ripasso-cursive/Cargo.toml
+@@ -34,7 +34,7 @@ features = ["toml"]
+ default-features = false
+ 
+ [dependencies.cursive]
+-version = "0.20.0"
++version = "0.21.0"
+ features = [
+     "toml",
+     "crossterm-backend",
