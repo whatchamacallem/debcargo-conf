@@ -1,0 +1,36 @@
+From: Sophie Herold <sophie@hemio.de>
+Date: Thu, 1 Aug 2024 21:59:51 +0200
+Subject: Revert "rsvg: Fix deprecation in image-rs"
+
+Revert 2e85d64e81ab5c28223e173f00100e889f22adda
+---
+ src/document.rs | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -153,7 +127,7 @@ version = "0.20"
+ version = "0.20"
+ 
+ [dependencies.image]
+-version = "0.25.0"
++version = "0.24.0"
+ features = [
+     "jpeg",
+     "png",
+diff --git a/rsvg/src/document.rs b/rsvg/src/document.rs
+index b53e87cd1..cda554dca 100644
+--- a/src/document.rs
++++ b/src/document.rs
+@@ -653,9 +653,9 @@ fn load_image_with_image_rs(
+ 
+     let reader = if let Some(ref content_type) = content_type {
+         let format = image_format(content_type)?;
+-        image::ImageReader::with_format(cursor, format)
++        image::io::Reader::with_format(cursor, format)
+     } else {
+-        image::ImageReader::new(cursor)
++        image::io::Reader::new(cursor)
+             .with_guessed_format()
+             .map_err(|_| LoadingError::Other(String::from("unknown image format")))?
+     };
