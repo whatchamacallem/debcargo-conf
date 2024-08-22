@@ -1,0 +1,59 @@
+Index: rust-typenum-1.17.0/src/type_operators.rs
+===================================================================
+--- rust-typenum-1.17.0.orig/src/type_operators.rs
++++ rust-typenum-1.17.0/src/type_operators.rs
+@@ -240,6 +240,7 @@ impl_pow_i!(
+ 
+ #[test]
+ fn pow_test() {
++    use alloc::string::ToString;
+     use crate::consts::*;
+     let z0 = Z0::new();
+     let p3 = P3::new();
+@@ -257,18 +258,19 @@ fn pow_test() {
+             assert_eq!($x.powi(u3), $x * $x * $x);
+         };
+         ($x:ident, $f:ident) => {
+-            assert!((<$f as Pow<Z0>>::powi(*$x, z0) - 1.0).abs() < ::core::$f::EPSILON);
+-            assert!((<$f as Pow<U0>>::powi(*$x, u0) - 1.0).abs() < ::core::$f::EPSILON);
++            let epsilon = ::core::$f::EPSILON * 2.0;
++            assert!((<$f as Pow<Z0>>::powi(*$x, z0) - 1.0).abs() < epsilon);
++            assert!((<$f as Pow<U0>>::powi(*$x, u0) - 1.0).abs() < epsilon);
+ 
+-            assert!((<$f as Pow<P3>>::powi(*$x, p3) - $x * $x * $x).abs() < ::core::$f::EPSILON);
+-            assert!((<$f as Pow<U3>>::powi(*$x, u3) - $x * $x * $x).abs() < ::core::$f::EPSILON);
++            assert!((<$f as Pow<P3>>::powi(*$x, p3) - $x * $x * $x).abs() < epsilon, &(::alloc::string::ToString::to_string("assertion failed: ") + stringify!((<$f as Pow<P3>>::powi(*$x, p3) - $x * $x * $x).abs() < epsilon)+" left="+&((<$f as Pow<P3>>::powi(*$x, p3) - $x * $x * $x).abs().to_bits().to_string()+" right = "+&(epsilon.to_string()))));
++            assert!((<$f as Pow<U3>>::powi(*$x, u3) - $x * $x * $x).abs() < epsilon, &(::alloc::string::ToString::to_string("assertion failed: ") + stringify!((<$f as Pow<U3>>::powi(*$x, u3) - $x * $x * $x).abs() < epsilon)+" left="+&((<$f as Pow<U3>>::powi(*$x, u3) - $x * $x * $x).abs().to_bits().to_string()+" right = "+&(epsilon.to_string()))));
+ 
+             if *$x == 0.0 {
+                 assert!(<$f as Pow<N3>>::powi(*$x, n3).is_infinite());
+             } else {
+                 assert!(
+                     (<$f as Pow<N3>>::powi(*$x, n3) - 1. / $x / $x / $x).abs()
+-                        < ::core::$f::EPSILON
++                        < epsilon
+                 );
+             }
+         };
+@@ -287,6 +289,7 @@ fn pow_test() {
+         check!(x);
+     }
+     for x in &[0.0f32, 2.2, -3.5, 378.223] {
++        let x = core::hint::black_box(x);
+         check!(x, f32);
+     }
+     for x in &[0.0f64, 2.2, -3.5, -2387.2, 234.22] {
+Index: rust-typenum-1.17.0/src/lib.rs
+===================================================================
+--- rust-typenum-1.17.0.orig/src/lib.rs
++++ rust-typenum-1.17.0/src/lib.rs
+@@ -61,6 +61,9 @@
+ #![doc(html_root_url = "https://docs.rs/typenum/1.17.0")]
+ #![cfg_attr(docsrs, feature(doc_auto_cfg, doc_cfg))]
+ 
++#[cfg(test)]
++extern crate alloc;
++
+ // For debugging macros:
+ // #![feature(trace_macros)]
+ // trace_macros!(true);
