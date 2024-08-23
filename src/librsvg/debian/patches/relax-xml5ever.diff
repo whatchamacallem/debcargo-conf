@@ -1,0 +1,35 @@
+From: =?utf-8?q?Jeremy_B=C3=ADcha?= <jeremy.bicha@canonical.com>
+Date: Thu, 22 Aug 2024 22:17:56 -0400
+Subject: Relax xml5ever
+
+---
+ Cargo.toml     | 2 +-
+ src/xml/mod.rs | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 50ee055..19ada14 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -149,7 +149,7 @@ version = "0.2"
+ version = "0.3.0"
+ 
+ [dependencies.markup5ever]
+-version = "0.12.0"
++version = "0.11.0"
+ 
+ [dependencies.nalgebra]
+ version = "0.33.0"
+diff --git a/src/xml/mod.rs b/src/xml/mod.rs
+index 4773a8d..77681df 100644
+--- a/src/xml/mod.rs
++++ b/src/xml/mod.rs
+@@ -715,7 +715,7 @@ fn parse_xml_stylesheet_processing_instruction(data: &str) -> Result<Vec<(String
+         error: false,
+     }));
+ 
+-    let mut queue = BufferQueue::default();
++    let mut queue = BufferQueue::new();
+     queue.push_back(format_tendril!("<rsvg-hack {} />", data));
+ 
+     let sink = ProcessingInstructionSink(pi_data.clone());
