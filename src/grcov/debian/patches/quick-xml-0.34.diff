@@ -1,0 +1,20 @@
+--- grcov.orig/Cargo.toml
++++ grcov/Cargo.toml
+@@ -87,3 +87,3 @@
+ [dependencies.quick-xml]
+-version = "0.29"
++version = ">= 0.34, < 1.0"
+ 
+--- grcov.orig/src/parser.rs
++++ grcov/src/parser.rs
+@@ -563,3 +563,3 @@
+         if a.key.into_inner() == name.as_bytes() {
+-            return Ok(a.decode_and_unescape_value(reader)?.into_owned());
++            return Ok(a.decode_and_unescape_value(reader.decoder())?.into_owned());
+         }
+@@ -781,3 +786,4 @@
+     let mut parser = Reader::from_reader(xml_reader);
+-    parser.expand_empty_elements(true).trim_text(false);
++    parser.config_mut().expand_empty_elements = true;
++    parser.config_mut().trim_text(false);
+ 
