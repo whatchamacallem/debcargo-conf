@@ -1,0 +1,26 @@
+Index: xcb/Cargo.toml
+===================================================================
+--- xcb.orig/Cargo.toml
++++ xcb/Cargo.toml
+@@ -145,7 +145,7 @@ features = [
+ ]
+ 
+ [build-dependencies.quick-xml]
+-version = "0.30.0"
++version = ">= 0.34"
+ 
+ [features]
+ composite = ["xfixes"]
+Index: xcb/build/parse.rs
+===================================================================
+--- xcb.orig/build/parse.rs
++++ xcb/build/parse.rs
+@@ -305,7 +305,7 @@ impl<B: BufRead> Iterator for &mut Parse
+ impl Parser<BufReader<File>> {
+     pub fn from_file(xml_file: &Path) -> Self {
+         let mut xml = XmlReader::from_file(xml_file).unwrap();
+-        xml.trim_text(true);
++        xml.config_mut().trim_text(true);
+ 
+         Parser {
+             xml,
