@@ -1,0 +1,49 @@
+commit 8af42b390fb0fe3dd9dd4bb239e545a54b520198
+Author: Evan Cameron <ecameron@bluecatnetworks.com>
+Date:   Thu Jun 6 17:24:28 2024 -0400
+
+    v6: fix panic on new stable (#73)
+
+diff --git a/rust-toolchain b/rust-toolchain
+index 65ee09598..54227249d 100644
+--- a/rust-toolchain
++++ b/rust-toolchain
+@@ -1 +1 @@
+-1.67.0
++1.78.0
+diff --git a/src/v4/relay.rs b/src/v4/relay.rs
+index c2caea832..141248991 100644
+--- a/src/v4/relay.rs
++++ b/src/v4/relay.rs
+@@ -1,4 +1,4 @@
+-//!
++//! # relay
+ use std::{collections::HashMap, fmt, net::Ipv4Addr};
+ 
+ use crate::{Decodable, Encodable};
+diff --git a/src/v6/options.rs b/src/v6/options.rs
+index 9857ef9ff..8ac4add26 100644
+--- a/src/v6/options.rs
++++ b/src/v6/options.rs
+@@ -940,7 +940,7 @@ where
+         let mid = (l + r) >> 1;
+         // SAFETY: we know it is within the length
+         let mid_cmp = f(unsafe { arr.get_unchecked(mid) });
+-        let nxt_cmp = if mid < n {
++        let nxt_cmp = if mid < n && mid != n - 1 {
+             f(unsafe { arr.get_unchecked(mid + 1) }) == Ordering::Greater
+         } else {
+             false
+@@ -991,6 +991,12 @@ mod tests {
+         let arr = vec![1, 2, 2, 2, 2, 3, 4, 7, 8, 8];
+         assert_eq!(Some(7..=7), range_binsearch(&arr, |x| x.cmp(&7)));
+ 
++        let arr = vec![1, 2, 2, 2, 2, 3, 4, 7, 8, 9];
++        assert_eq!(Some(9..=9), range_binsearch(&arr, |x| x.cmp(&9)));
++
++        let arr = vec![1, 2, 2, 2, 2, 3, 4, 7, 9, 8];
++        assert_eq!(Some(0..=0), range_binsearch(&arr, |x| x.cmp(&1)));
++
+         let arr: Vec<i32> = vec![];
+         assert_eq!(None, range_binsearch(&arr, |x| x.cmp(&1)));
+ 
