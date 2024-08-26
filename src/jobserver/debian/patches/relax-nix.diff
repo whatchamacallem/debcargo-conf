@@ -1,0 +1,25 @@
+Index: jobserver/Cargo.toml
+===================================================================
+--- jobserver.orig/Cargo.toml
++++ jobserver/Cargo.toml
+@@ -56,3 +56,3 @@ version = "0.2.87"
+ [target."cfg(unix)".dev-dependencies.nix]
+-version = "0.28.0"
++version = "0.27.0"
+ features = ["fs"]
+Index: jobserver/src/unix.rs
+===================================================================
+--- jobserver.orig/src/unix.rs
++++ jobserver/src/unix.rs
+@@ -575,3 +575,3 @@ mod test {
+         io::{self, Write},
+-        os::unix::io::AsRawFd,
++        os::unix::io::{AsRawFd, FromRawFd, RawFd},
+         sync::Arc,
+@@ -605,4 +605,4 @@ mod test {
+         let (read, write) = nix::unistd::pipe().unwrap();
+-        let read = File::from(read);
+-        let mut write = File::from(write);
++        let read = unsafe { File::from_raw_fd(read) };
++        let mut write = unsafe { File::from_raw_fd(write) };
+ 
