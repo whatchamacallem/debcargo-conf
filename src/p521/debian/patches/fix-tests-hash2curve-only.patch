@@ -1,0 +1,28 @@
+Index: p521/src/arithmetic/hash2curve.rs
+===================================================================
+--- p521.orig/src/arithmetic/hash2curve.rs
++++ p521/src/arithmetic/hash2curve.rs
+@@ -115,6 +115,7 @@ mod tests {
+     };
+     use hex_literal::hex;
+     use proptest::{num, prelude::ProptestConfig, proptest};
++    #[cfg(feature = "sha512")]
+     use sha2::Sha512;
+ 
+     #[test]
+@@ -133,6 +134,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(feature = "sha512")]
+     fn hash_to_curve() {
+         struct TestVector {
+             msg: &'static [u8],
+@@ -252,6 +254,7 @@ mod tests {
+ 
+     /// Taken from <https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-voprf#appendix-A.5>.
+     #[test]
++    #[cfg(feature = "sha512")]
+     fn hash_to_scalar_voprf() {
+         struct TestVector {
+             dst: &'static [u8],
