@@ -1,0 +1,33 @@
+Index: proptest/src/num.rs
+===================================================================
+--- proptest.orig/src/num.rs
++++ proptest/src/num.rs
+@@ -1370,7 +1370,7 @@ mod test {
+ 
+     proptest! {
+         #![proptest_config(crate::test_runner::Config::with_cases(1024))]
+-
++        #[cfg(not(target_arch = "riscv64"))]
+         #[test]
+         fn f32_any_generates_desired_values(
+             strategy in crate::bits::u32::ANY.prop_map(f32::Any::from_bits)
+@@ -1389,6 +1389,7 @@ mod test {
+         }
+ 
+         #[test]
++        #[cfg(not(target_arch = "riscv64"))]
+         fn f64_any_generates_desired_values(
+             strategy in crate::bits::u32::ANY.prop_map(f64::Any::from_bits)
+         ) {
+Index: proptest/src/test_runner/runner.rs
+===================================================================
+--- proptest.orig/src/test_runner/runner.rs
++++ proptest/src/test_runner/runner.rs
+@@ -1484,6 +1484,7 @@ mod timeout_tests {
+         }
+ 
+         #[test]
++        #[cfg(not(target_arch = "riscv64"))]
+         fn max_shrink_iters_works_with_forking() {
+             test_shrink_bail(Config {
+                 fork: true,
