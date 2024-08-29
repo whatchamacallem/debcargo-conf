@@ -7,25 +7,20 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 +++ b/src/core/common/cipher_text_impl/v1_local.rs
 @@ -2,5 +2,4 @@
  use std::marker::PhantomData;
--use ::Aes256Ctr;
-+use ::cipher::{KeyIvInit, StreamCipher};
- use ::cipher::generic_array::GenericArray;
--use ::cipher::{NewCipher, StreamCipher};
+-use aes::Aes256Ctr;
++use aes::cipher::{KeyIvInit, StreamCipher};
+ use aes::cipher::generic_array::GenericArray;
+-use aes::cipher::{NewCipher, StreamCipher};
  use crate::core::common::cipher_text::CipherText;
 @@ -9,2 +8,4 @@
  
-+type 256Ctr = ctr::Ctr64BE<aes::Aes256>;
++type Aes256Ctr = ctr::Ctr64BE<aes::Aes256>;
 +
  impl CipherText<V1, Local> {
-@@ -26,2 +27,2 @@
-     }
--}
-\ No newline at end of file
-+}
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -44,4 +44,7 @@
- [dependencies.]
+ [dependencies.aes]
 -version = "0.7.5"
 -features = ["ctr"]
 +version = "0.8"
@@ -36,30 +31,24 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  optional = true
 @@ -178,3 +181,3 @@
      "core",
--    "",
-+    "", "ctr",
+-    "aes",
++    "aes", "ctr",
      "chacha20",
 @@ -210,3 +213,3 @@
      "core",
--    "",
-+    "", "ctr",
+-    "aes",
++    "aes", "ctr",
      "hmac",
 --- a/src/core/common/cipher_text_impl/v3_local.rs
 +++ b/src/core/common/cipher_text_impl/v3_local.rs
-@@ -2,5 +2,4 @@
+@@ -2,7 +2,8 @@
  use std::marker::PhantomData;
--use ::Aes256Ctr;
-+use ::cipher::{KeyIvInit, StreamCipher};
- use ::cipher::generic_array::GenericArray;
--use ::cipher::{NewCipher, StreamCipher};
+-use aes::Aes256Ctr;
++use aes::cipher::{KeyIvInit, StreamCipher};
+ use aes::cipher::generic_array::GenericArray;
+-use aes::cipher::{NewCipher, StreamCipher};
  use crate::core::common::{CipherText, EncryptionKey};
-@@ -8,2 +7,4 @@
- 
-+type 256Ctr = ctr::Ctr64BE<aes::Aes256>;
+ use crate::core::{Local, V3};
 +
- impl CipherText<V3, Local> {
-@@ -25,2 +26,2 @@
-     }
--}
-\ No newline at end of file
-+}
++type Aes256Ctr = ctr::Ctr64BE<aes::Aes256>;
+ 
