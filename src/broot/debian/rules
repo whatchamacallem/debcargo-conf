@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/default.mk
+
+%:
+	dh $@ --buildsystem cargo --with bash-completion
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf $(CURDIR)/debian/manpages $(CURDIR)/debian/build_artifacts
+
+override_dh_auto_install:
+	install -D -m 0644 $(CURDIR)/man/page $(CURDIR)/debian/manpages/broot.1
+	sed -i -e "s/#version/$(DEB_VERSION_UPSTREAM)/g" -e "s/#date/$(shell date +'%Y')/g" \
+		$(CURDIR)/debian/manpages/broot.1
+	dh_auto_install
+
+override_dh_auto_test:
+	dh_auto_test -- test --all

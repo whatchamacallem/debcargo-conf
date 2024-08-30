@@ -1,0 +1,101 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -110,7 +110,7 @@
+ version = "0.7"
+ 
+ [dependencies.lazy-regex]
+-version = "3.3"
++version = "2.5"
+ 
+ [dependencies.libc]
+ version = "0.2"
+@@ -134,6 +134,9 @@
+ [dependencies.rayon]
+ version = "1.8"
+ 
++[dependencies.regex]
++version = "1.10"
++
+ [dependencies.resvg]
+ version = "0.42"
+ 
+--- a/src/pattern/content_regex_pattern.rs
++++ b/src/pattern/content_regex_pattern.rs
+@@ -4,7 +4,6 @@
+     crate::{
+         content_search::*,
+     },
+-    lazy_regex::regex,
+     std::{
+         fmt,
+         fs::File,
+--- a/src/pattern/mod.rs
++++ b/src/pattern/mod.rs
+@@ -35,10 +35,7 @@
+     tok_pattern::*,
+ };
+ 
+-use {
+-    crate::errors::PatternError,
+-    lazy_regex::regex,
+-};
++use crate::errors::PatternError;
+ 
+ pub fn build_regex(pat: &str, flags: &str) -> Result<regex::Regex, PatternError> {
+     let mut builder = regex::RegexBuilder::new(pat);
+--- a/src/pattern/regex_pattern.rs
++++ b/src/pattern/regex_pattern.rs
+@@ -3,7 +3,6 @@
+ use {
+     super::NameMatch,
+     crate::errors::PatternError,
+-    lazy_regex::regex,
+     smallvec::SmallVec,
+     std::fmt,
+ };
+--- a/src/git/ignore.rs
++++ b/src/git/ignore.rs
+@@ -4,7 +4,6 @@
+     git2,
+     glob,
+     id_arena::{Arena, Id},
+-    lazy_regex::regex,
+     once_cell::sync::Lazy,
+     std::{
+         fmt,
+@@ -55,6 +54,7 @@
+     /// parse a line of a .gitignore file.
+     /// The ref_dir is used if the line starts with '/'
+     fn from(line: &str, ref_dir: &Path) -> Option<GitIgnoreRule> {
++        use lazy_regex::regex;
+         if line.starts_with('#') {
+             return None; // comment line
+         }
+--- a/src/shell_install/bash.rs
++++ b/src/shell_install/bash.rs
+@@ -17,7 +17,6 @@
+         errors::*,
+     },
+     directories::UserDirs,
+-    lazy_regex::regex,
+     regex::Captures,
+     std::{env, path::PathBuf},
+     termimad::{
+@@ -86,6 +85,7 @@
+ /// Paths in SOURCING_FILES can be absolute or relative to the home
+ /// directory. Environment variables designed as $NAME are interpolated.
+ fn get_sourcing_paths() -> Vec<PathBuf> {
++    use lazy_regex::regex;
+     let homedir_path = UserDirs::new()
+         .expect("no home directory!")
+         .home_dir()
+--- a/src/errors.rs
++++ b/src/errors.rs
+@@ -3,7 +3,6 @@
+ use {
+     custom_error::custom_error,
+     image::error::ImageError,
+-    lazy_regex::regex,
+     std::io,
+ };
+ 
