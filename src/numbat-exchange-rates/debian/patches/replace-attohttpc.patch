@@ -1,26 +1,34 @@
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -20,9 +20,9 @@
+Index: numbat-exchange-rates/Cargo.toml
+===================================================================
+--- numbat-exchange-rates.orig/Cargo.toml
++++ numbat-exchange-rates/Cargo.toml
+@@ -20,9 +20,9 @@ homepage = "https://numbat.dev/"
  license = "MIT OR Apache-2.0"
  repository = "https://github.com/sharkdp/numbat"
  
 -[dependencies.attohttpc]
--version = "0.26.0"
+-version = "0.27.0"
 -features = ["tls-rustls-webpki-roots"]
 +[dependencies.reqwest]
 +version = ">= 0.11.22"
 +features = ["rustls-tls", "blocking"]
+ optional = true
  default-features = false
  
- [dependencies.quick-xml]
---- a/src/lib.rs
-+++ b/src/lib.rs
-@@ -36,7 +36,7 @@
- const ECB_XML_URL: &str = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
+@@ -32,2 +32,2 @@
+ [features]
+-fetch-exchangerates = ["dep:attohttpc"]
++fetch-exchangerates = ["dep:reqwest"]
+Index: numbat-exchange-rates/src/lib.rs
+===================================================================
+--- numbat-exchange-rates.orig/src/lib.rs
++++ numbat-exchange-rates/src/lib.rs
+@@ -38,7 +38,7 @@ const ECB_XML_URL: &str = "https://www.e
  
+ #[cfg(feature = "fetch-exchangerates")]
  fn fetch_ecb_xml() -> Option<String> {
 -    attohttpc::get(ECB_XML_URL).send().ok()?.text().ok()
 +    reqwest::blocking::get(ECB_XML_URL).ok()?.text().ok()
  }
  
- pub fn fetch_exchange_rates() -> Option<ExchangeRates> {
+ #[cfg(feature = "fetch-exchangerates")]
