@@ -1,0 +1,25 @@
+Forwarded: not-needed
+Last-Update: 2024-08-31
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -377,3 +377,3 @@
+ [dependencies.itertools]
+-version = "0.13"
++version = ">= 0.10, < 1.0"
+ 
+--- a/src/text/text.rs
++++ b/src/text/text.rs
+@@ -634,7 +634,6 @@
+     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+-        for (position, line) in self.iter().with_position() {
+-            if position == Position::Last || position == Position::Only {
+-                write!(f, "{line}")?;
+-            } else {
+-                writeln!(f, "{line}")?;
++        for position in self.iter().with_position() {
++            match position {
++                Position::Last(line) | Position::Only(line) => write!(f, "{line}")?,
++                Position::First(line) | Position::Middle(line) => writeln!(f, "{line}")?,
+             }

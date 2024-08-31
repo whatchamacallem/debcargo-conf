@@ -1,0 +1,97 @@
+Forwarded: not-needed
+Last-Update: 2023-07-14
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -373,4 +373,4 @@
+ 
+-[dependencies.instability]
+-version = "0.3.1"
++#[dependencies.instability]
++#version = "0.3.1"
+ 
+--- a/src/backend/crossterm.rs
++++ b/src/backend/crossterm.rs
+@@ -107,6 +107,6 @@
+     /// Gets the writer.
+-    #[instability::unstable(
++    /*#[instability::unstable(
+         feature = "backend-writer",
+         issue = "https://github.com/ratatui/ratatui/pull/991"
+-    )]
++    )]*/
+     pub const fn writer(&self) -> &W {
+@@ -119,6 +119,6 @@
+     /// way that the Terminal implements diffing Buffers.
+-    #[instability::unstable(
++    /*#[instability::unstable(
+         feature = "backend-writer",
+         issue = "https://github.com/ratatui/ratatui/pull/991"
+-    )]
++    )]*/
+     pub fn writer_mut(&mut self) -> &mut W {
+--- a/src/backend/termion.rs
++++ b/src/backend/termion.rs
+@@ -90,6 +90,6 @@
+     /// Gets the writer.
+-    #[instability::unstable(
++    /*#[instability::unstable(
+         feature = "backend-writer",
+         issue = "https://github.com/ratatui/ratatui/pull/991"
+-    )]
++    )]*/
+     pub const fn writer(&self) -> &W {
+@@ -101,6 +101,6 @@
+     /// way that the Terminal implements diffing Buffers.
+-    #[instability::unstable(
++    /*#[instability::unstable(
+         feature = "backend-writer",
+         issue = "https://github.com/ratatui/ratatui/pull/991"
+-    )]
++    )]*/
+     pub fn writer_mut(&mut self) -> &mut W {
+--- a/src/terminal/frame.rs
++++ b/src/terminal/frame.rs
+@@ -108,3 +108,3 @@
+     #[allow(clippy::needless_pass_by_value)]
+-    #[instability::unstable(feature = "widget-ref")]
++    //#[instability::unstable(feature = "widget-ref")]
+     pub fn render_widget_ref<W: WidgetRef>(&mut self, widget: W, area: Rect) {
+@@ -166,3 +166,3 @@
+     #[allow(clippy::needless_pass_by_value)]
+-    #[instability::unstable(feature = "widget-ref")]
++    //#[instability::unstable(feature = "widget-ref")]
+     pub fn render_stateful_widget_ref<W>(&mut self, widget: W, area: Rect, state: &mut W::State)
+--- a/src/widgets.rs
++++ b/src/widgets.rs
+@@ -307,3 +307,3 @@
+ /// ```
+-#[instability::unstable(feature = "widget-ref")]
++//#[instability::unstable(feature = "widget-ref")]
+ pub trait WidgetRef {
+@@ -408,3 +408,3 @@
+ /// ```
+-#[instability::unstable(feature = "widget-ref")]
++//#[instability::unstable(feature = "widget-ref")]
+ pub trait StatefulWidgetRef {
+--- a/src/widgets/paragraph.rs
++++ b/src/widgets/paragraph.rs
+@@ -313,6 +313,6 @@
+     /// ```
+-    #[instability::unstable(
++    /*#[instability::unstable(
+         feature = "rendered-line-info",
+         issue = "https://github.com/ratatui/ratatui/issues/293"
+-    )]
++    )]*/
+     pub fn line_count(&self, width: u16) -> usize {
+@@ -368,6 +368,6 @@
+     /// ```
+-    #[instability::unstable(
++    /*#[instability::unstable(
+         feature = "rendered-line-info",
+         issue = "https://github.com/ratatui/ratatui/issues/293"
+-    )]
++    )]*/
+     pub fn line_width(&self) -> usize {
