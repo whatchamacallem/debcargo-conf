@@ -1,0 +1,29 @@
+Description: Adapt to ratatui update to 0.28
+Last-Update: 2024-09-01
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -25,3 +25,3 @@
+ [dependencies.tui]
+-version = "0.26.0"
++version = ">= 0.25, < 1.0"
+ default-features = false
+--- a/src/terminal.rs
++++ b/src/terminal.rs
+@@ -48,8 +48,9 @@
+         let size = backend.size()?;
++		let rect = Rect::new(0, 0, size.width, size.height);
+         Ok(Terminal {
+             backend,
+-            buffers: [Buffer::empty(size), Buffer::empty(size)],
++            buffers: [Buffer::empty(rect), Buffer::empty(rect)],
+             current: 0,
+             hidden_cursor: false,
+-            known_size: size,
++            known_size: rect,
+         })
+@@ -132,2 +133,3 @@
+         self.backend.size()
++            .map(|tui::prelude::Size { width, height }| Rect::new(0, 0, width, height))
+     }
