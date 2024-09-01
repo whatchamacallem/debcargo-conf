@@ -89,10 +89,14 @@ run_debcargo() {
 		echo "cd $BUILDDIR"
 		echo "quilt pop -a -f"
 		echo "rm -rf .pc"
-		echo "ln -s $PKGDIR/debian/patches"
-		echo "quilt push --fuzz=0 -a -f"
-		echo "$EDITOR <file>"
+		echo "mkdir debian"
+		echo "ln -s $PKGDIR/debian/patches debian"
+		echo "Then for each patch, run"
+		echo "quilt push -f"
+		echo "and if needed, edit patched files or the patch and then run"
 		echo "quilt refresh"
+		echo "Repeat until there are no more patches, and then"
+		echo "git-add all of the patches in $PKGDIR"
 		exit 1
 	fi
 	set -e

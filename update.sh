@@ -73,7 +73,7 @@ and directly git-add without editing:
 	    src/$PKGNAME/debian/copyright.debcargo.hint
 
 When done, git-add all your changes plus any unmodified hint files, and re-run
-this command (\`./update.sh $*\`).
+this command (\`./update.sh $*\`).  Do NOT run git commit at this stage.
 
 For issues with debian/control, edit src/$PKGNAME/debian/debcargo.toml instead.
 You can find docs for that in debcargo.toml.example in the debcargo git repo.
@@ -92,6 +92,7 @@ You can test-build your package by running:
 
   cd build && ./build.sh $CRATE $VER
 
+You should not run git commit before doing this; it uses files git-added.
 This assumes that you have set up sbuild; see "Build environment" in README.rst
 for details. Try to fix any lintian errors, but note that some errors are due
 to lintian being out-of-date and/or are expected at this stage of the process
