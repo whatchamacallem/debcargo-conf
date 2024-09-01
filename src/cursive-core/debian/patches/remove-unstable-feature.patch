@@ -1,7 +1,7 @@
-Index: cursive-core/src/lib.rs
-===================================================================
---- cursive-core.orig/src/lib.rs
-+++ cursive-core/src/lib.rs
+diff --git a/src/lib.rs b/src/lib.rs
+index 976e0cf..4e7056c 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
 @@ -8,7 +8,6 @@
  //!
  //! [`cursive`]: https://docs.rs/cursive
@@ -10,24 +10,24 @@ Index: cursive-core/src/lib.rs
  
  macro_rules! new_default(
      ($c:ident<$t:ident>) => {
-Index: cursive-core/src/theme.rs
-===================================================================
---- cursive-core.orig/src/theme.rs
-+++ cursive-core/src/theme.rs
-@@ -130,7 +130,6 @@ impl Theme {
-     }
+diff --git a/src/theme/mod.rs b/src/theme/mod.rs
+index 7a06f1a..edbb0cb 100644
+--- a/src/theme/mod.rs
++++ b/src/theme/mod.rs
+@@ -242,7 +242,6 @@ impl Default for Theme {
  
+ impl Theme {
      #[cfg(feature = "toml")]
 -    #[cfg_attr(feature = "doc-cfg", doc(cfg(feature = "toml")))]
-     /// Load values from an already parsed toml [`Table`], overwriting previous values.
-     ///
-     /// [`Table`]: https://docs.rs/toml/latest/toml/type.Table.html
-@@ -160,13 +159,11 @@ pub enum Error {
+     fn load_toml(&mut self, table: &toml::value::Table) {
+         if let Some(&toml::Value::Boolean(shadow)) = table.get("shadow") {
+             self.shadow = shadow;
+@@ -265,13 +264,11 @@ pub enum Error {
      Io(io::Error),
  
      #[cfg(feature = "toml")]
 -    #[cfg_attr(feature = "doc-cfg", doc(cfg(feature = "toml")))]
-     /// An error occurred when parsing the toml content.
+     /// An error occured when parsing the toml content.
      Parse(toml::de::Error),
  }
  
@@ -36,7 +36,7 @@ Index: cursive-core/src/theme.rs
  impl From<io::Error> for Error {
      fn from(err: io::Error) -> Self {
          Error::Io(err)
-@@ -174,7 +171,6 @@ impl From<io::Error> for Error {
+@@ -279,7 +276,6 @@ impl From<io::Error> for Error {
  }
  
  #[cfg(feature = "toml")]
@@ -44,7 +44,7 @@ Index: cursive-core/src/theme.rs
  impl From<toml::de::Error> for Error {
      fn from(err: toml::de::Error) -> Self {
          Error::Parse(err)
-@@ -185,7 +181,6 @@ impl From<toml::de::Error> for Error {
+@@ -290,7 +286,6 @@ impl From<toml::de::Error> for Error {
  ///
  /// Must have the `toml` feature enabled.
  #[cfg(feature = "toml")]
@@ -52,7 +52,7 @@ Index: cursive-core/src/theme.rs
  pub fn load_theme_file<P: AsRef<Path>>(filename: P) -> Result<Theme, Error> {
      let content = {
          let mut content = String::new();
-@@ -201,7 +196,6 @@ pub fn load_theme_file<P: AsRef<Path>>(f
+@@ -306,7 +301,6 @@ pub fn load_theme_file<P: AsRef<Path>>(filename: P) -> Result<Theme, Error> {
  ///
  /// Must have the `toml` feature enabled.
  #[cfg(feature = "toml")]
@@ -60,10 +60,10 @@ Index: cursive-core/src/theme.rs
  pub fn load_toml(content: &str) -> Result<Theme, Error> {
      let table = toml::de::from_str(content)?;
  
-Index: cursive-core/src/utils/markup/markdown.rs
-===================================================================
---- cursive-core.orig/src/utils/markup/markdown.rs
-+++ cursive-core/src/utils/markup/markdown.rs
+diff --git a/src/utils/markup/markdown.rs b/src/utils/markup/markdown.rs
+index 6f3ce4a..f977343 100644
+--- a/src/utils/markup/markdown.rs
++++ b/src/utils/markup/markdown.rs
 @@ -2,7 +2,6 @@
  //!
  //! Needs the `markdown` feature to be enabled.
@@ -72,27 +72,12 @@ Index: cursive-core/src/utils/markup/markdown.rs
  
  use std::borrow::Cow;
  
-Index: cursive-core/src/utils/markup/ansi.rs
-===================================================================
---- cursive-core.orig/src/utils/markup/ansi.rs
-+++ cursive-core/src/utils/markup/ansi.rs
-@@ -2,7 +2,6 @@
- //!
- //! Needs the `ansi` feature to be enabled.
- #![cfg(feature = "ansi")]
--#![cfg_attr(feature = "doc-cfg", doc(cfg(feature = "ansi")))]
+@@ -30,7 +29,7 @@ pub struct Parser<'a> {
+     first: bool,
+     stack: Vec<Style>,
+     input: &'a str,
+-    parser: pulldown_cmark::Parser<'a, 'a>,
++    parser: pulldown_cmark::Parser<'a>,
+ }
  
- use crate::style::{BaseColor, Color, Effect, Style};
- use crate::utils::markup::{StyledIndexedSpan, StyledString};
-Index: cursive-core/src/utils/markup/cursup.rs
-===================================================================
---- cursive-core.orig/src/utils/markup/cursup.rs
-+++ cursive-core/src/utils/markup/cursup.rs
-@@ -15,7 +15,6 @@
- //! // Highlight a letter from the word to show a shortcut available.
- //! Button::new(cursup::parse("/red{Q}uit"), |s| s.quit());
- //! ```
--#![cfg_attr(feature = "doc-cfg", doc(cfg(feature = "cursup")))]
- 
- use crate::style::Style;
- use crate::utils::markup::{StyledIndexedSpan, StyledString};
+ impl<'a> Parser<'a> {
