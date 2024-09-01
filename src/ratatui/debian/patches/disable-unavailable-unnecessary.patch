@@ -1,6 +1,7 @@
 Description: Disable examples and unavailable deps
  termwiz is proper unavailable,
  font8x8 is cruft,
+ document-features is useless without feature comments,
  color-eyre (many), fakeit (1) and octocrab (1) are used by examples.
  Examples are too many and drastically slow down builds and autopkgtest runs.
 Forwarded: not-needed
@@ -473,6 +474,13 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 +#name = "main"
 +#path = "benches/main.rs"
 +#harness = false
+@@ -370,3 +370,3 @@
+-[dependencies.document-features]
+-version = "0.2.7"
+-optional = true
++#[dependencies.document-features]
++#version = "0.2.7"
++#optional = true
 @@ -402,3 +402,3 @@
 -[dependencies.termwiz]
 -version = "0.22.0"
@@ -503,3 +511,10 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 @@ -501 +501 @@
 -termwiz = ["dep:termwiz"]
 +#termwiz = ["dep:termwiz"]
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -224,2 +224,2 @@
+-#![cfg_attr(feature = "document-features", doc = "\n## Features")]
+-#![cfg_attr(feature = "document-features", doc = document_features::document_features!())]
++//#![cfg_attr(feature = "document-features", doc = "\n## Features")]
++//#![cfg_attr(feature = "document-features", doc = document_features::document_features!())]
