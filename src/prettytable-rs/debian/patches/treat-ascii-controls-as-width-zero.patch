@@ -1,0 +1,42 @@
+Description: Treat ascii control characters as width 0
+ This brings the behaviour with unicode-width 0.1.13 closer to that with
+ unicode-width 0.10
+Author: Peter Michael Green <plugwash@debian.org>
+
+--- rust-prettytable-rs-0.10.0.orig/src/utils.rs
++++ rust-prettytable-rs-0.10.0/src/utils.rs
+@@ -3,7 +3,33 @@ use std::fmt;
+ use std::io::{Error, ErrorKind, Write};
+ use std::str;
+ 
+-use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
++//use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
++
++trait UnicodeWidthChar {
++    fn width(self) -> Option<usize>;
++}
++
++trait UnicodeWidthStr {
++    fn width(&self) -> usize;
++}
++
++impl  UnicodeWidthChar for char {
++    fn width(self) -> Option<usize> {
++        if self as u32 <= 0x1F { return Some(0) }
++        return unicode_width::UnicodeWidthChar::width(self);
++    }
++}
++
++impl UnicodeWidthStr for str {
++    fn width(&self) -> usize {
++        let mut result = 0;
++        for chunk in self.split(|c| c as u32 <= 0x1F) {
++             result += unicode_width::UnicodeWidthStr::width(chunk);
++        }
++        return result;
++    }
++
++}
+ 
+ use super::format::Alignment;
+ 
