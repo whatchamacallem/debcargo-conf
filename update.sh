@@ -17,6 +17,10 @@ if git branch --remotes --format='%(refname:short)' | grep "^origin/pending-$PKG
 then
 	abort 1 "The remote pending-$PKGNAME branch already exists. Please resolve this before updating this crate."
 fi
+if git branch --format='%(refname:short)' | grep "^pending-$PKGNAME\$"
+then
+	abort 1 "The local pending-$PKGNAME branch already exists. Please resolve this before updating this crate."
+fi
 
 if [ -n "$VER" ]; then
 	if [ ! -d "$PWD/src/$PKGBASE" ]; then
