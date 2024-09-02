@@ -12,9 +12,10 @@ case "$(git rev-parse --abbrev-ref HEAD)" in
 pending-*)	abort 1 "You are on a pending-release branch, $0 can only be run on another branch, like master";;
 esac
 
+git fetch origin
 if git branch --remotes --format='%(refname:short)' | grep "^origin/pending-$PKGNAME\$"
 then
-	abort 1 "The remote pending-$PKGNAME branch already exists. Please resolve this before trying to update this crate."
+	abort 1 "The remote pending-$PKGNAME branch already exists. Please resolve this before updating this crate."
 fi
 
 if [ -n "$VER" ]; then
