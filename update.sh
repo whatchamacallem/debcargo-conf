@@ -12,6 +12,11 @@ case "$(git rev-parse --abbrev-ref HEAD)" in
 pending-*)	abort 1 "You are on a pending-release branch, $0 can only be run on another branch, like master";;
 esac
 
+if git branch --remotes --format='%(refname:short)' | grep "^origin/pending-$PKGNAME\$"
+then
+	abort 1 "The remote pending-$PKGNAME branch already exists. Please resolve this before trying to update this crate."
+fi
+
 if [ -n "$VER" ]; then
 	if [ ! -d "$PWD/src/$PKGBASE" ]; then
 		abort 1 "Using crate $CRATE with version $VER but default-version is not packaged." \
