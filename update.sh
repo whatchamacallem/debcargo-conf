@@ -13,13 +13,10 @@ pending-*)	abort 1 "You are on a pending-release branch, $0 can only be run on a
 esac
 
 git fetch origin
-if git branch --remotes --format='%(refname:short)' | grep "^origin/pending-$PKGNAME\$"
+pending_branches=$(git branch --all --format='%(refname:short)' | grep -E "^(origin/)?pending-$PKGNAME\$" | tr "\012" " " | sed -e 's/ $//')
+if [ -n "$pending_branches" ]
 then
-	abort 1 "The remote pending-$PKGNAME branch already exists. Please resolve this before updating this crate."
-fi
-if git branch --format='%(refname:short)' | grep "^pending-$PKGNAME\$"
-then
-	abort 1 "The local pending-$PKGNAME branch already exists. Please resolve this before updating this crate."
+	abort 1 "These pending branches already exist: $pending_branches. Please resolve this before updating this crate."
 fi
 
 if [ -n "$VER" ]; then
