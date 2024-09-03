@@ -12,11 +12,11 @@ case "$(git rev-parse --abbrev-ref HEAD)" in
 pending-*)	abort 1 "You are on a pending-release branch, $0 can only be run on another branch, like master";;
 esac
 
-git fetch origin
-pending_branches=$(git branch --all --format='%(refname:short)' | grep -E "^(origin/)?pending-$PKGNAME\$" | tr "\012" " " | sed -e 's/ $//')
+timeout 5 git fetch origin || echo >&2 "$0: Failed to fetch upstream to check pending branches, please check network"
+pending_branches=$(git branch --all --list "*pending-$PKGNAME")
 if [ -n "$pending_branches" ]
 then
-	abort 1 "These pending branches already exist: $pending_branches. Please resolve this before updating this crate."
+	abort 1 "Please resolve these existing pending branches before updating this crate:$(printf "\n$pending_branches")"
 fi
 
 if [ -n "$VER" ]; then
