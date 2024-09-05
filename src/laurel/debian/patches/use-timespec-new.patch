@@ -4,11 +4,9 @@ Description: Use TimeSpec::new( instead of TimeSpec::from(libc::timespec {
  already contains code that avoids this problem, so lets use it.
 Author: Peter Michael Green <plugwash@debian.org>
 
---- rust-laurel-0.6.1.orig/src/procfs.rs
-+++ rust-laurel-0.6.1/src/procfs.rs
-@@ -150,10 +150,10 @@ pub(crate) fn parse_proc_pid(pid: u32) -
- 
-     // Use the boottime-based clock to calculate process start
+--- a/src/procfs.rs
++++ b/src/procfs.rs
+@@ -152,6 +152,6 @@
      // time, convert to Unix-epoch-based-time.
 -    let proc_boottime = TimeSpec::from(libc::timespec {
 -        tv_sec: (starttime / *CLK_TCK) as _,
@@ -19,5 +17,3 @@ Author: Peter Michael Green <plugwash@debian.org>
 +        ((starttime % *CLK_TCK) * (1_000_000_000 / *CLK_TCK)) as _,
 +    );
      #[cfg(not(target_os = "linux"))]
-     let proc_age = TimeSpec::from(std::time::Duration::ZERO);
-     #[cfg(target_os = "linux")]
