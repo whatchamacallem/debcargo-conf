@@ -92,7 +92,7 @@ run_debcargo() {
 		echo "mkdir debian"
 		echo "ln -s $PKGDIR/debian/patches debian"
 		echo "Then for each patch, run"
-		echo "quilt push -f"
+		echo "QUILT_PATCHES=debian/patches quilt push -f"
 		echo "and if needed, edit patched files or the patch and then run"
 		echo "quilt refresh"
 		echo "Repeat until there are no more patches, and then"
