@@ -12,7 +12,7 @@ case "$(git rev-parse --abbrev-ref HEAD)" in
 pending-*)	abort 1 "You are on a pending-release branch, $0 can only be run on another branch, like master";;
 esac
 
-timeout 5 git fetch origin || echo >&2 "$0: Failed to fetch upstream to check pending branches, please check network"
+timeout 5 git fetch origin --prune || abort 1 "Failed to fetch upstream to check pending branches, please check network"
 pending_branches=$(git branch --all --list "*pending-$PKGNAME")
 if [ -n "$pending_branches" ]
 then
