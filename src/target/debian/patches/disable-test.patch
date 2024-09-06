@@ -1,0 +1,36 @@
+Description: Disable the test.
+ * This crate is literally translating conditional compilation macros to
+ corresponding values. There's not much point in testing, other than mistyped
+ values.
+ * It only covers and runs on x86_64-linux-gnu and some basic Windows and macOS
+ conditions, leaving out all the architectures Debian supports.
+ * It runs in a bizarre way, using a full blown crate to find the built, pretty
+ much demo-only, binary, and runs it.
+ * Happens to remove all B-Ds.
+Forwarded: not-needed
+Last-Update: 2024-09-06
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/tests/binary.rs
++++ b/tests/binary.rs
+@@ -1,2 +1,2 @@
+-extern crate executable_path;
++/*extern crate executable_path;
+ 
+@@ -56,2 +56,2 @@
+   pretty_assertions::assert_eq!(output, EXPECTED);
+-}
++}*/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -19,6 +19,6 @@
+ license = "CC0-1.0"
+-[dev-dependencies.executable-path]
+-version = "1.0.0"
++#[dev-dependencies.executable-path]
++#version = "1.0.0"
+ 
+-[dev-dependencies.pretty_assertions]
+-version = "0.7.2"
++#[dev-dependencies.pretty_assertions]
++#version = "0.7.2"
