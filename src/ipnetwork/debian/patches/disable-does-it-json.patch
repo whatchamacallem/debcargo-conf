@@ -1,0 +1,59 @@
+Description: Disable tests depending on does-it-json
+ tests::test_json uses does-it-json to verify if +schemars is enabled, but it's
+ not packaged.
+Last-Update: 2023-10-01
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/tests/test_json.rs
++++ b/tests/test_json.rs
+@@ -23,10 +23,10 @@
+ 
+         assert_eq!(::serde_json::to_string(&mystruct).unwrap(), json_string);
+ 
+-        #[cfg(feature = "schemars")]
++        /*#[cfg(feature = "schemars")]
+         if let Err(s) = does_it_json::validate_with_output(&mystruct) {
+             panic!("{}", s);
+-        }
++        }*/
+     }
+ 
+     #[test]
+@@ -49,10 +49,10 @@
+ 
+         assert_eq!(::serde_json::to_string(&mystruct).unwrap(), json_string);
+ 
+-        #[cfg(feature = "schemars")]
++        /*#[cfg(feature = "schemars")]
+         if let Err(s) = does_it_json::validate_with_output(&mystruct) {
+             panic!("{}", s);
+-        }
++        }*/
+     }
+ 
+     #[test]
+@@ -77,9 +77,9 @@
+ 
+         assert_eq!(::serde_json::to_string(&mystruct).unwrap(), json_string);
+ 
+-        #[cfg(feature = "schemars")]
++        /*#[cfg(feature = "schemars")]
+         if let Err(s) = does_it_json::validate_with_output(&mystruct) {
+             panic!("{}", s);
+-        }
++        }*/
+     }
+ }
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -49,8 +49,8 @@
+ #version = "0.3.4"
+ #features = ["html_reports"]
+ 
+-[dev-dependencies.does-it-json]
+-version = "0.0.3"
++#[dev-dependencies.does-it-json]
++#version = "0.0.3"
+ 
+ [dev-dependencies.serde_json]
+ version = "1.0"
