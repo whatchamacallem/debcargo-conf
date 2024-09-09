@@ -1,0 +1,22 @@
+Description: use mem::zeroed to create zero timespec.
+ The time64 patches for the libc crate add padding to struct timespec,
+ on time64 architectures. Unfortunately this means that timespecs can't
+ be created in the normal way in rust.
+
+ Instead we create the structure using std::mem::zeroed.
+Author: Peter Michael Green <plugwash@debian.org>
+
+--- rust-pleaser-0.5.5.orig/src/lib.rs
++++ rust-pleaser-0.5.5/src/lib.rs
+@@ -2072,10 +2072,7 @@ pub fn create_token_dir() -> bool {
+ }
+ 
+ pub fn boot_secs() -> libc::timespec {
+-    let mut tp = libc::timespec {
+-        tv_sec: 0,
+-        tv_nsec: 0,
+-    };
++    let mut tp = unsafe { std::mem::zeroed() };
+     #[cfg(target_os = "linux")]
+     unsafe {
+         libc::clock_gettime(libc::CLOCK_BOOTTIME, &mut tp)
