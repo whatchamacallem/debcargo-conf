@@ -1,0 +1,26 @@
+Index: ctrlc/Cargo.toml
+===================================================================
+--- ctrlc.orig/Cargo.toml
++++ ctrlc/Cargo.toml
+@@ -49,7 +49,7 @@ version = "0.3"
+ termination = []
+ 
+ [target."cfg(unix)".dependencies.nix]
+-version = "0.29"
++version = "0.27"
+ features = [
+     "fs",
+     "signal",
+Index: ctrlc/src/platform/unix/mod.rs
+===================================================================
+--- ctrlc.orig/src/platform/unix/mod.rs
++++ ctrlc/src/platform/unix/mod.rs
+@@ -24,7 +24,7 @@ pub type Signal = nix::sys::signal::Sign
+ extern "C" fn os_handler(_: nix::libc::c_int) {
+     // Assuming this always succeeds. Can't really handle errors in any meaningful way.
+     unsafe {
+-        let fd = BorrowedFd::borrow_raw(PIPE.1);
++        let fd = PIPE.1;
+         let _ = unistd::write(fd, &[0u8]);
+     }
+ }
