@@ -1,0 +1,179 @@
+From ab38b6230440da1ab732a86181fbae82770e475d Mon Sep 17 00:00:00 2001
+From: dignifiedquire <me@dignifiedquire.com>
+Date: Mon, 9 Sep 2024 17:33:56 +0200
+Subject: [PATCH] test: skip writing files by default
+
+These are only used for debugging anyway.
+
+Closes #403
+---
+ src/composed/key/builder.rs   | 18 +++++++++---------
+ src/composed/message/types.rs | 18 +++++++++---------
+ 2 files changed, 18 insertions(+), 18 deletions(-)
+
+diff --git a/src/composed/key/builder.rs b/src/composed/key/builder.rs
+index a874bae..2e054c0 100644
+--- a/src/composed/key/builder.rs
++++ b/src/composed/key/builder.rs
+@@ -415,8 +415,8 @@ mod tests {
+             .to_armored_string(None.into())
+             .expect("failed to serialize key");
+ 
+-        std::fs::write("sample-rsa-enc.sec.asc", &armor_enc).unwrap();
+-        std::fs::write("sample-rsa.sec.asc", &armor_plain).unwrap();
++        // std::fs::write("sample-rsa-enc.sec.asc", &armor_enc).unwrap();
++        // std::fs::write("sample-rsa.sec.asc", &armor_plain).unwrap();
+ 
+         let (signed_key2_enc, _headers) =
+             SignedSecretKey::from_string(&armor_enc).expect("failed to parse key (enc)");
+@@ -447,7 +447,7 @@ mod tests {
+             .to_armored_string(None.into())
+             .expect("failed to serialize public key");
+ 
+-        std::fs::write("sample-rsa.pub.asc", &armor).unwrap();
++        // std::fs::write("sample-rsa.pub.asc", &armor).unwrap();
+ 
+         let (signed_key2, _headers) =
+             SignedPublicKey::from_string(&armor).expect("failed to parse public key");
+@@ -519,7 +519,7 @@ mod tests {
+             .expect("failed to serialize key");
+ 
+         println!("armor: {armor:?}");
+-        std::fs::write("sample-x25519.sec.asc", &armor).unwrap();
++        // std::fs::write("sample-x25519.sec.asc", &armor).unwrap();
+ 
+         let (signed_key2, _headers) =
+             SignedSecretKey::from_string(&armor).expect("failed to parse key");
+@@ -539,7 +539,7 @@ mod tests {
+             .to_armored_string(None.into())
+             .expect("failed to serialize public key");
+ 
+-        std::fs::write("sample-x25519.pub.asc", &armor).unwrap();
++        // std::fs::write("sample-x25519.pub.asc", &armor).unwrap();
+ 
+         let (signed_key2, _headers) =
+             SignedPublicKey::from_string(&armor).expect("failed to parse public key");
+@@ -592,7 +592,7 @@ mod tests {
+             .to_armored_string(None.into())
+             .expect("failed to serialize key");
+ 
+-        std::fs::write("sample-ecdsa.sec.asc", &armor).unwrap();
++        // std::fs::write("sample-ecdsa.sec.asc", &armor).unwrap();
+ 
+         let (signed_key2, _headers) =
+             SignedSecretKey::from_string(&armor).expect("failed to parse key");
+@@ -612,7 +612,7 @@ mod tests {
+             .to_armored_string(None.into())
+             .expect("failed to serialize public key");
+ 
+-        std::fs::write(format!("sample-ecdsa-{curve:?}.pub.asc"), &armor).unwrap();
++        // std::fs::write(format!("sample-ecdsa-{curve:?}.pub.asc"), &armor).unwrap();
+ 
+         let (signed_key2, _headers) =
+             SignedPublicKey::from_string(&armor).expect("failed to parse public key");
+@@ -697,7 +697,7 @@ mod tests {
+             .to_armored_string(None.into())
+             .expect("failed to serialize key");
+ 
+-        std::fs::write("sample-dsa.sec.asc", &armor).unwrap();
++        // std::fs::write("sample-dsa.sec.asc", &armor).unwrap();
+ 
+         let (signed_key2, _headers) =
+             SignedSecretKey::from_string(&armor).expect("failed to parse key");
+@@ -717,7 +717,7 @@ mod tests {
+             .to_armored_string(None.into())
+             .expect("failed to serialize public key");
+ 
+-        std::fs::write(format!("sample-dsa-{key_size:?}.pub.asc"), &armor).unwrap();
++        // std::fs::write(format!("sample-dsa-{key_size:?}.pub.asc"), &armor).unwrap();
+ 
+         let (signed_key2, _headers) =
+             SignedPublicKey::from_string(&armor).expect("failed to parse public key");
+diff --git a/src/composed/message/types.rs b/src/composed/message/types.rs
+index f219e17..f768f3c 100644
+--- a/src/composed/message/types.rs
++++ b/src/composed/message/types.rs
+@@ -850,7 +850,7 @@ mod tests {
+         assert_eq!(encrypted, encrypted2);
+ 
+         let armored = encrypted.to_armored_bytes(None.into()).unwrap();
+-        fs::write("./message-rsa.asc", &armored).unwrap();
++        // fs::write("./message-rsa.asc", &armored).unwrap();
+ 
+         let parsed = Message::from_armor_single(&armored[..]).unwrap().0;
+ 
+@@ -878,7 +878,7 @@ mod tests {
+                 .unwrap();
+ 
+             let armored = encrypted.to_armored_bytes(None.into()).unwrap();
+-            fs::write("./message-x25519.asc", &armored).unwrap();
++            // fs::write("./message-x25519.asc", &armored).unwrap();
+ 
+             let parsed = Message::from_armor_single(&armored[..]).unwrap().0;
+ 
+@@ -906,7 +906,7 @@ mod tests {
+             .unwrap();
+ 
+         let armored = encrypted.to_armored_bytes(None.into()).unwrap();
+-        fs::write("./message-password.asc", &armored).unwrap();
++        // fs::write("./message-password.asc", &armored).unwrap();
+ 
+         let parsed = Message::from_armor_single(&armored[..]).unwrap().0;
+ 
+@@ -981,7 +981,7 @@ mod tests {
+             .unwrap();
+ 
+         let armored = signed_msg.to_armored_bytes(None.into()).unwrap();
+-        fs::write("./message-string-signed-x25519.asc", &armored).unwrap();
++        // fs::write("./message-string-signed-x25519.asc", &armored).unwrap();
+ 
+         signed_msg.verify(&pkey).unwrap();
+ 
+@@ -1004,7 +1004,7 @@ mod tests {
+             .unwrap();
+ 
+         let armored = signed_msg.to_armored_bytes(None.into()).unwrap();
+-        fs::write("./message-bytes-signed-x25519.asc", &armored).unwrap();
++        // fs::write("./message-bytes-signed-x25519.asc", &armored).unwrap();
+ 
+         signed_msg.verify(&pkey).unwrap();
+ 
+@@ -1028,7 +1028,7 @@ mod tests {
+         let compressed_msg = signed_msg.compress(CompressionAlgorithm::ZLIB).unwrap();
+ 
+         let armored = compressed_msg.to_armored_bytes(None.into()).unwrap();
+-        fs::write("./message-bytes-compressed-signed-x25519.asc", &armored).unwrap();
++        // fs::write("./message-bytes-compressed-signed-x25519.asc", &armored).unwrap();
+ 
+         signed_msg.verify(&pkey).unwrap();
+ 
+@@ -1055,7 +1055,7 @@ mod tests {
+                 .unwrap();
+ 
+             let armored = signed_msg.to_armored_bytes(None.into()).unwrap();
+-            fs::write("./message-string-signed-rsa.asc", &armored).unwrap();
++            // fs::write("./message-string-signed-rsa.asc", &armored).unwrap();
+ 
+             signed_msg.verify(&pkey).unwrap();
+ 
+@@ -1080,7 +1080,7 @@ mod tests {
+             .unwrap();
+ 
+         let armored = signed_msg.to_armored_bytes(None.into()).unwrap();
+-        fs::write("./message-bytes-signed-rsa.asc", &armored).unwrap();
++        // fs::write("./message-bytes-signed-rsa.asc", &armored).unwrap();
+ 
+         signed_msg.verify(&pkey).unwrap();
+ 
+@@ -1105,7 +1105,7 @@ mod tests {
+ 
+         let compressed_msg = signed_msg.compress(CompressionAlgorithm::ZLIB).unwrap();
+         let armored = compressed_msg.to_armored_bytes(None.into()).unwrap();
+-        fs::write("./message-bytes-compressed-signed-rsa.asc", &armored).unwrap();
++        // fs::write("./message-bytes-compressed-signed-rsa.asc", &armored).unwrap();
+ 
+         signed_msg.verify(&pkey).unwrap();
+ 
+-- 
+2.45.2
+
