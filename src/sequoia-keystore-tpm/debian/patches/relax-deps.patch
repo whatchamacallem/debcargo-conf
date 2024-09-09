@@ -1,0 +1,55 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 41fd48f..4158ab8 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -53,6 +53,7 @@ version = "0.6"
+ [dependencies.sequoia-openpgp]
+ version = "1.17"
+ default-features = false
++features = ["compression", "crypto-nettle"]
+ 
+ [dependencies.sequoia-tpm]
+ version = "0.1.0"
+@@ -61,7 +62,7 @@ version = "0.1.0"
+ version = "1"
+ 
+ [dependencies.serde_yaml]
+-version = "0.8"
++version = "0.9"
+ 
+ [dependencies.tokio]
+ version = "1.19"
+@@ -74,11 +75,6 @@ features = [
+ [dev-dependencies.env_logger]
+ version = ">=0.10, <0.12"
+ 
+-[dev-dependencies.sequoia-openpgp]
+-version = "1"
+-features = ["compression"]
+-default-features = false
+-
+ [dev-dependencies.tracing]
+ version = "0.1"
+ default-features = false
+@@ -88,21 +84,5 @@ version = "0.3"
+ features = ["env-filter"]
+ default-features = false
+ 
+-[target."cfg(not(windows))".dev-dependencies.sequoia-openpgp]
+-version = "1"
+-features = [
+-    "crypto-nettle",
+-    "__implicit-crypto-backend-for-tests",
+-]
+-default-features = false
+-
+-[target."cfg(windows)".dev-dependencies.sequoia-openpgp]
+-version = "1"
+-features = [
+-    "crypto-cng",
+-    "__implicit-crypto-backend-for-tests",
+-]
+-default-features = false
+-
+ [badges.maintenance]
+ status = "actively-developed"
