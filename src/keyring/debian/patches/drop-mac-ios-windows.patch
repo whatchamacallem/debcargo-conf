@@ -3,69 +3,61 @@ Description: Avoid trying to build anything for ios, macos, or windows.  Debian 
 
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -32,11 +32,6 @@
- license = "MIT OR Apache-2.0"
- repository = "https://github.com/hwchen/keyring-rs.git"
+@@ -39,8 +39,6 @@
  
--[[example]]
+ [package.metadata.docs.rs]
+ features = [
+-    "apple-native",
+-    "windows-native",
+     "sync-secret-service",
+     "crypto-rust",
+ ]
+@@ -50,11 +48,6 @@
+ path = "src/lib.rs"
+ 
+ [[example]]
 -name = "iostest"
 -crate-type = ["staticlib"]
 -path = "examples/ios.rs"
 -
- [dependencies.lazy_static]
+-[[example]]
+ name = "keyring-cli"
+ path = "examples/cli.rs"
+ 
+@@ -93,7 +86,6 @@
  version = "1"
  
-@@ -72,32 +67,18 @@
-     "platform-linux",
-     "platform-freebsd",
-     "platform-openbsd",
--    "platform-macos",
--    "platform-ios",
--    "platform-windows",
+ [features]
+-apple-native = ["dep:security-framework"]
+ async-io = ["zbus?/async-io"]
+ async-secret-service = [
+     "dep:secret-service",
+@@ -114,14 +106,6 @@
+     "dbus-secret-service?/vendored",
+     "openssl?/vendored",
  ]
- platform-freebsd = ["linux-secret-service"]
--platform-ios = ["security-framework"]
- platform-linux = [
-     "linux-secret-service",
-     "linux-keyutils",
- ]
--platform-macos = ["security-framework"]
- platform-openbsd = ["linux-secret-service"]
--platform-windows = [
--    "windows-sys",
--    "byteorder",
+-windows-native = [
+-    "dep:windows-sys",
+-    "dep:byteorder",
 -]
--windows-test-threading = []
- 
- [target."cfg(target_os = \"freebsd\")".dependencies.secret-service]
- version = "3"
- optional = true
- 
--[target."cfg(target_os = \"ios\")".dependencies.security-framework]
--version = "2.6"
+-
+-[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies.security-framework]
+-version = "2"
 -optional = true
--
- [target."cfg(target_os = \"linux\")".dependencies.linux-keyutils]
- version = "0.2"
- features = ["std"]
-@@ -107,22 +88,6 @@
- version = "3"
- optional = true
  
--[target."cfg(target_os = \"macos\")".dependencies.security-framework]
--version = "2.6"
--optional = true
--
- [target."cfg(target_os = \"openbsd\")".dependencies.secret-service]
- version = "3"
+ [target.'cfg(target_os = "freebsd")'.dependencies.dbus-secret-service]
+ version = "4.0.1"
+@@ -163,15 +147,3 @@
+ [target.'cfg(target_os = "openbsd")'.dependencies.zbus]
+ version = "4"
  optional = true
 -
--[target."cfg(target_os = \"windows\")".dependencies.byteorder]
+-[target.'cfg(target_os = "windows")'.dependencies.byteorder]
 -version = "1.2"
 -optional = true
 -
--[target."cfg(target_os = \"windows\")".dependencies.windows-sys]
--version = "0.52"
+-[target.'cfg(target_os = "windows")'.dependencies.windows-sys]
+-version = "0.59"
 -features = [
 -    "Win32_Foundation",
 -    "Win32_Security_Credentials",
