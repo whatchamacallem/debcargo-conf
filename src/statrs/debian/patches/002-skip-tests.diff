@@ -1,0 +1,49 @@
+Description: Skip tests needing ./data/ path
+ Skip tests needing ./data/ which is not available from upstream.
+Author: Yogeswaran Umasankar <yogu@debian.org>
+Forwarded: not-needed
+Last-Update: 2024-09-09
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/statistics/iter_statistics.rs
++++ b/src/statistics/iter_statistics.rs
+@@ -253,6 +253,7 @@ mod tests {
+     use crate::testing;
+ 
+     #[test]
++    #[ignore]
+     fn test_mean() {
+         let mut data = testing::load_data("nist/lottery.txt");
+         assert_almost_eq!((&data).mean(), 518.958715596330, 1e-12);
+@@ -280,6 +281,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_std_dev() {
+         let mut data = testing::load_data("nist/lottery.txt");
+         assert_almost_eq!((&data).std_dev(), 291.699727470969, 1e-13);
+@@ -329,6 +331,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_covariance_consistent_with_variance() {
+         let mut data = testing::load_data("nist/lottery.txt");
+         assert_almost_eq!((&data).variance(), (&data).covariance(&data), 1e-10);
+@@ -347,6 +350,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_pop_covar_consistent_with_pop_var() {
+         let mut data = testing::load_data("nist/lottery.txt");
+         assert_almost_eq!((&data).population_variance(), (&data).population_covariance(&data), 1e-10);
+@@ -365,6 +369,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_covariance_is_symmetric() {
+         let data_a = &testing::load_data("nist/lottery.txt")[0..200];
+         let data_b = &testing::load_data("nist/lew.txt")[0..200];
