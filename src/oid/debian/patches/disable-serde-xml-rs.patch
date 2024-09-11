@@ -1,0 +1,48 @@
+Description: Disable broken, unmaintained test dep serde-xml-rs
+ which is only used to serialize test results for comparison
+Forwarded: not-needed
+Last-Update: 2024-09-11
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -33,4 +33,4 @@
+ 
+-[dev-dependencies.serde-xml-rs]
+-version = "0.4.0"
++#[dev-dependencies.serde-xml-rs]
++#version = "0.5.0"
+ 
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -383,3 +383,3 @@
+         use serde_derive::{Deserialize, Serialize};
+-        use serde_xml_rs;
++        //use serde_xml_rs;
+ 
+@@ -420,3 +420,3 @@
+ 
+-        #[test]
++        /*#[test]
+         fn xml_serde_serialize() {
+@@ -428,5 +428,5 @@
+             assert_eq!(expected, actual);
+-        }
++        }*/
+ 
+-        #[test]
++        /*#[test]
+         fn xml_serde_deserialize_element() {
+@@ -439,5 +439,5 @@
+             assert_eq!(expected, actual);
+-        }
++        }*/
+ 
+-        #[test]
++        /*#[test]
+         fn xml_serde_deserialize_attribute() {
+@@ -450,3 +450,3 @@
+             assert_eq!(expected, actual);
+-        }
++        }*/
+     }
