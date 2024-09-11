@@ -1,26 +1,25 @@
-Index: serde-with/Cargo.toml
-===================================================================
---- serde-with.orig/Cargo.toml
-+++ serde-with/Cargo.toml
-@@ -163,7 +163,7 @@ path = "tests/schemars_0_8.rs"
- required-features = ["macros", "schemars_0_8"]
- 
+0.22 fixed an inconsistency between its BinHex implementation and the spec,
+specifically, in commit 838355e0ac. Just disable the test for now.
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -165,3 +165,3 @@
  [dependencies.base64]
--version = "0.22.0"
+-version = "0.22.1"
 +version = "0.21.0"
  optional = true
- default-features = false
- 
-Index: serde-with/tests/base64.rs
-===================================================================
---- serde-with.orig/tests/base64.rs
-+++ serde-with/tests/base64.rs
-@@ -38,7 +38,7 @@ fn base64_vec() {
- 
-     check_error_deserialization::<BDefault>(
+--- a/tests/base64.rs
++++ b/tests/base64.rs
+@@ -40,3 +40,3 @@
          r#"["0"]"#,
 -        expect!["Invalid input length: 1 at line 1 column 4"],
 +        expect!["Encoded text cannot have a 6-bit remainder. at line 1 column 4"],
      );
-     check_error_deserialization::<BDefault>(
-         r#"["zz"]"#,
+@@ -134,6 +134,6 @@
+ 
+-    is_equal(
++    /*is_equal(
+         B64BinHex(bytes.to_vec()),
+         expect![[r##""DEFGHIJKLMNPQRSTUVXYZ[`abc!\"#$%&'()*+,-012345689@ABCdefhijklmpqr!!==""##]],
+-    );
++    );*/
+ }
