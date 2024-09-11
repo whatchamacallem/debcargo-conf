@@ -1,0 +1,29 @@
+Index: gix-archive/Cargo.toml
+===================================================================
+--- gix-archive.orig/Cargo.toml
++++ gix-archive/Cargo.toml
+@@ -77,7 +77,7 @@ optional = true
+ default-features = false
+ 
+ [dependencies.zip]
+-version = "2.1.0"
++version = "0.6"
+ features = [
+     "deflate",
+     "time",
+Index: gix-archive/src/write.rs
+===================================================================
+--- gix-archive.orig/src/write.rs
++++ gix-archive/src/write.rs
+@@ -168,9 +168,9 @@ fn append_zip_entry<W: std::io::Write +
+     compression_level: Option<i64>,
+     tree_prefix: Option<&bstr::BString>,
+ ) -> Result<(), Error> {
+-    let file_opts = zip::write::FileOptions::<'_, ()>::default()
++    let file_opts = zip::write::FileOptions::default()
+         .compression_method(zip::CompressionMethod::Deflated)
+-        .compression_level(compression_level)
++        .compression_level(compression_level.map(|v| v as i32))
+         .large_file(entry.bytes_remaining().map_or(true, |len| len > u32::MAX as usize))
+         .last_modified_time(mtime)
+         .unix_permissions(if entry.mode.is_executable() { 0o755 } else { 0o644 });
