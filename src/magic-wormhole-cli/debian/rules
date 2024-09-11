@@ -1,15 +1,9 @@
 #!/usr/bin/make -f
 %:
-	dh $@ --buildsystem cargo --with bash-completion
+	dh $@ --buildsystem cargo --with shell_completions
 
-# Manually generate and install completions
+# Manually generate completions
 execute_after_dh_auto_install:
-	mkdir -p $(CURDIR)/debian/wormhole-rs/usr/share/bash-completion/completions/
-	mkdir -p $(CURDIR)/debian/wormhole-rs/usr/share/fish/completions/
-	mkdir -p $(CURDIR)/debian/wormhole-rs/usr/share/zsh/vendor-completions/
-	$(CURDIR)/debian/wormhole-rs/usr/bin/wormhole-rs completion bash > $(CURDIR)/wormhole-rs.bash-completion
-	$(CURDIR)/debian/wormhole-rs/usr/bin/wormhole-rs completion fish > $(CURDIR)/wormhole-rs.fish
-	$(CURDIR)/debian/wormhole-rs/usr/bin/wormhole-rs completion zsh > $(CURDIR)/_wormhole-rs
-	cp -f $(CURDIR)/_wormhole-rs debian/wormhole-rs/usr/share/zsh/vendor-completions/_wormhole-rs
-	cp -f $(CURDIR)/wormhole-rs.fish debian/wormhole-rs/usr/share/fish/completions/wormhole-rs.fish
-	cp -f $(CURDIR)/wormhole-rs.bash-completion debian/wormhole-rs/usr/share/bash/completions/wormhole-rs
+	$(CURDIR)/debian/wormhole-rs/usr/bin/wormhole-rs completion bash > $(CURDIR)/wormhole-rs.bash-completions
+	$(CURDIR)/debian/wormhole-rs/usr/bin/wormhole-rs completion fish > $(CURDIR)/wormhole-rs.fish-completions
+	$(CURDIR)/debian/wormhole-rs/usr/bin/wormhole-rs completion zsh > $(CURDIR)/wormhole-rs.zsh-completions
