@@ -1,0 +1,26 @@
+Index: ordered-float/src/lib.rs
+===================================================================
+--- ordered-float.orig/src/lib.rs
++++ ordered-float/src/lib.rs
+@@ -2511,6 +2511,7 @@ mod impl_rand {
+     mod tests {
+         use super::*;
+ 
++        #[cfg(feature = "std")]
+         fn sample_fuzz<T>()
+         where
+             Standard: Distribution<NotNan<T>>,
+@@ -2534,11 +2535,13 @@ mod impl_rand {
+         }
+ 
+         #[test]
++        #[cfg(feature = "std")]
+         fn sampling_f32_does_not_panic() {
+             sample_fuzz::<f32>();
+         }
+ 
+         #[test]
++        #[cfg(feature = "std")]
+         fn sampling_f64_does_not_panic() {
+             sample_fuzz::<f64>();
+         }

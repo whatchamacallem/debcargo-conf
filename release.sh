@@ -45,7 +45,7 @@ type dch >/dev/null || \
 abort 1 "Install devscripts, we need to run dch."
 
 RELBRANCH="pending-$PKGNAME"
-git fetch origin --prune
+timeout 15 git fetch origin --prune || abort 1 "Failed to fetch upstream to check whether we are synced, please check network"
 
 git merge-base --is-ancestor origin/master HEAD || \
 abort 1 "You are not synced with origin/master, please do so before running this script."
@@ -208,11 +208,11 @@ cat <<eof
 Since the source package is already in Debian and this version does not introduce
 new binaries, then you can just go ahead and directly dput the source package.
 
-  cd build && dput ${DEBSRC}_${DEBVER}_source.changes && git checkout - && git merge - && cd -
+  cd build && dput ${DEBSRC}_${DEBVER}_source.changes && cd - && git checkout master
 
 If you want to build and test it, run:
 
-  cd build && ./build.sh $CRATE && dput ${DEBSRC}_${DEBVER}_source.changes && git checkout - && git merge - && cd -
+  cd build && ./build.sh $CRATE && dput ${DEBSRC}_${DEBVER}_source.changes && cd - && git checkout master
 
 For your reference, this source package builds $(echo "$upload_bin_packages" | wc -l) binary package(s):
 $upload_bin_packages

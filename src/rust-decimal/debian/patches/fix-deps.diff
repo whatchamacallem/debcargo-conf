@@ -1,123 +1,122 @@
-diff --git a/Cargo.toml b/Cargo.toml
-index 1d485ef..487c588 100644
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -39,11 +39,6 @@ default-features = false
+Index: rust-decimal/Cargo.toml
+===================================================================
+--- rust-decimal.orig/Cargo.toml
++++ rust-decimal/Cargo.toml
+@@ -80,24 +80,12 @@ default-features = false
  version = "0.7"
  default-features = false
  
 -[dependencies.borsh]
--version = "0.9.3"
+-version = "1.1.1"
+-features = [
+-    "derive",
+-    "unstable__schema",
+-]
 -optional = true
 -default-features = false
--
- [dependencies.byteorder]
- version = "1.3"
- optional = true
-@@ -54,25 +49,25 @@ version = "1.0"
+ 
+ [dependencies.bytes]
+ version = "1.0"
  optional = true
  default-features = false
  
 -[dependencies.diesel]
--version = "1.4"
+-version = "2.2"
 -optional = true
 -default-features = false
-+# [dependencies.diesel]
-+# version = "1.4"
-+# optional = true
-+# default-features = false
  
- [dependencies.num-traits]
- version = "0.2"
- features = ["i128"]
- default-features = false
- 
--[dependencies.postgres]
--version = "0.19"
--optional = true
--default-features = false
-+# [dependencies.postgres]
-+# version = "0.19"
-+# optional = true
-+# default-features = false
- 
--[dependencies.rocket]
--version = "0.5.0-rc.1"
--optional = true
--default-features = false
-+#[dependencies.rocket]
-+#version = "0.5.0-rc.1"
-+#optional = true
-+#default-features = false
- 
- [dependencies.serde]
- version = "1.0"
-@@ -84,12 +79,12 @@ version = "1.0"
+ [dependencies.ndarray]
+ version = "0.15.6"
+@@ -134,10 +122,6 @@ features = [
  optional = true
  default-features = false
  
+-[dependencies.rocket]
+-version = "0.5.0-rc.3"
+-optional = true
+-default-features = false
+ 
+ [dependencies.serde]
+ version = "1.0"
+@@ -149,4 +133,0 @@
 -[dependencies.tokio-postgres]
 -version = "0.7"
 -optional = true
 -default-features = false
--[dev-dependencies.bincode]
--version = "1.3"
-+# [dependencies.tokio-postgres]
-+# version = "0.7"
-+# optional = true
-+# default-features = false
-+# [dev-dependencies.bincode]
-+# version = "1.3"
- 
- [dev-dependencies.bytes]
- version = "1.0"
-@@ -101,8 +96,8 @@ default-features = false
+@@ -169,9 +146,6 @@ default-features = false
  [dev-dependencies.csv]
  version = "1"
  
 -[dev-dependencies.futures]
 -version = "0.3"
-+# [dev-dependencies.futures]
-+# version = "0.3"
+-default-features = false
  
- [dev-dependencies.serde]
- version = "1.0"
-@@ -112,24 +107,24 @@ default-features = false
+ [dev-dependencies.postgres]
+ version = "0.19"
+@@ -194,14 +168,6 @@ default-features = false
  [dev-dependencies.serde_json]
  version = "1.0"
  
 -[dev-dependencies.tokio]
 -version = "1.0"
--features = ["rt-multi-thread", "test-util", "macros"]
-+# [dev-dependencies.tokio]
-+# version = "1.0"
-+# features = ["rt-multi-thread", "test-util", "macros"]
+-features = [
+-    "macros",
+-    "rt-multi-thread",
+-    "test-util",
+-]
+-default-features = false
  
- [dev-dependencies.version-sync]
- version = "0.9"
+ [dev-dependencies.tokio-postgres]
+ version = "0.7"
+@@ -216,31 +182,7 @@ features = [
+ default-features = false
  
  [features]
+-borsh = [
+-    "dep:borsh",
+-    "std",
+-]
  c-repr = []
--db-diesel-mysql = ["diesel/mysql", "std"]
--db-diesel-postgres = ["diesel/postgres", "std"]
--db-postgres = ["byteorder", "bytes", "postgres", "std"]
--db-tokio-postgres = ["byteorder", "bytes", "postgres", "std", "tokio-postgres"]
-+#db-diesel-mysql = ["diesel/mysql", "std"]
-+#db-diesel-postgres = ["diesel/postgres", "std"]
-+#db-postgres = ["byteorder", "bytes", "postgres", "std"]
-+#db-tokio-postgres = ["byteorder", "bytes", "postgres", "std", "tokio-postgres"]
- default = ["serde", "std"]
- legacy-ops = []
- maths = []
- maths-nopanic = ["maths"]
--rocket-traits = ["rocket"]
-+#rocket-traits = ["rocket"]
- rust-fuzz = ["arbitrary"]
+-db-diesel-mysql = [
+-    "diesel/mysql",
+-    "std",
+-]
+-db-diesel-postgres = [
+-    "diesel/postgres",
+-    "std",
+-]
+-db-diesel2-mysql = ["db-diesel-mysql"]
+-db-diesel2-postgres = ["db-diesel-postgres"]
+-db-postgres = [
+-    "dep:bytes",
+-    "dep:postgres-types",
+-    "std",
+-]
+-db-tokio-postgres = [
+-    "dep:bytes",
+-    "dep:postgres-types",
+-    "std",
+-]
+ default = [
+     "serde",
+     "std",
+@@ -253,7 +195,6 @@ proptest = ["dep:proptest"]
+ rand = ["dep:rand"]
+ rkyv = ["dep:rkyv"]
+ rkyv-safe = ["rkyv/validation"]
+-rocket-traits = ["dep:rocket"]
+ rust-fuzz = ["dep:arbitrary"]
+ serde = ["dep:serde"]
  serde-arbitrary-precision = ["serde-with-arbitrary-precision"]
- serde-bincode = ["serde-str"]
-@@ -139,4 +134,4 @@ serde-with-arbitrary-precision = ["serde", "serde_json/arbitrary_precision"]
- serde-with-float = ["serde"]
+@@ -269,11 +210,9 @@ serde-with-float = ["serde"]
  serde-with-str = ["serde"]
- std = []
+ std = [
+     "arrayvec/std",
+-    "borsh?/std",
+     "bytes?/std",
+     "rand?/std",
+     "rkyv?/std",
+     "serde?/std",
+     "serde_json?/std",
+ ]
 -tokio-pg = ["db-tokio-postgres"]
-+#tokio-pg = ["db-tokio-postgres"]

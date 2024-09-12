@@ -1,0 +1,65 @@
+Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Description: Avoid trying to build anything for ios, macos, or windows.  Debian doesn't need it, and we don't necessarily have straightforward access to the dependencies
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -39,8 +39,6 @@
+ 
+ [package.metadata.docs.rs]
+ features = [
+-    "apple-native",
+-    "windows-native",
+     "sync-secret-service",
+     "crypto-rust",
+ ]
+@@ -50,11 +48,6 @@
+ path = "src/lib.rs"
+ 
+ [[example]]
+-name = "iostest"
+-crate-type = ["staticlib"]
+-path = "examples/ios.rs"
+-
+-[[example]]
+ name = "keyring-cli"
+ path = "examples/cli.rs"
+ 
+@@ -93,7 +86,6 @@
+ version = "1"
+ 
+ [features]
+-apple-native = ["dep:security-framework"]
+ async-io = ["zbus?/async-io"]
+ async-secret-service = [
+     "dep:secret-service",
+@@ -114,14 +106,6 @@
+     "dbus-secret-service?/vendored",
+     "openssl?/vendored",
+ ]
+-windows-native = [
+-    "dep:windows-sys",
+-    "dep:byteorder",
+-]
+-
+-[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies.security-framework]
+-version = "2"
+-optional = true
+ 
+ [target.'cfg(target_os = "freebsd")'.dependencies.dbus-secret-service]
+ version = "4.0.1"
+@@ -163,15 +147,3 @@
+ [target.'cfg(target_os = "openbsd")'.dependencies.zbus]
+ version = "4"
+ optional = true
+-
+-[target.'cfg(target_os = "windows")'.dependencies.byteorder]
+-version = "1.2"
+-optional = true
+-
+-[target.'cfg(target_os = "windows")'.dependencies.windows-sys]
+-version = "0.59"
+-features = [
+-    "Win32_Foundation",
+-    "Win32_Security_Credentials",
+-]
+-optional = true

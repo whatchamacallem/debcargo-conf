@@ -1,0 +1,49 @@
+Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Description: drop alternate confy backends for RON and YAML output.
+
+serde_yaml is deprecated upstream (see
+https://github.com/rust-cli/confy/issues/103).
+
+And confy depends on ron 0.8, but debian currently only has ron 0.7,
+and upgrading it would trigger a bigger cascade of changes.
+
+The packages that i am working on that depend on confy don't need
+either the YAML or the RON formats.
+
+When upstream fixes the serde_yaml dependency, or debian's ron
+packaging is synchronized with upstream's ron dependency, please drop
+these changes.
+
+In that case, there will probably be some adjustments needed for the
+test suite, because an --all-features test will fail.  Confy needs to
+be built with exactly one of toml_conf, ron_conf, or yaml_conf
+features enabled.
+
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -26,17 +26,9 @@
+ [dependencies.directories]
+ version = "5"
+ 
+-[dependencies.ron]
+-version = "0.8.0"
+-optional = true
+-
+ [dependencies.serde]
+ version = "^1.0"
+ 
+-[dependencies.serde_yaml]
+-version = "0.9"
+-optional = true
+-
+ [dependencies.thiserror]
+ version = "1.0"
+ 
+@@ -52,6 +44,4 @@
+ 
+ [features]
+ default = ["toml_conf"]
+-ron_conf = ["ron"]
+ toml_conf = ["toml"]
+-yaml_conf = ["serde_yaml"]

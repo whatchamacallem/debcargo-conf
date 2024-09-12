@@ -12,6 +12,13 @@ case "$(git rev-parse --abbrev-ref HEAD)" in
 pending-*)	abort 1 "You are on a pending-release branch, $0 can only be run on another branch, like master";;
 esac
 
+timeout 15 git fetch origin --prune || abort 1 "Failed to fetch upstream to check pending branches, please check network"
+pending_branches=$(git branch --all --list "*pending-$PKGNAME")
+if [ -n "$pending_branches" ]
+then
+	abort 1 "Please resolve these existing pending branches before updating this crate:$(printf "\n$pending_branches")"
+fi
+
 if [ -n "$VER" ]; then
 	if [ ! -d "$PWD/src/$PKGBASE" ]; then
 		abort 1 "Using crate $CRATE with version $VER but default-version is not packaged." \

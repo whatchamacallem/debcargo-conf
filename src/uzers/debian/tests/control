@@ -1,0 +1,34 @@
+Test-Command: /usr/share/cargo/bin/cargo-auto-test uzers 0.12.1 --all-targets
+Features: test-name=librust-uzers-dev:default
+Depends: dh-cargo (>= 18), librust-env-logger-0.10-dev, librust-serial-test-2+default-dev, @
+Restrictions: allow-stderr
+
+Test-Command: /usr/share/cargo/bin/cargo-auto-test uzers 0.12.1 --all-targets --all-features --tests ::test::
+Features: test-name=rust-uzers:integration-no-mocked
+Depends: dh-cargo (>= 18), librust-env-logger-0.10-dev, librust-serial-test-2-dev, @
+Restrictions: allow-stderr
+
+# https://github.com/rustadopt/uzers-rs/blob/main/.github/workflows/testing.yml
+Test-Command: env NSS_WRAPPER_PASSWD=tests/fixtures/passwd NSS_WRAPPER_GROUP=tests/fixtures/group LD_PRELOAD=libnss_wrapper.so /usr/share/cargo/bin/cargo-auto-test uzers 0.12.1 --all-targets --all-features --tests mocked_test::
+Features: test-name=rust-uzers:integration-mocked+nss-wrapper
+Depends: dh-cargo (>= 18), libnss-wrapper, librust-env-logger-0.10-dev, librust-serial-test-2-dev, @
+Restrictions: allow-stderr
+
+Test-Command: /usr/share/cargo/bin/cargo-auto-test uzers 0.12.1 --all-targets --no-default-features
+Features: test-name=librust-uzers-dev:
+Depends: dh-cargo (>= 18), librust-env-logger-0.10-dev, librust-serial-test-2+default-dev, @
+Restrictions: allow-stderr
+
+Test-Command: /usr/share/cargo/bin/cargo-auto-test uzers 0.12.1 --all-targets --no-default-features --features cache
+Features: test-name=librust-uzers-dev:cache
+Depends: dh-cargo (>= 18), librust-env-logger-0.10-dev, librust-serial-test-2+default-dev, @
+Restrictions: allow-stderr
+
+Test-Command: /usr/share/cargo/bin/cargo-auto-test uzers 0.12.1 --all-targets --no-default-features --features mock
+Features: test-name=librust-uzers-dev:mock
+Depends: dh-cargo (>= 18), librust-env-logger-0.10-dev, librust-serial-test-2+default-dev, @
+Restrictions: allow-stderr
+
+# logging = ['dep:log'], only used to trace! certain actions, no need for own test run
+#Test-Command: /usr/share/cargo/bin/cargo-auto-test uzers 0.12.1 --all-targets --no-default-features --features log
+#Test-Command: /usr/share/cargo/bin/cargo-auto-test uzers 0.12.1 --all-targets --no-default-features --features logging
