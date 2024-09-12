@@ -1,0 +1,47 @@
+Index: cargo/Cargo.toml
+===================================================================
+--- cargo.orig/Cargo.toml
++++ cargo/Cargo.toml
+@@ -302,9 +302,6 @@ default-features = false
+ version = "0.10.57"
+ optional = true
+ 
+-[target.'cfg(target_has_atomic = "64")'.dependencies.tracing-chrome]
+-version = "0.7.2"
+-
+ [target.'cfg(target_os = "linux")'.dependencies.cargo-credential-libsecret]
+ version = "0.4.2"
+ 
+Index: cargo/src/bin/cargo/main.rs
+===================================================================
+--- cargo.orig/src/bin/cargo/main.rs
++++ cargo/src/bin/cargo/main.rs
+@@ -61,6 +61,7 @@ fn setup_logger() -> Option<ChromeFlushG
+     profile_guard
+ }
+ 
++/* Debian: disabled, not yet packaged tracing-chrome
+ #[cfg(target_has_atomic = "64")]
+ type ChromeFlushGuard = tracing_chrome::FlushGuard;
+ #[cfg(target_has_atomic = "64")]
+@@ -87,10 +88,9 @@ where
+         (None, None)
+     }
+ }
++*/
+ 
+-#[cfg(not(target_has_atomic = "64"))]
+ type ChromeFlushGuard = ();
+-#[cfg(not(target_has_atomic = "64"))]
+ fn chrome_layer() -> (
+     Option<tracing_subscriber::layer::Identity>,
+     Option<ChromeFlushGuard>,
+@@ -98,7 +98,7 @@ fn chrome_layer() -> (
+     (None, None)
+ }
+ 
+-#[cfg(target_has_atomic = "64")]
++#[allow(dead_code)]
+ fn env_to_bool(os: Option<&OsStr>) -> bool {
+     match os.and_then(|os| os.to_str()) {
+         Some("1") | Some("true") => true,
