@@ -180,7 +180,9 @@ check_build_deps() {
 
 if ! check_build_deps; then
 	if [ "$IGNORE_MISSING_BUILD_DEPS" != 1 ]; then
-		abort 1 "Missing build-dependencies, but maybe try '{apt,cargo} update'"
+		abort 1 'Missing build dependencies, possibly due to one of these reasons:' \
+			'- Version mismatch, which could be worked around ("relaxed") by patching Cargo.toml' \
+			'- Disabled feature, which requires either enabling in the dependency or disabling locally'
 	fi
 fi
 
