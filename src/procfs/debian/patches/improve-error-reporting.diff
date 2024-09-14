@@ -1,0 +1,28 @@
+Index: procfs/src/lib.rs
+===================================================================
+--- procfs.orig/src/lib.rs
++++ procfs/src/lib.rs
+@@ -311,13 +311,17 @@ lazy_static! {
+ }
+ 
+ fn convert_to_kibibytes(num: u64, unit: &str) -> ProcResult<u64> {
+-    match unit {
+-        "B" => Ok(num),
+-        "KiB" | "kiB" | "kB" | "KB" => Ok(num * 1024),
+-        "MiB" | "miB" | "MB" | "mB" => Ok(num * 1024 * 1024),
+-        "GiB" | "giB" | "GB" | "gB" => Ok(num * 1024 * 1024 * 1024),
+-        unknown => Err(build_internal_error!(format!("Unknown unit type {}", unknown))),
++    let result = match unit {
++        "B" => num as u128,
++        "KiB" | "kiB" | "kB" | "KB" => num as u128 * 1024,
++        "MiB" | "miB" | "MB" | "mB" => num as u128 * 1024 * 1024,
++        "GiB" | "giB" | "GB" | "gB" => num as u128 * 1024 * 1024 * 1024,
++        unknown => return Err(build_internal_error!(format!("Unknown unit type {}", unknown))),
++    };
++    if result > u64::MAX.into() {
++        return  Err(build_internal_error!(format!("arithmetic overflow while converting value {} with unit {}", num, unit)));
+     }
++    return Ok(result as u64);
+ }
+ 
+ trait FromStrRadix: Sized {
