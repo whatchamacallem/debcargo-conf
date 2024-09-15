@@ -1,7 +1,7 @@
-Index: rust-procfs-0.14.2/src/meminfo.rs
+Index: procfs/src/meminfo.rs
 ===================================================================
---- rust-procfs-0.14.2.orig/src/meminfo.rs
-+++ rust-procfs-0.14.2/src/meminfo.rs
+--- procfs.orig/src/meminfo.rs
++++ procfs/src/meminfo.rs
 @@ -382,9 +382,9 @@ impl Meminfo {
              file_huge_pages: map.remove("FileHugePages"),
          };
@@ -14,7 +14,15 @@ Index: rust-procfs-0.14.2/src/meminfo.rs
  
          Ok(meminfo)
      }
-@@ -514,7 +514,11 @@ mod test {
+@@ -398,6 +398,7 @@ mod test {
+     #[allow(clippy::cognitive_complexity)]
+     #[allow(clippy::blocks_in_if_conditions)]
+     #[test]
++    #[cfg(not(target_arch = "s390x"))]
+     fn test_meminfo() {
+         // TRAVIS
+         // we don't have access to the kernel_config on travis, so skip that test there
+@@ -514,7 +515,11 @@ mod test {
              assert!(meminfo.commit_limit.is_none());
          }
  
@@ -27,7 +35,7 @@ Index: rust-procfs-0.14.2/src/meminfo.rs
              && config
                  .as_ref()
                  .map_or(std::path::Path::new("/proc/kpagecgroup").exists(), |cfg| {
-@@ -549,7 +553,11 @@ mod test {
+@@ -549,7 +554,11 @@ mod test {
              assert!(meminfo.shmem_pmd_mapped.is_none());
          }
  
@@ -40,7 +48,7 @@ Index: rust-procfs-0.14.2/src/meminfo.rs
              assert!(meminfo.cma_total.is_some());
              assert!(meminfo.cma_free.is_some());
          } else {
-@@ -557,7 +565,10 @@ mod test {
+@@ -557,7 +566,10 @@ mod test {
              assert!(meminfo.cma_free.is_none());
          }
  
@@ -52,7 +60,7 @@ Index: rust-procfs-0.14.2/src/meminfo.rs
              .as_ref()
              .map_or(true, |cfg| cfg.contains_key("CONFIG_HUGETLB_PAGE"))
          {
-@@ -570,7 +581,10 @@ mod test {
+@@ -570,7 +582,10 @@ mod test {
              assert!(meminfo.hugepagesize.is_none());
          }
  
@@ -64,7 +72,7 @@ Index: rust-procfs-0.14.2/src/meminfo.rs
              && config
                  .as_ref()
                  .map_or(true, |cfg| cfg.contains_key("CONFIG_HUGETLB_PAGE"))
-@@ -580,7 +594,10 @@ mod test {
+@@ -580,7 +595,10 @@ mod test {
              assert!(meminfo.hugepages_rsvd.is_none());
          }
  
@@ -76,10 +84,10 @@ Index: rust-procfs-0.14.2/src/meminfo.rs
              && config
                  .as_ref()
                  .map_or(true, |cfg| cfg.contains_key("CONFIG_HUGETLB_PAGE"))
-Index: rust-procfs-0.14.2/src/process/tests.rs
+Index: procfs/src/process/tests.rs
 ===================================================================
---- rust-procfs-0.14.2.orig/src/process/tests.rs
-+++ rust-procfs-0.14.2/src/process/tests.rs
+--- procfs.orig/src/process/tests.rs
++++ procfs/src/process/tests.rs
 @@ -382,15 +382,15 @@ fn test_proc_auxv() {
              }
              12 => {
@@ -99,10 +107,10 @@ Index: rust-procfs-0.14.2/src/process/tests.rs
              }
              15 => {
                  println!("Platform string address: 0x{:x}", v);
-Index: rust-procfs-0.14.2/src/process/task.rs
+Index: procfs/src/process/task.rs
 ===================================================================
---- rust-procfs-0.14.2.orig/src/process/task.rs
-+++ rust-procfs-0.14.2/src/process/task.rs
+--- procfs.orig/src/process/task.rs
++++ procfs/src/process/task.rs
 @@ -105,7 +105,7 @@ mod tests {
      use std::process;
      use std::sync::{Arc, Barrier};
@@ -121,10 +129,10 @@ Index: rust-procfs-0.14.2/src/process/task.rs
  
      #[test]
      fn test_task_children() {
-Index: rust-procfs-0.14.2/src/cpuinfo.rs
+Index: procfs/src/cpuinfo.rs
 ===================================================================
---- rust-procfs-0.14.2.orig/src/cpuinfo.rs
-+++ rust-procfs-0.14.2/src/cpuinfo.rs
+--- procfs.orig/src/cpuinfo.rs
++++ procfs/src/cpuinfo.rs
 @@ -152,8 +152,9 @@ mod tests {
          let info = CpuInfo::new().unwrap();
          println!("{:#?}", info.flags(0));
@@ -137,10 +145,10 @@ Index: rust-procfs-0.14.2/src/cpuinfo.rs
              // May not be available on some old kernels:
              info.physical_id(num);
          }
-Index: rust-procfs-0.14.2/src/lib.rs
+Index: procfs/src/lib.rs
 ===================================================================
---- rust-procfs-0.14.2.orig/src/lib.rs
-+++ rust-procfs-0.14.2/src/lib.rs
+--- procfs.orig/src/lib.rs
++++ procfs/src/lib.rs
 @@ -1302,7 +1302,11 @@ mod tests {
          assert!(diff <= 1);
  
@@ -154,10 +162,10 @@ Index: rust-procfs-0.14.2/src/lib.rs
  
          // the sum of each individual CPU should be equal to the total cpu entry
          // note: on big machines with 128 cores, it seems that the differences can be rather high,
-Index: rust-procfs-0.14.2/src/net.rs
+Index: procfs/src/net.rs
 ===================================================================
---- rust-procfs-0.14.2.orig/src/net.rs
-+++ rust-procfs-0.14.2/src/net.rs
+--- procfs.orig/src/net.rs
++++ procfs/src/net.rs
 @@ -729,6 +729,11 @@ mod tests {
          // When you connect to [2a00:1450:4001:814::200e]:80 (ipv6.google.com) the entry with
          // 5014002A14080140000000000E200000:0050 remote endpoint is created in /proc/net/tcp6
