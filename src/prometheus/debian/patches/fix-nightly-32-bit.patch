@@ -1,7 +1,7 @@
-Index: rust-prometheus-0.13.3/src/histogram.rs
+Index: rust-prometheus-0.13.4/src/histogram.rs
 ===================================================================
---- rust-prometheus-0.13.3.orig/src/histogram.rs
-+++ rust-prometheus-0.13.3/src/histogram.rs
+--- rust-prometheus-0.13.4.orig/src/histogram.rs
++++ rust-prometheus-0.13.4/src/histogram.rs
 @@ -528,8 +528,8 @@ impl Instant {
              #[cfg(all(feature = "nightly", target_os = "linux"))]
              Instant::MonotonicCoarse(t) => {
@@ -13,3 +13,16 @@ Index: rust-prometheus-0.13.3/src/histogram.rs
                  let dur = now_ms - t_ms;
                  if dur >= 0 {
                      Duration::from_millis(dur as u64)
+@@ -559,10 +559,8 @@ mod coarse {
+     pub const MILLIS_PER_SEC: i64 = 1_000;
+ 
+     pub fn get_time_coarse() -> Timespec {
+-        let mut t = Timespec(timespec {
+-            tv_sec: 0,
+-            tv_nsec: 0,
+-        });
++        let t : libc::timespec = unsafe { std::mem::zeroed() };
++        let mut t = Timespec(t);
+         assert_eq!(
+             unsafe { clock_gettime(CLOCK_MONOTONIC_COARSE, &mut t.0) },
+             0
