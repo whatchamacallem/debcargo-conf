@@ -1,0 +1,111 @@
+Index: debian-control/Cargo.toml
+===================================================================
+--- debian-control.orig/Cargo.toml
++++ debian-control/Cargo.toml
+@@ -29,7 +29,6 @@ optional = true
+ 
+ [dependencies.deb822-lossless]
+ version = ">=0.1.20"
+-features = ["derive"]
+ 
+ [dependencies.debversion]
+ version = ">=0.3"
+Index: debian-control/src/lib.rs
+===================================================================
+--- debian-control.orig/src/lib.rs
++++ debian-control/src/lib.rs
+@@ -2,36 +2,8 @@
+ //!
+ //! This crate provides a parser for Debian control files.
+ //!
+-//! # Example
+-//!
+-//! ```rust
+-//! use debian_control::lossy::Control;
+-//! use debian_control::fields::Priority;
+-//! use std::fs::File;
+-//!
+-//! let mut control = Control::new();
+-//! let mut source = &mut control.source;
+-//! source.name = "hello".to_string();
+-//! source.section = Some("rust".to_string());
+-//!
+-//! let mut binary = control.add_binary("hello");
+-//! binary.architecture = Some("amd64".to_string());
+-//! binary.priority = Some(Priority::Optional);
+-//! binary.description = Some("Hello, world!".to_string());
+-//!
+-//! assert_eq!(control.to_string(), r#"Source: hello
+-//! Section: rust
+-//!
+-//! Package: hello
+-//! Architecture: amd64
+-//! Priority: optional
+-//! Description: Hello, world!
+-//! "#);
+-//! ```
+-//!
+ //! See the ``lossless`` module for a parser that preserves all comments and formatting, and
+ //! as well as allowing inline errors.
+-pub mod lossy;
+ pub use lossless::control::{Binary, Control, Source};
+ pub mod fields;
+ pub use fields::*;
+Index: debian-control/src/lossless/relations.rs
+===================================================================
+--- debian-control.orig/src/lossless/relations.rs
++++ debian-control/src/lossless/relations.rs
+@@ -1766,53 +1766,6 @@ impl std::str::FromStr for Relation {
+     }
+ }
+ 
+-impl From<crate::lossy::Relation> for Relation {
+-    fn from(relation: crate::lossy::Relation) -> Self {
+-        let mut builder = Relation::build(&relation.name);
+-
+-        if let Some((vc, version)) = relation.version {
+-            builder = builder.version_constraint(vc, version);
+-        }
+-
+-        if let Some(archqual) = relation.archqual {
+-            builder = builder.archqual(&archqual);
+-        }
+-
+-        if let Some(architectures) = relation.architectures {
+-            builder = builder.architectures(architectures);
+-        }
+-
+-        builder = builder.profiles(relation.profiles);
+-
+-        builder.build()
+-    }
+-}
+-
+-impl From<Relation> for crate::lossy::Relation {
+-    fn from(relation: Relation) -> Self {
+-        crate::lossy::Relation {
+-            name: relation.name(),
+-            version: relation.version(),
+-            archqual: relation.archqual(),
+-            architectures: relation.architectures().map(|a| a.collect()),
+-            profiles: relation.profiles().collect(),
+-        }
+-    }
+-}
+-
+-impl From<Entry> for Vec<crate::lossy::Relation> {
+-    fn from(entry: Entry) -> Self {
+-        entry.relations().map(|r| r.into()).collect()
+-    }
+-}
+-
+-impl From<Vec<crate::lossy::Relation>> for Entry {
+-    fn from(relations: Vec<crate::lossy::Relation>) -> Self {
+-        let relations: Vec<Relation> = relations.into_iter().map(|r| r.into()).collect();
+-        Entry::from(relations)
+-    }
+-}
+-
+ #[cfg(test)]
+ mod tests {
+     use super::*;
