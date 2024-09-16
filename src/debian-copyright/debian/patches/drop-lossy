@@ -1,0 +1,127 @@
+Index: debian-copyright/Cargo.toml
+===================================================================
+--- debian-copyright.orig/Cargo.toml
++++ debian-copyright/Cargo.toml
+@@ -29,13 +29,8 @@ repository = "https://github.com/jelmer/
+ name = "debian_copyright"
+ path = "src/lib.rs"
+ 
+-[[example]]
+-name = "license-for-file"
+-path = "examples/license-for-file.rs"
+-
+ [dependencies.deb822-lossless]
+ version = ">=0.1.10"
+-features = ["derive"]
+ 
+ [dependencies.debversion]
+ version = ">=0.3"
+Index: debian-copyright/src/lib.rs
+===================================================================
+--- debian-copyright.orig/src/lib.rs
++++ debian-copyright/src/lib.rs
+@@ -1,45 +1,11 @@
+ //! A library for parsing and manipulating debian/copyright files that
+ //! use the DEP-5 format.
+ //!
+-//! # Examples
+-//!
+-//! ```rust
+-//!
+-//! use debian_copyright::Copyright;
+-//! use std::path::Path;
+-//!
+-//! let text = r#"Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+-//! Upstream-Author: John Doe <john@example>
+-//! Upstream-Name: example
+-//! Source: https://example.com/example
+-//!
+-//! Files: *
+-//! License: GPL-3+
+-//! Copyright: 2019 John Doe
+-//!
+-//! Files: debian/*
+-//! License: GPL-3+
+-//! Copyright: 2019 Jane Packager
+-//!
+-//! License: GPL-3+
+-//!  This program is free software: you can redistribute it and/or modify
+-//!  it under the terms of the GNU General Public License as published by
+-//!  the Free Software Foundation, either version 3 of the License, or
+-//!  (at your option) any later version.
+-//! "#;
+-//!
+-//! let c = text.parse::<Copyright>().unwrap();
+-//! let license = c.find_license_for_file(Path::new("debian/foo")).unwrap();
+-//! assert_eq!(license.name(), Some("GPL-3+"));
+-//! ```
+-//!
+ //! See the ``lossless`` module (behind the ``lossless`` feature) for a more forgiving parser that
+ //! allows partial parsing, parsing files with errors and unknown fields and editing while
+ //! preserving formatting.
+ 
+-pub mod lossy;
+ pub mod lossless;
+-pub use lossy::Copyright;
+ 
+ pub const CURRENT_FORMAT: &str =
+     "https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/";
+@@ -94,9 +60,7 @@ impl std::fmt::Display for License {
+         match self {
+             License::Name(name) => f.write_str(name),
+             License::Text(text) => write!(f, "\n{}", text),
+-            License::Named(name, text) => write!(f, "{}\n{}", name, text)
++            License::Named(name, text) => write!(f, "{}\n{}", name, text),
+         }
+     }
+ }
+-
+-
+Index: debian-copyright/src/lossless.rs
+===================================================================
+--- debian-copyright.orig/src/lossless.rs
++++ debian-copyright/src/lossless.rs
+@@ -2,42 +2,10 @@
+ //! use the DEP-5 format.
+ //!
+ //! This library is intended to be used for manipulating debian/copyright
+-//!
+-//! # Examples
+-//!
+-//! ```rust
+-//!
+-//! use debian_copyright::Copyright;
+-//! use std::path::Path;
+-//!
+-//! let text = r#"Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+-//! Upstream-Author: John Doe <john@example>
+-//! Upstream-Name: example
+-//! Source: https://example.com/example
+-//!
+-//! Files: *
+-//! License: GPL-3+
+-//! Copyright: 2019 John Doe
+-//!
+-//! Files: debian/*
+-//! License: GPL-3+
+-//! Copyright: 2019 Jane Packager
+-//!
+-//! License: GPL-3+
+-//!  This program is free software: you can redistribute it and/or modify
+-//!  it under the terms of the GNU General Public License as published by
+-//!  the Free Software Foundation, either version 3 of the License, or
+-//!  (at your option) any later version.
+-//! "#;
+-//!
+-//! let c = text.parse::<Copyright>().unwrap();
+-//! let license = c.find_license_for_file(Path::new("debian/foo")).unwrap();
+-//! assert_eq!(license.name(), Some("GPL-3+"));
+-//! ```
+ 
++use crate::{License, CURRENT_FORMAT, KNOWN_FORMATS};
+ use deb822_lossless::{Deb822, Paragraph};
+ use std::path::Path;
+-use crate::{CURRENT_FORMAT, KNOWN_FORMATS, License};
+ 
+ #[derive(Debug)]
+ pub struct Copyright(Deb822);
