@@ -1,0 +1,143 @@
+Index: gix-path/src/env/git/tests.rs
+===================================================================
+--- gix-path.orig/src/env/git/tests.rs
++++ gix-path/src/env/git/tests.rs
+@@ -361,10 +361,10 @@ mod exe_info {
+     use std::path::{Path, PathBuf};
+ 
+     use crate::env::git::{exe_info, NULL_DEVICE};
+-    use gix_testtools::tempfile;
++    //use gix_testtools::tempfile;
+     use serial_test::serial;
+ 
+-    /// Wrapper for a valid path to a plausible location, kept from accidentally existing (until drop).
++    /* /// Wrapper for a valid path to a plausible location, kept from accidentally existing (until drop).
+     #[derive(Debug)]
+     struct NonexistentLocation {
+         _empty: tempfile::TempDir,
+@@ -392,9 +392,9 @@ mod exe_info {
+         fn path(&self) -> &Path {
+             &self.nonexistent
+         }
+-    }
++    }*/
+ 
+-    fn set_temp_env_vars<'a>(path: &Path) -> gix_testtools::Env<'a> {
++    /*fn set_temp_env_vars<'a>(path: &Path) -> gix_testtools::Env<'a> {
+         let path_str = path.to_str().expect("valid Unicode");
+ 
+         let env = gix_testtools::Env::new()
+@@ -409,11 +409,11 @@ mod exe_info {
+         );
+ 
+         env
+-    }
++    }*/
+ 
+-    fn unset_windows_directory_vars<'a>() -> gix_testtools::Env<'a> {
++    /*fn unset_windows_directory_vars<'a>() -> gix_testtools::Env<'a> {
+         gix_testtools::Env::new().unset("windir").unset("SystemRoot")
+-    }
++    }*/
+ 
+     fn check_exe_info() {
+         let path = exe_info()
+@@ -436,24 +436,24 @@ mod exe_info {
+         check_exe_info();
+     }
+ 
+-    #[test]
++    /*#[test]
+     #[serial]
+     fn tolerates_broken_temp() {
+         let non = NonexistentLocation::new();
+         let _env = set_temp_env_vars(non.path());
+         check_exe_info();
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     #[serial]
+     fn tolerates_oversanitized_env() {
+         // This test runs on all systems, but it is only checking for a Windows regression. Also, on
+         // Windows, having both a broken temp dir and an over-sanitized environment is not supported.
+         let _env = unset_windows_directory_vars();
+         check_exe_info();
+-    }
++    }*/
+ 
+-    #[test]
++    /* #[test]
+     #[serial]
+     fn same_result_with_broken_temp() {
+         let with_unmodified_temp = exe_info();
+@@ -465,9 +465,9 @@ mod exe_info {
+         };
+ 
+         assert_eq!(with_unmodified_temp, with_nonexistent_temp);
+-    }
++    } */
+ 
+-    #[test]
++    /* #[test]
+     #[serial]
+     fn same_result_with_oversanitized_env() {
+         let with_unmodified_env = exe_info();
+@@ -478,9 +478,9 @@ mod exe_info {
+         };
+ 
+         assert_eq!(with_unmodified_env, with_oversanitized_env);
+-    }
++    } */
+ 
+-    #[test]
++    /*#[test]
+     #[serial]
+     #[cfg(not(target_os = "macos"))] // Assumes no higher "unknown" scope. The `nosystem` case works.
+     fn never_from_local_scope() {
+@@ -496,9 +496,9 @@ mod exe_info {
+             maybe_path, None,
+             "Should find no config path if the config would be local (empty system config)"
+         );
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     #[serial]
+     fn never_from_local_scope_nosystem() {
+         let repo = gix_testtools::scripted_fixture_read_only("local_config.sh").expect("script succeeds");
+@@ -513,9 +513,9 @@ mod exe_info {
+             maybe_path, None,
+             "Should find no config path if the config would be local (suppressed system config)"
+         );
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     #[serial]
+     #[cfg(not(target_os = "macos"))] // Assumes no higher "unknown" scope. The `nosystem` case works.
+     fn never_from_local_scope_even_if_temp_is_here() {
+@@ -534,9 +534,9 @@ mod exe_info {
+             maybe_path, None,
+             "Should find no config path if the config would be local even in a `/tmp`-like dir (empty system config)"
+         );
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     #[serial]
+     fn never_from_local_scope_even_if_temp_is_here_nosystem() {
+         let repo = gix_testtools::scripted_fixture_read_only("local_config.sh")
+@@ -554,7 +554,7 @@ mod exe_info {
+             maybe_path, None,
+             "Should find no config path if the config would be local even in a `/tmp`-like dir (suppressed system config)"
+         );
+-    }
++    }*/
+ 
+     #[test]
+     fn first_file_from_config_with_origin() {
