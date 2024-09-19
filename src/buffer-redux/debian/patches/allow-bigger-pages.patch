@@ -1,0 +1,17 @@
+Index: buffer-redux/src/ringbuf_tests.rs
+===================================================================
+--- buffer-redux.orig/src/ringbuf_tests.rs
++++ buffer-redux/src/ringbuf_tests.rs
+@@ -28,7 +28,11 @@ macro_rules! assert_capacity {
+             // Macos' minimum allocation size is sometimes? 16K
+             assert!(cap == $cap || cap == ::std::cmp::max(16 * 1024, $cap));
+         } else {
+-            assert_eq!(cap, $cap);
++            // some linux systems have larger pages, we assert that
++            // either the capacity is the capacity requested, or
++            // that the capacity is larger than requested and is
++            // a power of two.
++            assert!((cap == $cap) || ((cap >= $cap) && ((cap & (cap - 1)) == 0 )));
+         }
+     };
+ }
