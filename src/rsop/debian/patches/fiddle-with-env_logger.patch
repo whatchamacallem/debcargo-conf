@@ -1,0 +1,22 @@
+Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Description: Help build daemons find env_logger 0.10
+
+Debian build daemons pick the first package from any disjunction in Build-Depends.
+
+Since we don't have env_logger 0.11 in debian, and debcargo converts a wide range into a latest-version-first disjunction, this will cause a FTBFS due to unsatisfiable build-deps.
+
+When we have env_logger 0.11 in debian, we should drop this patch.
+
+Forwarded: not-needed
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -36,7 +36,7 @@
+ required-features = ["cliv"]
+ 
+ [dependencies.env_logger]
+-version = ">=0.10, <0.12"
++version = "0.10"
+ 
+ [dependencies.rpgpie-sop]
+ version = "0.3"
