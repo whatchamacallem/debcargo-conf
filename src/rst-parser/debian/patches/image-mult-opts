@@ -1,0 +1,62 @@
+commit ebca18e58a134bedc9dfb3288f20c169dac38f0b
+Author: Jelmer Vernooĳ <jelmer@jelmer.uk>
+Date:   Thu Aug 15 17:57:58 2024 +0100
+
+    Handle images with multiple options (#53)
+    
+    Co-authored-by: Philipp A. <flying-sheep@web.de>
+
+Index: rst-parser/src/rst.pest
+===================================================================
+--- rst-parser.orig/src/rst.pest
++++ rst-parser/src/rst.pest
+@@ -88,7 +88,7 @@ replace = { ^"replace::" ~ " "* ~ paragr
+ 
+ image_directive = _{ ".." ~ PUSH(" "+) ~ image ~ DROP }
+ image           =  { ^"image::" ~ line ~ image_opt_block? }
+-image_opt_block = _{ PEEK[..-1] ~ PUSH("  " ~ POP) ~ image_option } //TODO: merge with other directives?
++image_opt_block = _{ PEEK[..-1] ~ PUSH("  " ~ POP) ~ image_option ~ (PEEK[..] ~ image_option)* }
+ image_option    =  { ":" ~ image_opt_name ~ ":" ~ line }
+ image_opt_name  =  { common_opt_name | "alt" | "height" | "width" | "scale" | "align" | "target" }
+ 
+Index: rst-parser/src/tests.rs
+===================================================================
+--- rst-parser.orig/src/tests.rs
++++ rst-parser/src/tests.rs
+@@ -394,6 +394,36 @@ fn substitution_image() {
+ 	};
+ }
+ 
++#[allow(clippy::cognitive_complexity)]
++#[test]
++fn substitution_image_with_alt() {
++    parses_to! {
++        parser: RstParser,
++        input: "\
++.. |subst| image:: thing.png
++   :alt: A thing
++   :target: foo.html
++",
++        rule: Rule::document,
++        tokens: [
++            substitution_def(0, 67, [
++                substitution_name(4, 9),
++                image(11, 67, [
++                    line(18, 29, [ str(18, 28) ]),
++                    image_option(32, 46, [
++                        image_opt_name(33, 36),
++                        line(37, 46, [ str(37, 45) ]),
++                    ]),
++                    image_option(49, 67, [
++                        image_opt_name(50, 56),
++                        line(57, 67, [ str(57, 66) ]),
++                    ]),
++                ]),
++            ]),
++        ]
++    };
++}
++
+ // TODO: test images
+ 
+ #[allow(clippy::cognitive_complexity)]
