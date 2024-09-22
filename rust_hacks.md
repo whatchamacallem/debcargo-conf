@@ -7,6 +7,8 @@ This document aims to document some nice "hacks" and tricks to employ when packa
 A nice tool to generate a graphical overview of a rust projects' dependency tree is `cargo debstatus`. Install it like that:
 `apt install cargo-debstatus` (trixie and sid). Then download either a release or clone the git project and `cd` into there. Run `cargo debstatus` to get a nice graph about dependencies and reverse dependencies.
 
+Please note that `cargo debstatus` [may be unable to find](https://github.com/kpcyrd/cargo-debstatus/issues/44) some of the crates which are already packaged in Debian, so before packaging new crates double-check they are not in the archive using `apt search $CRATE_NAME` or `apt list '*$CRATE_NAME*'` (replace underscores with dashes in `$CRATE_NAME`).
+
 ## Patching crates
 If a crate needs a) a newer dependency or b) an older dependency than the one in the archive you need to patch the crate. This is relatively common. You can also use this to patch out features in Cargo.toml or make changes to the source code. 
 
