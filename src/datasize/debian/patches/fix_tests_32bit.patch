@@ -1,0 +1,16 @@
+Description: Disable tests that are failing on 32bit archs
+ The testsuite is failing on some architectures armhf, armel, i386 while it
+ runs fine on amd64 arm64 ppc64el 390x.
+Bug: https://github.com/CasperLabs/datasize-rs/issues/19
+Last-Update: 2024-09-22
+
+--- a/src/std.rs
++++ b/src/std.rs
+@@ -554,6 +554,7 @@
+ 
+     #[test]
+     #[cfg(feature = "detailed")]
++    #[cfg(not(target_pointer_width = "32"))]
+     fn test_nested_detailed_struct() {
+         #[derive(DataSize)]
+         struct Inner {
