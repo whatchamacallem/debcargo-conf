@@ -1,0 +1,86 @@
+Index: librsvg/Cargo.toml
+===================================================================
+--- librsvg.orig/Cargo.toml
++++ librsvg/Cargo.toml
+@@ -33,6 +33,7 @@ readme = "README.md"
+ license = "LGPL-2.1-or-later"
+ repository = "https://gitlab.gnome.org/GNOME/librsvg/"
+ autobenches = false
++autotests = false
+ 
+ [package.metadata.docs.rs]
+ rustc-args = [
+@@ -243,11 +244,6 @@ version = "7.0.0"
+ 
+ [features]
+ avif = ["image/avif-native"]
+-test-utils = ["yeslogic-fontconfig-sys"]
+-
+-[target."cfg(all(not(target_os = \"macos\"), not(target_os = \"windows\")))".dependencies.yeslogic-fontconfig-sys]
+-version = "6.0.0"
+-optional = true
+ 
+ [lints.rust.unexpected_cfgs]
+ level = "warn"
+Index: librsvg/tests/api.rs
+===================================================================
+--- librsvg.orig/tests/api.rs
++++ librsvg/tests/api.rs
+@@ -3,8 +3,8 @@ use gio::prelude::*;
+ use rsvg::tests_only::{SharedImageSurface, SurfaceType};
+ use rsvg::{CairoRenderer, RenderingError};
+ 
+-use rsvg::test_utils::load_svg;
+-use rsvg::test_utils::reference_utils::{Compare, Evaluate, Reference};
++//use rsvg::test_utils::load_svg;
++//use rsvg::test_utils::reference_utils::{Compare, Evaluate, Reference};
+ 
+ #[test]
+ fn has_element_with_id_works() {
+@@ -216,7 +216,7 @@ fn text_doesnt_leave_points_in_current_p
+     assert!(!cr.has_current_point().unwrap());
+ }
+ 
+-#[test]
++/*#[test]
+ fn cancellation_works() {
+     let svg = load_svg(
+         br##"<?xml version="1.0" encoding="UTF-8"?>
+@@ -258,4 +258,4 @@ fn cancellation_works() {
+     Reference::from_surface(reference_surf)
+         .compare(&output_surf)
+         .evaluate(&output_surf, "cancellation_works");
+-}
++}*/
+Index: librsvg/tests/primitives.rs
+===================================================================
+--- librsvg.orig/tests/primitives.rs
++++ librsvg/tests/primitives.rs
+@@ -1,8 +1,8 @@
+-use rsvg::test_utils::reference_utils::{Compare, Evaluate, Reference};
+-use rsvg::test_utils::{load_svg, render_document, SurfaceSize};
+-use rsvg::{test_compare_render_output, test_svg_reference};
++//use rsvg::test_utils::reference_utils::{Compare, Evaluate, Reference};
++//use rsvg::test_utils::{load_svg, render_document, SurfaceSize};
++//use rsvg::{test_compare_render_output, test_svg_reference};
+ 
+-#[test]
++/* #[test]
+ fn simple_opacity_with_transform() {
+     let svg = load_svg(
+         br#"<?xml version="1.0" encoding="UTF-8"?>
+@@ -376,3 +376,4 @@ test_svg_reference!(
+     "tests/fixtures/reftests/avif-image-1003.svg",
+     "tests/fixtures/reftests/avif-image-1003-ref.svg"
+ ); */
++*/
+Index: librsvg/tests/shapes.rs
+===================================================================
+--- librsvg.orig/tests/shapes.rs
++++ librsvg/tests/shapes.rs
+@@ -1,4 +1,4 @@
+-use rsvg::test_svg_reference;
++//use rsvg::test_svg_reference;
+ 
+ /* test_svg_reference!(
+     ellipse_auto_rx_ry,

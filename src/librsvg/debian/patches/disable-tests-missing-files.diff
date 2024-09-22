@@ -1,0 +1,271 @@
+Index: librsvg/src/url_resolver.rs
+===================================================================
+--- librsvg.orig/src/url_resolver.rs
++++ librsvg/src/url_resolver.rs
+@@ -230,7 +230,7 @@ mod tests {
+         Url::from_file_path(absolute).unwrap()
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn allows_relative() {
+         let base_url = url_from_test_fixtures("tests/fixtures/loading/bar.svg");
+         let url_resolver = UrlResolver::new(Some(base_url));
+@@ -277,7 +277,7 @@ mod tests {
+             url_resolver.resolve_href(&make_file_uri("/etc/passwd")),
+             Err(AllowedUrlError::NotSiblingOrChildOfBaseFile)
+         ));
+-    }
++    }*/
+ 
+     #[test]
+     fn disallows_queries() {
+Index: librsvg/tests/bugs.rs
+===================================================================
+--- librsvg.orig/tests/bugs.rs
++++ librsvg/tests/bugs.rs
+@@ -289,7 +289,7 @@ fn doubly_recursive_use() {
+ }
+ 
+ // https://gitlab.gnome.org/GNOME/librsvg/-/issues/347
+-#[test]
++/*#[test]
+ fn test_text_bounds() {
+     setup_font_map();
+ 
+@@ -313,7 +313,7 @@ fn test_text_bounds() {
+     // elements compute sensible bounds"; the bug #347 was that their ink_rect
+     // was not being computed correctly at all.
+     assert!(ink_r.y() > 48.0 && ink_r.y() < 49.0);
+-}
++}*/
+ 
+ // https://gitlab.gnome.org/GNOME/librsvg/-/issues/703
+ #[test]
+Index: librsvg/tests/filters.rs
+===================================================================
+--- librsvg.orig/tests/filters.rs
++++ librsvg/tests/filters.rs
+@@ -88,7 +88,7 @@ fn non_filter_reference_cancels_filter_c
+         .evaluate(&output_surf, "non_filter_reference_cancels_filter_chain");
+ }
+ 
+-test_compare_render_output!(
++/* test_compare_render_output!(
+     blur_filter_func,
+     400,
+     400,
+@@ -108,9 +108,9 @@ test_compare_render_output!(
+   <rect x="100" y="100" width="200" height="200" fill="lime" filter="url(#filter)"/>
+ </svg>
+ "##,
+-);
++);*/
+ 
+-test_compare_render_output!(
++/*test_compare_render_output!(
+     brightness_filter_func,
+     400,
+     400,
+@@ -160,9 +160,9 @@ br##"<?xml version="1.0" encoding="UTF-8
+   <rect x="100" y="100" width="200" height="200" fill="green" filter="url(#filter)"/>
+ </svg>
+ "##,
+-);
++);*/
+ 
+-test_compare_render_output!(
++/*test_compare_render_output!(
+     dropshadow_filter_func,
+     400,
+     400,
+@@ -333,9 +333,9 @@ test_compare_render_output!(
+   <rect x="100" y="100" width="200" height="200" fill="lime" filter="url(#filter)"/>
+ </svg>
+ "##,
+-);
++);*/
+ 
+-test_compare_render_output!(
++/* test_compare_render_output!(
+     mask_type,
+     200,
+     100,
+@@ -360,10 +360,10 @@ test_compare_render_output!(
+   <rect x="110" y="10" width="80" height="80" fill="green"/>
+ </svg>
+ "##,
+-);
++); */
+ 
+-test_svg_reference!(
++/*test_svg_reference!(
+     bug_743_fe_drop_shadow,
+     "tests/fixtures/reftests/svg2/bug743-fe-drop-shadow.svg",
+     "tests/fixtures/reftests/svg2/bug743-fe-drop-shadow-ref.svg"
+-);
++);*/
+Index: librsvg/tests/geometries.rs
+===================================================================
+--- librsvg.orig/tests/geometries.rs
++++ librsvg/tests/geometries.rs
+@@ -115,7 +115,7 @@ fn test(svg_filename: &str) {
+     }
+ }
+ 
+-#[test]
++/*#[test]
+ fn dual() {
+     test("tests/fixtures/geometries/dual.svg");
+ }
+@@ -133,4 +133,4 @@ fn quad() {
+ #[test]
+ fn single() {
+     test("tests/fixtures/geometries/single.svg");
+-}
++}*/
+Index: librsvg/tests/loading_disallowed.rs
+===================================================================
+--- librsvg.orig/tests/loading_disallowed.rs
++++ librsvg/tests/loading_disallowed.rs
+@@ -1,7 +1,7 @@
+ use rsvg::test_svg_reference;
+ 
+-test_svg_reference!(
++/*test_svg_reference!(
+     bug_996_malicious_url,
+     "tests/fixtures/loading/disallowed-996.svg",
+     "tests/fixtures/loading/disallowed-996-ref.svg"
+-);
++);*/
+Index: librsvg/tests/primitive_geometries.rs
+===================================================================
+--- librsvg.orig/tests/primitive_geometries.rs
++++ librsvg/tests/primitive_geometries.rs
+@@ -135,7 +135,7 @@ fn test(svg_filename: &str, geometries_f
+     }
+ }
+ 
+-#[test]
++/* #[test]
+ fn rect() {
+     test(
+         "tests/fixtures/primitive_geometries/rect.svg",
+@@ -165,4 +165,4 @@ fn rect_isolate() {
+         "tests/fixtures/primitive_geometries/rect_isolate.svg",
+         "tests/fixtures/primitive_geometries/rect_isolate.svg.geom",
+     );
+-}
++} */
+Index: librsvg/tests/primitives.rs
+===================================================================
+--- librsvg.orig/tests/primitives.rs
++++ librsvg/tests/primitives.rs
+@@ -323,7 +323,7 @@ fn nested_masks() {
+         .evaluate(&output_surf, "nested_masks");
+ }
+ 
+-test_compare_render_output!(
++/* test_compare_render_output!(
+     image_element_with_no_href,
+     30,
+     30,
+@@ -348,9 +348,9 @@ test_compare_render_output!(
+ <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+   <rect x="10" y="10" width="20" height="20" fill="black" style="transform: translate(40px, 40px);"/>
+ </svg>"##,
+-);
++); */
+ 
+-test_compare_render_output!(
++/* test_compare_render_output!(
+     compound_transform_property,
+     100,
+     100,
+@@ -368,11 +368,11 @@ test_svg_reference!(
+     invalid_element_type_for_paint_server,
+     "tests/fixtures/reftests/invalid-element-type-for-paint-server.svg",
+     "tests/fixtures/reftests/invalid-element-type-for-paint-server-ref.svg"
+-);
++);*/
+ 
+-#[cfg(feature = "avif")]
++/* #[cfg(feature = "avif")]
+ test_svg_reference!(
+     can_decode_avif_image_1003,
+     "tests/fixtures/reftests/avif-image-1003.svg",
+     "tests/fixtures/reftests/avif-image-1003-ref.svg"
+-);
++); */
+Index: librsvg/tests/reference.rs
+===================================================================
+--- librsvg.orig/tests/reference.rs
++++ librsvg/tests/reference.rs
+@@ -6,7 +6,7 @@
+ //! antialiasing artifacts, floating-point variations, and such.
+ //!
+ 
+-use rsvg::tests_only::{SharedImageSurface, SurfaceType};
++/* use rsvg::tests_only::{SharedImageSurface, SurfaceType};
+ use rsvg::{CairoRenderer, IntrinsicDimensions, Length, Loader};
+ 
+ use rsvg::test_utils::reference_utils::{Compare, Evaluate, Reference};
+@@ -1199,4 +1199,4 @@ test_svg_reference!(
+     bug_1121_feimage_embedded_svg,
+     "tests/fixtures/reftests/bugs-reftests/bug1121-feimage-embedded-svg.svg",
+     "tests/fixtures/reftests/bugs-reftests/bug1121-feimage-embedded-svg-ref.svg"
+-);
++); */
+Index: librsvg/tests/render_crash.rs
+===================================================================
+--- librsvg.orig/tests/render_crash.rs
++++ librsvg/tests/render_crash.rs
+@@ -3,7 +3,7 @@
+ //! Ensures that redering a particular SVG doesn't crash, but we don't care
+ //! about the resulting image or even whether there were errors during rendering.
+ 
+-use rsvg::{CairoRenderer, Loader};
++/* use rsvg::{CairoRenderer, Loader};
+ 
+ use std::path::PathBuf;
+ 
+@@ -76,4 +76,4 @@ mod tests {
+     t!(pattern_with_no_children_svg,                    "pattern-with-no-children.svg");
+     t!(pixelrectangle_duplicate_crash_svg,              "PixelRectangle-duplicate-crash.svg");
+     t!(recursive_feimage_svg,                           "recursive-feimage.svg");
+-}
++} */
+Index: librsvg/tests/shapes.rs
+===================================================================
+--- librsvg.orig/tests/shapes.rs
++++ librsvg/tests/shapes.rs
+@@ -1,6 +1,6 @@
+ use rsvg::test_svg_reference;
+ 
+-test_svg_reference!(
++/* test_svg_reference!(
+     ellipse_auto_rx_ry,
+     "tests/fixtures/reftests/svg2-reftests/ellipse-auto-rx-ry.svg",
+     "tests/fixtures/reftests/svg2-reftests/ellipse-auto-rx-ry-ref.svg"
+@@ -10,4 +10,4 @@ test_svg_reference!(
+     ellipse_single_auto_rx_ry,
+     "tests/fixtures/reftests/svg2-reftests/ellipse-single-auto-rx-ry.svg",
+     "tests/fixtures/reftests/svg2-reftests/ellipse-single-auto-rx-ry-ref.svg"
+-);
++); */
+Index: librsvg/tests/text.rs
+===================================================================
+--- librsvg.orig/tests/text.rs
++++ librsvg/tests/text.rs
+@@ -1,4 +1,4 @@
+-use float_cmp::approx_eq;
++/*use float_cmp::approx_eq;
+ use rsvg::{CairoRenderer, Loader};
+ 
+ use rsvg::test_utils::setup_font_map;
+@@ -122,4 +122,4 @@ fn test_text_layer_geometry() {
+             expected_ink_rect
+         );
+     }
+-}
++}*/
