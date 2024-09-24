@@ -1,0 +1,58 @@
+commit 38bb4ce8a509cf9f1a88726b991310413910d5b3
+Author: Jelmer Vernooĳ <jelmer@jelmer.uk>
+Date:   Tue Sep 24 02:17:52 2024 +0100
+
+    Allow 4+ spaces of indentation for image options
+    
+    Previously, this only supported 3.
+
+diff --git a/src/rst.pest b/parser/src/rst.pest
+index 7c45153..e60958f 100644
+--- a/src/rst.pest
++++ b/src/rst.pest
+@@ -88,7 +88,7 @@ replace = { ^"replace::" ~ " "* ~ paragraph }
+ 
+ image_directive = _{ ".." ~ PUSH(" "+) ~ image ~ DROP }
+ image           =  { ^"image::" ~ line ~ image_opt_block? }
+-image_opt_block = _{ PEEK[..-1] ~ PUSH("  " ~ POP) ~ image_option ~ (PEEK[..] ~ image_option)* }
++image_opt_block = _{ PUSH(" "+) ~ image_option ~ (PEEK ~ image_option)* ~ DROP }
+ image_option    =  { ":" ~ image_opt_name ~ ":" ~ line }
+ image_opt_name  =  { common_opt_name | "alt" | "height" | "width" | "scale" | "align" | "target" }
+ 
+diff --git a/src/tests.rs b/parser/src/tests.rs
+index fdacf8c..73875fe 100644
+--- a/src/tests.rs
++++ b/src/tests.rs
+@@ -423,6 +423,32 @@ fn substitution_image_with_alt() {
+     };
+ }
+ 
++#[allow(clippy::cognitive_complexity)]
++#[test]
++fn substitution_image_with_many_indents() {
++    parses_to! {
++        parser: RstParser,
++        input: "\
++.. image:: thing.png
++    :target: foo.html
++.. image:: another.png
++",
++        rule: Rule::document,
++        tokens: [
++            image(3, 43, [
++                line(10, 21, [ str(10, 20) ]),
++                image_option(25, 43, [
++                    image_opt_name(26, 32),
++                    line(33, 43, [ str(33, 42) ]),
++                ]),
++            ]),
++            image(46, 66, [
++                line(53, 66, [ str(53, 65) ]),
++            ]),
++        ]
++    };
++}
++
+ // TODO: test images
+ 
+ #[allow(clippy::cognitive_complexity)]
