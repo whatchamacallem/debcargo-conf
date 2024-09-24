@@ -7,23 +7,18 @@ of additional packaging work.  Better to just avoid it for now.
 This set of changes for the sake of reduced dependency subtrees
 was guided by Lars Wirzenius from upstream.
 
-This patched was modified by Peter Michael Green to support
-sequoia-sq 0.33.0 and by Alexander Kjäll for 0.34.0
+This patch was modified by Peter Michael Green and Alexander
+Kjäll to support newer versions of sequoia-sq
 
 diff --git a/Cargo.toml b/Cargo.toml
 index 4b9851c..7e02a0a 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -160,9 +160,6 @@ version = ">=2, <4"
- [dev-dependencies.regex]
- version = "1"
- 
--[dev-dependencies.subplotlib]
+@@ -160,4 +160,0 @@
+-[dependencies.subplotlib]
 -version = ">=0.7, <0.10"
+-optional = true
 -
- [build-dependencies.anyhow]
- version = "1.0.18"
- 
 @@ -204,10 +201,6 @@ default-features = false
  version = "1.0.137"
  features = ["derive"]
@@ -35,14 +30,11 @@ index 4b9851c..7e02a0a 100644
  [build-dependencies.terminal_size]
  version = ">=0.2.6, <0.4"
  
-@@ -225,7 +218,6 @@ default = [
-     "crypto-nettle",
-     "dot-writer",
- ]
--subplot = ["subplot-build"]
- 
- [badges.gitlab]
- repository = "sequoia-pgp/sequoia-sq"
+@@ -225,4 +218,0 @@
+-subplot = [
+-    "subplot-build",
+-    "subplotlib",
+-]
 diff --git a/build.rs b/build.rs
 index 91fa909..aa5d3e0 100644
 --- a/build.rs
