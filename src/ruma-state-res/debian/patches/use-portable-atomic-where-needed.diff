@@ -1,0 +1,58 @@
+Index: rust-ruma-state-res-0.8.0/Cargo.toml
+===================================================================
+--- rust-ruma-state-res-0.8.0.orig/Cargo.toml
++++ rust-ruma-state-res-0.8.0/Cargo.toml
+@@ -77,5 +77,8 @@ features = ["unstable-pdu"]
+ [dev-dependencies.tracing-subscriber]
+ version = "0.3.3"
+ 
++[dev-dependencies.portable-atomic]
++version = "=1.4.3"
++
+ [features]
+ unstable-exhaustive-types = []
+Index: rust-ruma-state-res-0.8.0/benches/state_res_bench.rs
+===================================================================
+--- rust-ruma-state-res-0.8.0.orig/benches/state_res_bench.rs
++++ rust-ruma-state-res-0.8.0/benches/state_res_bench.rs
+@@ -11,11 +11,17 @@ use std::{
+     borrow::Borrow,
+     collections::{HashMap, HashSet},
+     sync::{
+-        atomic::{AtomicU64, Ordering::SeqCst},
++        atomic::Ordering::SeqCst,
+         Arc,
+     },
+ };
+ 
++#[cfg(target_has_atomic = "64")]
++use std::sync::atomic::AtomicU64;
++
++#[cfg(not(target_has_atomic = "64"))]
++use portable_atomic::AtomicU64;
++
+ use criterion::{criterion_group, criterion_main, Criterion};
+ use event::PduEvent;
+ use js_int::{int, uint};
+Index: rust-ruma-state-res-0.8.0/src/test_utils.rs
+===================================================================
+--- rust-ruma-state-res-0.8.0.orig/src/test_utils.rs
++++ rust-ruma-state-res-0.8.0/src/test_utils.rs
+@@ -2,11 +2,16 @@ use std::{
+     borrow::Borrow,
+     collections::{BTreeMap, HashMap, HashSet},
+     sync::{
+-        atomic::{AtomicU64, Ordering::SeqCst},
++        atomic::Ordering::SeqCst,
+         Arc,
+     },
+ };
+ 
++#[cfg(target_has_atomic = "64")]
++use std::sync::atomic::AtomicU64;
++#[cfg(not(target_has_atomic = "64"))]
++use portable_atomic::AtomicU64;
++
+ use js_int::{int, uint};
+ use ruma_common::{
+     event_id,
