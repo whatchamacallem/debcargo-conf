@@ -1,0 +1,64 @@
+Index: sqlx-sqlite/Cargo.toml
+===================================================================
+--- sqlx-sqlite.orig/Cargo.toml
++++ sqlx-sqlite/Cargo.toml
+@@ -69,7 +69,7 @@ features = [
+ default-features = false
+ 
+ [dependencies.libsqlite3-sys]
+-version = "0.30.1"
++version = ">=0.26"
+ features = [
+     "pkg-config",
+     "vcpkg",
+Index: sqlx-sqlite/src/statement/virtual.rs
+===================================================================
+--- sqlx-sqlite.orig/src/statement/virtual.rs
++++ sqlx-sqlite/src/statement/virtual.rs
+@@ -5,9 +5,7 @@ use std::os::raw::c_char;
+ use std::ptr::{null, null_mut, NonNull};
+ use std::sync::Arc;
+ 
+-use libsqlite3_sys::{
+-    sqlite3, sqlite3_prepare_v3, sqlite3_stmt, SQLITE_OK, SQLITE_PREPARE_PERSISTENT,
+-};
++use libsqlite3_sys::{sqlite3, sqlite3_prepare_v2, sqlite3_stmt, SQLITE_OK};
+ 
+ use sqlx_core::bytes::{Buf, Bytes};
+ use sqlx_core::error::Error;
+@@ -145,19 +143,6 @@ fn prepare(
+     query: &mut Bytes,
+     persistent: bool,
+ ) -> Result<Option<StatementHandle>, Error> {
+-    let mut flags = 0;
+-
+-    // For some reason, when building with the `sqlcipher` feature enabled
+-    // `SQLITE_PREPARE_PERSISTENT` ends up being `i32` instead of `u32`. Crazy, right?
+-    #[allow(trivial_casts, clippy::unnecessary_cast)]
+-    if persistent {
+-        // SQLITE_PREPARE_PERSISTENT
+-        //  The SQLITE_PREPARE_PERSISTENT flag is a hint to the query
+-        //  planner that the prepared statement will be retained for a long time
+-        //  and probably reused many times.
+-        flags |= SQLITE_PREPARE_PERSISTENT as u32;
+-    }
+-
+     while !query.is_empty() {
+         let mut statement_handle: *mut sqlite3_stmt = null_mut();
+         let mut tail: *const c_char = null();
+@@ -173,14 +158,7 @@ fn prepare(
+ 
+         // <https://www.sqlite.org/c3ref/prepare.html>
+         let status = unsafe {
+-            sqlite3_prepare_v3(
+-                conn,
+-                query_ptr,
+-                query_len,
+-                flags,
+-                &mut statement_handle,
+-                &mut tail,
+-            )
++            sqlite3_prepare_v2(conn, query_ptr, query_len, &mut statement_handle, &mut tail)
+         };
+ 
+         if status != SQLITE_OK {
