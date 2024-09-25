@@ -2,7 +2,7 @@ Index: debian-copyright/Cargo.toml
 ===================================================================
 --- debian-copyright.orig/Cargo.toml
 +++ debian-copyright/Cargo.toml
-@@ -29,13 +29,8 @@ repository = "https://github.com/jelmer/
+@@ -36,13 +36,8 @@ repository = "https://github.com/jelmer/
  name = "debian_copyright"
  path = "src/lib.rs"
  
@@ -20,12 +20,12 @@ Index: debian-copyright/src/lib.rs
 ===================================================================
 --- debian-copyright.orig/src/lib.rs
 +++ debian-copyright/src/lib.rs
-@@ -1,45 +1,11 @@
+@@ -2,45 +2,8 @@
  //! A library for parsing and manipulating debian/copyright files that
  //! use the DEP-5 format.
  //!
 -//! # Examples
--//!
+ //!
 -//! ```rust
 -//!
 -//! use debian_copyright::Copyright;
@@ -56,36 +56,24 @@ Index: debian-copyright/src/lib.rs
 -//! assert_eq!(license.name(), Some("GPL-3+"));
 -//! ```
 -//!
- //! See the ``lossless`` module (behind the ``lossless`` feature) for a more forgiving parser that
- //! allows partial parsing, parsing files with errors and unknown fields and editing while
- //! preserving formatting.
- 
--pub mod lossy;
+-//! See the ``lossless`` module (behind the ``lossless`` feature) for a more forgiving parser that
+-//! allows partial parsing, parsing files with errors and unknown fields and editing while
+-//! preserving formatting.
+-
  pub mod lossless;
+-pub mod lossy;
 -pub use lossy::Copyright;
  
+ /// The current version of the DEP-5 format.
  pub const CURRENT_FORMAT: &str =
-     "https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/";
-@@ -94,9 +60,7 @@ impl std::fmt::Display for License {
-         match self {
-             License::Name(name) => f.write_str(name),
-             License::Text(text) => write!(f, "\n{}", text),
--            License::Named(name, text) => write!(f, "{}\n{}", name, text)
-+            License::Named(name, text) => write!(f, "{}\n{}", name, text),
-         }
-     }
- }
--
--
 Index: debian-copyright/src/lossless.rs
 ===================================================================
 --- debian-copyright.orig/src/lossless.rs
 +++ debian-copyright/src/lossless.rs
-@@ -2,42 +2,10 @@
- //! use the DEP-5 format.
+@@ -3,38 +3,6 @@
  //!
  //! This library is intended to be used for manipulating debian/copyright
--//!
+ //!
 -//! # Examples
 -//!
 -//! ```rust
@@ -117,11 +105,7 @@ Index: debian-copyright/src/lossless.rs
 -//! let license = c.find_license_for_file(Path::new("debian/foo")).unwrap();
 -//! assert_eq!(license.name(), Some("GPL-3+"));
 -//! ```
- 
-+use crate::{License, CURRENT_FORMAT, KNOWN_FORMATS};
+-
+ use crate::{License, CURRENT_FORMAT, KNOWN_FORMATS};
  use deb822_lossless::{Deb822, Paragraph};
  use std::path::Path;
--use crate::{CURRENT_FORMAT, KNOWN_FORMATS, License};
- 
- #[derive(Debug)]
- pub struct Copyright(Deb822);
