@@ -1,0 +1,27 @@
+Index: sqlx-core/Cargo.toml
+===================================================================
+--- sqlx-core.orig/Cargo.toml
++++ sqlx-core/Cargo.toml
+@@ -265,10 +265,6 @@ default-features = false
+ version = "1.1.2"
+ optional = true
+ 
+-[dependencies.webpki-roots]
+-version = "0.26"
+-optional = true
+-
+ [dev-dependencies.sqlx]
+ version = "=0.8.2"
+ features = [
+Index: sqlx-core/src/net/tls/tls_rustls.rs
+===================================================================
+--- sqlx-core.orig/src/net/tls/tls_rustls.rs
++++ sqlx-core/src/net/tls/tls_rustls.rs
+@@ -128,7 +128,6 @@ where
+         }
+     } else {
+         let mut cert_store = RootCertStore::empty();
+-        cert_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+ 
+         if let Some(ca) = tls_config.root_cert_path {
+             let data = ca.data().await?;
