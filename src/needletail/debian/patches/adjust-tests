@@ -1,0 +1,37 @@
+Author: Michael R. Crusoe <crusoe@gmail.com>
+Description: Remove tests referencing missing tests data
+Forwarded: not-needed
+
+Drop this patch once upstream ships the "tests" data in their crate.
+--- needletail.orig/src/parser/fastq.rs
++++ needletail/src/parser/fastq.rs
+@@ -609,29 +609,4 @@
+         let e = rec.unwrap_err();
+         assert_eq!(e.kind, ParseErrorKind::UnequalLengths);
+     }
+-
+-    // https://github.com/onecodex/needletail/pull/36
+-    #[test]
+-    fn test_bad_headers() {
+-        let mut reader = Reader::from_path("tests/data/bad_header.fastq").unwrap();
+-        let rec = reader.next().unwrap();
+-        assert!(rec.is_ok());
+-        let rec2 = reader.next().unwrap();
+-        let e = rec2.unwrap_err();
+-        // Ideally this would not be UnexpectedEnd since we know it's an invalid record
+-        // but that's for another day
+-        assert_eq!(e.kind, ParseErrorKind::UnexpectedEnd);
+-    }
+-
+-    // https://github.com/onecodex/needletail/pull/39
+-    #[test]
+-    fn test_fastq_with_random_tsv_inside() {
+-        let mut reader = Reader::from_path("tests/data/random_tsv.fq").unwrap();
+-        let rec = reader.next().unwrap();
+-        assert!(rec.is_ok());
+-        let rec2 = reader.next().unwrap();
+-        let e = rec2.unwrap_err();
+-        // It errors when it tries to validate the separator line that needs to start with `+`
+-        assert_eq!(e.kind, ParseErrorKind::InvalidSeparator);
+-    }
+ }
