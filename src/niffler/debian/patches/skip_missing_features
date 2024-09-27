@@ -1,0 +1,91 @@
+Author: Michael R. Crusoe <crusoe@debian.org>
+Description: skip features not yet available in Debian
+Forwarded: not-needed
+--- niffler.orig/Cargo.toml.orig
++++ niffler/Cargo.toml.orig
+@@ -20,22 +20,12 @@
+ xz = ["lzma"]
+ 
+ # bzip2 feature transitivity
+-bz2_tokio = ["bzip2/tokio"]
+ bz2_static = ["bzip2/static"]
+ 
+-# lzma feature transitivity
+-lzma_tokio = ["liblzma/tokio"]
+-
+ # flate2 feature transitivity
+ gz_zlib = ["flate2/zlib"]
+-gz_zlib-ng-compat = ["flate2/zlib-ng-compat"]
+-gz_cloudflare_zlib = ["flate2/cloudflare_zlib"]
+ gz_rust_backend = ["flate2/rust_backend"]
+ 
+-# xz feature transitivity
+-xz_tokio = ["liblzma/tokio"]
+-
+-
+ [dependencies]
+ cfg-if = "1.0"
+ thiserror = "1.0"
+@@ -72,23 +62,14 @@
+ [package.metadata.cargo-all-features]
+ denylist = [
+   # bzip2 feature transitivity
+-  "bz2_tokio",
+   "bz2_static",
+ 
+-  # lzma feature transitivity
+-  "lzma_tokio",
+-
+   # flate2 feature transitivity
+   "gz_zlib",
+-  "gz_zlib-ng-compat",
+-  "gz_cloudflare_zlib",
+   "gz_rust_backend",
+ 
+-  # xz feature transitivity
+-  "xz_tokio",
+-
+   # xz is an alias to lzma
+   "xz",
+ ]
+ 
+-skip_optional_dependencies = true
+\ No newline at end of file
++skip_optional_dependencies = true
+--- niffler.orig/Cargo.toml
++++ niffler/Cargo.toml
+@@ -27,14 +27,9 @@
+ 
+ [package.metadata.cargo-all-features]
+ denylist = [
+-    "bz2_tokio",
+     "bz2_static",
+-    "lzma_tokio",
+     "gz_zlib",
+-    "gz_zlib-ng-compat",
+-    "gz_cloudflare_zlib",
+     "gz_rust_backend",
+-    "xz_tokio",
+     "xz",
+ ]
+ skip_optional_dependencies = true
+@@ -96,7 +91,6 @@
+ bgz = ["bgzip"]
+ bz2 = ["bzip2"]
+ bz2_static = ["bzip2/static"]
+-bz2_tokio = ["bzip2/tokio"]
+ default = [
+     "bz2",
+     "lzma",
+@@ -106,11 +100,7 @@
+     "zstd",
+ ]
+ gz = ["flate2"]
+-gz_cloudflare_zlib = ["flate2/cloudflare_zlib"]
+ gz_rust_backend = ["flate2/rust_backend"]
+ gz_zlib = ["flate2/zlib"]
+-gz_zlib-ng-compat = ["flate2/zlib-ng-compat"]
+ lzma = ["liblzma"]
+-lzma_tokio = ["liblzma/tokio"]
+ xz = ["lzma"]
+-xz_tokio = ["liblzma/tokio"]
