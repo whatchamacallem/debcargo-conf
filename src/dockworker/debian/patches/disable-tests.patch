@@ -1,0 +1,75 @@
+From: NoisyCoil <noisycoil@tutanota.com>
+Date: Sun, 29 Sep 2024 21:29:38 +0200
+Subject: Disable failing tests
+
+These tests require a running docker instance in order to pass, so
+we disable them.
+---
+ src/docker.rs | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+--- a/src/docker.rs
++++ b/src/docker.rs
+@@ -282,7 +282,7 @@
+         .into())
+     }
+ 
+-    #[cfg(any(feature = "openssl", feature = "rustls"))]
++    #[cfg(any(all(feature = "openssl", feature = "hyper-tls"), all(feature = "rustls", feature = "hyper-rustls")))]
+     pub fn connect_with_ssl(
+         addr: &str,
+         key: &Path,
+@@ -298,7 +298,7 @@
+         Ok(Docker::new(client, Protocol::Tcp))
+     }
+ 
+-    #[cfg(not(any(feature = "openssl", feature = "rustls")))]
++    #[cfg(not(any(all(feature = "openssl", feature = "hyper-tls"), all(feature = "rustls", feature = "hyper-rustls"))))]
+     pub fn connect_with_ssl(
+         _addr: &str,
+         _key: &Path,
+@@ -1550,24 +1550,28 @@
+     }
+ 
+     #[tokio::test]
++    #[ignore = "needs a running docker instance"]
+     async fn test_ping() {
+         let docker = Docker::connect_with_defaults().unwrap();
+         docker.ping().await.unwrap();
+     }
+ 
+     #[tokio::test]
++    #[ignore = "needs a running docker instance"]
+     async fn test_system_info() {
+         let docker = Docker::connect_with_defaults().unwrap();
+         docker.system_info().await.unwrap();
+     }
+ 
+     #[tokio::test]
++    #[ignore = "needs a running docker instance"]
+     async fn test_version() {
+         let docker = Docker::connect_with_defaults().unwrap();
+         docker.version().await.unwrap();
+     }
+ 
+     #[tokio::test]
++    #[ignore = "needs a running docker instance"]
+     async fn test_events() {
+         let docker = Docker::connect_with_defaults().unwrap();
+         let _ = docker.events(None, None, None).await.unwrap();
+@@ -2008,6 +2012,7 @@
+     }
+ 
+     #[tokio::test]
++    #[ignore = "needs a running docker instance"]
+     async fn test_api() {
+         let docker = Docker::connect_with_defaults().unwrap();
+ 
+@@ -2102,6 +2107,7 @@
+     }
+ 
+     #[tokio::test]
++    #[ignore = "needs a running docker instance"]
+     async fn test_networks() {
+         let docker = Docker::connect_with_defaults().unwrap();
+         inspect_networks(&docker).await;

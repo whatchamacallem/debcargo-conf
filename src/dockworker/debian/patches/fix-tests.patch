@@ -1,0 +1,44 @@
+--- a/src/hyper_client.rs
++++ b/src/hyper_client.rs
+@@ -9,9 +9,9 @@
+ #[derive(Clone, Debug)]
+ enum Client {
+     HttpClient(hyper::Client<hyper::client::HttpConnector>),
+-    #[cfg(feature = "openssl")]
++    #[cfg(all(feature = "openssl", feature = "hyper-tls"))]
+     HttpsClient(hyper::Client<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>),
+-    #[cfg(feature = "rustls")]
++    #[cfg(all(feature = "rustls", feature = "hyper-rustls"))]
+     HttpsClient(hyper::Client<hyper_rustls::HttpsConnector<hyper::client::HttpConnector>>),
+     #[cfg(unix)]
+     UnixClient(hyper::Client<hyperlocal::UnixConnector>),
+@@ -21,9 +21,9 @@
+     fn request(&self, req: Request<hyper::Body>) -> hyper::client::ResponseFuture {
+         match self {
+             Client::HttpClient(http_client) => http_client.request(req),
+-            #[cfg(feature = "openssl")]
++            #[cfg(all(feature = "openssl", feature = "hyper-tls"))]
+             Client::HttpsClient(https_client) => https_client.request(req),
+-            #[cfg(feature = "rustls")]
++            #[cfg(all(feature = "rustls", feature = "hyper-rustls"))]
+             Client::HttpsClient(https_client) => https_client.request(req),
+             #[cfg(unix)]
+             Client::UnixClient(unix_client) => unix_client.request(req),
+@@ -144,7 +144,7 @@
+         Self::new(Client::UnixClient(client), url)
+     }
+ 
+-    #[cfg(feature = "openssl")]
++    #[cfg(all(feature = "openssl", feature = "hyper-tls"))]
+     pub fn connect_with_ssl(
+         addr: &str,
+         key: &Path,
+@@ -178,7 +178,7 @@
+         Ok(Self::new(Client::HttpsClient(client), url))
+     }
+ 
+-    #[cfg(feature = "rustls")]
++    #[cfg(all(feature = "rustls", feature = "rustls-pemfile"))]
+     pub fn connect_with_ssl(
+         addr: &str,
+         key: &Path,
