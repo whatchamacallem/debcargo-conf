@@ -1,0 +1,23 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo --with shell_completions
+
+override_dh_auto_test:
+	dh_auto_test -- test --all
+
+override_dh_installdocs:
+	$$(find $(CURDIR)/debian -name procs -executable -not -type d | head -1) --gen-config > $(CURDIR)/debian/config.toml.example
+	dh_installdocs
+
+override_dh_installman:
+	asciidoctor -b manpage -o debian/procs.1 $(CURDIR)/man/procs.1.adoc
+	dh_installman
+
+override_dh_shell_completions:
+	$$(find $(CURDIR)/debian -name procs -executable -not -type d | head -1) --gen-completion-out bash > $(CURDIR)/debian/procs.bash-completions
+	$$(find $(CURDIR)/debian -name procs -executable -not -type d | head -1) --gen-completion-out zsh > $(CURDIR)/debian/procs.zsh-completions
+	$$(find $(CURDIR)/debian -name procs -executable -not -type d | head -1) --gen-completion-out fish > $(CURDIR)/debian/procs.fish-completions
+	dh_shell_completions
+
+override_dh_compress:
+	dh_compress -XREADME.md
