@@ -1,0 +1,33 @@
+Description: Disable non-default features
+ Upstream `lmdb-master-sys` relies on compiling a vendored version of
+ `liblmdb`, providing multiple features enabled using compiler flags and
+ defines. Our Debian package uses the pre-built packaged library, and
+ therefore cannot provide those features. As no consumer of
+ `lmdb-master-sys` currently relies on those features, we can disable
+ them entirely.
+Author: Arnaud Ferraris <aferraris@debian.org>
+Forwarded: not-needed
+Last-Update: 2024-10-01
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -72,18 +72,4 @@
+ version = "0.4.2"
+ 
+ [features]
+-asan = []
+ default = []
+-fuzzer = []
+-fuzzer-no-link = []
+-longer-keys = []
+-mdb_idl_logn_10 = []
+-mdb_idl_logn_11 = []
+-mdb_idl_logn_12 = []
+-mdb_idl_logn_13 = []
+-mdb_idl_logn_14 = []
+-mdb_idl_logn_15 = []
+-mdb_idl_logn_16 = []
+-mdb_idl_logn_8 = []
+-mdb_idl_logn_9 = []
+-posix-sem = []

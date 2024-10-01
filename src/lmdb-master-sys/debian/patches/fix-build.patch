@@ -1,0 +1,183 @@
+Description: Fix build on Debian
+ Upstream code relies on building a static library from vendored source.
+ For Debian we want to avoid this and would rather use the pre-built,
+ packaged version of `liblmdb`. Using pkg-config is a simple way to ensure
+ the needed linker flags (especially `-llmdb`) are used and the build can
+ therefore succeed.
+Author: Arnaud Ferraris <aferraris@debian.org>
+Forwarded: not-needed
+Last-Update: 2024-10-01
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -65,8 +65,8 @@
+ optional = true
+ default-features = false
+ 
+-[build-dependencies.cc]
+-version = "1.0.104"
++[build-dependencies.pkg-config]
++version = "0.3"
+ 
+ [build-dependencies.doxygen-rs]
+ version = "0.4.2"
+--- a/build.rs
++++ b/build.rs
+@@ -1,4 +1,4 @@
+-extern crate cc;
++extern crate pkg_config;
+ 
+ #[cfg(feature = "bindgen")]
+ extern crate bindgen;
+@@ -7,149 +7,9 @@
+ #[path = "bindgen.rs"]
+ mod generate;
+ 
+-use std::env;
+-use std::path::PathBuf;
+-
+-#[cfg(all(
+-    feature = "mdb_idl_logn_8",
+-    not(any(
+-        feature = "mdb_idl_logn_9",
+-        feature = "mdb_idl_logn_10",
+-        feature = "mdb_idl_logn_11",
+-        feature = "mdb_idl_logn_12",
+-        feature = "mdb_idl_logn_13",
+-        feature = "mdb_idl_logn_14",
+-        feature = "mdb_idl_logn_15",
+-        feature = "mdb_idl_logn_16"
+-    ))
+-))]
+-const MDB_IDL_LOGN: u8 = 8;
+-#[cfg(all(
+-    feature = "mdb_idl_logn_9",
+-    not(any(
+-        feature = "mdb_idl_logn_10",
+-        feature = "mdb_idl_logn_11",
+-        feature = "mdb_idl_logn_12",
+-        feature = "mdb_idl_logn_13",
+-        feature = "mdb_idl_logn_14",
+-        feature = "mdb_idl_logn_15",
+-        feature = "mdb_idl_logn_16"
+-    ))
+-))]
+-const MDB_IDL_LOGN: u8 = 9;
+-#[cfg(all(
+-    feature = "mdb_idl_logn_10",
+-    not(any(
+-        feature = "mdb_idl_logn_11",
+-        feature = "mdb_idl_logn_12",
+-        feature = "mdb_idl_logn_13",
+-        feature = "mdb_idl_logn_14",
+-        feature = "mdb_idl_logn_15",
+-        feature = "mdb_idl_logn_16"
+-    ))
+-))]
+-const MDB_IDL_LOGN: u8 = 10;
+-#[cfg(all(
+-    feature = "mdb_idl_logn_11",
+-    not(any(
+-        feature = "mdb_idl_logn_12",
+-        feature = "mdb_idl_logn_13",
+-        feature = "mdb_idl_logn_14",
+-        feature = "mdb_idl_logn_15",
+-        feature = "mdb_idl_logn_16"
+-    ))
+-))]
+-const MDB_IDL_LOGN: u8 = 11;
+-#[cfg(all(
+-    feature = "mdb_idl_logn_12",
+-    not(any(
+-        feature = "mdb_idl_logn_13",
+-        feature = "mdb_idl_logn_14",
+-        feature = "mdb_idl_logn_15",
+-        feature = "mdb_idl_logn_16"
+-    ))
+-))]
+-const MDB_IDL_LOGN: u8 = 12;
+-#[cfg(all(
+-    feature = "mdb_idl_logn_13",
+-    not(any(
+-        feature = "mdb_idl_logn_14",
+-        feature = "mdb_idl_logn_15",
+-        feature = "mdb_idl_logn_16"
+-    ))
+-))]
+-const MDB_IDL_LOGN: u8 = 13;
+-#[cfg(all(
+-    feature = "mdb_idl_logn_14",
+-    not(any(feature = "mdb_idl_logn_15", feature = "mdb_idl_logn_16"))
+-))]
+-const MDB_IDL_LOGN: u8 = 14;
+-#[cfg(all(feature = "mdb_idl_logn_15", not(any(feature = "mdb_idl_logn_16"))))]
+-const MDB_IDL_LOGN: u8 = 15;
+-#[cfg(any(
+-    feature = "mdb_idl_logn_16",
+-    not(any(
+-        feature = "mdb_idl_logn_8",
+-        feature = "mdb_idl_logn_9",
+-        feature = "mdb_idl_logn_10",
+-        feature = "mdb_idl_logn_11",
+-        feature = "mdb_idl_logn_12",
+-        feature = "mdb_idl_logn_13",
+-        feature = "mdb_idl_logn_14",
+-        feature = "mdb_idl_logn_15",
+-        feature = "mdb_idl_logn_16",
+-    ))
+-))]
+-const MDB_IDL_LOGN: u8 = 16;
+-
+-macro_rules! warn {
+-    ($message:expr) => {
+-        println!("cargo:warning={}", $message);
+-    };
+-}
+-
+ fn main() {
+     #[cfg(feature = "bindgen")]
+     generate::generate();
+ 
+-    let mut lmdb = PathBuf::from(&env::var("CARGO_MANIFEST_DIR").unwrap());
+-    lmdb.push("lmdb");
+-    lmdb.push("libraries");
+-    lmdb.push("liblmdb");
+-
+-    if cfg!(feature = "fuzzer") && cfg!(feature = "fuzzer-no-link") {
+-        warn!("Features `fuzzer` and `fuzzer-no-link` are mutually exclusive.");
+-        warn!("Building with `-fsanitize=fuzzer`.");
+-    }
+-
+-    let mut builder = cc::Build::new();
+-
+-    builder
+-        .define("MDB_IDL_LOGN", Some(MDB_IDL_LOGN.to_string().as_str()))
+-        .file(lmdb.join("mdb.c"))
+-        .file(lmdb.join("midl.c"))
+-        // https://github.com/mozilla/lmdb/blob/b7df2cac50fb41e8bd16aab4cc5fd167be9e032a/libraries/liblmdb/Makefile#L23
+-        .flag_if_supported("-Wno-unused-parameter")
+-        .flag_if_supported("-Wbad-function-cast")
+-        .flag_if_supported("-Wuninitialized");
+-
+-    if cfg!(feature = "posix-sem") {
+-        builder.define("MDB_USE_POSIX_SEM", None);
+-    }
+-
+-    if cfg!(feature = "asan") {
+-        builder.flag("-fsanitize=address");
+-    }
+-
+-    if cfg!(feature = "fuzzer") {
+-        builder.flag("-fsanitize=fuzzer");
+-    } else if cfg!(feature = "fuzzer-no-link") {
+-        builder.flag("-fsanitize=fuzzer-no-link");
+-    }
+-
+-    if cfg!(feature = "longer-keys") {
+-        builder.define("MDB_MAXKEYSIZE", "0");
+-    }
+-
+-    builder.compile("liblmdb.a")
++    pkg_config::probe_library("lmdb").unwrap();
+ }
