@@ -1,0 +1,31 @@
+Description: Disable lmdb-master-sys features
+ Upstream `lmdb-master-sys` relies on compiling a vendored version of
+ `liblmdb`, providing multiple features enabled using compiler flags and
+ defines. Our Debian package uses the pre-built packaged library, and
+ therefore cannot provide those features. As no consumer of `heed`
+ currently relies on those, we can disable those features entirely.
+Author: Arnaud Ferraris <aferraris@debian.org>
+Forwarded: not-needed
+Last-Update: 2024-10-01
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -116,17 +116,6 @@
+     "serde-bincode",
+     "serde-json",
+ ]
+-longer-keys = ["lmdb-master-sys/longer-keys"]
+-mdb_idl_logn_10 = ["lmdb-master-sys/mdb_idl_logn_10"]
+-mdb_idl_logn_11 = ["lmdb-master-sys/mdb_idl_logn_11"]
+-mdb_idl_logn_12 = ["lmdb-master-sys/mdb_idl_logn_12"]
+-mdb_idl_logn_13 = ["lmdb-master-sys/mdb_idl_logn_13"]
+-mdb_idl_logn_14 = ["lmdb-master-sys/mdb_idl_logn_14"]
+-mdb_idl_logn_15 = ["lmdb-master-sys/mdb_idl_logn_15"]
+-mdb_idl_logn_16 = ["lmdb-master-sys/mdb_idl_logn_16"]
+-mdb_idl_logn_8 = ["lmdb-master-sys/mdb_idl_logn_8"]
+-mdb_idl_logn_9 = ["lmdb-master-sys/mdb_idl_logn_9"]
+-posix-sem = ["lmdb-master-sys/posix-sem"]
+ preserve_order = ["heed-types/preserve_order"]
+ raw_value = ["heed-types/raw_value"]
+ read-txn-no-tls = []
