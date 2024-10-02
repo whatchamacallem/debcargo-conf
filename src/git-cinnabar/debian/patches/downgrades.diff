@@ -1,0 +1,61 @@
+Description: Downgrade bit-vec and itertools dependencies
+Author: Mike Hommey <glandium@debian.org>
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: git-cinnabar/Cargo.toml
+===================================================================
+--- git-cinnabar.orig/Cargo.toml
++++ git-cinnabar/Cargo.toml
+@@ -58,7 +58,7 @@ version = "2.0.1"
+ version = "0.3"
+ 
+ [dependencies.bit-vec]
+-version = "0.8"
++version = "0.6"
+ 
+ [dependencies.bitflags]
+ version = "2"
+@@ -130,7 +130,7 @@ version = "0.4"
+ version = "2"
+ 
+ [dependencies.itertools]
+-version = "0.13"
++version = "0.10"
+ 
+ [dependencies.libc]
+ version = "0.2"
+@@ -190,7 +190,7 @@ version = "3"
+ version = "1.0.46"
+ 
+ [build-dependencies.itertools]
+-version = "0.13"
++version = "0.10"
+ 
+ [build-dependencies.make-cmd]
+ version = "0.1"
+Index: git-cinnabar/src/hg_bundle.rs
+===================================================================
+--- git-cinnabar.orig/src/hg_bundle.rs
++++ git-cinnabar/src/hg_bundle.rs
+@@ -960,7 +960,7 @@ impl<R: Read> HgRepo for BundleConnectio
+                 .branch_heads()
+                 .enumerate()
+                 .sorted_by_key(|(n, (_, branch))| (*branch, *n))
+-                .chunk_by(|(_, (_, branch))| *branch)
++                .group_by(|(_, (_, branch))| *branch)
+             {
+                 branchmap.extend_from_slice(branch);
+                 writeln!(
+Index: git-cinnabar/src/main.rs
+===================================================================
+--- git-cinnabar.orig/src/main.rs
++++ git-cinnabar/src/main.rs
+@@ -1568,7 +1568,7 @@ fn do_reclone(store: &mut Store, rebase:
+                 }
+             });
+         for (category, update_refs) in
+-            &update_refs.into_iter().chunk_by(|(refname_or_head, _, _)| {
++            &update_refs.into_iter().group_by(|(refname_or_head, _, _)| {
+                 if let Either::Left(refname) = refname_or_head {
+                     if refname.as_bytes().starts_with(b"refs/tags/") {
+                         "Rebased tags"

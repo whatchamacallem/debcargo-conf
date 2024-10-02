@@ -1,0 +1,32 @@
+Description: Remove dependency on make-cmd
+Author: Mike Hommey <glandium@debian.org>
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: git-cinnabar/Cargo.toml
+===================================================================
+--- git-cinnabar.orig/Cargo.toml
++++ git-cinnabar/Cargo.toml
+@@ -192,9 +192,6 @@ version = "1.0.46"
+ [build-dependencies.itertools]
+ version = "0.10"
+ 
+-[build-dependencies.make-cmd]
+-version = "0.1"
+-
+ [build-dependencies.rustflags]
+ version = "0.1"
+ optional = true
+Index: git-cinnabar/build.rs
+===================================================================
+--- git-cinnabar.orig/build.rs
++++ git-cinnabar/build.rs
+@@ -40,7 +40,8 @@ use std::path::{Path, PathBuf};
+ use std::process::Command;
+ 
+ use itertools::Itertools;
+-use make_cmd::gnu_make;
++
++pub fn gnu_make() -> Command { Command::new("make") }
+ 
+ #[cfg(not(windows))]
+ fn normalize_path(s: &str) -> &str {
