@@ -1,0 +1,134 @@
+--- chic.orig/Cargo.toml
++++ chic/Cargo.toml
+@@ -25,3 +25,3 @@
+ [dependencies.annotate-snippets]
+-version = "0.10"
++version = "0.11"
+ 
+--- chic.orig/src/warning.rs
++++ chic/src/warning.rs
+@@ -1,3 +1,3 @@
+ use annotate_snippets::Renderer;
+-use annotate_snippets::{Annotation, AnnotationType, Slice, Snippet, SourceAnnotation};
++use annotate_snippets::{Level, Snippet, Message, Annotation};
+ 
+@@ -5,3 +5,3 @@
+ pub struct Warning<'a> {
+-    snippet: Snippet<'a>,
++    snippet: Message<'a>,
+ }
+@@ -12,15 +12,3 @@
+         Self {
+-            snippet: Snippet {
+-                title: Some(Annotation {
+-                    label: Some(label),
+-                    id: None,
+-                    annotation_type: AnnotationType::Warning,
+-                }),
+-                slices: vec![],
+-                footer: vec![],
+-                /* opt: FormatOptions {
+-                    color: true,
+-                    ..Default::default()
+-                },*/
+-            },
++            snippet: Level::Warning.title(label),
+         }
+@@ -37,13 +25,11 @@
+     ) -> Self {
+-        self.snippet.slices.push(Slice {
+-            source: source,
+-            line_start,
+-            origin: None,
+-            fold: false,
+-            annotations: vec![SourceAnnotation {
+-                label: label,
+-                annotation_type: AnnotationType::Warning,
+-                range: (start, end),
+-            }],
+-        });
++        self.snippet = self.snippet.snippet(Snippet
++            ::source(source)
++            .line_start(line_start)
++            .fold(false)
++            .annotations( vec![Level::Warning
++                .span(start.. end)
++                .label(label)
++            ])
++        );
+         self
+@@ -53,7 +39,5 @@
+     pub fn help(mut self, label: &'a str) -> Self {
+-        self.snippet.footer.push(Annotation {
+-            label: Some(label),
+-            id: None,
+-            annotation_type: AnnotationType::Help,
+-        });
++        self.snippet = self.snippet.footer(
++            Level::Help.title(label)
++        );
+         self
+
+--- chic.orig/src/error.rs
++++ chic/src/error.rs
+@@ -1,3 +1,3 @@
+ use annotate_snippets::Renderer;
+-use annotate_snippets::{Annotation, AnnotationType, Slice, Snippet, SourceAnnotation};
++use annotate_snippets::{Level, Snippet, Message, Annotation};
+ 
+@@ -5,3 +5,3 @@
+ pub struct Error<'a> {
+-    snippet: Snippet<'a>,
++    snippet: Message<'a>,
+ }
+@@ -12,15 +12,3 @@
+         Self {
+-            snippet: Snippet {
+-                title: Some(Annotation {
+-                    label: Some(label),
+-                    id: None,
+-                    annotation_type: AnnotationType::Error,
+-                }),
+-                slices: vec![],
+-                footer: vec![],
+-                /*opt: FormatOptions {
+-                    color: true,
+-                    ..Default::default()
+-                },*/
+-            },
++            snippet: Level::Error.title(label),
+         }
+@@ -37,13 +25,11 @@
+     ) -> Self {
+-        self.snippet.slices.push(Slice {
+-            source: source,
+-            line_start,
+-            origin: None,
+-            fold: false,
+-            annotations: vec![SourceAnnotation {
+-                label: label,
+-                annotation_type: AnnotationType::Error,
+-                range: (start, end),
+-            }],
+-        });
++        self.snippet = self.snippet.snippet(Snippet
++            ::source(source)
++            .line_start(line_start)
++            .fold(false)
++            .annotations( vec![Level::Error
++                .span(start.. end)
++                .label(label)
++            ])
++        );
+         self
+@@ -53,7 +39,5 @@
+     pub fn help(mut self, label: &'a str) -> Self {
+-        self.snippet.footer.push(Annotation {
+-            label: Some(label),
+-            id: None,
+-            annotation_type: AnnotationType::Help,
+-        });
++        self.snippet = self.snippet.footer(
++            Level::Help.title(label)
++        );
+         self
