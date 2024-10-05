@@ -1,0 +1,99 @@
+Author: Matthias Geiger <werdahias@debia.org>
+Forwarded: https://github.com/jabedude/ofiles/pull/10
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -34,12 +34,13 @@
+ version = "0.4.8"
+ 
+ [dependencies.nix]
+-version = "0.17.0"
++version = "0.27.0"
++features = ["fs","process"]
+ [dev-dependencies.env_logger]
+-version = "0.7.1"
++version = "0.10"
+ 
+ [dev-dependencies.rusty-fork]
+-version = "0.2.2"
++version = "0.3"
+ 
+ [dev-dependencies.tempfile]
+-version = "3.1.0"
++version = "3.10"
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -4,7 +4,7 @@
+ 
+ use error_chain;
+ use glob::glob;
+-use log::{trace, info};
++use log::{info, trace};
+ use nix::sys::stat::{lstat, SFlag};
+ 
+ /// Newtype pattern to avoid type errors.
+@@ -160,7 +160,9 @@
+             }
+         }
+     } else {
+-        return Err(crate::ErrorKind::InodeNotFound(format!("Unknown file {:?}", stat_info)).into());
++        return Err(
++            crate::ErrorKind::InodeNotFound(format!("Unknown file {:?}", stat_info)).into(),
++        );
+     }
+ 
+     Ok(pids)
+@@ -198,7 +200,7 @@
+     fn test_ofile_other_process_unix_socket() {
+         env_logger::init();
+         let path = "/tmp/.opath_socket";
+-
++        unsafe{
+         match fork() {
+             Ok(ForkResult::Parent { child, .. }) => {
+                 eprintln!("Child pid: {}", child);
+@@ -219,7 +221,7 @@
+                 thread::sleep(Duration::from_millis(5000));
+             },
+             Err(_) => panic!("Fork failed"),
+-        }
++        }}
+     }
+     }
+ 
+@@ -250,7 +252,7 @@
+     #[test]
+     fn test_file_other_process() {
+         let path = "/tmp/.opath_tmp";
+-
++        unsafe{
+         match fork() {
+             Ok(ForkResult::Parent { child, .. }) => {
+                 thread::sleep(Duration::from_millis(100));
+@@ -266,7 +268,7 @@
+                 thread::sleep(Duration::from_millis(500));
+             },
+             Err(_) => panic!("Fork failed"),
+-        }
++        }}
+     }
+     }
+ 
+@@ -274,7 +276,7 @@
+     #[test]
+     fn test_directory_other_process() {
+         let path = ".";
+-
++        unsafe{
+         match fork() {
+             Ok(ForkResult::Parent { child, .. }) => {
+                 thread::sleep(Duration::from_millis(100));
+@@ -289,7 +291,7 @@
+                 thread::sleep(Duration::from_millis(500));
+             },
+             Err(_) => panic!("Fork failed"),
+-        }
++        }}
+     }
+     }
+ }
