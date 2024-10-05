@@ -1,0 +1,21 @@
+--- rust-itertools-0.13.0.orig/tests/test_std.rs
++++ rust-itertools-0.13.0/tests/test_std.rs
+@@ -21,6 +21,7 @@ use rand::{
+ };
+ use rand::{seq::SliceRandom, thread_rng};
+ use std::{cmp::min, fmt::Debug, marker::PhantomData};
++use std::convert::TryInto;
+ 
+ #[test]
+ fn product3() {
+@@ -1050,7 +1051,9 @@ fn binomial(n: usize, k: usize) -> usize
+     if k > n {
+         0
+     } else {
+-        (n - k + 1..=n).product::<usize>() / (1..=k).product::<usize>()
++        let n = n as u64;
++        let k = k as u64;
++        ((n - k + 1..=n).product::<u64>() / (1..=k).product::<u64>()).try_into().unwrap()
+     }
+ }
+ 
