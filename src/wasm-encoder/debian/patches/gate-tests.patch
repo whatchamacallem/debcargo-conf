@@ -1,0 +1,82 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 0c1b419..6abbb19 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -41,7 +41,7 @@ version = "0.2.4"
+ 
+ [dependencies.wasmparser]
+ version = "0.217.0"
+-features = ["std"]
++features = ["std", "validate", "features"]
+ optional = true
+ default-features = false
+ 
+diff --git a/src/core/code.rs b/src/core/code.rs
+index 6b23235..6d40487 100644
+--- a/src/core/code.rs
++++ b/src/core/code.rs
+@@ -83,6 +83,8 @@ impl CodeSection {
+     /// into a new code section encoder:
+     ///
+     /// ```
++    /// #[cfg(feature = "wasmparser")]
++    /// {
+     /// # use wasmparser::{BinaryReader, CodeSectionReader};
+     /// //                  id, size, # entries, entry
+     /// let code_section = [10, 6,    1,         4, 0, 65, 0, 11];
+@@ -97,6 +99,7 @@ impl CodeSection {
+     /// // than re-parsing and re-encoding it.
+     /// let mut encoder = wasm_encoder::CodeSection::new();
+     /// encoder.raw(&code_section[body_range.start..body_range.end]);
++    /// }
+     /// ```
+     pub fn raw(&mut self, data: &[u8]) -> &mut Self {
+         data.encode(&mut self.bytes);
+diff --git a/src/core/dump.rs b/src/core/dump.rs
+index f9c01d9..b76343e 100644
+--- a/src/core/dump.rs
++++ b/src/core/dump.rs
+@@ -333,6 +333,7 @@ impl Encode for CoreDumpValue {
+ }
+ 
+ #[cfg(test)]
++#[cfg(feature = "wasmparser")]
+ mod tests {
+     use super::*;
+     use crate::Module;
+diff --git a/src/core/producers.rs b/src/core/producers.rs
+index 00b3853..63c6e2d 100644
+--- a/src/core/producers.rs
++++ b/src/core/producers.rs
+@@ -118,6 +118,7 @@ impl Encode for ProducersField {
+ 
+ #[cfg(test)]
+ mod test {
++    #[cfg(feature = "wasmparser")]
+     #[test]
+     fn roundtrip_example() {
+         use crate::{Module, ProducersField, ProducersSection};
+diff --git a/src/core/types.rs b/src/core/types.rs
+index 8b05ac4..d44de95 100644
+--- a/src/core/types.rs
++++ b/src/core/types.rs
+@@ -652,6 +652,7 @@ impl Section for TypeSection {
+ }
+ 
+ #[cfg(test)]
++#[cfg(feature = "wasmparser")]
+ mod tests {
+     use super::*;
+     use crate::Module;
+diff --git a/src/lib.rs b/src/lib.rs
+index 756bf51..3979c60 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -65,6 +65,7 @@
+ //! let wasm_bytes = module.finish();
+ //!
+ //! // We generated a valid Wasm module!
++//! #[cfg(feature = "wasmparser")]
+ //! assert!(wasmparser::validate(&wasm_bytes).is_ok());
+ //! ```
+ 

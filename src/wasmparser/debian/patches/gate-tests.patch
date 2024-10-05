@@ -1,0 +1,91 @@
+diff --git a/src/parser.rs b/src/parser.rs
+index 4c0c4a8..87a8b83 100644
+--- a/src/parser.rs
++++ b/src/parser.rs
+@@ -451,6 +451,8 @@ impl Parser {
+     /// incrementally parsing it.
+     ///
+     /// ```
++    /// #[cfg(feature = "std")]
++    /// {
+     /// use std::io::Read;
+     /// use anyhow::Result;
+     /// use wasmparser::{Parser, Chunk, Payload::*};
+@@ -551,6 +553,7 @@ impl Parser {
+     /// }
+     ///
+     /// # parse(&b"\0asm\x01\0\0\0"[..]).unwrap();
++    /// }
+     /// ```
+     pub fn parse<'a>(&mut self, data: &'a [u8], eof: bool) -> Result<Chunk<'a>> {
+         let (data, eof) = if usize_to_u64(data.len()) > self.max_size {
+@@ -863,6 +866,8 @@ impl Parser {
+     /// a buffer and then parsing it.
+     ///
+     /// ```
++    /// #[cfg(feature = "std")]
++    /// {
+     /// use std::io::Read;
+     /// use anyhow::Result;
+     /// use wasmparser::{Parser, Chunk, Payload::*};
+@@ -928,6 +933,7 @@ impl Parser {
+     /// }
+     ///
+     /// # parse(&b"\0asm\x01\0\0\0"[..]).unwrap();
++    /// }
+     /// ```
+     pub fn parse_all(self, mut data: &[u8]) -> impl Iterator<Item = Result<Payload>> {
+         let mut stack = Vec::new();
+diff --git a/src/validator.rs b/src/validator.rs
+index b6b8be3..80eabfc 100644
+--- a/src/validator.rs
++++ b/src/validator.rs
+@@ -372,6 +372,8 @@ impl Validator {
+     /// defined multiple times across different modules and components.
+     ///
+     /// ```
++    /// #[cfg(feature = "std")]
++    /// {
+     /// fn foo() -> anyhow::Result<()> {
+     /// use wasmparser::Validator;
+     ///
+@@ -413,6 +415,7 @@ impl Validator {
+     /// # Ok(())
+     /// # }
+     /// # foo().unwrap()
++    /// }
+     /// ```
+     pub fn reset(&mut self) {
+         let Validator {
+@@ -1491,6 +1494,7 @@ impl Validator {
+ }
+ 
+ #[cfg(test)]
++#[cfg(feature = "std")]
+ mod tests {
+     use crate::{GlobalType, MemoryType, RefType, TableType, ValType, Validator, WasmFeatures};
+     use anyhow::Result;
+diff --git a/src/validator/names.rs b/src/validator/names.rs
+index 8925f33..0d779ed 100644
+--- a/src/validator/names.rs
++++ b/src/validator/names.rs
+@@ -925,6 +925,7 @@ fn is_base64(s: &str) -> bool {
+ }
+ 
+ #[cfg(test)]
++#[cfg(feature = "std")]
+ mod tests {
+     use super::*;
+     use std::collections::HashSet;
+diff --git a/tests/big-module.rs b/tests/big-module.rs
+index 06cf02d..5d6023f 100644
+--- a/tests/big-module.rs
++++ b/tests/big-module.rs
+@@ -1,6 +1,7 @@
+ use wasm_encoder::*;
+ 
+ #[test]
++#[cfg(feature = "validate")]
+ fn big_type_indices() {
+     const N: u32 = 100_000;
+     let mut module = Module::new();
