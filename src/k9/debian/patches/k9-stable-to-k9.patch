@@ -4,21 +4,17 @@ Forwarded: not-needed
 Last-Update: 2024-06-19
 --- a/src/paths.rs
 +++ b/src/paths.rs
-@@ -134,27 +134,27 @@
-     }
-     #[test]
+@@ -136,3 +136,3 @@
      fn remove_path_overlap_test() -> Result<()> {
 -        k9_stable::snapshot!(
 +        k9::snapshot!(
              remove_overlap_helper("hello/world", "world/hello")?,
-             r##"hello"##
-         );
+@@ -141,3 +141,3 @@
  
 -        k9_stable::snapshot!(
 +        k9::snapshot!(
              remove_overlap_helper("a/b/c/d/e/f/g", "c/d/e/f/g/h/i")?,
-             r##"a/b"##
-         );
+@@ -146,8 +146,8 @@
  
 -        k9_stable::snapshot!(remove_overlap_helper("a/b/c", "a/b/c")?, r##""##);
 +        k9::snapshot!(remove_overlap_helper("a/b/c", "a/b/c")?, r##""##);
@@ -30,28 +26,19 @@ Last-Update: 2024-06-19
 -        k9_stable::snapshot!(
 +        k9::snapshot!(
              remove_overlap_helper("/home/workspace/my_crate", "my_crate/my_file")?,
-             r##"/home/workspace"##
-         );
+@@ -156,3 +156,3 @@
  
 -        k9_stable::snapshot!(
 +        k9::snapshot!(
              remove_overlap_helper("/Users/me/p/gull/gull", "gull/e2e/flow_codegen_test.rs")?,
-             r##"/Users/me/p/gull"##
-         );
 --- a/src/snapshot/ast.rs
 +++ b/src/snapshot/ast.rs
-@@ -16,7 +16,7 @@
-     fn visit_macro(&mut self, m: &'ast Macro) {
-         let last_path_segment = m.path.segments.last();
+@@ -18,3 +18,3 @@
          if let Some(PathSegment { ident, .. }) = last_path_segment {
 -            if ident == &self.macro_name && ident.span().start().line == self.line {
 +	    if ident == &self.macro_name && ident.span().start().line == self.line {
                  self.found.replace((m.tokens.to_owned(), m.to_owned()));
-             }
-         }
-@@ -147,9 +147,9 @@
-     #[test]
-     fn no_literal() -> Result<()> {
+@@ -149,5 +149,5 @@
          let range = find_snapshot_literal_range(SOURCE, "random_macro", 4, false)?;
 -        k9_stable::assert_equal!(&range.start, &range.end);
 +        k9::assert_equal!(&range.start, &range.end);
@@ -59,60 +46,36 @@ Last-Update: 2024-06-19
 -        k9_stable::snapshot!(
 +        k9::snapshot!(
              format!("{:?}", range),
-             r##"Range { start: LineColumn { line: 4, column: 24 }, end: LineColumn { line: 4, column: 24 } }"##
-         );
-@@ -160,7 +160,7 @@
-     fn literal() -> Result<()> {
-         let range = find_snapshot_literal_range(SOURCE, "hello_macro", 5, true)?;
+@@ -162,3 +162,3 @@
  
 -        k9_stable::snapshot!(
 +        k9::snapshot!(
              format!("{:?}", range),
-             r##"Range { start: LineColumn { line: 5, column: 25 }, end: LineColumn { line: 5, column: 34 } }"##
-         );
-@@ -171,7 +171,7 @@
-     fn not_a_literal_error() {
-         let err = find_snapshot_literal_range(SOURCE, "wrong_macro", 6, true).unwrap_err();
+@@ -173,3 +173,3 @@
  
 -        k9_stable::snapshot!(
 +        k9::snapshot!(
              format!("{:?}", err),
-             r#"
- 
 --- a/src/snapshot/source_code.rs
 +++ b/src/snapshot/source_code.rs
-@@ -133,7 +133,7 @@
- 
-     #[test]
+@@ -135,3 +135,3 @@
      fn extracting_range() {
 -        k9_stable::assert_equal!(
 +        k9::assert_equal!(
              extract_range(
-                 CONTENT,
-                 &Range {
-@@ -148,7 +148,7 @@
- 
-     #[test]
+@@ -150,3 +150,3 @@
      fn empty_range() {
 -        k9_stable::assert_equal!(
 +        k9::assert_equal!(
              extract_range(
-                 CONTENT,
-                 &Range {
-@@ -163,7 +163,7 @@
- 
-     #[test]
+@@ -165,3 +165,3 @@
      fn overflow() {
 -        k9_stable::assert_equal!(
 +        k9::assert_equal!(
              extract_range(
-                 CONTENT,
-                 &Range {
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -58,9 +58,8 @@
- [dev-dependencies.derive_builder]
- version = "0.12.0"
+@@ -60,5 +60,4 @@
  
 -[dev-dependencies.k9_stable]
 -version = "0.11.7"
@@ -120,5 +83,3 @@ Last-Update: 2024-06-19
 +[dev-dependencies.k9]
 +version = "0.12"
  
- [dev-dependencies.rand]
- version = "0.8"
