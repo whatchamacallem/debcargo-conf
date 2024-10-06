@@ -11,3 +11,28 @@ Index: num-prime/Cargo.toml
  
  [dependencies.num-traits]
  version = "0.2.14"
+Index: num-prime/src/mint.rs
+===================================================================
+--- num-prime.orig/src/mint.rs
++++ num-prime/src/mint.rs
+@@ -669,17 +669,17 @@ impl<T: Integer + Clone, R: Reducer<T> +
+     #[inline]
+     fn powm(self, exp: &Self, m: &Self) -> Self::Output {
+         Self(Right(match (self.0, &exp.0, &m.0) {
+-            (Left(v), Left(e), Left(m)) => ReducedInt::new(v, m).pow(e.clone()),
++            (Left(v), Left(e), Left(m)) => ReducedInt::new(v, m).pow(&e.clone()),
+             (Right(v), Left(e), Left(m)) => {
+                 debug_assert!(&v.modulus() == m);
+-                v.pow(e.clone())
++                v.pow(&e.clone())
+             }
+             (_, _, _) => unreachable!(),
+         }))
+     }
+ }
+ 
+-pub type SmallMint<T> = Mint<T, Montgomery<T, T>>;
++pub type SmallMint<T> = Mint<T, Montgomery<T>>;
+ 
+ #[cfg(test)]
+ mod tests {
