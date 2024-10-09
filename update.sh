@@ -79,84 +79,17 @@ if ! git diff --quiet -- "$PKGDIR_REL"; then
 fi
 
 cat >&2 <<eof
-Automatic update of $CRATE finished; now it's your turn to manually review it.
-
-Deal with any FIXMEs mentioned above, by editing any corresponding source files
-in $PKGDIR_REL. If a hint file is listed, indicated by (•), you should edit the
-*NON*-hint file, without the suffix .debcargo.hint, and git-add the hint file
-exactly as output by debcargo. So for example:
-
-to deal with a FIXME in:
-	    build/$PKGNAME/debian/copyright.debcargo.hint
-you should edit (and git-add when ready):
-	    src/$PKGNAME/debian/copyright
-and directly git-add without editing:
-	    src/$PKGNAME/debian/copyright.debcargo.hint
-
-When done, git-add all your changes plus any unmodified hint files, and re-run
-this command (\`./update.sh $*\`).  Do NOT run git commit at this stage.
-
-For issues with debian/control, edit src/$PKGNAME/debian/debcargo.toml instead.
-You can find docs for that in debcargo.toml.example in the debcargo git repo.
-
-Check that your fixes actually get rid of the FIXMEs. Of course, you can ignore
-FIXMEs listed in hint files, assuming you actually fixed the issues in the
-corresponding non-hint files. (We have no way to auto-detect this so you have
-to be honest!) You should also ignore the FIXME in the Distribution field in
-the top entry of debian/changelog, that will be dealt with in the next step.
-
-If there was a \`git diff\` above, check it to see if debcargo made changes to
-any auto-generated hint files. If so, you should make the equivalent changes to
-the non-hint files, and git-add these too.
-
-You can test-build your package by running:
-
-  cd build && ./build.sh $CRATE $VER
-
-You should not run git commit before doing this; it uses files git-added.
-This assumes that you have set up sbuild; see "Build environment" in README.rst
-for details. Try to fix any lintian errors, but note that some errors are due
-to lintian being out-of-date and/or are expected at this stage of the process
-(e.g. bad-distribution-in-changes-file). Ask on IRC when in doubt.
-
-If your update includes raising the semver level i.e. from 0.x.* to 0.y.* or
-from x.*.* to y.*.*., then you should also check the reverse-deps of your
-package, by running:
-
-  dev/list-rdeps.sh $CRATE
-
-If any of the reverse-dependencies depend on an older version of your crate,
-please try to update those too, to depend on the newer version that you just
-packaged. If this is impossible or too hard, you should retain the old version
-of your crate by running \`./update.sh $CRATE <OLD SEMVER>\`, where <OLD
-SEMVER> looks like 0.n or n - but you must have a good reason for this, which
-you should document in src/$PKGNAME-<OLD SEMVER>/debian/debcargo.toml.
-
-When satisfied with all of these outputs:
-
-- of debcargo after running ./update.sh
-- of lintian after running ./build.sh
-- of dev/list-rdeps.sh $CRATE
-
-then you can commit. For example:
-git commit -m "$CRATE: new upstream release" src/$PKGNAME/
-and push all your changes.
-
-Then, ask a Debian Developer to run \`./release.sh $*\`. This finalises your
-changes in the changelog, and allows them to build and upload the package. If
-you're not a Debian Developer and are unable to upload, please don't run that
-script or else you will need to revert the changes that it makes to your git.
-Instead, add an empty RFS file inside the created debian directory. If there
-are other issues that need to be addressed such as missing dependencies, they
-can be addressed by adding a comment into the RFS file; see CONTRIBUTING.rst's
-"Ready for upload" section for more details.
+Automatic update of crate '$CRATE' finished, now manually review it.
+Edit corresponding source files (in src/) to deal with FIXMEs mentioned above.
+If a hint file (with .debcargo.hint suffix) is listed, edit the non-hint file
+and git add both.
+When done, re-run this command (./update.sh) for changes to take effect.
+Review any diff and adapt hint file changes in their non-hint versions
+accordingly.
+On a major version bump, also check its reverse dependencies, and update them,
+making sure nothing breaks.
 eof
-if [ -n "$VER" ]; then
-cat >&2 <<eof
-
-You are packaging an older version of a crate. Please document why it's needed,
-by adding comments to src/$PKGNAME/debian/debcargo.toml. For example because it
-is a dependency of other crate(s), and it is not possible to update them to use
-the latest version of $CRATE. Please also mention the names of these crate(s).
-eof
+if [ -n $VER ]; then
+	echo >&2 'This is a versioned package.'
+	echo >&2 'You should have a good reason for this and document it in its debcargo.toml.'
 fi
