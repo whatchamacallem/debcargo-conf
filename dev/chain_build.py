@@ -283,7 +283,7 @@ def chain_build(specs: List[str]) -> None:
 
 
 def main() -> None:
-    if len(argv) <= 2:
+    if len(argv) <= 1:
         print(HELP)
         exit()
 
