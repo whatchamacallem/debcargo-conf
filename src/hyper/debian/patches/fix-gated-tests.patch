@@ -1,0 +1,99 @@
+--- a/src/body/incoming.rs
++++ b/src/body/incoming.rs
+@@ -107,2 +107,3 @@
+     #[cfg(test)]
++    #[cfg(all(feature = "http1", any(feature = "client", feature = "server")))]
+     pub(crate) fn channel() -> (Sender, Incoming) {
+@@ -462,3 +463,3 @@
+ 
+-    use super::{Body, DecodedLength, Incoming, Sender, SizeHint};
++    use super::*;
+     use http_body_util::BodyExt;
+@@ -481,3 +482,4 @@
+ 
+-        assert_eq!(
++        #[cfg(all(feature = "http1", any(feature = "client", feature = "server")))]
++        { assert_eq!(
+             mem::size_of::<Sender>(),
+@@ -485,5 +487,6 @@
+             "Sender"
+-        );
++        ); }
+ 
+-        assert_eq!(
++        #[cfg(all(feature = "http1", any(feature = "client", feature = "server")))]
++        { assert_eq!(
+             mem::size_of::<Sender>(),
+@@ -491,3 +494,3 @@
+             "Option<Sender>"
+-        );
++        ); }
+     }
+@@ -504,5 +507,7 @@
+ 
++        #[cfg(all(feature = "http1", any(feature = "client", feature = "server")))]
+         eq(Incoming::channel().1, SizeHint::new(), "channel");
+ 
+-        eq(
++        #[cfg(all(any(feature = "http1", feature = "http2"), any(feature = "client", feature = "server")))]
++        { eq(
+             Incoming::new_channel(DecodedLength::new(4), /*wanter =*/ false).1,
+@@ -510,3 +515,3 @@
+             "channel with length",
+-        );
++        ); }
+     }
+@@ -515,2 +520,3 @@
+     #[tokio::test]
++    #[cfg(all(feature = "http1", any(feature = "client", feature = "server")))]
+     async fn channel_abort() {
+@@ -526,2 +532,3 @@
+     #[tokio::test]
++    #[cfg(all(feature = "http1", any(feature = "client", feature = "server")))]
+     async fn channel_abort_when_buffer_is_full() {
+@@ -546,4 +553,4 @@
+ 
+-    #[cfg(feature = "http1")]
+     #[test]
++    #[cfg(all(feature = "http1", any(feature = "client", feature = "server")))]
+     fn channel_buffers_one() {
+@@ -560,2 +567,3 @@
+     #[tokio::test]
++    #[cfg(all(feature = "http1", any(feature = "client", feature = "server")))]
+     async fn channel_empty() {
+@@ -567,2 +575,3 @@
+     #[test]
++    #[cfg(all(feature = "http1", any(feature = "client", feature = "server")))]
+     fn channel_ready() {
+@@ -576,2 +585,3 @@
+     #[test]
++    #[cfg(all(feature = "http1", any(feature = "client", feature = "server")))]
+     fn channel_wanter() {
+@@ -598,2 +608,3 @@
+     #[test]
++    #[cfg(all(feature = "http1", any(feature = "client", feature = "server")))]
+     fn channel_notices_closure() {
+--- a/src/rt/timer.rs
++++ b/src/rt/timer.rs
+@@ -3,3 +3,3 @@
+ //! Example using tokio timer:
+-//! ```rust
++//! ```rust,ignore
+ //! use std::{
+--- a/src/error.rs
++++ b/src/error.rs
+@@ -631,3 +631,3 @@
+ 
+-    #[cfg(feature = "http2")]
++    #[cfg(all(feature = "http2", feature = "client"))]
+     #[test]
+@@ -638,3 +638,3 @@
+ 
+-    #[cfg(feature = "http2")]
++    #[cfg(all(feature = "http2", feature = "client"))]
+     #[test]
+@@ -645,3 +645,3 @@
+ 
+-    #[cfg(feature = "http2")]
++    #[cfg(all(feature = "http2", feature = "client"))]
+     #[test]
