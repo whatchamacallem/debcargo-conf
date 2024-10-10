@@ -1,0 +1,89 @@
+--- a/tests/legacy_client.rs
++++ b/tests/legacy_client.rs
+@@ -1 +1,7 @@
++#![cfg(all(
++	// eponymous of this test module
++	feature = "client-legacy",
++	// $crate::client::legacy::Client
++	any(feature = "http1", feature = "http2"),
++))]
+ mod test_utils;
+@@ -22,4 +28,4 @@
+ use hyper::Request;
+-use hyper_util::client::legacy::connect::{capture_connection, HttpConnector};
+-use hyper_util::client::legacy::Client;
++use hyper_util::client::legacy::{connect::{capture_connection, HttpConnector}, Client };
++#[cfg(feature = "tokio")]
+ use hyper_util::rt::{TokioExecutor, TokioIo};
+@@ -41,2 +47,3 @@
+ #[test]
++#[cfg(feature = "tokio")]
+ fn drop_body_before_eof_closes_connection() {
+@@ -89,2 +96,3 @@
+ #[tokio::test]
++#[cfg(feature = "tokio")]
+ async fn drop_client_closes_idle_connections() {
+@@ -811,2 +819,3 @@
+ #[test]
++#[cfg(feature = "tokio")]
+ fn alpn_h2() {
+--- a/tests/test_utils/mod.rs
++++ b/tests/test_utils/mod.rs
+@@ -4,2 +4,3 @@
+ 
++#[cfg(feature = "client")]
+ use futures_channel::mpsc;
+@@ -10,2 +11,3 @@
+ use tokio::io::{self, AsyncRead, AsyncWrite, ReadBuf};
++#[cfg(feature = "tokio")]
+ use tokio::net::TcpStream;
+@@ -14,6 +16,10 @@
+ 
+-use hyper_util::client::legacy::connect::HttpConnector;
+-use hyper_util::client::legacy::connect::{Connected, Connection};
++#[cfg(feature = "client-legacy")]
++use hyper_util::client::legacy::connect::{HttpConnector, Connected, Connection};
++#[cfg(feature = "tokio")]
+ use hyper_util::rt::TokioIo;
+ 
++#[cfg(feature = "client-legacy")]
++mod debug_connector {
++use super::*;
+ #[derive(Clone)]
+@@ -73,8 +79,14 @@
+ }
++}
++#[cfg(feature = "client-legacy")]
++pub use debug_connector::*;
+ 
++#[cfg(all(feature = "client", feature = "tokio"))]
++mod debug_stream {
++use super::*;
+ pub struct DebugStream {
+-    tcp: TokioIo<TcpStream>,
+-    on_drop: mpsc::Sender<()>,
+-    is_alpn_h2: bool,
+-    is_proxy: bool,
++    pub(super) tcp: TokioIo<TcpStream>,
++    pub(super) on_drop: mpsc::Sender<()>,
++    pub(super) is_alpn_h2: bool,
++    pub(super) is_proxy: bool,
+ }
+@@ -175 +187,5 @@
+ }
++}
++#[cfg(all(feature = "client", feature = "tokio"))]
++pub use debug_stream::*;
++
+--- a/src/server/conn/auto/mod.rs
++++ b/src/server/conn/auto/mod.rs
+@@ -76,3 +76,3 @@
+     ///
+-    /// ```
++    /// ```ignore
+     /// use hyper_util::{
+@@ -987,3 +987,3 @@
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature = "tokio"))]
+ mod tests {
