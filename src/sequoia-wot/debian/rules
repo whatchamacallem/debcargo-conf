@@ -1,9 +1,11 @@
 #!/usr/bin/make -f
 
-export ASSET_OUT_DIR=debian/tmp
-
 include /usr/share/dpkg/pkg-info.mk
 
 %:
-	dh $@ --buildsystem cargo
+	dh $@ --buildsystem cargo --with bash-completion
 
+override_dh_install:
+	for file in sq-wot.fish _sq-wot sq-wot.bash ; do find target/*linux*/release -name $$file -exec mv {} debian/tmp/ \; ; done
+	find target/*linux*/release -name '*.1' -exec mv {} debian/tmp/ \;
+	dh_install
