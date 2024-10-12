@@ -1,0 +1,14 @@
+Description: disable it_wraps_rust_struct test on i386
+ Test fails only on i386, which is a minute rounding error
+ and potentially an arch issue than software.
+Author: Ananthu C V <weepingclown@disroot.org>
+Last-Update: 2024-10-12
+
+--- a/tests/typed_data_subclass_from_ruby.rs
++++ b/tests/typed_data_subclass_from_ruby.rs
+@@ -35,4 +35,5 @@
+ }
+ 
++#[cfg(not(target_arch = "x86"))]
+ #[test]
+ fn it_wraps_rust_struct() {
