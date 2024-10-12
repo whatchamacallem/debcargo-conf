@@ -1,0 +1,21 @@
+Description: Fix tests on ppc64
+ The `resize_database` test assumes the system's page size is 4k.
+ However, Debian ppc64el systems have a page size of 64k, breaking this
+ assumption, leading to this test failing on this architecture. As
+ there doesn't seem to be a (easy) way to make it more generic, let's
+ just disable it for this architecture.
+Forwarded: not-needed
+Author: Arnaud Ferraris <aferraris@debian.org>
+Last-Update: 2024-10-12
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/env.rs
++++ b/src/env.rs
+@@ -1134,6 +1134,7 @@
+     }
+ 
+     #[test]
++    #[cfg(not(target_arch = "powerpc64"))]
+     fn resize_database() {
+         let dir = tempfile::tempdir().unwrap();
+         let page_size = page_size::get();
