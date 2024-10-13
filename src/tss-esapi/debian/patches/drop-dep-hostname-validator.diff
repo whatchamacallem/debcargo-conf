@@ -1,23 +1,15 @@
-Index: tss-esapi/Cargo.toml
-===================================================================
---- tss-esapi.orig/Cargo.toml
-+++ tss-esapi/Cargo.toml
-@@ -37,9 +37,6 @@ version = "0.13.2"
- [dependencies.enumflags2]
- version = "0.7.1"
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -43,4 +43,4 @@
  
 -[dependencies.hostname-validator]
 -version = "1.1.0"
--
- [dependencies.log]
- version = "0.4.11"
++#[dependencies.hostname-validator]
++#version = "1.1.0"
  
-Index: tss-esapi/src/tcti_ldr.rs
-===================================================================
---- tss-esapi.orig/src/tcti_ldr.rs
-+++ tss-esapi/src/tcti_ldr.rs
-@@ -167,4 +167,21 @@ impl TctiNameConf {
- }
+--- a/src/tcti_ldr.rs
++++ b/src/tcti_ldr.rs
+@@ -168,2 +168,19 @@
  
 +fn hostname_is_valid(hostname: &str) -> bool {
 +    fn is_valid_char(byte: u8) -> bool {
@@ -37,31 +29,18 @@ Index: tss-esapi/src/tcti_ldr.rs
 +}
 +
  impl TryFrom<TctiNameConf> for CString {
-     type Error = Error;
-@@ -181,7 +198,7 @@ impl TryFrom<TctiNameConf> for CString {
-         let tcti_conf = match tcti {
-             TctiNameConf::Mssim(config) => {
+@@ -182,3 +199,3 @@
                  if let ServerAddress::Hostname(name) = &config.host {
 -                    if !hostname_validator::is_valid(name) {
 +                    if !hostname_is_valid(name) {
                          return Err(Error::WrapperError(WrapperErrorKind::InvalidParam));
-                     }
-                 }
-@@ -189,7 +206,7 @@ impl TryFrom<TctiNameConf> for CString {
-             }
-             TctiNameConf::Swtpm(config) => {
+@@ -190,3 +207,3 @@
                  if let ServerAddress::Hostname(name) = &config.host {
 -                    if !hostname_validator::is_valid(name) {
 +                    if !hostname_is_valid(name) {
                          return Err(Error::WrapperError(WrapperErrorKind::InvalidParam));
-                     }
-                 }
-@@ -476,7 +493,7 @@ impl FromStr for ServerAddress {
-             return Ok(ServerAddress::Ip(addr));
-         }
+@@ -477,3 +494,3 @@
  
 -        if !hostname_validator::is_valid(config_str) {
 +        if !hostname_is_valid(config_str) {
              return Err(Error::WrapperError(WrapperErrorKind::InvalidParam));
-         }
- 
