@@ -1,35 +1,55 @@
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -57,10 +57,10 @@
+Index: cargo-util-schemas/Cargo.toml
+===================================================================
+--- cargo-util-schemas.orig/Cargo.toml
++++ cargo-util-schemas/Cargo.toml
+@@ -55,15 +55,15 @@ version = "0.2.4"
+ [dependencies.url]
+ version = "2.5.0"
  
 -[dev-dependencies.snapbox]
--version = "0.6.7"
+-version = "0.6.9"
 -features = [
 -    "diff",
 -    "dir",
 -    "term-svg",
 -    "regex",
+-    "json",
 -]
 +#[dev-dependencies.snapbox]
-+#version = "0.6.7"
++#version = "0.6.9"
 +#features = [
 +#    "diff",
 +#    "dir",
 +#    "term-svg",
 +#    "regex",
++#    "json",
 +#]
  
---- a/src/core/partial_version.rs
-+++ b/src/core/partial_version.rs
-@@ -185,3 +185,3 @@
+ [lints.clippy]
+ dbg_macro = "warn"
+Index: cargo-util-schemas/src/core/partial_version.rs
+===================================================================
+--- cargo-util-schemas.orig/src/core/partial_version.rs
++++ cargo-util-schemas/src/core/partial_version.rs
+@@ -183,7 +183,7 @@ enum ErrorKind {
+     Unexpected,
+ }
  
 -#[cfg(test)]
 +#[cfg(all(test, feature = "enough-snapbox"))]
  mod test {
---- a/src/manifest/rust_version.rs
-+++ b/src/manifest/rust_version.rs
-@@ -105,3 +105,3 @@
+     use super::*;
+     use snapbox::prelude::*;
+Index: cargo-util-schemas/src/manifest/rust_version.rs
+===================================================================
+--- cargo-util-schemas.orig/src/manifest/rust_version.rs
++++ cargo-util-schemas/src/manifest/rust_version.rs
+@@ -103,7 +103,7 @@ enum RustVersionErrorKind {
+     PartialVersion(#[from] PartialVersionError),
+ }
  
 -#[cfg(test)]
 +#[cfg(all(test, feature = "enough-snapbox"))]
  mod test {
+     use super::*;
+     use snapbox::prelude::*;
