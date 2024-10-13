@@ -1,0 +1,94 @@
+Description: Remove dependency on tee
+Author: Mike Hommey <glandium@debian.org>
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: git-cinnabar/Cargo.toml
+===================================================================
+--- git-cinnabar.orig/Cargo.toml
++++ git-cinnabar/Cargo.toml
+@@ -167,9 +167,6 @@ version = "0.10"
+ version = "1.0"
+ optional = true
+ 
+-[dependencies.tee]
+-version = "0.1"
+-
+ [dependencies.tempfile]
+ version = "3"
+ 
+Index: git-cinnabar/src/hg_bundle.rs
+===================================================================
+--- git-cinnabar.orig/src/hg_bundle.rs
++++ git-cinnabar/src/hg_bundle.rs
+@@ -23,7 +23,7 @@ use flate2::read::ZlibDecoder;
+ use flate2::write::ZlibEncoder;
+ use indexmap::IndexMap;
+ use itertools::Itertools;
+-use tee::TeeReader;
++use crate::TeeReader;
+ use zstd::stream::read::Decoder as ZstdDecoder;
+ use zstd::stream::write::Encoder as ZstdEncoder;
+ 
+Index: git-cinnabar/src/main.rs
+===================================================================
+--- git-cinnabar.orig/src/main.rs
++++ git-cinnabar/src/main.rs
+@@ -73,7 +73,7 @@ use std::collections::{BTreeMap, BTreeSe
+ use std::ffi::{CStr, CString, OsStr, OsString};
+ use std::fs::File;
+ use std::hash::Hash;
+-use std::io::{stderr, stdin, stdout, BufRead, BufReader, BufWriter, IsTerminal, Write};
++use std::io::{self, stderr, stdin, stdout, BufRead, BufReader, BufWriter, IsTerminal, Read, Write};
+ use std::iter::repeat;
+ use std::os::raw::{c_char, c_int};
+ #[cfg(windows)]
+@@ -129,7 +129,6 @@ use store::{
+     RawHgChangeset, RawHgFile, RawHgManifest, SetWhat, Store, BROKEN_REF, CHECKED_REF,
+     METADATA_REF, NOTES_REF, REFS_PREFIX, REPLACE_REFS_PREFIX,
+ };
+-use tee::TeeReader;
+ use tree_util::{diff_by_path, merge_join_by_path, NoRecurse, RecurseTree};
+ use url::Url;
+ use util::{CStrExt, IteratorExt, OsStrExt, SliceExt, Transpose};
+@@ -168,6 +167,28 @@ use version_check::{find_version, Versio
+ 
+ pub const CARGO_PKG_REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
+ 
++pub struct TeeReader<R: Read, W: Write> {
++    reader: R,
++    writer: W,
++}
++
++impl<R: Read, W: Write> TeeReader<R, W> {
++    pub fn new(reader: R, writer: W) -> TeeReader<R, W> {
++        TeeReader {
++            reader: reader,
++            writer: writer,
++        }
++    }
++}
++
++impl<R: Read, W: Write> Read for TeeReader<R, W> {
++    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
++        let n = self.reader.read(buf)?;
++        self.writer.write_all(&buf[..n])?;
++        Ok(n)
++    }
++}
++
+ #[allow(improper_ctypes)]
+ extern "C" {
+     fn do_cleanup(rollback: c_int);
+Index: git-cinnabar/src/store.rs
+===================================================================
+--- git-cinnabar.orig/src/store.rs
++++ git-cinnabar/src/store.rs
+@@ -27,7 +27,7 @@ use indexmap::IndexMap;
+ use itertools::EitherOrBoth::{Both, Left, Right};
+ use itertools::Itertools;
+ use percent_encoding::{percent_decode, percent_encode, NON_ALPHANUMERIC};
+-use tee::TeeReader;
++use crate::TeeReader;
+ use url::{Host, Url};
+ 
+ use crate::cinnabar::{
