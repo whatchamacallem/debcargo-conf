@@ -1,8 +1,8 @@
-Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
+Index: rust-portable-atomic-1.9.0/src/tests/helper.rs
 ===================================================================
---- rust-portable-atomic-1.4.3.orig/src/tests/helper.rs
-+++ rust-portable-atomic-1.4.3/src/tests/helper.rs
-@@ -2,6 +2,28 @@
+--- rust-portable-atomic-1.9.0.orig/src/tests/helper.rs
++++ rust-portable-atomic-1.9.0/src/tests/helper.rs
+@@ -4,6 +4,28 @@
  
  use core::sync::atomic::Ordering;
  
@@ -31,7 +31,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
  macro_rules! __test_atomic_common {
      ($atomic_type:ty, $value_type:ty) => {
          #[test]
-@@ -55,7 +77,7 @@ macro_rules! __test_atomic_int_load_stor
+@@ -61,7 +83,7 @@ macro_rules! __test_atomic_int_load_stor
          #[test]
          fn static_load_only() {
              static VAR: $atomic_type = <$atomic_type>::new(10);
@@ -40,7 +40,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  assert_eq!(VAR.load(order), 10);
              }
          }
-@@ -65,7 +87,7 @@ macro_rules! __test_atomic_int_load_stor
+@@ -71,7 +93,7 @@ macro_rules! __test_atomic_int_load_stor
              test_load_ordering(|order| VAR.load(order));
              test_store_ordering(|order| VAR.store(10, order));
              for (&load_order, &store_order) in
@@ -49,25 +49,25 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
              {
                  assert_eq!(VAR.load(load_order), 10);
                  VAR.store(5, store_order);
-@@ -131,7 +153,7 @@ macro_rules! __test_atomic_float_load_st
+@@ -137,7 +159,7 @@ macro_rules! __test_atomic_float_load_st
          #[test]
          fn static_load_only() {
-             static VAR: $atomic_type = <$atomic_type>::new(10.0);
+             static VAR: $atomic_type = <$atomic_type>::new(10.);
 -            for &order in &test_helper::LOAD_ORDERINGS {
 +            for &order in &LOAD_ORDERINGS {
-                 assert_eq!(VAR.load(order), 10.0);
+                 assert_eq!(VAR.load(order), 10.);
              }
          }
-@@ -141,7 +163,7 @@ macro_rules! __test_atomic_float_load_st
+@@ -147,7 +169,7 @@ macro_rules! __test_atomic_float_load_st
              test_load_ordering(|order| VAR.load(order));
-             test_store_ordering(|order| VAR.store(10.0, order));
+             test_store_ordering(|order| VAR.store(10., order));
              for (&load_order, &store_order) in
 -                test_helper::LOAD_ORDERINGS.iter().zip(&test_helper::STORE_ORDERINGS)
 +                LOAD_ORDERINGS.iter().zip(&STORE_ORDERINGS)
              {
-                 assert_eq!(VAR.load(load_order), 10.0);
-                 VAR.store(5.0, store_order);
-@@ -175,7 +197,7 @@ macro_rules! __test_atomic_bool_load_sto
+                 assert_eq!(VAR.load(load_order), 10.);
+                 VAR.store(5., store_order);
+@@ -181,7 +203,7 @@ macro_rules! __test_atomic_bool_load_sto
          #[test]
          fn static_load_only() {
              static VAR: $atomic_type = <$atomic_type>::new(false);
@@ -76,7 +76,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  assert_eq!(VAR.load(order), false);
              }
          }
-@@ -185,7 +207,7 @@ macro_rules! __test_atomic_bool_load_sto
+@@ -191,7 +213,7 @@ macro_rules! __test_atomic_bool_load_sto
              test_load_ordering(|order| VAR.load(order));
              test_store_ordering(|order| VAR.store(false, order));
              for (&load_order, &store_order) in
@@ -85,7 +85,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
              {
                  assert_eq!(VAR.load(load_order), false);
                  VAR.store(true, store_order);
-@@ -221,7 +243,7 @@ macro_rules! __test_atomic_ptr_load_stor
+@@ -227,7 +249,7 @@ macro_rules! __test_atomic_ptr_load_stor
          #[test]
          fn static_load_only() {
              static VAR: $atomic_type = <$atomic_type>::new(ptr::null_mut());
@@ -94,7 +94,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  assert_eq!(VAR.load(order), ptr::null_mut());
              }
          }
-@@ -233,7 +255,7 @@ macro_rules! __test_atomic_ptr_load_stor
+@@ -239,7 +261,7 @@ macro_rules! __test_atomic_ptr_load_stor
              let mut v = 1_u8;
              let p = &mut v as *mut u8;
              for (&load_order, &store_order) in
@@ -103,7 +103,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
              {
                  assert_eq!(VAR.load(load_order), ptr::null_mut());
                  VAR.store(p, store_order);
-@@ -259,7 +281,7 @@ macro_rules! __test_atomic_int {
+@@ -264,7 +286,7 @@ macro_rules! __test_atomic_int {
          fn swap() {
              let a = <$atomic_type>::new(5);
              test_swap_ordering(|order| a.swap(5, order));
@@ -112,7 +112,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  assert_eq!(a.swap(10, order), 5);
                  assert_eq!(a.swap(5, order), 10);
              }
-@@ -270,7 +292,7 @@ macro_rules! __test_atomic_int {
+@@ -275,7 +297,7 @@ macro_rules! __test_atomic_int {
              test_compare_exchange_ordering(|success, failure| {
                  a.compare_exchange(5, 5, success, failure)
              });
@@ -121,7 +121,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(5);
                  assert_eq!(a.compare_exchange(5, 10, success, failure), Ok(5));
                  assert_eq!(a.load(Ordering::Relaxed), 10);
-@@ -284,7 +306,7 @@ macro_rules! __test_atomic_int {
+@@ -289,7 +311,7 @@ macro_rules! __test_atomic_int {
              test_compare_exchange_ordering(|success, failure| {
                  a.compare_exchange_weak(4, 4, success, failure)
              });
@@ -130,7 +130,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(4);
                  assert_eq!(a.compare_exchange_weak(6, 8, success, failure), Err(4));
                  let mut old = a.load(Ordering::Relaxed);
-@@ -302,7 +324,7 @@ macro_rules! __test_atomic_int {
+@@ -307,7 +329,7 @@ macro_rules! __test_atomic_int {
          fn fetch_add() {
              let a = <$atomic_type>::new(0);
              test_swap_ordering(|order| a.fetch_add(0, order));
@@ -139,7 +139,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(0);
                  assert_eq!(a.fetch_add(10, order), 0);
                  assert_eq!(a.load(Ordering::Relaxed), 10);
-@@ -315,7 +337,7 @@ macro_rules! __test_atomic_int {
+@@ -320,7 +342,7 @@ macro_rules! __test_atomic_int {
          fn add() {
              let a = <$atomic_type>::new(0);
              test_swap_ordering(|order| a.add(0, order));
@@ -148,7 +148,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(0);
                  a.add(10, order);
                  assert_eq!(a.load(Ordering::Relaxed), 10);
-@@ -328,7 +350,7 @@ macro_rules! __test_atomic_int {
+@@ -333,7 +355,7 @@ macro_rules! __test_atomic_int {
          fn fetch_sub() {
              let a = <$atomic_type>::new(20);
              test_swap_ordering(|order| a.fetch_sub(0, order));
@@ -157,7 +157,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(20);
                  assert_eq!(a.fetch_sub(10, order), 20);
                  assert_eq!(a.load(Ordering::Relaxed), 10);
-@@ -341,7 +363,7 @@ macro_rules! __test_atomic_int {
+@@ -346,7 +368,7 @@ macro_rules! __test_atomic_int {
          fn sub() {
              let a = <$atomic_type>::new(20);
              test_swap_ordering(|order| a.sub(0, order));
@@ -166,7 +166,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(20);
                  a.sub(10, order);
                  assert_eq!(a.load(Ordering::Relaxed), 10);
-@@ -354,7 +376,7 @@ macro_rules! __test_atomic_int {
+@@ -359,7 +381,7 @@ macro_rules! __test_atomic_int {
          fn fetch_and() {
              let a = <$atomic_type>::new(0b101101);
              test_swap_ordering(|order| a.fetch_and(0b101101, order));
@@ -175,7 +175,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(0b101101);
                  assert_eq!(a.fetch_and(0b110011, order), 0b101101);
                  assert_eq!(a.load(Ordering::Relaxed), 0b100001);
-@@ -364,7 +386,7 @@ macro_rules! __test_atomic_int {
+@@ -369,7 +391,7 @@ macro_rules! __test_atomic_int {
          fn and() {
              let a = <$atomic_type>::new(0b101101);
              test_swap_ordering(|order| a.and(0b101101, order));
@@ -184,7 +184,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(0b101101);
                  a.and(0b110011, order);
                  assert_eq!(a.load(Ordering::Relaxed), 0b100001);
-@@ -374,7 +396,7 @@ macro_rules! __test_atomic_int {
+@@ -379,7 +401,7 @@ macro_rules! __test_atomic_int {
          fn fetch_nand() {
              let a = <$atomic_type>::new(0x13);
              test_swap_ordering(|order| a.fetch_nand(0x31, order));
@@ -193,7 +193,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(0x13);
                  assert_eq!(a.fetch_nand(0x31, order), 0x13);
                  assert_eq!(a.load(Ordering::Relaxed), !(0x13 & 0x31));
-@@ -384,7 +406,7 @@ macro_rules! __test_atomic_int {
+@@ -389,7 +411,7 @@ macro_rules! __test_atomic_int {
          fn fetch_or() {
              let a = <$atomic_type>::new(0b101101);
              test_swap_ordering(|order| a.fetch_or(0, order));
@@ -202,7 +202,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(0b101101);
                  assert_eq!(a.fetch_or(0b110011, order), 0b101101);
                  assert_eq!(a.load(Ordering::Relaxed), 0b111111);
-@@ -394,7 +416,7 @@ macro_rules! __test_atomic_int {
+@@ -399,7 +421,7 @@ macro_rules! __test_atomic_int {
          fn or() {
              let a = <$atomic_type>::new(0b101101);
              test_swap_ordering(|order| a.or(0, order));
@@ -211,7 +211,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(0b101101);
                  a.or(0b110011, order);
                  assert_eq!(a.load(Ordering::Relaxed), 0b111111);
-@@ -404,7 +426,7 @@ macro_rules! __test_atomic_int {
+@@ -409,7 +431,7 @@ macro_rules! __test_atomic_int {
          fn fetch_xor() {
              let a = <$atomic_type>::new(0b101101);
              test_swap_ordering(|order| a.fetch_xor(0, order));
@@ -220,7 +220,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(0b101101);
                  assert_eq!(a.fetch_xor(0b110011, order), 0b101101);
                  assert_eq!(a.load(Ordering::Relaxed), 0b011110);
-@@ -414,7 +436,7 @@ macro_rules! __test_atomic_int {
+@@ -419,7 +441,7 @@ macro_rules! __test_atomic_int {
          fn xor() {
              let a = <$atomic_type>::new(0b101101);
              test_swap_ordering(|order| a.xor(0, order));
@@ -229,7 +229,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(0b101101);
                  a.xor(0b110011, order);
                  assert_eq!(a.load(Ordering::Relaxed), 0b011110);
-@@ -424,7 +446,7 @@ macro_rules! __test_atomic_int {
+@@ -429,7 +451,7 @@ macro_rules! __test_atomic_int {
          fn fetch_max() {
              let a = <$atomic_type>::new(23);
              test_swap_ordering(|order| a.fetch_max(23, order));
@@ -238,7 +238,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(23);
                  assert_eq!(a.fetch_max(22, order), 23);
                  assert_eq!(a.load(Ordering::Relaxed), 23);
-@@ -447,7 +469,7 @@ macro_rules! __test_atomic_int {
+@@ -449,7 +471,7 @@ macro_rules! __test_atomic_int {
          fn fetch_min() {
              let a = <$atomic_type>::new(23);
              test_swap_ordering(|order| a.fetch_min(23, order));
@@ -247,7 +247,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(23);
                  assert_eq!(a.fetch_min(24, order), 23);
                  assert_eq!(a.load(Ordering::Relaxed), 23);
-@@ -470,7 +492,7 @@ macro_rules! __test_atomic_int {
+@@ -469,7 +491,7 @@ macro_rules! __test_atomic_int {
          fn fetch_not() {
              let a = <$atomic_type>::new(1);
              test_swap_ordering(|order| a.fetch_not(order));
@@ -256,7 +256,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(1);
                  assert_eq!(a.fetch_not(order), 1);
                  assert_eq!(a.load(Ordering::Relaxed), !1);
-@@ -480,7 +502,7 @@ macro_rules! __test_atomic_int {
+@@ -479,7 +501,7 @@ macro_rules! __test_atomic_int {
          fn not() {
              let a = <$atomic_type>::new(1);
              test_swap_ordering(|order| a.not(order));
@@ -265,7 +265,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(1);
                  a.not(order);
                  assert_eq!(a.load(Ordering::Relaxed), !1);
-@@ -490,7 +512,7 @@ macro_rules! __test_atomic_int {
+@@ -489,7 +511,7 @@ macro_rules! __test_atomic_int {
          fn fetch_neg() {
              let a = <$atomic_type>::new(5);
              test_swap_ordering(|order| a.fetch_neg(order));
@@ -273,8 +273,8 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
 +            for &order in &SWAP_ORDERINGS {
                  let a = <$atomic_type>::new(5);
                  assert_eq!(a.fetch_neg(order), 5);
-                 assert_eq!(a.load(Ordering::Relaxed), (5 as $int_type).wrapping_neg());
-@@ -507,7 +529,7 @@ macro_rules! __test_atomic_int {
+                 assert_eq!(a.load(Ordering::Relaxed), <$int_type>::wrapping_neg(5));
+@@ -506,7 +528,7 @@ macro_rules! __test_atomic_int {
          fn neg() {
              let a = <$atomic_type>::new(5);
              test_swap_ordering(|order| a.neg(order));
@@ -282,8 +282,8 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
 +            for &order in &SWAP_ORDERINGS {
                  let a = <$atomic_type>::new(5);
                  a.neg(order);
-                 assert_eq!(a.load(Ordering::Relaxed), (5 as $int_type).wrapping_neg());
-@@ -524,7 +546,7 @@ macro_rules! __test_atomic_int {
+                 assert_eq!(a.load(Ordering::Relaxed), <$int_type>::wrapping_neg(5));
+@@ -523,7 +545,7 @@ macro_rules! __test_atomic_int {
          fn bit_set() {
              let a = <$atomic_type>::new(0b0001);
              test_swap_ordering(|order| assert!(a.bit_set(0, order)));
@@ -292,7 +292,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(0b0000);
                  assert!(!a.bit_set(0, order));
                  assert_eq!(a.load(Ordering::Relaxed), 0b0001);
-@@ -536,7 +558,7 @@ macro_rules! __test_atomic_int {
+@@ -535,7 +557,7 @@ macro_rules! __test_atomic_int {
          fn bit_clear() {
              let a = <$atomic_type>::new(0b0000);
              test_swap_ordering(|order| assert!(!a.bit_clear(0, order)));
@@ -301,7 +301,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(0b0001);
                  assert!(a.bit_clear(0, order));
                  assert_eq!(a.load(Ordering::Relaxed), 0b0000);
-@@ -548,7 +570,7 @@ macro_rules! __test_atomic_int {
+@@ -547,7 +569,7 @@ macro_rules! __test_atomic_int {
          fn bit_toggle() {
              let a = <$atomic_type>::new(0b0000);
              test_swap_ordering(|order| a.bit_toggle(0, order));
@@ -310,7 +310,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(0b0000);
                  assert!(!a.bit_toggle(0, order));
                  assert_eq!(a.load(Ordering::Relaxed), 0b0001);
-@@ -558,7 +580,7 @@ macro_rules! __test_atomic_int {
+@@ -557,7 +579,7 @@ macro_rules! __test_atomic_int {
          }
          ::quickcheck::quickcheck! {
              fn quickcheck_swap(x: $int_type, y: $int_type) -> bool {
@@ -319,7 +319,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_eq!(a.swap(y, order), x);
                      assert_eq!(a.swap(x, order), y);
-@@ -584,7 +606,7 @@ macro_rules! __test_atomic_int {
+@@ -583,7 +605,7 @@ macro_rules! __test_atomic_int {
                          break z;
                      }
                  };
@@ -328,7 +328,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_eq!(a.compare_exchange(x, y, success, failure).unwrap(), x);
                      assert_eq!(a.load(Ordering::Relaxed), y);
-@@ -594,7 +616,7 @@ macro_rules! __test_atomic_int {
+@@ -593,7 +615,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_fetch_add(x: $int_type, y: $int_type) -> bool {
@@ -337,7 +337,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_eq!(a.fetch_add(y, order), x);
                      assert_eq!(a.load(Ordering::Relaxed), x.wrapping_add(y));
-@@ -605,7 +627,7 @@ macro_rules! __test_atomic_int {
+@@ -604,7 +626,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_add(x: $int_type, y: $int_type) -> bool {
@@ -346,7 +346,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      a.add(y, order);
                      assert_eq!(a.load(Ordering::Relaxed), x.wrapping_add(y));
-@@ -616,7 +638,7 @@ macro_rules! __test_atomic_int {
+@@ -615,7 +637,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_fetch_sub(x: $int_type, y: $int_type) -> bool {
@@ -355,7 +355,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_eq!(a.fetch_sub(y, order), x);
                      assert_eq!(a.load(Ordering::Relaxed), x.wrapping_sub(y));
-@@ -627,7 +649,7 @@ macro_rules! __test_atomic_int {
+@@ -626,7 +648,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_sub(x: $int_type, y: $int_type) -> bool {
@@ -364,7 +364,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      a.sub(y, order);
                      assert_eq!(a.load(Ordering::Relaxed), x.wrapping_sub(y));
-@@ -638,7 +660,7 @@ macro_rules! __test_atomic_int {
+@@ -637,7 +659,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_fetch_and(x: $int_type, y: $int_type) -> bool {
@@ -373,7 +373,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_eq!(a.fetch_and(y, order), x);
                      assert_eq!(a.load(Ordering::Relaxed), x & y);
-@@ -649,7 +671,7 @@ macro_rules! __test_atomic_int {
+@@ -648,7 +670,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_and(x: $int_type, y: $int_type) -> bool {
@@ -382,7 +382,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      a.and(y, order);
                      assert_eq!(a.load(Ordering::Relaxed), x & y);
-@@ -660,7 +682,7 @@ macro_rules! __test_atomic_int {
+@@ -659,7 +681,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_fetch_nand(x: $int_type, y: $int_type) -> bool {
@@ -391,7 +391,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_eq!(a.fetch_nand(y, order), x);
                      assert_eq!(a.load(Ordering::Relaxed), !(x & y));
-@@ -671,7 +693,7 @@ macro_rules! __test_atomic_int {
+@@ -670,7 +692,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_fetch_or(x: $int_type, y: $int_type) -> bool {
@@ -400,7 +400,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_eq!(a.fetch_or(y, order), x);
                      assert_eq!(a.load(Ordering::Relaxed), x | y);
-@@ -682,7 +704,7 @@ macro_rules! __test_atomic_int {
+@@ -681,7 +703,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_or(x: $int_type, y: $int_type) -> bool {
@@ -409,7 +409,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      a.or(y, order);
                      assert_eq!(a.load(Ordering::Relaxed), x | y);
-@@ -693,7 +715,7 @@ macro_rules! __test_atomic_int {
+@@ -692,7 +714,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_fetch_xor(x: $int_type, y: $int_type) -> bool {
@@ -418,7 +418,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_eq!(a.fetch_xor(y, order), x);
                      assert_eq!(a.load(Ordering::Relaxed), x ^ y);
-@@ -704,7 +726,7 @@ macro_rules! __test_atomic_int {
+@@ -703,7 +725,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_xor(x: $int_type, y: $int_type) -> bool {
@@ -427,7 +427,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      a.xor(y, order);
                      assert_eq!(a.load(Ordering::Relaxed), x ^ y);
-@@ -715,7 +737,7 @@ macro_rules! __test_atomic_int {
+@@ -714,7 +736,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_fetch_max(x: $int_type, y: $int_type) -> bool {
@@ -436,7 +436,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_eq!(a.fetch_max(y, order), x);
                      assert_eq!(a.load(Ordering::Relaxed), core::cmp::max(x, y));
-@@ -726,7 +748,7 @@ macro_rules! __test_atomic_int {
+@@ -725,7 +747,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_fetch_min(x: $int_type, y: $int_type) -> bool {
@@ -445,7 +445,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_eq!(a.fetch_min(y, order), x);
                      assert_eq!(a.load(Ordering::Relaxed), core::cmp::min(x, y));
-@@ -737,7 +759,7 @@ macro_rules! __test_atomic_int {
+@@ -736,7 +758,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_fetch_not(x: $int_type) -> bool {
@@ -454,7 +454,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_eq!(a.fetch_not(order), x);
                      assert_eq!(a.load(Ordering::Relaxed), !x);
-@@ -747,7 +769,7 @@ macro_rules! __test_atomic_int {
+@@ -746,7 +768,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_not(x: $int_type) -> bool {
@@ -463,7 +463,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      a.not(order);
                      assert_eq!(a.load(Ordering::Relaxed), !x);
-@@ -757,7 +779,7 @@ macro_rules! __test_atomic_int {
+@@ -756,7 +778,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_fetch_neg(x: $int_type) -> bool {
@@ -472,7 +472,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_eq!(a.fetch_neg(order), x);
                      assert_eq!(a.load(Ordering::Relaxed), x.wrapping_neg());
-@@ -767,7 +789,7 @@ macro_rules! __test_atomic_int {
+@@ -766,7 +788,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_neg(x: $int_type) -> bool {
@@ -481,7 +481,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      a.neg(order);
                      assert_eq!(a.load(Ordering::Relaxed), x.wrapping_neg());
-@@ -777,7 +799,7 @@ macro_rules! __test_atomic_int {
+@@ -776,7 +798,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_bit_set(x: $int_type, bit: u32) -> bool {
@@ -489,8 +489,8 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
 +                for &order in &SWAP_ORDERINGS {
                      let a = <$atomic_type>::new(x);
                      let b = a.bit_set(bit, order);
-                     let mask = (1 as $int_type).wrapping_shl(bit);
-@@ -787,7 +809,7 @@ macro_rules! __test_atomic_int {
+                     let mask = <$int_type>::wrapping_shl(1, bit);
+@@ -786,7 +808,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_bit_clear(x: $int_type, bit: u32) -> bool {
@@ -498,8 +498,8 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
 +                for &order in &SWAP_ORDERINGS {
                      let a = <$atomic_type>::new(x);
                      let b = a.bit_clear(bit, order);
-                     let mask = (1 as $int_type).wrapping_shl(bit);
-@@ -797,7 +819,7 @@ macro_rules! __test_atomic_int {
+                     let mask = <$int_type>::wrapping_shl(1, bit);
+@@ -796,7 +818,7 @@ macro_rules! __test_atomic_int {
                  true
              }
              fn quickcheck_bit_toggle(x: $int_type, bit: u32) -> bool {
@@ -507,89 +507,89 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
 +                for &order in &SWAP_ORDERINGS {
                      let a = <$atomic_type>::new(x);
                      let b = a.bit_toggle(bit, order);
-                     let mask = (1 as $int_type).wrapping_shl(bit);
-@@ -935,7 +957,7 @@ macro_rules! __test_atomic_float {
+                     let mask = <$int_type>::wrapping_shl(1, bit);
+@@ -933,7 +955,7 @@ macro_rules! __test_atomic_float {
          fn swap() {
-             let a = <$atomic_type>::new(5.0);
-             test_swap_ordering(|order| a.swap(5.0, order));
+             let a = <$atomic_type>::new(5.);
+             test_swap_ordering(|order| a.swap(5., order));
 -            for &order in &test_helper::SWAP_ORDERINGS {
 +            for &order in &SWAP_ORDERINGS {
-                 assert_eq!(a.swap(10.0, order), 5.0);
-                 assert_eq!(a.swap(5.0, order), 10.0);
+                 assert_eq!(a.swap(10., order), 5.);
+                 assert_eq!(a.swap(5., order), 10.);
              }
-@@ -946,7 +968,7 @@ macro_rules! __test_atomic_float {
+@@ -944,7 +966,7 @@ macro_rules! __test_atomic_float {
              test_compare_exchange_ordering(|success, failure| {
-                 a.compare_exchange(5.0, 5.0, success, failure)
+                 a.compare_exchange(5., 5., success, failure)
              });
 -            for &(success, failure) in &test_helper::COMPARE_EXCHANGE_ORDERINGS {
 +            for &(success, failure) in &COMPARE_EXCHANGE_ORDERINGS {
-                 let a = <$atomic_type>::new(5.0);
-                 assert_eq!(a.compare_exchange(5.0, 10.0, success, failure), Ok(5.0));
-                 assert_eq!(a.load(Ordering::Relaxed), 10.0);
-@@ -960,7 +982,7 @@ macro_rules! __test_atomic_float {
+                 let a = <$atomic_type>::new(5.);
+                 assert_eq!(a.compare_exchange(5., 10., success, failure), Ok(5.));
+                 assert_eq!(a.load(Ordering::Relaxed), 10.);
+@@ -958,7 +980,7 @@ macro_rules! __test_atomic_float {
              test_compare_exchange_ordering(|success, failure| {
-                 a.compare_exchange_weak(4.0, 4.0, success, failure)
+                 a.compare_exchange_weak(4., 4., success, failure)
              });
 -            for &(success, failure) in &test_helper::COMPARE_EXCHANGE_ORDERINGS {
 +            for &(success, failure) in &COMPARE_EXCHANGE_ORDERINGS {
-                 let a = <$atomic_type>::new(4.0);
-                 assert_eq!(a.compare_exchange_weak(6.0, 8.0, success, failure), Err(4.0));
+                 let a = <$atomic_type>::new(4.);
+                 assert_eq!(a.compare_exchange_weak(6., 8., success, failure), Err(4.));
                  let mut old = a.load(Ordering::Relaxed);
-@@ -978,7 +1000,7 @@ macro_rules! __test_atomic_float {
+@@ -976,7 +998,7 @@ macro_rules! __test_atomic_float {
          fn fetch_add() {
-             let a = <$atomic_type>::new(0.0);
-             test_swap_ordering(|order| a.fetch_add(0.0, order));
+             let a = <$atomic_type>::new(0.);
+             test_swap_ordering(|order| a.fetch_add(0., order));
 -            for &order in &test_helper::SWAP_ORDERINGS {
 +            for &order in &SWAP_ORDERINGS {
-                 let a = <$atomic_type>::new(0.0);
-                 assert_eq!(a.fetch_add(10.0, order), 0.0);
-                 assert_eq!(a.load(Ordering::Relaxed), 10.0);
-@@ -991,7 +1013,7 @@ macro_rules! __test_atomic_float {
+                 let a = <$atomic_type>::new(0.);
+                 assert_eq!(a.fetch_add(10., order), 0.);
+                 assert_eq!(a.load(Ordering::Relaxed), 10.);
+@@ -989,7 +1011,7 @@ macro_rules! __test_atomic_float {
          fn fetch_sub() {
-             let a = <$atomic_type>::new(20.0);
-             test_swap_ordering(|order| a.fetch_sub(0.0, order));
+             let a = <$atomic_type>::new(20.);
+             test_swap_ordering(|order| a.fetch_sub(0., order));
 -            for &order in &test_helper::SWAP_ORDERINGS {
 +            for &order in &SWAP_ORDERINGS {
-                 let a = <$atomic_type>::new(20.0);
-                 assert_eq!(a.fetch_sub(10.0, order), 20.0);
-                 assert_eq!(a.load(Ordering::Relaxed), 10.0);
-@@ -1004,7 +1026,7 @@ macro_rules! __test_atomic_float {
+                 let a = <$atomic_type>::new(20.);
+                 assert_eq!(a.fetch_sub(10., order), 20.);
+                 assert_eq!(a.load(Ordering::Relaxed), 10.);
+@@ -1002,7 +1024,7 @@ macro_rules! __test_atomic_float {
          fn fetch_max() {
-             let a = <$atomic_type>::new(23.0);
-             test_swap_ordering(|order| a.fetch_max(23.0, order));
+             let a = <$atomic_type>::new(23.);
+             test_swap_ordering(|order| a.fetch_max(23., order));
 -            for &order in &test_helper::SWAP_ORDERINGS {
 +            for &order in &SWAP_ORDERINGS {
-                 let a = <$atomic_type>::new(23.0);
-                 assert_eq!(a.fetch_max(22.0, order), 23.0);
-                 assert_eq!(a.load(Ordering::Relaxed), 23.0);
-@@ -1016,7 +1038,7 @@ macro_rules! __test_atomic_float {
+                 let a = <$atomic_type>::new(23.);
+                 assert_eq!(a.fetch_max(22., order), 23.);
+                 assert_eq!(a.load(Ordering::Relaxed), 23.);
+@@ -1014,7 +1036,7 @@ macro_rules! __test_atomic_float {
          fn fetch_min() {
-             let a = <$atomic_type>::new(23.0);
-             test_swap_ordering(|order| a.fetch_min(23.0, order));
+             let a = <$atomic_type>::new(23.);
+             test_swap_ordering(|order| a.fetch_min(23., order));
 -            for &order in &test_helper::SWAP_ORDERINGS {
 +            for &order in &SWAP_ORDERINGS {
-                 let a = <$atomic_type>::new(23.0);
-                 assert_eq!(a.fetch_min(24.0, order), 23.0);
-                 assert_eq!(a.load(Ordering::Relaxed), 23.0);
-@@ -1028,7 +1050,7 @@ macro_rules! __test_atomic_float {
+                 let a = <$atomic_type>::new(23.);
+                 assert_eq!(a.fetch_min(24., order), 23.);
+                 assert_eq!(a.load(Ordering::Relaxed), 23.);
+@@ -1026,7 +1048,7 @@ macro_rules! __test_atomic_float {
          fn fetch_neg() {
-             let a = <$atomic_type>::new(5.0);
+             let a = <$atomic_type>::new(5.);
              test_swap_ordering(|order| a.fetch_neg(order));
 -            for &order in &test_helper::SWAP_ORDERINGS {
 +            for &order in &SWAP_ORDERINGS {
-                 let a = <$atomic_type>::new(5.0);
-                 assert_eq!(a.fetch_neg(order), 5.0);
-                 assert_eq!(a.load(Ordering::Relaxed), -5.0);
-@@ -1040,7 +1062,7 @@ macro_rules! __test_atomic_float {
+                 let a = <$atomic_type>::new(5.);
+                 assert_eq!(a.fetch_neg(order), 5.);
+                 assert_eq!(a.load(Ordering::Relaxed), -5.);
+@@ -1038,7 +1060,7 @@ macro_rules! __test_atomic_float {
          fn fetch_abs() {
-             let a = <$atomic_type>::new(23.0);
+             let a = <$atomic_type>::new(23.);
              test_swap_ordering(|order| a.fetch_abs(order));
 -            for &order in &test_helper::SWAP_ORDERINGS {
 +            for &order in &SWAP_ORDERINGS {
-                 let a = <$atomic_type>::new(-23.0);
-                 assert_eq!(a.fetch_abs(order), -23.0);
-                 assert_eq!(a.load(Ordering::Relaxed), 23.0);
-@@ -1050,7 +1072,7 @@ macro_rules! __test_atomic_float {
+                 let a = <$atomic_type>::new(-23.);
+                 assert_eq!(a.fetch_abs(order), -23.);
+                 assert_eq!(a.load(Ordering::Relaxed), 23.);
+@@ -1048,7 +1070,7 @@ macro_rules! __test_atomic_float {
          }
          ::quickcheck::quickcheck! {
              fn quickcheck_swap(x: $float_type, y: $float_type) -> bool {
@@ -598,7 +598,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_float_op_eq!(a.swap(y, order), x);
                      assert_float_op_eq!(a.swap(x, order), y);
-@@ -1064,7 +1086,7 @@ macro_rules! __test_atomic_float {
+@@ -1062,7 +1084,7 @@ macro_rules! __test_atomic_float {
                          break z;
                      }
                  };
@@ -607,7 +607,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_float_op_eq!(a.compare_exchange(x, y, success, failure).unwrap(), x);
                      assert_float_op_eq!(a.load(Ordering::Relaxed), y);
-@@ -1083,7 +1105,7 @@ macro_rules! __test_atomic_float {
+@@ -1081,7 +1103,7 @@ macro_rules! __test_atomic_float {
                      // https://github.com/rust-lang/rust/issues/73288
                      return true;
                  }
@@ -616,7 +616,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_float_op_eq!(a.fetch_add(y, order), x);
                      assert_float_op_eq!(a.load(Ordering::Relaxed), x + y);
-@@ -1100,7 +1122,7 @@ macro_rules! __test_atomic_float {
+@@ -1098,7 +1120,7 @@ macro_rules! __test_atomic_float {
                      // https://github.com/rust-lang/rust/issues/73288
                      return true;
                  }
@@ -625,7 +625,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_float_op_eq!(a.fetch_sub(y, order), x);
                      assert_float_op_eq!(a.load(Ordering::Relaxed), x - y);
-@@ -1111,7 +1133,7 @@ macro_rules! __test_atomic_float {
+@@ -1109,7 +1131,7 @@ macro_rules! __test_atomic_float {
                  true
              }
              fn quickcheck_fetch_max(x: $float_type, y: $float_type) -> bool {
@@ -634,7 +634,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_float_op_eq!(a.fetch_max(y, order), x);
                      assert_float_op_eq!(a.load(Ordering::Relaxed), x.max(y));
-@@ -1122,7 +1144,7 @@ macro_rules! __test_atomic_float {
+@@ -1120,7 +1142,7 @@ macro_rules! __test_atomic_float {
                  true
              }
              fn quickcheck_fetch_min(x: $float_type, y: $float_type) -> bool {
@@ -643,7 +643,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_float_op_eq!(a.fetch_min(y, order), x);
                      assert_float_op_eq!(a.load(Ordering::Relaxed), x.min(y));
-@@ -1133,7 +1155,7 @@ macro_rules! __test_atomic_float {
+@@ -1131,7 +1153,7 @@ macro_rules! __test_atomic_float {
                  true
              }
              fn quickcheck_fetch_neg(x: $float_type) -> bool {
@@ -652,7 +652,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_float_op_eq!(a.fetch_neg(order), x);
                      assert_float_op_eq!(a.load(Ordering::Relaxed), -x);
-@@ -1143,7 +1165,7 @@ macro_rules! __test_atomic_float {
+@@ -1141,7 +1163,7 @@ macro_rules! __test_atomic_float {
                  true
              }
              fn quickcheck_fetch_abs(x: $float_type) -> bool {
@@ -661,7 +661,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_float_op_eq!(a.fetch_abs(order), x);
                      assert_float_op_eq!(a.fetch_abs(order), x.abs());
-@@ -1164,7 +1186,7 @@ macro_rules! __test_atomic_bool {
+@@ -1162,7 +1184,7 @@ macro_rules! __test_atomic_bool {
          fn swap() {
              let a = <$atomic_type>::new(true);
              test_swap_ordering(|order| a.swap(true, order));
@@ -670,7 +670,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  assert_eq!(a.swap(true, order), true);
                  assert_eq!(a.swap(false, order), true);
                  assert_eq!(a.swap(false, order), false);
-@@ -1177,7 +1199,7 @@ macro_rules! __test_atomic_bool {
+@@ -1175,7 +1197,7 @@ macro_rules! __test_atomic_bool {
              test_compare_exchange_ordering(|success, failure| {
                  a.compare_exchange(true, true, success, failure)
              });
@@ -679,7 +679,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(true);
                  assert_eq!(a.compare_exchange(true, false, success, failure), Ok(true));
                  assert_eq!(a.load(Ordering::Relaxed), false);
-@@ -1191,7 +1213,7 @@ macro_rules! __test_atomic_bool {
+@@ -1189,7 +1211,7 @@ macro_rules! __test_atomic_bool {
              test_compare_exchange_ordering(|success, failure| {
                  a.compare_exchange_weak(false, false, success, failure)
              });
@@ -688,7 +688,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(false);
                  assert_eq!(a.compare_exchange_weak(true, true, success, failure), Err(false));
                  let mut old = a.load(Ordering::Relaxed);
-@@ -1209,7 +1231,7 @@ macro_rules! __test_atomic_bool {
+@@ -1207,7 +1229,7 @@ macro_rules! __test_atomic_bool {
          fn fetch_and() {
              let a = <$atomic_type>::new(true);
              test_swap_ordering(|order| assert_eq!(a.fetch_and(true, order), true));
@@ -697,7 +697,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(true);
                  assert_eq!(a.fetch_and(false, order), true);
                  assert_eq!(a.load(Ordering::Relaxed), false);
-@@ -1228,7 +1250,7 @@ macro_rules! __test_atomic_bool {
+@@ -1226,7 +1248,7 @@ macro_rules! __test_atomic_bool {
          fn and() {
              let a = <$atomic_type>::new(true);
              test_swap_ordering(|order| a.and(true, order));
@@ -706,7 +706,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(true);
                  a.and(false, order);
                  assert_eq!(a.load(Ordering::Relaxed), false);
-@@ -1247,7 +1269,7 @@ macro_rules! __test_atomic_bool {
+@@ -1245,7 +1267,7 @@ macro_rules! __test_atomic_bool {
          fn fetch_or() {
              let a = <$atomic_type>::new(true);
              test_swap_ordering(|order| assert_eq!(a.fetch_or(false, order), true));
@@ -715,7 +715,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(true);
                  assert_eq!(a.fetch_or(false, order), true);
                  assert_eq!(a.load(Ordering::Relaxed), true);
-@@ -1266,7 +1288,7 @@ macro_rules! __test_atomic_bool {
+@@ -1264,7 +1286,7 @@ macro_rules! __test_atomic_bool {
          fn or() {
              let a = <$atomic_type>::new(true);
              test_swap_ordering(|order| a.or(false, order));
@@ -724,7 +724,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(true);
                  a.or(false, order);
                  assert_eq!(a.load(Ordering::Relaxed), true);
-@@ -1285,7 +1307,7 @@ macro_rules! __test_atomic_bool {
+@@ -1283,7 +1305,7 @@ macro_rules! __test_atomic_bool {
          fn fetch_xor() {
              let a = <$atomic_type>::new(true);
              test_swap_ordering(|order| assert_eq!(a.fetch_xor(false, order), true));
@@ -733,7 +733,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(true);
                  assert_eq!(a.fetch_xor(false, order), true);
                  assert_eq!(a.load(Ordering::Relaxed), true);
-@@ -1304,7 +1326,7 @@ macro_rules! __test_atomic_bool {
+@@ -1302,7 +1324,7 @@ macro_rules! __test_atomic_bool {
          fn xor() {
              let a = <$atomic_type>::new(true);
              test_swap_ordering(|order| a.xor(false, order));
@@ -742,7 +742,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(true);
                  a.xor(false, order);
                  assert_eq!(a.load(Ordering::Relaxed), true);
-@@ -1322,7 +1344,7 @@ macro_rules! __test_atomic_bool {
+@@ -1320,7 +1342,7 @@ macro_rules! __test_atomic_bool {
          ::quickcheck::quickcheck! {
              fn quickcheck_compare_exchange(x: bool, y: bool) -> bool {
                  let z = !y;
@@ -751,16 +751,16 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_eq!(a.compare_exchange(x, y, success, failure).unwrap(), x);
                      assert_eq!(a.load(Ordering::Relaxed), y);
-@@ -1345,7 +1367,7 @@ macro_rules! __test_atomic_ptr {
+@@ -1343,7 +1365,7 @@ macro_rules! __test_atomic_ptr {
              let a = <$atomic_type>::new(ptr::null_mut());
              test_swap_ordering(|order| a.swap(ptr::null_mut(), order));
              let x = &mut 1;
 -            for &order in &test_helper::SWAP_ORDERINGS {
 +            for &order in &SWAP_ORDERINGS {
                  assert_eq!(a.swap(x, order), ptr::null_mut());
-                 assert_eq!(a.swap(ptr::null_mut(), order), x as _);
+                 assert_eq!(a.swap(ptr::null_mut(), order), x as *mut _);
              }
-@@ -1356,7 +1378,7 @@ macro_rules! __test_atomic_ptr {
+@@ -1354,7 +1376,7 @@ macro_rules! __test_atomic_ptr {
              test_compare_exchange_ordering(|success, failure| {
                  a.compare_exchange(ptr::null_mut(), ptr::null_mut(), success, failure)
              });
@@ -769,7 +769,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(ptr::null_mut());
                  let x = &mut 1;
                  assert_eq!(
-@@ -1377,7 +1399,7 @@ macro_rules! __test_atomic_ptr {
+@@ -1375,7 +1397,7 @@ macro_rules! __test_atomic_ptr {
              test_compare_exchange_ordering(|success, failure| {
                  a.compare_exchange_weak(ptr::null_mut(), ptr::null_mut(), success, failure)
              });
@@ -778,7 +778,25 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(ptr::null_mut());
                  let x = &mut 1;
                  assert_eq!(a.compare_exchange_weak(x, x, success, failure), Err(ptr::null_mut()));
-@@ -1416,7 +1438,7 @@ macro_rules! __test_atomic_int_pub {
+@@ -1393,7 +1415,7 @@ macro_rules! __test_atomic_ptr {
+             fn quickcheck_swap(x: usize, y: usize) -> bool {
+                 let x = sptr::invalid_mut(x);
+                 let y = sptr::invalid_mut(y);
+-                for &order in &test_helper::SWAP_ORDERINGS {
++                for &order in &SWAP_ORDERINGS {
+                     let a = <$atomic_type>::new(x);
+                     assert_eq!(a.swap(y, order), x);
+                     assert_eq!(a.swap(x, order), y);
+@@ -1410,7 +1432,7 @@ macro_rules! __test_atomic_ptr {
+                 let x = sptr::invalid_mut(x);
+                 let y = sptr::invalid_mut(y);
+                 let z = sptr::invalid_mut(z);
+-                for &(success, failure) in &test_helper::COMPARE_EXCHANGE_ORDERINGS {
++                for &(success, failure) in &COMPARE_EXCHANGE_ORDERINGS {
+                     let a = <$atomic_type>::new(x);
+                     assert_eq!(a.compare_exchange(x, y, success, failure).unwrap(), x);
+                     assert_eq!(a.load(Ordering::Relaxed), y);
+@@ -1435,7 +1457,7 @@ macro_rules! __test_atomic_int_pub {
          fn fetch_update() {
              let a = <$atomic_type>::new(7);
              test_compare_exchange_ordering(|set, fetch| a.fetch_update(set, fetch, |x| Some(x)));
@@ -787,7 +805,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(7);
                  assert_eq!(a.fetch_update(success, failure, |_| None), Err(7));
                  assert_eq!(a.fetch_update(success, failure, |x| Some(x + 1)), Ok(7));
-@@ -1432,7 +1454,7 @@ macro_rules! __test_atomic_int_pub {
+@@ -1476,7 +1498,7 @@ macro_rules! __test_atomic_int_pub {
                          break z;
                      }
                  };
@@ -796,16 +814,16 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                      let a = <$atomic_type>::new(x);
                      assert_eq!(
                          a.fetch_update(success, failure, |_| Some(y))
-@@ -1464,7 +1486,7 @@ macro_rules! __test_atomic_float_pub {
+@@ -1509,7 +1531,7 @@ macro_rules! __test_atomic_float_pub {
          fn fetch_update() {
-             let a = <$atomic_type>::new(7.0);
+             let a = <$atomic_type>::new(7.);
              test_compare_exchange_ordering(|set, fetch| a.fetch_update(set, fetch, |x| Some(x)));
 -            for &(success, failure) in &test_helper::COMPARE_EXCHANGE_ORDERINGS {
 +            for &(success, failure) in &COMPARE_EXCHANGE_ORDERINGS {
-                 let a = <$atomic_type>::new(7.0);
-                 assert_eq!(a.fetch_update(success, failure, |_| None), Err(7.0));
-                 assert_eq!(a.fetch_update(success, failure, |x| Some(x + 1.0)), Ok(7.0));
-@@ -1488,7 +1510,7 @@ macro_rules! __test_atomic_bool_pub {
+                 let a = <$atomic_type>::new(7.);
+                 assert_eq!(a.fetch_update(success, failure, |_| None), Err(7.));
+                 assert_eq!(a.fetch_update(success, failure, |x| Some(x + 1.)), Ok(7.));
+@@ -1552,7 +1574,7 @@ macro_rules! __test_atomic_bool_pub {
          fn fetch_nand() {
              let a = <$atomic_type>::new(true);
              test_swap_ordering(|order| assert_eq!(a.fetch_nand(false, order), true));
@@ -814,7 +832,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(true);
                  assert_eq!(a.fetch_nand(false, order), true);
                  assert_eq!(a.load(Ordering::Relaxed), true);
-@@ -1508,7 +1530,7 @@ macro_rules! __test_atomic_bool_pub {
+@@ -1572,7 +1594,7 @@ macro_rules! __test_atomic_bool_pub {
          fn fetch_not() {
              let a = <$atomic_type>::new(true);
              test_swap_ordering(|order| a.fetch_not(order));
@@ -823,7 +841,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(true);
                  assert_eq!(a.fetch_not(order), true);
                  assert_eq!(a.load(Ordering::Relaxed), false);
-@@ -1521,7 +1543,7 @@ macro_rules! __test_atomic_bool_pub {
+@@ -1585,7 +1607,7 @@ macro_rules! __test_atomic_bool_pub {
          fn not() {
              let a = <$atomic_type>::new(true);
              test_swap_ordering(|order| a.fetch_not(order));
@@ -832,7 +850,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(true);
                  a.not(order);
                  assert_eq!(a.load(Ordering::Relaxed), false);
-@@ -1534,7 +1556,7 @@ macro_rules! __test_atomic_bool_pub {
+@@ -1598,7 +1620,7 @@ macro_rules! __test_atomic_bool_pub {
          fn fetch_update() {
              let a = <$atomic_type>::new(false);
              test_compare_exchange_ordering(|set, fetch| a.fetch_update(set, fetch, |x| Some(x)));
@@ -841,7 +859,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(false);
                  assert_eq!(a.fetch_update(success, failure, |_| None), Err(false));
                  assert_eq!(a.fetch_update(success, failure, |x| Some(!x)), Ok(false));
-@@ -1559,7 +1581,7 @@ macro_rules! __test_atomic_ptr_pub {
+@@ -1642,7 +1664,7 @@ macro_rules! __test_atomic_ptr_pub {
          fn fetch_update() {
              let a = <$atomic_type>::new(ptr::null_mut());
              test_compare_exchange_ordering(|set, fetch| a.fetch_update(set, fetch, |x| Some(x)));
@@ -850,7 +868,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let a = <$atomic_type>::new(ptr::null_mut());
                  assert_eq!(a.fetch_update(success, failure, |_| None), Err(ptr::null_mut()));
                  assert_eq!(
-@@ -1662,7 +1684,7 @@ macro_rules! __test_atomic_ptr_pub {
+@@ -1764,7 +1786,7 @@ macro_rules! __test_atomic_ptr_pub {
          fn bit_set() {
              let a = <$atomic_type>::new(ptr::null_mut::<u64>().cast::<u8>().map_addr(|a| a | 1));
              test_swap_ordering(|order| assert!(a.bit_set(0, order)));
@@ -859,7 +877,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let pointer = &mut 1u64 as *mut u64 as *mut u8;
                  let atom = <$atomic_type>::new(pointer);
                  // Tag the bottom bit of the pointer.
-@@ -1677,7 +1699,7 @@ macro_rules! __test_atomic_ptr_pub {
+@@ -1779,7 +1801,7 @@ macro_rules! __test_atomic_ptr_pub {
          fn bit_clear() {
              let a = <$atomic_type>::new(ptr::null_mut::<u64>().cast::<u8>());
              test_swap_ordering(|order| assert!(!a.bit_clear(0, order)));
@@ -868,7 +886,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let pointer = &mut 1u64 as *mut u64 as *mut u8;
                  // A tagged pointer
                  let atom = <$atomic_type>::new(pointer.map_addr(|a| a | 1));
-@@ -1690,7 +1712,7 @@ macro_rules! __test_atomic_ptr_pub {
+@@ -1792,7 +1814,7 @@ macro_rules! __test_atomic_ptr_pub {
          fn bit_toggle() {
              let a = <$atomic_type>::new(ptr::null_mut::<u64>().cast::<u8>());
              test_swap_ordering(|order| a.bit_toggle(0, order));
@@ -877,7 +895,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
                  let pointer = &mut 1u64 as *mut u64 as *mut u8;
                  let atom = <$atomic_type>::new(pointer);
                  // Toggle a tag bit on the pointer.
-@@ -1986,10 +2008,10 @@ pub(crate) fn assert_panic<T: std::fmt::
+@@ -2016,10 +2038,10 @@ pub(crate) fn assert_panic<T: std::fmt::
          .unwrap_or_else(|| msg.downcast_ref::<&'static str>().copied().unwrap().into())
  }
  pub(crate) fn rand_load_ordering() -> Ordering {
@@ -890,7 +908,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
          f(order);
      }
  
-@@ -2005,10 +2027,10 @@ pub(crate) fn test_load_ordering<T: std:
+@@ -2035,10 +2057,10 @@ pub(crate) fn test_load_ordering<T: std:
      }
  }
  pub(crate) fn rand_store_ordering() -> Ordering {
@@ -903,7 +921,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
          f(order);
      }
  
-@@ -2024,18 +2046,18 @@ pub(crate) fn test_store_ordering<T: std
+@@ -2054,18 +2076,18 @@ pub(crate) fn test_store_ordering<T: std
      }
  }
  pub(crate) fn rand_compare_exchange_ordering() -> (Ordering, Ordering) {
@@ -926,7 +944,7 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
              let msg = assert_panic(|| f(order, Ordering::AcqRel));
              assert!(
                  msg == "there is no such thing as an acquire-release failure ordering"
-@@ -2054,10 +2076,10 @@ pub(crate) fn test_compare_exchange_orde
+@@ -2084,10 +2106,10 @@ pub(crate) fn test_compare_exchange_orde
      }
  }
  pub(crate) fn rand_swap_ordering() -> Ordering {
@@ -939,101 +957,67 @@ Index: rust-portable-atomic-1.4.3/src/tests/helper.rs
          f(order);
      }
  }
-Index: rust-portable-atomic-1.4.3/src/tests/mod.rs
+Index: rust-portable-atomic-1.9.0/src/imp/detect/auxv.rs
 ===================================================================
---- rust-portable-atomic-1.4.3.orig/src/tests/mod.rs
-+++ rust-portable-atomic-1.4.3/src/tests/mod.rs
-@@ -326,7 +326,31 @@ LLVM version: 15.0.3",
- #[test]
- fn test_serde() {
-     use serde_test::{assert_tokens, Token};
--    use test_helper::serde::DebugPartialEq;
-+    use serde::{Deserialize, Serialize};
-+    #[derive(Debug)]
-+    pub struct DebugPartialEq<T>(pub T);
-+
-+    impl<T: fmt::Debug> PartialEq for DebugPartialEq<T> {
-+        fn eq(&self, other: &Self) -> bool {
-+            std::format!("{:?}", self) == std::format!("{:?}", other)
-+       }
-+    }
-+    impl<T: Serialize> Serialize for DebugPartialEq<T> {
-+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-+        where
-+            S: serde::Serializer,
-+        {
-+            self.0.serialize(serializer)
-+        }
-+    }
-+    impl<'de, T: Deserialize<'de>> Deserialize<'de> for DebugPartialEq<T> {
-+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-+        where
-+            D: serde::Deserializer<'de>,
-+        {
-+            T::deserialize(deserializer).map(Self)
-+        }
-+    }
+--- rust-portable-atomic-1.9.0.orig/src/imp/detect/auxv.rs
++++ rust-portable-atomic-1.9.0/src/imp/detect/auxv.rs
+@@ -360,7 +360,7 @@ mod arch {
+ mod tests {
+     use super::*;
  
-     macro_rules! t {
-         ($atomic_type:ty, $value_type:ident, $token_type:ident) => {
-Index: rust-portable-atomic-1.4.3/src/imp/atomic128/detect/auxv.rs
-===================================================================
---- rust-portable-atomic-1.4.3.orig/src/imp/atomic128/detect/auxv.rs
-+++ rust-portable-atomic-1.4.3/src/imp/atomic128/detect/auxv.rs
-@@ -272,11 +272,11 @@ mod tests {
-         clippy::no_effect_underscore_binding
-     )]
-     const _: fn() = || {
--        use test_helper::{libc, sys};
-+        //use test_helper::{libc, sys};
-         #[cfg(any(target_os = "linux", target_os = "android"))]
-         {
-             let mut _getauxval: unsafe extern "C" fn(ffi::c_ulong) -> ffi::c_ulong = ffi::getauxval;
--            _getauxval = libc::getauxval;
-+            //_getauxval = libc::getauxval;
-             #[cfg(any(target_env = "musl", target_os = "android"))] // TODO(codegen)
-             {
-                 _getauxval = sys::getauxval;
-@@ -303,7 +303,7 @@ mod tests {
-             _elf_aux_info = libc::elf_aux_info;
-             _elf_aux_info = sys::elf_aux_info;
+-    #[cfg(any(target_os = "linux", target_os = "android"))]
++    /*#[cfg(any(target_os = "linux", target_os = "android"))]
+     #[cfg(target_pointer_width = "64")]
+     #[test]
+     fn test_linux_like() {
+@@ -474,7 +474,7 @@ mod tests {
+                 );
+             }
          }
--        #[cfg(not(target_os = "freebsd"))] // libc doesn't have this on FreeBSD
-+        /*#[cfg(not(target_os = "freebsd"))] // libc doesn't have this on FreeBSD
-         static_assert!(ffi::AT_HWCAP == libc::AT_HWCAP);
-         static_assert!(ffi::AT_HWCAP == sys::AT_HWCAP as _);
-         #[cfg(not(target_os = "freebsd"))] // libc doesn't have this on FreeBSD
-@@ -322,6 +322,6 @@ mod tests {
-             static_assert!(
-                 arch::PPC_FEATURE2_ARCH_2_07 == sys::PPC_FEATURE2_ARCH_2_07 as ffi::c_ulong
-             );
--        }
-+        }*/
-     };
+-    }
++    }*/
+ 
+     #[allow(clippy::cast_sign_loss)]
+     #[cfg(all(target_arch = "aarch64", target_os = "android"))]
+@@ -764,7 +764,7 @@ mod tests {
+     // without actually running tests on these platforms.
+     // See also tools/codegen/src/ffi.rs.
+     // TODO(codegen): auto-generate this test
+-    #[allow(
++    /*#[allow(
+         clippy::cast_possible_wrap,
+         clippy::cast_sign_loss,
+         clippy::cast_possible_truncation,
+@@ -849,5 +849,5 @@ mod tests {
+                 );
+             }
+         }
+-    };
++    };*/
  }
-Index: rust-portable-atomic-1.4.3/src/imp/atomic128/detect/common.rs
+Index: rust-portable-atomic-1.9.0/src/imp/detect/common.rs
 ===================================================================
---- rust-portable-atomic-1.4.3.orig/src/imp/atomic128/detect/common.rs
-+++ rust-portable-atomic-1.4.3/src/imp/atomic128/detect/common.rs
-@@ -144,14 +144,14 @@ mod c_types {
+--- rust-portable-atomic-1.9.0.orig/src/imp/detect/common.rs
++++ rust-portable-atomic-1.9.0/src/imp/detect/common.rs
+@@ -162,7 +162,7 @@ mod c_types {
+     pub(crate) type c_char = i8;
+ 
      // Static assertions for C type definitions.
-     #[cfg(test)]
+-    #[cfg(test)]
++    /*#[cfg(test)]
      const _: fn() = || {
--        use test_helper::{libc, sys};
-+        //use test_helper::{libc, sys};
+         use test_helper::{libc, sys};
          let _: c_int = 0 as std::os::raw::c_int;
-         let _: c_uint = 0 as std::os::raw::c_uint;
-         let _: c_long = 0 as std::os::raw::c_long;
-         let _: c_ulong = 0 as std::os::raw::c_ulong;
--        let _: c_size_t = 0 as libc::size_t; // std::os::raw::c_size_t is unstable
-+        //let _: c_size_t = 0 as libc::size_t; // std::os::raw::c_size_t is unstable
+@@ -176,7 +176,7 @@ mod c_types {
+         )))]
          let _: c_char = 0 as std::os::raw::c_char;
--        let _: c_char = 0 as sys::c_char;
-+        //let _: c_char = 0 as sys::c_char;
-     };
+         let _: c_char = 0 as sys::c_char;
+-    };
++    };*/
  }
  
-@@ -316,29 +316,29 @@ mod tests_common {
+ #[allow(
+@@ -254,55 +254,55 @@ mod tests_common {
      #[test]
      #[cfg_attr(portable_atomic_test_outline_atomics_detect_false, ignore)]
      fn test_detect() {
@@ -1054,7 +1038,7 @@ Index: rust-portable-atomic-1.4.3/src/imp/atomic128/detect/common.rs
 -            }
 +            }*/
          }
-         if detect().test(CpuInfo::HAS_LSE2) {
+         if detect().has_lse2() {
              assert!(detect().test(CpuInfo::HAS_LSE));
              assert!(detect().test(CpuInfo::HAS_LSE2));
 -            if let Ok(test_helper::cpuinfo::ProcCpuinfo { lse2: Some(lse2), .. }) = proc_cpuinfo {
@@ -1070,5 +1054,39 @@ Index: rust-portable-atomic-1.4.3/src/imp/atomic128/detect/common.rs
 -            }
 +            }*/
          }
-         if detect().test(CpuInfo::HAS_LSE128) {
+         if detect().has_lse128() {
              assert!(detect().test(CpuInfo::HAS_LSE));
+             assert!(detect().test(CpuInfo::HAS_LSE2));
+             assert!(detect().test(CpuInfo::HAS_LSE128));
+-            if let Ok(test_helper::cpuinfo::ProcCpuinfo { lse128: Some(lse128), .. }) = proc_cpuinfo
++            /*if let Ok(test_helper::cpuinfo::ProcCpuinfo { lse128: Some(lse128), .. }) = proc_cpuinfo
+             {
+                 assert!(lse128);
+-            }
++            }*/
+         } else {
+             assert!(!detect().test(CpuInfo::HAS_LSE128));
+-            if let Ok(test_helper::cpuinfo::ProcCpuinfo { lse128: Some(lse128), .. }) = proc_cpuinfo
++            /*if let Ok(test_helper::cpuinfo::ProcCpuinfo { lse128: Some(lse128), .. }) = proc_cpuinfo
+             {
+                 assert!(!lse128);
+-            }
++            }*/
+         }
+         if detect().has_rcpc3() {
+             assert!(detect().test(CpuInfo::HAS_RCPC3));
+-            if let Ok(test_helper::cpuinfo::ProcCpuinfo { rcpc3: Some(rcpc3), .. }) = proc_cpuinfo {
++            /*if let Ok(test_helper::cpuinfo::ProcCpuinfo { rcpc3: Some(rcpc3), .. }) = proc_cpuinfo {
+                 assert!(rcpc3);
+-            }
++            }*/
+         } else {
+             assert!(!detect().test(CpuInfo::HAS_RCPC3));
+-            if let Ok(test_helper::cpuinfo::ProcCpuinfo { rcpc3: Some(rcpc3), .. }) = proc_cpuinfo {
++            /*if let Ok(test_helper::cpuinfo::ProcCpuinfo { rcpc3: Some(rcpc3), .. }) = proc_cpuinfo {
+                 assert!(!rcpc3);
+-            }
++            }*/
+         }
+     }
+     #[cfg(target_arch = "powerpc64")]

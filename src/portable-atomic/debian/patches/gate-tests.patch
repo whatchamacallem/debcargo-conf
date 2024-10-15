@@ -1,14 +1,14 @@
-Index: rust-portable-atomic-1.4.3/src/tests/mod.rs
+Index: rust-portable-atomic-1.9.0/src/tests/mod.rs
 ===================================================================
---- rust-portable-atomic-1.4.3.orig/src/tests/mod.rs
-+++ rust-portable-atomic-1.4.3/src/tests/mod.rs
-@@ -27,14 +27,18 @@ test_atomic_int_pub!(i16);
+--- rust-portable-atomic-1.9.0.orig/src/tests/mod.rs
++++ rust-portable-atomic-1.9.0/src/tests/mod.rs
+@@ -28,14 +28,18 @@ test_atomic_int_pub!(i16);
  test_atomic_int_pub!(u16);
  test_atomic_int_pub!(i32);
  test_atomic_int_pub!(u32);
-+#[cfg(any(fallback,target_has_atomic = "64"))]
++#[cfg(any(feature = "fallback",target_has_atomic = "64"))]
  test_atomic_int_pub!(i64);
-+#[cfg(any(fallback,target_has_atomic = "64"))]
++#[cfg(any(feature = "fallback",target_has_atomic = "64"))]
  test_atomic_int_pub!(u64);
 +#[cfg(feature = "fallback")]
  test_atomic_int_pub!(i128);
@@ -18,61 +18,62 @@ Index: rust-portable-atomic-1.4.3/src/tests/mod.rs
  #[cfg(feature = "float")]
  test_atomic_float_pub!(f32);
 -#[cfg(feature = "float")]
-+#[cfg(all(feature = "float",any(fallback,target_has_atomic = "64")))]
++#[cfg(all(feature = "float",any(feature = "fallback",target_has_atomic = "64")))]
  test_atomic_float_pub!(f64);
  
  #[deny(improper_ctypes)]
-@@ -49,7 +53,9 @@ extern "C" {
+@@ -50,7 +54,9 @@ extern "C" {
      fn _atomic_u16_ffi_safety(_: AtomicU16);
      fn _atomic_i32_ffi_safety(_: AtomicI32);
      fn _atomic_u32_ffi_safety(_: AtomicU32);
-+    #[cfg(any(fallback,target_has_atomic = "64"))]
++    #[cfg(any(feature = "fallback",target_has_atomic = "64"))]
      fn _atomic_i64_ffi_safety(_: AtomicI64);
-+    #[cfg(any(fallback,target_has_atomic = "64"))]
++    #[cfg(any(feature = "fallback",target_has_atomic = "64"))]
      fn _atomic_u64_ffi_safety(_: AtomicU64);
      // TODO: 128-bit integers are not FFI safe
      // https://github.com/rust-lang/unsafe-code-guidelines/issues/119
-@@ -58,7 +64,7 @@ extern "C" {
+@@ -59,7 +65,7 @@ extern "C" {
      // fn _atomic_u128_ffi_safety(_: AtomicU128);
      #[cfg(feature = "float")]
      fn _atomic_f32_ffi_safety(_: AtomicF32);
 -    #[cfg(feature = "float")]
-+    #[cfg(all(feature = "float",any(fallback,target_has_atomic = "64")))]
++    #[cfg(all(feature = "float",any(feature = "fallback",target_has_atomic = "64")))]
      fn _atomic_f64_ffi_safety(_: AtomicF64);
  }
  
-@@ -76,7 +82,7 @@ fn test_is_lock_free() {
+@@ -77,7 +83,7 @@ fn test_is_lock_free() {
      assert!(AtomicI32::is_lock_free());
      assert!(AtomicU32::is_always_lock_free());
      assert!(AtomicU32::is_lock_free());
 -    #[cfg(not(portable_atomic_no_cfg_target_has_atomic))]
-+    #[cfg(all(not(portable_atomic_no_cfg_target_has_atomic),any(fallback,target_has_atomic = "64")))]
++    #[cfg(all(not(portable_atomic_no_cfg_target_has_atomic),any(feature = "fallback",target_has_atomic = "64")))]
      {
-         if cfg!(all(
-             feature = "fallback",
-@@ -105,6 +111,7 @@ fn test_is_lock_free() {
-             assert!(!AtomicU64::is_lock_free());
+         if cfg!(any(
+             target_has_atomic = "64",
+@@ -124,6 +130,7 @@ fn test_is_lock_free() {
+             }
          }
      }
-+    #[cfg(any(fallback,target_has_atomic = "128"))]
++    #[cfg(any(feature = "fallback",target_has_atomic = "128"))]
      if cfg!(portable_atomic_no_asm) && cfg!(not(portable_atomic_unstable_asm)) {
          assert!(!AtomicI128::is_always_lock_free());
          assert!(!AtomicI128::is_lock_free());
-@@ -344,14 +351,16 @@ fn test_serde() {
+@@ -420,13 +427,17 @@ fn test_serde() {
      t!(AtomicU16, u16, U16);
      t!(AtomicI32, i32, I32);
      t!(AtomicU32, u32, U32);
-+    #[cfg(any(fallback,target_has_atomic = "64"))]
++    #[cfg(any(feature = "fallback",target_has_atomic = "64"))]
      t!(AtomicI64, i64, I64);
-+    #[cfg(any(fallback,target_has_atomic = "64"))]
++    #[cfg(any(feature = "fallback",target_has_atomic = "64"))]
      t!(AtomicU64, u64, U64);
-     // TODO: serde_test doesn't support Token::{I128,U128}
-     // t!(AtomicI128, i128, I128);
-     // t!(AtomicU128, u128, U128);
++    #[cfg(feature = "fallback")]
+     t!(AtomicI128, i128, I128);
++    #[cfg(feature = "fallback")]
+     t!(AtomicU128, u128, U128);
      #[cfg(feature = "float")]
      t!(AtomicF32, f32, F32);
 -    #[cfg(feature = "float")]
-+    #[cfg(all(feature = "float",any(fallback,target_has_atomic = "64")))]
++    #[cfg(all(feature = "float",any(feature = "fallback",target_has_atomic = "64")))]
+     // TODO: fixed in LLVM 18?
      #[cfg(not(target_arch = "mips"))] // LLVM 17 (nightly-2023-08-09) bug: assertion failed at core/src/num/diy_float.rs:78:9
      t!(AtomicF64, f64, F64);
- }
