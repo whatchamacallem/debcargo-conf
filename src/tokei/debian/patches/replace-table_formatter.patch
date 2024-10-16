@@ -1,0 +1,98 @@
+Description: Replace unavailable table_formatter with packaged comfy-table.
+ Table formatting is only used to show the language table, i.e.
+ `tokei --languages`, so this is rather self-contained.
+Last-Update: 2024-10-16
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -142,4 +142,4 @@
+ 
+-[dependencies.table_formatter]
+-version = "0.6.1"
++[dependencies.comfy-table]
++version = "7"
+ 
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -347,5 +347,6 @@
+     pub fn print_supported_languages() -> Result<(), Box<dyn std::error::Error>> {
+-        use table_formatter::table::*;
+-        use table_formatter::{cell, table};
+-        let term_width = term_size::dimensions().map(|(w, _)| w).unwrap_or(75) - 8;
++        use comfy_table::{Cell, ColumnConstraint::UpperBoundary, Table, Width::Fixed};
++        let mut table = Table::new();
++        let term_width = terminal_size::terminal_size().map(|(terminal_size::Width(w), _)| w).unwrap_or(75) - 8;
++
+         let (lang_w, suffix_w) = if term_width <= 80 {
+@@ -356,49 +357,26 @@
+ 
+-        let header = vec![
+-            cell!(
+-                "Language",
+-                align = Align::Left,
+-                padding = Padding::NONE,
+-                width = Some(lang_w)
+-            )
+-            .with_formatter(vec![table_formatter::table::FormatterFunc::Normal(
+-                Colorize::bold,
+-            )]),
+-            cell!(
+-                "Extensions",
+-                align = Align::Left,
+-                padding = Padding::new(3, 0),
+-                width = Some(suffix_w)
+-            )
+-            .with_formatter(vec![table_formatter::table::FormatterFunc::Normal(
+-                Colorize::bold,
+-            )]),
+-        ];
+-        let content = LanguageType::list()
+-            .iter()
+-            .map(|(key, ext)| {
+-                vec![
+-                    // table::TableCell::new(table::Cell::TextCell(key.name().to_string()))
+-                    //     .with_width(lang_w),
+-                    cell!(key.name()).with_width(Some(lang_w)),
+-                    cell!(
+-                        if matches!(key, LanguageType::Emojicode) {
+-                            ext.join(", ") + "\u{200b}"
+-                        } else if ext.is_empty() {
+-                            "<None>".to_string()
+-                        } else {
+-                            ext.join(", ")
+-                        },
+-                        align = Align::Left,
+-                        padding = Padding::new(3, 0),
+-                        width = Some(suffix_w)
+-                    ),
+-                ]
+-            })
+-            .collect();
+-        let t = table!(header - content with Border::ALL);
++        table.set_header(vec!["Language", "Extensions"]);
++        table
++            .column_mut(0)
++            .expect("language table should have 2 columns")
++            .set_constraint(UpperBoundary(Fixed(lang_w)));
++        table
++            .column_mut(1)
++            .expect("language table should have 2 columns")
++            .set_constraint(UpperBoundary(Fixed(suffix_w)));
++
++        for (key, ext) in LanguageType::list() {
++            table.add_row(vec![
++                key.name().to_string(),
++                if matches!(key, LanguageType::Emojicode) {
++                    ext.join(", ") + "\u{200b}"
++                } else if ext.is_empty() {
++                    "<None>".to_string()
++                } else {
++                    ext.join(", ")
++                },
++            ]);
++        }
+ 
+-        let mut render_result = Vec::new();
+-        t.render(&mut render_result)?;
+-        println!("{}", String::from_utf8(render_result)?);
++        println!("{table}");
+         Ok(())
