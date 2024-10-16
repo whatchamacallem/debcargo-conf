@@ -1,27 +1,41 @@
 only in patch2:
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -30,2 +30,3 @@
+Index: futures-test/Cargo.toml
+===================================================================
+--- futures-test.orig/Cargo.toml
++++ futures-test/Cargo.toml
+@@ -37,14 +37,17 @@ path = "src/lib.rs"
+ [dependencies.futures-core]
+ version = "0.3.31"
  default-features = false
 +features = ["std"]
  
-@@ -34,2 +35,3 @@
+ [dependencies.futures-executor]
+ version = "0.3.31"
  default-features = false
 +features = ["std"]
  
-@@ -38,2 +40,3 @@
+ [dependencies.futures-io]
+ version = "0.3.31"
  default-features = false
 +features = ["std"]
  
-@@ -50,2 +53,3 @@
+ [dependencies.futures-macro]
+ version = "=0.3.31"
+@@ -57,26 +60,18 @@ default-features = false
+ [dependencies.futures-task]
+ version = "0.3.31"
  default-features = false
 +features = ["std"]
  
-@@ -54,2 +58,3 @@
+ [dependencies.futures-util]
+ version = "0.3.31"
  default-features = false
 +features = ["std", "io"]
  
-@@ -64,11 +69 @@
+ [dependencies.pin-project]
+ version = "1.0.11"
+ 
+ [dev-dependencies]
  
 -[features]
 -default = ["std"]
@@ -33,10 +47,16 @@ only in patch2:
 -    "futures-util/io",
 -    "futures-executor/std",
 -]
-only in patch2:
---- a/src/lib.rs
-+++ b/src/lib.rs
-@@ -16,10 +16,4 @@
+ 
+ [lints.rust]
+ missing_debug_implementations = "warn"
+Index: futures-test/src/lib.rs
+===================================================================
+--- futures-test.orig/src/lib.rs
++++ futures-test/src/lib.rs
+@@ -9,14 +9,8 @@
+ #![warn(missing_docs, unsafe_op_in_unsafe_fn)]
+ #![allow(clippy::test_attr_in_doctest)]
  
 -#[cfg(not(feature = "std"))]
 -compile_error!(
@@ -47,7 +67,11 @@ only in patch2:
  #[doc(hidden)]
 -#[cfg(feature = "std")]
  pub mod __private {
-@@ -39,18 +33,12 @@
+     pub use futures_core::{future, stream, task};
+     pub use futures_executor::block_on;
+@@ -32,22 +26,16 @@ pub mod __private {
+ }
+ 
  #[macro_use]
 -#[cfg(feature = "std")]
  mod assert;
@@ -66,7 +90,11 @@ only in patch2:
  
 -#[cfg(feature = "std")]
  pub mod io;
-@@ -83,3 +71,2 @@
+ 
+ mod assert_unmoved;
+@@ -76,5 +64,4 @@ mod track_closed;
+ ///     })
+ /// }
  /// ```
 -#[cfg(feature = "std")]
  pub use futures_macro::test_internal as test;
