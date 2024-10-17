@@ -1,0 +1,42 @@
+Description: Disable unavailable dependency detone and related test
+Forwarded: not-needed
+Last-Update: 2024-10-16
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -3218,3 +3218,3 @@
+     use super::*;
+-    use detone::IterDecomposeVietnamese;
++    //use detone::IterDecomposeVietnamese;
+     use encoding_rs::IBM866;
+@@ -3233,3 +3233,3 @@
+     use encoding_rs::WINDOWS_1257;
+-    use encoding_rs::WINDOWS_1258;
++    //use encoding_rs::WINDOWS_1258;
+     use encoding_rs::WINDOWS_874;
+@@ -3246,3 +3246,3 @@
+     fn check(input: &str, encoding: &'static Encoding) {
+-        let orthographic;
++        /*let orthographic;
+         let (bytes, _, _) = if encoding == WINDOWS_1258 {
+@@ -3254,5 +3254,5 @@
+         } else {
+-            encoding.encode(input)
+-        };
+-        check_bytes(&bytes, encoding);
++            encoding.encode(input);
++        };*/
++        check_bytes(&encoding.encode(input).0, encoding);
+     }
+@@ -3434,2 +3434,3 @@
+     #[test]
++    #[cfg(any())] // dependency detone unavailable
+     fn test_vi() {
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -45,4 +45,4 @@
+ optional = true
+-[dev-dependencies.detone]
+-version = "1.0.0"
++#[dev-dependencies.detone]
++#version = "1.0.0"
+ 
