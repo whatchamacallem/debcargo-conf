@@ -1,12 +1,12 @@
-Index: nix/src/sys/socket/mod.rs
+Index: nix/test/sys/test_socket.rs
 ===================================================================
---- nix.orig/src/sys/socket/mod.rs
-+++ nix/src/sys/socket/mod.rs
-@@ -1850,6 +1850,7 @@ mod test {
- 
-     #[cfg_attr(qemu, ignore)]
-     #[test]
-+    #[cfg(not(target_arch = "s390x"))]
-     fn test_recvmm2() -> crate::Result<()> {
-         use crate::sys::socket::{
-             sendmsg, setsockopt, socket, sockopt::Timestamping, MsgFlags, SockFlag, SockType,
+--- nix.orig/test/sys/test_socket.rs
++++ nix/test/sys/test_socket.rs
+@@ -2827,6 +2827,7 @@ fn test_icmp_protocol() {
+ #[cfg_attr(qemu, ignore)]
+ #[cfg(target_os = "linux")]
+ #[test]
++#[cfg(not(target_arch = "s390x"))]
+ fn test_recvmm2() -> nix::Result<()> {
+     use nix::sys::{
+         socket::{

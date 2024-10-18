@@ -44,25 +44,12 @@ Index: rust-nix-0.26.2/src/sys/time.rs
      }
  }
  
-Index: rust-nix-0.26.2/src/lib.rs
-===================================================================
---- rust-nix-0.26.2.orig/src/lib.rs
-+++ rust-nix-0.26.2/src/lib.rs
-@@ -46,1 +46,1 @@
--#![cfg_attr(test, deny(warnings))]
-+//#![cfg_attr(test, deny(warnings))]
-@@ -50,1 +50,1 @@
--#![deny(unused)]
-+//#![deny(unused)]
 Index: rust-nix-0.26.2/src/sys/resource.rs
 ===================================================================
---- rust-nix-0.26.2.orig/src/sys/resource.rs
-+++ rust-nix-0.26.2/src/sys/resource.rs
-@@ -438,6 +438,6 @@ mod test {
-         let user = usage.user_time();
-         assert!(user.tv_sec() > 0 || user.tv_usec() > 0);
-         assert_eq!(user.tv_sec(), rusage.ru_utime.tv_sec);
--        assert_eq!(user.tv_usec(), rusage.ru_utime.tv_usec);
-+        assert_eq!(user.tv_usec() as u64, rusage.ru_utime.tv_usec as u64);
-     }
+--- rust-nix-0.26.2.orig/test/sys/test_resource.rs
++++ rust-nix-0.26.2/test/sys/test_resource.rs
+@@ -438,3 +438,3 @@
+     assert_eq!(user.tv_sec(), rusage.ru_utime.tv_sec);
+-    assert_eq!(user.tv_usec(), rusage.ru_utime.tv_usec);
++    assert_eq!(user.tv_usec() as u64, rusage.ru_utime.tv_usec as u64);
  }
