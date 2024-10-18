@@ -1,0 +1,24 @@
+Description: Use system test vectors
+Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Forwarded: not-needed
+
+Because debian ships the crates independently (not the upstream git
+workspace), this test needs to use the test vectors from
+librust-fips203-dev.
+
+--- fips203-ffi/python/test/nist/keygen.py
++++ fips203-ffi/python/test/nist/keygen.py
+@@ -12,11 +12,12 @@ import fips203
+ import json
+ import re
+ from binascii import a2b_hex, b2a_hex
++import glob
+ 
+ from typing import Dict, Union, List, TypedDict
+ 
+ with open(
+-    "../../tests/nist_vectors/ML-KEM-keyGen-FIPS203/internalProjection.json"
++    glob.glob('/usr/share/cargo/registry/fips203-*/tests/nist_vectors/ML-KEM-keyGen-FIPS203/internalProjection.json')[0]
+ ) as f:
+     t = json.load(f)
+ 
