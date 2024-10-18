@@ -1,0 +1,31 @@
+Description: Ignore tests on s390x due to mm acct bug in debci runner kernel
+ These tests call `fn proc_meminfo_line()` in src/platform/linux.rs, which
+ reads each line of `/proc/meminfo` and parses the numbers as u64 values, then
+ wrap in `ByteSize` from bytesize crate with `ByteSize::kib(value as u64)`.
+ The method multiplies `value` by 1024, which on the runner triggers overflow.
+ .
+ terceiro gave a sample on that runner, with the line
+ > DirectMap1M:    18446744073679941632 kB
+ which is 29609984 shy of u64::MAX, presumably an earlier underflow.
+ .
+ fabiang suggested this might be what commit 81e847964985 fixed in the kernel,
+ which landed in 6.4, was backported to 6.3, but that runner is atm running
+ 6.10.6+bpo-s390x and somehow still exhibits this bug.
+ .
+ Some investigation might be needed on the kernel side, but for now just ignore
+ these tests, they aren't particularly relevant to current dependents.
+Last-Update: 2024-10-18
+--- a/src/platform/mod.rs
++++ b/src/platform/mod.rs
+@@ -79,2 +79,3 @@
+     #[test]
++    #[cfg_attr(target_arch = "s390x", ignore = "debci runner kernel version has memory accounting bug")]
+     fn test_memory() {
+@@ -85,2 +86,3 @@
+     #[test]
++    #[cfg_attr(target_arch = "s390x", ignore = "debci runner kernel version has memory accounting bug")]
+     fn test_swap() {
+@@ -91,2 +93,3 @@
+     #[test]
++    #[cfg_attr(target_arch = "s390x", ignore = "debci runner kernel version has memory accounting bug")]
+     fn test_mem_and_swap() {
