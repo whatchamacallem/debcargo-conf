@@ -1,0 +1,55 @@
+Index: calloop-0.10/Cargo.toml
+===================================================================
+--- calloop-0.10.orig/Cargo.toml
++++ calloop-0.10/Cargo.toml
+@@ -56,7 +56,7 @@ default-features = false
+ version = "0.4"
+ 
+ [dependencies.nix]
+-version = "0.27"
++version = "0.29"
+ features = [
+     "event",
+     "fs",
+Index: calloop-0.10/src/loop_logic.rs
+===================================================================
+--- calloop-0.10.orig/src/loop_logic.rs
++++ calloop-0.10/src/loop_logic.rs
+@@ -501,6 +501,7 @@ impl LoopSignal {
+ mod tests {
+     use std::time::Duration;
+     use std::os::fd::IntoRawFd;
++    use std::os::fd::BorrowedFd;
+ 
+     use crate::{
+         generic::Generic, ping::*, Dispatcher, Interest, Mode, Poll, PostAction, Readiness,
+@@ -788,7 +789,7 @@ mod tests {
+         assert!(!dispatched);
+ 
+         // write something, the socket becomes readable
+-        write(sock2, &[1, 2, 3]).unwrap();
++        write(unsafe { BorrowedFd::borrow_raw(sock2) }, &[1, 2, 3]).unwrap();
+         dispatched = false;
+         event_loop
+             .dispatch(Duration::ZERO, &mut dispatched)
+Index: calloop-0.10/src/sources/ping/eventfd.rs
+===================================================================
+--- calloop-0.10.orig/src/sources/ping/eventfd.rs
++++ calloop-0.10/src/sources/ping/eventfd.rs
+@@ -20,6 +20,7 @@
+ 
+ use std::{os::unix::io::RawFd, sync::Arc};
+ use std::os::fd::IntoRawFd;
++use std::os::fd::BorrowedFd;
+ 
+ use nix::sys::eventfd::{eventfd, EfdFlags};
+ use nix::unistd::{read, write};
+@@ -64,7 +65,7 @@ pub fn make_ping() -> std::io::Result<(P
+ #[inline]
+ fn send_ping(fd: RawFd, count: u64) -> std::io::Result<()> {
+     assert!(count > 0);
+-    match write(fd, &count.to_ne_bytes()) {
++    match write(unsafe { BorrowedFd::borrow_raw(fd) }, &count.to_ne_bytes()) {
+         // The write succeeded, the ping will wake up the loop.
+         Ok(_) => Ok(()),
+ 
