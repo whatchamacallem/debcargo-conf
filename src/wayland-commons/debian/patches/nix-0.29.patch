@@ -1,0 +1,38 @@
+Index: wayland-commons/src/socket.rs
+===================================================================
+--- wayland-commons.orig/src/socket.rs
++++ wayland-commons/src/socket.rs
+@@ -39,6 +39,24 @@ impl MyFrom<&BorrowedFd<'_>> for RawFd {
+     }
+ }
+ 
++use nix::sys::socket::CmsgIterator;
++trait ResultHack<'a> {
++    fn addresult(self) -> nix::Result<CmsgIterator<'a>>;
++}
++
++impl<'a> ResultHack<'a> for CmsgIterator<'a> {
++    fn addresult(self) -> nix::Result<CmsgIterator<'a>> {
++        return Ok(self);
++    }
++}
++
++impl<'a> ResultHack<'a> for nix::Result<CmsgIterator<'a>> {
++    fn addresult(self) -> nix::Result<CmsgIterator<'a>> {
++        return self;
++    }
++}
++
++
+ impl Socket {
+     /// Send a single message to the socket
+     ///
+@@ -85,7 +103,7 @@ impl Socket {
+         )?;
+ 
+         let mut fd_count = 0;
+-        let received_fds = msg.cmsgs().flat_map(|cmsg| match cmsg {
++        let received_fds = ResultHack::addresult(msg.cmsgs())?.flat_map(|cmsg| match cmsg {
+             socket::ControlMessageOwned::ScmRights(s) => s,
+             _ => Vec::new(),
+         });
