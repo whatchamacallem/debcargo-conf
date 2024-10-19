@@ -1,0 +1,52 @@
+--- rust-wayland-client-0.29-0.29.5.orig/Cargo.toml
++++ rust-wayland-client-0.29-0.29.5/Cargo.toml
+@@ -39,7 +39,7 @@ version = "1.0"
+ version = "0.2"
+ 
+ [dependencies.nix]
+-version = "0.27"
++version = "0.29"
+ features = [
+     "fs",
+     "poll",
+--- rust-wayland-client-0.29-0.29.5.orig/src/rust_imp/queues.rs
++++ rust-wayland-client-0.29-0.29.5/src/rust_imp/queues.rs
+@@ -6,6 +6,7 @@ use std::rc::Rc;
+ use std::sync::{Arc, Mutex};
+ 
+ use nix::poll::{poll, PollFd, PollFlags};
++use nix::poll::PollTimeout;
+ 
+ use wayland_commons::map::ObjectMap;
+ use wayland_commons::wire::{Argument, Message};
+@@ -35,6 +36,12 @@ impl MyFrom<&BorrowedFd<'_>> for RawFd {
+     }
+ }
+ 
++impl <'a> MyFrom<&BorrowedFd<'a>> for BorrowedFd<'a> {
++    fn from(t: &BorrowedFd<'a>) -> BorrowedFd<'a> {
++        t.clone()
++    }
++}
++
+ pub(crate) type QueueBuffer = Arc<Mutex<VecDeque<Message>>>;
+ 
+ pub(crate) fn create_queue_buffer() -> QueueBuffer {
+@@ -85,7 +92,7 @@ impl EventQueueInner {
+                     Ok(_) => break,
+                     Err(nix::Error::EAGAIN) => {
+                         // EAGAIN, we need to wait before writing, so we poll the socket
+-                        let poll_ret = poll(&mut [PollFd::new(MyFrom::from( unsafe { &BorrowedFd::borrow_raw(socket_fd)}), PollFlags::POLLOUT)], -1);
++                        let poll_ret = poll(&mut [PollFd::new(MyFrom::from( unsafe { &BorrowedFd::borrow_raw(socket_fd)}), PollFlags::POLLOUT)], PollTimeout::NONE);
+                         match poll_ret {
+                             Ok(_) => continue,
+                             Err(e) => {
+@@ -107,7 +114,7 @@ impl EventQueueInner {
+         }
+ 
+         // wait for incoming messages to arrive
+-        match poll(&mut [PollFd::new(MyFrom::from( unsafe { &BorrowedFd::borrow_raw(socket_fd)}), PollFlags::POLLIN)], -1) {
++        match poll(&mut [PollFd::new(MyFrom::from( unsafe { &BorrowedFd::borrow_raw(socket_fd)}), PollFlags::POLLIN)], PollTimeout::NONE) {
+             Ok(_) => (),
+             Err(e) => {
+                 self.cancel_read();
