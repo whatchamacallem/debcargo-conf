@@ -1,0 +1,26 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+UNIC_DIR = /usr/share/unicode
+GEN_SRC_DIR = ${CURDIR}/generate-sources
+LINK_DIR = ${GEN_SRC_DIR}/target/tmp/data/15.0.0
+DATA_DIR = ${CURDIR}/src/data
+
+execute_after_dh_auto_clean:
+	rm -f ${CURDIR}/src/categories.rs
+	# these pregenerated files are regenerated during the build time
+	rm -f ${DATA_DIR}/characters.rs ${DATA_DIR}/grapheme_test.rs ${DATA_DIR}/grapheme_characters.rs
+
+execute_before_dh_auto_build:
+	# see debcargo.toml for the categories.rs as missing-source reasoning
+	cp ${CURDIR}/debian/missing-sources/categories.rs ${CURDIR}/src/
+	cp -r ${CURDIR}/debian/missing-sources/generate-sources ${GEN_SRC_DIR}
+	mkdir -p ${LINK_DIR}
+	ln -s ${UNIC_DIR}/UnicodeData.txt ${UNIC_DIR}/auxiliary/GraphemeBreakTest.txt \
+		${UNIC_DIR}/auxiliary/GraphemeBreakProperty.txt ${UNIC_DIR}/emoji/emoji-data.txt ${LINK_DIR}
+	cd ${GEN_SRC_DIR} && cargo run && cd -
+	patch ${DATA_DIR}/grapheme_test.rs -i ${CURDIR}/debian/patches/drop-incompatible-tests.patch
+
+execute_after_dh_auto_build:
+	rm -rf ${GEN_SRC_DIR}

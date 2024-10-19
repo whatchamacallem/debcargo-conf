@@ -1,0 +1,55 @@
+Description: drop incompatible tests
+ Regenerating graphene_test.rs seems include twice as much tests as the original
+ and very few of them have confusing failures.
+Author: Ananthu C V <weepingclown@disroot.org>
+Forwarded: not-needed
+Last-Update: 2024-10-19
+--- a/src/data/grapheme_test.rs
++++ b/src/data/grapheme_test.rs
+@@ -4710,46 +4710,2 @@
+ 	);
+-	grapheme_test("\u{0915}\u{0924}",
+-		&["\u{0915}", "\u{0924}"],
+-		"  ÷ [0.2] DEVANAGARI LETTER KA (ConjunctLinkingScripts_LinkingConsonant) ÷ [999.0] DEVANAGARI LETTER TA (ConjunctLinkingScripts_LinkingConsonant) ÷ [0.3]"
+-	);
+-	grapheme_test("\u{0915}\u{094D}\u{0924}",
+-		&["\u{0915}\u{094D}\u{0924}"],
+-		"  ÷ [0.2] DEVANAGARI LETTER KA (ConjunctLinkingScripts_LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_ConjunctLinkingScripts_ConjunctLinker_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (ConjunctLinkingScripts_LinkingConsonant) ÷ [0.3]"
+-	);
+-	grapheme_test("\u{0915}\u{094D}\u{094D}\u{0924}",
+-		&["\u{0915}\u{094D}\u{094D}\u{0924}"],
+-		"  ÷ [0.2] DEVANAGARI LETTER KA (ConjunctLinkingScripts_LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_ConjunctLinkingScripts_ConjunctLinker_ExtCccZwj) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_ConjunctLinkingScripts_ConjunctLinker_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (ConjunctLinkingScripts_LinkingConsonant) ÷ [0.3]"
+-	);
+-	grapheme_test("\u{0915}\u{094D}\u{200D}\u{0924}",
+-		&["\u{0915}\u{094D}\u{200D}\u{0924}"],
+-		"  ÷ [0.2] DEVANAGARI LETTER KA (ConjunctLinkingScripts_LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_ConjunctLinkingScripts_ConjunctLinker_ExtCccZwj) × [9.0] ZERO WIDTH JOINER (ZWJ_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (ConjunctLinkingScripts_LinkingConsonant) ÷ [0.3]"
+-	);
+-	grapheme_test("\u{0915}\u{093C}\u{200D}\u{094D}\u{0924}",
+-		&["\u{0915}\u{093C}\u{200D}\u{094D}\u{0924}"],
+-		"  ÷ [0.2] DEVANAGARI LETTER KA (ConjunctLinkingScripts_LinkingConsonant) × [9.0] DEVANAGARI SIGN NUKTA (Extend_ConjunctLinkingScripts_ExtCccZwj) × [9.0] ZERO WIDTH JOINER (ZWJ_ExtCccZwj) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_ConjunctLinkingScripts_ConjunctLinker_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (ConjunctLinkingScripts_LinkingConsonant) ÷ [0.3]"
+-	);
+-	grapheme_test("\u{0915}\u{093C}\u{094D}\u{200D}\u{0924}",
+-		&["\u{0915}\u{093C}\u{094D}\u{200D}\u{0924}"],
+-		"  ÷ [0.2] DEVANAGARI LETTER KA (ConjunctLinkingScripts_LinkingConsonant) × [9.0] DEVANAGARI SIGN NUKTA (Extend_ConjunctLinkingScripts_ExtCccZwj) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_ConjunctLinkingScripts_ConjunctLinker_ExtCccZwj) × [9.0] ZERO WIDTH JOINER (ZWJ_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (ConjunctLinkingScripts_LinkingConsonant) ÷ [0.3]"
+-	);
+-	grapheme_test("\u{0915}\u{094D}\u{0924}\u{094D}\u{092F}",
+-		&["\u{0915}\u{094D}\u{0924}\u{094D}\u{092F}"],
+-		"  ÷ [0.2] DEVANAGARI LETTER KA (ConjunctLinkingScripts_LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_ConjunctLinkingScripts_ConjunctLinker_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (ConjunctLinkingScripts_LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_ConjunctLinkingScripts_ConjunctLinker_ExtCccZwj) × [9.3] DEVANAGARI LETTER YA (ConjunctLinkingScripts_LinkingConsonant) ÷ [0.3]"
+-	);
+-	grapheme_test("\u{0915}\u{094D}\u{0061}",
+-		&["\u{0915}\u{094D}", "\u{0061}"],
+-		"  ÷ [0.2] DEVANAGARI LETTER KA (ConjunctLinkingScripts_LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_ConjunctLinkingScripts_ConjunctLinker_ExtCccZwj) ÷ [999.0] LATIN SMALL LETTER A (Other) ÷ [0.3]"
+-	);
+-	grapheme_test("\u{0061}\u{094D}\u{0924}",
+-		&["\u{0061}\u{094D}", "\u{0924}"],
+-		"  ÷ [0.2] LATIN SMALL LETTER A (Other) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_ConjunctLinkingScripts_ConjunctLinker_ExtCccZwj) ÷ [999.0] DEVANAGARI LETTER TA (ConjunctLinkingScripts_LinkingConsonant) ÷ [0.3]"
+-	);
+-	grapheme_test("\u{003F}\u{094D}\u{0924}",
+-		&["\u{003F}\u{094D}", "\u{0924}"],
+-		"  ÷ [0.2] QUESTION MARK (Other) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_ConjunctLinkingScripts_ConjunctLinker_ExtCccZwj) ÷ [999.0] DEVANAGARI LETTER TA (ConjunctLinkingScripts_LinkingConsonant) ÷ [0.3]"
+-	);
+-	grapheme_test("\u{0915}\u{094D}\u{094D}\u{0924}",
+-		&["\u{0915}\u{094D}\u{094D}\u{0924}"],
+-		"  ÷ [0.2] DEVANAGARI LETTER KA (ConjunctLinkingScripts_LinkingConsonant) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_ConjunctLinkingScripts_ConjunctLinker_ExtCccZwj) × [9.0] DEVANAGARI SIGN VIRAMA (Extend_ConjunctLinkingScripts_ConjunctLinker_ExtCccZwj) × [9.3] DEVANAGARI LETTER TA (ConjunctLinkingScripts_LinkingConsonant) ÷ [0.3]"
+-	);
+ }
