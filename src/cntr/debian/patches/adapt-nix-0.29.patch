@@ -1,0 +1,99 @@
+Index: cntr/Cargo.toml
+===================================================================
+--- cntr.orig/Cargo.toml
++++ cntr/Cargo.toml
+@@ -61,7 +61,7 @@ version = "0.2.151"
+ version = "0.4.20"
+ 
+ [dependencies.nix]
+-version = "0.27"
++version = "0.29"
+ features = ["fs", "mount", "poll", "process", "sched", "signal", "socket", "term", "user"]
+ 
+ [dependencies.parking_lot]
+Index: cntr/src/fs.rs
+===================================================================
+--- cntr.orig/src/fs.rs
++++ cntr/src/fs.rs
+@@ -246,7 +246,7 @@ impl CntrFs {
+ 
+         let create_mode = stat::Mode::from_bits_truncate(mode);
+         let fd = fcntl::openat(
+-            parent_fd.raw(),
++            Some(parent_fd.raw()),
+             name,
+             oflag | OFlag::O_NOFOLLOW | OFlag::O_CLOEXEC,
+             create_mode,
+@@ -528,7 +528,7 @@ impl CntrFs {
+         let parent_inode = self.inode(parent)?;
+         let parent_fd = parent_inode.fd.read();
+         let fd = fcntl::openat(
+-            parent_fd.raw(),
++            Some(parent_fd.raw()),
+             name,
+             OFlag::O_PATH | OFlag::O_NOFOLLOW | OFlag::O_CLOEXEC,
+             stat::Mode::empty(),
+@@ -768,7 +768,7 @@ impl Filesystem for CntrFs {
+ 
+             let perm = stat::Mode::from_bits_truncate(mode);
+             let fd = inode.fd.read();
+-            tryfuse!(stat::mkdirat(fd.raw(), name, perm), reply);
++            tryfuse!(stat::mkdirat(Some(fd.raw()), name, perm), reply);
+         }
+         self.lookup(req, parent, name, reply);
+     }
+Index: cntr/src/ipc.rs
+===================================================================
+--- cntr.orig/src/ipc.rs
++++ cntr/src/ipc.rs
+@@ -1,6 +1,7 @@
+ use nix::errno::Errno;
+ use nix::sys::socket::*;
+ use simple_error::try_with;
++use simple_error::SimpleError;
+ use std::fs::File;
+ use std::io::{IoSlice, IoSliceMut};
+ use std::os::unix::prelude::*;
+@@ -51,7 +52,7 @@ impl Socket {
+                     Err(Errno::EAGAIN) | Err(Errno::EINTR) => continue,
+                     Err(e) => return try_with!(Err(e), "recvmsg failed"),
+                     Ok(msg) => {
+-                        for cmsg in msg.cmsgs() {
++                        for cmsg in msg.cmsgs().map_err(|e| SimpleError::from(e))? {
+                             if let ControlMessageOwned::ScmRights(fds) = cmsg {
+                                 for fd in fds {
+                                     files.push(unsafe { File::from_raw_fd(fd) })
+Index: cntr/src/pty.rs
+===================================================================
+--- cntr.orig/src/pty.rs
++++ cntr/src/pty.rs
+@@ -136,12 +136,12 @@ fn shovel(pairs: &mut [FilePair]) {
+             let fd = match pair.state {
+                 FilePairState::Read => {
+                     let fd = pair.from;
+-                    read_set.insert(fd);
++                    read_set.insert(fd.as_fd());
+                     fd.as_raw_fd()
+                 }
+                 FilePairState::Write => {
+                     let fd = pair.to;
+-                    write_set.insert(fd);
++                    write_set.insert(fd.as_fd());
+                     fd.as_raw_fd()
+                 }
+             };
+@@ -169,12 +169,12 @@ fn shovel(pairs: &mut [FilePair]) {
+         for pair in pairs.iter_mut() {
+             match pair.state {
+                 FilePairState::Read => {
+-                    if read_set.contains(pair.from) && !pair.read() {
++                    if read_set.contains(pair.from.as_fd()) && !pair.read() {
+                         return;
+                     }
+                 }
+                 FilePairState::Write => {
+-                    if write_set.contains(pair.to) && !pair.write() {
++                    if write_set.contains(pair.to.as_fd()) && !pair.write() {
+                         return;
+                     }
+                 }
