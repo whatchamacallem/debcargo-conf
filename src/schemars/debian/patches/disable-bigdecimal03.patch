@@ -1,0 +1,57 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 06b9beb..87b34f8 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -95,7 +95,6 @@ required-features = ["semver"]
+ name = "decimal"
+ required-features = [
+     "rust_decimal",
+-    "bigdecimal03",
+     "bigdecimal04",
+ ]
+ 
+@@ -105,11 +104,11 @@ optional = true
+ default-features = false
+ package = "arrayvec"
+ 
+-[dependencies.bigdecimal03]
+-version = "0.3"
+-optional = true
+-default-features = false
+-package = "bigdecimal"
++#[dependencies.bigdecimal03]
++#version = "0.3"
++#optional = true
++#default-features = false
++#package = "bigdecimal"
+ 
+ [dependencies.bigdecimal04]
+ version = "0.4"
+@@ -192,7 +191,7 @@ version = "1.2.1"
+ version = "1.0"
+ 
+ [features]
+-bigdecimal = ["bigdecimal03"]
++bigdecimal = ["bigdecimal04"]
+ default = ["derive"]
+ derive = ["schemars_derive"]
+ derive_json_schema = ["impl_json_schema"]
+diff --git a/tests/decimal.rs b/tests/decimal.rs
+index d245583..68d04a7 100644
+--- a/tests/decimal.rs
++++ b/tests/decimal.rs
+@@ -5,12 +5,12 @@ use util::*;
+ fn rust_decimal() -> TestResult {
+     test_default_generated_schema::<rust_decimal::Decimal>("rust_decimal")
+ }
+-
++/*
+ #[test]
+ fn bigdecimal03() -> TestResult {
+     test_default_generated_schema::<bigdecimal03::BigDecimal>("bigdecimal03")
+ }
+-
++*/
+ #[test]
+ fn bigdecimal04() -> TestResult {
+     test_default_generated_schema::<bigdecimal04::BigDecimal>("bigdecimal04")
