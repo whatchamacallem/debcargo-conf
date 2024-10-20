@@ -1,0 +1,41 @@
+Index: command-group/Cargo.toml
+===================================================================
+--- command-group.orig/Cargo.toml
++++ command-group/Cargo.toml
+@@ -87,7 +87,7 @@ with-tokio = [
+ ]
+ 
+ [target."cfg(unix)".dependencies.nix]
+-version = "0.27.1"
++version = "0.29"
+ features = [
+     "fs",
+     "poll",
+Index: command-group/src/stdlib/child/unix.rs
+===================================================================
+--- command-group.orig/src/stdlib/child/unix.rs
++++ command-group/src/stdlib/child/unix.rs
+@@ -21,6 +21,7 @@ use nix::{
+ 	},
+ 	unistd::Pid,
+ };
++use nix::poll::PollTimeout;
+ 
+ pub(super) struct ChildImp {
+ 	pgid: Pid,
+@@ -147,12 +148,12 @@ impl ChildImp {
+ 		let err_bfd = unsafe { BorrowedFd::borrow_raw(err_fd) };
+ 
+ 		let mut fds = [
+-			PollFd::new(&out_bfd, PollFlags::POLLIN),
+-			PollFd::new(&err_bfd, PollFlags::POLLIN),
++			PollFd::new(out_bfd, PollFlags::POLLIN),
++			PollFd::new(err_bfd, PollFlags::POLLIN),
+ 		];
+ 
+ 		loop {
+-			poll(&mut fds, -1)?;
++			poll(&mut fds, PollTimeout::NONE)?;
+ 
+ 			if fds[0].revents().is_some() && read(&mut out_r, out_v)? {
+ 				set_nonblocking(err_fd, false)?;
