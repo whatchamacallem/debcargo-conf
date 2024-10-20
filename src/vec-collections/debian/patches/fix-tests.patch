@@ -1,0 +1,201 @@
+Description: Relax dependencies in vec-collections
+ Relaxing dependencies in vec-collections
+Author: Emmanuel Arias <eamanu@debian.org>, Fabian Grünbichler <debian@fabian.gruenbichler.email>
+Last-Update: 2024-10-20
+---
+Update deps to currently packaged ones, and fix tests to adapt to quickcheck 1.x
+
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: vec-collections/Cargo.toml
+===================================================================
+--- vec-collections.orig/Cargo.toml
++++ vec-collections/Cargo.toml
+@@ -21,6 +21,7 @@ keywords = ["succinct", "vector", "array
+ categories = ["data-structures"]
+ license = "MIT OR Apache-2.0"
+ repository = "https://github.com/rklaehn/vec-collections"
++autoexamples = false
+ 
+ [[example]]
+ name = "radix_db"
+@@ -38,28 +39,28 @@ harness = false
+ name = "set_ops"
+ harness = false
+ [dependencies.binary-merge]
+-version = "0.1.1"
++version = "0.1"
+ 
+ [dependencies.bytecheck]
+-version = "0.6.5"
++version = "0.6"
+ optional = true
+ 
+ [dependencies.inplace-vec-builder]
+-version = "0.1.0"
++version = "0.1"
+ features = ["smallvec"]
+ 
+ [dependencies.lazy_static]
+-version = "1.4.0"
++version = "1.4"
+ 
+ [dependencies.num-traits]
+ version = "0.2"
+ 
+ [dependencies.parking_lot]
+-version = "0.11.2"
++version = "0.12"
+ optional = true
+ 
+ [dependencies.rkyv]
+-version = "0.7.18"
++version = "0.7"
+ optional = true
+ 
+ [dependencies.serde]
+@@ -68,15 +69,12 @@ optional = true
+ default-features = false
+ 
+ [dependencies.smallvec]
+-version = "1.4"
++version = "1"
+ 
+ [dependencies.sorted-iter]
+ version = "0.1"
+ [dev-dependencies.anyhow]
+-version = "1.0.32"
+-
+-[dev-dependencies.criterion]
+-version = "0.3.0"
++version = "1.0"
+ 
+ [dev-dependencies.fnv]
+ version = "1.0.7"
+@@ -87,9 +85,6 @@ version = "0.3.17"
+ [dev-dependencies.hex]
+ version = "0.4.3"
+ 
+-[dev-dependencies.hexdump]
+-version = "0.1.1"
+-
+ [dev-dependencies.lazy_static]
+ version = "1.4.0"
+ 
+@@ -103,13 +98,13 @@ version = "0.2.8"
+ version = "0.1.0"
+ 
+ [dev-dependencies.quickcheck]
+-version = "0.8"
++version = "1.0"
+ 
+ [dev-dependencies.quickcheck_macros]
+-version = "0.8.0"
++version = "1.0.0"
+ 
+ [dev-dependencies.rand]
+-version = "0.7.3"
++version = "0.8.5"
+ 
+ [dev-dependencies.rkyv]
+ version = "0.7.19"
+@@ -118,12 +113,6 @@ features = ["validation", "smallvec"]
+ [dev-dependencies.serde_json]
+ version = "1.0.41"
+ 
+-[dev-dependencies.stats_alloc]
+-version = "0.1.8"
+-
+-[dev-dependencies.testdrop]
+-version = "0.1.2"
+-
+ [dev-dependencies.tokio]
+ version = "1.13.0"
+ features = ["full"]
+Index: vec-collections/src/vec_map.rs
+===================================================================
+--- vec-collections.orig/src/vec_map.rs
++++ vec-collections/src/vec_map.rs
+@@ -932,7 +932,7 @@ mod tests {
+     type Ref = BTreeMap<i32, i32>;
+ 
+     impl<K: Arbitrary + Ord, V: Arbitrary> Arbitrary for VecMap1<K, V> {
+-        fn arbitrary<G: Gen>(g: &mut G) -> Self {
++        fn arbitrary(g: &mut Gen) -> Self {
+             let t: BTreeMap<K, V> = Arbitrary::arbitrary(g);
+             t.into()
+         }
+Index: vec-collections/src/vec_set.rs
+===================================================================
+--- vec-collections.orig/src/vec_set.rs
++++ vec-collections/src/vec_set.rs
+@@ -783,7 +783,7 @@ where
+ mod test {
+     use super::*;
+     use crate::vec_set::AbstractVecSet;
+-    use num_traits::PrimInt;
++    use num_traits::{PrimInt, WrappingAdd, WrappingSub};
+     use obey::*;
+     use quickcheck::*;
+ 
+@@ -798,18 +798,18 @@ mod test {
+     }
+ 
+     impl<T: Arbitrary + Ord + Copy + Default + fmt::Debug> Arbitrary for VecSet<[T; 2]> {
+-        fn arbitrary<G: Gen>(g: &mut G) -> Self {
++        fn arbitrary(g: &mut Gen) -> Self {
+             Self::from_vec(Arbitrary::arbitrary(g))
+         }
+     }
+ 
+-    impl<E: PrimInt> TestSamples<E, bool> for VecSet<[E; 2]> {
++    impl<E: PrimInt + WrappingAdd + WrappingSub> TestSamples<E, bool> for VecSet<[E; 2]> {
+         fn samples(&self, res: &mut BTreeSet<E>) {
+             res.insert(E::min_value());
+             for x in self.0.iter().cloned() {
+-                res.insert(x - E::one());
++                res.insert(x.wrapping_sub(&E::one()));
+                 res.insert(x);
+-                res.insert(x + E::one());
++                res.insert(x.wrapping_add(&E::one()));
+             }
+             res.insert(E::max_value());
+         }
+Index: vec-collections/src/radix_tree/mod.rs
+===================================================================
+--- vec-collections.orig/src/radix_tree/mod.rs
++++ vec-collections/src/radix_tree/mod.rs
+@@ -1565,7 +1565,7 @@ mod test {
+     use quickcheck::*;
+ 
+     impl Arbitrary for RadixTree<u8, ()> {
+-        fn arbitrary<G: Gen>(g: &mut G) -> Self {
++        fn arbitrary(g: &mut Gen) -> Self {
+             let t: Vec<String> = Arbitrary::arbitrary(g);
+             t.iter()
+                 .take(2)
+Index: vec-collections/src/total_vec_map.rs
+===================================================================
+--- vec-collections.orig/src/total_vec_map.rs
++++ vec-collections/src/total_vec_map.rs
+@@ -287,7 +287,7 @@ mod tests {
+     }
+ 
+     impl<K: Arbitrary + Ord, V: Arbitrary + Eq> Arbitrary for TotalVecMap1<K, V> {
+-        fn arbitrary<G: Gen>(g: &mut G) -> Self {
++        fn arbitrary(g: &mut Gen) -> Self {
+             TotalVecMap::new(Arbitrary::arbitrary(g), Arbitrary::arbitrary(g))
+         }
+     }
+Index: vec-collections/src/total_vec_set.rs
+===================================================================
+--- vec-collections.orig/src/total_vec_set.rs
++++ vec-collections/src/total_vec_set.rs
+@@ -343,7 +343,7 @@ mod tests {
+     type Test = TotalVecSet<[i64; 2]>;
+ 
+     impl<T: Arbitrary + Ord + Copy + Default + Debug> Arbitrary for TotalVecSet<[T; 2]> {
+-        fn arbitrary<G: Gen>(g: &mut G) -> Self {
++        fn arbitrary(g: &mut Gen) -> Self {
+             let mut elements: Vec<T> = Arbitrary::arbitrary(g);
+             elements.truncate(2);
+             let negated: bool = Arbitrary::arbitrary(g);
