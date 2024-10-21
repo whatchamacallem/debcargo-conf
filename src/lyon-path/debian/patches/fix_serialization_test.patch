@@ -1,0 +1,27 @@
+Description: fix test of serialization feature
+ Otherwise autopkgtest fails with errors like:
+
+ error[E0277]: the trait bound `Box<[u32]>: Serialize` is not satisfied
+ error[E0277]: the trait bound `Box<[u32]>: Deserialize<'_>` is not satisfied
+ error[E0277]: the trait bound `Box<[u32]>: Deserialize<'_>` is not satisfied
+ error[E0277]: the trait bound `Box<[u32]>: Deserialize<'_>` is not satisfied
+ error[E0277]: the trait bound `Box<[Point2D<f32, UnknownUnit>]>: Serialize` is not satisfied
+ error[E0277]: the trait bound `Box<[Verb]>: Serialize` is not satisfied
+ error[E0277]: the trait bound `Box<[Point2D<f32, UnknownUnit>]>: Deserialize<'_>` is not satisfied
+ error[E0277]: the trait bound `Box<[Verb]>: Deserialize<'_>` is not satisfied
+ error[E0277]: the trait bound `Box<[Point2D<f32, UnknownUnit>]>: Deserialize<'_>` is not satisfied
+ error[E0277]: the trait bound `Box<[Verb]>: Deserialize<'_>` is not satisfied
+ error[E0277]: the trait bound `Box<[Point2D<f32, UnknownUnit>]>: Deserialize<'_>` is not satisfied
+ error[E0277]: the trait bound `Box<[Verb]>: Deserialize<'_>` is not satisfied
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -42,7 +42,7 @@
+ [features]
+ default = ["std"]
+ serialization = [
+-    "serde",
++    "serde/std",
+     "lyon_geom/serialization",
+ ]
+ std = [
