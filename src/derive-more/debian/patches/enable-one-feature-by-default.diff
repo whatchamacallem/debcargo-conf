@@ -1,0 +1,26 @@
+Description: Enable one feature by default
+Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+
+Forwarded: not-needed
+
+Upstream expects any dependent code to explicitly declare at least one feature beyond std for the package.
+
+("To avoid redundant compilation times, by default no derives are supported.")
+
+But debcargo wants to build the package using only the default featureset, which upstream intends to fail.
+
+So, we add one feature by default, incurring a little bit of redundant compilation, to enable the package to build cleanly with debcargo's expectations.  bleh.
+
+See https://salsa.debian.org/rust-team/debcargo-conf/-/issues/87#note_538543 for more discussion
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -244,7 +244,7 @@
+ as_ref = ["derive_more-impl/as_ref"]
+ constructor = ["derive_more-impl/constructor"]
+ debug = ["derive_more-impl/debug"]
+-default = ["std"]
++default = ["std", "debug"]
+ deref = ["derive_more-impl/deref"]
+ deref_mut = ["derive_more-impl/deref_mut"]
+ display = ["derive_more-impl/display"]
