@@ -1,0 +1,95 @@
+Index: ptyprocess/Cargo.toml
+===================================================================
+--- ptyprocess.orig/Cargo.toml
++++ ptyprocess/Cargo.toml
+@@ -31,5 +31,5 @@ license = "MIT"
+ repository = "https://github.com/zhiburt/ptyprocess"
+ 
+ [dependencies.nix]
+-version = "0.27"
++version = ">= 0.27, < 1.0"
+ features = ["signal", "fs", "term", "feature", "ioctl"]
+Index: ptyprocess/src/lib.rs
+===================================================================
+--- ptyprocess.orig/src/lib.rs
++++ ptyprocess/src/lib.rs
+@@ -55,6 +55,8 @@ use std::fs::File;
+ use std::os::unix::prelude::{AsRawFd, CommandExt, FromRawFd, RawFd};
+ use std::os::fd::BorrowedFd;
+ use std::os::fd::AsFd;
++use std::os::fd::IntoRawFd;
++use std::os::fd::OwnedFd;
+ use std::process::{self, Command};
+ use std::thread;
+ use std::time::{self, Duration};
+@@ -92,6 +94,25 @@ pub struct PtyProcess {
+     terminate_delay: Duration,
+ }
+ 
++trait RefIfNeeded<'a> {
++    type Target;
++    fn refifneeded(&'a self) -> Self::Target;
++}
++
++impl RefIfNeeded<'_> for RawFd {
++    type Target = RawFd;
++    fn refifneeded(&self) -> RawFd {
++        return *self;
++    }
++}
++
++impl <'a> RefIfNeeded<'a> for OwnedFd {
++    type Target = BorrowedFd<'a>;
++    fn refifneeded(&'a self) -> BorrowedFd<'a> {
++        return self.as_fd();
++    }
++}
++
+ impl PtyProcess {
+     /// Spawns a child process and create a [PtyProcess].
+     ///
+@@ -126,17 +147,17 @@ impl PtyProcess {
+                         1,
+                         2,
+                         slave_fd,
+-                        exec_err_pipe_w,
+-                        exec_err_pipe_r,
++                        exec_err_pipe_w.as_raw_fd(),
++                        exec_err_pipe_r.as_raw_fd(),
+                         master.as_raw_fd(),
+                     ])?;
+ 
+                     close(slave_fd)?;
+-                    close(exec_err_pipe_r)?;
++                    close(exec_err_pipe_r.into_raw_fd())?;
+                     drop(master);
+ 
+                     // close pipe on sucessfull exec
+-                    fcntl(exec_err_pipe_w, FcntlArg::F_SETFD(FdFlag::FD_CLOEXEC))?;
++                    fcntl(exec_err_pipe_w.as_raw_fd(), FcntlArg::F_SETFD(FdFlag::FD_CLOEXEC))?;
+ 
+                     let _ = command.exec();
+                     Err(Error::last())
+@@ -146,17 +167,17 @@ impl PtyProcess {
+                 let code = err as i32;
+ 
+                 // Intentionally ignoring errors to exit the process properly
+-                let _ = write(exec_err_pipe_w, &code.to_be_bytes());
+-                let _ = close(exec_err_pipe_w);
++                let _ = write(exec_err_pipe_w.refifneeded(), &code.to_be_bytes());
++                let _ = close(exec_err_pipe_w.into_raw_fd());
+ 
+                 process::exit(code);
+             }
+             ForkResult::Parent { child } => {
+-                close(exec_err_pipe_w)?;
++                close(exec_err_pipe_w.into_raw_fd())?;
+ 
+                 let mut pipe_buf = [0u8; 4];
+-                unistd::read(exec_err_pipe_r, &mut pipe_buf)?;
+-                close(exec_err_pipe_r)?;
++                unistd::read(exec_err_pipe_r.as_raw_fd(), &mut pipe_buf)?;
++                close(exec_err_pipe_r.into_raw_fd())?;
+                 let code = i32::from_be_bytes(pipe_buf);
+                 if code != 0 {
+                     return Err(errno::from_i32(code));
