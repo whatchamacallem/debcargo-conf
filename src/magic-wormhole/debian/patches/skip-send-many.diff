@@ -1,17 +1,17 @@
 Description: Skip send_many test as it is known to be flaky
-Author: Matthias Geiger <werdahias@riseup.net>
+Author: Matthias Geiger <werdahias@debian.org>
 Forwarded: not-needed
-Last-Update: 2024-07-15
+Last-Update: 2024-10-23
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 
 --- a/src/core/test.rs
 +++ b/src/core/test.rs
-@@ -259,6 +259,7 @@
+@@ -354,6 +354,7 @@
   */
  #[cfg(feature = "transfer")]
- #[async_std::test]
+ #[test(async_std::test)]
 +#[ignore = "known to be flaky"]
  pub async fn test_send_many() -> eyre::Result<()> {
-     init_logger();
- 
+     let mailbox = MailboxConnection::create(transfer::APP_CONFIG.id(TEST_APPID), 2).await?;
+     let code = mailbox.code.clone();
