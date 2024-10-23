@@ -1,0 +1,25 @@
+Description: No need for accepting prerelease versions of derive_more
+Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+
+Debian doesn't typically package pre-release crates, so debcargo
+complains with:
+
+    debcargo failed: Cannot represent prerelease part of dependency:
+        derive_more Comparator { op: Caret, major: 1, minor: Some(0),
+        patch: Some(0), pre: Prerelease("beta.6") }
+
+This avoids such a complaint.
+
+Forwarded: not-needed
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -120,7 +120,7 @@
+ version = "^0.20.0"
+ 
+ [dependencies.derive_more]
+-version = "1.0.0-beta.6"
++version = "1.0.0"
+ features = ["debug"]
+ 
+ [dependencies.des]

@@ -1,0 +1,293 @@
+From 07df5757a3f91c28b178e809baf45a781d193de1 Mon Sep 17 00:00:00 2001
+From: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Date: Tue, 22 Oct 2024 17:30:51 -0400
+Subject: [PATCH] Gate x448 work behind an "x448" feature.
+
+The x448 crate hasn't had a release in over 2 years, while several of
+its dependencies are still rather unstable (in particular,
+ed448-goldilocks and rand_core have had at least one
+semver-incompatible bump since the x448 release, and ed448-goldilocks
+itself probably needs another release as well, since there are many
+useful cleanup changes pending there).
+
+This makes me think that x448 isn't quite ready for prime time in the
+existing rust ecosystem.  Given that ed448 itself is also not
+supported yet, it seems like any work with Curve448 might be premature
+to make available by default.
+
+This patch proposes to put the x448 code behind a feature named
+"x448".  It will also make it easier to land the rest of the RFC 9580
+work in debian, which is currently struggling with the unmaintained
+dependency chain here.
+
+Forwarded: https://github.com/rpgp/rpgp/pull/426
+
+---
+ Cargo.toml                                     | 2 +-
+ src/composed/key/builder.rs                    | 3 +++
+ src/crypto/mod.rs                              | 1 +
+ src/packet/key/public.rs                       | 2 ++
+ src/packet/key/secret.rs                       | 1 +
+ src/packet/public_key_encrypted_session_key.rs | 6 +++++-
+ src/packet/public_key_parser.rs                | 4 ++++
+ src/types/params/plain_secret.rs               | 7 +++++++
+ src/types/params/public.rs                     | 2 ++
+ src/types/secret_key_repr.rs                   | 2 ++
+ tests/rfc9580.rs                               | 1 +
+ 11 files changed, 29 insertions(+), 2 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 58236c8..ccedd4b 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -277,9 +277,6 @@
+ ]
+ default-features = false
+ 
+-[dependencies.x448]
+-version = "0.6"
+-
+ [dependencies.zeroize]
+ version = "1.5"
+ features = ["zeroize_derive"]
+diff --git a/src/composed/key/builder.rs b/src/composed/key/builder.rs
+index bdc5861..76078fd 100644
+--- a/src/composed/key/builder.rs
++++ b/src/composed/key/builder.rs
+@@ -264,6 +264,7 @@ pub enum KeyType {
+     /// Encrypting with X25519
+     X25519,
+     /// Encrypting with X448
++    #[cfg(feature = "x448")]
+     X448,
+ }
+ 
+@@ -299,6 +300,7 @@ impl KeyType {
+             KeyType::Dsa(_) => PublicKeyAlgorithm::DSA,
+             KeyType::Ed25519 => PublicKeyAlgorithm::Ed25519,
+             KeyType::X25519 => PublicKeyAlgorithm::X25519,
++            #[cfg(feature = "x448")]
+             KeyType::X448 => PublicKeyAlgorithm::X448,
+         }
+     }
+@@ -315,6 +317,7 @@ impl KeyType {
+             KeyType::Dsa(key_size) => dsa::generate_key(rng, (*key_size).into())?,
+             KeyType::Ed25519 => eddsa::generate_key(rng, eddsa::Mode::Ed25519),
+             KeyType::X25519 => x25519::generate_key(rng),
++            #[cfg(feature = "x448")]
+             KeyType::X448 => crate::crypto::x448::generate_key(rng),
+         };
+ 
+diff --git a/src/crypto/mod.rs b/src/crypto/mod.rs
+index ac16080..d22d740 100644
+--- a/src/crypto/mod.rs
++++ b/src/crypto/mod.rs
+@@ -16,6 +16,7 @@ pub mod public_key;
+ pub mod rsa;
+ pub mod sym;
+ pub mod x25519;
++#[cfg(feature = "x448")]
+ pub mod x448;
+ 
+ pub trait Decryptor {
+diff --git a/src/packet/key/public.rs b/src/packet/key/public.rs
+index 5abfdb7..2bdd72e 100644
+--- a/src/packet/key/public.rs
++++ b/src/packet/key/public.rs
+@@ -458,6 +458,7 @@ impl PublicKeyTrait for PubKeyInner {
+             PublicParams::X25519 { .. } => {
+                 bail!("X25519 can not be used for verify operations");
+             }
++            #[cfg(feature = "x448")]
+             PublicParams::X448 { .. } => {
+                 bail!("X448 can not be used for verify operations");
+             }
+@@ -579,6 +580,7 @@ impl PublicKeyTrait for PubKeyInner {
+                     sym_alg,
+                 })
+             }
++            #[cfg(feature = "x448")]
+             PublicParams::X448 { ref public } => {
+                 let (sym_alg, plain) = match typ {
+                     EskType::V6 => (None, plain),
+diff --git a/src/packet/key/secret.rs b/src/packet/key/secret.rs
+index f1670a0..d03241f 100644
+--- a/src/packet/key/secret.rs
++++ b/src/packet/key/secret.rs
+@@ -276,6 +276,7 @@ impl<D: PublicKeyTrait + PacketTrait + Clone + crate::ser::Serialize> SecretKeyT
+                 SecretKeyRepr::X25519(_) => {
+                     bail!("X25519 can not be used for signing operations")
+                 }
++                #[cfg(feature = "x448")]
+                 SecretKeyRepr::X448(_) => {
+                     bail!("X448 can not be used for signing operations")
+                 }
+diff --git a/src/packet/public_key_encrypted_session_key.rs b/src/packet/public_key_encrypted_session_key.rs
+index f5bc9c6..71c407e 100644
+--- a/src/packet/public_key_encrypted_session_key.rs
++++ b/src/packet/public_key_encrypted_session_key.rs
+@@ -79,7 +79,9 @@ impl PublicKeyEncryptedSessionKey {
+ 
+         // Appended a checksum of the session key (except for X25519 and X448)
+         match pp {
+-            PublicParams::X25519 { .. } | PublicParams::X448 { .. } => {}
++            PublicParams::X25519 { .. } => {}
++            #[cfg(feature = "x448")]
++            PublicParams::X448 { .. } => {}
+             _ => data.extend_from_slice(&checksum::calculate_simple(sk).to_be_bytes()),
+         }
+ 
+@@ -265,6 +267,7 @@ fn parse_esk<'i>(
+                 },
+             ))
+         }
++        #[cfg(feature = "x448")]
+         PublicKeyAlgorithm::X448 => {
+             // 56 octets representing an ephemeral X448 public key.
+             let (i, ephemeral_public) = nom::bytes::complete::take(56u8)(i)?;
+@@ -483,6 +486,7 @@ impl Serialize for PublicKeyEncryptedSessionKey {
+ 
+                 writer.write_all(session_key)?; // encrypted session key
+             }
++            #[cfg(feature = "x448")]
+             (
+                 PublicKeyAlgorithm::X448,
+                 PkeskBytes::X448 {
+diff --git a/src/packet/public_key_parser.rs b/src/packet/public_key_parser.rs
+index 83688bb..881bf23 100644
+--- a/src/packet/public_key_parser.rs
++++ b/src/packet/public_key_parser.rs
+@@ -80,6 +80,7 @@ fn x25519(i: &[u8]) -> IResult<&[u8], PublicParams> {
+ }
+ 
+ /// <https://www.rfc-editor.org/rfc/rfc9580.html#name-algorithm-specific-part-for-x4>
++#[cfg(feature = "x448")]
+ fn x448(i: &[u8]) -> IResult<&[u8], PublicParams> {
+     // 56 bytes of public key
+     let (i, p) = nom::bytes::complete::take(56u8)(i)?;
+@@ -200,7 +201,10 @@ pub fn parse_pub_fields(
+         PublicKeyAlgorithm::Ed25519 => ed25519(i),
+         PublicKeyAlgorithm::X25519 => x25519(i),
+         PublicKeyAlgorithm::Ed448 => unknown(i, len), // FIXME: implement later
++        #[cfg(feature = "x448")]
+         PublicKeyAlgorithm::X448 => x448(i),
++        #[cfg(not(feature = "x448"))]
++        PublicKeyAlgorithm::X448 => unknown(i, len),
+ 
+         PublicKeyAlgorithm::DiffieHellman
+         | PublicKeyAlgorithm::Private100
+diff --git a/src/types/params/plain_secret.rs b/src/types/params/plain_secret.rs
+index 83d780d..2e9d8ff 100644
+--- a/src/types/params/plain_secret.rs
++++ b/src/types/params/plain_secret.rs
+@@ -38,6 +38,7 @@ pub enum PlainSecretParams {
+     EdDSALegacy(#[debug("..")] Mpi),
+     Ed25519(#[debug("..")] [u8; 32]),
+     X25519(#[debug("..")] [u8; 32]),
++    #[cfg(feature = "x448")]
+     X448(#[debug("..")] [u8; 56]),
+ }
+ 
+@@ -60,6 +61,7 @@ pub enum PlainSecretParamsRef<'a> {
+     EdDSALegacy(#[debug("..")] MpiRef<'a>),
+     Ed25519(#[debug("..")] &'a [u8; 32]),
+     X25519(#[debug("..")] &'a [u8; 32]),
++    #[cfg(feature = "x448")]
+     X448(#[debug("..")] &'a [u8; 56]),
+ }
+ 
+@@ -79,6 +81,7 @@ impl<'a> PlainSecretParamsRef<'a> {
+             PlainSecretParamsRef::EdDSALegacy(v) => PlainSecretParams::EdDSALegacy((*v).to_owned()),
+             PlainSecretParamsRef::Ed25519(s) => PlainSecretParams::Ed25519((*s).to_owned()),
+             PlainSecretParamsRef::X25519(s) => PlainSecretParams::X25519((*s).to_owned()),
++            #[cfg(feature = "x448")]
+             PlainSecretParamsRef::X448(s) => PlainSecretParams::X448((*s).to_owned()),
+         }
+     }
+@@ -116,6 +119,7 @@ impl<'a> PlainSecretParamsRef<'a> {
+             PlainSecretParamsRef::X25519(s) => {
+                 writer.write_all(&s[..])?;
+             }
++            #[cfg(feature = "x448")]
+             PlainSecretParamsRef::X448(s) => {
+                 writer.write_all(&s[..])?;
+             }
+@@ -254,6 +258,7 @@ impl<'a> PlainSecretParamsRef<'a> {
+                     secret: **d,
+                 }))
+             }
++            #[cfg(feature = "x448")]
+             PlainSecretParamsRef::X448(d) => {
+                 Ok(SecretKeyRepr::X448(crate::crypto::x448::SecretKey {
+                     secret: **d,
+@@ -343,6 +348,7 @@ impl PlainSecretParams {
+             PlainSecretParams::EdDSALegacy(v) => PlainSecretParamsRef::EdDSALegacy(v.as_ref()),
+             PlainSecretParams::Ed25519(s) => PlainSecretParamsRef::Ed25519(s),
+             PlainSecretParams::X25519(s) => PlainSecretParamsRef::X25519(s),
++            #[cfg(feature = "x448")]
+             PlainSecretParams::X448(s) => PlainSecretParamsRef::X448(s),
+         }
+     }
+@@ -492,6 +498,7 @@ fn parse_secret_params(
+             let (i, s) = nom::bytes::complete::take(32u8)(i)?;
+             Ok((i, PlainSecretParams::X25519(s.try_into().expect("32"))))
+         }
++        #[cfg(feature = "x448")]
+         PublicKeyAlgorithm::X448 => {
+             let (i, s) = nom::bytes::complete::take(56u8)(i)?;
+             Ok((i, PlainSecretParams::X448(s.try_into().expect("56"))))
+diff --git a/src/types/params/public.rs b/src/types/params/public.rs
+index 3703b4d..ef18c5f 100644
+--- a/src/types/params/public.rs
++++ b/src/types/params/public.rs
+@@ -20,6 +20,7 @@ pub enum PublicParams {
+     EdDSALegacy { curve: ECCCurve, q: Mpi },
+     Ed25519 { public: [u8; 32] },
+     X25519 { public: [u8; 32] },
++    #[cfg(feature = "x448")]
+     X448 { public: [u8; 56] },
+     Unknown { data: Vec<u8> },
+ }
+@@ -236,6 +237,7 @@ impl Serialize for PublicParams {
+             PublicParams::X25519 { ref public } => {
+                 writer.write_all(&public[..])?;
+             }
++            #[cfg(feature = "x448")]
+             PublicParams::X448 { ref public } => {
+                 writer.write_all(&public[..])?;
+             }
+diff --git a/src/types/secret_key_repr.rs b/src/types/secret_key_repr.rs
+index c05bd56..adb313f 100644
+--- a/src/types/secret_key_repr.rs
++++ b/src/types/secret_key_repr.rs
+@@ -18,6 +18,7 @@ pub enum SecretKeyRepr {
+     ECDH(ecdh::SecretKey),
+     EdDSA(eddsa::SecretKey),
+     X25519(x25519::SecretKey),
++    #[cfg(feature = "x448")]
+     X448(crate::crypto::x448::SecretKey),
+ }
+ 
+@@ -79,6 +80,7 @@ impl SecretKeyRepr {
+                 };
+             }
+ 
++            #[cfg(feature = "x448")]
+             (
+                 SecretKeyRepr::X448(ref priv_key),
+                 PkeskBytes::X448 {
+diff --git a/tests/rfc9580.rs b/tests/rfc9580.rs
+index fff5c63..c381446 100644
+--- a/tests/rfc9580.rs
++++ b/tests/rfc9580.rs
+@@ -16,6 +16,7 @@ const MSG: &str = "hello world\n";
+ // Test cases based on keys with new formats from RFC9580
+ const CASES_9580: &[&str] = &[
+     ("tests/rfc9580/v6-25519-annex-a-4"), // TSK from RFC 9580 Annex A.4 (Ed25519/X25519)
++    #[cfg(feature = "x448")]
+     ("tests/rfc9580/v6-ed25519-x448"), // TSK using Ed25519/X448 (TODO: replace with Ed448/X448 once rPGP supports it)
+     ("tests/rfc9580/v6-rsa"),          // TSK using RSA
+     ("tests/rfc9580/v6-nistp"),        // TSK using NIST P-256
+-- 
+2.45.2
+
