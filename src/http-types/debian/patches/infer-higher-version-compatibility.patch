@@ -1,0 +1,15 @@
+Description: patch for infer version >=0.3.0
+Author: Ananthu C V <weepingclown@disroot.org>
+Forwarded: not-needed
+Last-Update: 2024-05-31
+--- a/src/mime/mod.rs
++++ b/src/mime/mod.rs
+@@ -44,7 +44,7 @@
+     pub fn sniff(bytes: &[u8]) -> crate::Result<Self> {
+         let info = Infer::new();
+         let mime = match info.get(bytes) {
+-            Some(info) => info.mime,
++            Some(info) => info.mime_type(),
+             None => crate::bail!("Could not sniff the mime type"),
+         };
+         Mime::from_str(&mime)

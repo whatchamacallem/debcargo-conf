@@ -1,0 +1,29 @@
+Description: fix pinning
+Author: Ananthu C V <weepingclown@disroot.org>
+Forwarded: not-needed
+Last-Update: 2024-09-22
+--- a/src/upgrade/receiver.rs
++++ b/src/upgrade/receiver.rs
+@@ -1,2 +1,2 @@
+-use futures_lite::Stream;
++use futures_lite::StreamExt;
+ 
+@@ -27,3 +27,4 @@
+     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+-        Pin::new(&mut self.receiver).poll_next(cx)
++        let mut pinned_receiver = Box::pin(self.receiver.clone());
++	pinned_receiver.poll_next(cx)
+     }
+--- a/src/trailers.rs
++++ b/src/trailers.rs
+@@ -52,3 +52,3 @@
+ };
+-use futures_lite::Stream;
++use futures_lite::StreamExt;
+ 
+@@ -253,3 +253,4 @@
+     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+-        Pin::new(&mut self.receiver).poll_next(cx)
++        let mut pinned_receiver = Box::pin(self.receiver.clone());
++	pinned_receiver.poll_next(cx)
+     }
