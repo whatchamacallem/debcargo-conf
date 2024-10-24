@@ -1,39 +1,77 @@
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -238,6 +238,2 @@
+Index: serde-with/Cargo.toml
+===================================================================
+--- serde-with.orig/Cargo.toml
++++ serde-with/Cargo.toml
+@@ -268,10 +268,6 @@ version = "1.0.6"
+ [dev-dependencies.glob]
+ version = "0.3.0"
  
 -[dev-dependencies.jsonschema]
 -version = "0.18.0"
 -features = ["resolve-file"]
 -default-features = false
  
---- a/tests/schemars_0_8.rs
-+++ b/tests/schemars_0_8.rs
-@@ -1,2 +1,2 @@
+ [dev-dependencies.mime]
+ version = "0.3.16"
+Index: serde-with/tests/schemars_0_8.rs
+===================================================================
+--- serde-with.orig/tests/schemars_0_8.rs
++++ serde-with/tests/schemars_0_8.rs
+@@ -1,6 +1,6 @@
+ //! Test Cases
+ 
 -use crate::utils::{check_matches_schema, check_valid_json_schema};
 +//use crate::utils::{check_matches_schema, check_valid_json_schema};
  use expect_test::expect_file;
-@@ -94,3 +94,3 @@
+ use schemars::JsonSchema;
+ use serde::Serialize;
+@@ -94,7 +94,7 @@ fn schemars_basic() {
+     expected.assert_eq(&schema);
+ }
  
 -#[test]
 +/*#[test]
- fn schemars_custom_with() {
-@@ -117,3 +117,3 @@
+ fn schemars_other_cfg_attrs() {
+     #[serde_as]
+     #[derive(JsonSchema, Serialize)]
+@@ -108,9 +108,9 @@ fn schemars_other_cfg_attrs() {
+     check_matches_schema::<Test>(&json!({
+         "custom": "23",
      }));
 -}
 +}*/
  
-@@ -185,3 +185,3 @@
+-#[test]
++/*#[test]
+ fn schemars_custom_with() {
+     #[serde_as]
+     #[derive(JsonSchema, Serialize)]
+@@ -133,7 +133,7 @@ fn schemars_custom_with() {
+         "with_disabled": "5",
+         "always_enabled": 7,
+     }));
+-}
++}*/
+ 
+ #[test]
+ fn schemars_deserialize_only_bug_735() {
+@@ -201,11 +201,11 @@ fn schemars_custom_schema_with() {
+         always_enabled: i32,
+     }
  
 -    check_matches_schema::<Test>(&json!({
 +    /* check_matches_schema::<Test>(&json!({
          "custom": 3,
-@@ -189,3 +189,3 @@
+         "with_disabled": "5",
          "always_enabled": 7,
 -    }));
 +    })); */
  }
-@@ -440,6 +440,6 @@
+ 
+ mod test_std {
+@@ -456,10 +456,10 @@ mod derive {
+         field: u32,
+     }
  
 -    #[test]
 +    /*#[test]
@@ -42,22 +80,38 @@
 -    }
 +    }*/
  }
-@@ -456,3 +456,3 @@
+ 
+ mod array {
+@@ -472,7 +472,7 @@ mod array {
+         array: [u32; 3],
+     }
  
 -    #[test]
 +    /* #[test]
      fn test_serialized_is_valid() {
-@@ -499,3 +499,3 @@
+         let array = FixedArray { array: [1, 2, 3] };
+ 
+@@ -515,7 +515,7 @@ mod array {
+         check_matches_schema::<FixedArray>(&json!({
+             "array": [-1, 0x1_0000_0000i64, 32]
          }));
 -    }
 +    }*/
  }
-@@ -520,3 +520,3 @@
+ 
+ mod bool_from_int {
+@@ -536,7 +536,7 @@ mod bool_from_int {
+         value: bool,
+     }
  
 -    #[test]
 +    /* #[test]
      fn test_serialized_strict_is_valid() {
-@@ -534,5 +534,5 @@
+         check_valid_json_schema(&vec![
+             BoolStrict { value: true },
+@@ -550,9 +550,9 @@ mod bool_from_int {
+             BoolFlexible { value: true },
+             BoolFlexible { value: false },
          ]);
 -    }
 +    }*/
@@ -65,27 +119,47 @@
 -    #[test]
 +    /*#[test]
      #[should_panic]
-@@ -573,3 +573,3 @@
+     fn strict_out_of_range() {
+         check_matches_schema::<BoolStrict>(&json!({
+@@ -589,7 +589,7 @@ mod bool_from_int {
+         check_matches_schema::<BoolFlexible>(&json!({
+             "value": 0.5
          }));
 -    }
 +    }*/
  }
-@@ -586,3 +586,3 @@
+ 
+ mod bytes_or_string {
+@@ -602,7 +602,7 @@ mod bytes_or_string {
+         bytes: Vec<u8>,
+     }
  
 -    #[test]
 +    /* #[test]
      fn test_serialized_is_valid() {
-@@ -613,3 +613,3 @@
+         check_valid_json_schema(&Test {
+             bytes: b"test".to_vec(),
+@@ -629,7 +629,7 @@ mod bytes_or_string {
+         check_matches_schema::<Test>(&json!({
+             "bytes": 5
          }));
 -    }
 +    }*/
  }
-@@ -637,3 +637,3 @@
+ 
+ mod enum_map {
+@@ -653,7 +653,7 @@ mod enum_map {
+     #[serde(transparent)]
+     struct Outer(#[serde_as(as = "EnumMap")] Vec<Inner>);
  
 -    #[test]
 +    /*#[test]
      fn test_serialized_is_valid() {
-@@ -647,5 +647,5 @@
+         check_valid_json_schema(&Outer(vec![
+             Inner::A(5),
+@@ -663,9 +663,9 @@ mod enum_map {
+                 d: -34.0,
+             }),
          ]));
 -    }
 +    }*/
@@ -93,7 +167,11 @@
 -    #[test]
 +    /* #[test]
      fn test_matches_expected() {
-@@ -659,5 +659,5 @@
+         check_matches_schema::<Outer>(&json!({
+             "A": 75,
+@@ -675,9 +675,9 @@ mod enum_map {
+                 "d": 777
+             }
          }));
 -    }
 +    }*/
@@ -101,7 +179,11 @@
 -    #[test]
 +    /*#[test]
      fn test_no_fields_required() {
-@@ -673,5 +673,5 @@
+         check_matches_schema::<Outer>(&json!({}));
+     }
+@@ -689,15 +689,15 @@ mod enum_map {
+             "A": "b",
+             "B": 5
          }));
 -    }
 +    }*/
@@ -109,17 +191,27 @@
 -    #[test]
 +    /* #[test]
      #[should_panic]
-@@ -681,3 +681,3 @@
+     fn test_invalid_key() {
+         check_matches_schema::<Outer>(&json!({
+             "invalid": 4
          }));
 -    }
 +    }*/
  }
-@@ -711,3 +711,3 @@
+ 
+ mod duration {
+@@ -727,7 +727,7 @@ mod duration {
+         flexible_str: Duration,
+     }
  
 -    #[test]
 +    /*#[test]
      fn test_serialized_is_valid() {
-@@ -721,5 +721,5 @@
+         check_valid_json_schema(&DurationTest {
+             strict_u64: Duration::from_millis(2500),
+@@ -737,9 +737,9 @@ mod duration {
+             flexible_f64: Duration::from_millis(2500),
+             flexible_str: Duration::from_millis(2500),
          });
 -    }
 +    }*/
@@ -127,7 +219,11 @@
 -    #[serde_as]
 +    /*#[serde_as]
      #[derive(Serialize, JsonSchema)]
-@@ -733,5 +733,5 @@
+     struct FlexibleU64Duration(#[serde_as(as = "DurationSeconds<u64, Flexible>")] Duration);
+ 
+@@ -749,9 +749,9 @@ mod duration {
+ 
+     #[serde_as]
      #[derive(Serialize, JsonSchema)]
 -    struct FlexibleTimestamp(#[serde_as(as = "TimestampSeconds<i64, Flexible>")] SystemTime);
 +    struct FlexibleTimestamp(#[serde_as(as = "TimestampSeconds<i64, Flexible>")] SystemTime);*/
@@ -135,7 +231,11 @@
 -    #[test]
 +    /*#[test]
      fn test_string_as_flexible_u64() {
-@@ -785,6 +785,6 @@
+         check_matches_schema::<FlexibleU64Duration>(&json!("32"));
+     }
+@@ -801,10 +801,10 @@ mod duration {
+     #[test]
+     fn test_negative_string_as_flexible_timestamp() {
          check_matches_schema::<FlexibleTimestamp>(&json!("-50000"));
 -    }
 +    }*/
@@ -144,7 +244,11 @@
 -#[test]
 +/* #[test]
  fn test_borrow_cow() {
-@@ -815,5 +815,5 @@
+     use std::borrow::Cow;
+ 
+@@ -831,9 +831,9 @@ fn test_map() {
+     check_valid_json_schema(&Test {
+         map: [("a", 1), ("b", 2)],
      });
 -}
 +}*/
@@ -152,7 +256,11 @@
 -#[test]
 +/*#[test]
  fn test_if_is_human_readable() {
-@@ -842,5 +842,5 @@
+     #[serde_as]
+     #[derive(Serialize, JsonSchema)]
+@@ -858,9 +858,9 @@ fn test_set_last_value_wins_with_duplica
+     check_matches_schema::<Test>(&json!({
+         "set": [ 1, 2, 3, 1, 4, 2 ]
      }));
 -}
 +}*/
@@ -160,37 +268,64 @@
 -#[test]
 +/*#[test]
  #[should_panic]
-@@ -857,3 +857,3 @@
+ fn test_set_prevent_duplicates_with_duplicates() {
+     #[serde_as]
+@@ -873,7 +873,7 @@ fn test_set_prevent_duplicates_with_dupl
+     check_matches_schema::<Test>(&json!({
+         "set": [ 1, 1 ]
      }));
 -}
 +}*/
  
-@@ -883,3 +883,3 @@
+ mod key_value_map {
+     use super::*;
+@@ -899,7 +899,7 @@ mod key_value_map {
+         B(String, i32),
+     }
  
 -    #[test]
 +    /*#[test]
      fn test_untagged_enum() {
-@@ -894,3 +894,3 @@
+         let value = KVMap(vec![
+             UntaggedEnum::A {
+@@ -910,7 +910,7 @@ mod key_value_map {
+         ]);
+ 
          check_valid_json_schema(&value);
 -    }
 +    }*/
  
-@@ -907,3 +907,3 @@
+     #[derive(Clone, Debug, JsonSchema, Serialize)]
+     #[serde(untagged)]
+@@ -923,7 +923,7 @@ mod key_value_map {
+         },
+     }
  
 -    #[test]
 +    /*#[test]
      fn test_untagged_nested_enum() {
-@@ -932,3 +932,3 @@
+         let value = KVMap(vec![
+             UntaggedNestedEnum::Nested(UntaggedEnum::A {
+@@ -948,14 +948,14 @@ mod key_value_map {
+         ]);
+ 
          check_valid_json_schema(&value);
 -    }
 +    }*/
  }
-@@ -939,3 +939,3 @@
+ 
+ mod one_or_many {
+     use super::*;
+     use serde_with::formats::{PreferMany, PreferOne};
  
 -    #[serde_as]
 +    /*#[serde_as]
      #[derive(Clone, Debug, JsonSchema, Serialize)]
-@@ -956,5 +956,5 @@
+     #[serde(transparent)]
+     struct WithPreferOne(#[serde_as(as = "OneOrMany<_, PreferOne>")] Vec<i32>);
+@@ -972,9 +972,9 @@ mod one_or_many {
+ 
+         check_valid_json_schema(&single);
          check_valid_json_schema(&multiple);
 -    }
 +    }*/
@@ -198,7 +333,11 @@
 -    #[test]
 +    /*#[test]
      fn test_prefer_one_matches() {
-@@ -974,5 +974,5 @@
+         check_matches_schema::<WithPreferOne>(&json!(7));
+         check_matches_schema::<WithPreferOne>(&json!([1, 2, 3]));
+@@ -990,9 +990,9 @@ mod one_or_many {
+     #[should_panic]
+     fn test_prefer_one_no_invalid_type_many() {
          check_matches_schema::<WithPreferOne>(&json!(["test", 1]));
 -    }
 +    }*/
@@ -206,7 +345,11 @@
 -    #[test]
 +    /*#[test]
      fn test_prefer_many() {
-@@ -989,5 +989,5 @@
+         let single = WithPreferMany(vec![7]);
+         let multiple = WithPreferMany(vec![1, 2, 3]);
+@@ -1005,16 +1005,16 @@ mod one_or_many {
+     #[should_panic]
+     fn test_prefer_many_no_invalid_type_one() {
          check_matches_schema::<WithPreferMany>(&json!("test"));
 -    }
 +    }*/
@@ -214,7 +357,7 @@
 -    #[test]
 +    /*#[test]
      #[should_panic]
-@@ -995,6 +995,6 @@
+     fn test_prefer_many_no_invalid_type_many() {
          check_matches_schema::<WithPreferMany>(&json!(["test", 1]));
 -    }
 +    }*/
@@ -223,18 +366,30 @@
 -#[test]
 +/*#[test]
  fn test_pickfirst() {
-@@ -1007,2 +1007,2 @@
+     #[serde_as]
+     #[derive(JsonSchema, Serialize)]
+@@ -1023,4 +1023,4 @@ fn test_pickfirst() {
+ 
+     check_matches_schema::<IntOrDisplay>(&json!(7));
      check_matches_schema::<IntOrDisplay>(&json!("17"));
 -}
 +}*/
---- a/tests/utils.rs
-+++ b/tests/utils.rs
-@@ -80,3 +80,3 @@
+Index: serde-with/tests/utils.rs
+===================================================================
+--- serde-with.orig/tests/utils.rs
++++ serde-with/tests/utils.rs
+@@ -78,7 +78,7 @@ where
+     );
+ }
  
 -#[track_caller]
 +/*#[track_caller]
  pub fn check_matches_schema<T>(value: &serde_json::Value)
-@@ -127,5 +127,5 @@
+ where
+     T: schemars_0_8::JsonSchema,
+@@ -125,9 +125,9 @@ where
+             panic!("{}", message);
+         };
      }
 -}
 +}*/
@@ -242,7 +397,11 @@
 -#[track_caller]
 +/*#[track_caller]
  pub fn check_valid_json_schema<T>(value: &T)
-@@ -137,2 +137,2 @@
+ where
+     T: schemars_0_8::JsonSchema + Serialize,
+@@ -135,4 +135,4 @@ where
+     let value = serde_json::to_value(value).expect("could not serialize T to json");
+ 
      check_matches_schema::<T>(&value);
 -}
 +}*/
