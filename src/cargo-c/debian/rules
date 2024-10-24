@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_auto_test:
+	dh_auto_test -- test --all
+
+#use lower debuginfo level on 32-bit to avoid running out of address space.
+ifeq ($(DEB_HOST_ARCH_BITS),32)
+execute_after_dh_auto_configure:
+	sed -i s/debuginfo=2/debuginfo=1/ debian/cargo_home/config*
+endif
