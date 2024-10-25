@@ -21,3 +21,10 @@ override_dh_auto_clean:
 override_dh_dwz:
 	# Don't do anything. fails because of the
 	# https://github.com/rust-lang/rust/issues/66118
+
+#use lower debuginfo level on 32-bit to avoid running out of address space.
+ifeq ($(DEB_HOST_ARCH_BITS),32)
+execute_after_dh_auto_configure:
+	sed -i s/debuginfo=2/debuginfo=1/ debian/cargo_home/config*
+endif
+
