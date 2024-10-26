@@ -1,0 +1,32 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -54,7 +54,7 @@
+ version = "0.8"
+ 
+ [dependencies.image_hasher]
+-version = "2.0"
++version = "1"
+ 
+ [dependencies.indicatif]
+ version = "0.17"
+--- a/src/commands.rs
++++ b/src/commands.rs
+@@ -242,7 +242,7 @@
+         long,
+         default_value = "Gradient",
+         value_parser = parse_similar_hash_algorithm,
+-        help = "Hash algorithm (allowed: Mean, Gradient, Blockhash, VertGradient, DoubleGradient, Median)"
++        help = "Hash algorithm (allowed: Mean, Gradient, Blockhash, VertGradient, DoubleGradient)"
+     )]
+     pub hash_alg: HashAlg,
+     #[clap(
+@@ -695,8 +695,7 @@
+         "blockhash" => HashAlg::Blockhash,
+         "vertgradient" => HashAlg::VertGradient,
+         "doublegradient" => HashAlg::DoubleGradient,
+-        "median" => HashAlg::Median,
+-        _ => return Err("Couldn't parse the hash algorithm (allowed: Mean, Gradient, Blockhash, VertGradient, DoubleGradient, Median)".to_string()),
++        _ => return Err("Couldn't parse the hash algorithm (allowed: Mean, Gradient, Blockhash, VertGradient, DoubleGradient)".to_string()),
+     };
+     Ok(algorithm)
+ }
