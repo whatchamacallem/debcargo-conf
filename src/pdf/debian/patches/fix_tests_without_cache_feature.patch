@@ -5,9 +5,9 @@ Last-Update: 2024-01-18
 
 --- a/examples/content.rs
 +++ b/examples/content.rs
-@@ -7,6 +7,7 @@
- use pdf::object::*;
- use pdf::build::*;
+@@ -14,6 +14,7 @@
+ 
+ use pdf::primitive::PdfString;
  
 +#[cfg(feature="cache")]
  fn main() -> Result<(), PdfError> {
@@ -35,11 +35,10 @@ Last-Update: 2024-01-18
      println!("read: {}", path);
 --- a/examples/read.rs
 +++ b/examples/read.rs
-@@ -11,7 +11,7 @@
- use pdf::error::PdfError;
- use pdf::enc::StreamFilter;
+@@ -21,6 +21,7 @@
+     }
+ }
  
--
 +#[cfg(feature="cache")]
  fn main() -> Result<(), PdfError> {
      let path = args().nth(1).expect("no file given");
@@ -55,3 +54,13 @@ Last-Update: 2024-01-18
      let _ = run!({
          use memmap2::Mmap;
          let file = std::fs::File::open(file_path!("example.pdf")).expect("can't open file");
+--- a/examples/other_page_content.rs
++++ b/examples/other_page_content.rs
+@@ -8,6 +8,7 @@
+ /// Extract data from a page entry that is under "other".
+ /// This example looks for stikethroughs in the annotations entry
+ /// and returns a Vec<Rect> for the bounds of the struckthrough text.
++#[cfg(feature="cache")]
+ fn main() -> Result<(), PdfError> {
+     let path = args()
+         .nth(1)
