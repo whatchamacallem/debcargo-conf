@@ -1,0 +1,230 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit bf09447eb22f1d02314bb12507b5d69e1bb68263
+Author: gwenn <gtreguier@gmail.com>
+Date:   Sat Feb 24 13:53:15 2024 +0100
+
+    Upgrade nix to 0.28
+
+Index: rustyline/src/config.rs
+===================================================================
+--- rustyline.orig/src/config.rs
++++ rustyline/src/config.rs
+@@ -15,7 +15,7 @@ pub struct Config {
+     completion_prompt_limit: usize,
+     /// Duration (milliseconds) Rustyline will wait for a character when
+     /// reading an ambiguous key sequence.
+-    keyseq_timeout: i32,
++    keyseq_timeout: Option<u16>,
+     /// Emacs or Vi mode
+     edit_mode: EditMode,
+     /// If true, each nonblank line returned by `readline` will be
+@@ -106,7 +106,7 @@ impl Config {
+     ///
+     /// By default, no timeout (-1) or 500ms if `EditMode::Vi` is activated.
+     #[must_use]
+-    pub fn keyseq_timeout(&self) -> i32 {
++    pub fn keyseq_timeout(&self) -> Option<u16> {
+         self.keyseq_timeout
+     }
+ 
+@@ -203,7 +203,7 @@ impl Default for Config {
+             history_ignore_space: false,
+             completion_type: CompletionType::Circular, // TODO Validate
+             completion_prompt_limit: 100,
+-            keyseq_timeout: -1,
++            keyseq_timeout: None,
+             edit_mode: EditMode::Emacs,
+             auto_add_history: false,
+             bell_style: BellStyle::default(),
+@@ -368,7 +368,7 @@ impl Builder {
+     /// After seeing an ESC key, wait at most `keyseq_timeout_ms` for another
+     /// byte.
+     #[must_use]
+-    pub fn keyseq_timeout(mut self, keyseq_timeout_ms: i32) -> Self {
++    pub fn keyseq_timeout(mut self, keyseq_timeout_ms: Option<u16>) -> Self {
+         self.set_keyseq_timeout(keyseq_timeout_ms);
+         self
+     }
+@@ -502,7 +502,7 @@ pub trait Configurer {
+     }
+ 
+     /// Timeout for ambiguous key sequences in milliseconds.
+-    fn set_keyseq_timeout(&mut self, keyseq_timeout_ms: i32) {
++    fn set_keyseq_timeout(&mut self, keyseq_timeout_ms: Option<u16>) {
+         self.config_mut().keyseq_timeout = keyseq_timeout_ms;
+     }
+ 
+@@ -510,8 +510,8 @@ pub trait Configurer {
+     fn set_edit_mode(&mut self, edit_mode: EditMode) {
+         self.config_mut().edit_mode = edit_mode;
+         match edit_mode {
+-            EditMode::Emacs => self.set_keyseq_timeout(-1), // no timeout
+-            EditMode::Vi => self.set_keyseq_timeout(500),
++            EditMode::Emacs => self.set_keyseq_timeout(None), // no timeout
++            EditMode::Vi => self.set_keyseq_timeout(Some(500)),
+         }
+     }
+ 
+Index: rustyline/src/tty/unix.rs
+===================================================================
+--- rustyline.orig/src/tty/unix.rs
++++ rustyline/src/tty/unix.rs
+@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
+ 
+ use log::{debug, warn};
+ use nix::errno::Errno;
+-use nix::poll::{self, PollFlags};
++use nix::poll::{self, PollFlags, PollTimeout};
+ use nix::sys::select::{self, FdSet};
+ #[cfg(not(feature = "termios"))]
+ use nix::sys::termios::Termios;
+@@ -179,7 +179,7 @@ type PipeWriter = (Arc<Mutex<File>>, Syn
+ /// Console input reader
+ pub struct PosixRawReader {
+     tty_in: BufReader<TtyIn>,
+-    timeout_ms: i32,
++    timeout_ms: PollTimeout,
+     parser: Parser,
+     key_map: PosixKeyMap,
+     // external print reader
+@@ -234,7 +234,7 @@ impl PosixRawReader {
+     ) -> Self {
+         Self {
+             tty_in: BufReader::with_capacity(1024, TtyIn { fd, sigwinch_pipe }),
+-            timeout_ms: config.keyseq_timeout(),
++            timeout_ms: config.keyseq_timeout().into(),
+             parser: Parser::new(),
+             key_map,
+             pipe_reader,
+@@ -277,8 +277,8 @@ impl PosixRawReader {
+             if !allow_recurse {
+                 return Ok(E::ESC);
+             }
+-            let timeout = if self.timeout_ms < 0 {
+-                100
++            let timeout = if self.timeout_ms.is_none() {
++                100u8.into()
+             } else {
+                 self.timeout_ms
+             };
+@@ -681,12 +681,12 @@ impl PosixRawReader {
+         })
+     }
+ 
+-    fn poll(&mut self, timeout_ms: i32) -> Result<i32> {
++    fn poll(&mut self, timeout_ms: PollTimeout) -> Result<i32> {
+         let n = self.tty_in.buffer().len();
+         if n > 0 {
+             return Ok(n as i32);
+         }
+-        let mut fds = [poll::PollFd::new(self, PollFlags::POLLIN)];
++        let mut fds = [poll::PollFd::new(self.as_fd(), PollFlags::POLLIN)];
+         let r = poll::poll(&mut fds, timeout_ms);
+         match r {
+             Ok(n) => Ok(n),
+@@ -715,11 +715,11 @@ impl PosixRawReader {
+             .map(|fd| unsafe { BorrowedFd::borrow_raw(fd) });
+         loop {
+             let mut readfds = FdSet::new();
+-            if let Some(ref sigwinch_pipe) = sigwinch_pipe {
++            if let Some(sigwinch_pipe) = sigwinch_pipe {
+                 readfds.insert(sigwinch_pipe);
+             }
+-            readfds.insert(&tty_in);
+-            if let Some(ref pipe_reader) = pipe_reader {
++            readfds.insert(tty_in);
++            if let Some(pipe_reader) = pipe_reader {
+                 readfds.insert(pipe_reader);
+             }
+             if let Err(err) = select::select(None, Some(&mut readfds), None, None, None) {
+@@ -731,10 +731,10 @@ impl PosixRawReader {
+                     continue;
+                 }
+             };
+-            if sigwinch_pipe.map_or(false, |fd| readfds.contains(&fd)) {
++            if sigwinch_pipe.map_or(false, |fd| readfds.contains(fd)) {
+                 self.tty_in.get_ref().sigwinch()?;
+                 return Err(ReadlineError::WindowResized);
+-            } else if readfds.contains(&tty_in) {
++            } else if readfds.contains(tty_in) {
+                 // prefer user input over external print
+                 return self.next_key(single_esc_abort).map(Event::KeyPress);
+             } else if let Some(ref pipe_reader) = self.pipe_reader {
+@@ -771,8 +771,8 @@ impl RawReader for PosixRawReader {
+             if !self.tty_in.buffer().is_empty() {
+                 debug!(target: "rustyline", "read buffer {:?}", self.tty_in.buffer());
+             }
+-            let timeout_ms = if single_esc_abort && self.timeout_ms == -1 {
+-                0
++            let timeout_ms = if single_esc_abort && self.timeout_ms.is_none() {
++                PollTimeout::ZERO
+             } else {
+                 self.timeout_ms
+             };
+@@ -1085,14 +1085,14 @@ impl Renderer for PosixRenderer {
+     }
+ 
+     fn move_cursor_at_leftmost(&mut self, rdr: &mut PosixRawReader) -> Result<()> {
+-        if rdr.poll(0)? != 0 {
++        if rdr.poll(PollTimeout::ZERO)? != 0 {
+             debug!(target: "rustyline", "cannot request cursor location");
+             return Ok(());
+         }
+         /* Report cursor location */
+         self.write_and_flush("\x1b[6n")?;
+         /* Read the response: ESC [ rows ; cols R */
+-        if rdr.poll(100)? == 0
++        if rdr.poll(PollTimeout::from(100u8))? == 0
+             || rdr.next_char()? != '\x1b'
+             || rdr.next_char()? != '['
+             || read_digits_until(rdr, ';')?.is_none()
+@@ -1129,7 +1129,7 @@ fn read_digits_until(rdr: &mut PosixRawR
+ fn write_all(fd: RawFd, buf: &str) -> nix::Result<()> {
+     let mut bytes = buf.as_bytes();
+     while !bytes.is_empty() {
+-        match write(fd, bytes) {
++        match write(unsafe { BorrowedFd::borrow_raw(fd) }, bytes) {
+             Ok(0) => return Err(Errno::EIO),
+             Ok(n) => bytes = &bytes[n..],
+             Err(Errno::EINTR) => {}
+@@ -1160,7 +1160,7 @@ fn set_cursor_visibility(fd: RawFd, visi
+ static mut SIGWINCH_PIPE: RawFd = -1;
+ #[cfg(not(feature = "signal-hook"))]
+ extern "C" fn sigwinch_handler(_: libc::c_int) {
+-    let _ = unsafe { write(SIGWINCH_PIPE, &[b's']) };
++    let _ = unsafe { write(BorrowedFd::borrow_raw(SIGWINCH_PIPE), &[b's']) };
+ }
+ 
+ #[derive(Clone, Debug)]
+@@ -1407,14 +1407,10 @@ impl Term for PosixTerminal {
+             return Err(nix::Error::ENOTTY.into());
+         }
+         use nix::unistd::pipe;
+-        use std::os::unix::io::FromRawFd;
+         let (sender, receiver) = mpsc::sync_channel(1); // TODO validate: bound
+         let (r, w) = pipe()?;
+-        let reader = Arc::new(Mutex::new((unsafe { File::from_raw_fd(r) }, receiver)));
+-        let writer = (
+-            Arc::new(Mutex::new(unsafe { File::from_raw_fd(w) })),
+-            sender,
+-        );
++        let reader = Arc::new(Mutex::new((r.into(), receiver)));
++        let writer = (Arc::new(Mutex::new(w.into())), sender);
+         self.pipe_reader.replace(reader);
+         self.pipe_writer.replace(writer.clone());
+         Ok(ExternalPrinter {
+Index: rustyline/Cargo.toml
+===================================================================
+--- rustyline.orig/Cargo.toml
++++ rustyline/Cargo.toml
+@@ -162,7 +162,7 @@ with-file-history = ["fd-lock"]
+ with-sqlite-history = ["rusqlite"]
+ 
+ [target."cfg(unix)".dependencies.nix]
+-version = "0.27"
++version = ">= 0.28, < 1.0"
+ features = [
+     "fs",
+     "ioctl",
