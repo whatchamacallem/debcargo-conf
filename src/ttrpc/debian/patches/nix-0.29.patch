@@ -1,0 +1,43 @@
+Index: ttrpc/Cargo.toml
+===================================================================
+--- ttrpc.orig/Cargo.toml
++++ ttrpc/Cargo.toml
+@@ -56,7 +56,7 @@ features = ["extra_traits"]
+ version = "0.4"
+ 
+ [dependencies.nix]
+-version = "0.27"
++version = "0.29"
+ features = ["fs", "socket"]
+ 
+ [dependencies.protobuf]
+Index: ttrpc/src/common.rs
+===================================================================
+--- ttrpc.orig/src/common.rs
++++ ttrpc/src/common.rs
+@@ -34,7 +34,7 @@ pub(crate) fn do_listen(listener: RawFd)
+     }
+ 
+     let listener = unsafe { BorrowedFd::borrow_raw(listener) };
+-    listen(&listener, 10).map_err(|e| Error::Socket(e.to_string()))
++    listen(&listener, Backlog::new(10)?).map_err(|e| Error::Socket(e.to_string()))
+ }
+ 
+ #[cfg(any(target_os = "linux", target_os = "android"))]
+Index: ttrpc/src/sync/sys/unix/net.rs
+===================================================================
+--- ttrpc.orig/src/sync/sys/unix/net.rs
++++ ttrpc/src/sync/sys/unix/net.rs
+@@ -65,8 +65,10 @@ impl PipeListener {
+ 
+     fn new_monitor_fd() ->  Result<(i32, i32)> {
+         #[cfg(any(target_os = "linux", target_os = "android"))]
+-        let fds = pipe2(nix::fcntl::OFlag::O_CLOEXEC)?;
+- 
++        let (rfd,wfd) = pipe2(nix::fcntl::OFlag::O_CLOEXEC)?;
++        let rfd = rfd.into_raw_fd();
++        let wfd = wfd.into_raw_fd();
++        let fds = (rfd,wfd);
+         
+         #[cfg(target_os = "macos")] 
+         let fds = {
