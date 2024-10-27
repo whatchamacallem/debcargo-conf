@@ -1,0 +1,141 @@
+From 174859bc1b8cfc56e083f4105b67b080fb356716 Mon Sep 17 00:00:00 2001
+From: NoisyCoil <noisycoil@tutanota.com>
+Date: Sun, 27 Oct 2024 15:57:04 +0100
+Subject: [PATCH] Port to env_logger 0.11
+
+env_logger 0.11 removed the API around which this library is written and
+offloaded its functionality to the anstyle crate, which is re-exported as
+env_logger::fmt::style. anstyle's API is very different than v0.10's:
+anstyle just provides ANSI escape codes which must then be used in format
+strings. Opening escape codes are printed with "{}" and closing escape
+codes are printed with "{:#}". `fn colored_level` must be re-written
+from scratch (and nicely enough can be marked as const).
+
+Testing suggests the patch does not change the visual appearance of the
+logs.
+---
+ src/lib.rs | 71 +++++++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 49 insertions(+), 22 deletions(-)
+
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -45,11 +45,13 @@
+ use std::sync::atomic::{AtomicUsize, Ordering};
+ 
+ use env_logger::{
+-    fmt::{Color, Style, StyledValue},
++    fmt::style::{AnsiColor, Color, Style},
+     Builder,
+ };
+ use log::Level;
+ 
++const BSTYLE: Style = Style::new().bold();
++
+ /// Initializes the global logger with a pretty env logger.
+ ///
+ /// This should be called early in the execution of a Rust program, and the
+@@ -169,16 +171,24 @@
+         let target = record.target();
+         let max_width = max_target_width(target);
+ 
+-        let mut style = f.style();
+-        let level = colored_level(&mut style, record.level());
++        let (lstyle, level) = colored_level(record.level());
+ 
+-        let mut style = f.style();
+-        let target = style.set_bold(true).value(Padded {
++        let target = Padded {
+             value: target,
+             width: max_width,
+-        });
++        };
+ 
+-        writeln!(f, " {} {} > {}", level, target, record.args(),)
++        writeln!(
++            f,
++            " {}{}{:#} {}{}{:#} > {}",
++            lstyle,
++            level,
++            lstyle,
++            BSTYLE,
++            target,
++            BSTYLE,
++            record.args(),
++        )
+     });
+ 
+     builder
+@@ -197,18 +207,27 @@
+         let target = record.target();
+         let max_width = max_target_width(target);
+ 
+-        let mut style = f.style();
+-        let level = colored_level(&mut style, record.level());
++        let (lstyle, level) = colored_level(record.level());
+ 
+-        let mut style = f.style();
+-        let target = style.set_bold(true).value(Padded {
++        let target = Padded {
+             value: target,
+             width: max_width,
+-        });
++        };
+ 
+         let time = f.timestamp_millis();
+ 
+-        writeln!(f, " {} {} {} > {}", time, level, target, record.args(),)
++        writeln!(
++            f,
++            " {}{}{:#} {} {}{}{:#} > {}",
++            lstyle,
++            time,
++            lstyle,
++            level,
++            BSTYLE,
++            target,
++            BSTYLE,
++            record.args(),
++        )
+     });
+ 
+     builder
+@@ -237,12 +256,20 @@
+     }
+ }
+ 
+-fn colored_level<'a>(style: &'a mut Style, level: Level) -> StyledValue<'a, &'static str> {
+-    match level {
+-        Level::Trace => style.set_color(Color::Magenta).value("TRACE"),
+-        Level::Debug => style.set_color(Color::Blue).value("DEBUG"),
+-        Level::Info => style.set_color(Color::Green).value("INFO "),
+-        Level::Warn => style.set_color(Color::Yellow).value("WARN "),
+-        Level::Error => style.set_color(Color::Red).value("ERROR"),
+-    }
++const fn colored_level(level: Level) -> (Style, &'static str) {
++    let style = Style::new();
++    let (style, level) = match level {
++        Level::Trace => (
++            style.fg_color(Some(Color::Ansi(AnsiColor::Magenta))),
++            "TRACE",
++        ),
++        Level::Debug => (style.fg_color(Some(Color::Ansi(AnsiColor::Blue))), "DEBUG"),
++        Level::Info => (style.fg_color(Some(Color::Ansi(AnsiColor::Green))), "INFO "),
++        Level::Warn => (
++            style.fg_color(Some(Color::Ansi(AnsiColor::Yellow))),
++            "WARN ",
++        ),
++        Level::Error => (style.fg_color(Some(Color::Ansi(AnsiColor::Red))), "ERROR"),
++    };
++    (style, level)
+ }
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -31,7 +31,7 @@
+ repository = "https://github.com/seanmonstar/pretty-env-logger"
+ 
+ [dependencies.env_logger]
+-version = "0.10"
++version = "0.11"
+ 
+ [dependencies.log]
+ version = "0.4"
