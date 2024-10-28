@@ -1,0 +1,147 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -28,11 +28,11 @@
+ //! }
+ //! ```
+ 
+-use abnf_core::{complete::*, is_ALPHA, is_BIT, is_DIGIT, is_HEXDIG};
++use abnf_core::{complete::*, is_alpha, is_bit, is_digit, is_hexdig};
+ use nom::{
+     branch::alt,
+     bytes::complete::{tag, take_until, take_while, take_while1},
+-    character::complete::char,
++    character::complete::{char, line_ending},
+     combinator::{all_consuming, map, opt, recognize, value},
+     error::{convert_error, ErrorKind, ParseError, VerboseError},
+     multi::{many0, many1, separated_list1},
+@@ -111,13 +111,13 @@
+ // -------------------------------------------------------------------------------------------------
+ 
+ /// ```abnf
+-/// rulelist = 1*( rule / (*WSP c-nl) )
++/// rulelist = 1*( rule / (*wsp c-nl) )
+ ///             ; Errata ID: 3076
+ /// ```
+ fn rulelist_internal<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, Vec<Rule>, E> {
+     let mut parser = many1(alt((
+         map(rule_internal, Some),
+-        map(tuple((many0(WSP), c_nl)), |_| None),
++        map(tuple((many0(wsp), c_nl)), |_| None),
+     )));
+ 
+     let (input, rulelist) = parser(input)?;
+@@ -146,7 +146,7 @@
+ /// Whitespace and comments before rule allowed, no trailing newline required.
+ fn rule_internal_single<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&str, Rule, E> {
+     let mut parser = tuple((
+-        many0(alt((c_nl, recognize(WSP)))),
++        many0(alt((c_nl, recognize(wsp)))),
+         rulename,
+         defined_as,
+         elements,
+@@ -167,9 +167,9 @@
+ /// rulename = ALPHA *(ALPHA / DIGIT / "-")
+ /// ```
+ fn rulename<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, &str, E> {
+-    let is_valid = |x| is_ALPHA(x) || is_DIGIT(x) || x == '-';
++    let is_valid = |x| is_alpha(x) || is_digit(x) || x == '-';
+ 
+-    recognize(tuple((ALPHA, take_while(is_valid))))(input)
++    recognize(tuple((alpha, take_while(is_valid))))(input)
+ }
+ 
+ /// Basic rules definition and incremental alternatives.
+@@ -189,11 +189,11 @@
+ }
+ 
+ /// ```abnf
+-/// elements = alternation *WSP
++/// elements = alternation *wsp
+ ///             ; Errata ID: 2968
+ /// ```
+ fn elements<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, Node, E> {
+-    terminated(alternation, many0(WSP))(input)
++    terminated(alternation, many0(wsp))(input)
+ }
+ 
+ /// ```abnf
+@@ -341,7 +341,7 @@
+ fn quoted_string<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, &str, E> {
+     let is_inner = |x| matches!(x, '\x20'..='\x21' | '\x23'..='\x7E');
+ 
+-    delimited(DQUOTE, take_while(is_inner), DQUOTE)(input)
++    delimited(dquote, take_while(is_inner), dquote)(input)
+ }
+ 
+ /// ```abnf
+@@ -421,17 +421,21 @@
+     delimited(char('<'), take_while(is_inner), char('>'))(input)
+ }
+ 
++fn crlf_relaxed_local<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, &str, E> {
++    line_ending(input)
++}
++
+ /// Comment or Newline.
+ ///
+ /// ```abnf
+ /// c-nl = comment / CRLF
+ /// ```
+ fn c_nl<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, &'a str, E> {
+-    alt((comment, crlf_relaxed))(input)
++    alt((comment, crlf_relaxed_local))(input)
+ }
+ 
+ /// ```abnf
+-/// comment = ";" *(WSP / VCHAR) CRLF
++/// comment = ";" *(wsp / VCHAR) CRLF
+ ///
+ /// Relaxed, see <https://github.com/duesee/abnf/issues/11>.
+ /// ```
+@@ -440,16 +444,16 @@
+ }
+ 
+ /// ```abnf
+-/// c-wsp = WSP / (c-nl WSP)
++/// c-wsp = wsp / (c-nl wsp)
+ /// ```
+ fn c_wsp<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, &'a str, E> {
+-    alt((recognize(WSP), recognize(tuple((c_nl, recognize(WSP))))))(input)
++    alt((recognize(wsp), recognize(tuple((c_nl, recognize(wsp))))))(input)
+ }
+ 
+ // -------------------------------------------------------------------------------------------------
+ 
+ fn bin_u32<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, u32, E> {
+-    let (remaining, out) = take_while1(is_BIT)(input)?;
++    let (remaining, out) = take_while1(is_bit)(input)?;
+     match u32::from_str_radix(out, 2) {
+         Ok(num) => Ok((remaining, num)),
+         Err(_) => Err(nom::Err::Failure(nom::error::make_error(
+@@ -461,7 +465,7 @@
+ }
+ 
+ fn dec_u32<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, u32, E> {
+-    let (remaining, out) = take_while1(is_DIGIT)(input)?;
++    let (remaining, out) = take_while1(is_digit)(input)?;
+     match u32::from_str_radix(out, 10) {
+         Ok(num) => Ok((remaining, num)),
+         Err(_) => Err(nom::Err::Failure(nom::error::make_error(
+@@ -473,7 +477,7 @@
+ }
+ 
+ fn dec_usize<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, usize, E> {
+-    let (remaining, out) = take_while1(is_DIGIT)(input)?;
++    let (remaining, out) = take_while1(is_digit)(input)?;
+     match usize::from_str_radix(out, 10) {
+         Ok(num) => Ok((remaining, num)),
+         Err(_) => Err(nom::Err::Failure(nom::error::make_error(
+@@ -485,7 +489,7 @@
+ }
+ 
+ fn hex_u32<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, u32, E> {
+-    let (remaining, out) = take_while1(is_HEXDIG)(input)?;
++    let (remaining, out) = take_while1(is_hexdig)(input)?;
+     match u32::from_str_radix(out, 16) {
+         Ok(num) => Ok((remaining, num)),
+         Err(_) => Err(nom::Err::Failure(nom::error::make_error(
