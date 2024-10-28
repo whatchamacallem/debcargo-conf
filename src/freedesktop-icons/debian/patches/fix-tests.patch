@@ -1,0 +1,128 @@
+From f49135271102227f26dbb02810da55f6d978fb60 Mon Sep 17 00:00:00 2001
+From: NoisyCoil <noisycoil@tutanota.com>
+Date: Tue, 29 Oct 2024 01:00:49 +0100
+Subject: [PATCH] Replace icons and themes with ones more suitable to Debian
+Forwarded: not-needed
+
+Tests use icon themes and applications which either do not exist in
+Debian, or would pull in a lot of dependencies. Replace them with
+Debian icons and existing themes.
+---
+ src/lib.rs         | 21 ++++++++++++---------
+ src/theme/mod.rs   | 10 ++++++----
+ src/theme/parse.rs |  7 ++-----
+ 3 files changed, 20 insertions(+), 18 deletions(-)
+
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -318,13 +318,14 @@
+ 
+     #[test]
+     fn simple_lookup() {
+-        let firefox = lookup("firefox").find();
++        // The firefox icon used for testing does not exist in Debian, use the Debian emblem instead
++        let debian_emblem = lookup("emblem-debian").find();
+ 
+         asserting!("Lookup with no parameters should return an existing icon")
+-            .that(&firefox)
++            .that(&debian_emblem)
+             .is_some()
+             .is_equal_to(PathBuf::from(
+-                "/usr/share/icons/hicolor/22x22/apps/firefox.png",
++                "/usr/share/icons/hicolor/22x22/emblems/emblem-debian.png",
+             ));
+     }
+ 
+@@ -342,30 +343,32 @@
+ 
+     #[test]
+     fn should_fallback_to_parent_theme() {
++        // Debian does not package the Arc icon theme, and Adwaita's icon's path is different
+         let icon = lookup("video-single-display-symbolic")
+-            .with_theme("Arc")
++            .with_theme("HighContrast")
+             .find();
+ 
+-        asserting!("Lookup for an icon in the Arc theme should find the icon in its parent")
++        asserting!("Lookup for an icon in the HighContrast theme should find the icon in its parent")
+             .that(&icon)
+             .is_some()
+             .is_equal_to(PathBuf::from(
+-                "/usr/share/icons/Adwaita/scalable/devices/video-single-display-symbolic.svg",
++                "/usr/share/icons/Adwaita/symbolic/devices/video-single-display-symbolic.svg",
+             ));
+     }
+ 
+     #[test]
+     fn should_fallback_to_pixmaps_utlimately() {
+-        let archlinux_logo = lookup("archlinux-logo")
++        // Debian does not package the ArchLinux logo. Use the Debian security logo instead
++        let debian_security = lookup("debian-security")
+             .with_size(16)
+             .with_scale(1)
+             .with_theme("Papirus")
+             .find();
+ 
+         asserting!("When lookup fail in theme, icon should be found in '/usr/share/pixmaps'")
+-            .that(&archlinux_logo)
++            .that(&debian_security)
+             .is_some()
+-            .is_equal_to(PathBuf::from("/usr/share/pixmaps/archlinux-logo.png"));
++            .is_equal_to(PathBuf::from("/usr/share/pixmaps/debian-security.png"));
+     }
+ 
+     /*#[test]
+--- a/src/theme/mod.rs
++++ b/src/theme/mod.rs
+@@ -228,23 +228,25 @@
+ 
+     #[test]
+     fn should_get_png_first() {
++        // Blueman pulls in a ton of dependencies, use the Debian emblem instead
+         let themes = THEMES.get("hicolor").unwrap();
+         let icon = themes
+             .iter()
+-            .find_map(|t| t.try_get_icon_exact_size("blueman", 24, 1, true));
++            .find_map(|t| t.try_get_icon_exact_size("emblem-debian", 24, 1, true));
+         assert_that!(icon).is_some().is_equal_to(PathBuf::from(
+-            "/usr/share/icons/hicolor/scalable/apps/blueman.svg",
++            "/usr/share/icons/hicolor/scalable/emblems/emblem-debian.svg",
+         ));
+     }
+ 
+     #[test]
+     fn should_get_svg_first() {
++        // Blueman pulls in a ton of dependencies, use the Debian emblem instead
+         let themes = THEMES.get("hicolor").unwrap();
+         let icon = themes
+             .iter()
+-            .find_map(|t| t.try_get_icon_exact_size("blueman", 24, 1, false));
++            .find_map(|t| t.try_get_icon_exact_size("emblem-debian", 24, 1, false));
+         assert_that!(icon).is_some().is_equal_to(PathBuf::from(
+-            "/usr/share/icons/hicolor/22x22/apps/blueman.png",
++            "/usr/share/icons/hicolor/22x22/emblems/emblem-debian.png",
+         ));
+     }
+ }
+--- a/src/theme/parse.rs
++++ b/src/theme/parse.rs
+@@ -88,17 +88,14 @@
+ 
+     #[test]
+     fn should_get_theme_parents() {
+-        for theme in THEMES.get("Arc").unwrap() {
++        // Debian does not package the Arc icon theme, use HighContrast instead
++        for theme in THEMES.get("HighContrast").unwrap() {
+             let parents = theme.inherits();
+ 
+             assert_that!(parents).does_not_contain("hicolor");
+ 
+             assert_that!(parents).is_equal_to(vec![
+-                "Moka",
+-                "Faba",
+-                "elementary",
+                 "Adwaita",
+-                "gnome",
+             ]);
+         }
+     }

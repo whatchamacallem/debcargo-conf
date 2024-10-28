@@ -1,0 +1,42 @@
+Description: Remove linicon dependency
+ As of writing this patch, linicon is not in Debian and depends on a
+ number of crates also not in Debian. Since it's used only in tests
+ to check that "Given the same input parameter, lookup should output
+ be the same as linincon", we remove this dependency and the relative
+ test.
+Author: NoisyCoil <noisycoil@tutanota.com>
+Forwarded: not-needed
+Last-Update: 2024-10-28
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -47,8 +47,5 @@
+ [dev-dependencies.gtk4]
+ version = "0.4.7"
+ 
+-[dev-dependencies.linicon]
+-version = "2.3.0"
+-
+ [dev-dependencies.speculoos]
+ version = "0.11.0"
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -368,7 +368,7 @@
+             .is_equal_to(PathBuf::from("/usr/share/pixmaps/archlinux-logo.png"));
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn compare_to_linincon_with_theme() {
+         let lin_wireshark = linicon::lookup_icon("wireshark")
+             .next()
+@@ -386,7 +386,7 @@
+             .that(&wireshark)
+             .is_some()
+             .is_equal_to(lin_wireshark);
+-    }
++    }*/
+ 
+     #[test]
+     fn should_not_attempt_to_lookup_a_not_found_cached_icon() {
