@@ -1228,3 +1228,41 @@ Index: rust-portable-atomic-1.9.0/src/imp/riscv.rs
                          for base in [0, !0] {
                              let mut arr = Align16([
                                  <$atomic_type>::new(base),
+Index: rust-portable-atomic-1.9.0/src/imp/detect/riscv_linux.rs
+===================================================================
+--- rust-portable-atomic-1.9.0.orig/src/imp/detect/riscv_linux.rs
++++ rust-portable-atomic-1.9.0/src/imp/detect/riscv_linux.rs
+@@ -124,7 +124,7 @@ mod tests {
+ 
+     // We use asm-based syscall for compatibility with non-libc targets.
+     // This test tests that our ones and libc::syscall returns the same result.
+-    #[test]
++    /* #[test]
+     fn test_linux_like() {
+         use test_helper::libc;
+         unsafe fn __libc_riscv_hwprobe(
+@@ -146,7 +146,7 @@ mod tests {
+         let mut libc_out = ffi::riscv_hwprobe { key: ffi::RISCV_HWPROBE_KEY_IMA_EXT_0, value: 0 };
+         assert_eq!(riscv_hwprobe(&mut out), libc_riscv_hwprobe(&mut libc_out));
+         assert_eq!(out, libc_out);
+-    }
++    } */
+ 
+     // Static assertions for FFI bindings.
+     // This checks that FFI bindings defined in this crate, FFI bindings defined
+@@ -157,7 +157,7 @@ mod tests {
+     // without actually running tests on these platforms.
+     // See also tools/codegen/src/ffi.rs.
+     // TODO(codegen): auto-generate this test
+-    #[allow(
++    /*#[allow(
+         clippy::cast_possible_wrap,
+         clippy::cast_sign_loss,
+         clippy::no_effect_underscore_binding
+@@ -182,5 +182,5 @@ mod tests {
+         );
+         let ffi: ffi::riscv_hwprobe = unsafe { mem::zeroed() };
+         let _ = sys::riscv_hwprobe { key: ffi.key, value: ffi.value };
+-    };
++    };*/
+ }
