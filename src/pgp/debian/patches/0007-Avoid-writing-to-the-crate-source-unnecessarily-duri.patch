@@ -1,0 +1,44 @@
+From efe172c71c4ab0c3d60e9b4b62939a0392d183c7 Mon Sep 17 00:00:00 2001
+From: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Date: Tue, 29 Oct 2024 21:38:17 -0400
+Subject: [PATCH] Avoid writing to the crate source unnecessarily during tests
+
+See https://github.com/rpgp/rpgp/issues/430
+---
+ src/composed/message/types.rs | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/composed/message/types.rs b/src/composed/message/types.rs
+index b01bb32..5c030e8 100644
+--- a/src/composed/message/types.rs
++++ b/src/composed/message/types.rs
+@@ -1014,7 +1014,7 @@ mod tests {
+         assert_eq!(encrypted, encrypted2);
+ 
+         let armored = encrypted.to_armored_bytes(None.into()).unwrap();
+-        fs::write("./message-rsa.asc", &armored).unwrap();
++        // fs::write("./message-rsa.asc", &armored).unwrap();
+ 
+         let parsed = Message::from_armor_single(&armored[..]).unwrap().0;
+ 
+@@ -1078,7 +1078,7 @@ mod tests {
+                         .unwrap();
+ 
+                     let armored = encrypted.to_armored_bytes(None.into()).unwrap();
+-                    fs::write("./message-x25519.asc", &armored).unwrap();
++                    // fs::write("./message-x25519.asc", &armored).unwrap();
+ 
+                     let parsed = Message::from_armor_single(&armored[..]).unwrap().0;
+ 
+@@ -1141,7 +1141,7 @@ mod tests {
+                     .unwrap();
+ 
+                 let armored = encrypted.to_armored_bytes(None.into()).unwrap();
+-                fs::write("./message-password.asc", &armored).unwrap();
++                // fs::write("./message-password.asc", &armored).unwrap();
+ 
+                 let parsed = Message::from_armor_single(&armored[..]).unwrap().0;
+ 
+-- 
+2.45.2
+
