@@ -1,6 +1,10 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 3f36a10..8cb5f06 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -247,5 +247,5 @@
+@@ -236,9 +236,9 @@ version = "1"
+ [target."cfg(not(miri))".dev-dependencies.rayon]
+ version = "1"
  
 -[target."cfg(not(miri))".dev-dependencies.reqwest]
 -version = "0.12"
@@ -9,55 +13,94 @@
 +#version = "0.12"
 +#features = ["blocking"]
  
---- a/tests/repo/mod.rs
-+++ b/tests/repo/mod.rs
-@@ -387,2 +387,3 @@
- pub fn clone_rust() {
-+    return;
-     let needs_clone = match fs::read_to_string("tests/rust/COMMIT") {
-@@ -432,3 +433,3 @@
- fn download_and_unpack() -> Result<()> {
--    let url = format!(
-+    /*let url = format!(
-         "https://github.com/rust-lang/rust/archive/{}.tar.gz",
-@@ -458,3 +459,3 @@
- 
--    fs::write("tests/rust/COMMIT", REVISION)?;
-+    fs::write("tests/rust/COMMIT", REVISION)?;*/
-     Ok(())
---- a/tests/test_precedence.rs
-+++ b/tests/test_precedence.rs
-@@ -57,3 +57,3 @@
- 
--#[test]
-+//#[test]
- fn test_rustc_precedence() {
---- a/tests/test_round_trip.rs
-+++ b/tests/test_round_trip.rs
-@@ -50,3 +50,3 @@
- 
--#[test]
-+//#[test]
- fn test_round_trip() {
+ [target."cfg(not(miri))".dev-dependencies.tar]
+ version = "0.4.16"
+diff --git a/benches/file.rs b/benches/file.rs
+index 5754d20..f479e6b 100644
 --- a/benches/file.rs
 +++ b/benches/file.rs
-@@ -1 +1,2 @@
+@@ -1,3 +1,4 @@
 +/*
  // $ cargo bench --features full,test --bench file
-@@ -56,2 +57,2 @@
+ 
+ #![feature(rustc_private, test)]
+@@ -55,4 +56,4 @@ fn create_token_buffer(b: &mut Bencher) {
+ fn parse_file(b: &mut Bencher) {
+     let tokens = get_tokens();
      b.iter(|| syn::parse2::<syn::File>(tokens.clone()));
 -}
 +}*/
+diff --git a/benches/rust.rs b/benches/rust.rs
+index 75a9f91..c0b1e10 100644
 --- a/benches/rust.rs
 +++ b/benches/rust.rs
-@@ -1 +1,5 @@
+@@ -1,3 +1,7 @@
 +fn main() {
 +    eprintln!("Debian: this bench is disabled due to dependency on reqwest.\n\
 +    To run it, please unapply debian/patches/remove-reqwest.patch.");
 +/*
  // $ cargo bench --features full,test --bench rust
-@@ -188,3 +192,3 @@
+ //
+ // Syn only, useful for profiling:
+@@ -187,5 +191,5 @@ fn main() {
+             elapsed.subsec_millis(),
+         );
      }
 -    eprintln!();
 +    eprintln!();*/
  }
+diff --git a/tests/repo/mod.rs b/tests/repo/mod.rs
+index 96f039c..3130aef 100644
+--- a/tests/repo/mod.rs
++++ b/tests/repo/mod.rs
+@@ -452,6 +452,7 @@ pub fn rayon_init() {
+ }
+ 
+ pub fn clone_rust() {
++    return;
+     let needs_clone = match fs::read_to_string("tests/rust/COMMIT") {
+         Err(_) => true,
+         Ok(contents) => contents.trim() != REVISION,
+@@ -497,7 +498,7 @@ pub fn clone_rust() {
+ }
+ 
+ fn download_and_unpack() -> Result<()> {
+-    let url = format!(
++    /*let url = format!(
+         "https://github.com/rust-lang/rust/archive/{}.tar.gz",
+         REVISION
+     );
+@@ -523,6 +524,6 @@ fn download_and_unpack() -> Result<()> {
+         entry.unpack(&out)?;
+     }
+ 
+-    fs::write("tests/rust/COMMIT", REVISION)?;
++    fs::write("tests/rust/COMMIT", REVISION)?;*/
+     Ok(())
+ }
+diff --git a/tests/test_precedence.rs b/tests/test_precedence.rs
+index 7231bd6..2c42792 100644
+--- a/tests/test_precedence.rs
++++ b/tests/test_precedence.rs
+@@ -56,7 +56,7 @@ mod macros;
+ mod common;
+ mod repo;
+ 
+-#[test]
++//#[test]
+ fn test_rustc_precedence() {
+     repo::rayon_init();
+     repo::clone_rust();
+diff --git a/tests/test_round_trip.rs b/tests/test_round_trip.rs
+index 197552f..e6a93c4 100644
+--- a/tests/test_round_trip.rs
++++ b/tests/test_round_trip.rs
+@@ -49,7 +49,7 @@ mod macros;
+ mod common;
+ mod repo;
+ 
+-#[test]
++//#[test]
+ fn test_round_trip() {
+     repo::rayon_init();
+     repo::clone_rust();
