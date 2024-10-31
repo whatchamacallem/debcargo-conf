@@ -2,5 +2,77 @@ overlay = "."
 uploaders = ["Wolfgang Silbermayr <wolfgang@silbermayr.at>", "Daniel Kahn Gillmor <dkg@fifthhorseman.net>"]
 collapse_features = true
 
+# nightly is not expected to work on debian's stable releases:
 [packages."lib+nightly"]
 test_is_broken = true
+
+# derive_more deliberately fails when no functional features are included.
+# and testing_helpers and std features don't bring in any functionality either.
+[packages.lib]
+test_is_broken = true
+
+# and all of these tests provide functional features, so the test should pass:
+[packages."lib+add"]
+test_is_broken = false
+[packages."lib+add_assign"]
+test_is_broken = false
+[packages."lib+as_ref"]
+test_is_broken = false
+[packages."lib+constructor"]
+test_is_broken = false
+[packages."lib+debug"]
+test_is_broken = false
+[packages."lib+deref"]
+test_is_broken = false
+[packages."lib+deref_mut"]
+test_is_broken = false
+[packages."lib+display"]
+test_is_broken = false
+[packages."lib+error"]
+test_is_broken = false
+[packages."lib+from"]
+test_is_broken = false
+[packages."lib+from_str"]
+test_is_broken = false
+[packages."lib+index"]
+test_is_broken = false
+[packages."lib+index_mut"]
+test_is_broken = false
+[packages."lib+into"]
+test_is_broken = false
+[packages."lib+into_iterator"]
+test_is_broken = false
+[packages."lib+is_variant"]
+test_is_broken = false
+[packages."lib+mul"]
+test_is_broken = false
+[packages."lib+mul_assign"]
+test_is_broken = false
+[packages."lib+not"]
+test_is_broken = false
+[packages."lib+sum"]
+test_is_broken = false
+[packages."lib+try_from"]
+test_is_broken = false
+[packages."lib+try_into"]
+test_is_broken = false
+[packages."lib+try_unwrap"]
+test_is_broken = false
+[packages."lib+unwrap"]
+test_is_broken = false
+
+# but "--no-default-features --features full" fails somehow because of no_std:
+# see https://github.com/JelteF/derive_more/issues/420
+[packages."lib+full"]
+test_is_broken = true
+
+# and --all-features tests fail when filesystem is read-only
+# see https://github.com/JelteF/derive_more/issues/421
+[packages."lib+@"]
+test_is_broken = true
+
+# The default test passes because of
+# debian/patches/enable-one-feature-by-default.diff
+[packages."lib+default"]
+test_is_broken = false
+
