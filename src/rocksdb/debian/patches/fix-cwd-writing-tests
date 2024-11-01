@@ -1,0 +1,36 @@
+From: Michael R. Crusoe <crusoe@debian.org>
+Subject: Fix two tests that want to write to the current working directory
+Forwarded: https://github.com/rust-rocksdb/rust-rocksdb/pull/938
+
+To instead write to a temporary directory.
+
+--- rocksdb.orig/src/compaction_filter.rs
++++ rocksdb/src/compaction_filter.rs
+@@ -158,7 +158,11 @@
+ fn compaction_filter_test() {
+     use crate::{Options, DB};
+ 
+-    let path = "_rust_rocksdb_filter_test";
++    let tempdir = tempfile::Builder::new()
++        .prefix("_rust_rocksdb_filter_test")
++        .tempdir()
++        .expect("Failed to create temporary path for the _rust_rocksdb_filter_test");
++    let path = tempdir.path();
+     let mut opts = Options::default();
+     opts.create_if_missing(true);
+     opts.set_compaction_filter("test", test_filter);
+--- rocksdb.orig/src/compaction_filter_factory.rs
++++ rocksdb/src/compaction_filter_factory.rs
+@@ -122,7 +122,11 @@
+ 
+     #[test]
+     fn compaction_filter_factory_test() {
+-        let path = "_rust_rocksdb_filter_factory_test";
++        let tempdir = tempfile::Builder::new()
++            .prefix("_rust_rocksdb_filter_factory_test")
++            .tempdir()
++            .expect("Failed to create temporary path for the _rust_rocksdb_filter_factory_test.");
++        let path = tempdir.path();
+         let mut opts = Options::default();
+         opts.create_if_missing(true);
+         opts.set_compaction_filter_factory(TestFactory(CString::new("TestFactory").unwrap()));
