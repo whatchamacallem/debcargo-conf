@@ -1,0 +1,73 @@
+--- librocksdb-sys.orig/build.rs
++++ librocksdb-sys/build.rs
+@@ -55,7 +55,6 @@
+ 
+     if cfg!(feature = "snappy") {
+         config.define("SNAPPY", Some("1"));
+-        config.include("snappy/");
+     }
+ 
+     if cfg!(feature = "lz4") {
+@@ -262,35 +261,6 @@
+     config.compile("librocksdb.a");
+ }
+ 
+-fn build_snappy() {
+-    let target = env::var("TARGET").unwrap();
+-    let endianness = env::var("CARGO_CFG_TARGET_ENDIAN").unwrap();
+-    let mut config = cc::Build::new();
+-
+-    config.include("snappy/");
+-    config.include(".");
+-    config.define("NDEBUG", Some("1"));
+-    config.extra_warnings(false);
+-
+-    if target.contains("msvc") {
+-        config.flag("-EHsc");
+-    } else {
+-        // Snappy requires C++11.
+-        // See: https://github.com/google/snappy/blob/master/CMakeLists.txt#L32-L38
+-        config.flag("-std=c++11");
+-    }
+-
+-    if endianness == "big" {
+-        config.define("SNAPPY_IS_BIG_ENDIAN", Some("1"));
+-    }
+-
+-    config.file("snappy/snappy.cc");
+-    config.file("snappy/snappy-sinksource.cc");
+-    config.file("snappy/snappy-c.cc");
+-    config.cpp(true);
+-    config.compile("libsnappy.a");
+-}
+-
+ fn try_to_find_and_link_lib(lib_name: &str) -> bool {
+     println!("cargo:rerun-if-env-changed={lib_name}_COMPILE");
+     if let Ok(v) = env::var(format!("{lib_name}_COMPILE")) {
+@@ -365,8 +335,6 @@
+     }
+     if cfg!(feature = "snappy") && !try_to_find_and_link_lib("SNAPPY") {
+         println!("cargo:rerun-if-changed=snappy/");
+-        fail_on_empty_directory("snappy");
+-        build_snappy();
+     }
+ 
+     // Allow dependent crates to locate the sources and output directory of
+@@ -381,8 +349,4 @@
+         "dh-cargo:deb-built-using=rocksdb=1={}",
+         env::var("CARGO_MANIFEST_DIR").unwrap()
+     );
+-    println!(
+-        "dh-cargo:deb-built-using=snappy=1={}",
+-        env::var("CARGO_MANIFEST_DIR").unwrap()
+-    );
+ }
+--- librocksdb-sys.orig/Cargo.toml
++++ librocksdb-sys/Cargo.toml
+@@ -90,6 +90,5 @@
+ jemalloc = ["tikv-jemalloc-sys"]
+ lz4 = ["lz4-sys"]
+ rtti = []
+-snappy = []
+ zlib = ["libz-sys"]
+ zstd = ["zstd-sys"]
