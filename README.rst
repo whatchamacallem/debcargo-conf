@@ -14,12 +14,12 @@ To package a new crate, or to update an existing crate
 
 ::
 
-  ./new-package.sh <rust-crate-name>  # or
-  ./update.sh      <rust-crate-name>
+  ./update.sh <rust-crate-name>
 
 and follow its instructions.
 
-Note that ``new-package.sh`` is just a symlink to ``update.sh``, to help newcomers.
+Note: ``new-package.sh`` and ``package.sh`` are deprecated, use ``update.sh``
+instead.
 
 To package a co-installable older version of a crate
 ----------------------------------------------------
@@ -27,8 +27,7 @@ To package a co-installable older version of a crate
 To maintain an old version of a crate alongside the latest one, first make sure
 the latest version is packaged by doing all of the above, then run::
 
-  ./new-package.sh <rust-crate-name> <old-version>  # or
-  ./update.sh      <rust-crate-name> <old-version>
+  ./update.sh <rust-crate-name> <old-version>
 
 and follow its instructions. To save time, you can first copy anything relevant
 from ``src/<rust-crate-name>`` to ``src/<rust-crate-name>-<old-version>``, then
