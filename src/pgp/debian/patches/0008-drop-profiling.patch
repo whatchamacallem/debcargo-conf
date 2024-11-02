@@ -1,0 +1,40 @@
+Description: Drop profiling/benchmarks
+Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Forwarded: not-needed
+
+riscv64 CI takes so long that it is timing out (see
+https://ci.debian.net/packages/r/rust-pgp/testing/riscv64/ )
+
+If https://salsa.debian.org/rust-team/debcargo/-/merge_requests/71 is
+merged, we might be able to use the proposed test_architecture
+mechanism and drop this patch.
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -40,10 +40,6 @@
+ [lib]
+ bench = false
+ 
+-[[bench]]
+-name = "benches_main"
+-harness = false
+-
+ [dependencies.aes]
+ version = "^0.8"
+ 
+@@ -162,10 +158,6 @@
+ version = "0.2"
+ optional = true
+ 
+-[dependencies.gperftools]
+-version = "0.2.0"
+-optional = true
+-
+ [dependencies.hex]
+ version = "^0.4"
+ 
+@@ -320,4 +312,3 @@
+     "md-5/asm",
+ ]
+ default = []
+-profile = ["gperftools"]
