@@ -1,0 +1,212 @@
+diff --git a/src/protocol/mod.rs b/src/protocol/mod.rs
+index 77935fd..44ff11f 100644
+--- a/src/protocol/mod.rs
++++ b/src/protocol/mod.rs
+@@ -51,7 +51,7 @@ pub mod dri3;
+ pub mod ge;
+ #[cfg(feature = "glx")]
+ pub mod glx;
+-#[cfg(feature = "present")]
++#[cfg(all(feature = "present", feature = "dri3"))]
+ pub mod present;
+ #[cfg(feature = "randr")]
+ pub mod randr;
+@@ -464,7 +464,7 @@ fn get_request_name_internal(
+                     _ => RequestInfo::UnknownRequest(Some("Glx"), minor_opcode),
+                 }
+             }
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             present::X11_EXTENSION_NAME => {
+                 match minor_opcode {
+                     present::QUERY_VERSION_REQUEST => RequestInfo::KnownExt("Present::QueryVersion"),
+@@ -1454,17 +1454,17 @@ pub enum Request<'input> {
+     GlxGetQueryObjectivARB(glx::GetQueryObjectivARBRequest),
+     #[cfg(feature = "glx")]
+     GlxGetQueryObjectuivARB(glx::GetQueryObjectuivARBRequest),
+-    #[cfg(feature = "present")]
++    #[cfg(all(feature = "present", feature = "dri3"))]
+     PresentQueryVersion(present::QueryVersionRequest),
+-    #[cfg(feature = "present")]
++    #[cfg(all(feature = "present", feature = "dri3"))]
+     PresentPixmap(present::PixmapRequest<'input>),
+-    #[cfg(feature = "present")]
++    #[cfg(all(feature = "present", feature = "dri3"))]
+     PresentNotifyMSC(present::NotifyMSCRequest),
+-    #[cfg(feature = "present")]
++    #[cfg(all(feature = "present", feature = "dri3"))]
+     PresentSelectInput(present::SelectInputRequest),
+-    #[cfg(feature = "present")]
++    #[cfg(all(feature = "present", feature = "dri3"))]
+     PresentQueryCapabilities(present::QueryCapabilitiesRequest),
+-    #[cfg(feature = "present")]
++    #[cfg(all(feature = "present", feature = "dri3"))]
+     PresentPixmapSynced(present::PixmapSyncedRequest<'input>),
+     #[cfg(feature = "randr")]
+     RandrQueryVersion(randr::QueryVersionRequest),
+@@ -2579,7 +2579,7 @@ impl<'input> Request<'input> {
+                     _ => (),
+                 }
+             }
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Some((present::X11_EXTENSION_NAME, _)) => {
+                 match header.minor_opcode {
+                     present::QUERY_VERSION_REQUEST => return Ok(Request::PresentQueryVersion(present::QueryVersionRequest::try_parse_request(header, remaining)?)),
+@@ -3544,17 +3544,17 @@ impl<'input> Request<'input> {
+             Request::GlxGetQueryObjectivARB(_) => Some(parse_reply::<glx::GetQueryObjectivARBRequest>),
+             #[cfg(feature = "glx")]
+             Request::GlxGetQueryObjectuivARB(_) => Some(parse_reply::<glx::GetQueryObjectuivARBRequest>),
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Request::PresentQueryVersion(_) => Some(parse_reply::<present::QueryVersionRequest>),
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Request::PresentPixmap(_) => None,
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Request::PresentNotifyMSC(_) => None,
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Request::PresentSelectInput(_) => None,
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Request::PresentQueryCapabilities(_) => Some(parse_reply::<present::QueryCapabilitiesRequest>),
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Request::PresentPixmapSynced(_) => None,
+             #[cfg(feature = "randr")]
+             Request::RandrQueryVersion(_) => Some(parse_reply::<randr::QueryVersionRequest>),
+@@ -4759,17 +4759,17 @@ impl<'input> Request<'input> {
+             Request::GlxGetQueryObjectivARB(req) => Request::GlxGetQueryObjectivARB(req),
+             #[cfg(feature = "glx")]
+             Request::GlxGetQueryObjectuivARB(req) => Request::GlxGetQueryObjectuivARB(req),
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Request::PresentQueryVersion(req) => Request::PresentQueryVersion(req),
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Request::PresentPixmap(req) => Request::PresentPixmap(req.into_owned()),
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Request::PresentNotifyMSC(req) => Request::PresentNotifyMSC(req),
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Request::PresentSelectInput(req) => Request::PresentSelectInput(req),
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Request::PresentQueryCapabilities(req) => Request::PresentQueryCapabilities(req),
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Request::PresentPixmapSynced(req) => Request::PresentPixmapSynced(req.into_owned()),
+             #[cfg(feature = "randr")]
+             Request::RandrQueryVersion(req) => Request::RandrQueryVersion(req),
+@@ -5770,9 +5770,9 @@ pub enum Reply {
+     GlxGetQueryObjectivARB(glx::GetQueryObjectivARBReply),
+     #[cfg(feature = "glx")]
+     GlxGetQueryObjectuivARB(glx::GetQueryObjectuivARBReply),
+-    #[cfg(feature = "present")]
++    #[cfg(all(feature = "present", feature = "dri3"))]
+     PresentQueryVersion(present::QueryVersionReply),
+-    #[cfg(feature = "present")]
++    #[cfg(all(feature = "present", feature = "dri3"))]
+     PresentQueryCapabilities(present::QueryCapabilitiesReply),
+     #[cfg(feature = "randr")]
+     RandrQueryVersion(randr::QueryVersionReply),
+@@ -6923,13 +6923,13 @@ impl From<glx::GetQueryObjectuivARBReply> for Reply {
+     Reply::GlxGetQueryObjectuivARB(reply)
+   }
+ }
+-#[cfg(feature = "present")]
++#[cfg(all(feature = "present", feature = "dri3"))]
+ impl From<present::QueryVersionReply> for Reply {
+   fn from(reply: present::QueryVersionReply) -> Reply {
+     Reply::PresentQueryVersion(reply)
+   }
+ }
+-#[cfg(feature = "present")]
++#[cfg(all(feature = "present", feature = "dri3"))]
+ impl From<present::QueryCapabilitiesReply> for Reply {
+   fn from(reply: present::QueryCapabilitiesReply) -> Reply {
+     Reply::PresentQueryCapabilities(reply)
+@@ -8414,15 +8414,15 @@ pub enum Event {
+     GlxBufferSwapComplete(glx::BufferSwapCompleteEvent),
+     #[cfg(feature = "glx")]
+     GlxPbufferClobber(glx::PbufferClobberEvent),
+-    #[cfg(feature = "present")]
++    #[cfg(all(feature = "present", feature = "dri3"))]
+     PresentCompleteNotify(present::CompleteNotifyEvent),
+-    #[cfg(feature = "present")]
++    #[cfg(all(feature = "present", feature = "dri3"))]
+     PresentConfigureNotify(present::ConfigureNotifyEvent),
+-    #[cfg(feature = "present")]
++    #[cfg(all(feature = "present", feature = "dri3"))]
+     PresentGeneric(present::GenericEvent),
+-    #[cfg(feature = "present")]
++    #[cfg(all(feature = "present", feature = "dri3"))]
+     PresentIdleNotify(present::IdleNotifyEvent),
+-    #[cfg(feature = "present")]
++    #[cfg(all(feature = "present", feature = "dri3"))]
+     PresentRedirectNotify(present::RedirectNotifyEvent),
+     #[cfg(feature = "randr")]
+     RandrNotify(randr::NotifyEvent),
+@@ -8648,7 +8648,7 @@ impl Event {
+                     _ => Ok(Self::Unknown(event.to_vec())),
+                 }
+             }
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Some((present::X11_EXTENSION_NAME, ext_info)) => {
+                 match event_code - ext_info.first_event {
+                     present::GENERIC_EVENT => Ok(Self::PresentGeneric(TryParse::try_parse(event)?.0)),
+@@ -8781,7 +8781,7 @@ impl Event {
+                     _ => Ok(Self::Unknown(event.to_vec())),
+                 }
+             }
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Some(present::X11_EXTENSION_NAME) => {
+                 match ge_event.event_type {
+                     present::COMPLETE_NOTIFY_EVENT => Ok(Self::PresentCompleteNotify(TryParse::try_parse(event)?.0)),
+@@ -8884,15 +8884,15 @@ impl Event {
+             Event::GlxBufferSwapComplete(value) => Some(value.sequence),
+             #[cfg(feature = "glx")]
+             Event::GlxPbufferClobber(value) => Some(value.sequence),
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Event::PresentCompleteNotify(value) => Some(value.sequence),
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Event::PresentConfigureNotify(value) => Some(value.sequence),
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Event::PresentGeneric(value) => Some(value.sequence),
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Event::PresentIdleNotify(value) => Some(value.sequence),
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Event::PresentRedirectNotify(value) => Some(value.sequence),
+             #[cfg(feature = "randr")]
+             Event::RandrNotify(value) => Some(value.sequence),
+@@ -9102,15 +9102,15 @@ impl Event {
+             Event::GlxBufferSwapComplete(value) => value.response_type,
+             #[cfg(feature = "glx")]
+             Event::GlxPbufferClobber(value) => value.response_type,
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Event::PresentCompleteNotify(value) => value.response_type,
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Event::PresentConfigureNotify(value) => value.response_type,
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Event::PresentGeneric(value) => value.response_type,
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Event::PresentIdleNotify(value) => value.response_type,
+-            #[cfg(feature = "present")]
++            #[cfg(all(feature = "present", feature = "dri3"))]
+             Event::PresentRedirectNotify(value) => value.response_type,
+             #[cfg(feature = "randr")]
+             Event::RandrNotify(value) => value.response_type,

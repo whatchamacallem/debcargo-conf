@@ -1,17 +1,25 @@
 diff --git a/src/connect.rs b/src/connect.rs
-index d8cfc20..859b3d5 100644
+index 67e319e..82399c7 100644
 --- a/src/connect.rs
 +++ b/src/connect.rs
-@@ -44,7 +44,7 @@ use core::fmt;
- /// the address of the connection, and the display. You can use the `Connect`
+@@ -44,6 +44,8 @@ use core::fmt;
  /// to establish an X11 connection like so:
  ///
--/// ```rust,no_run
-+/// ```rust,ignore
+ /// ```rust,no_run
++/// # #[cfg(feature = "std")]
++/// # {
  /// # use x11rb_protocol::connect::Connect;
  /// # use x11rb_protocol::xauth::Family;
  /// # use std::{error::Error, io::prelude::*};
-@@ -263,7 +263,7 @@ impl TryFrom<Connect> for Setup {
+@@ -86,6 +88,7 @@ use core::fmt;
+ /// let setup = connect.into_setup()?;
+ /// # Ok(())
+ /// # }
++/// # }
+ /// ```
+ ///
+ /// If, instead, `stream` implements `AsyncRead` and `AsyncWrite`, the code
+@@ -262,7 +265,7 @@ impl TryFrom<Connect> for Setup {
  }
  
  #[cfg(test)]
@@ -21,10 +29,10 @@ index d8cfc20..859b3d5 100644
      use super::Connect;
      use crate::errors::ConnectError;
 diff --git a/src/packet_reader.rs b/src/packet_reader.rs
-index 5c1ee06..40a7af5 100644
+index 1a3950e..a6ba090 100644
 --- a/src/packet_reader.rs
 +++ b/src/packet_reader.rs
-@@ -125,7 +125,7 @@ fn extra_length(buffer: &[u8]) -> usize {
+@@ -124,7 +124,7 @@ fn extra_length(buffer: &[u8]) -> usize {
      }
  }
  
@@ -68,11 +76,24 @@ index 2e26e38..510fd14 100644
  use std::borrow::Cow;
  
  use crate::protocol::{get_request_name, request_name};
+diff --git a/src/wrapper.rs b/src/wrapper.rs
+index 6e6f27b..beeefed 100644
+--- a/src/wrapper.rs
++++ b/src/wrapper.rs
+@@ -41,7 +41,7 @@ where
+     }
+ 
+     fn size_hint(&self) -> (usize, Option<usize>) {
+-        let size = self.0.len() / core::mem::size_of::<T>();
++        let size = self.0.len() / size_of::<T>();
+         (size, Some(size))
+     }
+ }
 diff --git a/src/x11_utils.rs b/src/x11_utils.rs
-index 7e156b1..9f2bf82 100644
+index 945a684..611cacb 100644
 --- a/src/x11_utils.rs
 +++ b/src/x11_utils.rs
-@@ -388,7 +388,7 @@ implement_serialize!(i64: 8);
+@@ -386,7 +386,7 @@ implement_serialize!(i64: 8);
  forward_float!(f32: u32);
  forward_float!(f64: u64);
  
