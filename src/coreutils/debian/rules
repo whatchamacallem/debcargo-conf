@@ -29,6 +29,9 @@ ifeq ($(DEB_HOST_ARCH_BITS),32)
 	sed -i 's/lto = "thin"/lto = true/' Cargo.toml
 endif
 # Create the symlink early to be able to generate the manpages
+	cd debian/tmp/usr/share/zsh/site-functions && mkdir rust-coreutils && mv _* rust-coreutils
+	cd debian/tmp/usr/bin && mv rust-coreutils coreutils && rm rust-*
+#	cd debian/tmp/usr/share/fish/vendor_completions.d && for f in *fish; do mv $$f rust-$$f; done
 	dh_link
 
 override_dh_missing:
@@ -41,7 +44,9 @@ override_dh_dwz:
 #use lower debuginfo level on 32-bit to avoid running out of address space.
 ifeq ($(DEB_HOST_ARCH_BITS),32)
 execute_after_dh_auto_configure:
-	sed -i s/debuginfo=2/debuginfo=1/ debian/cargo_home/config
+	if test -f debian/cargo_home/config; then \
+		sed -i s/debuginfo=2/debuginfo=1/ debian/cargo_home/config; \
+	fi
 endif
 
 override_dh_clean:
