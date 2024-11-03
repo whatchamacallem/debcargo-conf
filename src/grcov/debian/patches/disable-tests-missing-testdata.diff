@@ -1,287 +1,636 @@
-Index: grcov/src/lib.rs
-===================================================================
---- grcov.orig/src/lib.rs
-+++ grcov/src/lib.rs
-@@ -427,7 +427,7 @@ mod tests {
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -426,6 +426,7 @@
          assert!(func.executed);
      }
  
--    #[test]
-+    /*#[test]
++    #[ignore]
+     #[test]
      fn test_merge_relative_path() {
          let mut f = File::open("./test/relative_path/relative_path.info")
-             .expect("Failed to open lcov file");
-@@ -475,5 +475,5 @@ mod tests {
-         let result_map = Arc::try_unwrap(result_map).unwrap().into_inner().unwrap();
- 
-         assert!(result_map.len() == 3);
--    }
-+    }*/
- }
-Index: grcov/src/reader.rs
-===================================================================
---- grcov.orig/src/reader.rs
-+++ grcov/src/reader.rs
-@@ -1225,7 +1225,7 @@ mod tests {
- 
-     fn from_path(gcno: &mut Gcno, typ: FileType, path: &str) {
-         let path = PathBuf::from(path);
--        let mut f = File::open(&path).unwrap();
-+        let mut f = File::open(&path).expect(&format!("Could not open {:?} ",path));
-         let mut buf = Vec::new();
-         f.read_to_end(&mut buf).unwrap();
-         gcno.read(typ, buf, path.to_str().unwrap()).unwrap();
-@@ -1247,7 +1247,7 @@ mod tests {
-         input
+@@ -460,6 +461,7 @@
+         assert!(cov_result.functions.contains_key("myfun"));
      }
  
--    #[test]
-+    /*#[test]
-     fn test_reader_gcno() {
-         let mut gcno = Gcno::new();
-         from_path(&mut gcno, FileType::Gcno, "test/llvm/reader.gcno");
-@@ -1514,5 +1514,5 @@ mod tests {
-         )];
- 
-         assert_eq!(result, expected);
--    }
-+    }*/
- }
-Index: grcov/src/output.rs
-===================================================================
---- grcov.orig/src/output.rs
-+++ grcov/src/output.rs
-@@ -764,7 +764,7 @@ mod tests {
-         assert!(results.contains("FN:3,hello_world\n"));
-     }
- 
--    #[test]
-+    /*#[test]
-     fn test_covdir() {
-         let tmp_dir = tempfile::tempdir().expect("Failed to create temporary directory");
-         let file_name = "test_covdir.json";
-@@ -816,7 +816,7 @@ mod tests {
-         let expected: Value = serde_json::from_str(&read_file(&expected_path)).unwrap();
- 
-         assert_eq!(results, expected);
--    }
-+    }*/
- 
++    #[ignore]
      #[test]
-     fn test_coveralls_service_job_id() {
-Index: grcov/src/parser.rs
-===================================================================
---- grcov.orig/src/parser.rs
-+++ grcov/src/parser.rs
-@@ -829,7 +829,7 @@ mod tests {
+     fn test_ignore_relative_path() {
+         let mut f = File::open("./test/relative_path/relative_path.info")
+--- a/src/parser.rs
++++ b/src/parser.rs
+@@ -831,6 +831,7 @@
          assert_eq!(l, "".as_bytes().to_vec());
      }
  
--    #[test]
-+    /*#[test]
++    #[ignore]
+     #[test]
      fn test_lcov_parser() {
          let mut f = File::open("./test/prova.info").expect("Failed to open lcov file");
-         let mut buf = Vec::new();
-@@ -912,9 +912,9 @@ mod tests {
-         let func = result.functions.get("logConsoleMessage").unwrap();
-         assert_eq!(func.start, 21);
+@@ -916,6 +917,7 @@
          assert!(!func.executed);
--    }
-+    }*/
- 
--    #[test]
-+    /*#[test]
-     fn test_lcov_parser_with_branch_parsing() {
-         // Parse the same file, but with branch parsing enabled.
-         let mut f = File::open("./test/prova.info").expect("Failed to open lcov file");
-@@ -1931,9 +1931,9 @@ mod tests {
-             .unwrap();
-         assert_eq!(func.start, 188);
-         assert!(!func.executed);
--    }
-+    }*/
- 
--    #[test]
-+    /*#[test]
-     fn test_parser_jacoco_xml_basic() {
-         let mut lines: BTreeMap<u32, u64> = BTreeMap::new();
-         lines.insert(1, 0);
-@@ -2035,5 +2035,5 @@ mod tests {
-             .expect("Failed to open xml file");
-         let file = BufReader::new(&f);
-         let _results = parse_jacoco_xml_report(file).unwrap();
--    }
-+    }*/
- }
-Index: grcov/src/path_rewriting.rs
-===================================================================
---- grcov.orig/src/path_rewriting.rs
-+++ grcov/src/path_rewriting.rs
-@@ -556,7 +556,7 @@ mod tests {
-         assert_eq!(count, 1);
      }
  
--    #[cfg(unix)]
-+    /*#[cfg(unix)]
++    #[ignore]
+     #[test]
+     fn test_lcov_parser_with_branch_parsing() {
+         // Parse the same file, but with branch parsing enabled.
+@@ -1015,6 +1017,7 @@
+         assert!(!func.executed);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_lcov_parser_fn_with_commas() {
+         let mut f =
+@@ -1107,6 +1110,7 @@
+         assert!(func.executed);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_lcov_parser_empty_line() {
+         let mut f = File::open("./test/empty_line.info").expect("Failed to open lcov file");
+@@ -1198,6 +1202,7 @@
+         assert!(func.executed);
+     }
+ 
++    #[ignore]
+     #[allow(non_snake_case)]
+     #[test]
+     fn test_lcov_parser_invalid_DA_record() {
+@@ -1208,6 +1213,7 @@
+         assert!(result.is_err());
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_parser() {
+         let results = parse_gcov(Path::new("./test/prova.gcov")).unwrap();
+@@ -1423,6 +1429,7 @@
+         assert!(func.executed);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_parser_gcov_with_negative_counts() {
+         let results = parse_gcov(Path::new("./test/negative_counts.gcov")).unwrap();
+@@ -1432,6 +1439,7 @@
+         assert_eq!(result.lines, [(40, 0)].iter().cloned().collect());
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_parser_gcov_with_64bit_counts() {
+         let results = parse_gcov(Path::new("./test/64bit_count.gcov")).unwrap();
+@@ -1674,6 +1682,7 @@
+         // Assert more stuff.
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_parser_gcov_with_branches() {
+         let results = parse_gcov(Path::new("./test/intermediate_with_branches.gcov")).unwrap();
+@@ -1712,6 +1721,7 @@
+         assert!(!func.executed);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_parser_gcov_rust_generics_with_two_parameters() {
+         let results = parse_gcov(Path::new(
+@@ -1754,6 +1764,7 @@
+         assert!(func.executed);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_parser_gcov_gz() {
+         let results = parse_gcov_gz(Path::new(
+@@ -1935,6 +1946,7 @@
+         assert!(!func.executed);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_parser_jacoco_xml_basic() {
+         let mut lines: BTreeMap<u32, u64> = BTreeMap::new();
+@@ -1974,6 +1986,7 @@
+         assert_eq!(results, expected);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_parser_jacoco_xml_inner_classes() {
+         let mut lines: BTreeMap<u32, u64> = BTreeMap::new();
+@@ -2021,6 +2034,7 @@
+         assert_eq!(results, expected);
+     }
+ 
++    #[ignore]
+     #[test]
+     #[should_panic]
+     fn test_parser_jacoco_xml_non_top_level_classes_panics() {
+@@ -2030,6 +2044,7 @@
+         let _results = parse_jacoco_xml_report(file).unwrap();
+     }
+ 
++    #[ignore]
+     #[test]
+     #[should_panic]
+     fn test_parser_jacoco_xml_full_report_with_non_top_level_classes_panics() {
+--- a/src/reader.rs
++++ b/src/reader.rs
+@@ -1247,6 +1247,7 @@
+         input
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_reader_gcno() {
+         let mut gcno = Gcno::new();
+@@ -1257,6 +1258,7 @@
+         assert_eq!(output, input);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_reader_gcno_gcda() {
+         let mut gcno = Gcno::new();
+@@ -1269,6 +1271,7 @@
+         assert_eq!(output, input);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_reader_gcno_gcda_gcc6() {
+         let mut gcno = Gcno::new();
+@@ -1281,6 +1284,7 @@
+         assert_eq!(output, input);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_reader_gcno_gcda_gcc7() {
+         let mut gcno = Gcno::new();
+@@ -1293,6 +1297,7 @@
+         assert_eq!(output, input);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_reader_gcno_gcda_gcc8() {
+         let mut gcno = Gcno::new();
+@@ -1305,6 +1310,7 @@
+         assert_eq!(output, input);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_reader_gcno_gcda_gcc9() {
+         let mut gcno = Gcno::new();
+@@ -1317,6 +1323,7 @@
+         assert_eq!(output, input);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_reader_gcno_gcda_gcc10() {
+         let mut gcno = Gcno::new();
+@@ -1329,6 +1336,7 @@
+         assert_eq!(output, input);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_reader_gcno_gcda_gcda() {
+         let mut gcno = Gcno::new();
+@@ -1343,6 +1351,7 @@
+         assert_eq!(output, input);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_reader_gcno_counter() {
+         let mut gcno = Gcno::new();
+@@ -1360,6 +1369,7 @@
+         assert!(input == output);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_reader_gcno_gcda_counter() {
+         let mut gcno = Gcno::new();
+@@ -1378,6 +1388,7 @@
+         assert_eq!(output, input);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_reader_gcno_gcda_gcda_counter() {
+         let mut gcno = Gcno::new();
+@@ -1398,6 +1409,7 @@
+         assert_eq!(output, input);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_reader_finalize_file() {
+         let mut gcno = Gcno::new();
+@@ -1429,6 +1441,7 @@
+         assert_eq!(result, expected);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_reader_finalize_file_branch() {
+         let mut gcno = Gcno::new();
+--- a/src/producer.rs
++++ b/src/producer.rs
+@@ -648,6 +648,7 @@
+         }
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_dir_producer() {
+         let (sender, receiver) = unbounded();
+@@ -768,6 +769,7 @@
+         );
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_dir_producer_multiple_directories() {
+         let (sender, receiver) = unbounded();
+@@ -791,6 +793,7 @@
+         assert!(mapping.is_none());
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_dir_producer_directory_with_gcno_symlinks() {
+         let (sender, receiver) = unbounded();
+@@ -811,6 +814,7 @@
+         assert!(mapping.is_none());
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_dir_producer_directory_with_no_gcda() {
+         let (sender, receiver) = unbounded();
+@@ -834,6 +838,7 @@
+         assert!(mapping.is_none());
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_dir_producer_directory_with_no_gcda_ignore_orphan_gcno() {
+         let (sender, receiver) = unbounded();
+@@ -854,6 +859,7 @@
+         assert!(mapping.is_none());
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_zip_producer_with_gcda_dir() {
+         let (sender, receiver) = unbounded();
+@@ -904,6 +910,7 @@
+     }
+ 
+     // Test extracting multiple gcda archives.
++    #[ignore]
+     #[test]
+     fn test_zip_producer_multiple_gcda_archives() {
+         let (sender, receiver) = unbounded();
+@@ -964,6 +971,7 @@
+     }
+ 
+     // Test extracting gcno with no path mapping.
++    #[ignore]
+     #[test]
+     fn test_zip_producer_gcno_with_no_path_mapping() {
+         let (sender, receiver) = unbounded();
+@@ -1005,6 +1013,7 @@
+     }
+ 
+     // Test calling zip_producer with a different order of zip files.
++    #[ignore]
+     #[test]
+     fn test_zip_producer_different_order_of_zip_files() {
+         let (sender, receiver) = unbounded();
+@@ -1055,6 +1064,7 @@
+     }
+ 
+     // Test extracting profraw files.
++    #[ignore]
+     #[test]
+     fn test_zip_producer_profraw_files() {
+         let (sender, receiver) = unbounded();
+@@ -1081,6 +1091,7 @@
+     }
+ 
+     // Test extracting info files.
++    #[ignore]
+     #[test]
+     fn test_zip_producer_info_files() {
+         let (sender, receiver) = unbounded();
+@@ -1114,6 +1125,7 @@
+     }
+ 
+     // Test extracting jacoco report XML files.
++    #[ignore]
+     #[test]
+     fn test_zip_producer_jacoco_xml_files() {
+         let (sender, receiver) = unbounded();
+@@ -1145,6 +1157,7 @@
+     }
+ 
+     // Test extracting both jacoco xml and info files.
++    #[ignore]
+     #[test]
+     fn test_zip_producer_both_info_and_jacoco_xml() {
+         let (sender, receiver) = unbounded();
+@@ -1190,6 +1203,7 @@
+     }
+ 
+     // Test extracting both info and gcno/gcda files.
++    #[ignore]
+     #[test]
+     fn test_zip_producer_both_info_and_gcnogcda_files() {
+         let (sender, receiver) = unbounded();
+@@ -1244,6 +1258,7 @@
+     }
+ 
+     // Test extracting gcno with no associated gcda.
++    #[ignore]
+     #[test]
+     fn test_zip_producer_gcno_with_no_associated_gcda() {
+         let (sender, receiver) = unbounded();
+@@ -1268,6 +1283,7 @@
+     }
+ 
+     // Test extracting gcno with an associated gcda file in only one zip file.
++    #[ignore]
+     #[test]
+     fn test_zip_producer_gcno_with_associated_gcda_in_only_one_archive() {
+         let (sender, receiver) = unbounded();
+@@ -1293,6 +1309,7 @@
+     }
+ 
+     // Test passing a gcda archive with no gcno archive makes zip_producer fail.
++    #[ignore]
+     #[test]
+     #[should_panic]
+     fn test_zip_producer_with_gcda_archive_and_no_gcno_archive() {
+@@ -1310,6 +1327,7 @@
+     }
+ 
+     // Test extracting gcno/gcda archives, where a gcno file exist with no matching gcda file.
++    #[ignore]
+     #[test]
+     fn test_zip_producer_no_matching_gcno() {
+         let (sender, receiver) = unbounded();
+@@ -1348,6 +1366,7 @@
+ 
+     // Test extracting gcno/gcda archives, where a gcno file exist with no matching gcda file.
+     // The gcno file should be produced only once, not twice.
++    #[ignore]
+     #[test]
+     fn test_zip_producer_no_matching_gcno_two_gcda_archives() {
+         let (sender, receiver) = unbounded();
+@@ -1398,6 +1417,7 @@
+     }
+ 
+     // Test extracting gcno/gcda archives, where a gcno file exist with no matching gcda file and ignore orphan gcno files.
++    #[ignore]
+     #[test]
+     fn test_zip_producer_no_matching_gcno_ignore_orphan_gcno() {
+         let (sender, receiver) = unbounded();
+@@ -1428,6 +1448,7 @@
+     }
+ 
+     // Test extracting gcno/gcda archives, where a gcno file exist with no matching gcda file and ignore orphan gcno files.
++    #[ignore]
+     #[test]
+     fn test_zip_producer_no_matching_gcno_two_gcda_archives_ignore_orphan_gcno() {
+         let (sender, receiver) = unbounded();
+@@ -1470,6 +1491,7 @@
+         check_produced(tmp_path, &receiver, expected);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_zip_producer_llvm_buffers() {
+         let (sender, receiver) = unbounded();
+@@ -1527,6 +1549,7 @@
+         }
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_plain_producer() {
+         let (sender, receiver) = unbounded();
+@@ -1558,6 +1581,7 @@
+         check_produced(tmp_path, &receiver, expected);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_plain_profraw_producer() {
+         let (sender, receiver) = unbounded();
+@@ -1609,6 +1633,7 @@
+         );
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_jacoco_files() {
+         let mut file = File::open("./test/jacoco/basic-report.xml").ok();
+@@ -1639,6 +1664,7 @@
+         );
+     }
+ 
++    #[ignore]
+     #[test]
+     fn test_info_files() {
+         let mut file = File::open("./test/1494603973-2977-7.info").ok();
+--- a/src/path_rewriting.rs
++++ b/src/path_rewriting.rs
+@@ -557,6 +557,7 @@
+     }
+ 
+     #[cfg(unix)]
++    #[ignore]
      #[test]
      fn test_rewrite_paths_ignore_non_existing_files() {
          let mut result_map: CovResultMap = FxHashMap::default();
-@@ -614,7 +614,7 @@ mod tests {
-             assert_eq!(result, empty_result!());
-         }
-         assert_eq!(count, 1);
--    }
-+    }*/
- 
-     #[cfg(unix)]
-     #[test]
-@@ -933,7 +933,7 @@ mod tests {
-         .any(|_| false);
+@@ -589,6 +590,7 @@
      }
  
--    #[cfg(unix)]
-+    /*#[cfg(unix)]
+     #[cfg(windows)]
++    #[ignore]
+     #[test]
+     fn test_rewrite_paths_ignore_non_existing_files() {
+         let mut result_map: CovResultMap = FxHashMap::default();
+@@ -914,6 +916,7 @@
+         assert_eq!(count, 1);
+     }
+ 
++    #[ignore]
+     #[test]
+     #[should_panic]
+     fn test_rewrite_paths_rewrite_path_using_relative_source_directory() {
+@@ -934,6 +937,7 @@
+     }
+ 
+     #[cfg(unix)]
++    #[ignore]
      #[test]
      fn test_rewrite_paths_rewrite_path_using_absolute_source_directory() {
          let mut result_map: CovResultMap = FxHashMap::default();
-@@ -1041,9 +1041,9 @@ mod tests {
-             assert_eq!(result, empty_result!());
-         }
-         assert_eq!(count, 1);
--    }
-+    }*/
+@@ -962,6 +966,7 @@
+     }
  
--    #[cfg(unix)]
-+    /*#[cfg(unix)]
+     #[cfg(windows)]
++    #[ignore]
+     #[test]
+     fn test_rewrite_paths_rewrite_path_using_absolute_source_directory() {
+         let mut result_map: CovResultMap = FxHashMap::default();
+@@ -990,6 +995,7 @@
+     }
+ 
+     #[cfg(unix)]
++    #[ignore]
+     #[test]
+     fn test_rewrite_paths_subfolder_same_as_root() {
+         let mut result_map: CovResultMap = FxHashMap::default();
+@@ -1017,6 +1023,7 @@
+     }
+ 
+     #[cfg(windows)]
++    #[ignore]
+     #[test]
+     fn test_rewrite_paths_subfolder_same_as_root() {
+         let mut result_map: CovResultMap = FxHashMap::default();
+@@ -1044,6 +1051,7 @@
+     }
+ 
+     #[cfg(unix)]
++    #[ignore]
      #[test]
      fn test_rewrite_paths_rewrite_path_for_java_and_rust() {
          let mut result_map: CovResultMap = FxHashMap::default();
-@@ -1147,9 +1147,9 @@ mod tests {
-             assert_eq!(result, empty_result!());
-         }
-         assert_eq!(count, 1);
--    }
-+    }*/
+@@ -1070,6 +1078,7 @@
+     }
  
--    #[cfg(unix)]
-+    /*#[cfg(unix)]
+     #[cfg(windows)]
++    #[ignore]
+     #[test]
+     fn test_rewrite_paths_rewrite_path_for_java_and_rust() {
+         let mut result_map: CovResultMap = FxHashMap::default();
+@@ -1096,6 +1105,7 @@
+     }
+ 
+     #[cfg(unix)]
++    #[ignore]
+     #[test]
+     fn test_rewrite_paths_rewrite_path_using_absolute_source_directory_and_partial_path() {
+         let mut result_map: CovResultMap = FxHashMap::default();
+@@ -1123,6 +1133,7 @@
+     }
+ 
+     #[cfg(windows)]
++    #[ignore]
+     #[test]
+     fn test_rewrite_paths_rewrite_path_using_absolute_source_directory_and_partial_path() {
+         let mut result_map: CovResultMap = FxHashMap::default();
+@@ -1150,6 +1161,7 @@
+     }
+ 
+     #[cfg(unix)]
++    #[ignore]
      #[test]
      fn test_rewrite_paths_rewrite_path_and_remove_prefix() {
          let mut result_map: CovResultMap = FxHashMap::default();
-@@ -1208,7 +1208,7 @@ mod tests {
-             assert_eq!(result, empty_result!());
-         }
-         assert_eq!(count, 1);
--    }
-+    }*/
- 
-     #[cfg(unix)]
-     #[test]
-@@ -1262,7 +1262,7 @@ mod tests {
-         assert_eq!(count, 1);
+@@ -1181,6 +1193,7 @@
      }
  
--    #[cfg(unix)]
-+    /*#[cfg(unix)]
+     #[cfg(windows)]
++    #[ignore]
+     #[test]
+     fn test_rewrite_paths_rewrite_path_and_remove_prefix() {
+         let mut result_map: CovResultMap = FxHashMap::default();
+@@ -1263,6 +1276,7 @@
+     }
+ 
+     #[cfg(unix)]
++    #[ignore]
      #[test]
      fn test_rewrite_paths_rewrite_path_using_mapping_and_ignore_non_existing() {
          let mut result_map: CovResultMap = FxHashMap::default();
-@@ -1290,7 +1290,7 @@ mod tests {
-             assert_eq!(result, empty_result!());
-         }
-         assert_eq!(count, 1);
--    }
-+    }*/
- 
-     #[cfg(windows)]
-     #[test]
-@@ -1322,7 +1322,7 @@ mod tests {
-         assert_eq!(count, 1);
+@@ -1293,6 +1307,7 @@
      }
  
--    #[cfg(unix)]
-+    /*#[cfg(unix)]
+     #[cfg(windows)]
++    #[ignore]
+     #[test]
+     fn test_rewrite_paths_rewrite_path_using_mapping_and_ignore_non_existing() {
+         let mut result_map: CovResultMap = FxHashMap::default();
+@@ -1323,6 +1338,7 @@
+     }
+ 
+     #[cfg(unix)]
++    #[ignore]
      #[test]
      fn test_rewrite_paths_rewrite_path_using_mapping_and_remove_prefix() {
          let mut result_map: CovResultMap = FxHashMap::default();
-@@ -1470,9 +1470,9 @@ mod tests {
-             assert_eq!(result, empty_result!());
-         }
-         assert_eq!(count, 1);
--    }
-+    }*/
+@@ -1353,6 +1369,7 @@
+     }
  
--    #[cfg(unix)]
-+    /*#[cfg(unix)]
+     #[cfg(windows)]
++    #[ignore]
+     #[test]
+     fn test_rewrite_paths_rewrite_path_using_mapping_and_remove_prefix() {
+         // Mapping with uppercase disk and prefix with uppercase disk.
+@@ -1473,6 +1490,7 @@
+     }
+ 
+     #[cfg(unix)]
++    #[ignore]
      #[test]
      fn test_rewrite_paths_rewrite_path_using_mapping_and_source_directory_and_remove_prefix() {
          let mut result_map: CovResultMap = FxHashMap::default();
-@@ -1530,7 +1530,7 @@ mod tests {
-             assert_eq!(result, empty_result!());
-         }
-         assert_eq!(count, 1);
--    }
-+    }*/
- 
-     #[test]
-     fn test_rewrite_paths_only_covered() {
-@@ -1619,7 +1619,7 @@ mod tests {
-         assert!(!has_no_parent("/foo/bar.oof"));
+@@ -1503,6 +1521,7 @@
      }
  
--    #[cfg(unix)]
-+    /*#[cfg(unix)]
+     #[cfg(windows)]
++    #[ignore]
+     #[test]
+     fn test_rewrite_paths_rewrite_path_using_mapping_and_source_directory_and_remove_prefix() {
+         let mut result_map: CovResultMap = FxHashMap::default();
+@@ -1620,6 +1639,7 @@
+     }
+ 
+     #[cfg(unix)]
++    #[ignore]
      #[test]
      fn test_rewrite_paths_filter_lines_and_branches() {
          let mut result_map: CovResultMap = FxHashMap::default();
-@@ -1703,5 +1703,5 @@ mod tests {
-             }
-         }
-         assert_eq!(count, 1);
--    }
-+    }*/
- }
-Index: grcov/src/producer.rs
-===================================================================
---- grcov.orig/src/producer.rs
-+++ grcov/src/producer.rs
-@@ -648,7 +648,7 @@ mod tests {
-         }
+@@ -1663,6 +1683,7 @@
      }
  
--    #[test]
-+    /*#[test]
-     fn test_dir_producer() {
-         let (sender, receiver) = unbounded();
+     #[cfg(windows)]
++    #[ignore]
+     #[test]
+     fn test_rewrite_paths_filter_lines_and_branches() {
+         let mut result_map: CovResultMap = FxHashMap::default();
+--- a/src/output.rs
++++ b/src/output.rs
+@@ -764,6 +764,7 @@
+         assert!(results.contains("FN:3,hello_world\n"));
+     }
  
-@@ -766,9 +766,9 @@ mod tests {
-                 .unwrap(),
-             "modules/zlib/src/zlib.h"
-         );
--    }
-+    }*/
- 
--    #[test]
-+    /*#[test]
-     fn test_dir_producer_multiple_directories() {
-         let (sender, receiver) = unbounded();
- 
-@@ -789,9 +789,9 @@ mod tests {
- 
-         check_produced(tmp_path, &receiver, expected);
-         assert!(mapping.is_none());
--    }
-+    }*/
- 
--    #[test]
-+    /*#[test]
-     fn test_dir_producer_directory_with_gcno_symlinks() {
-         let (sender, receiver) = unbounded();
- 
-@@ -1661,5 +1661,5 @@ mod tests {
-             !Archive::check_file(file.as_mut(), &Archive::is_info),
-             "Not an info file expected"
-         );
--    }
-+    }*/
- }
++    #[ignore]
+     #[test]
+     fn test_covdir() {
+         let tmp_dir = tempfile::tempdir().expect("Failed to create temporary directory");
