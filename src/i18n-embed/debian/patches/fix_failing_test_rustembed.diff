@@ -1,0 +1,43 @@
+--- a/src/assets.rs
++++ b/src/assets.rs
+@@ -1,5 +1,6 @@
+ use std::borrow::Cow;
+ 
++#[cfg(feature = "rust-embed")]
+ use rust_embed::RustEmbed;
+ 
+ use crate::I18nEmbedError;
+@@ -29,6 +30,7 @@
+ 
+ impl Watcher for () {}
+ 
++#[cfg(feature = "rust-embed")]
+ impl<T> I18nAssets for T
+ where
+     T: RustEmbed,
+@@ -58,14 +60,14 @@
+ /// derived by the [`rust_embed::RustEmbed`] macro.
+ ///
+ /// ⚠️ *This type requires the following crate features to be activated: `autoreload`.*
+-#[cfg(feature = "autoreload")]
++#[cfg(all(feature = "autoreload", feature = "rust-embed"))]
+ #[derive(Debug)]
+ pub struct RustEmbedNotifyAssets<T: rust_embed::RustEmbed> {
+     base_dir: std::path::PathBuf,
+     embed: core::marker::PhantomData<T>,
+ }
+ 
+-#[cfg(feature = "autoreload")]
++#[cfg(all(feature = "autoreload", feature = "rust-embed"))]
+ impl<T: rust_embed::RustEmbed> RustEmbedNotifyAssets<T> {
+     /// Construct a new [`RustEmbedNotifyAssets`].
+     pub fn new(base_dir: impl Into<std::path::PathBuf>) -> Self {
+@@ -76,7 +78,7 @@
+     }
+ }
+ 
+-#[cfg(feature = "autoreload")]
++#[cfg(all(feature = "autoreload", feature = "rust-embed"))]
+ impl<T> I18nAssets for RustEmbedNotifyAssets<T>
+ where
+     T: RustEmbed,
