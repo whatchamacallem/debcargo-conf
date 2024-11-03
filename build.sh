@@ -12,7 +12,7 @@
 #     this when giving extra dependency debs.
 # SKIP_SIGN=1
 #     Skip signing built packages.
-# DISTRIBUTION=$suite
+# DISTRO=$suite
 #     Release to something other than unstable, e.g. experimental
 # CHROOT=$chroot
 #     Build using another schroot than debcargo-unstable-amd64-sbuild
@@ -51,7 +51,7 @@ if test -z "$VER" -o -f "$VER"; then
 else
 	shift 2
 fi
-DISTRIBUTION="${DISTRIBUTION:-unstable}"
+DISTRO="${DISTRO:-unstable}"
 
 PKGNAME=$($DEBCARGO deb-src-name "$CRATE" $VER || abort 1 "couldn't find crate $CRATE")
 DEBVER=$(dpkg-parsechangelog -l $PKGNAME/debian/changelog -SVersion)
@@ -100,22 +100,22 @@ Dir "$PWD/aptroot";
 Acquire::Languages "none";
 END
 {
-echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ $DISTRIBUTION main";
-echo "deb-src [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ $DISTRIBUTION main";
-case $DISTRIBUTION in
+echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ $DISTRO main";
+echo "deb-src [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ $DISTRO main";
+case $DISTRO in
 	experimental|rc-buggy)
 		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ unstable main"
 		;;
 	unstable|sid|testing) : ;;
 	*-backports)
-		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ ${DISTRIBUTION%-backports} main";
-		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ ${DISTRIBUTION%-backports}-updates main";
-		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://security.debian.org/debian-security/ ${DISTRIBUTION%-backports}-security main";
+		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ ${DISTRO%-backports} main";
+		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ ${DISTRO%-backports}-updates main";
+		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://security.debian.org/debian-security/ ${DISTRO%-backports}-security main";
 		;;
 	*)
 		# assume stable release
-		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ $DISTRIBUTION-updates main";
-		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://security.debian.org/debian-security/ $DISTRIBUTION-security main";
+		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://deb.debian.org/debian/ $DISTRO-updates main";
+		echo "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] http://security.debian.org/debian-security/ $DISTRO-security main";
 		;;
 esac;
 } > "./aptroot/etc/apt/sources.list"
@@ -167,7 +167,7 @@ check_build_deps() {
 	if shouldbuild dpkg-dummy/status "$(eval "$(apt-config shell v Dir::State::Lists/d)"; printf "$v")"; then
 		# pretend dpkg status file that marks all packages as installed
 		# this is because dpkg-checkbuilddeps only works on installed pkgs
-		( apt-cache dumpavail -o APT::Default-Release=$DISTRIBUTION && \
+		( apt-cache dumpavail -o APT::Default-Release=$DISTRO && \
 			for i in ${EXTRA_DEBS[*]}; do apt-cache show $(echo $i | cut -d_ -f1); done ) | \
 		sed -e 's/Package: .*/\0\nStatus: install ok installed/g' > dpkg-dummy/status.tmp
 		if ! test -s dpkg-dummy/status.tmp; then
@@ -203,7 +203,7 @@ if [ -n "${EXTRA_DEBS[*]}" ]; then
 fi
 
 if [ "$CHROOT_MODE" = "unshare" ]; then
-	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=--apt-upgrade -- unshare -t ${CHROOT} ${DISTRIBUTION:+-r $DISTRIBUTION}")
+	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=--apt-upgrade -- unshare -t ${CHROOT} ${DISTRO:+-r $DISTRO}")
 else
 	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=-- schroot ${CHROOT}")
 fi
@@ -222,7 +222,7 @@ fi
 SBUILD_CONFIG="$SCRIPTDIR/dev/sbuildrc" sbuild --no-source --arch-any --arch-all \
   ${CHROOT:+-c $CHROOT} \
   ${CHROOT_MODE:+--chroot-mode "$CHROOT_MODE"} \
-  ${DISTRIBUTION:+-d $DISTRIBUTION} \
+  ${DISTRO:+-d $DISTRO} \
   "${EXTRA_DEBS_SBUILD[@]}" \
   "${EXTRA_DEBS_AUTOPKGTEST_OPTS[@]}" \
   "${AUTOPKGTEST_OPTS[@]}" \

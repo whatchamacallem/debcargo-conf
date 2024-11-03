@@ -23,7 +23,7 @@ This script needs python-apt to work.
 This script expects to run at the root of the debcargo-conf repository.
 
 Env vars:
-- DISTRIBUTION
+- DISTRO
 - CHROOT
 - SBUILD_OPTS
 - EXTRA_DEBS
