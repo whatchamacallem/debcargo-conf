@@ -1,0 +1,25 @@
+Description: Replace rle-decode-fast with std provided function
+ as suggested by that crate itself.
+Last-Update: 2024-10-13
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -12,3 +12,2 @@
+ use core2::io;
+-use rle_decode_fast::rle_decode;
+ 
+@@ -188,7 +187,3 @@
+                 }
+-                rle_decode(
+-                    &mut self.buffer,
+-                    usize::from(backward_distance),
+-                    usize::from(length),
+-                );
++                self.buffer.extend_from_within(backward_distance as usize..(backward_distance + length) as usize);
+             }
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -32,4 +32,2 @@
+ 
+-[dependencies.rle-decode-fast]
+-version = "1.0.0"
+ 
