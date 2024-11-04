@@ -18,11 +18,10 @@ Description: remove unneeded mio versions
  Modified by Peter Michael Green to also disable mio 0.8 feature, since
  1.0 is now the current version.
 
-Index: udev/Cargo.toml
-===================================================================
---- udev.orig/Cargo.toml
-+++ udev/Cargo.toml
-@@ -41,16 +41,0 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -57,18 +57,2 @@
+ 
 -[dependencies.mio06]
 -version = "^0.6.21"
 -optional = true
@@ -39,39 +38,26 @@ Index: udev/Cargo.toml
 -features = ["os-ext"]
 -optional = true
 -package = "mio"
-Index: udev/src/lib.rs
-===================================================================
---- udev.orig/src/lib.rs
-+++ udev/src/lib.rs
-@@ -7,10 +7,6 @@
- extern crate io_lifetimes;
- extern crate libc;
+ 
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -9,6 +9,2 @@
  pub extern crate libudev_sys as ffi;
 -#[cfg(feature = "mio06")]
 -extern crate mio06;
 -#[cfg(feature = "mio07")]
 -extern crate mio07;
  #[cfg(feature = "mio08")]
- extern crate mio08;
- #[cfg(feature = "mio10")]
-Index: udev/src/monitor.rs
-===================================================================
---- udev.orig/src/monitor.rs
-+++ udev/src/monitor.rs
-@@ -7,10 +7,6 @@ use std::ops::Deref;
- use std::os::unix::io::{AsRawFd, RawFd};
- 
+--- a/src/monitor.rs
++++ b/src/monitor.rs
+@@ -9,6 +9,2 @@
  use io_lifetimes::{AsFd, BorrowedFd};
 -#[cfg(feature = "mio06")]
 -use mio06::{event::Evented, unix::EventedFd, Poll, PollOpt, Ready, Token};
 -#[cfg(feature = "mio07")]
 -use mio07::{event::Source, unix::SourceFd, Interest, Registry, Token};
  #[cfg(feature = "mio08")]
- use mio08::{event::Source, unix::SourceFd, Interest, Registry, Token};
- #[cfg(feature = "mio10")]
-@@ -309,32 +305,6 @@ impl Event {
-     }
- }
+@@ -335,28 +331,2 @@
  
 -#[cfg(feature = "mio06")]
 -impl Evented for Socket {
@@ -100,5 +86,3 @@ Index: udev/src/monitor.rs
 -    }
 -}
  
- #[cfg(any(feature = "mio07", feature = "mio08", feature = "mio10"))]
- impl Source for Socket {
