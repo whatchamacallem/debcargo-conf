@@ -190,7 +190,9 @@ eof
 			exit 1
 		fi
 
-	else
+	fi
+
+	if [ -n "$new_bin_packages" ]; then
 		cat <<eof
 ${RED}
 ATTENTION: this upload introduces NEW binary packages not already in Debian,
