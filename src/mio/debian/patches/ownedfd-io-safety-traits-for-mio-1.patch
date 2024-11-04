@@ -1,0 +1,353 @@
+Description: io safety traits for mio 1
+ Implement more I/O safety traits.
+ Implement `From<OwnedFd>` and `Into<OwnedFd>` for types that implement
+ `FromRawFd` and `IntoRawFd`.
+ And on Windows, implement `From<OwnedSocket>`, `Into<OwnedSocket>`, and
+ `AsSocket` for types that implement `FromRawSocket`, `IntoRawSocket`,
+ and `AsRawSocket`.
+Author: Dan Gohman <dev@sunfishcode.online>
+Origin: upstream, commit:d8d68ac6373a197af435a80d61d71963678fff97
+Forwarded: not-needed
+Applied-Upstream: commit:d8d68ac6373a197af435a80d61d71963678fff97
+Last-Update: 2024-11-04
+
+--- a/src/net/tcp/listener.rs
++++ b/src/net/tcp/listener.rs
+@@ -2,3 +2,3 @@
+ #[cfg(any(unix, target_os = "wasi"))]
+-use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, RawFd};
++use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+ // TODO: once <https://github.com/rust-lang/rust/issues/126198> is fixed this
+@@ -6,5 +6,7 @@
+ #[cfg(target_os = "hermit")]
+-use std::os::hermit::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, RawFd};
++use std::os::hermit::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+ #[cfg(windows)]
+-use std::os::windows::io::{AsRawSocket, FromRawSocket, IntoRawSocket, RawSocket};
++use std::os::windows::io::{
++    AsRawSocket, AsSocket, BorrowedSocket, FromRawSocket, IntoRawSocket, OwnedSocket, RawSocket,
++};
+ use std::{fmt, io};
+@@ -198,2 +200,9 @@
+ #[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
++impl From<TcpListener> for OwnedFd {
++    fn from(tcp_listener: TcpListener) -> Self {
++        tcp_listener.inner.into_inner().into()
++    }
++}
++
++#[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
+ impl AsFd for TcpListener {
+@@ -204,2 +213,15 @@
+ 
++#[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
++impl From<OwnedFd> for TcpListener {
++    /// Converts a `RawFd` to a `TcpListener`.
++    ///
++    /// # Notes
++    ///
++    /// The caller is responsible for ensuring that the socket is in
++    /// non-blocking mode.
++    fn from(fd: OwnedFd) -> Self {
++        TcpListener::from_std(From::from(fd))
++    }
++}
++
+ #[cfg(windows)]
+@@ -229,2 +251,29 @@
+     }
++}
++
++#[cfg(windows)]
++impl From<TcpListener> for OwnedSocket {
++    fn from(tcp_listener: TcpListener) -> Self {
++        tcp_listener.inner.into_inner().into()
++    }
++}
++
++#[cfg(windows)]
++impl AsSocket for TcpListener {
++    fn as_socket(&self) -> BorrowedSocket<'_> {
++        self.inner.as_socket()
++    }
++}
++
++#[cfg(windows)]
++impl From<OwnedSocket> for TcpListener {
++    /// Converts a `RawSocket` to a `TcpListener`.
++    ///
++    /// # Notes
++    ///
++    /// The caller is responsible for ensuring that the socket is in
++    /// non-blocking mode.
++    fn from(socket: OwnedSocket) -> Self {
++        TcpListener::from_std(From::from(socket))
++    }
+ }
+--- a/src/net/tcp/stream.rs
++++ b/src/net/tcp/stream.rs
+@@ -4,3 +4,3 @@
+ #[cfg(any(unix, target_os = "wasi"))]
+-use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, RawFd};
++use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+ // TODO: once <https://github.com/rust-lang/rust/issues/126198> is fixed this
+@@ -8,5 +8,7 @@
+ #[cfg(target_os = "hermit")]
+-use std::os::hermit::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, RawFd};
++use std::os::hermit::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+ #[cfg(windows)]
+-use std::os::windows::io::{AsRawSocket, FromRawSocket, IntoRawSocket, RawSocket};
++use std::os::windows::io::{
++    AsRawSocket, AsSocket, BorrowedSocket, FromRawSocket, IntoRawSocket, OwnedSocket, RawSocket,
++};
+ 
+@@ -380,2 +382,9 @@
+ #[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
++impl From<TcpStream> for OwnedFd {
++    fn from(tcp_stream: TcpStream) -> Self {
++        tcp_stream.inner.into_inner().into()
++    }
++}
++
++#[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
+ impl AsFd for TcpStream {
+@@ -386,2 +395,15 @@
+ 
++#[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
++impl From<OwnedFd> for TcpStream {
++    /// Converts a `RawFd` to a `TcpStream`.
++    ///
++    /// # Notes
++    ///
++    /// The caller is responsible for ensuring that the socket is in
++    /// non-blocking mode.
++    fn from(fd: OwnedFd) -> Self {
++        TcpStream::from_std(From::from(fd))
++    }
++}
++
+ #[cfg(windows)]
+@@ -411,2 +433,29 @@
+     }
++}
++
++#[cfg(windows)]
++impl From<TcpStream> for OwnedSocket {
++    fn from(tcp_stream: TcpStream) -> Self {
++        tcp_stream.inner.into_inner().into()
++    }
++}
++
++#[cfg(windows)]
++impl AsSocket for TcpStream {
++    fn as_socket(&self) -> BorrowedSocket<'_> {
++        self.inner.as_socket()
++    }
++}
++
++#[cfg(windows)]
++impl From<OwnedSocket> for TcpStream {
++    /// Converts a `RawSocket` to a `TcpStream`.
++    ///
++    /// # Notes
++    ///
++    /// The caller is responsible for ensuring that the socket is in
++    /// non-blocking mode.
++    fn from(socket: OwnedSocket) -> Self {
++        TcpStream::from_std(From::from(socket))
++    }
+ }
+--- a/src/net/udp.rs
++++ b/src/net/udp.rs
+@@ -11,3 +11,3 @@
+ #[cfg(any(unix, target_os = "wasi"))]
+-use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, RawFd};
++use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+ // TODO: once <https://github.com/rust-lang/rust/issues/126198> is fixed this
+@@ -15,5 +15,7 @@
+ #[cfg(target_os = "hermit")]
+-use std::os::hermit::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, RawFd};
++use std::os::hermit::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+ #[cfg(windows)]
+-use std::os::windows::io::{AsRawSocket, FromRawSocket, IntoRawSocket, RawSocket};
++use std::os::windows::io::{
++    AsRawSocket, AsSocket, BorrowedSocket, FromRawSocket, IntoRawSocket, OwnedSocket, RawSocket,
++};
+ use std::{fmt, io, net};
+@@ -674,2 +676,9 @@
+ #[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
++impl From<UdpSocket> for OwnedFd {
++    fn from(udp_socket: UdpSocket) -> Self {
++        udp_socket.inner.into_inner().into()
++    }
++}
++
++#[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
+ impl AsFd for UdpSocket {
+@@ -680,2 +689,15 @@
+ 
++#[cfg(any(unix, target_os = "hermit", target_os = "wasi"))]
++impl From<OwnedFd> for UdpSocket {
++    /// Converts a `RawFd` to a `UdpSocket`.
++    ///
++    /// # Notes
++    ///
++    /// The caller is responsible for ensuring that the socket is in
++    /// non-blocking mode.
++    fn from(fd: OwnedFd) -> Self {
++        UdpSocket::from_std(From::from(fd))
++    }
++}
++
+ #[cfg(windows)]
+@@ -705,2 +727,29 @@
+     }
++}
++
++#[cfg(windows)]
++impl From<UdpSocket> for OwnedSocket {
++    fn from(udp_socket: UdpSocket) -> Self {
++        udp_socket.inner.into_inner().into()
++    }
++}
++
++#[cfg(windows)]
++impl AsSocket for UdpSocket {
++    fn as_socket(&self) -> BorrowedSocket<'_> {
++        self.inner.as_socket()
++    }
++}
++
++#[cfg(windows)]
++impl From<OwnedSocket> for UdpSocket {
++    /// Converts a `RawSocket` to a `UdpSocket`.
++    ///
++    /// # Notes
++    ///
++    /// The caller is responsible for ensuring that the socket is in
++    /// non-blocking mode.
++    fn from(socket: OwnedSocket) -> Self {
++        UdpSocket::from_std(From::from(socket))
++    }
+ }
+--- a/src/net/uds/datagram.rs
++++ b/src/net/uds/datagram.rs
+@@ -1,3 +1,3 @@
+ use std::net::Shutdown;
+-use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, RawFd};
++use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+ use std::os::unix::net::{self, SocketAddr};
+@@ -251,2 +251,8 @@
+ 
++impl From<UnixDatagram> for OwnedFd {
++    fn from(unix_datagram: UnixDatagram) -> Self {
++        unix_datagram.inner.into_inner().into()
++    }
++}
++
+ impl AsFd for UnixDatagram {
+@@ -255,2 +261,8 @@
+     }
++}
++
++impl From<OwnedFd> for UnixDatagram {
++    fn from(fd: OwnedFd) -> Self {
++        UnixDatagram::from_std(From::from(fd))
++    }
+ }
+--- a/src/net/uds/listener.rs
++++ b/src/net/uds/listener.rs
+@@ -1,2 +1,2 @@
+-use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, RawFd};
++use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+ use std::os::unix::net::{self, SocketAddr};
+@@ -120,2 +120,8 @@
+ 
++impl From<UnixListener> for OwnedFd {
++    fn from(unix_listener: UnixListener) -> Self {
++        unix_listener.inner.into_inner().into()
++    }
++}
++
+ impl AsFd for UnixListener {
+@@ -124,2 +130,8 @@
+     }
++}
++
++impl From<OwnedFd> for UnixListener {
++    fn from(fd: OwnedFd) -> Self {
++        UnixListener::from_std(From::from(fd))
++    }
+ }
+--- a/src/net/uds/stream.rs
++++ b/src/net/uds/stream.rs
+@@ -3,3 +3,3 @@
+ use std::net::Shutdown;
+-use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, RawFd};
++use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+ use std::os::unix::net::{self, SocketAddr};
+@@ -264,2 +264,8 @@
+ 
++impl From<UnixStream> for OwnedFd {
++    fn from(unix_stream: UnixStream) -> Self {
++        unix_stream.inner.into_inner().into()
++    }
++}
++
+ impl AsFd for UnixStream {
+@@ -268,2 +274,8 @@
+     }
++}
++
++impl From<OwnedFd> for UnixStream {
++    fn from(fd: OwnedFd) -> Self {
++        UnixStream::from_std(From::from(fd))
++    }
+ }
+--- a/src/sys/unix/pipe.rs
++++ b/src/sys/unix/pipe.rs
+@@ -67,3 +67,3 @@
+ use std::io::{IoSlice, IoSliceMut, Read, Write};
+-use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd};
++use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd};
+ use std::process::{ChildStderr, ChildStdin, ChildStdout};
+@@ -380,2 +380,8 @@
+ 
++impl From<Sender> for OwnedFd {
++    fn from(sender: Sender) -> Self {
++        sender.inner.into_inner().into()
++    }
++}
++
+ impl AsFd for Sender {
+@@ -386,2 +392,10 @@
+ 
++impl From<OwnedFd> for Sender {
++    fn from(fd: OwnedFd) -> Self {
++        Sender {
++            inner: IoSource::new(File::from(fd)),
++        }
++    }
++}
++
+ /// Receiving end of an Unix pipe.
+@@ -553,2 +567,8 @@
+ 
++impl From<Receiver> for OwnedFd {
++    fn from(receiver: Receiver) -> Self {
++        receiver.inner.into_inner().into()
++    }
++}
++
+ impl AsFd for Receiver {
+@@ -557,2 +577,10 @@
+     }
++}
++
++impl From<OwnedFd> for Receiver {
++    fn from(fd: OwnedFd) -> Self {
++        Receiver {
++            inner: IoSource::new(File::from(fd)),
++        }
++    }
+ }
