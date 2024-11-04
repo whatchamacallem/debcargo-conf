@@ -144,7 +144,7 @@ fi
 DEBVER=$(dpkg-parsechangelog -l $BUILDDIR/debian/changelog -SVersion)
 DEBSRC=$(dpkg-parsechangelog -l $BUILDDIR/debian/changelog -SSource)
 DEB_HOST_ARCH=$(dpkg-architecture -q DEB_HOST_ARCH)
-SRC_CHANGES="$DEBSRC_$DEBVER_source.changes"
+SRC_CHANGES=$(realpath --relative-to $PWD $(ls $BUILDDIR/../$DEBSRC*$DEBVER*_source.changes))
 
 git commit -m "$PKGNAME: release $DEBVER"
 
