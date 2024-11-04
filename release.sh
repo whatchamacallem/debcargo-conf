@@ -18,20 +18,17 @@
 #     auto-REJECT from Debian FTP. TODO: we probably want to set this
 #     automatically on if the Debian version ends with -2 or above.
 
-type dch >/dev/null || \
-abort 1 "Install devscripts, we need to run dch."
-
 . ./vars.sh.frag
 
 RED=`echo -e "\033[1;31m"`
 NC=`echo -e "\033[0m"`
 
 if test ! -d $PKGDIR_REL; then
-    abort 1 "Cannot find $PKGDIR_REL. Did you run ./update.sh before?"
+    abort 1 "Cannot find $PKGDIR_REL. Did you run ./new-package.sh before?"
 fi
 
 if test ! -f "$PKGDIR_REL/debian/changelog"; then
-	abort 1 "Cannot find $PKGDIR_REL/debian/changelog. Did you run ./update.sh before?"
+	abort 1 "Cannot find $PKGDIR_REL/debian/changelog. Did you run ./new-package.sh before?"
 fi
 
 if git grep --quiet FIXME -- "$PKGDIR_REL" :^"$PKGDIR_REL/debian/*.debcargo.hint" :^"$PKGDIR_REL/debian/changelog" :^"$PKGDIR_REL/debian/patches/*"; then
@@ -39,10 +36,13 @@ if git grep --quiet FIXME -- "$PKGDIR_REL" :^"$PKGDIR_REL/debian/*.debcargo.hint
 fi
 
 git diff --quiet --cached || \
-abort 1 "You have other pending changes in git, please complete it or stash it away and re-run this script."
+abort 1 "You have other pending changes to git, please complete it or stash it away and re-run this script."
 
 git diff --quiet -- "$PKGDIR_REL" || \
 abort 1 "Please git-add your changes to $PKGDIR_REL before running"
+
+type dch >/dev/null || \
+abort 1 "Install devscripts, we need to run dch."
 
 RELBRANCH="pending-$PKGNAME"
 timeout 15 git fetch origin --prune || abort 1 "Failed to fetch upstream to check whether we are synced, please check network"
@@ -135,8 +135,7 @@ fi
 
 if ! ( cd build && SOURCEONLY=1 ./build.sh "$CRATE" $VER ); then
 	revert_git_changes
-	abort 1 \
-		"Release attempt failed (see messages above), possible reasons are: " \
+	abort 1 "Release attempt failed (see messages above), possible reasons are: " \
 		"- build-dependencies not in Debian => release those first." \
 		"- packaged version is out-of-date => run \`./update.sh $*\`"
 fi
@@ -144,67 +143,105 @@ fi
 DEBVER=$(dpkg-parsechangelog -l $BUILDDIR/debian/changelog -SVersion)
 DEBSRC=$(dpkg-parsechangelog -l $BUILDDIR/debian/changelog -SSource)
 DEB_HOST_ARCH=$(dpkg-architecture -q DEB_HOST_ARCH)
-SRC_CHANGES="$DEBSRC_$DEBVER_source.changes"
 
 git commit -m "$PKGNAME: release $DEBVER"
 
 if [ "$RERELEASE" = 1 ]; then
 
-	( cd build && dput $SRC_CHANGES )
-	git push origin "$RELBRANCH"
-	git checkout master
+( cd build && dput "${DEBSRC}_${DEBVER}_source.changes" )
+git push origin "$RELBRANCH"
+git checkout master
 
-	cat <<eof
-Source-only re-release of $CRATE uploaded. You need to do the following:
+cat <<eof
+Source-only re-release of $CRATE uploaded. You need to perform the following steps:
 
 eof
 
 else
 
-	unstable_bin_packages="$(rmadison --noconf --suite unstable --source-and-binary "${DEBSRC}" | grep -v 'source$' | cut -d ' ' -f 1 | sort -u)"
-	upload_bin_packages="$(grep '^Binary' "build/${DEBSRC}_${DEBVER}.dsc" | sed -e 's/^Binary: //' -e 's/, /,/g' | tr ',' '\n' | sort -u)"
-	diff_bin_packages="$(diff -u0 <(echo "$unstable_bin_packages") <(echo "$upload_bin_packages") | grep '^[+-]' || true)"
-	new_bin_packages="$(echo "$diff_bin_packages" | grep '^+' | sed -e 's/^+//g')"
-	rm_bin_packages="$(echo "$diff_bin_packages" | grep '^-' | sed -e 's/^-//g')"
+unstable_bin_packages="$(rmadison --noconf --suite unstable --source-and-binary "${DEBSRC}" | grep -v 'source$' | cut -d ' ' -f 1 | sort -u)"
+upload_bin_packages="$(grep '^Binary' "build/${DEBSRC}_${DEBVER}.dsc" | sed -e 's/^Binary: //' -e 's/, /,/g' | tr ',' '\n' | sort -u)"
+diff_bin_packages="$(diff -u0 <(echo "$unstable_bin_packages") <(echo "$upload_bin_packages") | grep '^[+-]' || true)"
+new_bin_packages="$(echo "$diff_bin_packages" | grep '^+' | sed -e 's/^+//g')"
+rm_bin_packages="$(echo "$diff_bin_packages" | grep '^-' | sed -e 's/^-//g')"
 
-	cat <<eof
-Release of $CRATE ready as a source package in ${BUILDDIR#$PWD/}.
-Its changes file is $SRC_CHANGES.
+show_build_notice() {
+cat <<eof
+The recommended way to build and upload is to run something like:
+
+  cd build && ./build.sh $CRATE $VER && dput ${DEBSRC}_${DEBVER}_${DEB_HOST_ARCH}.changes && git push origin $RELBRANCH && git checkout - && cd -
+
+eof
+}
+
+cat <<eof
+Release of $CRATE ready as a source package in ${BUILDDIR#$PWD/}. You need to
+perform the following steps:
+
+Build the package if necessary, and upload
+==========================================
+eof
+
+if [ -z "$unstable_bin_packages" ]; then
+cat <<eof
+${RED}
+Since this is a NEW source package not already in the Debian archive, you will need to build a binary package out of it.
+
+For your reference, this source package builds $(echo "$upload_bin_packages" | wc -l) binary package(s):
+$upload_bin_packages
+${NC}
+eof
+show_build_notice
+
+if test $(echo "$upload_bin_packages"|grep librust|wc -l) -ge 2; then
+    # We have more than one package
+    echo "${RED}"
+    echo "collapse_features = true missing in $PKGDIR_REL/debian/debcargo.toml"
+    echo "${NC}To add it:"
+    echo "git checkout - && git branch -D $RELBRANCH && echo 'collapse_features = true' >> $PKGDIR_REL/debian/debcargo.toml && git commit -m '$PKGDIR_REL: add collapse_features = true' $PKGDIR_REL/debian/debcargo.toml"
+    echo "${NC}"
+    exit 1
+fi
+
+elif [ -z "$new_bin_packages" ]; then
+cat <<eof
+Since the source package is already in Debian and this version does not introduce
+new binaries, then you can just go ahead and directly dput the source package.
+
+  cd build && dput ${DEBSRC}_${DEBVER}_source.changes && cd - && git checkout master
+
+If you want to build and test it, run:
+
+  cd build && ./build.sh $CRATE && dput ${DEBSRC}_${DEBVER}_source.changes && cd - && git checkout master
+
 For your reference, this source package builds $(echo "$upload_bin_packages" | wc -l) binary package(s):
 $upload_bin_packages
 eof
+# don't show build notice
 
-	if [ -z "$unstable_bin_packages" ]; then
-		cat <<eof
+else
+cat <<eof
 ${RED}
-Since this is a NEW package not already in Debian, a binary package is needed.
-Build it if you haven't, then run:
-	mergechanges -f \$SRC_CHANGES \$BIN_CHANGES
-and dput the resulting multi.changes.
-${NC}
-eof
-
-		if test $(echo "$upload_bin_packages"|grep librust|wc -l) -ge 2; then
-			# We have more than one package
-			echo "${RED}collapse_features = true missing in $PKGDIR_REL/debian/debcargo.toml${NC}"
-			exit 1
-		fi
-
-	else
-		cat <<eof
-${RED}
-ATTENTION: this upload introduces NEW binary packages not already in Debian,
-they need to be built and uploaded along:
-$new_bin_packages
+ATTENTION: this upload introduces NEW binary packages not already in the Debian
+archive, you will need to build a binary package out of it.
 
 PLEASE THINK CAREFULLY BEFORE UPLOADING NEW VERSIONS WITH NEW BINARY PACKAGES,
 AS SUCH UPLOADS CAN AFFECT ONGOING TRANSITIONS AND DELAY THEM SIGNIFICANTLY.
+
+For your reference, this source package builds $(echo "$upload_bin_packages" | wc -l) binary package(s):
+$upload_bin_packages
+
+Of those, the following are NEW:
+$new_bin_packages
 ${NC}
 eof
-	fi
+show_build_notice
 
-	if [ -n "$rm_bin_packages" ]; then
-		cat <<eof
+fi # end decision-making on show_build_notice
+
+if [ -n "$rm_bin_packages" ]; then
+
+cat <<eof
 
 ATTENTION: The following binary packages which are currently available in
 Debian unstable are no longer built from ${DEBSRC}, please investigate whether
@@ -212,14 +249,48 @@ this is intentional, and file RM requests where appropriate:
 
 $rm_bin_packages
 eof
-	fi
 
-	cat <<eof
+fi
 
-Push the pending- branch '$RELBRANCH' after uploading the package to signal the
-upload to others.
-Merge or cherry-pick it onto master when the upload is ACCEPTED, or delete it
-when REJECTED.
+cat <<eof
+This assumes you followed the "Build environment" instructions in README.rst,
+for setting up a build environment for release.
+
+If the build fails e.g. due to missing Build-Dependencies you should revert
+what I did (see below) and package those missing Build-Dependencies first.
+
+Push this pending-release branch
+================================
+
+After you have uploaded the package with dput(1), you should push $RELBRANCH so
+that other people see it's been uploaded. Then, checkout another branch like
+master to continue development on other packages.
+
+  git push origin $RELBRANCH && git checkout master
+
 eof
 
 fi
+
+cat >&2 <<eof
+Merge the pending-release branch if/when ACCEPTED
+=================================================
+
+When it's ACCEPTED by the Debian FTP masters, you may then merge this branch
+back into the master branch, delete it, and push these updates to origin.
+
+  git checkout master && git merge $RELBRANCH && git branch -d $RELBRANCH
+  git push origin master :$RELBRANCH
+
+Delete this branch without merging if/when REJECTED
+===================================================
+
+If your upload is REJECTED, or if you cannot perform an upload in the first
+place e.g. because you are not a Debian Developer, you should revert what I
+just did. To do that, run:
+
+  git checkout master && git branch -D $RELBRANCH
+
+Then ask a Debian Developer to re-run me ($0 $*) on your behalf. Also, touch
+and commit ${PKGDIR_REL}/debian/RFS so we can track these easier.
+eof
