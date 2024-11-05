@@ -6,25 +6,30 @@ Description: Make example `rockusb` an installed executable
  packaged by debcargo.
 Author: Arnaud Ferraris <aferraris@debian.org>
 Forwarded: not-needed
-Last-Update: 2023-12-19
+Last-Update: 2024-11-05
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -20,9 +20,11 @@
- license = "MIT OR Apache-2.0"
- repository = "https://github.com/collabora/rockchiprs"
- resolver = "1"
-+autoexamples = false
+@@ -15,7 +15,7 @@
+ version = "0.2.0"
+ authors = ["Sjoerd Simons <sjoerd@collabora.com>"]
+ build = false
+-autobins = false
++autobins = true
+ autoexamples = false
+ autotests = false
+ autobenches = false
+@@ -36,7 +36,7 @@
+ name = "rockusb"
+ path = "src/lib.rs"
  
 -[[example]]
 +[[bin]]
  name = "rockusb"
-+path = "examples/rockusb.rs"
+ path = "examples/rockusb.rs"
  required-features = ["libusb"]
- 
- [dependencies.bytes]
-@@ -44,31 +46,28 @@
+@@ -73,54 +73,45 @@
  [dependencies.thiserror]
  version = "1.0.38"
  
@@ -32,9 +37,17 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 +[dependencies.anyhow]
  version = "1.0.69"
  
+-[dev-dependencies.async-compression]
++[dependencies.async-compression]
+ version = "0.4.5"
+ features = [
+     "gzip",
+     "futures-io",
+ ]
+ 
 -[dev-dependencies.bmap-parser]
 +[dependencies.bmap-parser]
- version = "0.1.0"
+ version = "0.2.0"
  
 -[dev-dependencies.clap]
 +[dependencies.clap]
@@ -49,17 +62,36 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 +[dependencies.flate2]
  version = "1.0.25"
  
+-[dev-dependencies.futures]
+-version = "0.3.31"
+-features = [
+-    "compat",
+-    "io-compat",
+-]
+-
 -[dev-dependencies.nbd]
 +[dependencies.nbd]
  version = "0.3"
  
 -[dev-dependencies.rockfile]
 +[dependencies.rockfile]
- version = "0.1.1"
+ version = "0.1.2"
  
 -[dev-dependencies.rusb]
 -version = "0.9.1"
 -
+-[dev-dependencies.tokio]
++[dependencies.tokio]
+ version = "1.40.0"
+ features = ["full"]
+ 
+-[dev-dependencies.tokio-util]
++[dependencies.tokio-util]
+ version = "0.7.12"
+ features = ["compat"]
+ 
  [features]
- default = ["libusb"]
++default = ["libusb"]
  libusb = ["dep:rusb"]
+ nusb = [
+     "dep:nusb",

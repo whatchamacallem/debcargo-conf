@@ -1,0 +1,18 @@
+Description: Fix failing doctests
+ The project's README contains code examples and is included for
+ building the crate's documentation; this causes the build to fail as
+ as it's included *before* the corresponding modules are defined. Let's
+ drop this include to fix the build
+Author: Arnaud Ferraris <aferraris@debian.org>
+Forwarded: not-needed
+Last-Update: 2024-11-05
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1,5 +1,4 @@
+ #![cfg_attr(docsrs, feature(doc_auto_cfg))]
+-#![doc = include_str!("../README.md")]
+ 
+ /// libusb transport implementation
+ #[cfg(feature = "libusb")]
