@@ -1,27 +1,180 @@
---- a/src/time.rs
-+++ b/src/time.rs
-@@ -17,2 +17,7 @@
+Index: rust-input-linux-0.7.1/src/time.rs
+===================================================================
+--- rust-input-linux-0.7.1.orig/src/time.rs
++++ rust-input-linux-0.7.1/src/time.rs
+@@ -10,42 +10,72 @@ use serde::{Serialize, Deserialize};
+ #[repr(C)]
+ #[derive(Copy, Clone)]
+ #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
++#[cfg(not(any(target_arch = "arm", target_arch = "powerpc")))]
+ pub struct EventTime(
+ #[cfg_attr(feature = "serde", serde(with = "TimevalDef"))]
+ timeval
+ );
  
++#[repr(C)]
++#[derive(Copy, Clone)]
++#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
++#[cfg(any(target_arch = "arm", target_arch = "powerpc"))]
++pub struct EventTime(
++u32,u32
++);
++
++
 +#[cfg(not(any(target_arch = "arm", target_arch = "powerpc")))]
 +pub type TvUsecT = suseconds_t;
 +#[cfg(any(target_arch = "arm", target_arch = "powerpc"))]
 +pub type TvUsecT = i64;
 +
  #[cfg(feature = "serde")]
-@@ -22,5 +27,5 @@
+ #[derive(Serialize, Deserialize)]
+ #[serde(remote = "timeval")]
+ #[allow(dead_code)]
  struct TimevalDef {
      tv_sec: time_t,
 -    tv_usec: suseconds_t,
 +    tv_usec: TvUsecT,
  }
  
-@@ -31,3 +36,3 @@
+ impl EventTime {
+     /// Create a new timestamp.
+     pub const fn new(secs: i64, usecs: i64) -> Self {
+-        EventTime(timeval {
++        #[cfg(not(any(target_arch = "arm", target_arch = "powerpc")))]
++        return EventTime(timeval {
              tv_sec: secs as time_t,
 -            tv_usec: usecs as suseconds_t,
+-        })
 +            tv_usec: usecs as TvUsecT,
-         })
-@@ -60,3 +65,3 @@
++        });
++        #[cfg(any(target_arch = "arm", target_arch = "powerpc"))]
++        return EventTime(
++            secs as _,
++            usecs as _,
++        );
+     }
+ 
+     /// Create a timestamp given a libc [`timeval`].
+     pub const fn from_timeval(time: timeval) -> Self {
+-        EventTime(time)
++        #[cfg(not(any(target_arch = "arm", target_arch = "powerpc")))]
++        return EventTime(time);
++        #[cfg(any(target_arch = "arm", target_arch = "powerpc"))]
++        return EventTime(time.tv_sec as _ ,time.tv_usec as _);
+     }
+ 
+     /// The timestamp represented as seconds since an epoch.
+     pub const fn seconds(&self) -> i64 {
+-        (self.0).tv_sec as i64
++        #[cfg(not(any(target_arch = "arm", target_arch = "powerpc")))]
++        return (self.0).tv_sec as i64;
++        #[cfg(any(target_arch = "arm", target_arch = "powerpc"))]
++        return self.0 as _;
+     }
+ 
+     /// Set the seconds component of the timestamp.
+     pub fn set_seconds(&mut self, value: i64) {
+-        (self.0).tv_sec = value as time_t
++        #[cfg(not(any(target_arch = "arm", target_arch = "powerpc")))]
++        { (self.0).tv_sec = value as time_t; }
++        #[cfg(any(target_arch = "arm", target_arch = "powerpc"))]
++        { self.0 = value as _; }
+     }
+ 
+     /// The microseconds component of the seconds.
+@@ -53,17 +83,29 @@ impl EventTime {
+     /// This is meant to be modulo one second, though any value is technically
+     /// valid.
+     pub const fn microseconds(&self) -> i64 {
+-        (self.0).tv_usec as i64
++        #[cfg(not(any(target_arch = "arm", target_arch = "powerpc")))]
++        return (self.0).tv_usec as i64;
++        #[cfg(any(target_arch = "arm", target_arch = "powerpc"))]
++        return self.1 as i64;
+     }
+ 
+     /// Set the microseconds component of the timestamp.
      pub fn set_microseconds(&mut self, value: i64) {
 -        (self.0).tv_usec = value as suseconds_t
-+        (self.0).tv_usec = value as TvUsecT
++        #[cfg(not(any(target_arch = "arm", target_arch = "powerpc")))]
++        { (self.0).tv_usec = value as TvUsecT; }
++        #[cfg(any(target_arch = "arm", target_arch = "powerpc"))]
++        { self.1 = value as _; }
      }
+ 
+     /// The inner `libc` [`timeval`].
+     pub const fn into_inner(self) -> timeval {
+-        self.0
++        #[cfg(not(any(target_arch = "arm", target_arch = "powerpc")))]
++        return self.0;
++        #[cfg(any(target_arch = "arm", target_arch = "powerpc"))]
++        return timeval {
++            tv_sec : self.0 as _,
++            tv_usec : self.1 as _,
++        }
+     }
+ }
+ 
+@@ -76,8 +118,8 @@ impl Default for EventTime {
+ impl fmt::Debug for EventTime {
+     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+         f.debug_struct("EventTime")
+-            .field("seconds", &(self.0).tv_sec)
+-            .field("microseconds", &(self.0).tv_usec)
++            .field("seconds", &self.seconds())
++            .field("microseconds", &self.microseconds())
+             .finish()
+     }
+ }
+@@ -94,6 +136,7 @@ impl From<EventTime> for timeval {
+     }
+ }
+ 
++#[cfg(not(any(target_arch = "arm", target_arch = "powerpc")))]
+ impl Deref for EventTime {
+     type Target = timeval;
+ 
+@@ -102,12 +145,14 @@ impl Deref for EventTime {
+     }
+ }
+ 
++#[cfg(not(any(target_arch = "arm", target_arch = "powerpc")))]
+ impl DerefMut for EventTime {
+     fn deref_mut(&mut self) -> &mut Self::Target {
+         &mut self.0
+     }
+ }
+ 
++#[cfg(not(any(target_arch = "arm", target_arch = "powerpc")))]
+ impl AsRef<timeval> for EventTime {
+     fn as_ref(&self) -> &timeval {
+         &self.0
+@@ -140,22 +185,22 @@ impl PartialOrd for EventTime {
+ 
+ impl PartialEq for EventTime {
+     fn eq(&self, other: &Self) -> bool {
+-        (self.0).tv_sec == (other.0).tv_sec &&
+-            (self.0).tv_usec == (other.0).tv_usec
++        self.seconds() == other.seconds() &&
++            self.microseconds() == other.microseconds()
+     }
+ }
+ 
+ impl Hash for EventTime {
+     fn hash<H: Hasher>(&self, state: &mut H) {
+-        (self.0).tv_sec.hash(state);
+-        (self.0).tv_usec.hash(state);
++        self.seconds().hash(state);
++        self.microseconds().hash(state);
+     }
+ }
+ 
+ impl Ord for EventTime {
+     fn cmp(&self, other: &Self) -> cmp::Ordering {
+-        (self.0).tv_sec.cmp(&(other.0).tv_sec)
+-            .then((self.0).tv_usec.cmp(&(other.0).tv_usec))
++        self.seconds().cmp(&other.seconds())
++            .then(self.microseconds().cmp(&other.microseconds()))
+     }
+ }
+ 
