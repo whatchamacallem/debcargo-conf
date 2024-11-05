@@ -4,9 +4,11 @@ Description: Disable tests that rely on test tarballs
  tests than none of the tests.
 Author: Peter Michael Green <plugwash@debian.org>
 
---- a/tests/all.rs
-+++ b/tests/all.rs
-@@ -23,17 +23,17 @@
+Index: tar/tests/all.rs
+===================================================================
+--- tar.orig/tests/all.rs
++++ tar/tests/all.rs
+@@ -23,17 +23,17 @@ macro_rules! t {
      };
  }
  
@@ -27,7 +29,7 @@ Author: Peter Michael Green <plugwash@debian.org>
  fn simple_concat() {
      let bytes = tar!("simple.tar");
      let mut archive_bytes = Vec::new();
-@@ -76,9 +76,9 @@
+@@ -76,9 +76,9 @@ fn simple_concat() {
  
          names
      }
@@ -39,7 +41,7 @@ Author: Peter Michael Green <plugwash@debian.org>
  fn header_impls() {
      let mut ar = Archive::new(Cursor::new(tar!("simple.tar")));
      let hn = Header::new_old();
-@@ -91,9 +91,9 @@
+@@ -91,9 +91,9 @@ fn header_impls() {
          let h2b = h2.as_bytes();
          assert!(h1b[..] == h2b[..] && h2b[..] != hnb[..])
      }
@@ -51,7 +53,7 @@ Author: Peter Michael Green <plugwash@debian.org>
  fn header_impls_missing_last_header() {
      let mut ar = Archive::new(Cursor::new(tar!("simple_missing_last_header.tar")));
      let hn = Header::new_old();
-@@ -106,9 +106,9 @@
+@@ -106,9 +106,9 @@ fn header_impls_missing_last_header() {
          let h2b = h2.as_bytes();
          assert!(h1b[..] == h2b[..] && h2b[..] != hnb[..])
      }
@@ -63,7 +65,7 @@ Author: Peter Michael Green <plugwash@debian.org>
  fn reading_files() {
      let rdr = Cursor::new(tar!("reading_files.tar"));
      let mut ar = Archive::new(rdr);
-@@ -127,7 +127,7 @@
+@@ -127,7 +127,7 @@ fn reading_files() {
      assert_eq!(s, "b\nb\nb\nb\nb\nb\nb\nb\nb\nb\nb\n");
  
      assert!(entries.next().is_none());
@@ -72,7 +74,7 @@ Author: Peter Michael Green <plugwash@debian.org>
  
  #[test]
  fn writing_files() {
-@@ -221,7 +221,7 @@
+@@ -221,7 +221,7 @@ fn reading_entries_common<R: Read>(mut e
      assert!(entries.next().is_none());
  }
  
@@ -81,15 +83,15 @@ Author: Peter Michael Green <plugwash@debian.org>
  fn reading_entries() {
      let rdr = Cursor::new(tar!("reading_files.tar"));
      let mut ar = Archive::new(rdr);
-@@ -234,6 +234,7 @@
+@@ -234,6 +234,7 @@ fn reading_entries_with_seek() {
      let mut ar = Archive::new(rdr);
-     reading_entries_common(t!(ar.entries_with_seek()));
+     reading_entries_common(ar.entries_with_seek().unwrap());
  }
 +*/
  
  struct LoggingReader<R> {
      inner: R,
-@@ -264,6 +265,7 @@
+@@ -264,6 +265,7 @@ impl<T: Seek> Seek for LoggingReader<T>
      }
  }
  
@@ -97,7 +99,7 @@ Author: Peter Michael Green <plugwash@debian.org>
  #[test]
  fn skipping_entries_with_seek() {
      let mut reader = LoggingReader::new(Cursor::new(tar!("reading_files.tar")));
-@@ -281,6 +283,7 @@
+@@ -281,6 +283,7 @@ fn skipping_entries_with_seek() {
      assert!(files == files_seekable);
      assert!(seekable_reader.read_bytes < reader.read_bytes);
  }
@@ -105,15 +107,15 @@ Author: Peter Michael Green <plugwash@debian.org>
  
  fn check_dirtree(td: &TempDir) {
      let dir_a = td.path().join("a");
-@@ -291,6 +294,7 @@
+@@ -291,6 +294,7 @@ fn check_dirtree(td: &TempDir) {
      assert!(fs::metadata(&file_c).map(|m| m.is_file()).unwrap_or(false));
  }
  
 +/*
  #[test]
  fn extracting_directories() {
-     let td = t!(TempBuilder::new().prefix("tar-rs").tempdir());
-@@ -1077,8 +1081,9 @@
+     let td = TempBuilder::new().prefix("tar-rs").tempdir().unwrap();
+@@ -1187,8 +1191,9 @@ fn reading_sparse() {
      assert!(s[0x2fa0 + 6..0x4000].chars().all(|x| x == '\u{0}'));
  
      assert!(entries.next().is_none());
@@ -124,19 +126,7 @@ Author: Peter Michael Green <plugwash@debian.org>
  #[test]
  fn extract_sparse() {
      let rdr = Cursor::new(tar!("sparse.tar"));
-@@ -1118,9 +1123,9 @@
-     assert!(s[0x1000 + 6..0x2fa0].chars().all(|x| x == '\u{0}'));
-     assert_eq!(&s[0x2fa0..0x2fa0 + 6], "world\n");
-     assert!(s[0x2fa0 + 6..0x4000].chars().all(|x| x == '\u{0}'));
--}
-+}*/
- 
--#[test]
-+/*#[test]
- fn sparse_with_trailing() {
-     let rdr = Cursor::new(tar!("sparse-1.tar"));
-     let mut ar = Archive::new(rdr);
-@@ -1132,7 +1137,7 @@
+@@ -1254,7 +1259,7 @@ fn sparse_with_trailing() {
      assert_eq!(&s[..0xc], "0MB through\n");
      assert!(s[0xc..0x100_000].chars().all(|x| x == '\u{0}'));
      assert_eq!(&s[0x100_000..], "1MB through\n");
@@ -144,8 +134,8 @@ Author: Peter Michael Green <plugwash@debian.org>
 +}*/
  
  #[test]
- fn path_separators() {
-@@ -1302,15 +1307,15 @@
+ fn writing_sparse() {
+@@ -1485,15 +1490,15 @@ fn tar_directory_containing_symlink_to_d
      ar.finish().unwrap();
  }
  
@@ -164,7 +154,7 @@ Author: Peter Michael Green <plugwash@debian.org>
  fn unpack_path_larger_than_windows_max_path() {
      let dir_name = "iamaprettylongnameandtobepreciseiam91characterslongwhichsomethinkisreallylongandothersdonot";
      // 183 character directory name
-@@ -1321,7 +1326,7 @@
+@@ -1504,7 +1509,7 @@ fn unpack_path_larger_than_windows_max_p
      let mut ar = Archive::new(rdr);
      // should unpack path greater than windows MAX_PATH length of 260 characters
      assert!(ar.unpack(td.path()).is_ok());
@@ -173,7 +163,7 @@ Author: Peter Michael Green <plugwash@debian.org>
  
  #[test]
  fn append_long_multibyte() {
-@@ -1489,7 +1494,7 @@
+@@ -1689,7 +1694,7 @@ fn ownership_preserving() {
      }
  }
  
@@ -182,7 +172,7 @@ Author: Peter Michael Green <plugwash@debian.org>
  #[cfg(unix)]
  fn pax_and_gnu_uid_gid() {
      let tarlist = [tar!("biguid_gnu.tar"), tar!("biguid_pax.tar")];
-@@ -1514,4 +1519,4 @@
+@@ -1714,4 +1719,4 @@ fn pax_and_gnu_uid_gid() {
              assert!(ar.unpack(td.path()).is_err());
          }
      }
