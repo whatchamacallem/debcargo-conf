@@ -1,24 +1,10 @@
-From 804b4cb22b74b95fb7787d52941ef5c7922c6c0d Mon Sep 17 00:00:00 2001
-From: NoisyCoil <noisycoil@tutanota.com>
-Date: Sun, 3 Nov 2024 17:05:03 +0100
-Subject: [PATCH] Drop annotate-snippets
+and avoid pulling annotate-snippets, which needs a breaking update for cargo 0.81
 
-It requires an older version and large re-write. Based on the patch
-found in librust-bindgen-dev 0.66.1-11 and earlier
----
- Cargo.toml     |  7 +----
- codegen/mod.rs | 70 -------------------------------------------
- ir/context.rs  | 16 ----------
- ir/var.rs      | 38 -----------------------
- lib.rs         | 81 --------------------------------------------------
- regex_set.rs   | 67 -----------------------------------------
- 6 files changed, 1 insertion(+), 278 deletions(-)
-
-diff --git a/Cargo.toml b/Cargo.toml
-index 9ae7999..43e7af3 100644
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -68,11 +68,6 @@ search = "# Unreleased"
+Index: bindgen/Cargo.toml
+===================================================================
+--- bindgen.orig/Cargo.toml
++++ bindgen/Cargo.toml
+@@ -41,11 +41,6 @@ repository = "https://github.com/rust-la
  name = "bindgen"
  path = "lib.rs"
  
@@ -30,20 +16,20 @@ index 9ae7999..43e7af3 100644
  [dependencies.bitflags]
  version = "2.2.1"
  
-@@ -136,7 +131,7 @@ default = [
-     "prettyplease",
+@@ -119,7 +114,7 @@ default = [
      "runtime",
+     "which-rustfmt",
  ]
 -experimental = ["dep:annotate-snippets"]
 +experimental = []
  logging = ["dep:log"]
  runtime = ["clang-sys/runtime"]
  static = ["clang-sys/static"]
-diff --git a/codegen/mod.rs b/codegen/mod.rs
-index 741a3fb..dd43589 100644
---- a/codegen/mod.rs
-+++ b/codegen/mod.rs
-@@ -4606,49 +4606,6 @@ fn unsupported_abi_diagnostic(
+Index: bindgen/codegen/mod.rs
+===================================================================
+--- bindgen.orig/codegen/mod.rs
++++ bindgen/codegen/mod.rs
+@@ -4326,49 +4326,6 @@ fn unsupported_abi_diagnostic(
          fn_name,
          error
      );
@@ -69,7 +55,7 @@ index 741a3fb..dd43589 100644
 -        .add_annotation(
 -            format!(
 -                "The configured Rust version is {}.",
--                ctx.options().rust_target
+-                String::from(ctx.options().rust_target)
 -            ),
 -            Level::Note,
 -        );
@@ -93,7 +79,7 @@ index 741a3fb..dd43589 100644
  }
  
  fn variadic_fn_diagnostic(
-@@ -4660,33 +4617,6 @@ fn variadic_fn_diagnostic(
+@@ -4380,33 +4337,6 @@ fn variadic_fn_diagnostic(
          "Cannot generate wrapper for the static variadic function `{}`.",
          fn_name,
      );
@@ -127,11 +113,11 @@ index 741a3fb..dd43589 100644
  }
  
  fn objc_method_codegen(
-diff --git a/ir/context.rs b/ir/context.rs
-index a153693..10bccd9 100644
---- a/ir/context.rs
-+++ b/ir/context.rs
-@@ -3136,20 +3136,4 @@ impl TemplateParameters for PartialType {
+Index: bindgen/ir/context.rs
+===================================================================
+--- bindgen.orig/ir/context.rs
++++ bindgen/ir/context.rs
+@@ -2988,20 +2988,4 @@ impl TemplateParameters for PartialType
  
  fn unused_regex_diagnostic(item: &str, name: &str, _ctx: &BindgenContext) {
      warn!("unused option: {} {}", name, item);
@@ -152,19 +138,18 @@ index a153693..10bccd9 100644
 -            .display();
 -    }
  }
-diff --git a/ir/var.rs b/ir/var.rs
-index 40a061e..0434ac0 100644
---- a/ir/var.rs
-+++ b/ir/var.rs
-@@ -485,42 +485,4 @@ fn duplicated_macro_diagnostic(
-     _ctx: &BindgenContext,
+Index: bindgen/ir/var.rs
+===================================================================
+--- bindgen.orig/ir/var.rs
++++ bindgen/ir/var.rs
+@@ -448,41 +448,4 @@ fn duplicated_macro_diagnostic(
  ) {
      warn!("Duplicated macro definition: {}", macro_name);
--
+ 
 -    #[cfg(feature = "experimental")]
 -    // FIXME (pvdrz & amanjeev): This diagnostic message shows way too often to be actually
 -    // useful. We have to change the logic where this function is called to be able to emit this
--    // message only when the duplication is an actual issue.
+-    // message only when the duplication is an actuall issue.
 -    //
 -    // If I understood correctly, `bindgen` ignores all `#undef` directives. Meaning that this:
 -    // ```c
@@ -199,11 +184,11 @@ index 40a061e..0434ac0 100644
 -            .display();
 -    }
  }
-diff --git a/lib.rs b/lib.rs
-index 3bf0bc3..e7a6b69 100644
---- a/lib.rs
-+++ b/lib.rs
-@@ -40,8 +40,6 @@ mod time;
+Index: bindgen/lib.rs
+===================================================================
+--- bindgen.orig/lib.rs
++++ bindgen/lib.rs
+@@ -42,8 +42,6 @@ mod time;
  pub mod callbacks;
  
  mod clang;
@@ -212,7 +197,7 @@ index 3bf0bc3..e7a6b69 100644
  mod features;
  mod ir;
  mod parse;
-@@ -475,55 +473,6 @@ impl BindgenOptions {
+@@ -462,53 +460,6 @@ impl BindgenOptions {
          ];
  
          let record_matches = self.record_matches;
@@ -225,13 +210,11 @@ index 3bf0bc3..e7a6b69 100644
 -                    "--blocklist-function",
 -                    "--blocklist-item",
 -                    "--blocklist-file",
--                    "--blocklist-var",
 -                    "--opaque-type",
 -                    "--allowlist-type",
 -                    "--allowlist-function",
 -                    "--allowlist-var",
 -                    "--allowlist-file",
--                    "--allowlist-item",
 -                    "--bitfield-enum",
 -                    "--newtype-enum",
 -                    "--newtype-global-enum",
@@ -268,11 +251,10 @@ index 3bf0bc3..e7a6b69 100644
          for regex_set in self.abi_overrides.values_mut().chain(regex_sets) {
              regex_set.build(record_matches);
          }
-@@ -588,23 +537,6 @@ impl BindgenOptions {
+@@ -571,22 +522,6 @@ fn deprecated_target_diagnostic(target:
+     let target = String::from(target);
+     warn!("The {} Rust target is deprecated. If you have a good reason to use this target please report it at https://github.com/rust-lang/rust-bindgen/issues", target,);
  
- fn deprecated_target_diagnostic(target: RustTarget, _options: &BindgenOptions) {
-     warn!("The {} Rust target is deprecated. If you have a need to use this target please report it at https://github.com/rust-lang/rust-bindgen/issues", target);
--
 -    #[cfg(feature = "experimental")]
 -    if _options.emit_diagnostics {
 -        use crate::diagnostics::{Diagnostic, Level};
@@ -292,11 +274,10 @@ index 3bf0bc3..e7a6b69 100644
  }
  
  #[cfg(feature = "runtime")]
-@@ -1051,19 +983,6 @@ impl Bindings {
- 
+@@ -1060,18 +995,6 @@ impl Bindings {
  fn rustfmt_non_fatal_error_diagnostic(msg: &str, _options: &BindgenOptions) {
      warn!("{}", msg);
--
+ 
 -    #[cfg(feature = "experimental")]
 -    if _options.emit_diagnostics {
 -        use crate::diagnostics::{Diagnostic, Level};
@@ -312,10 +293,10 @@ index 3bf0bc3..e7a6b69 100644
  }
  
  impl std::fmt::Display for Bindings {
-diff --git a/regex_set.rs b/regex_set.rs
-index b78424a..6791e35 100644
---- a/regex_set.rs
-+++ b/regex_set.rs
+Index: bindgen/regex_set.rs
+===================================================================
+--- bindgen.orig/regex_set.rs
++++ bindgen/regex_set.rs
 @@ -104,10 +104,6 @@ impl RegexSet {
              Ok(x) => Some(x),
              Err(e) => {
@@ -389,11 +370,8 @@ index b78424a..6791e35 100644
 -        Level::Note,
 -    );
 -
--    if set.items.iter().any(|item| item.as_ref() == "*") {
+-    if set.items.iter().any(|item| item == "*") {
 -        diagnostic.add_annotation("Wildcard patterns \"*\" are no longer considered valid. Use \".*\" instead.", Level::Help);
 -    }
 -    diagnostic.display();
 -}
--- 
-2.47.0
-
