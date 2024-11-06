@@ -6,536 +6,241 @@ The tempdir crate has been deprecated in favour of tempfile.
 
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -73,2 +73,2 @@
+@@ -78,8 +78,8 @@
+ [dev-dependencies.libc]
+ version = "0.2"
+ 
 -[dev-dependencies.tempdir]
 -version = "0.3"
 +[dev-dependencies.tempfile]
 +version = "3"
---- a/src/file_ext/async_impl/async_std_impl.rs
-+++ b/src/file_ext/async_impl/async_std_impl.rs
-@@ -9,7 +9,7 @@
- #[cfg(test)]
- mod test {
  
--    extern crate tempdir;
-+    extern crate tempfile;
-     extern crate test;
- 
-     use crate::{
-@@ -21,7 +21,7 @@
-     /// Tests shared file lock operations.
-     #[async_std::test]
-     async fn lock_shared() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
-@@ -66,7 +66,7 @@
-     /// Tests exclusive file lock operations.
-     #[async_std::test]
-     async fn lock_exclusive() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
-@@ -102,7 +102,7 @@
-     /// Tests that a lock is released after the file that owns it is dropped.
-     #[async_std::test]
-     async fn lock_cleanup() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
-@@ -133,7 +133,7 @@
-     /// Tests file allocation.
-     #[async_std::test]
-     async fn allocate() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file = fs::OpenOptions::new()
-             .write(true)
-@@ -165,7 +165,7 @@
-     /// Checks filesystem space methods.
-     #[async_std::test]
-     async fn filesystem_space() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let total_space = total_space(tempdir.path()).unwrap();
-         let free_space = free_space(tempdir.path()).unwrap();
-         let available_space = available_space(tempdir.path()).unwrap();
---- a/src/file_ext/async_impl/smol_impl.rs
-+++ b/src/file_ext/async_impl/smol_impl.rs
-@@ -9,7 +9,7 @@
- #[cfg(test)]
- mod test {
- 
--    extern crate tempdir;
-+    extern crate tempfile;
-     extern crate test;
- 
-     use crate::{
-@@ -21,7 +21,7 @@
-     /// Tests shared file lock operations.
-     #[smol_potat::test]
-     async fn lock_shared() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
-@@ -66,7 +66,7 @@
-     /// Tests exclusive file lock operations.
-     #[smol_potat::test]
-     async fn lock_exclusive() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
-@@ -102,7 +102,7 @@
-     /// Tests that a lock is released after the file that owns it is dropped.
-     #[smol_potat::test]
-     async fn lock_cleanup() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
-@@ -133,7 +133,7 @@
-     /// Tests file allocation.
-     #[smol_potat::test]
-     async fn allocate() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file = fs::OpenOptions::new()
-             .write(true)
-@@ -165,7 +165,7 @@
-     /// Checks filesystem space methods.
-     #[smol_potat::test]
-     async fn filesystem_space() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let total_space = total_space(tempdir.path()).unwrap();
-         let free_space = free_space(tempdir.path()).unwrap();
-         let available_space = available_space(tempdir.path()).unwrap();
---- a/src/file_ext/async_impl/tokio_impl.rs
-+++ b/src/file_ext/async_impl/tokio_impl.rs
-@@ -9,7 +9,7 @@
- #[cfg(test)]
- mod test {
- 
--    extern crate tempdir;
-+    extern crate tempfile;
-     extern crate test;
- 
-     use crate::{
-@@ -21,7 +21,7 @@
-     /// Tests shared file lock operations.
-     #[tokio::test]
-     async fn lock_shared() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
-@@ -69,7 +69,7 @@
-     /// Tests exclusive file lock operations.
-     #[tokio::test]
-     async fn lock_exclusive() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
-@@ -107,7 +107,7 @@
-     /// Tests that a lock is released after the file that owns it is dropped.
-     #[tokio::test]
-     async fn lock_cleanup() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
-@@ -140,7 +140,7 @@
-     /// Tests file allocation.
-     #[tokio::test]
-     async fn allocate() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file = fs::OpenOptions::new()
-             .write(true)
-@@ -173,7 +173,7 @@
-     /// Checks filesystem space methods.
-     #[tokio::test]
-     async fn filesystem_space() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let total_space = total_space(tempdir.path()).unwrap();
-         let free_space = free_space(tempdir.path()).unwrap();
-         let available_space = available_space(tempdir.path()).unwrap();
+ [dev-dependencies.tokio]
+ version = "1"
 --- a/src/file_ext/sync_impl.rs
 +++ b/src/file_ext/sync_impl.rs
 @@ -88,7 +88,7 @@
- #[cfg(test)]
- mod test {
+     ($($use_stmt:item)*) => {
+         #[cfg(test)]
+         mod test {
+-            extern crate tempdir;
++            extern crate tempfile;
+             extern crate test;
  
--    extern crate tempdir;
-+    extern crate tempfile;
-     extern crate test;
+             use super::*;
+@@ -104,7 +104,7 @@
+             /// Tests shared file lock operations.
+             #[test]
+             fn lock_shared() {
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 let path = tempdir.path().join("fs4");
+                 let file1 = fs::OpenOptions::new()
+                     .read(true)
+@@ -149,7 +149,7 @@
+             /// Tests exclusive file lock operations.
+             #[test]
+             fn lock_exclusive() {
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 let path = tempdir.path().join("fs4");
+                 let file1 = fs::OpenOptions::new()
+                     .read(true)
+@@ -185,7 +185,7 @@
+             /// Tests that a lock is released after the file that owns it is dropped.
+             #[test]
+             fn lock_cleanup() {
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 let path = tempdir.path().join("fs4");
+                 let file1 = fs::OpenOptions::new()
+                     .read(true)
+@@ -216,7 +216,7 @@
+             /// Tests file allocation.
+             #[test]
+             fn allocate() {
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 let path = tempdir.path().join("fs4");
+                 let file = fs::OpenOptions::new()
+                     .write(true)
+@@ -248,7 +248,7 @@
+             /// Checks filesystem space methods.
+             #[test]
+             fn filesystem_space() {
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 let FsStats {
+                     free_space,
+                     available_space,
+@@ -263,9 +263,9 @@
  
-     use super::*;
-@@ -101,7 +101,7 @@
-     /// Tests shared file lock operations.
-     #[test]
-     fn lock_shared() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
-@@ -146,7 +146,7 @@
-     /// Tests exclusive file lock operations.
-     #[test]
-     fn lock_exclusive() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
-@@ -182,7 +182,7 @@
-     /// Tests that a lock is released after the file that owns it is dropped.
-     #[test]
-     fn lock_cleanup() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
-@@ -213,7 +213,7 @@
-     /// Tests file allocation.
-     #[test]
-     fn allocate() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file = fs::OpenOptions::new()
-             .write(true)
-@@ -245,7 +245,7 @@
-     /// Checks filesystem space methods.
-     #[test]
-     fn filesystem_space() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let FsStats {
-             free_space,
-             available_space,
-@@ -262,7 +262,7 @@
-     /// for comparing against the truncate and allocate benchmarks.
-     #[bench]
-     fn bench_file_create(b: &mut test::Bencher) {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("file");
+             /// Benchmarks creating and removing a file. This is a baseline benchmark
+             /// for comparing against the truncate and allocate benchmarks.
+-            #[bench]
++            #[bench]
+             fn bench_file_create(b: &mut test::Bencher) {
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 let path = tempdir.path().join("file");
  
-         b.iter(|| {
-@@ -281,7 +281,7 @@
-     #[bench]
-     fn bench_file_truncate(b: &mut test::Bencher) {
-         let size = 32 * 1024 * 1024;
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("file");
+                 b.iter(|| {
+@@ -284,7 +284,7 @@
+             #[bench]
+             fn bench_file_truncate(b: &mut test::Bencher) {
+                 let size = 32 * 1024 * 1024;
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 let path = tempdir.path().join("file");
  
-         b.iter(|| {
-@@ -301,7 +301,7 @@
-     #[bench]
-     fn bench_file_allocate(b: &mut test::Bencher) {
-         let size = 32 * 1024 * 1024;
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("file");
+                 b.iter(|| {
+@@ -304,7 +304,7 @@
+             #[bench]
+             fn bench_file_allocate(b: &mut test::Bencher) {
+                 let size = 32 * 1024 * 1024;
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 let path = tempdir.path().join("file");
  
-         b.iter(|| {
-@@ -321,7 +321,7 @@
-     #[bench]
-     fn bench_allocated_size(b: &mut test::Bencher) {
-         let size = 32 * 1024 * 1024;
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("file");
-         let file = fs::OpenOptions::new()
-             .read(true)
-@@ -340,7 +340,7 @@
-     /// Benchmarks locking and unlocking a file lock.
-     #[bench]
-     fn bench_lock_unlock(b: &mut test::Bencher) {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file = fs::OpenOptions::new()
-             .read(true)
-@@ -359,7 +359,7 @@
-     /// Benchmarks the free space method.
-     #[bench]
-     fn bench_free_space(b: &mut test::Bencher) {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         b.iter(|| {
-             test::black_box(free_space(tempdir.path()).unwrap());
-         });
-@@ -368,7 +368,7 @@
-     /// Benchmarks the available space method.
-     #[bench]
-     fn bench_available_space(b: &mut test::Bencher) {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         b.iter(|| {
-             test::black_box(available_space(tempdir.path()).unwrap());
-         });
-@@ -377,7 +377,7 @@
-     /// Benchmarks the total space method.
-     #[bench]
-     fn bench_total_space(b: &mut test::Bencher) {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         b.iter(|| {
-             test::black_box(total_space(tempdir.path()).unwrap());
-         });
---- a/src/unix/async_impl/async_std_impl.rs
-+++ b/src/unix/async_impl/async_std_impl.rs
-@@ -8,7 +8,7 @@
- 
- #[cfg(test)]
- mod test {
--    extern crate tempdir;
-+    extern crate tempfile;
- 
-     use async_std::fs;
- 
-@@ -18,7 +18,7 @@
-     /// held on the file descriptor.
-     #[async_std::test]
-     async fn lock_replace() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .write(true)
---- a/src/unix/async_impl/smol_impl.rs
-+++ b/src/unix/async_impl/smol_impl.rs
-@@ -8,7 +8,7 @@
- 
- #[cfg(test)]
- mod test {
--    extern crate tempdir;
-+    extern crate tempfile;
- 
-     use smol::fs;
- 
-@@ -18,7 +18,7 @@
-     /// held on the file descriptor.
-     #[smol_potat::test]
-     async fn lock_replace() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .write(true)
---- a/src/unix/async_impl/tokio_impl.rs
-+++ b/src/unix/async_impl/tokio_impl.rs
-@@ -8,7 +8,7 @@
- 
- #[cfg(test)]
- mod test {
--    extern crate tempdir;
-+    extern crate tempfile;
- 
-     use tokio::fs;
- 
-@@ -18,7 +18,7 @@
-     /// held on the file descriptor.
-     #[tokio::test]
-     async fn lock_replace() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .write(true)
+                 b.iter(|| {
+@@ -324,7 +324,7 @@
+             #[bench]
+             fn bench_allocated_size(b: &mut test::Bencher) {
+                 let size = 32 * 1024 * 1024;
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 let path = tempdir.path().join("file");
+                 let file = fs::OpenOptions::new()
+                     .read(true)
+@@ -343,7 +343,7 @@
+             /// Benchmarks locking and unlocking a file lock.
+             #[bench]
+             fn bench_lock_unlock(b: &mut test::Bencher) {
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 let path = tempdir.path().join("fs4");
+                 let file = fs::OpenOptions::new()
+                     .read(true)
+@@ -362,7 +362,7 @@
+             /// Benchmarks the free space method.
+             #[bench]
+             fn bench_free_space(b: &mut test::Bencher) {
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 b.iter(|| {
+                     test::black_box(free_space(tempdir.path()).unwrap());
+                 });
+@@ -371,7 +371,7 @@
+             /// Benchmarks the available space method.
+             #[bench]
+             fn bench_available_space(b: &mut test::Bencher) {
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 b.iter(|| {
+                     test::black_box(available_space(tempdir.path()).unwrap());
+                 });
+@@ -380,7 +380,7 @@
+             /// Benchmarks the total space method.
+             #[bench]
+             fn bench_total_space(b: &mut test::Bencher) {
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 b.iter(|| {
+                     test::black_box(total_space(tempdir.path()).unwrap());
+                 });
 --- a/src/unix/sync_impl.rs
 +++ b/src/unix/sync_impl.rs
-@@ -53,7 +53,7 @@
- 
- #[cfg(test)]
- mod test {
--    extern crate tempdir;
-+    extern crate tempfile;
- 
-     use std::fs;
- 
-@@ -63,7 +63,7 @@
-     /// held on the file descriptor.
-     #[test]
-     fn lock_replace() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .write(true)
---- a/src/windows/async_impl/async_std_impl.rs
-+++ b/src/windows/async_impl/async_std_impl.rs
-@@ -18,7 +18,7 @@
- #[cfg(test)]
- mod test {
- 
--    extern crate tempdir;
-+    extern crate tempfile;
- 
-     use async_std::fs;
- 
-@@ -28,7 +28,7 @@
-     /// shared locked.
-     #[async_std::test]
-     async fn lock_non_reentrant() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file = fs::OpenOptions::new()
-             .read(true)
-@@ -58,7 +58,7 @@
-     /// be unlocked independently.
-     #[async_std::test]
-     async fn lock_layering() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file = fs::OpenOptions::new()
-             .read(true)
-@@ -99,7 +99,7 @@
-     /// A file handle with multiple open locks will have all locks closed on drop.
-     #[async_std::test]
-     async fn lock_layering_cleanup() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
---- a/src/windows/async_impl/smol_impl.rs
-+++ b/src/windows/async_impl/smol_impl.rs
-@@ -17,7 +17,7 @@
- #[cfg(test)]
- mod test {
- 
--    extern crate tempdir;
-+    extern crate tempfile;
- 
-     use smol::fs;
- 
-@@ -27,7 +27,7 @@
-     /// shared locked.
-     #[smol_potat::test]
-     async fn lock_non_reentrant() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file = fs::OpenOptions::new()
-             .read(true)
 @@ -57,7 +57,7 @@
-     /// be unlocked independently.
-     #[smol_potat::test]
-     async fn lock_layering() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file = fs::OpenOptions::new()
-             .read(true)
-@@ -98,7 +98,7 @@
-     /// A file handle with multiple open locks will have all locks closed on drop.
-     #[smol_potat::test]
-     async fn lock_layering_cleanup() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
---- a/src/windows/async_impl/tokio_impl.rs
-+++ b/src/windows/async_impl/tokio_impl.rs
-@@ -18,7 +18,7 @@
- #[cfg(test)]
- mod test {
+     ($($use_stmt:item)*) => {
+         #[cfg(test)]
+         mod test {
+-          extern crate tempdir;
++          extern crate tempfile;
  
--    extern crate tempdir;
-+    extern crate tempfile;
+           use crate::lock_contended_error;
  
-     use tokio::fs;
- 
-@@ -28,7 +28,7 @@
-     /// shared locked.
-     #[tokio::test]
-     async fn lock_non_reentrant() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file = fs::OpenOptions::new()
-             .read(true)
-@@ -58,7 +58,7 @@
-     /// be unlocked independently.
-     #[tokio::test]
-     async fn lock_layering() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file = fs::OpenOptions::new()
-             .read(true)
-@@ -99,7 +99,7 @@
-     /// A file handle with multiple open locks will have all locks closed on drop.
-     #[tokio::test]
-     async fn lock_layering_cleanup() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
---- a/src/windows/sync_impl.rs
-+++ b/src/windows/sync_impl.rs
+@@ -69,7 +69,7 @@
+           /// held on the file descriptor.
+           #[test]
+           fn lock_replace() {
+-              let tempdir = tempdir::TempDir::new("fs4").unwrap();
++              let tempdir = tempfile::tempdir().unwrap();
+               let path = tempdir.path().join("fs4");
+               let file1 = fs::OpenOptions::new()
+                   .write(true)
+--- a/src/file_ext/async_impl.rs
++++ b/src/file_ext/async_impl.rs
+@@ -102,7 +102,7 @@
+      ($annotation:meta, $($use_stmt:item)*) => {
+         #[cfg(test)]
+         mod test {
+-            extern crate tempdir;
++            extern crate tempfile;
+             extern crate test;
+             use crate::{
+                 allocation_granularity, available_space, free_space,
+@@ -116,7 +116,7 @@
+             /// Tests shared file lock operations.
+             #[$annotation]
+             async fn lock_shared() {
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 let path = tempdir.path().join("fs4");
+                 let file1 = fs::OpenOptions::new()
+                     .read(true)
+@@ -161,7 +161,7 @@
+             /// Tests exclusive file lock operations.
+             #[$annotation]
+             async fn lock_exclusive() {
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 let path = tempdir.path().join("fs4");
+                 let file1 = fs::OpenOptions::new()
+                     .read(true)
+@@ -197,7 +197,7 @@
+             /// Tests that a lock is released after the file that owns it is dropped.
+             #[$annotation]
+             async fn lock_cleanup() {
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 let path = tempdir.path().join("fs4");
+                 let file1 = fs::OpenOptions::new()
+                     .read(true)
+@@ -228,7 +228,7 @@
+             /// Tests file allocation.
+             #[$annotation]
+             async fn allocate() {
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 let path = tempdir.path().join("fs4");
+                 let file = fs::OpenOptions::new()
+                     .write(true)
+@@ -260,7 +260,7 @@
+             /// Checks filesystem space methods.
+             #[$annotation]
+             async fn filesystem_space() {
+-                let tempdir = tempdir::TempDir::new("fs4").unwrap();
++                let tempdir = tempfile::tempdir().unwrap();
+                 let total_space = total_space(tempdir.path()).unwrap();
+                 let free_space = free_space(tempdir.path()).unwrap();
+                 let available_space = available_space(tempdir.path()).unwrap();
+--- a/src/unix/async_impl.rs
++++ b/src/unix/async_impl.rs
 @@ -57,7 +57,7 @@
- #[cfg(test)]
- mod test {
+     ($annotation:meta, $($use_stmt:item)*) => {
+         #[cfg(test)]
+         mod test {
+-          extern crate tempdir;
++          extern crate tempfile;
  
--    extern crate tempdir;
-+    extern crate tempfile;
+           use crate::lock_contended_error;
  
-     use std::fs;
- 
-@@ -67,7 +67,7 @@
-     /// shared locked.
-     #[test]
-     fn lock_non_reentrant() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file = fs::OpenOptions::new()
-             .read(true)
-@@ -96,7 +96,7 @@
-     /// be unlocked independently.
-     #[test]
-     fn lock_layering() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file = fs::OpenOptions::new()
-             .read(true)
-@@ -136,7 +136,7 @@
-     /// A file handle with multiple open locks will have all locks closed on drop.
-     #[test]
-     fn lock_layering_cleanup() {
--        let tempdir = tempdir::TempDir::new("fs4").unwrap();
-+        let tempdir = tempfile::tempdir().unwrap();
-         let path = tempdir.path().join("fs4");
-         let file1 = fs::OpenOptions::new()
-             .read(true)
+@@ -69,7 +69,7 @@
+           /// held on the file descriptor.
+           #[$annotation]
+           async fn lock_replace() {
+-              let tempdir = tempdir::TempDir::new("fs4").unwrap();
++              let tempdir = tempfile::tempdir().unwrap();
+               let path = tempdir.path().join("fs4");
+               let file1 = fs::OpenOptions::new()
+                   .write(true)
