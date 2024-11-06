@@ -1,13 +1,22 @@
-Index: exacl/Cargo.toml
-===================================================================
---- exacl.orig/Cargo.toml
-+++ exacl/Cargo.toml
-@@ -66,7 +66,7 @@ version = "1.0.59"
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -66,7 +66,7 @@
  version = "3.1.0"
  
  [build-dependencies.bindgen]
 -version = "0.63.0"
-+version = "0.66"
++version = "0.70"
  optional = true
  
  [features]
+--- a/build.rs
++++ b/build.rs
+@@ -37,7 +37,7 @@
+     // crate when any included header file changes.
+     let mut builder = bindgen::Builder::default()
+         .header(wrapper)
+-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
++        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+         .disable_header_comment()
+         .layout_tests(false); // no layout tests for passwd/group structs.
+ 
