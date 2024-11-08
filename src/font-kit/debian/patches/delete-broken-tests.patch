@@ -2,16 +2,17 @@ diff --git a/src/loaders/freetype.rs b/src/loaders/freetype.rs
 index ae93a1d..885f73b 100644
 --- a/src/loaders/freetype.rs
 +++ b/src/loaders/freetype.rs
-@@ -1220,16 +1220,3 @@ extern "C" {
-     fn FT_Get_Sfnt_Name_Count(face: FT_Face) -> FT_UInt;
+@@ -1229,17 +1229,3 @@
+         length: *mut FT_ULong,
+     ) -> FT_Error;
  }
- 
+-
 -#[cfg(test)]
 -mod test {
 -    use crate::loaders::freetype::Font;
 -
--    static PCF_FONT_PATH: &'static str = "resources/tests/times-roman-pcf/timR12.pcf";
--    static PCF_FONT_POSTSCRIPT_NAME: &'static str = "Times-Roman";
+-    static PCF_FONT_PATH: &str = "resources/tests/times-roman-pcf/timR12.pcf";
+-    static PCF_FONT_POSTSCRIPT_NAME: &str = "Times-Roman";
 -
 -    #[test]
 -    fn get_pcf_postscript_name() {
@@ -23,7 +24,7 @@ diff --git a/tests/tests.rs b/tests/tests.rs
 index 39d4b6b..2de6966 100644
 --- a/tests/tests.rs
 +++ b/tests/tests.rs
-@@ -83,39 +83,6 @@ pub fn get_font_full_name_from_lowercase_family_name() {
+@@ -80,39 +80,6 @@
      assert_eq!(font.full_name(), KNOWN_SYSTEM_FONT_NAME);
  }
  
@@ -63,7 +64,7 @@ index 39d4b6b..2de6966 100644
  #[cfg(feature = "source")]
  #[test]
  pub fn get_glyph_for_char() {
-@@ -306,170 +273,6 @@ pub fn get_vertically_hinted_glyph_outline() {
+@@ -304,171 +271,6 @@
      );
  }
  
@@ -115,6 +116,7 @@ index 39d4b6b..2de6966 100644
 -
 -#[cfg(all(
 -    feature = "source",
+-    not(feature = "loader-freetype-default"),
 -    not(any(target_os = "macos", target_os = "ios", target_family = "windows"))
 -))]
 -#[test]
@@ -215,7 +217,7 @@ index 39d4b6b..2de6966 100644
 -    let size = 32.0;
 -    let hinting_options = HintingOptions::None;
 -    let rasterization_options = RasterizationOptions::GrayscaleAa;
--    #[cfg(all(not(target_family = "windows")))]
+-    #[cfg(not(target_family = "windows"))]
 -    let expected_rect = RectI::new(Vector2I::new(1, -20), Vector2I::new(14, 21));
 -    #[cfg(target_family = "windows")]
 -    let expected_rect = RectI::new(Vector2I::new(1, -20), Vector2I::new(14, 20));
@@ -234,7 +236,7 @@ index 39d4b6b..2de6966 100644
  #[cfg(all(
      feature = "source",
      any(target_family = "windows", target_os = "macos", target_os = "ios")
-@@ -581,35 +384,6 @@ pub fn get_font_metrics() {
+@@ -580,35 +382,6 @@
      assert_eq!(bounding_box.width(), 5457.0);
  }
  
@@ -254,7 +256,7 @@ index 39d4b6b..2de6966 100644
 -    assert_eq!(metrics.ascent, 1901.0);
 -    assert_eq!(metrics.descent, -483.0);
 -    assert_eq!(metrics.line_gap, 0.0); // FIXME(pcwalton): Huh?!
--    assert_eq!(metrics.underline_position, -130.0);
+-    assert_eq!(metrics.underline_position, -40.0);
 -    assert_eq!(metrics.underline_thickness, 90.0);
 -    assert_eq!(metrics.cap_height, 0.0); // FIXME(pcwalton): Huh?!
 -    assert_eq!(metrics.x_height, 0.0); // FIXME(pcwalton): Huh?!
@@ -270,7 +272,7 @@ index 39d4b6b..2de6966 100644
  #[cfg(feature = "source")]
  #[test]
  pub fn get_font_properties() {
-@@ -841,54 +615,6 @@ pub fn rasterize_glyph() {
+@@ -840,54 +613,6 @@
      check_curly_shape(&canvas);
  }
  
@@ -325,7 +327,7 @@ index 39d4b6b..2de6966 100644
  #[cfg(feature = "source")]
  #[test]
  pub fn font_transform() {
-@@ -923,223 +649,6 @@ pub fn font_transform() {
+@@ -922,223 +647,6 @@
      assert!((raster_rect2.origin_y() - ((raster_rect.origin_y() - 8) * 3 + 8)).abs() <= 3);
  }
  
