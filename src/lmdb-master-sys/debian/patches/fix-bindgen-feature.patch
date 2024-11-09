@@ -1,0 +1,44 @@
+Description: Fix the 'bindgen' feature
+ The 'bindgen' feature is used to (re)generate the Rust bindings to the
+ C library. It should not be needed since the bindings are included in
+ the crate anyway, but in case it is, we fix it by generating them from
+ the C headers included in the liblmdb-dev package and saving them to
+ OUT_DIR. Note: the bindings are not generated if we cannot find the
+ system headers in the easiest way possible.
+Author: NoisyCoil <noisycoil@tutanota.com>
+Forwarded: not-needed
+Last-Update: 2024-11-10
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/bindgen.rs
++++ b/bindgen.rs
+@@ -45,15 +45,12 @@
+ }
+ 
+ pub fn generate() {
+-    let mut lmdb = PathBuf::from(&env::var("CARGO_MANIFEST_DIR").unwrap());
+-    lmdb.push("lmdb");
+-    lmdb.push("libraries");
+-    lmdb.push("liblmdb");
++    let Ok(lmdblib) = pkg_config::probe_library("lmdb") else { return; };
++    let Some(lmdb) = lmdblib.include_paths.first() else { return; };
+ 
+-    let mut out_path = PathBuf::from(&env::var("CARGO_MANIFEST_DIR").unwrap());
+-    out_path.push("src");
++    let out_path = PathBuf::from(&env::var("OUT_DIR").unwrap());
+ 
+-    let bindings = bindgen::Builder::default()
++    let Ok(bindings) = bindgen::Builder::default()
+         .header(lmdb.join("lmdb.h").to_string_lossy())
+         .allowlist_var("^(MDB|mdb)_.*")
+         .allowlist_type("^(MDB|mdb)_.*")
+@@ -67,8 +64,7 @@
+         .parse_callbacks(Box::new(Callbacks {}))
+         .layout_tests(false)
+         .prepend_enum_name(false)
+-        .generate()
+-        .expect("Unable to generate bindings");
++        .generate() else { return; };
+ 
+     bindings
+         .write_to_file(out_path.join("bindings.rs"))

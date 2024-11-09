@@ -1,0 +1,49 @@
+--- a/tests/lmdb.rs
++++ b/tests/lmdb.rs
+@@ -3,6 +3,7 @@
+ use std::process::Command;
+ 
+ #[test]
++#[ignore = "lmdb C library not present in debianized rust source"]
+ fn test_lmdb() {
+     let mut lmdb = PathBuf::from(&env::var("CARGO_MANIFEST_DIR").unwrap());
+     lmdb.push("lmdb");
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -59,6 +59,9 @@
+ [dev-dependencies.cstr]
+ version = "0.2"
+ 
++[dev-dependencies.tempfile]
++version = "3.13"
++
+ [build-dependencies.bindgen]
+ version = "0.70"
+ features = ["runtime"]
+--- a/tests/simple.rs
++++ b/tests/simple.rs
+@@ -41,9 +41,12 @@
+ }
+ 
+ fn test_simple(env_path: &str) {
+-    let _ = fs::remove_dir_all(env_path);
++    let tmp_dir = tempfile::tempdir().unwrap().into_path();
++    let env_dir = tmp_dir.join(env_path);
++    let env_path = env_dir.to_str().unwrap();
+     fs::create_dir_all(env_path).unwrap();
+ 
++
+     let mut env: *mut MDB_env = ptr::null_mut();
+     let mut dbi: MDB_dbi = 0;
+     let mut key = MDB_val {
+@@ -94,7 +97,9 @@
+         E!(mdb_txn_commit(txn));
+     }
+ 
+-    let file = File::create("./tests/fixtures/copytestdb.mdb").unwrap();
++    let fixtures_dir = tmp_dir.join("tests/fixtures");
++    fs::create_dir_all(&fixtures_dir).unwrap();
++    let file = File::create(fixtures_dir.join("copytestdb.mdb")).unwrap();
+ 
+     unsafe {
+         let fd = get_file_fd(&file);
