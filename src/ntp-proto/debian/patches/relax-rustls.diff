@@ -2,7 +2,7 @@ Index: ntp-proto/Cargo.toml
 ===================================================================
 --- ntp-proto.orig/Cargo.toml
 +++ ntp-proto/Cargo.toml
-@@ -38,11 +38,11 @@ version = "0.10"
+@@ -47,11 +47,11 @@ version = "0.10"
  version = "0.8.0"
  
  [dependencies.rustls]
@@ -17,3 +17,31 @@ Index: ntp-proto/Cargo.toml
      "tls12",
  ]
  default-features = false
+Index: ntp-proto/src/nts_record.rs
+===================================================================
+--- ntp-proto.orig/src/nts_record.rs
++++ ntp-proto/src/nts_record.rs
+@@ -2909,9 +2909,7 @@ mod test {
+                 rustls::server::NoClientAuth,
+                 #[cfg(feature = "nts-pool")]
+                 crate::tls_utils::AllowAnyAnonymousOrCertificateBearingClient::new(
+-                    // We know that our previous call to ServerConfig::builder already
+-                    // installed a default provider, but this is undocumented
+-                    rustls::crypto::CryptoProvider::get_default().unwrap(),
++                    rustls::crypto::ring::default_provider(),
+                 ),
+             ))
+             .with_single_cert(cert_chain.clone(), key_der.clone_key().into())
+Index: ntp-proto/src/tls_utils.rs
+===================================================================
+--- ntp-proto.orig/src/tls_utils.rs
++++ ntp-proto/src/tls_utils.rs
+@@ -19,7 +19,7 @@ use rustls::{
+ };
+ 
+ impl AllowAnyAnonymousOrCertificateBearingClient {
+-    pub fn new(provider: &CryptoProvider) -> Self {
++    pub fn new(provider: CryptoProvider) -> Self {
+         AllowAnyAnonymousOrCertificateBearingClient {
+             supported_algs: provider.signature_verification_algorithms,
+         }
