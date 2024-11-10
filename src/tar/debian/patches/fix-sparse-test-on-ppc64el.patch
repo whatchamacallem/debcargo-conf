@@ -14,3 +14,17 @@ Index: tar/src/builder.rs
  
      #[test]
      fn test_find_sparse_entries() {
+Index: tar/tests/all.rs
+===================================================================
+--- tar.orig/tests/all.rs
++++ tar/tests/all.rs
+@@ -1301,7 +1301,8 @@ fn writing_sparse() {
+     let data = t!(ar.into_inner());
+ 
+     // Without sparse support, the size of the tarball exceed 1MiB.
+-    #[cfg(target_os = "linux")]
++    // ppc64el has 64k pages and thus 64k blocks on tmpfs
++    #[cfg(all(target_os = "linux", not(target_arch = "ppc64el")))]
+     assert!(data.len() <= 37 * 1024); // ext4 (defaults to 4k block size)
+     #[cfg(target_os = "freebsd")]
+     assert!(data.len() <= 273 * 1024); // UFS (defaults to 32k block size, last block isn't a hole)
