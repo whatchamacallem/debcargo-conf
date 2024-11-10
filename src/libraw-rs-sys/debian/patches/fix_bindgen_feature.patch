@@ -12,7 +12,7 @@ Description: Fix bindgen feature
  version = "0.2"
  [build-dependencies.bindgen]
 -version = "0.57"
-+version = ">= 0.63, < 1.0"
++version = ">= 0.70, < 1.0"
  features = ["runtime"]
 -optional = true
 -default-features = false
@@ -34,7 +34,7 @@ Description: Fix bindgen feature
      bindings(&out_dir);
  
      println!("cargo:rustc-link-lib=raw");
-@@ -116,10 +116,24 @@
+@@ -116,108 +116,122 @@
      println!("cargo:rustc-link-lib=static=raw");
  }
  
@@ -61,7 +61,9 @@ Description: Fix bindgen feature
          .use_core()
          .ctypes_prefix("libc")
          .generate_comments(true)
-@@ -128,96 +142,96 @@
+-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
++        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+         // API improvements
          .derive_eq(true)
          .size_t_is_usize(true)
          // these are never part of the API
