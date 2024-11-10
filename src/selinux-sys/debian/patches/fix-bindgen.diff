@@ -1,29 +1,25 @@
-Index: rust-selinux-sys-0.6.7/Cargo.toml
-===================================================================
---- rust-selinux-sys-0.6.7.orig/Cargo.toml
-+++ rust-selinux-sys-0.6.7/Cargo.toml
-@@ -100,7 +100,7 @@ targets = [
- ]
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -109,7 +109,7 @@
+ path = "src/lib.rs"
  
  [build-dependencies.bindgen]
--version = "0.68"
-+version = ">= 0.66, < 1.0"
+-version = "0.70"
++version = ">= 0.70, < 1.0"
  
  [build-dependencies.cc]
- version = "1.0"
-Index: rust-selinux-sys-0.6.7/build.rs
-===================================================================
---- rust-selinux-sys-0.6.7.orig/build.rs
-+++ rust-selinux-sys-0.6.7/build.rs
-@@ -293,6 +293,7 @@ fn find_and_output_lib_dir(link_paths: &
+ version = "1"
+--- a/build.rs
++++ b/build.rs
+@@ -315,6 +315,7 @@
      }
  }
  
 +use std::io::Write;
- fn generate_bindings(out_dir: &Path, include_path: &Path) {
+ fn generate_bindings(target: &str, sysroot: Option<&Path>, out_dir: &Path, include_path: &Path) {
      let mut builder = bindgen::Builder::default()
-         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
-@@ -363,9 +364,17 @@ fn generate_bindings(out_dir: &Path, inc
+         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+@@ -391,9 +392,17 @@
          "selinux-sys: Failed to generate Rust bindings for 'selinux/selinux.h' and other headers",
      );
  
