@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+execute_before_dh_install:
+	debian/rebuildctl/usr/bin/rebuildctl completions bash > debian/rebuildctl.bash
+	debian/rebuildctl/usr/bin/rebuildctl completions fish > debian/rebuildctl.fish
+	debian/rebuildctl/usr/bin/rebuildctl completions zsh > debian/_rebuildctl
+
+execute_before_dh_installman:
+	help2man \
+		--name rebuildctl \
+		--no-info \
+		debian/rebuildctl/usr/bin/rebuildctl > debian/rebuildctl.1
+
+override_dh_dwz:
+	# Don't do anything. fails because of the
+	# https://github.com/rust-lang/rust/issues/66118
