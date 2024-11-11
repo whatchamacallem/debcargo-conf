@@ -38,6 +38,7 @@ used by many other crates or programs for which the upgrade path is complex.
 For example, if the API significantly changed and requires a lot of work.
 
 Instead, please consider:
+
 * Downgrading or upgrading the dependency.
 * If it doesn't exist, open an issue on the upstream issue tracker to
   encourage them to upgrade.
