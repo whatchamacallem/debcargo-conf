@@ -87,11 +87,8 @@ run_debcargo() {
 	$DEBCARGO package --config "$PKGCFG" --directory "$BUILDDIR" "$@" "$CRATE" "${REALVER:-$VER}"
 	if [ $? -ne 0 ]; then
 		echo "Command failed. If the patches failed to apply, to rebase them, run":
+		echo "./dev/link-patches.sh $PKGNAME"
 		echo "cd $BUILDDIR"
-		echo "quilt pop -a -f"
-		echo "rm -rf .pc"
-		echo "mkdir debian"
-		echo "ln -s $PKGDIR/debian/patches debian"
 		echo "Then for each patch, run"
 		echo "QUILT_PATCHES=debian/patches quilt push -f"
 		echo "and if needed, edit patched files or the patch and then run"
