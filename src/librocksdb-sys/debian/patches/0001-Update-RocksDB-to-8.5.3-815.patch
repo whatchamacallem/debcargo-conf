@@ -1,0 +1,74 @@
+From 734cf99e732c84702a4e73be5dd4aea99bc268f5 Mon Sep 17 00:00:00 2001
+From: Niklas Fiekas <niklas.fiekas@backscattering.de>
+Date: Thu, 21 Sep 2023 10:26:52 +0200
+Subject: [PATCH 1/1] Update RocksDB to 8.5.3 (#815)
+
+---
+ Cargo.toml                             |  2 +-
+ librocksdb-sys/Cargo.toml              |  2 +-
+ librocksdb-sys/build_version.cc        |  8 +++----
+ librocksdb-sys/rocksdb                 |  2 +-
+ librocksdb-sys/rocksdb_lib_sources.txt |  2 ++
+ librocksdb-sys/tests/ffi.rs            |  2 +-
+ src/db_options.rs                      | 33 +++++++++++++++++++++++++-
+ src/lib.rs                             |  5 ++--
+ tests/test_db.rs                       |  5 +++-
+ 9 files changed, 49 insertions(+), 12 deletions(-)
+
+--- librocksdb-sys.orig/Cargo.toml
++++ librocksdb-sys/Cargo.toml
+@@ -13,7 +13,7 @@
+ edition = "2018"
+ rust-version = "1.60"
+ name = "librocksdb-sys"
+-version = "0.11.0+8.1.1"
++version = "0.11.0+8.5.3"
+ authors = [
+     "Karl Hobley <karlhobley10@gmail.com>",
+     "Arkadiy Paronyan <arkadiy@ethcore.io>",
+--- librocksdb-sys.orig/build_version.cc
++++ librocksdb-sys/build_version.cc
+@@ -8,17 +8,17 @@
+ 
+ // The build script may replace these values with real values based
+ // on whether or not GIT is available and the platform settings
+-static const std::string rocksdb_build_git_sha  = "6a436150417120a3f9732d65a2a5c2b8d19b60fc";
+-static const std::string rocksdb_build_git_tag = "rocksdb_build_git_tag:v8.1.1";
++static const std::string rocksdb_build_git_sha  = "f32521662acf3352397d438b732144c7813bbbec";
++static const std::string rocksdb_build_git_tag = "rocksdb_build_git_tag:v8.5.3";
+ #define HAS_GIT_CHANGES 0
+ #if HAS_GIT_CHANGES == 0
+ // If HAS_GIT_CHANGES is 0, the GIT date is used.
+ // Use the time the branch/tag was last modified
+-static const std::string rocksdb_build_date = "rocksdb_build_date:2023-04-06 16:38:52";
++static const std::string rocksdb_build_date = "rocksdb_build_date:2023-09-01 20:58:39";
+ #else
+ // If HAS_GIT_CHANGES is > 0, the branch/tag has modifications.
+ // Use the time the build was created.
+-static const std::string rocksdb_build_date = "rocksdb_build_date:2023-04-06 16:38:52";
++static const std::string rocksdb_build_date = "rocksdb_build_date:2023-09-01 20:58:39";
+ #endif
+ 
+ std::unordered_map<std::string, ROCKSDB_NAMESPACE::RegistrarFunc> ROCKSDB_NAMESPACE::ObjectRegistry::builtins_ = {};
+--- librocksdb-sys.orig/rocksdb_lib_sources.txt
++++ librocksdb-sys/rocksdb_lib_sources.txt
+@@ -243,6 +243,8 @@
+ util/string_util.cc
+ util/thread_local.cc
+ util/threadpool_imp.cc
++util/udt_util.cc
++util/write_batch_util.cc
+ util/xxhash.cc
+ utilities/agg_merge/agg_merge.cc
+ utilities/backup/backup_engine.cc
+--- librocksdb-sys.orig/tests/ffi.rs
++++ librocksdb-sys/tests/ffi.rs
+@@ -1072,7 +1072,7 @@
+                 rocksdb_slicetransform_create_fixed_prefix(3),
+             );
+             rocksdb_options_set_hash_skip_list_rep(options, 5000, 4, 4);
+-            rocksdb_options_set_plain_table_factory(options, 4, 10, 0.75, 16);
++            rocksdb_options_set_plain_table_factory(options, 4, 10, 0.75, 16, 0, 0, 0, 0);
+             rocksdb_options_set_allow_concurrent_memtable_write(options, 0);
+ 
+             db = rocksdb_open(options, dbname, &mut err);
