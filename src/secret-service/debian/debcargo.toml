@@ -1,8 +1,22 @@
 overlay = "."
 uploaders = ["Jelmer Vernooĳ <jelmer@debian.org>"]
 collapse_features = true
+description = """
+A Rust library for interacting with the FreeDesktop Secret Service API
+through DBus.
+"""
 
+[packages.lib]
 # try to get the tests that rely on dbus to pass in the
 # autopkgtest context (see https://bugs.debian.org/1083230
-[packages.lib]
 test_depends = ["dbus-user-session", "gnome-keyring"]
+# tests fail if no async backend is enabled
+test_is_broken = true
+
+# debian/patches/default-feature picks what should be a functional default:
+[packages."lib+default"]
+test_is_broken = false
+
+# tests fail when more than one crypto or async backend is enabled.
+[packages."lib+@"]
+test_is_broken = true
