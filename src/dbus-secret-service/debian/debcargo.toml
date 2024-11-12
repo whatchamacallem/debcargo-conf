@@ -1,5 +1,17 @@
 overlay = "."
 uploaders = ["Daniel Kahn Gillmor <dkg@fifthhorseman.net>"]
 collapse_features = true
+description = """
+This dbus-secret-service crate offers Rust code access to the
+FreeDesktop.org Secret Service over D-Bus.  It offers a similar API to
+the secret-service crate, but without requiring an async runtime.
+"""
+
+# try to get the tests that rely on dbus to pass in the
+# autopkgtest context (see https://bugs.debian.org/1081520
 [packages.lib]
 test_depends = ["dbus-user-session", "gnome-keyring"]
+
+# build fails when both crypto-openssl and crypto-rust features are enabled.
+[packages."lib+@"]
+test_is_broken = true
