@@ -34,3 +34,33 @@ To instead write to a temporary directory.
          let mut opts = Options::default();
          opts.create_if_missing(true);
          opts.set_compaction_filter_factory(TestFactory(CString::new("TestFactory").unwrap()));
+--- rocksdb.orig/tests/test_comparator.rs
++++ rocksdb/tests/test_comparator.rs
+@@ -13,7 +13,11 @@
+ ) -> Vec<String> {
+     let mut result_vec = Vec::new();
+ 
+-    let path = "_path_for_rocksdb_storage";
++    let tempdir = tempfile::Builder::new()
++        .prefix("_path_for_rocksdb_storage")
++        .tempdir()
++        .expect("Failed to create temporary path for the _path_for_rocksdb_storage.");
++    let path = tempdir.path();
+     {
+         let mut db_opts = Options::default();
+ 
+--- rocksdb.orig/tests/test_merge_operator.rs
++++ rocksdb/tests/test_merge_operator.rs
+@@ -296,7 +296,11 @@
+ #[test]
+ fn test_merge_state() {
+     use {Options, DB};
+-    let path = "_rust_rocksdb_merge_test_state";
++    let tempdir = tempfile::Builder::new()
++        .prefix("_rust_rocksdb_merge_test_state")
++        .tempdir()
++        .expect("Failed to create temporary path for the _rust_rocksdb_merge_test_state.");
++    let path = tempdir.path();
+     let mut opts = Options::default();
+     opts.create_if_missing(true);
+     opts.set_merge_operator_associative("max-limit-12", make_merge_max_with_limit(12));
