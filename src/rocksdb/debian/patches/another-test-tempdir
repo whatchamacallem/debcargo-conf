@@ -1,0 +1,230 @@
+From: Michael R. Crusoe <crusoe@debian.org>
+Subject: More temp directories for tests
+--- rocksdb.orig/src/db_iterator.rs
++++ rocksdb/src/db_iterator.rs
+@@ -33,7 +33,11 @@
+ /// ```
+ /// use rocksdb::{DB, Options};
+ ///
+-/// let path = "_path_for_rocksdb_storage4";
++/// let tempdir = tempfile::Builder::new()
++///     .prefix("_path_for_rocksdb_storage4")
++///     .tempdir()
++///     .expect("Failed to create temporary path for the _path_for_rocksdb_storage4.");
++/// let path = tempdir.path();
+ /// {
+ ///     let db = DB::open_default(path).unwrap();
+ ///     let mut iter = db.raw_iterator();
+@@ -143,7 +147,11 @@
+     /// ```rust
+     /// use rocksdb::{DB, Options};
+     ///
+-    /// let path = "_path_for_rocksdb_storage5";
++    /// let tempdir = tempfile::Builder::new()
++    ///     .prefix("_path_for_rocksdb_storage5")
++    ///     .tempdir()
++    ///     .expect("Failed to create temporary path for the _path_for_rocksdb_storage5.");
++    /// let path = tempdir.path();
+     /// {
+     ///     let db = DB::open_default(path).unwrap();
+     ///     let mut iter = db.raw_iterator();
+@@ -180,7 +188,11 @@
+     /// ```rust
+     /// use rocksdb::{DB, Options};
+     ///
+-    /// let path = "_path_for_rocksdb_storage6";
++    /// let tempdir = tempfile::Builder::new()
++    ///     .prefix("_path_for_rocksdb_storage6")
++    ///     .tempdir()
++    ///     .expect("Failed to create temporary path for the _path_for_rocksdb_storage6.");
++    /// let path = tempdir.path();
+     /// {
+     ///     let db = DB::open_default(path).unwrap();
+     ///     let mut iter = db.raw_iterator();
+@@ -220,7 +232,11 @@
+     /// ```rust
+     /// use rocksdb::{DB, Options};
+     ///
+-    /// let path = "_path_for_rocksdb_storage7";
++    /// let tempdir = tempfile::Builder::new()
++    ///     .prefix("_path_for_rocksdb_storage7")
++    ///     .tempdir()
++    ///     .expect("Failed to create temporary path for the _path_for_rocksdb_storage7.");
++    /// let path = tempdir.path();
+     /// {
+     ///     let db = DB::open_default(path).unwrap();
+     ///     let mut iter = db.raw_iterator();
+@@ -259,7 +275,11 @@
+     /// ```rust
+     /// use rocksdb::{DB, Options};
+     ///
+-    /// let path = "_path_for_rocksdb_storage8";
++    /// let tempdir = tempfile::Builder::new()
++    ///     .prefix("_path_for_rocksdb_storage8")
++    ///     .tempdir()
++    ///     .expect("Failed to create temporary path for the _path_for_rocksdb_storage8.");
++    /// let path = tempdir.path();
+     /// {
+     ///     let db = DB::open_default(path).unwrap();
+     ///     let mut iter = db.raw_iterator();
+@@ -377,7 +397,11 @@
+ /// ```
+ /// use rocksdb::{DB, Direction, IteratorMode, Options};
+ ///
+-/// let path = "_path_for_rocksdb_storage2";
++/// let tempdir = tempfile::Builder::new()
++///     .prefix("_path_for_rocksdb_storage2")
++///     .tempdir()
++///     .expect("Failed to create temporary path for the _path_for_rocksdb_storage2.");
++/// let path = tempdir.path();
+ /// {
+ ///     let db = DB::open_default(path).unwrap();
+ ///     let mut iter = db.iterator(IteratorMode::Start); // Always iterates forward
+--- rocksdb.orig/src/db_options.rs
++++ rocksdb/src/db_options.rs
+@@ -290,7 +290,11 @@
+ /// ```
+ /// use rocksdb::{DB, Options, WriteBatch, WriteOptions};
+ ///
+-/// let path = "_path_for_rocksdb_storageY1";
++/// let tempdir = tempfile::Builder::new()
++///     .prefix("_path_for_rocksdb_storageY1")
++///     .tempdir()
++///     .expect("Failed to create temporary path for the _path_for_rocksdb_storageY1");
++/// let path = tempdir.path();
+ /// {
+ ///     let db = DB::open_default(path).unwrap();
+ ///     let mut batch = WriteBatch::default();
+@@ -319,7 +323,11 @@
+ /// ```
+ /// use rocksdb::{DB, Options, FlushOptions};
+ ///
+-/// let path = "_path_for_rocksdb_storageY2";
++/// let tempdir = tempfile::Builder::new()
++///     .prefix("_path_for_rocksdb_storageY2")
++///     .tempdir()
++///     .expect("Failed to create temporary path for the _path_for_rocksdb_storageY2");
++/// let path = tempdir.path();
+ /// {
+ ///     let db = DB::open_default(path).unwrap();
+ ///
+@@ -362,18 +370,26 @@
+ ///
+ /// let writer_opts = Options::default();
+ /// let mut writer = SstFileWriter::create(&writer_opts);
+-/// writer.open("_path_for_sst_file").unwrap();
++/// let tempdir = tempfile::Builder::new()
++///     .tempdir()
++///     .expect("Failed to create temporary folder for the _path_for_sst_file");
++/// let path1 = tempdir.path().join("_path_for_sst_file");
++/// writer.open(path1.clone()).unwrap();
+ /// writer.put(b"k1", b"v1").unwrap();
+ /// writer.finish().unwrap();
+ ///
+-/// let path = "_path_for_rocksdb_storageY3";
++/// let tempdir2 = tempfile::Builder::new()
++///     .prefix("_path_for_rocksdb_storageY3")
++///     .tempdir()
++///     .expect("Failed to create temporary path for the _path_for_rocksdb_storageY3");
++/// let path2 = tempdir2.path();
+ /// {
+-///   let db = DB::open_default(&path).unwrap();
++///   let db = DB::open_default(&path2).unwrap();
+ ///   let mut ingest_opts = IngestExternalFileOptions::default();
+ ///   ingest_opts.set_move_files(true);
+-///   db.ingest_external_file_opts(&ingest_opts, vec!["_path_for_sst_file"]).unwrap();
++///   db.ingest_external_file_opts(&ingest_opts, vec![path1]).unwrap();
+ /// }
+-/// let _ = DB::destroy(&Options::default(), path);
++/// let _ = DB::destroy(&Options::default(), path2);
+ /// ```
+ pub struct IngestExternalFileOptions {
+     pub(crate) inner: *mut ffi::rocksdb_ingestexternalfileoptions_t,
+--- rocksdb.orig/src/lib.rs
++++ rocksdb/src/lib.rs
+@@ -20,7 +20,11 @@
+ //! ```
+ //! use rocksdb::{DB, Options};
+ //! // NB: db is automatically closed at end of lifetime
+-//! let path = "_path_for_rocksdb_storage";
++//! let tempdir = tempfile::Builder::new()
++//!     .prefix("_path_for_rocksdb_storage")
++//!     .tempdir()
++//!     .expect("Failed to create temporary path for the _path_for_rocksdb_storage");
++//! let path = tempdir.path();
+ //! {
+ //!    let db = DB::open_default(path).unwrap();
+ //!    db.put(b"my key", b"my value").unwrap();
+@@ -39,7 +43,11 @@
+ //! ```
+ //! use rocksdb::{DB, ColumnFamilyDescriptor, Options};
+ //!
+-//! let path = "_path_for_rocksdb_storage_with_cfs";
++//! let tempdir = tempfile::Builder::new()
++//!     .prefix("_path_for_rocksdb_storage_with_cfs")
++//!     .tempdir()
++//!     .expect("Failed to create temporary path for the _path_for_rocksdb_storage_with_cfs.");
++//! let path = tempdir.path();
+ //! let mut cf_opts = Options::default();
+ //! cf_opts.set_max_write_buffer_number(16);
+ //! let cf = ColumnFamilyDescriptor::new("cf1", cf_opts);
+--- rocksdb.orig/src/merge_operator.rs
++++ rocksdb/src/merge_operator.rs
+@@ -37,7 +37,11 @@
+ //!    Some(result)
+ //! }
+ //!
+-//!let path = "_rust_path_to_rocksdb";
++//!let tempdir = tempfile::Builder::new()
++//!    .prefix("_rust_path_to_rocksdb")
++//!    .tempdir()
++//!    .expect("Failed to create temporary path for the _rust_path_to_rocksdb");
++//!let path = tempdir.path();
+ //!let mut opts = Options::default();
+ //!
+ //!opts.create_if_missing(true);
+--- rocksdb.orig/src/snapshot.rs
++++ rocksdb/src/snapshot.rs
+@@ -27,7 +27,11 @@
+ /// ```
+ /// use rocksdb::{DB, IteratorMode, Options};
+ ///
+-/// let path = "_path_for_rocksdb_storage3";
++/// let tempdir = tempfile::Builder::new()
++///     .prefix("_path_for_rocksdb_storage3")
++///     .tempdir()
++///     .expect("Failed to create temporary path for the _path_for_rocksdb_storage3");
++/// let path = tempdir.path();
+ /// {
+ ///     let db = DB::open_default(path).unwrap();
+ ///     let snapshot = db.snapshot(); // Creates a longer-term snapshot of the DB, but closed when goes out of scope
+--- rocksdb.orig/src/transactions/optimistic_transaction_db.rs
++++ rocksdb/src/transactions/optimistic_transaction_db.rs
+@@ -38,7 +38,11 @@
+ ///
+ /// ```
+ /// use rocksdb::{DB, Options, OptimisticTransactionDB, SingleThreaded};
+-/// let path = "_path_for_optimistic_transaction_db";
++/// let tempdir = tempfile::Builder::new()
++///     .prefix("_path_for_optimistic_transaction_db")
++///     .tempdir()
++///     .expect("Failed to create temporary path for the _path_for_optimistic_transaction_db");
++/// let path = tempdir.path();
+ /// {
+ ///     let db: OptimisticTransactionDB = OptimisticTransactionDB::open_default(path).unwrap();
+ ///     db.put(b"my key", b"my value").unwrap();
+--- rocksdb.orig/src/transactions/transaction_db.rs
++++ rocksdb/src/transactions/transaction_db.rs
+@@ -53,7 +53,11 @@
+ ///
+ /// ```
+ /// use rocksdb::{DB, Options, TransactionDB, SingleThreaded};
+-/// let path = "_path_for_transaction_db";
++/// let tempdir = tempfile::Builder::new()
++///     .prefix("_path_for_transaction_db")
++///     .tempdir()
++///     .expect("Failed to create temporary path for the _path_for_transaction_db");
++/// let path = tempdir.path();
+ /// {
+ ///     let db: TransactionDB = TransactionDB::open_default(path).unwrap();
+ ///     db.put(b"my key", b"my value").unwrap();

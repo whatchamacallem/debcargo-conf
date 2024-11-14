@@ -1,0 +1,55 @@
+From 834f60dd2cb2369826cd5ffbab512798a2027e43 Mon Sep 17 00:00:00 2001
+From: Vladimir <hello@0xdeafbeef.dev>
+Date: Thu, 29 Aug 2024 10:40:58 +0200
+Subject: [PATCH 36/46] Bump tikv-jemalloc-sys to 0.6 (#920)
+
+---
+ .github/workflows/rust.yml                                   | 2 +-
+ CHANGELOG.md                                                 | 4 ++++
+ Cargo.toml                                                   | 2 +-
+ librocksdb-sys/Cargo.toml                                    | 4 ++--
+ rust-toolchain.toml                                          | 2 +-
+ tests/fail/open_with_multiple_refs_as_single_threaded.stderr | 4 ++--
+ 6 files changed, 11 insertions(+), 7 deletions(-)
+
+--- rocksdb.orig/.github/workflows/rust.yml
++++ rocksdb/.github/workflows/rust.yml
+@@ -2,7 +2,7 @@
+ 
+ on: [push, pull_request]
+ env:
+-  RUST_VERSION: 1.70.0
++  RUST_VERSION: 1.71.1
+ 
+ jobs:
+   fmt:
+--- rocksdb.orig/CHANGELOG.md
++++ rocksdb/CHANGELOG.md
+@@ -2,6 +2,10 @@
+ 
+ ## [Unreleased]
+ 
++## [Breaking Changes]
++* Update jemalloc-sys to 0.6.0 (0xdeafbeef)
++* Bump MSRV to 1.71.1 (0xdeafbeef)
++
+ ## 0.22.0 (2024-02-13)
+ 
+ * Free memory on writebatch index and avoid unnecessary clones (jkurian)
+--- rocksdb.orig/tests/fail/open_with_multiple_refs_as_single_threaded.stderr
++++ rocksdb/tests/fail/open_with_multiple_refs_as_single_threaded.stderr
+@@ -7,7 +7,7 @@
+ help: consider changing this to be a mutable reference
+   |
+ 5 |     let db_ref1 = &mut db;
+-  |                   ~~~~~~~
++  |                    +++
+ 
+ error[E0596]: cannot borrow `*db_ref2` as mutable, as it is behind a `&` reference
+  --> tests/fail/open_with_multiple_refs_as_single_threaded.rs:9:5
+@@ -18,4 +18,4 @@
+ help: consider changing this to be a mutable reference
+   |
+ 6 |     let db_ref2 = &mut db;
+-  |                   ~~~~~~~
++  |                    +++
