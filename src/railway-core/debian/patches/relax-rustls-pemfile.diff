@@ -9,3 +9,27 @@
  optional = true
  
  [dependencies.serde]
+--- a/src/requester/hyper.rs
++++ b/src/requester/hyper.rs
+@@ -48,15 +48,16 @@
+             .with_tls_config({
+                 let mut store = rustls::RootCertStore::empty();
+                 let certs = rustls_pemfile::certs(&mut bytes);
++                if let Ok(ref cert) = certs {
+                 for cert in certs.into_iter() {
+-                    if let Ok(cert) = cert {
+-                        if let Err(e) = store.add(&rustls::Certificate(cert.to_vec())) {
++                        if let Err(e) = store.add(&rustls::Certificate(cert[0].clone())) {
+                             log::error!("Failed to add certificate: {}", e);
+                         }
+-                    } else {
++                    } 
++                }
++                else {
+                         log::error!("Failed to read certificate");
+                     }
+-                }
+ 
+                 rustls::ClientConfig::builder()
+                     .with_safe_defaults()
+
