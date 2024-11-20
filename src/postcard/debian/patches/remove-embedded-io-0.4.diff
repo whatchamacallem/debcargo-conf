@@ -32,7 +32,7 @@
      "heapless",
 --- a/src/eio.rs
 +++ b/src/eio.rs
-@@ -1,20 +1,7 @@
+@@ -1,20 +1,4 @@
  // We disable all embedded-io versions but the most recent in docs.rs, because we use
  // --all-features which doesn't work with non-additive features.
 -#[cfg(all(feature = "embedded-io-04", feature = "embedded-io-06", not(docsrs)))]
@@ -45,16 +45,16 @@
 -}
 -
 -#[cfg(feature = "embedded-io-06")]
-+#[cfg(feature = "embedded-io")]
- mod version_impl {
+-mod version_impl {
 -    pub use embedded_io_06 as embedded_io;
 -    pub use embedded_io_06::{Read, Write};
-+    pub use embedded_io::{Read, Write};
- }
- 
+-}
+-
 -// All versions should export the appropriate items
 -#[cfg(any(feature = "embedded-io-04", feature = "embedded-io-06"))]
 -pub use version_impl::{embedded_io, Read, Write};
++#[cfg(feature = "embedded-io")]
++pub use embedded_io::{Read, Write};
 --- a/src/lib.rs
 +++ b/src/lib.rs
 @@ -94,10 +94,10 @@
@@ -118,6 +118,15 @@
      feature = "use-std"
  ))]
  pub mod io {
+@@ -242,7 +241,7 @@
+     }
+ 
+     /// Support for [`embedded_io`](crate::eio::embedded_io) traits
+-    #[cfg(any(feature = "embedded-io-04", feature = "embedded-io-06"))]
++    #[cfg(any(feature = "embedded-io"))]
+     pub mod eio {
+         use super::super::Flavor;
+         use super::SlidingBuffer;
 --- a/src/de/mod.rs
 +++ b/src/de/mod.rs
 @@ -68,7 +68,7 @@
