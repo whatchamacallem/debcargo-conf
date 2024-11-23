@@ -11,15 +11,19 @@
  version = "1"
 --- a/build.rs
 +++ b/build.rs
-@@ -315,6 +315,7 @@
+@@ -315,7 +315,11 @@
      }
  }
  
 +use std::io::Write;
  fn generate_bindings(target: &str, sysroot: Option<&Path>, out_dir: &Path, include_path: &Path) {
++    #[cfg(target_arch = "riscv64")]
++    let target = "riscv64-unknown-linux-gnu";
++
      let mut builder = bindgen::Builder::default()
          .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
-@@ -391,9 +392,17 @@
+         .default_enum_style(bindgen::EnumVariation::ModuleConsts)
+@@ -391,9 +395,17 @@
          "selinux-sys: Failed to generate Rust bindings for 'selinux/selinux.h' and other headers",
      );
  
