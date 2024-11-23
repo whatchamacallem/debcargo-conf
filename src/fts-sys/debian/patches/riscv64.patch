@@ -1,0 +1,15 @@
+Description: fix clang target on riscv64
+ clang uses riscv64- while rust uses riscv64gc-
+Author: Peter Michael Green <plugwash@debian.org>
+
+--- rust-fts-sys-0.2.11.orig/build.rs
++++ rust-fts-sys-0.2.11/build.rs
+@@ -74,6 +74,8 @@ fn get_target_os(target: &str) -> Option
+ }
+ 
+ fn generate_bindings(target: &str, sysroot: Option<&Path>, out_dir: &Path) {
++    //clang uses a different target name from rustc for riscv64.
++    let target = target.replace("riscv64gc-","riscv64-");
+     let mut builder = bindgen::Builder::default()
+         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+         .default_enum_style(bindgen::EnumVariation::ModuleConsts)
