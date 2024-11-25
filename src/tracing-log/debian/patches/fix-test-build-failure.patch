@@ -1,0 +1,17 @@
+Description: Fix test build failure
+ This change was extracted from a larger upstream commit, the commit claimed
+ to be cleaning up warnings, but this one seems to be an actual error.
+ I suspect it was triggered by a change in rustc but I don't know for sure.
+Origin: Backport, bindgen
+
+--- rust-tracing-log-0.2.0.orig/src/interest_cache.rs
++++ rust-tracing-log-0.2.0/src/interest_cache.rs
+@@ -248,7 +248,7 @@ mod tests {
+ 
+     fn lock_for_test() -> impl Drop {
+         // We need to make sure only one test runs at a time.
+-        static LOCK: Lazy<Mutex<()>> = Lazy::new(Mutex::new);
++        static LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+ 
+         match LOCK.lock() {
+             Ok(guard) => guard,
