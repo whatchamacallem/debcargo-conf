@@ -11,7 +11,7 @@ override_dh_auto_clean:
 
 override_dh_auto_install:
 	install -D -m 0644 $(CURDIR)/man/page $(CURDIR)/debian/manpages/broot.1
-	sed -i -e "s/#version/$(DEB_VERSION_UPSTREAM)/g" -e "s/#date/$(shell date +'%Y')/g" \
+	sed -i -e "s/#version/$(DEB_VERSION_UPSTREAM)/g" -e "s/#date/$(shell date --utc --date="@$(SOURCE_DATE_EPOCH)" +'%Y')/g" \
 		$(CURDIR)/debian/manpages/broot.1
 	dh_auto_install
 
