@@ -5,6 +5,20 @@ export ASSET_OUT_DIR=debian/tmp
 
 include /usr/share/dpkg/pkg-info.mk
 
+# Disable lto on 32-bit arches since it OOMs otherwise
+execute_before_dh_auto_configure:
+ifeq ($(DEB_HOST_ARCH_BITS),32)
+export DEB_BUILD_OPTIONS += optimize=-lto
+endif
+
+# enable on 64-bit
+execute_after_dh_auto_configure:
+ifeq ($(DEB_HOST_ARCH_BITS),64)
+	echo 'lto="fat"' >> debian/cargo_home/config.toml
+	echo 'codegen-units=1' >> debian/cargo_home/config.toml
+	cat debian/cargo_home/config.toml
+endif
+
 %:
 	dh $@ --buildsystem cargo
 
