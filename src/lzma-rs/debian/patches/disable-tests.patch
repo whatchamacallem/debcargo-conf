@@ -1,0 +1,42 @@
+Description: Disable tests that depend on unavailable testfiles
+Author: NoisyCoil <noisycoil@tutanota.com>
+Forwarded: not-needed
+Last-Update: 2024-10-28
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/decode/stream.rs
++++ b/src/decode/stream.rs
+@@ -435,7 +435,7 @@
+     }
+ 
+     /// Test processing all chunk sizes
+-    #[test]
++    /*#[test]
+     fn test_stream_chunked() {
+         let small_input = include_bytes!("../../tests/files/small.txt");
+ 
+@@ -459,7 +459,7 @@
+                 assert_eq!(expected, &output[..]);
+             }
+         }
+-    }
++    }*/
+ 
+     #[test]
+     fn test_stream_corrupted() {
+@@ -474,7 +474,7 @@
+             .contains("can\'t finish stream because of previous write error"));
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_allow_incomplete() {
+         let input = include_bytes!("../../tests/files/small.txt");
+ 
+@@ -499,5 +499,5 @@
+         stream.write_all(&compressed[..]).unwrap();
+         let output = stream.finish().unwrap();
+         assert_eq!(output, &input[..26]);
+-    }
++    }*/
+ }
