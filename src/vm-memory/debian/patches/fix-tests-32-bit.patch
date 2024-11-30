@@ -1,42 +1,34 @@
-Index: rust-vm-memory-0.10.0/benches/mmap/mod.rs
-===================================================================
---- rust-vm-memory-0.10.0.orig/benches/mmap/mod.rs
-+++ rust-vm-memory-0.10.0/benches/mmap/mod.rs
-@@ -16,6 +16,9 @@ use criterion::{black_box, Criterion};
- 
+diff --git a/benches/mmap/mod.rs b/benches/mmap/mod.rs
+index bbf3ab3..5871c9e 100644
+--- a/benches/mmap/mod.rs
++++ b/benches/mmap/mod.rs
+@@ -16,3 +16,5 @@ use criterion::{black_box, Criterion};
  use vm_memory::{ByteValued, Bytes, GuestAddress, GuestMemory};
- 
+-
 +#[cfg(target_pointer_width = "32")]
 +const REGION_SIZE: usize = 0x1000_0000;
 +#[cfg(not(target_pointer_width = "32"))]
  const REGION_SIZE: usize = 0x8000_0000;
- const REGIONS_COUNT: u64 = 8;
- const ACCESS_SIZE: usize = 0x200;
-Index: rust-vm-memory-0.10.0/src/bitmap/mod.rs
-===================================================================
---- rust-vm-memory-0.10.0.orig/src/bitmap/mod.rs
-+++ rust-vm-memory-0.10.0/src/bitmap/mod.rs
-@@ -235,7 +235,7 @@ pub(crate) mod tests {
-         const BUF_SIZE: usize = 1024;
-         let buf = vec![1u8; 1024];
+diff --git a/src/bitmap/mod.rs b/src/bitmap/mod.rs
+index 51318ed..10d5ef6 100644
+--- a/src/bitmap/mod.rs
++++ b/src/bitmap/mod.rs
+@@ -237,3 +237,3 @@ pub(crate) mod tests {
  
 -        let val = 1u64;
 +        let val = 1usize;
  
-         let h = BytesHelper {
-             check_range_fn,
-Index: rust-vm-memory-0.10.0/src/bytes.rs
-===================================================================
---- rust-vm-memory-0.10.0.orig/src/bytes.rs
-+++ rust-vm-memory-0.10.0/src/bytes.rs
-@@ -380,8 +380,8 @@ pub(crate) mod tests {
-             let end = begin + size_of::<T>();
-             let unaligned_data = &mut data[begin..end];
+diff --git a/src/bytes.rs b/src/bytes.rs
+index 6274c3a..1fd7841 100644
+--- a/src/bytes.rs
++++ b/src/bytes.rs
+@@ -403,4 +403,4 @@ pub(crate) mod tests {
              {
 -                if align_of::<T>() != 1 {
 -                    assert_eq!(T::from_slice(unaligned_data), None);
 +                if (i % align_of::<T>()) != 0 {
 +                    assert_eq!(T::from_slice(unaligned_data), None, "{}::from_slice(unaligned_data) with alignment offset {} was not none", std::any::type_name::<T>(),i);
                      assert_eq!(T::from_mut_slice(unaligned_data), None);
-                 }
-             }
+-- 
+2.39.5
+
