@@ -1,78 +1,6 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -52,57 +52,6 @@
-     "tokio-native-tls",
- ]
- 
--[[example]]
--name = "autobahn-client"
--required-features = ["async-std-runtime"]
--
--[[example]]
--name = "async-std-echo"
--required-features = ["async-std-runtime"]
--
--[[example]]
--name = "client"
--required-features = ["async-std-runtime"]
--
--[[example]]
--name = "autobahn-server"
--required-features = ["async-std-runtime"]
--
--[[example]]
--name = "server"
--required-features = ["async-std-runtime"]
--
--[[example]]
--name = "echo-server"
--required-features = ["async-std-runtime"]
--
--[[example]]
--name = "server-headers"
--required-features = [
--    "async-std-runtime",
--    "handshake",
--]
--
--[[example]]
--name = "interval-server"
--required-features = ["async-std-runtime"]
--
--[[example]]
--name = "gio-echo"
--required-features = ["gio-runtime"]
--
--[[example]]
--name = "gio-echo-server"
--required-features = ["gio-runtime"]
--
--[[example]]
--name = "tokio-echo"
--required-features = ["tokio-runtime"]
--
--[[example]]
--name = "server-custom-accept"
--required-features = ["tokio-runtime"]
--
- [dependencies.async-std]
- version = "1.0"
- optional = true
-@@ -121,11 +70,11 @@
- default-features = false
- 
- [dependencies.gio]
--version = "0.18"
-+version = ">= 0.18, < 1.0"
- optional = true
- 
- [dependencies.glib]
--version = "0.18"
-+version = ">= 0.18, < 1.0"
- optional = true
- 
- [dependencies.log]
-@@ -138,13 +87,9 @@
+@@ -97,11 +97,6 @@
  [dependencies.pin-project-lite]
  version = "0.2"
  
@@ -80,25 +8,67 @@
 -version = "0.5.0"
 -optional = true
 -package = "async-native-tls"
- 
+-
  [dependencies.real-async-tls]
--version = "0.12"
-+version = "0.13"
- optional = true
- package = "async-tls"
+ version = "0.13"
+ features = ["client"]
+@@ -125,17 +120,17 @@
+ package = "tokio-openssl"
  
-@@ -181,9 +126,6 @@
- version = "0.20"
+ [dependencies.real-tokio-rustls]
+-version = "0.26"
++version = "0.24"
+ optional = true
+ default-features = false
+ package = "tokio-rustls"
+ 
+ [dependencies.rustls-native-certs]
+-version = "0.8"
++version = "0.6"
+ optional = true
+ 
+ [dependencies.rustls-pki-types]
+-version = "1.0.1"
++version = "1.10"
+ optional = true
+ 
+ [dependencies.tokio]
+@@ -148,10 +143,6 @@
+ version = "0.24"
  default-features = false
  
 -[dependencies.webpki-roots]
--version = "0.25"
+-version = "0.26"
 -optional = true
- 
+-
  [dev-dependencies.async-std]
  version = "1.0"
-@@ -223,11 +165,6 @@
-     "real-tokio-rustls",
+ features = [
+@@ -168,21 +159,14 @@
+ [dev-dependencies.futures-channel]
+ version = "0.3"
+ 
+-[dev-dependencies.http-body-util]
+-version = "0.1"
+-
+ [dev-dependencies.hyper]
+-version = "1.0"
++version = "0.14"
+ features = [
+     "http1",
+     "server",
+ ]
+ default-features = false
+ 
+-[dev-dependencies.hyper-util]
+-version = "0.1"
+-features = ["tokio"]
+-
+ [dev-dependencies.tokio]
+ version = "1.0"
+ features = ["full"]
+@@ -201,11 +185,6 @@
+     "rustls-pki-types",
      "tungstenite/__rustls-tls",
  ]
 -async-native-tls = [
@@ -109,7 +79,7 @@
  async-std-runtime = [
      "async-std",
      "handshake",
-@@ -243,12 +180,6 @@
+@@ -221,12 +200,6 @@
      "handshake",
  ]
  handshake = ["tungstenite/handshake"]
@@ -122,7 +92,7 @@
  tokio-openssl = [
      "tokio-runtime",
      "real-tokio-openssl",
-@@ -263,8 +194,4 @@
+@@ -241,9 +214,5 @@
      "__rustls-tls",
      "rustls-native-certs",
  ]
@@ -130,5 +100,5 @@
 -    "__rustls-tls",
 -    "webpki-roots",
 -]
+ url = ["tungstenite/url"]
  verbose-logging = []
-
