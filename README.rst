@@ -1,3 +1,10 @@
+**NOTE:**  This README as a guide to Rust packaging in Debian is being phased
+out in favor of the `Debian Rust Team book`_. You are likely to find more
+up-to-date information there.
+
+.. _Debian Rust Team book: https://rust-team.pages.debian.net/book/
+
+
 .. contents::
 
 Packaging a crate for Debian
