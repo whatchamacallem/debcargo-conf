@@ -1,0 +1,70 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -187,2 +187,5 @@
+ 
++[dev-dependencies.tempfile]
++version = "3"
++
+ [build-dependencies.version_check]
+--- a/tests/test_parser.rs
++++ b/tests/test_parser.rs
+@@ -71,3 +71,3 @@
+ fn test_empty_file() {
+-    let temp_file = Path::new("tests").join("empty.yaml");
++    let temp_file = tempfile::NamedTempFile::with_suffix(".yaml").unwrap(); let temp_file = temp_file.path();
+     fs::write(&temp_file, "").unwrap();
+@@ -94,3 +94,3 @@
+     let yaml = "scalar: value";
+-    let temp_file = Path::new("tests").join("temp_scalar.yaml");
++    let temp_file = tempfile::NamedTempFile::with_suffix(".yaml").unwrap(); let temp_file = temp_file.path();
+     fs::write(&temp_file, yaml).unwrap();
+@@ -131,3 +131,3 @@
+     let yaml = "- item1\n- item2\n- item3";
+-    let temp_file = Path::new("tests").join("temp_sequence.yaml");
++    let temp_file = tempfile::NamedTempFile::with_suffix(".yaml").unwrap(); let temp_file = temp_file.path();
+     fs::write(&temp_file, yaml).unwrap();
+@@ -172,3 +172,3 @@
+     let yaml = "key1: value1\nkey2: value2";
+-    let temp_file = Path::new("tests").join("temp_mapping.yaml");
++    let temp_file = tempfile::NamedTempFile::with_suffix(".yaml").unwrap(); let temp_file = temp_file.path();
+     fs::write(&temp_file, yaml).unwrap();
+@@ -223,3 +223,3 @@
+     ";
+-    let temp_file = Path::new("tests").join("nested.yaml");
++    let temp_file = tempfile::NamedTempFile::with_suffix(".yaml").unwrap(); let temp_file = temp_file.path();
+     fs::write(&temp_file, yaml).unwrap();
+@@ -273,3 +273,3 @@
+     ";
+-    let temp_file = Path::new("tests").join("anchors.yaml");
++    let temp_file = tempfile::NamedTempFile::with_suffix(".yaml").unwrap(); let temp_file = temp_file.path();
+     fs::write(&temp_file, yaml).unwrap();
+@@ -308,3 +308,3 @@
+     "#;
+-    let temp_file = Path::new("tests").join("multiline.yaml");
++    let temp_file = tempfile::NamedTempFile::with_suffix(".yaml").unwrap(); let temp_file = temp_file.path();
+     fs::write(&temp_file, yaml).unwrap();
+@@ -336,3 +336,3 @@
+     let yaml = "{key1: value1, key2: [item1, item2]}";
+-    let temp_file = Path::new("tests").join("flow_style.yaml");
++    let temp_file = tempfile::NamedTempFile::with_suffix(".yaml").unwrap(); let temp_file = temp_file.path();
+     fs::write(&temp_file, yaml).unwrap();
+@@ -378,3 +378,3 @@
+     let yaml = "unicode: 你好世界";
+-    let temp_file = Path::new("tests").join("unicode.yaml");
++    let temp_file = tempfile::NamedTempFile::with_suffix(".yaml").unwrap(); let temp_file = temp_file.path();
+     fs::write(&temp_file, yaml).unwrap();
+@@ -404,3 +404,3 @@
+     let yaml = "key: value # This is a comment\n# This is another comment\nother: value";
+-    let temp_file = Path::new("tests").join("comments.yaml");
++    let temp_file = tempfile::NamedTempFile::with_suffix(".yaml").unwrap(); let temp_file = temp_file.path();
+     fs::write(&temp_file, yaml).unwrap();
+@@ -430,3 +430,3 @@
+     let yaml = "%YAML 1.2\n---\nkey: value";
+-    let temp_file = Path::new("tests").join("directive.yaml");
++    let temp_file = tempfile::NamedTempFile::with_suffix(".yaml").unwrap(); let temp_file = temp_file.path();
+     fs::write(&temp_file, yaml).unwrap();
+@@ -469,3 +469,3 @@
+     let yaml = "key: : value";
+-    let temp_file = Path::new("tests").join("invalid.yaml");
++    let temp_file = tempfile::NamedTempFile::with_suffix(".yaml").unwrap(); let temp_file = temp_file.path();
+     fs::write(&temp_file, yaml).unwrap();
