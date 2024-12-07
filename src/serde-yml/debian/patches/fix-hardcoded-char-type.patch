@@ -1,0 +1,18 @@
+Description: Hardcoded as i8 but some platforms have u8
+Bug: https://github.com/sebastienrousseau/serde_yml/pull/38
+Last-Update: 2024-12-07
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/libyml/parser.rs
++++ b/src/libyml/parser.rs
+@@ -294 +294 @@
+-    let ptr = NonNull::new(anchor as *mut i8)?;
++    let ptr = NonNull::new(anchor as *mut std::ffi::c_char)?;
+@@ -303 +303 @@
+-    let ptr = NonNull::new(tag as *mut i8)?;
++    let ptr = NonNull::new(tag as *mut std::ffi::c_char)?;
+--- a/src/libyml/safe_cstr.rs
++++ b/src/libyml/safe_cstr.rs
+@@ -76 +76 @@
+-    pub fn from_ptr(ptr: NonNull<i8>) -> Self {
++    pub fn from_ptr(ptr: NonNull<std::ffi::c_char>) -> Self {
