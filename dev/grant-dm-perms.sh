@@ -13,4 +13,4 @@ grep -l "$m" src/*/debian/copyright src/*/debian/debcargo.toml \
 | sort -u \
 | dev/filter-package-in-debian.sh \
 | sed -nre 's/^(.*)\s[1-9][0-9]*$/rust-\1/gp' \
-| xargs -r dcut "$@" dm --uid "$m" --allow
+| xargs -t -r dcut "$@" dm --uid "$m" --allow
