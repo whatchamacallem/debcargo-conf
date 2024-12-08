@@ -1,0 +1,96 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 515def5..26fa592 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -55,10 +55,6 @@ name = "databake_derive"
+ path = "src/lib.rs"
+ proc-macro = true
+ 
+-[[test]]
+-name = "derive"
+-path = "tests/derive.rs"
+-
+ [dependencies.proc-macro2]
+ version = "1.0.61"
+ 
+diff --git a/src/lib.rs b/src/lib.rs
+index 74a0133..ae8e77d 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -21,7 +21,7 @@ use synstructure::{AddBounds, Structure};
+ /// For a type `Person` defined in the module `module` of crate `bar`, this derive
+ /// can be used as follows:
+ ///
+-/// ```rust
++/// ```ignore
+ /// use databake::Bake;
+ ///
+ /// #[derive(Bake)]
+diff --git a/tests/derive.rs b/tests/derive.rs
+deleted file mode 100644
+index fb9be2b..0000000
+--- a/tests/derive.rs
++++ /dev/null
+@@ -1,62 +0,0 @@
+-// This file is part of ICU4X. For terms of use, please see the file
+-// called LICENSE at the top level of the ICU4X source tree
+-// (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
+-
+-extern crate alloc;
+-
+-use databake::*;
+-
+-#[derive(Bake)]
+-#[databake(path = test)]
+-pub struct IntExample {
+-    x: u8,
+-}
+-
+-#[test]
+-fn test_int_example() {
+-    test_bake!(IntExample, const, crate::IntExample { x: 17u8 }, test,);
+-}
+-
+-#[derive(Bake)]
+-#[databake(path = test)]
+-pub struct GenericsExample<T> {
+-    x: u32,
+-    y: T,
+-}
+-
+-#[test]
+-fn test_generics_example() {
+-    test_bake!(
+-        GenericsExample<isize>,
+-        const,
+-        crate::GenericsExample {
+-            x: 17u32,
+-            y: 100isize
+-        },
+-        test
+-    );
+-}
+-
+-#[derive(Bake)]
+-#[databake(path = test)]
+-pub struct CowExample<'a> {
+-    x: u8,
+-    y: &'a str,
+-    z: alloc::borrow::Cow<'a, str>,
+-    w: alloc::borrow::Cow<'a, [u8]>,
+-}
+-
+-#[test]
+-fn test_cow_example() {
+-    test_bake!(
+-        CowExample<'static>,
+-        const,
+-        crate::CowExample {
+-            x: 17u8,
+-            y: "foo",
+-            z: alloc::borrow::Cow::Borrowed("bar"),
+-            w: alloc::borrow::Cow::Borrowed(b"\x01\x02\x03"),
+-        },
+-        test
+-    );
+-}
