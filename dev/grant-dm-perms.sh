@@ -22,4 +22,6 @@ echo $pkgs
 echo
 echo "Press enter to grant DM upload permissions to $m for these packages, else press CTRL-C to abort."
 read a
-| xargs -t -r dcut "$@" dm --uid "$m" --allow
+if [ -n "$pkgs" ] ; then
+	dcut "$@" dm --uid "$m" --allow $pkgs
+fi
