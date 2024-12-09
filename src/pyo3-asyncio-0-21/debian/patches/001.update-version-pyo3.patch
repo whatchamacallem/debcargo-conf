@@ -1,0 +1,51 @@
+Description: Adjustments for building with version pyo3-0.22
+Author: Josenilson Ferreira da Silva <nilsonfsilva@hotmail.com>
+Forwarded: not-needed
+Last-Update: 2024-12-07
+
+Index: pyo3-asyncio-0-21/Cargo.toml
+===================================================================
+--- pyo3-asyncio-0-21.orig/Cargo.toml
++++ pyo3-asyncio-0-21/Cargo.toml
+@@ -201,7 +201,7 @@ version = "1.14"
+ version = "0.2"
+ 
+ [dependencies.pyo3]
+-version = "0.21"
++version = ">=0.21"
+ 
+ [dependencies.pyo3-asyncio-macros-0-21]
+ version = "=0.21.0"
+Index: pyo3-asyncio-0-21/src/lib.rs
+===================================================================
+--- pyo3-asyncio-0-21.orig/src/lib.rs
++++ pyo3-asyncio-0-21/src/lib.rs
+@@ -473,7 +473,12 @@ fn copy_context(py: Python) -> PyResult<
+ }
+ 
+ /// Task-local data to store for Python conversions.
+-#[derive(Debug, Clone)]
++#[derive(Debug)]
++struct YourStruct {
++    event_loop: String,
++    context: String,
++}
++
+ pub struct TaskLocals {
+     /// Track the event loop of the Python task
+     event_loop: PyObject,
+@@ -510,12 +515,12 @@ impl TaskLocals {
+ 
+     /// Get a reference to the event loop
+     pub fn event_loop<'p>(&self, py: Python<'p>) -> Bound<'p, PyAny> {
+-        self.event_loop.clone().into_bound(py)
++        self.event_loop.clone_ref(py).into_bound(py)
+     }
+ 
+     /// Get a reference to the python context
+     pub fn context<'p>(&self, py: Python<'p>) -> Bound<'p, PyAny> {
+-        self.context.clone().into_bound(py)
++        self.context.clone_ref(py).into_bound(py)
+     }
+ }
+ 
