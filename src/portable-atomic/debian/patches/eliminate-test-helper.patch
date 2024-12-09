@@ -1,3 +1,38 @@
+Index: rust-portable-atomic-1.10.0/src/tests/mod.rs
+===================================================================
+--- rust-portable-atomic-1.10.0.orig/src/tests/mod.rs
++++ rust-portable-atomic-1.10.0/src/tests/mod.rs
+@@ -15,7 +15,7 @@ pub(crate) mod helper;
+ #[path = "../../version.rs"]
+ mod version;
+ 
+-use test_helper as _;
++//use test_helper as _;
+ 
+ use super::*;
+ 
+Index: rust-portable-atomic-1.10.0/src/imp/detect/auxv.rs
+===================================================================
+--- rust-portable-atomic-1.10.0.orig/src/imp/detect/auxv.rs
++++ rust-portable-atomic-1.10.0/src/imp/detect/auxv.rs
+@@ -680,7 +680,7 @@ mod tests {
+         }
+     }
+ 
+-    #[cfg(any(target_os = "linux", target_os = "android"))]
++    /*#[cfg(any(target_os = "linux", target_os = "android"))]
+     #[cfg(not(all(target_arch = "aarch64", target_pointer_width = "32")))]
+     #[test]
+     fn test_alternative() {
+@@ -848,7 +848,7 @@ mod tests {
+                 );
+             }
+         }
+-    }
++    }*/
+     #[allow(clippy::cast_possible_wrap)]
+     #[cfg(target_os = "freebsd")]
+     #[test]
 Index: rust-portable-atomic-1.10.0/src/imp/detect/common.rs
 ===================================================================
 --- rust-portable-atomic-1.10.0.orig/src/imp/detect/common.rs
@@ -33,6 +68,23 @@ Index: rust-portable-atomic-1.10.0/src/imp/detect/common.rs
      /// Defines functions with #[cfg(test)] static assertions which checks
      /// signatures are the same as the platform's latest header files' ones.
      // Note: This macro is sys_fn!({ }), not sys_fn! { }.
+@@ -202,14 +202,14 @@ mod c_types {
+             // `cargo check --tests --target <target>` run in CI (via TESTS=1 build.sh)
+             // without actually running tests on these platforms.
+             // See also https://github.com/taiki-e/test-helper/blob/HEAD/tools/codegen/src/ffi.rs.
+-            #[cfg(test)]
++            /*#[cfg(test)]
+             const _: fn() = || {$(
+                 $(#[$fn_attr])*
+                 {
+                     let mut _f: unsafe extern $abi fn($($arg_ty),*) $(-> $ret_ty)? = $name;
+                     _f = test_helper::sys::$name;
+                 }
+-            )*};
++            )*};*/
+         };
+     }
+     /// Defines #[repr(C)] structs with #[cfg(test)] static assertions which checks
 @@ -241,7 +241,7 @@ mod c_types {
              // `cargo check --tests --target <target>` run in CI (via TESTS=1 build.sh)
              // without actually running tests on these platforms.
@@ -142,16 +194,3 @@ Index: rust-portable-atomic-1.10.0/src/imp/detect/common.rs
          }
      }
      #[cfg(target_arch = "powerpc64")]
-Index: rust-portable-atomic-1.10.0/src/tests/mod.rs
-===================================================================
---- rust-portable-atomic-1.10.0.orig/src/tests/mod.rs
-+++ rust-portable-atomic-1.10.0/src/tests/mod.rs
-@@ -15,7 +15,7 @@ pub(crate) mod helper;
- #[path = "../../version.rs"]
- mod version;
- 
--use test_helper as _;
-+//use test_helper as _;
- 
- use super::*;
- 
