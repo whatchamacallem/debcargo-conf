@@ -8,137 +8,137 @@ Last-Update: 2024-10-01
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/src/distribution/binomial.rs
 +++ b/src/distribution/binomial.rs
-@@ -322,6 +322,7 @@ impl Discrete<u64, f64> for Binomial {
+@@ -354,6 +354,7 @@ impl Discrete<u64, f64> for Binomial {
  
  #[rustfmt::skip]
  #[cfg(test)]
 +#[cfg(not(target_arch = "x86"))]
  mod tests {
-     use std::fmt::Debug;
-     use crate::statistics::*;
+     use super::*;
+     use crate::distribution::internal::*;
 --- a/src/distribution/cauchy.rs
 +++ b/src/distribution/cauchy.rs
-@@ -227,6 +227,7 @@ impl Continuous<f64, f64> for Cauchy {
+@@ -278,6 +278,7 @@ impl Continuous<f64, f64> for Cauchy {
  
  #[rustfmt::skip]
  #[cfg(test)]
 +#[cfg(not(target_arch = "x86"))]
  mod tests {
-     use crate::statistics::*;
-     use crate::distribution::{ContinuousCDF, Continuous, Cauchy};
+     use super::*;
+     use crate::distribution::internal::*;
 --- a/src/distribution/chi.rs
 +++ b/src/distribution/chi.rs
-@@ -318,6 +318,7 @@ impl Continuous<f64, f64> for Chi {
+@@ -336,6 +336,7 @@ impl Continuous<f64, f64> for Chi {
  
  #[rustfmt::skip]
  #[cfg(test)]
 +#[cfg(not(target_arch = "x86"))]
  mod tests {
-     use std::f64;
+     use super::*;
      use crate::distribution::internal::*;
 --- a/src/distribution/empirical.rs
 +++ b/src/distribution/empirical.rs
-@@ -207,6 +207,7 @@ impl ContinuousCDF<f64, f64> for Empiric
+@@ -278,6 +278,7 @@ impl ContinuousCDF<f64, f64> for Empiric
  }
  
  #[cfg(test)]
 +#[cfg(not(target_arch = "x86"))]
  mod tests {
      use super::*;
-     #[test]
+ 
 --- a/src/distribution/fisher_snedecor.rs
 +++ b/src/distribution/fisher_snedecor.rs
-@@ -356,6 +356,7 @@ impl Continuous<f64, f64> for FisherSned
+@@ -414,6 +414,7 @@ impl Continuous<f64, f64> for FisherSned
  
  #[rustfmt::skip]
  #[cfg(test)]
 +#[cfg(not(target_arch = "x86"))]
  mod tests {
-     use crate::statistics::*;
-     use crate::distribution::{ContinuousCDF, Continuous, FisherSnedecor};
+     use super::*;
+     use crate::distribution::internal::*;
 --- a/src/distribution/geometric.rs
 +++ b/src/distribution/geometric.rs
-@@ -266,6 +266,7 @@ impl Discrete<u64, f64> for Geometric {
+@@ -301,6 +301,7 @@ impl Discrete<u64, f64> for Geometric {
  
  #[rustfmt::skip]
  #[cfg(test)]
 +#[cfg(not(target_arch = "x86"))]
  mod tests {
-     use std::fmt::Debug;
-     use crate::statistics::*;
+     use super::*;
+     use crate::distribution::internal::*;
 --- a/src/distribution/log_normal.rs
 +++ b/src/distribution/log_normal.rs
-@@ -298,6 +298,7 @@ impl Continuous<f64, f64> for LogNormal
+@@ -332,6 +332,7 @@ impl Continuous<f64, f64> for LogNormal
  
  #[rustfmt::skip]
  #[cfg(test)]
 +#[cfg(not(target_arch = "x86"))]
  mod tests {
-     use crate::statistics::*;
-     use crate::distribution::{ContinuousCDF, Continuous, LogNormal};
+     use super::*;
+     use crate::distribution::internal::*;
 --- a/src/distribution/normal.rs
 +++ b/src/distribution/normal.rs
-@@ -321,6 +321,7 @@ impl std::default::Default for Normal {
+@@ -367,6 +367,7 @@ impl std::default::Default for Normal {
  
  #[rustfmt::skip]
  #[cfg(test)]
 +#[cfg(not(target_arch = "x86"))]
  mod tests {
-     use crate::statistics::*;
-     use crate::distribution::{ContinuousCDF, Continuous, Normal};
+     use super::*;
+     use crate::distribution::internal::*;
 --- a/src/distribution/pareto.rs
 +++ b/src/distribution/pareto.rs
-@@ -329,6 +329,7 @@ impl Continuous<f64, f64> for Pareto {
+@@ -380,6 +380,7 @@ impl Continuous<f64, f64> for Pareto {
  
  #[rustfmt::skip]
  #[cfg(test)]
 +#[cfg(not(target_arch = "x86"))]
  mod tests {
-     use crate::statistics::*;
-     use crate::distribution::{ContinuousCDF, Continuous, Pareto};
+     use super::*;
+     use crate::distribution::internal::*;
 --- a/src/distribution/poisson.rs
 +++ b/src/distribution/poisson.rs
-@@ -297,6 +297,7 @@ pub fn sample_unchecked<R: Rng + ?Sized>
+@@ -338,6 +338,7 @@ pub fn sample_unchecked<R: ::rand::Rng +
  
  #[rustfmt::skip]
  #[cfg(test)]
 +#[cfg(not(target_arch = "x86"))]
  mod tests {
-     use std::fmt::Debug;
-     use crate::statistics::*;
+     use super::*;
+     use crate::distribution::internal::*;
 --- a/src/distribution/triangular.rs
 +++ b/src/distribution/triangular.rs
-@@ -312,6 +312,7 @@ fn sample_unchecked<R: Rng + ?Sized>(rng
+@@ -396,6 +396,7 @@ fn sample_unchecked<R: ::rand::Rng + ?Si
  
  #[rustfmt::skip]
  #[cfg(test)]
 +#[cfg(not(target_arch = "x86"))]
  mod tests {
-     use std::fmt::Debug;
-     use crate::statistics::*;
+     use super::*;
+     use crate::distribution::internal::*;
 --- a/src/distribution/weibull.rs
 +++ b/src/distribution/weibull.rs
-@@ -326,6 +326,7 @@ impl Continuous<f64, f64> for Weibull {
+@@ -376,6 +376,7 @@ impl Continuous<f64, f64> for Weibull {
  
  #[rustfmt::skip]
  #[cfg(test)]
 +#[cfg(not(target_arch = "x86"))]
  mod tests {
-     use crate::statistics::*;
-     use crate::distribution::{ContinuousCDF, Continuous, Weibull};
+     use super::*;
+     use crate::distribution::internal::*;
 --- a/src/function/beta.rs
 +++ b/src/function/beta.rs
-@@ -396,6 +396,7 @@ pub fn inv_beta_reg(mut a: f64, mut b: f
+@@ -424,6 +424,7 @@ pub fn inv_beta_reg(mut a: f64, mut b: f
  
  #[rustfmt::skip]
  #[cfg(test)]
 +#[cfg(not(target_arch = "x86"))]
  mod tests {
-     #[test]
-     fn test_ln_beta() {
+     use super::*;
+ 
 --- a/src/function/erf.rs
 +++ b/src/function/erf.rs
-@@ -738,6 +738,7 @@ fn erf_inv_impl(p: f64, q: f64, s: f64)
+@@ -737,6 +737,7 @@ fn erf_inv_impl(p: f64, q: f64, s: f64)
  
  #[rustfmt::skip]
  #[cfg(test)]
@@ -148,7 +148,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  
 --- a/src/function/factorial.rs
 +++ b/src/function/factorial.rs
-@@ -104,6 +104,7 @@ const FCACHE: [f64; MAX_FACTORIAL + 1] =
+@@ -101,6 +101,7 @@ const FCACHE: [f64; MAX_FACTORIAL + 1] =
  };
  
  #[cfg(test)]
@@ -158,11 +158,11 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  
 --- a/src/function/gamma.rs
 +++ b/src/function/gamma.rs
-@@ -423,6 +423,7 @@ fn signum(x: f64) -> f64 {
+@@ -443,6 +443,7 @@ fn signum(x: f64) -> f64 {
  
  #[rustfmt::skip]
  #[cfg(test)]
 +#[cfg(not(target_arch = "x86"))]
  mod tests {
-     use std::f64::{self, consts};
+     use super::*;
  
