@@ -125,7 +125,7 @@ A, then you can run something like::
   $ ( cd build && ./build.sh B librust-A*.deb )
 
 Or you can use the ``EXTRA_DEBS`` environment variable, which ``build.sh`` will
-inhert, like::
+inherit, like::
 
   $ EXTRA_DEBS=build/*.deb ./release.sh A
 
