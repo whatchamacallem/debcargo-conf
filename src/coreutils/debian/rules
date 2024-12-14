@@ -29,7 +29,9 @@ ifeq ($(DEB_HOST_ARCH_BITS),32)
 	sed -i 's/lto = "thin"/lto = true/' Cargo.toml
 endif
 # Create the symlink early to be able to generate the manpages
-	cd debian/tmp/usr/share/zsh/site-functions && mkdir rust-coreutils && mv _* rust-coreutils
+	cd debian/tmp/usr/share/zsh/site-functions && mkdir rust-coreutils && chmod -x _* && mv _* rust-coreutils
+	cd debian/tmp/usr/share/bash-completion/completions/ && chmod -x rust-*
+	cd debian/tmp/usr/share/fish/vendor_completions.d/ && chmod -x *.fish
 	cd debian/tmp/usr/bin && mv rust-coreutils coreutils && rm rust-*
 #	cd debian/tmp/usr/share/fish/vendor_completions.d && for f in *fish; do mv $$f rust-$$f; done
 	dh_link
