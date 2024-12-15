@@ -8,15 +8,19 @@ Date:   Thu Sep 7 15:14:34 2023 +0200
 
     Add cfg option gnu_time64_abi
 
-diff --git a/build.rs b/build.rs
-index 562025dfdc..787c25cdd6 100644
---- a/build.rs
-+++ b/build.rs
-@@ -15,2 +15,3 @@ const ALLOWED_CFGS: &'static [&'static str] = &[
+Index: libc/build.rs
+===================================================================
+--- libc.orig/build.rs
++++ libc/build.rs
+@@ -13,6 +13,7 @@ const ALLOWED_CFGS: &'static [&'static s
+     "freebsd13",
+     "freebsd14",
      "freebsd15",
 +    "gnu_time64_abi",
-     "libc_align",
-@@ -60,6 +61,11 @@ fn main() {
+     // FIXME(ctest): this config shouldn't be needed but ctest can't parse `const extern fn`
+     "libc_const_extern_fn",
+     "libc_deny_warnings",
+@@ -79,6 +80,11 @@ fn main() {
          Some(_) | None => (),
      }
  
@@ -28,7 +32,7 @@ index 562025dfdc..787c25cdd6 100644
      // On CI: deny all warnings
      if libc_ci {
          set_cfg("libc_deny_warnings");
-@@ -203,3 +209,32 @@ fn set_cfg(cfg: &str) {
+@@ -235,3 +241,32 @@ fn set_cfg(cfg: &str) {
      }
      println!("cargo:rustc-cfg={}", cfg);
  }

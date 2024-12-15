@@ -1,3 +1,7 @@
+This patch is based on the commit described below from the upstream
+time64 pull request, adapted for use in the Debian package by
+Peter Michael Green.
+
 commit 7bb47139eda82d37a43cdd3ff60572e5d224a2e4
 Author: Ola x Nilsson <olani@axis.com>
 Date:   Fri Mar 17 15:21:05 2023 +0100
@@ -13,11 +17,11 @@ index 2ff9a7e264..e280488620 100644
  
      pub struct input_event {
 +        #[cfg(not(gnu_time64_abi))]
-         pub time: ::timeval,
+         pub time: crate::timeval,
 +        #[cfg(gnu_time64_abi)]
-+        pub __sec: ::c_ulong,
++        pub __sec: c_ulong,
 +        #[cfg(gnu_time64_abi)]
-+        pub __usec: ::c_ulong,
-         pub type_: ::__u16,
-         pub code: ::__u16,
-         pub value: ::__s32,
++        pub __usec: c_ulong,
+         pub type_: __u16,
+         pub code: __u16,
+         pub value: __s32,

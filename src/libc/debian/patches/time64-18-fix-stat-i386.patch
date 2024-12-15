@@ -3,11 +3,11 @@ in src/unix/linux_like/linux/gnu/b32/x86/mod.rs, since we don't enable time64
 on i386 this causes us problems. This patch puts back the old definitions and
 adds conditionals.
 
-Index: rust-libc-0.2.153/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
+Index: libc/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
 ===================================================================
---- rust-libc-0.2.153.orig/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
-+++ rust-libc-0.2.153/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
-@@ -2,6 +2,7 @@ pub type c_char = i8;
+--- libc.orig/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
++++ libc/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
+@@ -5,6 +5,7 @@ pub type c_char = i8;
  pub type wchar_t = i32;
  pub type greg_t = i32;
  
@@ -15,9 +15,9 @@ Index: rust-libc-0.2.153/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
  pub type statfs64 = statfs;
  
  s! {
-@@ -130,7 +131,50 @@ s! {
-         __unused1: ::c_ulong,
-         __unused2: ::c_ulong
+@@ -134,7 +135,50 @@ s! {
+         __unused1: c_ulong,
+         __unused2: c_ulong,
      }
 +}
  
@@ -64,15 +64,15 @@ Index: rust-libc-0.2.153/src/unix/linux_like/linux/gnu/b32/x86/mod.rs
 +#[cfg(gnu_time64_abi)]
 +s! {
      pub struct stat64 {
-         pub st_dev: ::dev_t,
-         pub st_ino: ::ino_t,
-@@ -152,7 +196,9 @@ s! {
-         pub st_ctime_nsec: ::c_long,
+         pub st_dev: crate::dev_t,
+         pub st_ino: crate::ino_t,
+@@ -156,7 +200,9 @@ s! {
+         pub st_ctime_nsec: c_long,
          __pad3: i32,
      }
 +}
  
 +s! {
      pub struct statvfs64 {
-         pub f_bsize: ::c_ulong,
-         pub f_frsize: ::c_ulong,
+         pub f_bsize: c_ulong,
+         pub f_frsize: c_ulong,
