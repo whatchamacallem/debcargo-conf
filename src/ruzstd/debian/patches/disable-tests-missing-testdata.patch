@@ -1,38 +1,70 @@
+Index: ruzstd/src/tests/decode_corpus.rs
+===================================================================
 --- ruzstd.orig/src/tests/decode_corpus.rs
 +++ ruzstd/src/tests/decode_corpus.rs
-@@ -1 +1 @@
+@@ -1,4 +1,4 @@
 -#[test]
 +/*#[test]
-@@ -186 +186 @@
+ fn test_decode_corpus_files() {
+     extern crate std;
+     use crate::frame_decoder;
+@@ -190,4 +190,4 @@ fn test_decode_corpus_files() {
+     }
+ 
+     assert!(failed.is_empty());
 -}
 +}*/
+Index: ruzstd/src/tests/dict_test.rs
+===================================================================
 --- ruzstd.orig/src/tests/dict_test.rs
 +++ ruzstd/src/tests/dict_test.rs
-@@ -76,3 +76,3 @@
+@@ -74,7 +74,7 @@ fn test_dict_parsing() {
+     }
+ }
  
 -#[test]
 +/*#[test]
  fn test_dict_decoding() {
-@@ -258,2 +258,2 @@
+     extern crate std;
+     use crate::frame_decoder;
+@@ -262,4 +262,4 @@ fn test_dict_decoding() {
+     }
+ 
      assert!(failed.is_empty());
 -}
 +}*/
+Index: ruzstd/src/tests/fuzz_regressions.rs
+===================================================================
 --- ruzstd.orig/src/tests/fuzz_regressions.rs
 +++ ruzstd/src/tests/fuzz_regressions.rs
-@@ -1 +1 @@
+@@ -1,4 +1,4 @@
 -#[test]
 +/*#[test]
-@@ -28 +28 @@
+ fn test_all_artifacts() {
+     extern crate std;
+     use crate::frame_decoder;
+@@ -23,4 +23,4 @@ fn test_all_artifacts() {
+             frame_dec.decode_blocks(&mut f, frame_decoder::BlockDecodingStrategy::All)
+         });
+     }
 -}
 +}*/
+Index: ruzstd/src/tests/mod.rs
+===================================================================
 --- ruzstd.orig/src/tests/mod.rs
 +++ ruzstd/src/tests/mod.rs
-@@ -53,3 +53,3 @@
+@@ -75,7 +75,7 @@ fn skippable_frame() {
+     ));
+ }
  
 -#[cfg(test)]
 +/*#[cfg(test)]
  #[test]
-@@ -61,5 +61,5 @@
+ fn test_frame_header_reading() {
+     use crate::frame;
+@@ -83,9 +83,9 @@ fn test_frame_header_reading() {
+ 
+     let mut content = fs::File::open("./decodecorpus_files/z000088.zst").unwrap();
      let (_frame, _) = frame::read_frame_header(&mut content).unwrap();
 -}
 +}*/
@@ -40,7 +72,11 @@
 -#[test]
 +/*#[test]
  fn test_block_header_reading() {
-@@ -75,5 +75,5 @@
+     use crate::decoding;
+     use crate::frame;
+@@ -97,9 +97,9 @@ fn test_block_header_reading() {
+     let mut block_dec = decoding::block_decoder::new();
+     let block_header = block_dec.read_block_header(&mut content).unwrap();
      let _ = block_header; //TODO validate blockheader in a smart way
 -}
 +}*/
@@ -48,7 +84,11 @@
 -#[test]
 +/*#[test]
  fn test_frame_decoder() {
-@@ -100,5 +100,5 @@
+     use crate::frame_decoder;
+     use std::fs;
+@@ -122,9 +122,9 @@ fn test_frame_decoder() {
+     frame_dec
+         .decode_blocks(&mut content, frame_decoder::BlockDecodingStrategy::All)
          .unwrap();
 -}
 +}*/
@@ -56,7 +96,11 @@
 -#[test]
 +/*#[test]
  fn test_decode_from_to() {
-@@ -196,5 +196,5 @@
+     use crate::frame_decoder;
+     use std::fs::File;
+@@ -224,9 +224,9 @@ fn test_decode_from_to() {
+     if counter > 0 {
+         panic!("Result differs in at least {} bytes from original", counter);
      }
 -}
 +}*/
@@ -64,7 +108,11 @@
 -#[test]
 +/*#[test]
  fn test_specific_file() {
-@@ -256,5 +256,5 @@
+     use crate::frame_decoder;
+     use std::fs;
+@@ -284,9 +284,9 @@ fn test_specific_file() {
+     if counter > 0 {
+         std::println!("Result differs in at least {} bytes from original", counter);
      }
 -}
 +}*/
@@ -72,16 +120,38 @@
 -#[test]
 +/*#[test]
  #[cfg(feature = "std")]
-@@ -341,5 +341,5 @@
+ fn test_streaming() {
+     use std::fs;
+@@ -371,9 +371,9 @@ fn test_streaming() {
+     if counter > 0 {
+         panic!("Result differs in at least {} bytes from original", counter);
      }
 -}
 +}*/
  
 -#[test]
 +/*#[test]
- #[cfg(not(feature = "std"))]
-@@ -425,3 +425,3 @@
+ fn test_incremental_read() {
+     use crate::frame_decoder::FrameDecoder;
+ 
+@@ -479,9 +479,9 @@ fn test_streaming_no_std() {
+     if counter > 0 {
+         panic!("Result differs in at least {} bytes from original", counter);
      }
 -}
 +}*/
  
+-#[test]
++/*#[test]
+ fn test_decode_all() {
+     use crate::frame_decoder::{FrameDecoder, FrameDecoderError};
+ 
+@@ -564,7 +564,7 @@ fn test_decode_all() {
+     output.reserve_exact(original.len() + 1);
+     decoder.decode_all_to_vec(&input, &mut output).unwrap();
+     assert_eq!(output, original);
+-}
++}*/
+ 
+ pub mod bit_reader;
+ pub mod decode_corpus;
