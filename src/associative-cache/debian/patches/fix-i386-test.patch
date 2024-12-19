@@ -1,0 +1,67 @@
+Index: associative-cache/src/indices.rs
+===================================================================
+--- associative-cache.orig/src/indices.rs
++++ associative-cache/src/indices.rs
+@@ -154,48 +154,52 @@ mod tests {
+ 
+     #[test]
+     fn pointer_direct_mapped() {
++	let align = std::mem::align_of::<u64>();
++
+         assert_eq!(
+-            <PointerDirectMapped as Indices<*mut u64, Capacity4>>::indices(&(0 as *mut u64)),
++            <PointerDirectMapped as Indices<*mut u64, Capacity4>>::indices(&((0 * align) as *mut u64)),
+             0..1
+         );
+         assert_eq!(
+-            <PointerDirectMapped as Indices<*mut u64, Capacity4>>::indices(&(8 as *mut u64)),
++            <PointerDirectMapped as Indices<*mut u64, Capacity4>>::indices(&((1 * align) as *mut u64)),
+             1..2
+         );
+         assert_eq!(
+-            <PointerDirectMapped as Indices<*mut u64, Capacity4>>::indices(&(16 as *mut u64)),
++            <PointerDirectMapped as Indices<*mut u64, Capacity4>>::indices(&((2 * align) as *mut u64)),
+             2..3
+         );
+         assert_eq!(
+-            <PointerDirectMapped as Indices<*mut u64, Capacity4>>::indices(&(24 as *mut u64)),
++            <PointerDirectMapped as Indices<*mut u64, Capacity4>>::indices(&((3 * align) as *mut u64)),
+             3..4
+         );
+         assert_eq!(
+-            <PointerDirectMapped as Indices<*mut u64, Capacity4>>::indices(&(32 as *mut u64)),
++            <PointerDirectMapped as Indices<*mut u64, Capacity4>>::indices(&((4 * align) as *mut u64)),
+             0..1
+         );
+     }
+ 
+     #[test]
+     fn pointer_two_way() {
++	let align = std::mem::align_of::<u64>();
++
+         assert_eq!(
+-            <PointerTwoWay as Indices<*mut u64, Capacity4>>::indices(&(0 as *mut u64)),
++            <PointerTwoWay as Indices<*mut u64, Capacity4>>::indices(&((0 * align) as *mut u64)),
+             0..2
+         );
+         assert_eq!(
+-            <PointerTwoWay as Indices<*mut u64, Capacity4>>::indices(&(8 as *mut u64)),
++            <PointerTwoWay as Indices<*mut u64, Capacity4>>::indices(&((1 * align) as *mut u64)),
+             2..4
+         );
+         assert_eq!(
+-            <PointerTwoWay as Indices<*mut u64, Capacity4>>::indices(&(16 as *mut u64)),
++            <PointerTwoWay as Indices<*mut u64, Capacity4>>::indices(&((2 * align) as *mut u64)),
+             0..2
+         );
+         assert_eq!(
+-            <PointerTwoWay as Indices<*mut u64, Capacity4>>::indices(&(24 as *mut u64)),
++            <PointerTwoWay as Indices<*mut u64, Capacity4>>::indices(&((3 * align) as *mut u64)),
+             2..4
+         );
+         assert_eq!(
+-            <PointerTwoWay as Indices<*mut u64, Capacity4>>::indices(&(32 as *mut u64)),
++            <PointerTwoWay as Indices<*mut u64, Capacity4>>::indices(&((4 * align) as *mut u64)),
+             0..2
+         );
+     }
