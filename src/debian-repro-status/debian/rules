@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+execute_before_dh_installman:
+	help2man \
+		--name debian-repro-status \
+		--no-info \
+		debian/debian-repro-status/usr/bin/debian-repro-status > debian/debian-repro-status.1
+
+override_dh_dwz:
+	# Don't do anything. fails because of the
+	# https://github.com/rust-lang/rust/issues/66118
