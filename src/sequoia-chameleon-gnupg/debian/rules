@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-export DH_VERBOSE = 1
+#export DH_VERBOSE = 1
 export ASSET_OUT_DIR=debian/tmp
 
 include /usr/share/dpkg/pkg-info.mk
@@ -16,6 +16,7 @@ execute_after_dh_auto_configure:
 ifeq ($(DEB_HOST_ARCH_BITS),64)
 	echo 'lto="fat"' >> debian/cargo_home/config.toml
 	echo 'codegen-units=1' >> debian/cargo_home/config.toml
+	echo 'opt-level="z"' >> debian/cargo_home/config.toml
 	cat debian/cargo_home/config.toml
 endif
 
