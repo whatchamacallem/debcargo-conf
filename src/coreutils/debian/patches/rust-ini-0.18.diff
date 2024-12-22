@@ -2,23 +2,23 @@ This patch reverts part of https://github.com/uutils/coreutils/commit/19901055a2
 it seems removing the .iter fixes a warning with newer rust-ini but breaks
 the build with older rust-ini
 
-Index: rust-coreutils-0.0.27/Cargo.toml
+Index: coreutils/Cargo.toml
 ===================================================================
---- rust-coreutils-0.0.27.orig/Cargo.toml
-+++ rust-coreutils-0.0.27/Cargo.toml
-@@ -316,7 +316,7 @@ rayon = "1"
- redox_syscall = "0"
+--- coreutils.orig/Cargo.toml
++++ coreutils/Cargo.toml
+@@ -323,7 +323,7 @@ rand_core = "0.6.4"
+ rayon = "1"
  regex = "1"
- rstest = "0"
+ rstest = "0.23.0"
 -rust-ini = "0.21.0"
 +rust-ini = ">= 0.18.0"
  same-file = "1.0.6"
  self_cell = "1"
  selinux = "0.4.4"
-Index: rust-coreutils-0.0.27/src/uu/env/src/env.rs
+Index: coreutils/src/uu/env/src/env.rs
 ===================================================================
---- rust-coreutils-0.0.27.orig/src/uu/env/src/env.rs
-+++ rust-coreutils-0.0.27/src/uu/env/src/env.rs
+--- coreutils.orig/src/uu/env/src/env.rs
++++ coreutils/src/uu/env/src/env.rs
 @@ -165,7 +165,7 @@ fn load_config_file(opts: &mut Options)
  
          for (_, prop) in &conf {
