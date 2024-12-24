@@ -1,0 +1,17 @@
+On 32-bit architectures with 64-bit time, glibc's definition of suseconds_t
+is inconsistent with it's definition of time_t, use "as _" to workaround
+this.
+
+Index: rust-sys-info-0.9.1/lib.rs
+===================================================================
+--- rust-sys-info-0.9.1.orig/lib.rs
++++ rust-sys-info-0.9.1/lib.rs
+@@ -824,7 +824,7 @@ pub fn boottime() -> Result<timeval, Err
+             .map(|val| val.parse::<f64>().unwrap())
+             .collect::<Vec<f64>>();
+         bt.tv_sec = secs[0] as libc::time_t;
+-        bt.tv_usec = secs[1] as libc::suseconds_t;
++        bt.tv_usec = secs[1] as _;
+ 	    return Ok(bt);
+     }
+     #[cfg(any(target_vendor = "apple", target_os="freebsd", target_os = "openbsd", target_os = "netbsd"))]
