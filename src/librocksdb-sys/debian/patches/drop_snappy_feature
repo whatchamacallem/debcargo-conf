@@ -1,6 +1,6 @@
 --- librocksdb-sys.orig/build.rs
 +++ librocksdb-sys/build.rs
-@@ -55,7 +55,6 @@
+@@ -52,7 +52,6 @@
  
      if cfg!(feature = "snappy") {
          config.define("SNAPPY", Some("1"));
@@ -8,7 +8,7 @@
      }
  
      if cfg!(feature = "lz4") {
-@@ -257,35 +256,6 @@
+@@ -290,38 +289,6 @@
      config.compile("librocksdb.a");
  }
  
@@ -24,6 +24,9 @@
 -
 -    if target.contains("msvc") {
 -        config.flag("-EHsc");
+-        if cfg!(feature = "mt_static") {
+-            config.static_crt(true);
+-        }
 -    } else {
 -        // Snappy requires C++11.
 -        // See: https://github.com/google/snappy/blob/master/CMakeLists.txt#L32-L38
@@ -44,7 +47,7 @@
  fn try_to_find_and_link_lib(lib_name: &str) -> bool {
      println!("cargo:rerun-if-env-changed={lib_name}_COMPILE");
      if let Ok(v) = env::var(format!("{lib_name}_COMPILE")) {
-@@ -360,8 +330,6 @@
+@@ -409,8 +376,6 @@
      }
      if cfg!(feature = "snappy") && !try_to_find_and_link_lib("SNAPPY") {
          println!("cargo:rerun-if-changed=snappy/");
@@ -53,7 +56,7 @@
      }
  
      // Allow dependent crates to locate the sources and output directory of
-@@ -376,8 +344,4 @@
+@@ -425,8 +390,4 @@
          "dh-cargo:deb-built-using=rocksdb=1={}",
          env::var("CARGO_MANIFEST_DIR").unwrap()
      );
@@ -64,8 +67,8 @@
  }
 --- librocksdb-sys.orig/Cargo.toml
 +++ librocksdb-sys/Cargo.toml
-@@ -90,6 +90,5 @@
- jemalloc = ["tikv-jemalloc-sys"]
+@@ -88,6 +88,5 @@
+ lto = []
  lz4 = ["lz4-sys"]
  rtti = []
 -snappy = []
