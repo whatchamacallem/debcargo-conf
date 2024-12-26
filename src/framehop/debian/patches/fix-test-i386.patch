@@ -1,0 +1,17 @@
+Index: rust-framehop-0.13.0/src/rule_cache.rs
+===================================================================
+--- rust-framehop-0.13.0.orig/src/rule_cache.rs
++++ rust-framehop-0.13.0/src/rule_cache.rs
+@@ -140,7 +140,11 @@ mod tests {
+         );
+         assert_eq!(
+             core::mem::size_of::<Option<CacheEntry<UnwindRuleAarch64>>>(),
+-            24 // <-- larger than we'd like
++            if core::mem::align_of::<u64>() == 8 {
++                24 // <-- larger than we'd like
++            } else {
++                20
++            }
+         );
+     }
+ }
