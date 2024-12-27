@@ -107,5 +107,5 @@ shouldbuild() {
 }
 
 get_existing_version() {
-	head -n1 $1/debian/changelog | sed -nre "s/.*\((.*)-.*\).*/\1/gp"
+	dpkg-parsechangelog -SVersion -l $1/debian/changelog | sed -e "s/-[^-]*$//" -e "s/~/-/"
 }
