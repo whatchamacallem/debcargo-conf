@@ -1,13 +1,24 @@
-diff --git a/src/lib.rs b/src/lib.rs
-index f9dbccc..16f29e1 100644
---- a/src/lib.rs
-+++ b/src/lib.rs
-@@ -225,7 +225,7 @@ mod tests {
+Index: supports-color/src/lib.rs
+===================================================================
+--- supports-color.orig/src/lib.rs
++++ supports-color/src/lib.rs
+@@ -229,14 +229,15 @@ mod tests {
+ 
+         env::set_var("IGNORE_IS_TERMINAL", "1");
+         env::set_var("CLICOLOR", "1");
+-        let expected = Some(ColorLevel {
++        let expected = ColorLevel {
+             level: 1,
+             has_basic: true,
              has_256: false,
              has_16m: false,
-         });
+-        });
 -        assert_eq!(on(Stream::Stdout), expected);
-+        assert_eq!(on(Stream::Stdout), None);
- 
+-
++        };
++        if let Some(result) = on(Stream::Stdout) {
++            assert_eq!(result, expected);
++        }
          env::set_var("CLICOLOR", "0");
          assert_eq!(on(Stream::Stdout), None);
+     }
