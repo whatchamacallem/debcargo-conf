@@ -63,7 +63,7 @@ BUILDNAME="${DEBSRC}_${DEBVER}_${DEB_HOST_ARCH}"
 
 if [ -z "$CHROOT" ]; then
 	if [ "$CHROOT_MODE" = "unshare" ]; then
-		CHROOT="$(find ~/.cache/sbuild -iname "debcargo-*-$DEB_HOST_ARCH" | head -n1)"
+		CHROOT="$(find ~/.cache/sbuild -iname "debcargo-*-$DEB_HOST_ARCH*" | head -n1)"
 		if [ -z "$CHROOT" ]; then
 			CHROOT="unstable-${DEB_HOST_ARCH}"
 			echo >&2 "Automatically using sbuild tarball unstable-${DEB_HOST_ARCH}; however it's"
