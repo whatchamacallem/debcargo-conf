@@ -1,0 +1,29 @@
+Description: Bump bindgen to v0.71
+ Bindgen v0.71 only supports rustc v1.33 and higher
+Author: NoisyCoil <noisycoil@tutanota.com>
+Forwarded: not-needed
+Last-Update: 2024-12-29
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -36,7 +36,7 @@
+ default-features = false
+ 
+ [build-dependencies.bindgen]
+-version = "0.59.1"
++version = "0.71"
+ optional = true
+ 
+ [build-dependencies.cc]
+--- a/build.rs
++++ b/build.rs
+@@ -240,7 +240,7 @@
+     out_impl_path: PathBuf,
+ ) {
+     let mut builder = bindgen::Builder::default()
+-        .rust_target(bindgen::RustTarget::Stable_1_19)
++        .rust_target(bindgen::RustTarget::Stable_1_33)
+         .size_t_is_usize(true)
+         .use_core()
+         .ctypes_prefix("libc")
