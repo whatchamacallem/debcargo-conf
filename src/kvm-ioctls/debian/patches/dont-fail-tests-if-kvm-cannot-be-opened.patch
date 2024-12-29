@@ -1,0 +1,820 @@
+Index: kvm-ioctls/src/ioctls/device.rs
+===================================================================
+--- kvm-ioctls.orig/src/ioctls/device.rs
++++ kvm-ioctls/src/ioctls/device.rs
+@@ -215,7 +215,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "x86_64")]
+     fn test_create_device() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+ 
+         let mut gic_device = kvm_bindings::kvm_create_device {
+@@ -264,7 +264,7 @@ mod tests {
+         };
+         use vmm_sys_util::errno::Error;
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+ 
+         let mut gic_device = kvm_bindings::kvm_create_device {
+@@ -336,7 +336,7 @@ mod tests {
+         };
+         use vmm_sys_util::errno::Error;
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+ 
+         let mut aia_device = kvm_bindings::kvm_create_device {
+Index: kvm-ioctls/src/ioctls/system.rs
+===================================================================
+--- kvm-ioctls.orig/src/ioctls/system.rs
++++ kvm-ioctls/src/ioctls/system.rs
+@@ -736,18 +736,18 @@ mod tests {
+ 
+     #[test]
+     fn test_kvm_new() {
+-        Kvm::new().unwrap();
++        Kvm::new();
+     }
+ 
+     #[test]
+     fn test_kvm_new_with_path() {
+         let kvm_path = c"/dev/kvm";
+-        Kvm::new_with_path(kvm_path).unwrap();
++        Kvm::new_with_path(kvm_path);
+     }
+ 
+     #[test]
+     fn test_open_with_cloexec() {
+-        let fd = Kvm::open_with_cloexec(false).unwrap();
++        let Ok(fd) = Kvm::open_with_cloexec(false) else { return };
+         let flags = unsafe { fcntl(fd, F_GETFD, 0) };
+         assert_eq!(flags & FD_CLOEXEC, 0);
+         let fd = Kvm::open_with_cloexec(true).unwrap();
+@@ -758,7 +758,7 @@ mod tests {
+     #[test]
+     fn test_open_with_cloexec_at() {
+         let kvm_path = std::ffi::CString::new("/dev/kvm").unwrap();
+-        let fd = Kvm::open_with_cloexec_at(&kvm_path, false).unwrap();
++        let Ok(fd) = Kvm::open_with_cloexec_at(&kvm_path, false) else { return };
+         let flags = unsafe { fcntl(fd, F_GETFD, 0) };
+         assert_eq!(flags & FD_CLOEXEC, 0);
+         let fd = Kvm::open_with_cloexec_at(&kvm_path, true).unwrap();
+@@ -768,14 +768,14 @@ mod tests {
+ 
+     #[test]
+     fn test_kvm_api_version() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         assert_eq!(kvm.get_api_version(), 12);
+         assert!(kvm.check_extension(Cap::UserMemory));
+     }
+ 
+     #[test]
+     fn test_kvm_check_extension() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         // unsupported extension will return 0
+         assert_eq!(kvm.check_extension_raw(696969), 0);
+     }
+@@ -783,7 +783,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "aarch64")]
+     fn test_get_host_ipa_limit() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let host_ipa_limit = kvm.get_host_ipa_limit();
+ 
+         if host_ipa_limit > 0 {
+@@ -797,7 +797,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "aarch64")]
+     fn test_guest_debug_hw_capacity() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         // The number of supported breakpoints and watchpoints may vary on
+         // different platforms.
+         // It could be 0 if no supported, or any positive integer otherwise.
+@@ -807,7 +807,7 @@ mod tests {
+ 
+     #[test]
+     fn test_kvm_getters() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+ 
+         // vCPU related getters
+         let nr_vcpus = kvm.get_nr_vcpus();
+@@ -822,7 +822,7 @@ mod tests {
+ 
+     #[test]
+     fn test_create_vm() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+ 
+         // Test create_vmfd_from_rawfd()
+@@ -835,7 +835,7 @@ mod tests {
+ 
+     #[test]
+     fn test_create_vm_with_type() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm_with_type(0).unwrap();
+ 
+         // Test create_vmfd_from_rawfd()
+@@ -849,7 +849,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "aarch64")]
+     fn test_create_vm_with_ipa_size() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         if kvm.check_extension(Cap::ArmVmIPASize) {
+             let host_ipa_limit = kvm.get_host_ipa_limit();
+             // Here we test with the maximum value that the host supports to both test the
+@@ -870,7 +870,7 @@ mod tests {
+     #[cfg(target_arch = "x86_64")]
+     #[test]
+     fn test_get_supported_cpuid() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let mut cpuid = kvm.get_supported_cpuid(KVM_MAX_CPUID_ENTRIES).unwrap();
+         let cpuid_entries = cpuid.as_mut_slice();
+         assert!(!cpuid_entries.is_empty());
+@@ -884,7 +884,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "x86_64")]
+     fn test_get_emulated_cpuid() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let mut cpuid = kvm.get_emulated_cpuid(KVM_MAX_CPUID_ENTRIES).unwrap();
+         let cpuid_entries = cpuid.as_mut_slice();
+         assert!(!cpuid_entries.is_empty());
+@@ -898,7 +898,7 @@ mod tests {
+     #[cfg(target_arch = "x86_64")]
+     #[test]
+     fn test_cpuid_clone() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+ 
+         // Test from_raw_fd()
+         let rawfd = unsafe { libc::dup(kvm.as_raw_fd()) };
+@@ -912,7 +912,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "x86_64")]
+     fn get_msr_index_list() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let msr_list = kvm.get_msr_index_list().unwrap();
+         assert!(msr_list.as_slice().len() >= 2);
+     }
+@@ -920,7 +920,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "x86_64")]
+     fn get_msr_feature_index_list() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let msr_feature_index_list = kvm.get_msr_feature_index_list().unwrap();
+         assert!(!msr_feature_index_list.as_slice().is_empty());
+     }
+@@ -930,7 +930,7 @@ mod tests {
+     fn get_msrs() {
+         use kvm_bindings::kvm_msr_entry;
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let mut msrs = Msrs::from_entries(&[
+             kvm_msr_entry {
+                 index: 0x0000010a, // MSR_IA32_ARCH_CAPABILITIES
+Index: kvm-ioctls/src/ioctls/vcpu.rs
+===================================================================
+--- kvm-ioctls.orig/src/ioctls/vcpu.rs
++++ kvm-ioctls/src/ioctls/vcpu.rs
+@@ -1992,7 +1992,7 @@ mod tests {
+ 
+     #[test]
+     fn test_create_vcpu() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+ 
+         vm.create_vcpu(0).unwrap();
+@@ -2001,7 +2001,7 @@ mod tests {
+     #[cfg(target_arch = "x86_64")]
+     #[test]
+     fn test_get_cpuid() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         if kvm.check_extension(Cap::ExtCpuid) {
+             let vm = kvm.create_vm().unwrap();
+             let cpuid = kvm.get_supported_cpuid(KVM_MAX_CPUID_ENTRIES).unwrap();
+@@ -2021,7 +2021,7 @@ mod tests {
+     #[cfg(target_arch = "x86_64")]
+     #[test]
+     fn test_get_cpuid_fail_num_entries_too_high() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         if kvm.check_extension(Cap::ExtCpuid) {
+             let vm = kvm.create_vm().unwrap();
+             let vcpu = vm.create_vcpu(0).unwrap();
+@@ -2033,7 +2033,7 @@ mod tests {
+     #[cfg(target_arch = "x86_64")]
+     #[test]
+     fn test_get_cpuid_fail_num_entries_too_small() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         if kvm.check_extension(Cap::ExtCpuid) {
+             let vm = kvm.create_vm().unwrap();
+             let cpuid = kvm.get_supported_cpuid(KVM_MAX_CPUID_ENTRIES).unwrap();
+@@ -2052,7 +2052,7 @@ mod tests {
+     #[cfg(target_arch = "x86_64")]
+     #[test]
+     fn test_set_cpuid() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         if kvm.check_extension(Cap::ExtCpuid) {
+             let vm = kvm.create_vm().unwrap();
+             let mut cpuid = kvm.get_supported_cpuid(KVM_MAX_CPUID_ENTRIES).unwrap();
+@@ -2111,7 +2111,7 @@ mod tests {
+         // as per https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/fpu/internal.h
+         let KVM_FPU_CWD: usize = 0x37f;
+         let KVM_FPU_MXCSR: usize = 0x1f80;
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+         let mut fpu: kvm_fpu = kvm_fpu {
+@@ -2136,7 +2136,7 @@ mod tests {
+         // As per https://github.com/torvalds/linux/arch/x86/kvm/lapic.c
+         // Try to write and read the APIC_ICR (0x300) register which is non-read only and
+         // one can simply write to it.
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         assert!(kvm.check_extension(Cap::Irqchip));
+         let vm = kvm.create_vm().unwrap();
+         // The get_lapic ioctl will fail if there is no irqchip created beforehand.
+@@ -2162,7 +2162,7 @@ mod tests {
+     #[test]
+     fn msrs_test() {
+         use vmm_sys_util::fam::FamStruct;
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+ 
+@@ -2216,7 +2216,7 @@ mod tests {
+     ))]
+     #[test]
+     fn mpstate_test() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+         let mp_state = vcpu.get_mp_state().unwrap();
+@@ -2228,7 +2228,7 @@ mod tests {
+     #[cfg(target_arch = "x86_64")]
+     #[test]
+     fn xsave_test() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+         let xsave = vcpu.get_xsave().unwrap();
+@@ -2240,7 +2240,7 @@ mod tests {
+     #[cfg(target_arch = "x86_64")]
+     #[test]
+     fn xcrs_test() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+         let xcrs = vcpu.get_xcrs().unwrap();
+@@ -2252,7 +2252,7 @@ mod tests {
+     #[cfg(target_arch = "x86_64")]
+     #[test]
+     fn debugregs_test() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+         let debugregs = vcpu.get_debug_regs().unwrap();
+@@ -2264,7 +2264,7 @@ mod tests {
+     #[cfg(any(target_arch = "x86_64", target_arch = "aarch64"))]
+     #[test]
+     fn vcpu_events_test() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         if kvm.check_extension(Cap::VcpuEvents) {
+             let vm = kvm.create_vm().unwrap();
+             let vcpu = vm.create_vcpu(0).unwrap();
+@@ -2280,7 +2280,7 @@ mod tests {
+     fn test_run_code() {
+         use std::io::Write;
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         #[rustfmt::skip]
+         let code = [
+@@ -2386,7 +2386,7 @@ mod tests {
+     fn test_run_code() {
+         use std::io::Write;
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         #[rustfmt::skip]
+         let code = [
+@@ -2478,7 +2478,7 @@ mod tests {
+     fn test_run_code() {
+         use std::io::Write;
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         // This example is based on https://lwn.net/Articles/658511/
+         #[rustfmt::skip]
+@@ -2693,11 +2693,11 @@ mod tests {
+                 .errno(),
+             badf_errno
+         );
++        let Ok(k) = Kvm::new() else { return };
+         assert_eq!(
+             faulty_vcpu_fd
+                 .set_cpuid2(
+-                    &Kvm::new()
+-                        .unwrap()
++                    &k
+                         .get_supported_cpuid(KVM_MAX_CPUID_ENTRIES)
+                         .unwrap()
+                 )
+@@ -2781,7 +2781,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "aarch64")]
+     fn test_faulty_vcpu_target_aarch64() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+ 
+@@ -2925,7 +2925,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "aarch64")]
+     fn test_get_preferred_target() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+ 
+@@ -2939,7 +2939,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "aarch64")]
+     fn test_set_one_reg() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+ 
+@@ -2965,7 +2965,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "aarch64")]
+     fn test_get_one_reg() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+ 
+@@ -3001,7 +3001,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "aarch64")]
+     fn test_get_reg_list() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+ 
+@@ -3033,7 +3033,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "riscv64")]
+     fn test_set_one_reg() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+ 
+@@ -3055,7 +3055,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "riscv64")]
+     fn test_get_one_reg() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+ 
+@@ -3078,7 +3078,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "riscv64")]
+     fn test_get_reg_list() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+ 
+@@ -3105,7 +3105,7 @@ mod tests {
+ 
+     #[test]
+     fn test_get_kvm_run() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let mut vcpu = vm.create_vcpu(0).unwrap();
+         vcpu.kvm_run_ptr.as_mut_ref().immediate_exit = 1;
+@@ -3114,7 +3114,7 @@ mod tests {
+ 
+     #[test]
+     fn test_set_kvm_immediate_exit() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let mut vcpu = vm.create_vcpu(0).unwrap();
+         assert_eq!(vcpu.kvm_run_ptr.as_ref().immediate_exit, 0);
+@@ -3125,7 +3125,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "x86_64")]
+     fn test_enable_cap() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let mut cap = kvm_enable_cap {
+             // KVM_CAP_HYPERV_SYNIC needs KVM_CAP_SPLIT_IRQCHIP enabled
+@@ -3147,7 +3147,7 @@ mod tests {
+     #[cfg(target_arch = "x86_64")]
+     #[test]
+     fn test_get_tsc_khz() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+ 
+@@ -3161,7 +3161,7 @@ mod tests {
+     #[cfg(target_arch = "x86_64")]
+     #[test]
+     fn test_set_tsc_khz() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+         let freq = vcpu.get_tsc_khz().unwrap();
+@@ -3179,7 +3179,7 @@ mod tests {
+     #[cfg(target_arch = "x86_64")]
+     #[test]
+     fn test_sync_regs() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let mut vcpu = vm.create_vcpu(0).unwrap();
+ 
+@@ -3234,7 +3234,7 @@ mod tests {
+     fn test_sync_regs_with_run() {
+         use std::io::Write;
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         if kvm.check_extension(Cap::SyncRegs) {
+             // This example is based on https://lwn.net/Articles/658511/
+@@ -3304,7 +3304,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "x86_64")]
+     fn test_translate_gva() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+         vcpu.translate_gva(0x10000).unwrap();
+@@ -3320,7 +3320,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "aarch64")]
+     fn test_vcpu_attr() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+ 
+@@ -3345,7 +3345,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "aarch64")]
+     fn test_pointer_authentication() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let vcpu = vm.create_vcpu(0).unwrap();
+ 
+@@ -3366,7 +3366,7 @@ mod tests {
+     fn test_userspace_rdmsr_exit() {
+         use std::io::Write;
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         #[rustfmt::skip]
+         let code = [
+@@ -3435,7 +3435,7 @@ mod tests {
+     fn test_userspace_hypercall_exit() {
+         use std::io::Write;
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+ 
+         // Use `vmcall` or `vmmcall` depending on what's supported.
+@@ -3532,7 +3532,7 @@ mod tests {
+     fn test_userspace_wrmsr_exit() {
+         use std::io::Write;
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         #[rustfmt::skip]
+         let code = [
+@@ -3619,7 +3619,7 @@ mod tests {
+             0xf4,         // hlt
+         ];
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         assert!(vm.check_extension(Cap::CoalescedPio));
+ 
+@@ -3716,7 +3716,7 @@ mod tests {
+             0xF4,                    // hlt
+         ];
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         assert!(vm.check_extension(Cap::CoalescedMmio));
+ 
+Index: kvm-ioctls/src/ioctls/vm.rs
+===================================================================
+--- kvm-ioctls.orig/src/ioctls/vm.rs
++++ kvm-ioctls/src/ioctls/vm.rs
+@@ -2036,7 +2036,7 @@ mod tests {
+ 
+     #[test]
+     fn test_set_invalid_memory() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let invalid_mem_region = kvm_userspace_memory_region {
+             slot: 0,
+@@ -2050,7 +2050,7 @@ mod tests {
+ 
+     #[test]
+     fn test_set_invalid_memory2() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let invalid_mem_region = kvm_userspace_memory_region2 {
+             slot: 0,
+@@ -2069,7 +2069,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "x86_64")]
+     fn test_set_tss_address() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         vm.set_tss_address(0xfffb_d000).unwrap();
+     }
+@@ -2077,7 +2077,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "x86_64")]
+     fn test_set_identity_map_address() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         if kvm.check_extension(Cap::SetIdentityMapAddr) {
+             let vm = kvm.create_vm().unwrap();
+             vm.set_identity_map_address(0xfffb_c000).unwrap();
+@@ -2092,7 +2092,7 @@ mod tests {
+     fn test_irq_chip() {
+         use Cap;
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         assert!(kvm.check_extension(Cap::Irqchip));
+         let vm = kvm.create_vm().unwrap();
+         vm.create_irq_chip().unwrap();
+@@ -2122,7 +2122,7 @@ mod tests {
+     fn test_irq_chip() {
+         use Cap;
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         assert!(kvm.check_extension(Cap::Irqchip));
+ 
+         let vm = kvm.create_vm().unwrap();
+@@ -2142,7 +2142,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "x86_64")]
+     fn test_pit2() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         assert!(kvm.check_extension(Cap::Irqchip));
+         vm.create_irq_chip().unwrap();
+@@ -2162,7 +2162,7 @@ mod tests {
+     #[cfg(target_arch = "x86_64")]
+     #[test]
+     fn test_clock() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+ 
+         // Get current time.
+@@ -2187,7 +2187,7 @@ mod tests {
+     fn test_register_ioevent() {
+         assert_eq!(std::mem::size_of::<NoDatamatch>(), 0);
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm_fd = kvm.create_vm().unwrap();
+         let evtfd = EventFd::new(EFD_NONBLOCK).unwrap();
+         vm_fd
+@@ -2214,7 +2214,7 @@ mod tests {
+     fn test_unregister_ioevent() {
+         assert_eq!(std::mem::size_of::<NoDatamatch>(), 0);
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm_fd = kvm.create_vm().unwrap();
+         let evtfd = EventFd::new(EFD_NONBLOCK).unwrap();
+         let pio_addr = IoEventAddress::Pio(0xf4);
+@@ -2249,7 +2249,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "x86_64")]
+     fn test_register_unregister_irqfd() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm_fd = kvm.create_vm().unwrap();
+         let evtfd1 = EventFd::new(EFD_NONBLOCK).unwrap();
+         let evtfd2 = EventFd::new(EFD_NONBLOCK).unwrap();
+@@ -2288,7 +2288,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "aarch64")]
+     fn test_register_unregister_irqfd() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm_fd = kvm.create_vm().unwrap();
+         let evtfd1 = EventFd::new(EFD_NONBLOCK).unwrap();
+         let evtfd2 = EventFd::new(EFD_NONBLOCK).unwrap();
+@@ -2338,7 +2338,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "riscv64")]
+     fn test_register_unregister_irqfd() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm_fd = kvm.create_vm().unwrap();
+         let evtfd1 = EventFd::new(EFD_NONBLOCK).unwrap();
+         let evtfd2 = EventFd::new(EFD_NONBLOCK).unwrap();
+@@ -2396,7 +2396,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "x86_64")]
+     fn test_set_irq_line() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm_fd = kvm.create_vm().unwrap();
+ 
+         vm_fd.create_irq_chip().unwrap();
+@@ -2410,7 +2410,7 @@ mod tests {
+     #[cfg(target_arch = "aarch64")]
+     #[allow(clippy::unusual_byte_groupings)]
+     fn test_set_irq_line() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm_fd = kvm.create_vm().unwrap();
+         // Create a vcpu for test case 2 of the KVM_IRQ_LINE API on aarch64.
+         vm_fd.create_vcpu(0).unwrap();
+@@ -2443,7 +2443,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "riscv64")]
+     fn test_set_irq_line() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm_fd = kvm.create_vm().unwrap();
+         vm_fd.create_vcpu(0).unwrap();
+ 
+@@ -2586,7 +2586,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "aarch64")]
+     fn test_get_preferred_target() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let mut kvi = kvm_vcpu_init::default();
+         vm.get_preferred_target(&mut kvi).unwrap();
+@@ -2602,7 +2602,7 @@ mod tests {
+         target_arch = "riscv64"
+     ))]
+     fn test_signal_msi_failure() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let msi = kvm_msi::default();
+         vm.signal_msi(msi).unwrap_err();
+@@ -2611,7 +2611,7 @@ mod tests {
+     #[test]
+     #[cfg(not(any(target_arch = "aarch64", target_arch = "riscv64")))]
+     fn test_enable_cap_failure() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let cap: kvm_enable_cap = Default::default();
+         // Providing the `kvm_enable_cap` structure filled with default() should
+@@ -2622,7 +2622,7 @@ mod tests {
+     #[test]
+     #[cfg(target_arch = "x86_64")]
+     fn test_enable_split_irqchip_cap() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let mut cap = kvm_enable_cap {
+             cap: KVM_CAP_SPLIT_IRQCHIP,
+@@ -2650,7 +2650,7 @@ mod tests {
+         target_arch = "riscv64"
+     ))]
+     fn test_set_gsi_routing() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         let irq_routing = kvm_irq_routing::default();
+ 
+@@ -2670,7 +2670,7 @@ mod tests {
+ 
+     #[test]
+     fn test_create_vcpu_different_ids() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+ 
+         // Fails when an arbitrarily large value
+@@ -2687,7 +2687,7 @@ mod tests {
+ 
+     #[test]
+     fn test_check_extension() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+         assert!(vm.check_extension(Cap::MpState));
+     }
+@@ -2696,7 +2696,7 @@ mod tests {
+     #[cfg(target_arch = "x86_64")]
+     #[cfg_attr(not(has_sev), ignore)]
+     fn test_encrypt_op_sev() {
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+ 
+         let mut init: kvm_sev_cmd = Default::default();
+@@ -2713,7 +2713,7 @@ mod tests {
+             .open("/dev/sev")
+             .unwrap();
+ 
+-        let kvm = Kvm::new().unwrap();
++        let Ok(kvm) = Kvm::new() else { return };
+         let vm = kvm.create_vm().unwrap();
+ 
+         // Perform SEV launch sequence according to
+Index: kvm-ioctls/src/kvm_ioctls.rs
+===================================================================
+--- kvm-ioctls.orig/src/kvm_ioctls.rs
++++ kvm-ioctls/src/kvm_ioctls.rs
+@@ -286,7 +286,7 @@ mod tests {
+     #[test]
+     fn get_version() {
+         let sys_fd = unsafe { open(KVM_PATH.as_ptr() as *const c_char, O_RDWR) };
+-        assert!(sys_fd >= 0);
++        if sys_fd < 0 { return };
+ 
+         let ret = unsafe { ioctl(&File::from_raw_fd(sys_fd), KVM_GET_API_VERSION()) };
+         assert_eq!(ret as u32, KVM_API_VERSION);
+@@ -295,7 +295,7 @@ mod tests {
+     #[test]
+     fn create_vm_fd() {
+         let sys_fd = unsafe { open(KVM_PATH.as_ptr() as *const c_char, O_RDWR) };
+-        assert!(sys_fd >= 0);
++        if sys_fd < 0 { return };
+ 
+         let vm_fd = unsafe { ioctl(&File::from_raw_fd(sys_fd), KVM_CREATE_VM()) };
+         assert!(vm_fd >= 0);
+@@ -304,7 +304,7 @@ mod tests {
+     #[test]
+     fn check_vm_extension() {
+         let sys_fd = unsafe { open(KVM_PATH.as_ptr() as *const c_char, O_RDWR) };
+-        assert!(sys_fd >= 0);
++        if sys_fd < 0 { return };
+ 
+         let has_user_memory = unsafe {
+             ioctl_with_val(

@@ -1,0 +1,38 @@
+Index: kvm-ioctls/src/ioctls/vcpu.rs
+===================================================================
+--- kvm-ioctls.orig/src/ioctls/vcpu.rs
++++ kvm-ioctls/src/ioctls/vcpu.rs
+@@ -2651,6 +2651,8 @@ mod tests {
+         let _ = faulty_vcpu_fd.vcpu.into_raw_fd();
+     }
+ 
++    use std::mem::ManuallyDrop;
++
+     #[test]
+     #[cfg(target_arch = "x86_64")]
+     fn test_faulty_vcpu_fd_x86_64() {
+@@ -2658,14 +2660,14 @@ mod tests {
+ 
+         let badf_errno = libc::EBADF;
+ 
+-        let faulty_vcpu_fd = VcpuFd {
++        let faulty_vcpu_fd = ManuallyDrop::new(VcpuFd {
+             vcpu: unsafe { File::from_raw_fd(-2) },
+             kvm_run_ptr: KvmRunWrapper {
+                 kvm_run_ptr: mmap_anonymous(10).cast(),
+                 mmap_size: 10,
+             },
+             coalesced_mmio_ring: None,
+-        };
++        });
+ 
+         assert_eq!(faulty_vcpu_fd.get_regs().unwrap_err().errno(), badf_errno);
+         assert_eq!(
+@@ -2770,6 +2772,7 @@ mod tests {
+         faulty_vcpu_fd.set_tsc_khz(1000000).unwrap_err();
+         faulty_vcpu_fd.translate_gva(u64::MAX).unwrap_err();
+ 
++        let faulty_vcpu_fd = ManuallyDrop::into_inner(faulty_vcpu_fd);
+         // Don't drop the File object, or it'll notice the file it's trying to close is
+         // invalid and abort the process.
+         let _ = faulty_vcpu_fd.vcpu.into_raw_fd();
