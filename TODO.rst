@@ -45,33 +45,16 @@ note: (stable) rustfmt is shipped as part of src:rustc nowadays..
   * rustc-ap-syntax-pos
   * rustc-ap-serialize (fails because of usage of nightly feature)
 
-bat update
-----------
-
-syntect is in debian 
-Needs syntect => onig => onig-sys => bindgen 0.55 (for librust-bindgen-0.51+runtime-dev)
-Disabling syntect in bat causes:
-error[E0433]: failed to resolve: use of undeclared type or module `syntect`
- --> src/terminal.rs:4:5
-
 
 bingrep
 -------
 
 * metagoblin
 
-tokei
------
-
-needs handlebars
-which needs pest
-which needs ucd-trie
-
 librsvg
 -------
 
 see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=907629  
-
 
 
 bench
@@ -83,15 +66,6 @@ cargo-deb
 ----------------
 
 * should be packagable
-
-
-clap v2 dependency list 
------------------------
-structopt used clap v2
-dotenv is unmaintained and superseded by dotenvy which uses clap v3; 
-hexyl uses clapv4
-sniffglue, git-absorb, sha1collision, gcov, libslirp and cargo-binutils depend on structopt
-rav1e uses also clap4
 
 
 GTK stack dependency tree
@@ -150,16 +124,6 @@ Non-sys crate overview
 * gstreamer-audio -> gstreamer-audio
 * gstreamer-play -> gstreamer-video
   
-cxx depedency tree
------------------
-
-* cxx (level 2)
- * cxx-build (level 1)
- * cxx-gen (level 1)
- * cxxbridge-macros (level 1)
- * cxxbridge-flags (level 1)
- * link-cplusplus (level 1)
-
 matrix-sdk dependency tree
 --------------------------
 
@@ -232,7 +196,6 @@ Binary crates worth packaging (please add if you know more):
 - hg - Rust implement of hg
 - jql - JSON Query Language CLI tool.
 - macchina - fetch CLI tool (https://github.com/Macchina-CLI/macchina)
-- meli - terminal mail client (https://meli.delivery/)
 - recode_rs - CLI tool converting between the character encodings.
 - resvg - SVG renderer (in Debian; packaged separately, but doesn’t build anymore)
 - rural - User-friendly command-line HTTP tool
