@@ -1,0 +1,28 @@
+Index: cc-traits/src/impls/serde_json.rs
+===================================================================
+--- cc-traits.orig/src/impls/serde_json.rs
++++ cc-traits/src/impls/serde_json.rs
+@@ -3,7 +3,10 @@ use crate::{
+ 	Len, MapInsert, MapIter, MapIterMut, Remove, SimpleCollectionMut, SimpleCollectionRef,
+ 	SimpleKeyedRef,
+ };
+-use std::{borrow::Borrow, cmp::Ord, hash::Hash};
++use core::{borrow::Borrow, cmp::Ord, hash::Hash};
++
++#[cfg(not(feature = "std"))]
++use alloc::string::String;
+ 
+ impl Collection for serde_json::Map<String, serde_json::Value> {
+ 	type Item = serde_json::Value;
+Index: cc-traits/Cargo.toml
+===================================================================
+--- cc-traits.orig/Cargo.toml
++++ cc-traits/Cargo.toml
+@@ -54,3 +54,7 @@ default = [
+     "std",
+ ]
+ std = []
++serde_json = [
++    "dep:serde_json",
++    "alloc"
++]
