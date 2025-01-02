@@ -5,7 +5,7 @@ Index: terminal-size/src/unix.rs
 ===================================================================
 --- terminal-size.orig/src/unix.rs
 +++ terminal-size/src/unix.rs
-@@ -42,6 +42,29 @@ fn compare_with_stty() {
+@@ -61,6 +61,29 @@ fn compare_with_stty() {
      use std::process::Command;
      use std::process::Stdio;
  
@@ -35,7 +35,7 @@ Index: terminal-size/src/unix.rs
      let (rows, cols) = if cfg!(target_os = "illumos") {
          // illumos stty(1) does not accept a device argument, instead using
          // stdin unconditionally:
-@@ -77,14 +100,14 @@ fn compare_with_stty() {
+@@ -96,14 +119,14 @@ fn compare_with_stty() {
              Command::new("stty")
                  .arg("size")
                  .arg("-F")
@@ -52,7 +52,7 @@ Index: terminal-size/src/unix.rs
                  .arg("size")
                  .stderr(Stdio::inherit())
                  .output()
-@@ -102,7 +125,7 @@ fn compare_with_stty() {
+@@ -121,7 +144,7 @@ fn compare_with_stty() {
      };
      println!("{} {}", rows, cols);
  
@@ -65,10 +65,13 @@ Index: terminal-size/Cargo.toml
 ===================================================================
 --- terminal-size.orig/Cargo.toml
 +++ terminal-size/Cargo.toml
-@@ -33,2 +33,5 @@ repository = "https://github.com/eminenc
+@@ -46,6 +46,9 @@ path = "examples/get_size.rs"
+ version = "0.38.0"
+ features = ["termios"]
  
 +[target."cfg(not(windows))".dev-dependencies.libc]
 +version = "0.2"
 +
  [target."cfg(windows)".dependencies.windows-sys]
-
+ version = "0.59.0"
+ features = [
