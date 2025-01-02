@@ -1,70 +1,74 @@
-diff --git a/src/dumps.rs b/src/dumps.rs
-index 6a06212..7a6a4c3 100644
 --- a/src/dumps.rs
 +++ b/src/dumps.rs
-@@ -163,7 +163,7 @@ impl ThemeSet {
+@@ -219,7 +219,7 @@
  
  #[cfg(test)]
  mod tests {
--    #[cfg(all(feature = "yaml-load", any(feature = "dump-create", feature = "dump-create-rs"), any(feature = "dump-load", feature = "dump-load-rs")))]
-+    /* #[cfg(all(feature = "yaml-load", any(feature = "dump-create", feature = "dump-create-rs"), any(feature = "dump-load", feature = "dump-load-rs")))]
-     #[test]
-     fn can_dump_and_load() {
-         use super::*;
-@@ -197,7 +197,7 @@ mod tests {
+-    #[cfg(all(
++    /* #[cfg(all(
+         feature = "yaml-load",
+         feature = "dump-create",
+         feature = "dump-load",
+@@ -262,7 +262,7 @@
          // vector, so check the length first to fail faster.
          assert_eq!(bin1.len(), bin2.len());
          assert_eq!(bin1, bin2);
 -    }
 +    } */
  
-     #[cfg(all(feature = "assets", any(feature = "dump-load", feature = "dump-load-rs")))]
+     #[cfg(feature = "default-themes")]
      #[test]
-diff --git a/src/easy.rs b/src/easy.rs
-index 023a83e..ca72100 100644
 --- a/src/easy.rs
 +++ b/src/easy.rs
-@@ -271,14 +271,14 @@ mod tests {
+@@ -137,7 +137,7 @@
+     ///
+     /// This example uses `reader.lines()` to get lines without a newline character, it's simpler but may break on rare tricky cases.
+     ///
+-    /// ```
++    /// ```no_run
+     /// use syntect_no_panic::parsing::SyntaxSet;
+     /// use syntect_no_panic::highlighting::{ThemeSet, Style};
+     /// use syntect_no_panic::util::as_24_bit_terminal_escaped;
+@@ -292,7 +292,7 @@
+         assert!(ranges.len() > 4);
      }
  
+-    #[cfg(all(feature = "default-syntaxes", feature = "default-themes"))]
++    /* #[cfg(all(feature = "default-syntaxes", feature = "default-themes"))]
      #[test]
--    fn can_highlight_file() {
-+    /* fn can_highlight_file() {
+     fn can_highlight_file() {
          let ss = SyntaxSet::load_defaults_nonewlines();
-         let ts = ThemeSet::load_defaults();
-         HighlightFile::new("testdata/highlight_test.erb",
-                            &ss,
-                            &ts.themes["base16-ocean.dark"])
-             .unwrap();
+@@ -303,7 +303,7 @@
+             &ts.themes["base16-ocean.dark"],
+         )
+         .unwrap();
 -    }
 +    } */
  
+     #[cfg(feature = "default-syntaxes")]
      #[test]
-     fn can_find_regions() {
-diff --git a/src/highlighting/highlighter.rs b/src/highlighting/highlighter.rs
-index 2ebe50e..2e6f63c 100644
 --- a/src/highlighting/highlighter.rs
 +++ b/src/highlighting/highlighter.rs
-@@ -377,7 +377,7 @@ mod tests {
-     use crate::highlighting::{ThemeSet, Style, Color, FontStyle};
-     use crate::parsing::{ SyntaxSet, ScopeStack, ParseState};
+@@ -392,7 +392,7 @@
+     use crate::highlighting::{Color, FontStyle, Style, ThemeSet};
+     use crate::parsing::{ParseState, ScopeStack, SyntaxSet};
  
 -    #[test]
 +    /* #[test]
      fn can_parse() {
          let ps = SyntaxSet::load_from_folder("testdata/Packages").unwrap();
          let mut state = {
-@@ -457,7 +457,7 @@ mod tests {
-                        font_style: FontStyle::empty(),
-                    },
-                     "multiline comment"));
+@@ -481,7 +481,7 @@
+                 "multiline comment"
+             )
+         );
 -    }
 +    } */
  
      // see issues #133 and #203, this test tests the fixes for those issues
      #[test]
-@@ -536,7 +536,7 @@ mod tests {
-         assert_eq!(full_mod, StyleModifier { foreground: Some(c1), background: None, font_style: Some(FontStyle::ITALIC) });
+@@ -604,7 +604,7 @@
+         );
      }
  
 -    #[test]
@@ -72,37 +76,33 @@ index 2ebe50e..2e6f63c 100644
      fn test_ranges() {
          let ps = SyntaxSet::load_from_folder("testdata/Packages").unwrap();
          let mut state = {
-@@ -569,5 +569,5 @@ mod tests {
-                        font_style: FontStyle::empty(),
-                    },
-                     "5", Range { start: 30, end: 31 }));
+@@ -642,5 +642,5 @@
+                 Range { start: 30, end: 31 }
+             )
+         );
 -    }
 +    } */
  }
-diff --git a/src/highlighting/theme_set.rs b/src/highlighting/theme_set.rs
-index 419e874..75f926c 100644
 --- a/src/highlighting/theme_set.rs
 +++ b/src/highlighting/theme_set.rs
-@@ -71,7 +71,7 @@ impl ThemeSet {
+@@ -79,7 +79,7 @@
+     }
  }
- 
  
 -#[cfg(test)]
 +/* #[cfg(test)]
  mod tests {
-     use crate::highlighting::{ThemeSet, Color};
+     use crate::highlighting::{Color, ThemeSet};
      #[cfg(feature = "plist-load")]
-@@ -101,4 +101,4 @@ mod tests {
-                    });
+@@ -131,4 +131,4 @@
+         );
          // unreachable!();
      }
 -}
 +} */
-diff --git a/src/html.rs b/src/html.rs
-index 4e564c9..ba08802 100644
 --- a/src/html.rs
 +++ b/src/html.rs
-@@ -530,7 +530,7 @@ mod tests {
+@@ -558,7 +558,7 @@
      use crate::highlighting::{HighlightIterator, HighlightState, Highlighter, Style, ThemeSet};
      use crate::parsing::{ParseState, ScopeStack, SyntaxDefinition, SyntaxSet, SyntaxSetBuilder};
      use crate::util::LinesWithEndings;
@@ -111,8 +111,8 @@ index 4e564c9..ba08802 100644
      fn tokens() {
          let ss = SyntaxSet::load_defaults_newlines();
          let syntax = ss.find_syntax_by_name("Markdown").unwrap();
-@@ -623,7 +623,7 @@ mod tests {
-             html_generator.parse_html_for_line_which_includes_newline(line);
+@@ -657,7 +657,7 @@
+                 .expect("#[cfg(test)]");
          }
          html_generator.finalize();
 -    }
@@ -120,31 +120,27 @@ index 4e564c9..ba08802 100644
  
      #[test]
      fn test_classed_html_generator() {
-diff --git a/src/parsing/metadata.rs b/src/parsing/metadata.rs
-index ea1e466..61f72ff 100644
 --- a/src/parsing/metadata.rs
 +++ b/src/parsing/metadata.rs
-@@ -408,7 +408,7 @@ impl<'de> Deserialize<'de> for MetadataSet {
+@@ -485,7 +485,7 @@
+     }
  }
- 
  
 -#[cfg(test)]
 +/* #[cfg(test)]
  mod tests {
-     use std::path::Path;
      use super::*;
-@@ -494,4 +494,4 @@ mod tests {
-         assert_eq!(indent_ctx.increase_indent("struct This {}"), false);
- 
+     use crate::parsing::SyntaxSet;
+@@ -594,4 +594,4 @@
+         assert!(!indent_ctx.decrease_indent("struct This {}"));
+         assert!(!indent_ctx.increase_indent("struct This {}"));
      }
 -}
 +} */
-diff --git a/src/parsing/parser.rs b/src/parsing/parser.rs
-index d71947c..ea439e0 100644
 --- a/src/parsing/parser.rs
 +++ b/src/parsing/parser.rs
-@@ -688,7 +688,7 @@ mod tests {
-     use crate::parsing::ScopeStackOp::{Push, Pop, Clear, Restore};
+@@ -744,7 +744,7 @@
+     use crate::parsing::{Scope, ScopeStack, SyntaxSet, SyntaxSetBuilder};
      use crate::util::debug_print_ops;
  
 -    const TEST_SYNTAX: &str = include_str!("../../testdata/parser_tests.sublime-syntax");
@@ -152,7 +148,7 @@ index d71947c..ea439e0 100644
  
      #[test]
      fn can_parse_simple() {
-@@ -941,7 +941,7 @@ mod tests {
+@@ -1058,7 +1058,7 @@
              "<source.test>, <test>, <keyword.control.test>",
          ];
          expect_scope_stacks(line, &expect, TEST_SYNTAX);
@@ -161,7 +157,7 @@ index d71947c..ea439e0 100644
  
      #[test]
      fn can_parse_prototype_that_pops_main() {
-@@ -990,7 +990,7 @@ contexts:
+@@ -1107,7 +1107,7 @@
          expect_scope_stacks(line, &expect, syntax);
      }
  
@@ -170,7 +166,7 @@ index d71947c..ea439e0 100644
      fn can_parse_issue120() {
          let syntax = SyntaxDefinition::load_from_str(
              include_str!("../../testdata/embed_escape_test.sublime-syntax"),
-@@ -1016,7 +1016,7 @@ contexts:
+@@ -1134,7 +1134,7 @@
              "<top-level.test>",
          ];
          expect_scope_stacks_with_syntax(line2, &expect2, syntax);
@@ -179,12 +175,10 @@ index d71947c..ea439e0 100644
  
      #[test]
      fn can_parse_non_consuming_pop_that_would_loop() {
-diff --git a/src/parsing/syntax_set.rs b/src/parsing/syntax_set.rs
-index 04d8224..1ebf6f3 100644
 --- a/src/parsing/syntax_set.rs
 +++ b/src/parsing/syntax_set.rs
-@@ -773,7 +773,7 @@ mod tests {
-     use crate::parsing::{ParseState, Scope, syntax_definition};
+@@ -947,7 +947,7 @@
+     use crate::parsing::{syntax_definition, ParseState, Scope};
      use std::collections::HashMap;
  
 -    #[test]
@@ -192,8 +186,8 @@ index 04d8224..1ebf6f3 100644
      fn can_load() {
          let mut builder = SyntaxSetBuilder::new();
          builder.add_from_folder("testdata/Packages", false).unwrap();
-@@ -826,7 +826,7 @@ mod tests {
-         let main_context = ps.get_context(&syntax.context_ids["main"]);
+@@ -1033,7 +1033,7 @@
+             .expect("#[cfg(test)]");
          let count = syntax_definition::context_iter(&ps, main_context).count();
          assert_eq!(count, 109);
 -    }
@@ -201,6 +195,3 @@ index 04d8224..1ebf6f3 100644
  
      #[test]
      fn can_clone() {
--- 
-2.46.0
-

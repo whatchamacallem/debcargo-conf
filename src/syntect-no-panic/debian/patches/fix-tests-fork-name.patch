@@ -1,0 +1,335 @@
+--- a/examples/gendata.rs
++++ b/examples/gendata.rs
+@@ -6,9 +6,9 @@
+ //! An example of how this script is used to generate the pack files included
+ //! with syntect can be found under `make packs` in the Makefile.
+ use std::env;
+-use syntect::dumps::*;
+-use syntect::highlighting::ThemeSet;
+-use syntect::parsing::SyntaxSetBuilder;
++use syntect_no_panic::dumps::*;
++use syntect_no_panic::highlighting::ThemeSet;
++use syntect_no_panic::parsing::SyntaxSetBuilder;
+ 
+ fn usage_and_exit() -> ! {
+     println!(
+--- a/examples/latex-demo.rs
++++ b/examples/latex-demo.rs
+@@ -1,7 +1,7 @@
+-use syntect::easy::HighlightLines;
+-use syntect::highlighting::{Style, ThemeSet};
+-use syntect::parsing::SyntaxSet;
+-use syntect::util::{as_latex_escaped, LinesWithEndings};
++use syntect_no_panic::easy::HighlightLines;
++use syntect_no_panic::highlighting::{Style, ThemeSet};
++use syntect_no_panic::parsing::SyntaxSet;
++use syntect_no_panic::util::{as_latex_escaped, LinesWithEndings};
+ 
+ fn main() {
+     // Load these once at the start of your program
+--- a/examples/parsyncat.rs
++++ b/examples/parsyncat.rs
+@@ -2,9 +2,9 @@
+ //! Prints the highlighted output to stdout.
+ 
+ use rayon::prelude::*;
+-use syntect::easy::HighlightFile;
+-use syntect::highlighting::{Style, ThemeSet};
+-use syntect::parsing::SyntaxSet;
++use syntect_no_panic::easy::HighlightFile;
++use syntect_no_panic::highlighting::{Style, ThemeSet};
++use syntect_no_panic::parsing::SyntaxSet;
+ 
+ use std::fs::File;
+ use std::io::{BufRead, BufReader};
+@@ -64,7 +64,7 @@
+     for file_regions in regions {
+         print!(
+             "{}",
+-            syntect::util::as_24_bit_terminal_escaped(&file_regions[..], true)
++            syntect_no_panic::util::as_24_bit_terminal_escaped(&file_regions[..], true)
+         );
+     }
+ }
+--- a/examples/syncat.rs
++++ b/examples/syncat.rs
+@@ -2,11 +2,11 @@
+ use std::borrow::Cow;
+ use std::io::BufRead;
+ use std::path::Path;
+-use syntect::dumps::{dump_to_file, from_dump_file};
+-use syntect::easy::HighlightFile;
+-use syntect::highlighting::{Style, Theme, ThemeSet};
+-use syntect::parsing::SyntaxSet;
+-use syntect::util::as_24_bit_terminal_escaped;
++use syntect_no_panic::dumps::{dump_to_file, from_dump_file};
++use syntect_no_panic::easy::HighlightFile;
++use syntect_no_panic::highlighting::{Style, Theme, ThemeSet};
++use syntect_no_panic::parsing::SyntaxSet;
++use syntect_no_panic::util::as_24_bit_terminal_escaped;
+ 
+ fn load_theme(tm_file: &str, enable_caching: bool) -> Theme {
+     let tm_path = Path::new(tm_file);
+--- a/examples/synhtml-css-classes.rs
++++ b/examples/synhtml-css-classes.rs
+@@ -9,11 +9,11 @@
+ //!
+ //! You can open the html with a web browser and change between light and dark
+ //! mode.
+-use syntect::highlighting::ThemeSet;
+-use syntect::html::css_for_theme_with_class_style;
+-use syntect::html::{ClassStyle, ClassedHTMLGenerator};
+-use syntect::parsing::SyntaxSet;
+-use syntect::util::LinesWithEndings;
++use syntect_no_panic::highlighting::ThemeSet;
++use syntect_no_panic::html::css_for_theme_with_class_style;
++use syntect_no_panic::html::{ClassStyle, ClassedHTMLGenerator};
++use syntect_no_panic::parsing::SyntaxSet;
++use syntect_no_panic::util::LinesWithEndings;
+ 
+ use std::fs::File;
+ use std::io::{BufWriter, Write};
+--- a/examples/synhtml.rs
++++ b/examples/synhtml.rs
+@@ -1,8 +1,8 @@
+ //! Prints highlighted HTML for a file to stdout.
+ //! Basically just wraps a body around `highlighted_html_for_file`
+-use syntect::highlighting::{Color, ThemeSet};
+-use syntect::html::highlighted_html_for_file;
+-use syntect::parsing::SyntaxSet;
++use syntect_no_panic::highlighting::{Color, ThemeSet};
++use syntect_no_panic::html::highlighted_html_for_file;
++use syntect_no_panic::parsing::SyntaxSet;
+ 
+ fn main() {
+     let ss = SyntaxSet::load_defaults_newlines();
+--- a/examples/synstats.rs
++++ b/examples/synstats.rs
+@@ -6,9 +6,9 @@
+ //! Another thing it does that other line count programs can't always
+ //! do is properly count comments in embedded syntaxes. For example
+ //! JS, CSS and Ruby comments embedded in ERB files.
+-use syntect::easy::ScopeRegionIterator;
+-use syntect::highlighting::{ScopeSelector, ScopeSelectors};
+-use syntect::parsing::{ParseState, ScopeStack, ScopeStackOp, SyntaxSet};
++use syntect_no_panic::easy::ScopeRegionIterator;
++use syntect_no_panic::highlighting::{ScopeSelector, ScopeSelectors};
++use syntect_no_panic::parsing::{ParseState, ScopeStack, ScopeStackOp, SyntaxSet};
+ 
+ use std::fs::File;
+ use std::io::{BufRead, BufReader};
+--- a/examples/syntest.rs
++++ b/examples/syntest.rs
+@@ -8,9 +8,9 @@
+ // parsing the sublime-syntax files in the JavaScript folder:
+ // cargo run --example syntest testdata/Packages/JavaScript/syntax_test_json.json testdata/Packages/JavaScript/
+ 
+-use syntect::easy::ScopeRegionIterator;
+-use syntect::highlighting::ScopeSelectors;
+-use syntect::parsing::{ParseState, Scope, ScopeStack, SyntaxSet, SyntaxSetBuilder};
++use syntect_no_panic::easy::ScopeRegionIterator;
++use syntect_no_panic::highlighting::ScopeSelectors;
++use syntect_no_panic::parsing::{ParseState, Scope, ScopeStack, SyntaxSet, SyntaxSetBuilder};
+ 
+ use std::cmp::{max, min};
+ use std::fs::File;
+@@ -179,7 +179,7 @@
+     parse_test_lines: bool,
+     out_opts: OutputOptions,
+ ) -> Result<SyntaxTestFileResult, SyntaxTestHeaderError> {
+-    use syntect::util::debug_print_ops;
++    use syntect_no_panic::util::debug_print_ops;
+     let f = File::open(path).unwrap();
+     let mut reader = BufReader::new(f);
+     let mut line = String::new();
+--- a/src/easy.rs
++++ b/src/easy.rs
+@@ -22,10 +22,10 @@
+ /// Prints colored lines of a string to the terminal
+ ///
+ /// ```
+-/// use syntect::easy::HighlightLines;
+-/// use syntect::parsing::SyntaxSet;
+-/// use syntect::highlighting::{ThemeSet, Style};
+-/// use syntect::util::{as_24_bit_terminal_escaped, LinesWithEndings};
++/// use syntect_no_panic::easy::HighlightLines;
++/// use syntect_no_panic::parsing::SyntaxSet;
++/// use syntect_no_panic::highlighting::{ThemeSet, Style};
++/// use syntect_no_panic::util::{as_24_bit_terminal_escaped, LinesWithEndings};
+ ///
+ /// // Load these once at the start of your program
+ /// let ps = SyntaxSet::load_defaults_newlines();
+@@ -111,10 +111,10 @@
+     /// as well as being slightly faster since it can re-use a line buffer.
+     ///
+     /// ```
+-    /// use syntect::parsing::SyntaxSet;
+-    /// use syntect::highlighting::{ThemeSet, Style};
+-    /// use syntect::util::as_24_bit_terminal_escaped;
+-    /// use syntect::easy::HighlightFile;
++    /// use syntect_no_panic::parsing::SyntaxSet;
++    /// use syntect_no_panic::highlighting::{ThemeSet, Style};
++    /// use syntect_no_panic::util::as_24_bit_terminal_escaped;
++    /// use syntect_no_panic::easy::HighlightFile;
+     /// use std::io::BufRead;
+     ///
+     /// # use std::io;
+@@ -138,10 +138,10 @@
+     /// This example uses `reader.lines()` to get lines without a newline character, it's simpler but may break on rare tricky cases.
+     ///
+     /// ```
+-    /// use syntect::parsing::SyntaxSet;
+-    /// use syntect::highlighting::{ThemeSet, Style};
+-    /// use syntect::util::as_24_bit_terminal_escaped;
+-    /// use syntect::easy::HighlightFile;
++    /// use syntect_no_panic::parsing::SyntaxSet;
++    /// use syntect_no_panic::highlighting::{ThemeSet, Style};
++    /// use syntect_no_panic::util::as_24_bit_terminal_escaped;
++    /// use syntect_no_panic::easy::HighlightFile;
+     /// use std::io::BufRead;
+     ///
+     /// let ss = SyntaxSet::load_defaults_nonewlines();
+--- a/src/highlighting/selector.rs
++++ b/src/highlighting/selector.rs
+@@ -92,8 +92,8 @@
+     /// # Examples
+     ///
+     /// ```
+-    /// use syntect::parsing::{ScopeStack, MatchPower};
+-    /// use syntect::highlighting::ScopeSelectors;
++    /// use syntect_no_panic::parsing::{ScopeStack, MatchPower};
++    /// use syntect_no_panic::highlighting::ScopeSelectors;
+     /// use std::str::FromStr;
+     /// assert_eq!(ScopeSelectors::from_str("a.b, a e.f - c k, e.f - a.b").unwrap()
+     ///     .does_match(ScopeStack::from_str("a.b c.d j e.f").unwrap().as_slice()),
+--- a/src/html.rs
++++ b/src/html.rs
+@@ -31,9 +31,9 @@
+ /// # Example
+ ///
+ /// ```
+-/// use syntect::html::{ClassedHTMLGenerator, ClassStyle};
+-/// use syntect::parsing::SyntaxSet;
+-/// use syntect::util::LinesWithEndings;
++/// use syntect_no_panic::html::{ClassedHTMLGenerator, ClassStyle};
++/// use syntect_no_panic::parsing::SyntaxSet;
++/// use syntect_no_panic::util::LinesWithEndings;
+ ///
+ /// let current_code = r#"
+ /// x <- 5
+@@ -451,10 +451,10 @@
+ /// # Examples
+ ///
+ /// ```
+-/// use syntect::easy::HighlightLines;
+-/// use syntect::parsing::SyntaxSet;
+-/// use syntect::highlighting::{ThemeSet, Style};
+-/// use syntect::html::{styled_line_to_highlighted_html, IncludeBackground};
++/// use syntect_no_panic::easy::HighlightLines;
++/// use syntect_no_panic::parsing::SyntaxSet;
++/// use syntect_no_panic::highlighting::{ThemeSet, Style};
++/// use syntect_no_panic::html::{styled_line_to_highlighted_html, IncludeBackground};
+ ///
+ /// // Load these once at the start of your program
+ /// let ps = SyntaxSet::load_defaults_newlines();
+--- a/src/parsing/metadata.rs
++++ b/src/parsing/metadata.rs
+@@ -297,8 +297,8 @@
+ ///
+ /// ```
+ /// # #[macro_use] extern crate serde_json;
+-/// # use syntect::parsing::*;
+-/// # use syntect::highlighting::ScopeSelectors;
++/// # use syntect_no_panic::parsing::*;
++/// # use syntect_no_panic::highlighting::ScopeSelectors;
+ /// # use std::str::FromStr;
+ /// #
+ /// // given the following two scoped metadata collections:
+--- a/src/parsing/scope.rs
++++ b/src/parsing/scope.rs
+@@ -279,7 +279,7 @@
+     /// # Examples
+     ///
+     /// ```
+-    /// use syntect::parsing::Scope;
++    /// use syntect_no_panic::parsing::Scope;
+     /// assert!( Scope::new("string").unwrap()
+     ///         .is_prefix_of(Scope::new("string.quoted").unwrap()));
+     /// assert!( Scope::new("string.quoted").unwrap()
+@@ -527,7 +527,7 @@
+     ///
+     /// # Examples
+     /// ```
+-    /// use syntect::parsing::{ScopeStack, MatchPower};
++    /// use syntect_no_panic::parsing::{ScopeStack, MatchPower};
+     /// use std::str::FromStr;
+     /// assert_eq!(ScopeStack::from_str("a.b c e.f").unwrap()
+     ///     .does_match(ScopeStack::from_str("a.b c.d e.f.g").unwrap().as_slice()),
+--- a/src/parsing/syntax_set.rs
++++ b/src/parsing/syntax_set.rs
+@@ -251,7 +251,7 @@
+     /// text:
+     ///
+     /// ```
+-    /// use syntect::parsing::SyntaxSet;
++    /// use syntect_no_panic::parsing::SyntaxSet;
+     /// let ss = SyntaxSet::load_defaults_newlines();
+     /// let syntax = ss.find_syntax_for_file("testdata/highlight_test.erb")
+     ///     .unwrap() // for IO errors, you may want to use try!() or another plain text fallback
+@@ -291,7 +291,7 @@
+     ///
+     /// # Examples
+     /// ```
+-    /// use syntect::parsing::SyntaxSetBuilder;
++    /// use syntect_no_panic::parsing::SyntaxSetBuilder;
+     /// let mut builder = SyntaxSetBuilder::new();
+     /// builder.add_plain_text_syntax();
+     /// let ss = builder.build();
+--- a/src/util.rs
++++ b/src/util.rs
+@@ -61,10 +61,10 @@
+ /// Usage is similar to the `as_24_bit_terminal_escaped` function:
+ ///
+ /// ```
+-/// use syntect::easy::HighlightLines;
+-/// use syntect::parsing::SyntaxSet;
+-/// use syntect::highlighting::{ThemeSet,Style};
+-/// use syntect::util::{as_latex_escaped,LinesWithEndings};
++/// use syntect_no_panic::easy::HighlightLines;
++/// use syntect_no_panic::parsing::SyntaxSet;
++/// use syntect_no_panic::highlighting::{ThemeSet,Style};
++/// use syntect_no_panic::util::{as_latex_escaped,LinesWithEndings};
+ ///
+ /// // Load these once at the start of your program
+ /// let ps = SyntaxSet::load_defaults_newlines();
+@@ -174,7 +174,7 @@
+ /// # Examples
+ ///
+ /// ```
+-/// use syntect::util::LinesWithEndings;
++/// use syntect_no_panic::util::LinesWithEndings;
+ ///
+ /// let mut lines = LinesWithEndings::from("foo\nbar\nbaz");
+ ///
+@@ -272,8 +272,8 @@
+ /// # Examples
+ ///
+ /// ```
+-/// use syntect::util::modify_range;
+-/// use syntect::highlighting::{Style, StyleModifier, FontStyle};
++/// use syntect_no_panic::util::modify_range;
++/// use syntect_no_panic::highlighting::{Style, StyleModifier, FontStyle};
+ ///
+ /// let plain = Style::default();
+ /// let boldmod = StyleModifier { foreground: None, background: None, font_style: Some(FontStyle::BOLD) };
+--- a/tests/error_handling.rs
++++ b/tests/error_handling.rs
+@@ -4,7 +4,7 @@
+     io::{Error as IoError, ErrorKind},
+ };
+ 
+-use syntect::{
++use syntect_no_panic::{
+     parsing::{ParseScopeError, ParseSyntaxError},
+     LoadingError,
+ };
