@@ -5,10 +5,13 @@ Index: terminal-size/src/unix.rs
 ===================================================================
 --- terminal-size.orig/src/unix.rs
 +++ terminal-size/src/unix.rs
-@@ -61,6 +61,29 @@ fn compare_with_stty() {
+@@ -60,6 +60,31 @@ pub unsafe fn terminal_size_using_fd(fd:
+ fn compare_with_stty() {
      use std::process::Command;
      use std::process::Stdio;
- 
++    use std::os::fd::OwnedFd;
++    use std::os::fd::FromRawFd;
++
 +    //in debian the tests run without a terminal, create one for testing
 +    let slavename;
 +    let slavefd;
@@ -29,13 +32,12 @@ Index: terminal-size/src/unix.rs
 +            ws_ypixel: 0,
 +        };
 +        if ioctl(masterfd,TIOCSWINSZ,&ws) != 0 {panic!("TIOCSWINSZ failed")}
-+        slavefd = open(slavenamearr.as_mut_ptr(), O_RDWR|O_NOCTTY);
++        slavefd = OwnedFd::from_raw_fd(open(slavenamearr.as_mut_ptr(), O_RDWR|O_NOCTTY));
 +    }
-+
+ 
      let (rows, cols) = if cfg!(target_os = "illumos") {
          // illumos stty(1) does not accept a device argument, instead using
-         // stdin unconditionally:
-@@ -96,14 +119,14 @@ fn compare_with_stty() {
+@@ -96,14 +121,14 @@ fn compare_with_stty() {
              Command::new("stty")
                  .arg("size")
                  .arg("-F")
@@ -52,12 +54,12 @@ Index: terminal-size/src/unix.rs
                  .arg("size")
                  .stderr(Stdio::inherit())
                  .output()
-@@ -121,7 +144,7 @@ fn compare_with_stty() {
+@@ -121,7 +146,7 @@ fn compare_with_stty() {
      };
      println!("{} {}", rows, cols);
  
 -    if let Some((Width(w), Height(h))) = terminal_size() {
-+    if let Some((Width(w), Height(h))) = terminal_size_using_fd(slavefd) {
++    if let Some((Width(w), Height(h))) = terminal_size_of(slavefd) {
          assert_eq!(rows, h);
          assert_eq!(cols, w);
      } else {
