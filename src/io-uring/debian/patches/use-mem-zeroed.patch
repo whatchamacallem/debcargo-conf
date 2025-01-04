@@ -1,0 +1,22 @@
+use mem::zeroed to create instances of io_uring_getevents_arg to
+support both the pregenerated bindings and the bindgen generated
+bindings.
+
+Index: io-uring/src/types.rs
+===================================================================
+--- io-uring.orig/src/types.rs
++++ io-uring/src/types.rs
+@@ -233,12 +233,7 @@ pub struct SubmitArgs<'prev: 'now, 'now>
+ impl<'prev, 'now> SubmitArgs<'prev, 'now> {
+     #[inline]
+     pub const fn new() -> SubmitArgs<'static, 'static> {
+-        let args = sys::io_uring_getevents_arg {
+-            sigmask: 0,
+-            sigmask_sz: 0,
+-            pad: 0,
+-            ts: 0,
+-        };
++        let args: sys::io_uring_getevents_arg = unsafe { core::mem::zeroed() };
+ 
+         SubmitArgs {
+             args,
