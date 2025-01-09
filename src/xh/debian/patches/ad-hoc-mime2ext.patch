@@ -1,0 +1,59 @@
+Description: A naive MIME to extension guesser due to mime2ext unavailable
+Forwarded: not-needed
+Last-Update: 2025-01-09
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -161,3 +161,3 @@
+ 
+-[dependencies.mime2ext]
++[disabled.dependencies.mime2ext]
+ version = "0.1.0"
+--- a/src/download.rs
++++ b/src/download.rs
+@@ -7,3 +7,3 @@
+ use indicatif::{HumanBytes, ProgressBar, ProgressStyle};
+-use mime2ext::mime2ext;
++//use mime2ext::mime2ext;
+ use regex_lite::Regex;
+@@ -53,5 +53,34 @@
+ 
+-    fn guess_extension(response: &Response) -> Option<&'static str> {
++    fn guess_extension(response: &Response) -> Option</*&'static str*/ String> {
+         let mimetype = response.headers().get(CONTENT_TYPE)?.to_str().ok()?;
+-        mime2ext(mimetype)
++        let mut split = mimetype.splitn(2, '/');
++        let cat = split.next()?.to_ascii_lowercase();
++        let kind = split.next()?.to_ascii_lowercase();
++        match cat.as_str() {
++            "application" => if kind.len() <= 4 { Some(kind.as_str()) } else { None },
++            "audio" => match kind.as_str() {
++                "matroska" => Some("mka"),
++                "vorbis" => Some("ogg"),
++                other => if kind.len() <= 4 { Some(other) } else { None },
++            },
++            "video" => if kind.starts_with("h26") { Some("mp4") } else {
++                match kind.as_str() {
++                    "matroska" => Some("mkv"),
++                    other => if kind.len() <= 4 { Some(other) } else { None },
++                }
++            },
++            "font" => Some(kind.as_str()),
++            "image" => match kind.as_str() {
++                "svg+xml" => Some("svg"),
++                other => if kind.len() <= 4 { Some(other) } else { None },
++            },
++            "text" => match kind.as_str() {
++                "javascript" => Some("js"),
++                "markdown" => Some("md"),
++                "plain" => Some("txt"),
++                other => if kind.len() <= 4 { Some(other) } else { None },
++            }
++            _ => None,
++        }.map(|s| s.to_string())
++        //mime2ext(mimetype)
+     }
+@@ -69,3 +98,3 @@
+             filename.push('.');
+-            filename.push_str(extension);
++            filename.push_str(&extension);
+         }

@@ -1,0 +1,25 @@
+Description: Remove usage of serde-transcode
+Forwarded: not-needed
+Last-Update: 2025-01-09
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -214,3 +214,3 @@
+ 
+-[dependencies.serde-transcode]
++[disabled.dependencies.serde-transcode]
+ version = "1.1.1"
+--- a/src/formatting/mod.rs
++++ b/src/formatting/mod.rs
+@@ -31,2 +31,3 @@
+ pub fn serde_json_format(indent_level: usize, text: &str, write: impl Write) -> io::Result<()> {
++    use serde::ser::Serialize;
+     let indent = " ".repeat(indent_level);
+@@ -34,4 +35,6 @@
+     let mut serializer = serde_json::Serializer::with_formatter(write, formatter);
+-    let mut deserializer = serde_json::Deserializer::from_str(text);
+-    serde_transcode::transcode(&mut deserializer, &mut serializer)?;
++    //let mut deserializer = serde_json::Deserializer::from_str(text);
++    //serde_transcode::transcode(&mut deserializer, &mut serializer)?;
++    let value: serde_json::Value = serde_json::from_str(text)?;
++    value.serialize(&mut serializer)?;
+     Ok(())
