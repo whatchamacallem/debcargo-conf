@@ -1,15 +1,49 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -208 +208 @@
+@@ -144,7 +144,7 @@
+ #    "native-tls",
+ #    "native-tls-crate?/vendored",
+ #]
 -rustls-tls = ["rustls-tls-webpki-roots"]
-+rustls-tls = ["rustls-tls-native-roots"]
-@@ -214,4 +213,0 @@
++rustls-tls = ["rustls-tls-native-roots"] # Debian: was rustls-tls-webpki-roots
+ rustls-tls-manual-roots = [
+     "rustls-tls-manual-roots-no-provider",
+     "__rustls-ring",
+@@ -160,15 +160,15 @@
+     "__rustls",
+ ]
+ rustls-tls-no-provider = ["rustls-tls-manual-roots-no-provider"]
 -rustls-tls-webpki-roots = [
--    "webpki-roots",
+-    "rustls-tls-webpki-roots-no-provider",
+-    "__rustls-ring",
+-]
+-rustls-tls-webpki-roots-no-provider = [
+-    "dep:webpki-roots",
+-    "hyper-rustls?/webpki-tokio",
 -    "__rustls",
 -]
-@@ -361,4 +356,0 @@
--
--[target."cfg(not(target_arch = \"wasm32\"))".dependencies.webpki-roots]
--version = "0.25"
++#rustls-tls-webpki-roots = [
++#    "rustls-tls-webpki-roots-no-provider",
++#    "__rustls-ring",
++#]
++#rustls-tls-webpki-roots-no-provider = [
++#    "dep:webpki-roots",
++#    "hyper-rustls?/webpki-tokio",
++#    "__rustls",
++#]
+ socks = ["dep:tokio-socks"]
+ stream = [
+     "tokio/fs",
+@@ -526,9 +526,9 @@
+ ]
+ default-features = false
+ 
+-[target.'cfg(not(target_arch = "wasm32"))'.dependencies.webpki-roots]
+-version = "0.26.0"
 -optional = true
++#[target.'cfg(not(target_arch = "wasm32"))'.dependencies.webpki-roots]
++#version = "0.26.0"
++#optional = true
+ 
+ [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies.brotli_crate]
+ version = "6.0.0"
