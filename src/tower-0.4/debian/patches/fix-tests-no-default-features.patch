@@ -1,27 +1,52 @@
 --- a/src/load/peak_ewma.rs
 +++ b/src/load/peak_ewma.rs
-@@ -310,3 +310,3 @@
+@@ -307,7 +307,7 @@
+     n + s
+ }
  
 -#[cfg(test)]
 +#[cfg(all(test, feature="futures-util"))]
  mod tests {
+     use futures_util::future;
+     use std::time::Duration;
 --- a/src/load/pending_requests.rs
 +++ b/src/load/pending_requests.rs
-@@ -146,3 +146,3 @@
+@@ -145,7 +145,7 @@
+     }
+ }
  
 -#[cfg(test)]
 +#[cfg(all(test, feature = "futures-util"))]
  mod tests {
+     use super::*;
+     use futures_util::future;
 --- a/src/make/make_service/shared.rs
 +++ b/src/make/make_service/shared.rs
-@@ -104,3 +104,3 @@
+@@ -102,7 +102,7 @@
+     pub type SharedFuture<S> = futures_util::future::Ready<Result<S, Infallible>>;
+ }
  
 -#[cfg(test)]
 +#[cfg(all(test, feature = "util"))]
  mod tests {
+     use super::*;
+     use crate::make::MakeService;
 --- a/tests/steer/main.rs
 +++ b/tests/steer/main.rs
-@@ -1,2 +1,2 @@
+@@ -1,4 +1,4 @@
 -#![cfg(feature = "steer")]
 +#![cfg(all(feature = "steer", feature = "futures-util"))]
  #[path = "../support.rs"]
+ mod support;
+ 
+--- a/src/util/rng.rs
++++ b/src/util/rng.rs
+@@ -125,7 +125,7 @@
+     [aidx, bidx]
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature = "balance"))]
+ mod tests {
+     use super::*;
+     use quickcheck::*;
