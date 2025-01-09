@@ -1,0 +1,120 @@
+diff --git a/cargo-auditable.schema.json b/cargo-auditable.schema.json
+new file mode 100644
+index 0000000..9fbddfd
+--- /dev/null
++++ b/cargo-auditable.schema.json
+@@ -0,0 +1,101 @@
++{
++    "$schema": "http://json-schema.org/draft-07/schema#",
++    "$id": "https://rustsec.org/schemas/cargo-auditable.json",
++    "title": "cargo-auditable schema",
++    "description": "Describes the `VersionInfo` JSON data structure that cargo-auditable embeds into Rust binaries.",
++    "type": "object",
++    "required": [
++        "packages"
++    ],
++    "properties": {
++        "packages": {
++            "type": "array",
++            "items": {
++                "$ref": "#/definitions/Package"
++            }
++        }
++    },
++    "definitions": {
++        "DependencyKind": {
++            "type": "string",
++            "enum": [
++                "build",
++                "runtime"
++            ]
++        },
++        "Package": {
++            "description": "A single package in the dependency tree",
++            "type": "object",
++            "required": [
++                "name",
++                "source",
++                "version"
++            ],
++            "properties": {
++                "dependencies": {
++                    "description": "Packages are stored in an ordered array both in the `VersionInfo` struct and in JSON. Here we refer to each package by its index in the array. May be omitted if the list is empty.",
++                    "type": "array",
++                    "items": {
++                        "type": "integer",
++                        "format": "uint",
++                        "minimum": 0.0
++                    }
++                },
++                "kind": {
++                    "description": "\"build\" or \"runtime\". May be omitted if set to \"runtime\". If it's both a build and a runtime dependency, \"runtime\" is recorded.",
++                    "allOf": [
++                        {
++                            "$ref": "#/definitions/DependencyKind"
++                        }
++                    ]
++                },
++                "name": {
++                    "description": "Crate name specified in the `name` field in Cargo.toml file. Examples: \"libc\", \"rand\"",
++                    "type": "string"
++                },
++                "root": {
++                    "description": "Whether this is the root package in the dependency tree. There should only be one root package. May be omitted if set to `false`.",
++                    "type": "boolean"
++                },
++                "source": {
++                    "description": "Currently \"git\", \"local\", \"crates.io\" or \"registry\". Designed to be extensible with other revision control systems, etc.",
++                    "allOf": [
++                        {
++                            "$ref": "#/definitions/Source"
++                        }
++                    ]
++                },
++                "version": {
++                    "description": "The package's version in the [semantic version](https://semver.org) format.",
++                    "type": "string"
++                }
++            }
++        },
++        "Source": {
++            "description": "Serializes to \"git\", \"local\", \"crates.io\" or \"registry\". Designed to be extensible with other revision control systems, etc.",
++            "oneOf": [
++                {
++                    "type": "string",
++                    "enum": [
++                        "CratesIo",
++                        "Git",
++                        "Local",
++                        "Registry"
++                    ]
++                },
++                {
++                    "type": "object",
++                    "required": [
++                        "Other"
++                    ],
++                    "properties": {
++                        "Other": {
++                            "type": "string"
++                        }
++                    },
++                    "additionalProperties": false
++                }
++            ]
++        }
++    }
++}
+diff --git a/src/lib.rs b/src/lib.rs
+index 2ba84f0..5bfd490 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -172,8 +172,6 @@ mod tests {
+         let contents = fs::read_to_string(
+             // `CARGO_MANIFEST_DIR` env is path to dir containing auditable-serde's Cargo.toml
+             PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+-                .parent()
+-                .unwrap()
+                 .join("cargo-auditable.schema.json"),
+         )
+         .expect("error reading existing schema");
