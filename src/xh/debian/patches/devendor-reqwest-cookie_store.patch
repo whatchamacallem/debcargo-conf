@@ -1,0 +1,58 @@
+Forwarded: not-needed
+Last-Update: 2025-01-09
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -17,3 +17,3 @@
+ mod utils;
+-mod vendored;
++//mod vendored;
+ 
+@@ -48,3 +48,3 @@
+ use crate::utils::{test_mode, test_pretend_term, url_with_query};
+-use crate::vendored::reqwest_cookie_store;
++//use crate::vendored::reqwest_cookie_store;
+ 
+@@ -62,2 +62,38 @@
+ 
++#[derive(Default)]
++struct CookieJar(std::sync::Mutex<CookieStore>);
++
++impl CookieJar {
++	fn lock(&self) -> Result<std::sync::MutexGuard<'_, CookieStore>, std::sync::PoisonError::<std::sync::MutexGuard<'_, CookieStore>>> {
++		self.0.lock()
++	}
++}
++
++impl reqwest::cookie::CookieStore for CookieJar {
++	fn set_cookies(&self, headers: &mut dyn Iterator<Item = &HeaderValue>, url: &reqwest::Url) {
++		let mut store = self.0.lock().unwrap();
++		let cookies = headers.filter_map(|val| {
++			std::str::from_utf8(val.as_bytes())
++				.map_err(cookie_store::RawCookieParseError::from)
++				.and_then(RawCookie::parse)
++				.map(|c| c.into_owned())
++				.ok()
++		});
++		store.store_response_cookies(cookies, url);
++	}
++
++	fn cookies(&self, url: &reqwest::Url) -> Option<HeaderValue> {
++		let store = self.0.lock().unwrap();
++		let s = store.get_request_values(url)
++			.map(|(name, value)| format!("{name}={value}"))
++			.collect::<Vec<_>>()
++			.join("; ");
++		if s.is_empty() {
++			None
++		} else {
++			HeaderValue::from_maybe_shared(s.as_bytes().to_vec()).ok()
++		}
++	}
++}
++
+ fn main() {
+@@ -284,3 +320,3 @@
+ 
+-    let cookie_jar = Arc::new(reqwest_cookie_store::CookieStoreMutex::default());
++    let cookie_jar = Arc::new(CookieJar::default());
+     client = client.cookie_provider(cookie_jar.clone());

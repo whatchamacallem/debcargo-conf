@@ -1,0 +1,32 @@
+Description: Disable unavailable jsonxf, work around functionality it enables
+Forwarded: not-needed
+Last-Update: 2025-01-09
+--- a/src/formatting/mod.rs
++++ b/src/formatting/mod.rs
+@@ -17,2 +17,3 @@
+ 
++#[cfg(any())]
+ pub fn get_json_formatter(indent_level: usize) -> jsonxf::Formatter {
+--- a/src/printer.rs
++++ b/src/printer.rs
+@@ -20,3 +20,3 @@
+     formatting::serde_json_format,
+-    formatting::{get_json_formatter, Highlighter},
++    formatting::{/*get_json_formatter,*/ Highlighter},
+     middleware::ResponseExt,
+@@ -251,2 +251,3 @@
+ 
++    #[cfg(any())]
+     fn print_json_stream(&mut self, stream: &mut impl Read) -> io::Result<()> {
+@@ -300,3 +301,3 @@
+         match content_type {
+-            ContentType::Json => self.print_json_stream(body),
++            ContentType::Json => { let mut buf = Vec::with_capacity(1024); body.read_to_end(&mut buf)?; self.print_json_text(&String::from_utf8_lossy(&buf), true) }, //self.print_json_stream(body),
+             ContentType::Xml => self.print_syntax_stream(body, "xml"),
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -149,3 +149,3 @@
+ 
+-[dependencies.jsonxf]
++[disabled.dependencies.jsonxf]
+ version = "1.1.0"
