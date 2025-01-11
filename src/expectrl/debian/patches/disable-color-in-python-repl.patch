@@ -1,0 +1,14 @@
+--- rust-expectrl-0.7.1.orig/src/repl.rs
++++ rust-expectrl-0.7.1/src/repl.rs
+@@ -99,8 +99,10 @@ pub async fn spawn_bash() -> Result<Repl
+ pub fn spawn_python() -> Result<ReplSession, Error> {
+     // todo: check windows here
+     // If we spawn it as ProcAttr::default().commandline("python3") it will spawn processes endlessly....
++    let mut cmd = Command::new("python3");
++    let _ = cmd.env("PYTHON_COLORS","0");
+ 
+-    let session = spawn("python3")?;
++    let session = crate::session::Session::spawn(cmd)?;
+ 
+     let mut idle = ReplSession::new(session, ">>> ".to_owned(), Some("quit()".to_owned()), false);
+     idle.expect_prompt()?;
