@@ -1,0 +1,13 @@
+--- a/tests/basic.rs
++++ b/tests/basic.rs
+@@ -7,7 +7,10 @@
+ };
+ use rand::{rngs::SmallRng, seq::SliceRandom, SeedableRng};
+ 
++#[cfg(target_pointer_width = "64")]
+ const SEED: &'static [u8; 32] = b"testseedtestseedtestseedtestseed";
++#[cfg(not(target_pointer_width = "64"))]
++const SEED: &'static [u8; 16] = b"testseedtestseed";
+ 
+ #[test]
+ pub fn insert() {
