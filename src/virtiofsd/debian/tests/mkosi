@@ -1,0 +1,103 @@
+#!/bin/sh
+# Build a minimal system image with mkosi matching the distribution/release
+# of the host system, and boot it to run a simple smoke test that checks
+# whether file sharing via virtiofsd works as expected.
+
+set -e
+set -x
+
+RELEASE=$(
+    # shellcheck disable=SC1091
+    . /etc/os-release;
+    if [ "$ID" = "ubuntu" ]; then
+        echo "$VERSION_CODENAME"
+    elif [ "$ID" = "debian" ]; then
+        if [ -n "$VERSION_ID" ] && [ -n "$VERSION_CODENAME" ]; then
+            echo "$VERSION_CODENAME"
+        else
+            debian_version="$(cat /etc/debian_version)"
+            if [ "${debian_version#*/}" = sid ]; then
+                if [ ! -f /etc/apt/preferences.d/autopkgtest-unstable.pref ] && ( [ "$VERSION_CODENAME" = sid ] || grep -q -r sid /etc/apt/sources.list* || grep -q -r unstable /etc/apt/sources.list* ); then
+                    echo "sid"
+                else
+                    echo "$VERSION_CODENAME"
+                fi
+            fi
+        fi
+    fi
+)
+
+cleanup () {
+    rm -rf "$workdir" || true
+}
+
+export PATH="/usr/sbin:$PATH"
+
+if [ "${INTERACTIVE:-}" = "1" ]; then
+    workdir=/var/tmp/virtiofsd-smoke-test
+    mkdir -p "$workdir"
+else
+    workdir="$(mktemp --directory --tmpdir=/var/tmp virtiofsd-smoke-test.XXXXXXXXXX)"
+    trap cleanup EXIT
+fi
+cd "$workdir"
+
+mkdir -p mkosi.cache/
+
+mkdir -p mkosi.extra/usr/lib/systemd/system/
+cat <<EOF >mkosi.extra/usr/lib/systemd/system/virtiofsd-smoke-test.service
+[Unit]
+After=multi-user.target
+Requires=multi-user.target
+FailureAction=poweroff
+SuccessAction=poweroff
+
+[Service]
+Type=oneshot
+ExecStart=test -f /work/src/marker-outer
+ExecStart=touch /work/src/marker-inner
+EOF
+
+# mkosi registers a pid with machined before it is assigned to a scope, so machined
+# associates it with the user session, and kills it later when the machine is shut down,
+# disable registration to avoid it. This is a workaround for versions older than 25, where
+# Register=no does the same.
+if dpkg --compare-versions "$(dpkg-query --showformat='${Version}' --show mkosi)" lt 25; then
+    if [ -z "${INTERACTIVE}" ]; then
+        sed -i "/  register_machine(/d" /usr/lib/python3/dist-packages/mkosi/qemu.py
+    fi
+else
+    tee -a mkosi.local.conf <<EOF
+[Runtime]
+Register=no
+EOF
+fi
+
+# Build the image first, this is the slow bit, so we do it outside of the timeout invocation
+mkosi \
+    ${RELEASE:+"--release=${RELEASE}"} \
+    --tools-tree="" \
+    --package-manager-tree=/etc/apt \
+    --bootable=yes \
+    --bootloader=systemd-boot \
+    --package=systemd-boot \
+    --package=linux-image-generic \
+    --kernel-command-line=systemd.unit=virtiofsd-smoke-test.service \
+    build
+
+touch marker-outer
+rm -f marker-inner
+
+# Using script to pretend qemu is attached to a TTY causes more bugs to surface.
+# Ensure that the test doesn't hang forever, a few seconds should be enough on
+# normal machines, use 10 minutes to account for slow platforms. But shorter for
+# interactive runs.
+timeout="10m"
+if [ "${INTERACTIVE:-}" = "1" ]; then
+    timeout="30s"
+fi
+timeout --foreground "${timeout}" \
+    script --return --quiet --command \
+    "mkosi ${RELEASE:+"--release=${RELEASE}"} --tools-tree="" --runtime-build-sources=yes qemu"
+
+test -f marker-inner
