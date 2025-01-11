@@ -16,11 +16,11 @@
 --- a/examples/latex-demo.rs
 +++ b/examples/latex-demo.rs
 @@ -1,7 +1,7 @@
--use syntect::easy::HighlightLines;
+-use syntect::easy::{HighlightLines, HighlightOptions};
 -use syntect::highlighting::{Style, ThemeSet};
 -use syntect::parsing::SyntaxSet;
 -use syntect::util::{as_latex_escaped, LinesWithEndings};
-+use syntect_no_panic::easy::HighlightLines;
++use syntect_no_panic::easy::{HighlightLines, HighlightOptions};
 +use syntect_no_panic::highlighting::{Style, ThemeSet};
 +use syntect_no_panic::parsing::SyntaxSet;
 +use syntect_no_panic::util::{as_latex_escaped, LinesWithEndings};
@@ -33,16 +33,16 @@
  //! Prints the highlighted output to stdout.
  
  use rayon::prelude::*;
--use syntect::easy::HighlightFile;
+-use syntect::easy::{HighlightFile, HighlightOptions};
 -use syntect::highlighting::{Style, ThemeSet};
 -use syntect::parsing::SyntaxSet;
-+use syntect_no_panic::easy::HighlightFile;
++use syntect_no_panic::easy::{HighlightFile, HighlightOptions};
 +use syntect_no_panic::highlighting::{Style, ThemeSet};
 +use syntect_no_panic::parsing::SyntaxSet;
  
  use std::fs::File;
  use std::io::{BufRead, BufReader};
-@@ -64,7 +64,7 @@
+@@ -66,7 +66,7 @@
      for file_regions in regions {
          print!(
              "{}",
@@ -58,12 +58,12 @@
  use std::io::BufRead;
  use std::path::Path;
 -use syntect::dumps::{dump_to_file, from_dump_file};
--use syntect::easy::HighlightFile;
+-use syntect::easy::{HighlightFile, HighlightOptions};
 -use syntect::highlighting::{Style, Theme, ThemeSet};
 -use syntect::parsing::SyntaxSet;
 -use syntect::util::as_24_bit_terminal_escaped;
 +use syntect_no_panic::dumps::{dump_to_file, from_dump_file};
-+use syntect_no_panic::easy::HighlightFile;
++use syntect_no_panic::easy::{HighlightFile, HighlightOptions};
 +use syntect_no_panic::highlighting::{Style, Theme, ThemeSet};
 +use syntect_no_panic::parsing::SyntaxSet;
 +use syntect_no_panic::util::as_24_bit_terminal_escaped;
@@ -159,7 +159,7 @@
  ///
  /// // Load these once at the start of your program
  /// let ps = SyntaxSet::load_defaults_newlines();
-@@ -111,10 +111,10 @@
+@@ -125,10 +125,10 @@
      /// as well as being slightly faster since it can re-use a line buffer.
      ///
      /// ```
@@ -174,7 +174,7 @@
      /// use std::io::BufRead;
      ///
      /// # use std::io;
-@@ -138,10 +138,10 @@
+@@ -152,10 +152,10 @@
      /// This example uses `reader.lines()` to get lines without a newline character, it's simpler but may break on rare tricky cases.
      ///
      /// ```
@@ -217,6 +217,24 @@
  ///
  /// let current_code = r#"
  /// x <- 5
+@@ -275,7 +275,7 @@
+ }
+ 
+ /// Convenience method that combines `start_highlighted_html_snippet`, `styled_line_to_highlighted_html`
+-/// and `HighlightLines` from `syntect::easy` to create a full highlighted HTML snippet for
++/// and `HighlightLines` from `syntect_no_panic::easy` to create a full highlighted HTML snippet for
+ /// a string (which can contain many lines).
+ ///
+ /// Note that the `syntax` passed in must be from a `SyntaxSet` compiled for newline characters.
+@@ -302,7 +302,7 @@
+ }
+ 
+ /// Convenience method that combines `start_highlighted_html_snippet`, `styled_line_to_highlighted_html`
+-/// and `HighlightFile` from `syntect::easy` to create a full highlighted HTML snippet for
++/// and `HighlightFile` from `syntect_no_panic::easy` to create a full highlighted HTML snippet for
+ /// a file.
+ ///
+ /// Note that the `syntax` passed in must be from a `SyntaxSet` compiled for newline characters.
 @@ -451,10 +451,10 @@
  /// # Examples
  ///
@@ -267,7 +285,7 @@
      ///     .does_match(ScopeStack::from_str("a.b c.d e.f.g").unwrap().as_slice()),
 --- a/src/parsing/syntax_set.rs
 +++ b/src/parsing/syntax_set.rs
-@@ -251,7 +251,7 @@
+@@ -257,7 +257,7 @@
      /// text:
      ///
      /// ```
@@ -276,7 +294,7 @@
      /// let ss = SyntaxSet::load_defaults_newlines();
      /// let syntax = ss.find_syntax_for_file("testdata/highlight_test.erb")
      ///     .unwrap() // for IO errors, you may want to use try!() or another plain text fallback
-@@ -291,7 +291,7 @@
+@@ -297,7 +297,7 @@
      ///
      /// # Examples
      /// ```
