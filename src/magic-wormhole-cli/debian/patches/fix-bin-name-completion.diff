@@ -1,0 +1,52 @@
+Description: Fix shell completions 
+ This cherrypicks the bits needed to enable working shell completion from upstream commits c00e94f to 7287e34.
+Author: Matthias Geiger <werdahias@debian.org>
+Origin: upstream
+Bug: https://github.com/magic-wormhole/magic-wormhole.rs/issues/282
+Applied-Upstream: 7287e34 
+Last-Update: 2025-01-11
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -239,6 +243,7 @@
+     version,
+     author,
+     about,
++    name = "wormhole-rs",
+     arg_required_else_help = true,
+     disable_help_subcommand = true,
+     propagate_version = true,
+@@ -505,7 +531,7 @@
+         },
+         WormholeCommand::Completion { shell } => {
+             let mut cmd = WormholeCli::command();
+-            let binary_name = cmd.get_name().to_string();
++            let binary_name = "wormhole-rs";
+ 
+             match shell {
+                 shell @ clap_complete::Shell::Zsh => {
+@@ -513,7 +539,7 @@
+                     // this way we can source it directly `source <(wormhole-rs completion zsh)`
+ 
+                     let mut out = Vec::new();
+-                    clap_complete::generate(shell, &mut cmd, &binary_name, &mut out);
++                    clap_complete::generate(shell, &mut cmd, binary_name, &mut out);
+                     let out = String::from_utf8(out)
+                         .expect("Internal error: shell completion not UTF-8 encoded");
+                     let out = format!(
+@@ -1196,10 +1232,10 @@
+ 
+         for shell in clap_complete::Shell::value_variants() {
+             let mut cmd = WormholeCli::command();
+-            let binary_name = cmd.get_name().to_string();
++            let binary_name = "wormhole-rs";
+ 
+             let mut out = Vec::new();
+-            clap_complete::generate(*shell, &mut cmd, &binary_name, &mut out);
++            clap_complete::generate(*shell, &mut cmd, binary_name, &mut out);
+             String::from_utf8(out).unwrap();
+         }
+     }
+
