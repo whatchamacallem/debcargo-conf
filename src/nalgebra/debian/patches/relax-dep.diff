@@ -1,21 +1,81 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -39,6 +39,8 @@
- license = "Apache-2.0"
- repository = "https://github.com/dimforge/nalgebra"
- resolver = "2"
-+autobenches = false
-+autoexamples = false
- 
- [package.metadata.docs.rs]
- all-features = true
-@@ -54,20 +56,6 @@
+@@ -59,90 +59,6 @@
  name = "nalgebra"
  path = "src/lib.rs"
  
 -[[example]]
+-name = "dimensional_genericity"
+-path = "examples/dimensional_genericity.rs"
+-
+-[[example]]
+-name = "homogeneous_coordinates"
+-path = "examples/homogeneous_coordinates.rs"
+-
+-[[example]]
+-name = "linear_system_resolution"
+-path = "examples/linear_system_resolution.rs"
+-
+-[[example]]
+-name = "matrix_construction"
+-path = "examples/matrix_construction.rs"
+-
+-[[example]]
 -name = "matrixcompare"
+-path = "examples/matrixcompare.rs"
 -required-features = ["compare"]
+-
+-[[example]]
+-name = "mvp"
+-path = "examples/mvp.rs"
+-
+-[[example]]
+-name = "point_construction"
+-path = "examples/point_construction.rs"
+-
+-[[example]]
+-name = "raw_pointer"
+-path = "examples/raw_pointer.rs"
+-
+-[[example]]
+-name = "reshaping"
+-path = "examples/reshaping.rs"
+-
+-[[example]]
+-name = "scalar_genericity"
+-path = "examples/scalar_genericity.rs"
+-
+-[[example]]
+-name = "screen_to_view_coords"
+-path = "examples/screen_to_view_coords.rs"
+-
+-[[example]]
+-name = "transform_conversion"
+-path = "examples/transform_conversion.rs"
+-
+-[[example]]
+-name = "transform_matrix4"
+-path = "examples/transform_matrix4.rs"
+-
+-[[example]]
+-name = "transform_vector_point"
+-path = "examples/transform_vector_point.rs"
+-
+-[[example]]
+-name = "transform_vector_point3"
+-path = "examples/transform_vector_point3.rs"
+-
+-[[example]]
+-name = "transformation_pointer"
+-path = "examples/transformation_pointer.rs"
+-
+-[[example]]
+-name = "unit_wrapper"
+-path = "examples/unit_wrapper.rs"
+-
+-[[test]]
+-name = "lib"
+-path = "tests/lib.rs"
 -
 -[[bench]]
 -name = "nalgebra_bench"
@@ -27,10 +87,11 @@
 -version = "0.9"
 -optional = true
 -default-features = false
- 
+-
  [dependencies.approx]
  version = "0.5"
-@@ -77,79 +65,6 @@
+ default-features = false
+@@ -151,85 +67,6 @@
  version = "1.5"
  optional = true
  
@@ -104,39 +165,48 @@
 -optional = true
 -package = "glam"
 -
+-[dependencies.glam029]
+-version = "0.29"
+-optional = true
+-package = "glam"
+-
 -[dependencies.matrixcompare-core]
 -version = "0.1"
 -optional = true
- 
+-
  [dependencies.matrixmultiply]
  version = "0.3"
-@@ -226,18 +226,13 @@
+ optional = true
+@@ -305,19 +142,13 @@
  [dependencies.typenum]
  version = "1.12"
  
 -[dev-dependencies.cool_asserts]
 -version = "2.0.3"
- 
+-
  [dev-dependencies.criterion]
 -version = "0.4"
 +version = "0.5"
  features = ["html_reports"]
  
  [dev-dependencies.itertools]
--version = "0.13"
--
+ version = "0.13"
+ 
 -[dev-dependencies.matrixcompare]
 -version = "0.3.0"
-+version = "0.10"
- 
+-
  [dev-dependencies.rand_isaac]
  version = "0.3"
-@@ -164,22 +164,7 @@
+ 
+@@ -333,26 +164,10 @@
  [features]
  alloc = []
  arbitrary = ["quickcheck"]
 -compare = ["matrixcompare-core"]
- convert-bytemuck = ["bytemuck"]
+ convert-bytemuck = [
+     "bytemuck",
+     "num-complex/bytemuck",
+ ]
 -convert-glam014 = ["glam014"]
 -convert-glam015 = ["glam015"]
 -convert-glam016 = ["glam016"]
@@ -151,7 +221,7 @@
 -convert-glam025 = ["glam025"]
 -convert-glam027 = ["glam027"]
 -convert-glam028 = ["glam028"]
+-convert-glam029 = ["glam029"]
  convert-mint = ["mint"]
  debug = [
      "approx/num-complex",
-
