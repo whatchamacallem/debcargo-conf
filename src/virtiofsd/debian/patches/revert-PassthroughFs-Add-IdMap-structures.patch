@@ -1,0 +1,82 @@
+From: Michael Tokarev <mjt@tls.msk.ru>
+Date: Wed, 1 Jan 2025 23:35:45 +0300
+Subject: Revert "PassthroughFs: Add IdMap structures"
+
+This reverts commit e4b26825e0419ac613392935c2fe4ba499e972be.
+
+Temporarily, because of difficulties with the newly used crates.
+---
+ src/passthrough/mod.rs | 26 +++++++++-----------------
+ 1 file changed, 9 insertions(+), 17 deletions(-)
+
+diff --git a/src/passthrough/mod.rs b/src/passthrough/mod.rs
+index fcaf0e1..af4ee13 100644
+--- a/src/passthrough/mod.rs
++++ b/src/passthrough/mod.rs
+@@ -27,7 +27,7 @@ use crate::passthrough::util::{
+     ebadf, is_safe_inode, openat, openat_verbose, reopen_fd_through_proc,
+ };
+ use crate::read_dir::ReadDir;
+-use crate::soft_idmap::{GuestGid, GuestUid, HostGid, HostUid, Id, IdMap};
++use crate::soft_idmap::{GuestGid, GuestId, GuestUid, HostGid, HostId, HostUid, Id};
+ use crate::util::{other_io_error, ResultErrorContext};
+ use crate::{fuse, oslib};
+ use file_handle::{FileHandle, FileOrHandle, OpenableFileHandle};
+@@ -458,12 +458,6 @@ pub struct PassthroughFs {
+     track_migration_info: AtomicBool,
+ 
+     cfg: Config,
+-
+-    /// Map to translate between host and guest UIDs.
+-    uid_map: IdMap<GuestUid, HostUid>,
+-
+-    /// Map to translate between host and guest GIDs.
+-    gid_map: IdMap<GuestGid, HostGid>,
+ }
+ 
+ impl PassthroughFs {
+@@ -516,8 +510,6 @@ impl PassthroughFs {
+             os_facts: oslib::OsFacts::new(),
+             track_migration_info: AtomicBool::new(false),
+             cfg,
+-            uid_map: IdMap::empty(),
+-            gid_map: IdMap::empty(),
+         };
+ 
+         // Check to see if the client remapped "security.capability", if so,
+@@ -1437,24 +1429,24 @@ impl PassthroughFs {
+             .set()
+     }
+ 
+-    /// Translate `guest_uid` to a host UID using [`self.uid_map`](`Self#structfield.uid_map`).
++    /// Translate `guest_uid` to a host UID
+     fn map_guest_uid(&self, guest_uid: GuestUid) -> io::Result<HostUid> {
+-        self.uid_map.map_guest(guest_uid).map_err(Into::into)
++        Ok(guest_uid.id_mapped())
+     }
+ 
+-    /// Translate `guest_gid` to a host GID using [`self.gid_map`](`Self#structfield.gid_map`).
++    /// Translate `guest_gid` to a host GID
+     fn map_guest_gid(&self, guest_gid: GuestGid) -> io::Result<HostGid> {
+-        self.gid_map.map_guest(guest_gid).map_err(Into::into)
++        Ok(guest_gid.id_mapped())
+     }
+ 
+-    /// Translate `host_uid` to a guest UID using [`self.uid_map`](`Self#structfield.uid_map`).
++    /// Translate `host_uid` to a guest UID
+     fn map_host_uid(&self, host_uid: HostUid) -> io::Result<GuestUid> {
+-        self.uid_map.map_host(host_uid).map_err(Into::into)
++        Ok(host_uid.id_mapped())
+     }
+ 
+-    /// Translate `host_gid` to a guest GID using [`self.gid_map`](`Self#structfield.gid_map`).
++    /// Translate `host_gid` to a guest GID
+     fn map_host_gid(&self, host_gid: HostGid) -> io::Result<GuestGid> {
+-        self.gid_map.map_host(host_gid).map_err(Into::into)
++        Ok(host_gid.id_mapped())
+     }
+ }
+ 
+-- 
+2.39.5
+
