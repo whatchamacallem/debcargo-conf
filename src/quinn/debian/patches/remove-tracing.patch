@@ -1,9 +1,7 @@
-Index: quinn/Cargo.toml
-===================================================================
---- quinn.orig/Cargo.toml
-+++ quinn/Cargo.toml
-@@ -136,21 +136,20 @@ features = [
-     "sync",
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -164,21 +164,20 @@
+     "macros",
  ]
  
 -[dev-dependencies.tracing-futures]
@@ -38,13 +36,11 @@ Index: quinn/Cargo.toml
  
  [dev-dependencies.url]
  version = "2"
-Index: quinn/benches/bench.rs
-===================================================================
---- quinn.orig/benches/bench.rs
-+++ quinn/benches/bench.rs
-@@ -6,8 +6,8 @@ use std::{
- 
+--- a/benches/bench.rs
++++ b/benches/bench.rs
+@@ -7,8 +7,8 @@
  use bencher::{benchmark_group, benchmark_main, Bencher};
+ use rustls::pki_types::{CertificateDer, PrivatePkcs8KeyDer};
  use tokio::runtime::{Builder, Runtime};
 -use tracing::error_span;
 -use tracing_futures::Instrument as _;
@@ -53,7 +49,7 @@ Index: quinn/benches/bench.rs
  
  use quinn::{Endpoint, TokioRuntime};
  
-@@ -37,7 +37,7 @@ fn small_data_100_streams(bench: &mut Be
+@@ -38,7 +38,7 @@
  }
  
  fn send_data(bench: &mut Bencher, data: &'static [u8], concurrent_streams: usize) {
@@ -62,7 +58,7 @@ Index: quinn/benches/bench.rs
  
      let ctx = Context::new();
      let (addr, thread) = ctx.spawn_server();
-@@ -130,7 +130,7 @@ impl Context {
+@@ -132,7 +132,7 @@
                          });
                      }
                  }
@@ -71,7 +67,7 @@ Index: quinn/benches/bench.rs
              );
              runtime.block_on(handle).unwrap();
          });
-@@ -151,7 +151,7 @@ impl Context {
+@@ -153,7 +153,7 @@
                  endpoint
                      .connect_with(self.client_config.clone(), server_addr, "localhost")
                      .unwrap()
@@ -80,11 +76,9 @@ Index: quinn/benches/bench.rs
                      .await
              })
              .unwrap();
-Index: quinn/examples/client.rs
-===================================================================
---- quinn.orig/examples/client.rs
-+++ quinn/examples/client.rs
-@@ -42,12 +42,12 @@ struct Opt {
+--- a/examples/client.rs
++++ b/examples/client.rs
+@@ -48,12 +48,12 @@
  }
  
  fn main() {
@@ -99,20 +93,18 @@ Index: quinn/examples/client.rs
      let opt = Opt::parse();
      let code = {
          if let Err(e) = run(opt) {
-Index: quinn/examples/server.rs
-===================================================================
---- quinn.orig/examples/server.rs
-+++ quinn/examples/server.rs
-@@ -13,7 +13,7 @@ use std::{
- use anyhow::{anyhow, bail, Context, Result};
- use clap::Parser;
+--- a/examples/server.rs
++++ b/examples/server.rs
+@@ -15,7 +15,7 @@
+ use proto::crypto::rustls::QuicServerConfig;
+ use rustls::pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer};
  use tracing::{error, info, info_span};
 -use tracing_futures::Instrument as _;
 +//use tracing_futures::Instrument as _;
  
  mod common;
  
-@@ -40,12 +40,12 @@ struct Opt {
+@@ -48,12 +48,12 @@
  }
  
  fn main() {
@@ -127,7 +119,7 @@ Index: quinn/examples/server.rs
      let opt = Opt::parse();
      let code = {
          if let Err(e) = run(opt) {
-@@ -192,11 +192,11 @@ async fn handle_connection(root: Arc<Pat
+@@ -199,11 +199,11 @@
                          error!("failed: {reason}", reason = e.to_string());
                      }
                  }
@@ -141,38 +133,36 @@ Index: quinn/examples/server.rs
      .await?;
      Ok(())
  }
-Index: quinn/src/tests.rs
-===================================================================
---- quinn.orig/src/tests.rs
-+++ quinn/src/tests.rs
-@@ -16,14 +16,14 @@ use tokio::{
+--- a/src/tests.rs
++++ b/src/tests.rs
+@@ -26,14 +26,14 @@
      time::{Duration, Instant},
  };
- use tracing::{info, info_span};
+ use tracing::{error_span, info};
 -use tracing_futures::Instrument as _;
 -use tracing_subscriber::EnvFilter;
-+//use tracing_futures::Instrument as _;
-+//use tracing_subscriber::EnvFilter;
++// use tracing_futures::Instrument as _;
++// use tracing_subscriber::EnvFilter;
  
- use super::{ClientConfig, Endpoint, RecvStream, SendStream, TransportConfig};
+ use super::{ClientConfig, Endpoint, EndpointConfig, RecvStream, SendStream, TransportConfig};
  
  #[test]
  fn handshake_timeout() {
 -    let _guard = subscribe();
-+    //let _guard = subscribe();
++    // let _guard = subscribe();
      let runtime = rt_threaded();
      let client = {
          let _guard = runtime.enter();
-@@ -61,7 +61,7 @@ fn handshake_timeout() {
+@@ -75,7 +75,7 @@
  
  #[tokio::test]
  async fn close_endpoint() {
 -    let _guard = subscribe();
-+    //let _guard = subscribe();
-     let mut endpoint =
-         Endpoint::client(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 0)).unwrap();
-     endpoint.set_default_client_config(ClientConfig::with_root_certificates(
-@@ -113,7 +113,7 @@ fn local_addr() {
++    // let _guard = subscribe();
+ 
+     // Avoid NoRootAnchors error
+     let cert = rcgen::generate_simple_self_signed(vec!["localhost".into()]).unwrap();
+@@ -132,7 +132,7 @@
  
  #[test]
  fn read_after_close() {
@@ -181,7 +171,7 @@ Index: quinn/src/tests.rs
      let runtime = rt_basic();
      let endpoint = {
          let _guard = runtime.enter();
-@@ -151,7 +151,7 @@ fn read_after_close() {
+@@ -169,7 +169,7 @@
  
  #[test]
  fn export_keying_material() {
@@ -190,16 +180,16 @@ Index: quinn/src/tests.rs
      let runtime = rt_basic();
      let endpoint = {
          let _guard = runtime.enter();
-@@ -184,7 +184,7 @@ fn export_keying_material() {
+@@ -214,7 +214,7 @@
  
  #[tokio::test]
- async fn accept_after_close() {
+ async fn ip_blocking() {
 -    let _guard = subscribe();
-+    //let _guard = subscribe();
-     let endpoint = endpoint();
- 
-     const MSG: &[u8] = b"goodbye!";
-@@ -251,7 +251,7 @@ fn endpoint_with_config(transport_config
++    // let _guard = subscribe();
+     let endpoint_factory = EndpointFactory::new();
+     let client_1 = endpoint_factory.endpoint();
+     let client_1_addr = client_1.local_addr().unwrap();
+@@ -309,7 +309,7 @@
  
  #[tokio::test]
  async fn zero_rtt() {
@@ -208,7 +198,7 @@ Index: quinn/src/tests.rs
      let endpoint = endpoint();
  
      const MSG0: &[u8] = b"zero";
-@@ -416,7 +416,7 @@ fn stress_both_windows() {
+@@ -461,7 +461,7 @@
  }
  
  fn run_echo(args: EchoArgs) {
@@ -217,25 +207,16 @@ Index: quinn/src/tests.rs
      let runtime = rt_basic();
      let handle = {
          // Use small receive windows
-@@ -485,7 +485,7 @@ fn run_echo(args: EchoArgs) {
-                 assert_eq!(None, incoming.local_ip());
+@@ -579,7 +579,7 @@
+                 new_conn.close(0u32.into(), b"done");
+                 client.wait_idle().await;
              }
- 
--            let new_conn = incoming.instrument(info_span!("server")).await.unwrap();
-+            let new_conn = incoming.await.unwrap();
-             tokio::spawn(async move {
-                 while let Ok(stream) = new_conn.accept_bi().await {
-                     tokio::spawn(echo(stream));
-@@ -499,7 +499,7 @@ fn run_echo(args: EchoArgs) {
-             let new_conn = client
-                 .connect(server_addr, "localhost")
-                 .unwrap()
--                .instrument(info_span!("client"))
-+                //.instrument(info_span!("client"))
-                 .await
-                 .expect("connect");
- 
-@@ -573,13 +573,13 @@ fn gen_data(size: usize, seed: u64) -> V
+-            .instrument(error_span!("client")),
++            // .instrument(error_span!("client")),
+         );
+         handle
+     };
+@@ -630,13 +630,13 @@
      buf
  }
  
@@ -251,7 +232,7 @@ Index: quinn/src/tests.rs
  
  struct TestWriter;
  
-@@ -606,7 +606,7 @@ fn rt_threaded() -> Runtime {
+@@ -663,7 +663,7 @@
  
  #[tokio::test]
  async fn rebind_recv() {
@@ -259,8 +240,8 @@ Index: quinn/src/tests.rs
 +    //let _guard = subscribe();
  
      let cert = rcgen::generate_simple_self_signed(vec!["localhost".into()]).unwrap();
-     let key = rustls::PrivateKey(cert.serialize_private_key_der());
-@@ -672,7 +672,7 @@ async fn rebind_recv() {
+     let key = PrivatePkcs8KeyDer::from(cert.key_pair.serialize_der());
+@@ -733,7 +733,7 @@
  
  #[tokio::test]
  async fn stream_id_flow_control() {
@@ -269,7 +250,7 @@ Index: quinn/src/tests.rs
      let mut cfg = TransportConfig::default();
      cfg.max_concurrent_uni_streams(1u32.into());
      let endpoint = endpoint_with_config(cfg);
-@@ -706,7 +706,7 @@ async fn stream_id_flow_control() {
+@@ -767,7 +767,7 @@
  
  #[tokio::test]
  async fn two_datagram_readers() {
@@ -278,11 +259,49 @@ Index: quinn/src/tests.rs
      let endpoint = endpoint();
  
      let (client, server) = tokio::join!(
-Index: quinn/tests/many_connections.rs
-===================================================================
---- quinn.orig/tests/many_connections.rs
-+++ quinn/tests/many_connections.rs
-@@ -17,12 +17,11 @@ struct Shared {
+@@ -803,7 +803,7 @@
+ 
+ #[tokio::test]
+ async fn multiple_conns_with_zero_length_cids() {
+-    let _guard = subscribe();
++    // let _guard = subscribe();
+     let mut factory = EndpointFactory::new();
+     factory
+         .endpoint_config
+@@ -830,8 +830,8 @@
+             .await
+             .unwrap();
+         conn.closed().await;
+-    }
+-    .instrument(error_span!("client1"));
++    };
++    // .instrument(error_span!("client1"));
+     let client2 = async move {
+         let conn = client2
+             .connect(server_addr, "localhost")
+@@ -839,15 +839,15 @@
+             .await
+             .unwrap();
+         conn.closed().await;
+-    }
+-    .instrument(error_span!("client2"));
++    };
++    // .instrument(error_span!("client2"));
+     let server = async move {
+         let client1 = server.accept().await.unwrap().await.unwrap();
+         let client2 = server.accept().await.unwrap().await.unwrap();
+         // Both connections are now concurrently live.
+         client1.close(42u32.into(), &[]);
+         client2.close(42u32.into(), &[]);
+-    }
+-    .instrument(error_span!("server"));
++    };
++    // .instrument(error_span!("server"));
+     tokio::join!(client1, client2, server);
+ }
+--- a/tests/many_connections.rs
++++ b/tests/many_connections.rs
+@@ -19,12 +19,11 @@
  #[test]
  #[ignore]
  fn connect_n_nodes_to_1_and_send_1mb_data() {
