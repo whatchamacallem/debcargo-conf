@@ -1,9 +1,9 @@
 Description: Disable color in logs
  After the update to env_logger v0.11, virtiofsd started causing virtualized
- systems to hang at boot time. This was determined to be caused to some component
- of the stack incorrectly parsing logs, probably due to ANSI color escape codes.
- Such a component should probably stop parsing the output of env_logger. In the
- meantime, we disable color in logs.
+ systems to hang at boot time. This was determined to be caused by env_logger
+ issuing ioctl syscalls when the 'auto-color' feature is enabled, which in
+ turn are blocked by virtiofsd's seccomp filter. While we determine if ioctl
+ calls can be allowlisted we disable color in logs.
 Author: NoisyCoil <noisycoil@tutanota.com>, Luca Boccassi <bluca@debian.org>
 Forwarded: no
 Last-Update: 2025-01-12
