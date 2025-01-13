@@ -1,0 +1,126 @@
+From: Peter Michael Green <plugwash@debian.org>
+From: Maytham Alsudany <maytha8thedev@gmail.com>
+Forwarded: not-needed
+Description: Upgrade rustls
+ Also replaces webpki-roots with rustls-native-certs.
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -39,17 +39,19 @@
+ version = "0.3.5"
+ 
+ [dependencies.rustls]
+-version = "0.21"
++version = "0.23"
++default-features = false
++features = ["ring", "logging", "std", "tls12"]
+ 
+ [dependencies.rustls-pemfile]
+-version = "1.0"
++version = "2"
+ 
+ [dependencies.rustls-webpki]
+-version = "0.101.4"
++version = "0.102"
+ optional = true
+ 
+-[dependencies.webpki-roots]
+-version = "0.22.3"
++[dependencies.rustls-native-certs]
++version = "0.8"
+ optional = true
+ 
+ [dev-dependencies.async-std]
+@@ -67,7 +69,7 @@
+ version = "1"
+ 
+ [features]
+-client = ["webpki-roots"]
++client = ["rustls-native-certs"]
+ default = [
+     "client",
+     "server",
+--- a/src/connector.rs
++++ b/src/connector.rs
+@@ -3,7 +3,8 @@
+ use crate::client;
+ 
+ use futures_io::{AsyncRead, AsyncWrite};
+-use rustls::{ClientConfig, ClientConnection, OwnedTrustAnchor, RootCertStore, ServerName};
++use rustls::pki_types::ServerName;
++use rustls::{ClientConfig, ClientConnection, RootCertStore};
+ use std::convert::TryFrom;
+ use std::future::Future;
+ use std::io;
+@@ -65,15 +66,9 @@
+ impl Default for TlsConnector {
+     fn default() -> Self {
+         let mut root_certs = RootCertStore::empty();
+-        root_certs.add_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.0.iter().map(|ta| {
+-            OwnedTrustAnchor::from_subject_spki_name_constraints(
+-                ta.subject,
+-                ta.spki,
+-                ta.name_constraints,
+-            )
+-        }));
++        let result = rustls_native_certs::load_native_certs().expect("Failed to load system root certificates");
++        root_certs.add_parsable_certificates(result);
+         let config = ClientConfig::builder()
+-            .with_safe_defaults()
+             .with_root_certificates(root_certs)
+             .with_no_client_auth();
+         Arc::new(config).into()
+@@ -118,7 +113,7 @@
+         F: FnOnce(&mut ClientConnection),
+     {
+         let domain = match ServerName::try_from(domain.as_ref()) {
+-            Ok(domain) => domain,
++            Ok(domain) => domain.to_owned(),
+             Err(_) => {
+                 return Connect(ConnectInner::Error(Some(io::Error::new(
+                     io::ErrorKind::InvalidInput,
+--- a/src/rusttls/test_stream.rs
++++ b/src/rusttls/test_stream.rs
+@@ -4,9 +4,10 @@
+ use futures_util::io::{AsyncReadExt, AsyncWriteExt};
+ use futures_util::task::{noop_waker_ref, Context};
+ use futures_util::{future, ready};
++use rustls::pki_types::{PrivateKeyDer, ServerName};
+ use rustls::{
+-    Certificate, ClientConfig, ClientConnection, ConnectionCommon, PrivateKey, RootCertStore,
+-    ServerConfig, ServerConnection, ServerName,
++    ClientConfig, ClientConnection, ConnectionCommon, RootCertStore,
++    ServerConfig, ServerConnection,
+ };
+ use rustls_pemfile::{certs, pkcs8_private_keys};
+ use std::convert::TryFrom;
+@@ -223,12 +224,10 @@
+     const CHAIN: &str = include_str!("../../tests/end.chain");
+     const RSA: &str = include_str!("../../tests/end.rsa");
+ 
+-    let cert = certs(&mut BufReader::new(Cursor::new(CERT))).unwrap();
+-    let cert = cert.into_iter().map(Certificate).collect();
+-    let mut keys = pkcs8_private_keys(&mut BufReader::new(Cursor::new(RSA))).unwrap();
+-    let key = PrivateKey(keys.pop().unwrap());
++    let cert = certs(&mut BufReader::new(Cursor::new(CERT))).map(|c| c.unwrap()).collect::<Vec<_>>();
++    let mut keys = pkcs8_private_keys(&mut BufReader::new(Cursor::new(RSA))).map(|c| c.unwrap()).collect::<Vec<_>>();
++    let key = PrivateKeyDer::from(keys.pop().unwrap());
+     let sconfig = ServerConfig::builder()
+-        .with_safe_defaults()
+         .with_no_client_auth()
+         .with_single_cert(cert, key)
+         .unwrap();
+@@ -236,11 +235,10 @@
+ 
+     let domain = ServerName::try_from("localhost").unwrap();
+     let mut root_store = RootCertStore::empty();
+-    let chain = certs(&mut BufReader::new(Cursor::new(CHAIN))).unwrap();
+-    let (added, ignored) = root_store.add_parsable_certificates(&chain);
++    let chain = certs(&mut BufReader::new(Cursor::new(CHAIN))).map(|c| c.unwrap()).collect::<Vec<_>>();
++    let (added, ignored) = root_store.add_parsable_certificates(chain);
+     assert!(added >= 1 && ignored == 0);
+     let cconfig = ClientConfig::builder()
+-        .with_safe_defaults()
+         .with_root_certificates(root_store)
+         .with_no_client_auth();
+     let client = ClientConnection::new(Arc::new(cconfig), domain);
