@@ -1,0 +1,64 @@
+From: Dirkjan Ochtman <dirkjan@ochtman.nl>
+From: Maytham Alsudany <maytha8thedev@gmail.com>
+Origin: upstream, https://github.com/hickory-dns/hickory-dns/commit/f9646f9494ec7d801fdef63024f2acc684b00f29
+Forwarded: not-needed
+Subject: [PATCH] Upgrade to rustls-native-certs 0.8
+
+--- a/src/quic/quic_client_stream.rs
++++ b/src/quic/quic_client_stream.rs
+@@ -276,8 +276,13 @@
+     {
+         use crate::error::ProtoErrorKind;
+ 
++        let mut result = rustls_native_certs::load_native_certs();
++        if let Some(err) = result.errors.pop() {
++            return Err(err.into());
++        }
++
+         let (added, ignored) =
+-            root_store.add_parsable_certificates(rustls_native_certs::load_native_certs()?);
++            root_store.add_parsable_certificates(result.certs);
+ 
+         if ignored > 0 {
+             tracing::warn!(
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -184,7 +184,7 @@
+ optional = true
+ 
+ [dependencies.rustls-native-certs]
+-version = "0.6.3"
++version = "0.8"
+ optional = true
+ 
+ [dependencies.rustls-pemfile]
+--- a/src/error.rs
++++ b/src/error.rs
+@@ -410,6 +410,16 @@
+     }
+ }
+ 
++#[cfg(all(feature = "native-certs", not(feature = "webpki-roots")))]
++impl From<rustls_native_certs::Error> for ProtoErrorKind {
++    fn from(e: rustls_native_certs::Error) -> Self {
++        match e.kind {
++            rustls_native_certs::ErrorKind::Io { inner, path: _ } => ProtoErrorKind::Io(inner),
++            _ => ProtoErrorKind::NativeCerts,
++        }
++    }
++}
++
+ impl<T> From<sync::PoisonError<T>> for ProtoError {
+     fn from(_e: sync::PoisonError<T>) -> Self {
+         ProtoErrorKind::Poisoned.into()
+--- a/src/h2/h2_client_stream.rs
++++ b/src/h2/h2_client_stream.rs
+@@ -749,7 +749,7 @@
+         #[cfg(all(feature = "native-certs", not(feature = "webpki-roots")))]
+         {
+             let (added, ignored) = root_store
+-                .add_parsable_certificates(&rustls_native_certs::load_native_certs().unwrap());
++                .add_parsable_certificates(rustls_native_certs::load_native_certs().unwrap());
+ 
+             if ignored > 0 {
+                 warn!(
