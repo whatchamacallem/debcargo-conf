@@ -1,0 +1,48 @@
+From: Maytham Alsudany <maytha8thedev@gmail.com>
+Forwarded: not-needed
+Description: Disable webpki roots
+ Use rustls-native-certs to access the system's certificate store instead.
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -40,6 +40,7 @@
+ [lib]
+ name = "tokio_rustls"
+ path = "src/lib.rs"
++doctest = false
+ 
+ [[test]]
+ name = "badssl"
+@@ -86,8 +87,8 @@
+ version = "1.0"
+ features = ["full"]
+ 
+-[dev-dependencies.webpki-roots]
+-version = "0.26"
++[dev-dependencies.rustls-native-certs]
++version = "0.8"
+ 
+ [features]
+ default = [
+--- a/tests/badssl.rs
++++ b/tests/badssl.rs
+@@ -43,7 +43,8 @@
+ 
+ async fn test_tls12_impl(vectored: bool) -> io::Result<()> {
+     let mut root_store = rustls::RootCertStore::empty();
+-    root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
++    let result = rustls_native_certs::load_native_certs().unwrap();
++    root_store.add_parsable_certificates(result);
+     let config = rustls::ClientConfig::builder_with_protocol_versions(&[&rustls::version::TLS12])
+         .with_root_certificates(root_store)
+         .with_no_client_auth();
+@@ -80,7 +81,8 @@
+ 
+ async fn test_modern_impl(vectored: bool) -> io::Result<()> {
+     let mut root_store = rustls::RootCertStore::empty();
+-    root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
++    let result = rustls_native_certs::load_native_certs().unwrap();
++    root_store.add_parsable_certificates(result);
+     let config = rustls::ClientConfig::builder()
+         .with_root_certificates(root_store)
+         .with_no_client_auth();

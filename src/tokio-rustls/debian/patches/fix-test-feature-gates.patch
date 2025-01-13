@@ -1,0 +1,64 @@
+From: Maytham Alsudany <maytha8thedev@gmail.com>
+Forwarded: no
+Description: Fix test feature gates
+ Some tests need to be gated behind the "ring" feature, as they relies on the
+ availability of a default CryptoProvider (which the "ring" feature in rustls
+ sets, and it is enabled by the "ring" feature in tokio-rustls).
+
+--- a/src/common/test_stream.rs
++++ b/src/common/test_stream.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "ring")]
+ use std::io::{self, Cursor, Read, Write};
+ use std::pin::Pin;
+ use std::sync::Arc;
+--- a/tests/test.rs
++++ b/tests/test.rs
+@@ -15,6 +15,7 @@
+ use tokio::{runtime, time};
+ use tokio_rustls::{LazyConfigAcceptor, TlsAcceptor, TlsConnector};
+ 
++#[cfg(feature = "ring")]
+ lazy_static! {
+     static ref TEST_SERVER: SocketAddr = {
+         let (config, _) = utils::make_configs();
+@@ -80,6 +81,7 @@
+     Ok(())
+ }
+ 
++#[cfg(feature = "ring")]
+ #[tokio::test]
+ async fn pass() -> io::Result<()> {
+     // TODO: not sure how to resolve this right now but since
+@@ -96,6 +98,7 @@
+     Ok(())
+ }
+ 
++#[cfg(feature = "ring")]
+ #[tokio::test]
+ async fn fail() -> io::Result<()> {
+     let (_, config) = utils::make_configs();
+@@ -108,6 +111,7 @@
+     Ok(())
+ }
+ 
++#[cfg(feature = "ring")]
+ #[tokio::test]
+ async fn test_lazy_config_acceptor() -> io::Result<()> {
+     let (sconfig, cconfig) = utils::make_configs();
+@@ -201,6 +205,7 @@
+     Ok(())
+ }
+ 
++#[cfg(feature = "ring")]
+ #[tokio::test]
+ async fn acceptor_alert() {
+     let (sconfig, _) = utils::make_configs();
+--- a/tests/early-data.rs
++++ b/tests/early-data.rs
+@@ -1,4 +1,4 @@
+-#![cfg(feature = "early-data")]
++#![cfg(all(feature = "early-data", feature = "ring"))]
+ 
+ use std::io::{self, Read, Write};
+ use std::net::{SocketAddr, TcpListener};
