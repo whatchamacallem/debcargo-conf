@@ -1,0 +1,16 @@
+Description: Disable tests using tikv-jemalloc-ctl, circular dependency
+ Also, -ctl is not in 'cator's dev-deps.
+Forwarded: not-needed
+Last-Update: 2025-01-14
+--- a/tests/malloctl.rs
++++ b/tests/malloctl.rs
+@@ -1 +1,2 @@
++#![cfg(feature = "tikv-jemalloc-ctl")]
+ use std::alloc::{GlobalAlloc, Layout};
+--- a/tests/background_thread_defaults.rs
++++ b/tests/background_thread_defaults.rs
+@@ -1,3 +1,3 @@
+ //! Test background threads run-time default settings.
+-
++#![cfg(feature = "tikv-jemalloc-ctl")]
+ use tikv_jemallocator::Jemalloc;
