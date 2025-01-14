@@ -8,3 +8,6 @@ override_dh_auto_test:
 ifneq ($(DEB_HOST_ARCH),mips64el)
 	dh_auto_test -- test --all
 endif
+
+override_dh_auto_install:
+	$(if $(findstring armhf,$(DEB_HOST_ARCH)), DEB_BUILD_OPTIONS="parallel=4 $(filter-out parallel=%,$(DEB_BUILD_OPTIONS))") dh_auto_install
