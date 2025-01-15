@@ -18,7 +18,7 @@
          atomic::{
 -            AtomicBool, AtomicI16, AtomicI32, AtomicI64, AtomicI8, AtomicIsize, AtomicU16,
 -            AtomicU32, AtomicU64, AtomicU8, AtomicUsize,
-+            AtomicBool, AtomicI16, AtomicI32,AtomicI8, AtomicIsize, AtomicU16,
++            AtomicBool, AtomicI16, AtomicI32, AtomicI8, AtomicIsize, AtomicU16,
 +            AtomicU32, AtomicU8, AtomicUsize,
          },
          Arc, Mutex, RwLock, Weak as ArcWeak,
@@ -27,10 +27,10 @@
  };
  
 +#[cfg(target_has_atomic = "64")]
-+use std::sync::atomic::AtomicU64;
++use std::sync::atomic::{AtomicU64, AtomicI64};
 +
 +#[cfg(not(target_has_atomic = "64"))]
-+use portable_atomic::AtomicU64;
++use portable_atomic::{AtomicU64, AtomicI64};
 +
  impl<T> Type for PhantomData<T>
  where
