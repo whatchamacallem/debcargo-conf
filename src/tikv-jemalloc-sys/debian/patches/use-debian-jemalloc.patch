@@ -1,0 +1,14 @@
+Description: Devendor jemalloc, use Debian packaged
+Forwarded: not-needed
+Last-Update: 2025-01-15
+--- a/build.rs
++++ b/build.rs
+@@ -79,2 +79,8 @@
+ fn main() {
++    println!("dh-cargo:deb-built-using=jemalloc_pic=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
++    let host_type = Command::new("dpkg-architecture").args(["--query", "DEB_HOST_MULTIARCH"]).output().expect("Debian: failed to query host type").stdout;
++    let host_type = String::from_utf8_lossy(&host_type);
++    println!("cargo:rustc-link-search=native=/usr/lib/{host_type}");
++    println!("cargo:rustc-link-lib=static=jemalloc");
++    return;
+     let target = expect_env("TARGET");
