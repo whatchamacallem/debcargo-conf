@@ -13,13 +13,14 @@ check_command curl jq
 
 pushd src >/dev/null
 
-NAMES=*
-if [ $# -ne 0 ]; then
-    NAMES=$@
+if [ ${#@} -eq 0 ]; then
+	names="$(ls | grep --invert-match --perl-regexp '\w-\d')"
+else
+	names=$@
 fi
 
 echo -e "crate\tpackaged\tcrates.io"
-for name in $NAMES; do
+for name in $names; do
     if [ ! -e $name/debian/changelog ]; then
         continue
     fi
