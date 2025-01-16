@@ -1,15 +1,7 @@
---- librocksdb-sys.orig/build.rs
-+++ librocksdb-sys/build.rs
-@@ -372,4 +372,12 @@
-         env::var("CARGO_MANIFEST_DIR").unwrap()
-     );
-     println!("cargo:out_dir={}", env::var("OUT_DIR").unwrap());
-+    println!(
-+        "dh-cargo:deb-built-using=rocksdb=1={}",
-+        env::var("CARGO_MANIFEST_DIR").unwrap()
-+    );
-+    println!(
-+        "dh-cargo:deb-built-using=snappy=1={}",
-+        env::var("CARGO_MANIFEST_DIR").unwrap()
-+    );
- }
+--- a/build.rs
++++ b/build.rs
+@@ -378,2 +378,4 @@
+ fn main() {
++    println!("dh-cargo:deb-built-using=rocksdb=1={}", env::var("CARGO_MANIFEST_DIR").unwrap());
++    println!("dh-cargo:deb-built-using=snappy=1={}", env::var("CARGO_MANIFEST_DIR").unwrap());
+     if !Path::new("rocksdb/AUTHORS").exists() {
