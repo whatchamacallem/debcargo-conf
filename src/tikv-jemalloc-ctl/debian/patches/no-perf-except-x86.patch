@@ -1,0 +1,10 @@
+Description: Disable profiling except on amd64 i386, as did src:jemalloc
+Forwarded: not-needed
+Last-Update: 2025-01-17
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -94,3 +94,3 @@
+ pub mod opt;
+-#[cfg(feature = "profiling")]
++#[cfg(all(feature = "profiling", any(target_arch = "x86", target_arch = "x86_64")))]
+ pub mod profiling;
