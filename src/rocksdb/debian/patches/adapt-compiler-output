@@ -1,73 +1,50 @@
 Author: Michael R. Crusoe <crusoe@debian.org>
 Description: match newer rustc output
 Forwarded: not-needed
---- rocksdb.orig/tests/fail/snapshot_outlive_db.stderr
-+++ rocksdb/tests/fail/snapshot_outlive_db.stderr
-@@ -6,6 +6,6 @@
- 5 |         let db = DB::open_default("foo").unwrap();
-   |             -- binding `db` declared here
+--- a/tests/fail/snapshot_outlive_db.stderr
++++ b/tests/fail/snapshot_outlive_db.stderr
+@@ -8,3 +8,3 @@
  6 |         db.snapshot()
 -  |         ^^^^^^^^^^^^^ borrowed value does not live long enough
 +  |         ^^ borrowed value does not live long enough
  7 |     };
-   |     - `db` dropped here while still borrowed
---- rocksdb.orig/tests/fail/iterator_outlive_db.stderr
-+++ rocksdb/tests/fail/iterator_outlive_db.stderr
-@@ -6,6 +6,6 @@
- 5 |         let db = DB::open_default("foo").unwrap();
-   |             -- binding `db` declared here
+--- a/tests/fail/iterator_outlive_db.stderr
++++ b/tests/fail/iterator_outlive_db.stderr
+@@ -8,3 +8,3 @@
  6 |         db.iterator(IteratorMode::Start)
 -  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ borrowed value does not live long enough
 +  |         ^^ borrowed value does not live long enough
  7 |     };
-   |     - `db` dropped here while still borrowed
---- rocksdb.orig/tests/fail/snapshot_outlive_transaction.stderr
-+++ rocksdb/tests/fail/snapshot_outlive_transaction.stderr
-@@ -6,6 +6,6 @@
- 6 |         let txn = db.transaction();
-   |             --- binding `txn` declared here
+--- a/tests/fail/snapshot_outlive_transaction.stderr
++++ b/tests/fail/snapshot_outlive_transaction.stderr
+@@ -8,3 +8,3 @@
  7 |         txn.snapshot()
 -  |         ^^^^^^^^^^^^^^ borrowed value does not live long enough
 +  |         ^^^ borrowed value does not live long enough
  8 |     };
-   |     - `txn` dropped here while still borrowed
---- rocksdb.orig/tests/fail/snapshot_outlive_transaction_db.stderr
-+++ rocksdb/tests/fail/snapshot_outlive_transaction_db.stderr
-@@ -6,6 +6,6 @@
- 5 |         let db = TransactionDB::<SingleThreaded>::open_default("foo").unwrap();
-   |             -- binding `db` declared here
+--- a/tests/fail/snapshot_outlive_transaction_db.stderr
++++ b/tests/fail/snapshot_outlive_transaction_db.stderr
+@@ -8,3 +8,3 @@
  6 |         db.snapshot()
 -  |         ^^^^^^^^^^^^^ borrowed value does not live long enough
 +  |         ^^ borrowed value does not live long enough
  7 |     };
-   |     - `db` dropped here while still borrowed
---- rocksdb.orig/tests/fail/transaction_outlive_transaction_db.stderr
-+++ rocksdb/tests/fail/transaction_outlive_transaction_db.stderr
-@@ -6,6 +6,6 @@
- 5 |         let db = TransactionDB::<SingleThreaded>::open_default("foo").unwrap();
-   |             -- binding `db` declared here
+--- a/tests/fail/transaction_outlive_transaction_db.stderr
++++ b/tests/fail/transaction_outlive_transaction_db.stderr
+@@ -8,3 +8,3 @@
  6 |         db.transaction()
 -  |         ^^^^^^^^^^^^^^^^ borrowed value does not live long enough
 +  |         ^^ borrowed value does not live long enough
  7 |     };
-   |     - `db` dropped here while still borrowed
---- rocksdb.orig/tests/fail/open_with_multiple_refs_as_single_threaded.stderr
-+++ rocksdb/tests/fail/open_with_multiple_refs_as_single_threaded.stderr
-@@ -2,7 +2,7 @@
-  --> tests/fail/open_with_multiple_refs_as_single_threaded.rs:8:5
-   |
+--- a/tests/fail/open_with_multiple_refs_as_single_threaded.stderr
++++ b/tests/fail/open_with_multiple_refs_as_single_threaded.stderr
+@@ -4,3 +4,3 @@
  8 |     db_ref1.create_cf("cf1", &opts).unwrap();
 -  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `db_ref1` is a `&` reference, so the data it refers to cannot be borrowed as mutable
 +  |     ^^^^^^^ `db_ref1` is a `&` reference, so the data it refers to cannot be borrowed as mutable
    |
- help: consider changing this to be a mutable reference
-   |
-@@ -13,7 +13,7 @@
-  --> tests/fail/open_with_multiple_refs_as_single_threaded.rs:9:5
-   |
+@@ -15,3 +15,3 @@
  9 |     db_ref2.create_cf("cf2", &opts).unwrap();
 -  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `db_ref2` is a `&` reference, so the data it refers to cannot be borrowed as mutable
 +  |     ^^^^^^^ `db_ref2` is a `&` reference, so the data it refers to cannot be borrowed as mutable
-   |
- help: consider changing this to be a mutable reference
    |

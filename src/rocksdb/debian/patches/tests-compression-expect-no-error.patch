@@ -1,0 +1,14 @@
+Description: Do not expect error even for compression types not enabled
+Forwarded: not-needed
+Last-Update: 2025-01-07
+--- a/tests/test_rocksdb_options.rs
++++ b/tests/test_rocksdb_options.rs
+@@ -214,5 +214,5 @@
+ 
+-    if should_open {
+-        let _db = db.unwrap();
+-    } else {
++    if true /* Debian: was should_open, but we dynamically link those and */ {
++        let _db = db.unwrap(); /* always pull them in, so there's no chance */
++    } else { /* they are unavailable */
+         let _err = db.unwrap_err();
