@@ -2,7 +2,7 @@ Index: wayland-backend/src/test/destructors.rs
 ===================================================================
 --- wayland-backend.orig/src/test/destructors.rs
 +++ wayland-backend/src/test/destructors.rs
-@@ -73,7 +73,7 @@ macro_rules! impl_client_objectdata {
+@@ -74,7 +74,7 @@ macro_rules! impl_client_objectdata {
  impl_client_objectdata!(client_rs);
  impl_client_objectdata!(client_sys);
  
@@ -11,7 +11,7 @@ Index: wayland-backend/src/test/destructors.rs
      let (tx, rx) = std::os::unix::net::UnixStream::pair().unwrap();
      let mut server = server_backend::Backend::new().unwrap();
      let _client_id = server.handle().insert_client(rx, Arc::new(())).unwrap();
-@@ -187,7 +187,7 @@ expand_test!(destructor_cleanup, {
+@@ -188,7 +188,7 @@ expand_test!(destructor_cleanup, {
      server.flush(None).unwrap();
  
      assert!(server_data.0.load(Ordering::Acquire));
@@ -24,7 +24,7 @@ Index: wayland-backend/src/test/many_args.rs
 ===================================================================
 --- wayland-backend.orig/src/test/many_args.rs
 +++ wayland-backend/src/test/many_args.rs
-@@ -116,7 +116,7 @@ macro_rules! clientdata_impls {
+@@ -122,7 +122,7 @@ macro_rules! clientdata_impls {
  clientdata_impls!(client_rs);
  clientdata_impls!(client_sys);
  
@@ -33,7 +33,7 @@ Index: wayland-backend/src/test/many_args.rs
  expand_test!(many_args, {
      let (tx, rx) = std::os::unix::net::UnixStream::pair().unwrap();
      let mut server = server_backend::Backend::new().unwrap();
-@@ -190,4 +190,4 @@ expand_test!(many_args, {
+@@ -196,4 +196,4 @@ expand_test!(many_args, {
      server.dispatch_all_clients(&mut ()).unwrap();
  
      assert!(server_data.0.load(Ordering::SeqCst));
@@ -43,7 +43,7 @@ Index: wayland-backend/src/test/mod.rs
 ===================================================================
 --- wayland-backend.orig/src/test/mod.rs
 +++ wayland-backend/src/test/mod.rs
-@@ -49,12 +49,12 @@ macro_rules! expand_test {
+@@ -48,12 +48,12 @@ macro_rules! expand_test {
      };
  }
  
@@ -71,7 +71,7 @@ Index: wayland-backend/src/test/object_args.rs
      ($server_backend:tt) => {
          impl $server_backend::ObjectData<()> for ServerData {
              fn request(
-@@ -87,7 +87,7 @@ macro_rules! impl_server_objectdata {
+@@ -94,7 +94,7 @@ macro_rules! impl_server_objectdata {
  }
  
  impl_server_objectdata!(server_rs);
@@ -80,7 +80,7 @@ Index: wayland-backend/src/test/object_args.rs
  
  struct ClientData(AtomicBool);
  
-@@ -119,7 +119,7 @@ impl_client_objectdata!(client_rs);
+@@ -126,7 +126,7 @@ impl_client_objectdata!(client_rs);
  impl_client_objectdata!(client_sys);
  
  // create a global and create objects
@@ -89,7 +89,7 @@ Index: wayland-backend/src/test/object_args.rs
      let (tx, rx) = std::os::unix::net::UnixStream::pair().unwrap();
      let mut server = server_backend::Backend::new().unwrap();
      let _client_id = server.handle().insert_client(rx, Arc::new(())).unwrap();
-@@ -480,4 +480,4 @@ expand_test!(new_id_null_and_non_null, {
+@@ -487,4 +487,4 @@ expand_test!(new_id_null_and_non_null, {
      client.prepare_read().unwrap().read().unwrap();
  
      assert!(server_data.0.load(Ordering::SeqCst));
@@ -117,12 +117,16 @@ Index: wayland-backend/src/test/protocol_error.rs
  
  expand_test!(client_wrong_id, {
      let (tx, rx) = std::os::unix::net::UnixStream::pair().unwrap();
-@@ -243,3 +243,3 @@
+@@ -255,7 +255,7 @@ impl<D> server_sys::ObjectData<D> for Pr
+     }
+ }
  
 -expand_test!(protocol_error_in_request_without_object_init, {
 +/* expand_test!(protocol_error_in_request_without_object_init, {
      let (tx, rx) = std::os::unix::net::UnixStream::pair().unwrap();
-@@ -302,4 +302,4 @@ expand_test!(protocol_error_in_request_w
+     let mut server = server_backend::Backend::new().unwrap();
+     let _client_id = server.handle().insert_client(rx, Arc::new(())).unwrap();
+@@ -316,4 +316,4 @@ expand_test!(protocol_error_in_request_w
  
      // the server should not panic, and gracefull accept that the user did not provide any object data for
      // the already destroyed object
