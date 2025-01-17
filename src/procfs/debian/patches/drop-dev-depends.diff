@@ -1,8 +1,6 @@
-Index: procfs/src/process/tests.rs
-===================================================================
---- procfs.orig/src/process/tests.rs
-+++ procfs/src/process/tests.rs
-@@ -443,7 +443,7 @@ fn test_nopanic() {
+--- a/src/process/tests.rs
++++ b/src/process/tests.rs
+@@ -494,7 +494,7 @@
      assert!(inner().is_err());
  }
  
@@ -11,7 +9,7 @@ Index: procfs/src/process/tests.rs
  fn test_procinfo() {
      // test to see that this crate and procinfo give mostly the same results
  
-@@ -468,7 +468,7 @@ fn test_procinfo() {
+@@ -519,7 +519,7 @@
      //assert_eq!(me_stat.flags, procinfo_stat.flags, "procfs:{:?} procinfo:{:?}", crate::StatFlags::from_bits(me_stat.flags), crate::StatFlags::from_bits(procinfo_stat.flags));
      assert_eq!(me_stat.pid, procinfo_stat.pid);
      assert_eq!(me_stat.ppid, procinfo_stat.ppid);
@@ -20,24 +18,27 @@ Index: procfs/src/process/tests.rs
  
  #[test]
  fn test_statm() {
-Index: procfs/Cargo.toml
-===================================================================
---- procfs.orig/Cargo.toml
-+++ procfs/Cargo.toml
-@@ -84,8 +84,2 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -167,15 +167,9 @@
+ [dev-dependencies.criterion]
+ version = "0.5"
  
 -[dev-dependencies.failure]
 -version = "0.1"
 -
+ [dev-dependencies.libc]
+ version = "0.2.139"
+ 
 -[dev-dependencies.procinfo]
 -version = "0.4.2"
 -
  [features]
-Index: procfs/src/lib.rs
-===================================================================
---- procfs.orig/src/lib.rs
-+++ procfs/src/lib.rs
-@@ -1367,7 +1367,7 @@ mod tests {
+ backtrace = [
+     "dep:backtrace",
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -643,7 +643,7 @@
          }
      }
  
@@ -46,10 +47,12 @@ Index: procfs/src/lib.rs
      #[test]
      fn test_failure() {
          fn inner() -> Result<(), failure::Error> {
-@@ -1385,5 +1385,5 @@ mod tests {
+@@ -661,7 +661,7 @@
          let _ = inner2();
          // Unwrapping this failure should produce a message that looks like:
          // thread 'tests::test_failure' panicked at 'called `Result::unwrap()` on an `Err` value: PermissionDenied(Some("/proc/1/maps"))', src/libcore/result.rs:997:5
 -    }
 +    }*/
- }
+ 
+     /// Test that an ESRCH error gets mapped into a ProcError::NotFound
+     #[test]
