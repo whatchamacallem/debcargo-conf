@@ -1,0 +1,22 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -49,3 +49,3 @@
+ [dependencies.bytecheck]
+-version = "0.6"
++version = "0.8"
+ optional = true
+@@ -68,3 +68,3 @@
+ [dependencies.rkyv]
+-version = "0.7"
++version = "0.8"
+ optional = true
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -83,5 +83,5 @@
+     feature = "rkyv",
+-    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
++    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, rkyv::Portable)
+ )]
+-#[cfg_attr(feature = "rkyv", archive(as = "Complex<T::Archived>"))]
++#[cfg_attr(feature = "rkyv", rkyv(as = Complex<T::Archived>))]
+ #[cfg_attr(feature = "bytecheck", derive(bytecheck::CheckBytes))]
