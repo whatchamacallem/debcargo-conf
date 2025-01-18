@@ -56,11 +56,12 @@ def _todash(crate: str) -> str:
     return crate.replace('_', '-')
 
 
-def _print(*args):
-    if stdout.isatty():
+if stdout.isatty():
+    def _print(*args):
         print('\n\x1b[34;100m[chain_build]\x1b[;m', *args)
-    else:
-        print('[chain_build]', *args, '\n')
+else:
+    def _print(*args):
+        print('\n[chain_build]', *args)
 
 
 DCH_VER_RE = re.compile(r'\((.*?)\)')
