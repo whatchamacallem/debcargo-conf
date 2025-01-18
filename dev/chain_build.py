@@ -92,6 +92,10 @@ class CrateSpec:
     def dch_path(self) -> str:
         return join('src', self.suffixed, 'debian', 'changelog')
 
+    @property
+    def debcargo_toml_path(self) -> str:
+        return join('src', self.suffixed, 'debian', 'debcargo.toml')
+
     def dch_version(self) -> str:
         line0 = open(self.dch_path).readline()
         search = DCH_VER_RE.search(line0)
@@ -160,7 +164,7 @@ def find_existing(specs: Sequence[CrateSpec]) -> tuple[CrateSource, ...]:
 
 
 def collapse_features(spec: CrateSpec) -> bool:
-    f = open(spec.dch_path, 'r+')
+    f = open(spec.debcargo_toml_path, 'r+')
     toml = f.read()
     if COLL_LINE in toml:
         return False
