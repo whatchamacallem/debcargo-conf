@@ -46,9 +46,7 @@ from typing import Sequence, Self
 try:
     from apt.cache import Cache as AptCache
 except Exception:
-    print(
-        'This scripts depends on python-apt to work, apt install python3-apt and rerun'
-    )
+    print('This scripts depends on python-apt to work, apt install python3-apt and rerun')
     exit(1)
 
 
@@ -63,7 +61,7 @@ aptc = AptCache()
 
 if stdout.isatty():
     def _print(*args):
-        print('\n\x1b[34;100m[chain_build]\x1b[;m', *args)
+        print('\n\x1b[34;100m[chain_build]\x1b[;m', *args) # ]] nvim..
 else:
     def _print(*args):
         print('\n[chain_build]', *args)
