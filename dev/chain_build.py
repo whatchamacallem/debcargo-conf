@@ -266,7 +266,7 @@ def chain_build(specs: Sequence[CrateSpec]) -> None:
         all_debs = glob('*.deb')
         chdir('..')
         for deb in all_debs:
-            if deb_match(deb, spec):
+            if spec.match_deb(deb):
                 debs.add(deb)
 
 
