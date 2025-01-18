@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-USAGE = 'Usage: dev/chain_build.py [!]<CRATE>[=<REALVER>] <CRATE2>[=<REALVER>] ...'
+USAGE = 'Usage: dev/chain_build.py [!]<CRATE>[=<REALVER>] [!]<CRATE2>[=<REALVER>] ...'
 
 HELP = f'''
 {USAGE}
