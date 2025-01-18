@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-USAGE = 'Usage: dev/chain_build.py [!]<CRATE>[=<REALVER>] [!]<CRATE2>[=<REALVER>] ...'
+USAGE = 'Usage: dev/chain_build.py [!]<CRATE>[-<SEMVER>][=<REALVER>] [!]<CRATE2>[-<SEMVER>][=<REALVER>] ...'
 
 HELP = f'''
 {USAGE}
@@ -9,6 +9,8 @@ Build a chain of packages, each having all previous packages as 'extra
 dependency deb' as in build.sh. It fails when one in the chain fails to build,
 and picks up where it stopped next time by checking which packages have been
 recently built.
+
+`<CRATE>-<SEMVER>` means a versioned package, i.e. src/<CRATE>-<SEMVER>.
 
 If multiple instances of the same crate are given, the first versioned
 (crate=ver) overrides others. This is to ease manually specifying versions
@@ -56,6 +58,9 @@ def _todash(crate: str) -> str:
     return crate.replace('_', '-')
 
 
+def _suffixed(crate: str, ver_suffix: str = '') -> str:
+    return f'{crate}-{ver_suffix}' if ver_suffix else crate
+
 if stdout.isatty():
     def _print(*args):
         print('\n\x1b[34;100m[chain_build]\x1b[;m', *args)
@@ -75,12 +80,12 @@ def _get_dch_version(crate: str) -> str:
     ).group(1)
 
 
-def find_existing(specs: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
+def find_existing(specs: list[tuple[str, str, str]]) -> list[tuple[str, str, str, str]]:
     '''Find existing debs.
 
-    :param specs: A list of 2-tuples, each being (name, version) of a crate
+    :param specs: A list of 3-tuples, each being (name, ver_suffix, version) of a crate
 
-    :return: A list of 3-tuples, each being (crate_name, deb_name, source),
+    :return: A list of 4-tuples, each being (crate_name, ver_suffix, deb_name, source),
     where source is either 'apt' (from apt cache) or 'build' (waiting for
     build)
     '''
@@ -89,23 +94,26 @@ def find_existing(specs: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
     chdir('build')
     debs = glob('*.deb')
     chdir('..')
-    built = []
+
+    built: list[tuple[str, str, str, str]] = []
+
     _print('Conducting search in apt cache and build/ directory for existing debs')
-    for crate, ver in specs:
+    for crate, ver_suffix, ver in specs:
         _crate = _todash(crate)
-        pkg_re = re.compile(rf'librust-{_crate}(?:\+.*?)?-dev_{ver}')
+        suffixed = _suffixed(_crate, ver_suffix)
+        pkg_re = re.compile(rf'librust-{suffixed}(?:\+.*?)?-dev_{ver}')
         if ver == '*':
             try:
-                ver = _get_dch_version(crate)
+                ver = _get_dch_version(suffixed)
             except Exception:
                 pass
-        pkg = aptc.get(f'librust-{_crate}-dev')
+        pkg = aptc.get(f'librust-{suffixed}-dev')
         if (
             pkg is not None
             and pkg.candidate is not None
             and (ver == '*' or pkg.candidate.version.startswith(ver))
         ):
-            built.append((crate, pkg.candidate.version, 'apt'))
+            built.append((crate, ver_suffix, pkg.candidate.version, 'apt'))
             continue
         if ver == '*':
             # version isn't specified, and d/changelog doesn't exist,
@@ -113,7 +121,7 @@ def find_existing(specs: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
             continue
         for deb in debs:
             if pkg_re.match(deb):
-                built.append((crate, deb, 'build'))
+                built.append((crate, ver_suffix, deb, 'build'))
     return built
 
 
@@ -145,10 +153,16 @@ def collapse_features(crate: str) -> bool:
     return True
 
 
-def build_one(crate: str, ver: str, prev_debs: list[str]) -> None:
+def build_one(
+    crate: str,
+    ver_suffix: str,
+    ver: str,
+    prev_debs: list[str] = [],
+) -> None:
     '''Build package for given crate.
 
     :param crate: Crate name.
+    :param ver_suffix optional: Version suffix (foo-1) or empty '' (foo).
     :param ver: Version to build, can be '*' or a version number. '*' means
     latest available.
     :param prev_debs: A list of previously built debs, passed to build process
@@ -157,52 +171,83 @@ def build_one(crate: str, ver: str, prev_debs: list[str]) -> None:
     :raises: Fails when running repackage.sh or update.sh failed.
     '''
 
+    args = (crate,)
+    if ver_suffix:
+        args = (crate, ver_suffix)
+
     env = environ.copy()
     if ver != '*':
         env['REALVER'] = ver
     # prevent git from stopping us with a pager
     env['GIT_PAGER'] = 'cat'
+
     # TODO: make repackage.sh the default
     if 'REPACKAGE' in env:
-        run(('./repackage.sh', crate), env=env, check=True)
+        run(('./repackage.sh',) + args, env=env, check=True)
     else:
         # \n is for when update.sh stops for confirmation
-        run(('./update.sh', crate), env=env, input=b'\n', check=True)
+        run(('./update.sh',) + args, env=env, input=b'\n', check=True)
         # if not set before, rerun ./update.sh to enable it
-        if collapse_features(crate):
-            run(('./update.sh', crate), env=env, input=b'\n', check=True)
+        if collapse_features(_suffixed(crate, ver_suffix)):
+            run(('./update.sh',) + args, env=env, input=b'\n', check=True)
+
     env['EXTRA_DEBS'] = ','.join(prev_debs)
+
     chdir('build')
-    run(('./build.sh', crate), env=env, check=True)
+    run(('./build.sh',) + args, env=env, check=True)
     chdir('..')
 
 
-def parse_specs(specs: List[str]) -> List[Tuple[str, str]]:
+VER_SUFFIX_RE = re.compile(r'([\w-]+)-(\d\S*)$')
+
+
+def parse_specs(specs: List[str]) -> List[Tuple[str, str, str]]:
     '''Parses input specs.
 
-    Each spec is a string in the format 'crate[=version]'.
+    Each spec is a string in the format 'crate[-ver_suffix][=version]'.
 
     :param specs: A tuple of spec strings.
 
-    :return: A list of 2-tuples, each being (name, version) of a crate.
+    :return: A list of 3-tuples, each being (name, ver_suffix, version) of a crate.
     '''
 
     recorded = []
-    versions: Dict[str, str] = {}
+    versions: Dict[Tuple[str, str], str] = {}
     for spec in specs:
         crate, ver = (spec.split('=') + ['*'])[:2]
         # filter out 1.2.3+surplus-version-part
         if '+' in ver:
             ver = ver.split('+')[0]
 
-        if crate in recorded:
-            if versions.get(crate, '*') != '*':
+        suffix_search = VER_SUFFIX_RE.search(crate)
+        ver_suffix = ''
+        if suffix_search:
+            crate, ver_suffix = suffix_search.groups()
+        c_vs = (crate, ver_suffix)
+
+        if c_vs in recorded:
+            if versions.get(c_vs, '*') != '*':
                 continue
         else:
-            recorded.append(crate)
-        versions[crate] = ver
+            recorded.append(c_vs)
+        versions[c_vs] = ver
 
-    return [(crate, versions[crate]) for crate in recorded]
+    return [(crate, ver_suffix, versions[(crate, ver_suffix)]) for (crate, ver_suffix) in recorded]
+
+
+def try_build(crate, ver_suffix, ver, debs):
+    suffixed = _suffixed(crate, ver_suffix)
+    try:
+        build_one(crate, ver_suffix, ver, debs)
+    except Exception as e:
+        print(e)
+        _print(
+            f'Failed to build {suffixed}. Please fix it then press any key to continue.'
+        )
+        input()
+        if basename(getcwd()) == 'build':
+            chdir('..')
+        try_build(crate, ver_suffix, ver, debs)
 
 
 def chain_build(specs: List[str]) -> None:
@@ -211,32 +256,37 @@ def chain_build(specs: List[str]) -> None:
     :param specs: A tuple of crate specs. See `parse_specs()`.
     '''
 
+    global _suffixed
     specs = parse_specs(specs)
     found = find_existing(specs)
     env = environ.copy()
     extra_debs = env.get('EXTRA_DEBS')
     built, debs = set(), set()
-    target = specs[-1][0]
+    target_spec = specs[-1]
+    target = target_spec[0]
+    target_ver_suffix = target_spec[1]
     if found:
         _print('Existing debs:')
-        for crate, deb_or_ver, kind in found:
-            if crate == target:
+        for crate, ver_suffix, deb_or_ver, kind in found:
+            if crate == target and ver_suffix == target_ver_suffix:
                 continue
-            built.add(crate)
+            built.add((crate, ver_suffix))
+            suffixed = _suffixed(crate, ver_suffix)
             if kind == 'build':
-                print(crate, deb_or_ver)
+                print(suffixed, deb_or_ver)
                 debs.add(deb_or_ver)
             elif kind == 'apt':
-                print(crate, deb_or_ver, 'in apt repository')
+                print(suffixed, deb_or_ver, 'in apt repository')
         _print('To be built:')
-        for crate, ver in specs:
-            if crate not in built:
+        for crate, ver_suffix, ver in specs:
+            suffixed = _suffixed(crate, ver_suffix)
+            if (crate, ver_suffix) not in built:
                 if ver == '*':
                     try:
-                        ver = _get_dch_version(crate)
+                        ver = _get_dch_version(suffixed)
                     except:
                         pass
-                print(crate, ver, 'FORCE BUILD' if crate[0] == '!' else '')
+                print(suffixed, ver, 'FORCE BUILD' if crate[0] == '!' else '')
     else:
         built, debs = set(), set()
         _print('No recently built packages')
@@ -249,32 +299,20 @@ def chain_build(specs: List[str]) -> None:
     _print('Starting chain build, press any key to continue, Ctrl+C to abort')
     input()
 
-    def try_build(crate, ver, debs):
-        try:
-            build_one(crate, ver, debs)
-        except Exception as e:
-            print(e)
-            _print(
-                f'Failed to build crate {crate}. Please fix it then press any key to continue.'
-            )
-            input()
-            if basename(getcwd()) == 'build':
-                chdir('..')
-            try_build(crate, ver, debs)
-
-    for crate, ver in specs:
-        if crate in built:
+    for crate, ver_suffix, ver in specs:
+        if (crate, ver_suffix) in built:
             continue
         if crate[0] == '!':
             crate = crate[1:]
-        _print('Start building', crate, 'version', ver, 'with previous debs', debs)
-        try_build(crate, ver, debs)
-        built.add(crate)
+        suffixed = _suffixed(crate, ver_suffix)
+        _print('Start building', suffixed, 'version', ver, 'with previous debs', debs)
+        try_build(crate, ver_suffix, ver, debs)
+        built.add((crate, ver_suffix))
         if ver == '*':
             # used in a glob, so
             ver = ''
-        _crate = _todash(crate)
-        pkg_re = re.compile(rf'librust-{_crate}(?:\+.*?)?-dev_{ver}')
+        _suffixed = _todash(suffixed)
+        pkg_re = re.compile(rf'librust-{_suffixed}(?:\+.*?)?-dev_{ver}')
         chdir('build')
         all_debs = glob('*.deb')
         chdir('..')
