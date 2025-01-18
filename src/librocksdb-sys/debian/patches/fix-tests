@@ -1,3 +1,15 @@
+From: NoisyCoil <noisycoil@tutanota.com>
+Subject: Fix error_message argument type
+Forwarded: https://github.com/rust-rocksdb/rust-rocksdb/pull/972
+
+Some of the tests that were re-enabled in v0.17 of librocksdb-sys fail to compile on at least arm64, armel and riscv64 on Debian infrastructure due to a bad argument type (`error[E0308]: mismatched types, expected *const i8, found *mut u8`):
+
+    https://ci.debian.net/packages/r/rust-librocksdb-sys/testing/arm64/56531952/
+    https://ci.debian.net/packages/r/rust-librocksdb-sys/testing/armel/56531584/
+    https://ci.debian.net/packages/r/rust-librocksdb-sys/testing/riscv64/56538194/
+
+This PR uses libc's `c_char` instead of `i8` as the argument of `error_message` so as to match the corresponding variable in `internal`.
+
 --- a/src/test.rs
 +++ b/src/test.rs
 @@ -20,7 +20,7 @@
