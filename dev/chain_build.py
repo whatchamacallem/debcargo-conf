@@ -6,11 +6,12 @@ HELP = f'''
 {USAGE}
 
 Build a chain of packages, each having all previous packages as 'extra
-dependency deb' as in build.sh. It fails when one in the chain fails to build,
-and picks up where it stopped next time by checking which packages have been
+dependency deb' as in build.sh. Fails when one in the chain fails to build, and
+picks up where it stopped next time by checking which packages have been
 recently built.
 
 `<CRATE>-<SEMVER>` means a versioned package, i.e. src/<CRATE>-<SEMVER>.
+It's considered different than `<CRATE>`.
 
 If multiple instances of the same crate are given, the first versioned
 (crate=ver) overrides others. This is to ease manually specifying versions
@@ -29,9 +30,9 @@ Env vars:
 - CHROOT
 - SBUILD_OPTS
 - EXTRA_DEBS
-Those env vars are passed to build.sh, read it for their descriptions.
-
-- REPACKAGE: Use ./repackage.sh instead of ./update.sh to prepare the source package
+    Those env vars are passed to build.sh, read it for their descriptions.
+- REPACKAGE
+    Use ./repackage.sh instead of ./update.sh to prepare the source package
 '''
 
 import re
@@ -46,7 +47,7 @@ from typing import Sequence, Self
 try:
     from apt.cache import Cache as AptCache
 except Exception:
-    print('This scripts depends on python-apt to work, apt install python3-apt and rerun')
+    print('python-apt is needed, apt install python3-apt and re-run')
     exit(1)
 
 
@@ -129,14 +130,6 @@ class CrateSource:
 
 
 def find_existing(specs: Sequence[CrateSpec]) -> tuple[CrateSource, ...]:
-    '''Find existing debs.
-
-    :param specs: A sequence of `CrateSpec`s
-
-    :return: A tuple of `CrateSource`s, whose `.kind` is either 'apt'
-    (from apt cache) or 'build' (waiting for build)
-    '''
-
     # get all debs first, so we needn't walk again and again
     chdir('build')
     debs = glob('*.deb')
@@ -144,7 +137,6 @@ def find_existing(specs: Sequence[CrateSpec]) -> tuple[CrateSource, ...]:
 
     built = []
 
-    _print('Conducting search in apt cache and build/ directory for existing debs')
     for spec in specs:
         ver = spec.ver if spec.ver != UNKNOWN_VERSION else spec.dch_version()
         pkg = aptc.get(f'librust-{spec.suffixed}-dev')
@@ -164,8 +156,6 @@ def find_existing(specs: Sequence[CrateSpec]) -> tuple[CrateSource, ...]:
 
 
 def collapse_features(spec: CrateSpec) -> bool:
-    '''Write COLL_LINE into `crate`'s debcargo.toml.'''
-
     f = open(spec.dch_path, 'r+')
     toml = f.read()
     if COLL_LINE in toml:
@@ -189,15 +179,6 @@ def collapse_features(spec: CrateSpec) -> bool:
 
 
 def build_one(spec: CrateSpec, prev_debs: set[str]) -> None:
-    '''Build package for given crate.
-
-    :param cratespec: `CrateSpec`.
-    :param prev_debs: A list of previously built debs, passed to build process
-    to be installed as additional packages (usually dependencies).
-
-    :raises: Fails when running repackage.sh or update.sh failed.
-    '''
-
     args: tuple[str, ...] = (spec.name,)
     if spec.ver_suffix:
         args = (spec.name, spec.ver_suffix)
@@ -230,8 +211,7 @@ def try_build(spec: CrateSpec, debs: set[str]) -> None:
         build_one(spec, debs)
     except Exception as e:
         print(e)
-        _print(f'Failed to build {spec.suffixed}.' \
-            'Please fix it then press any key to continue.')
+        _print(f'Failed to build {spec.suffixed}. Fix it then press any key to continue.')
         input()
         if basename(getcwd()) == 'build':
             chdir('..')
@@ -239,11 +219,6 @@ def try_build(spec: CrateSpec, debs: set[str]) -> None:
 
 
 def chain_build(specs: Sequence[CrateSpec]) -> None:
-    '''Build crates in a chain.
-
-    :param specs: A sequence of `CrateSpec`s.
-    '''
-
     found = find_existing(specs)
     env = environ.copy()
     extra_debs = env.get('EXTRA_DEBS')
@@ -273,13 +248,13 @@ def chain_build(specs: Sequence[CrateSpec]) -> None:
             print(deb)
             debs.add(deb)
 
-    _print('Starting chain build, press any key to continue, Ctrl+C to abort')
+    _print('Press any key to start chain build, Ctrl-C to abort')
     input()
 
     for spec in specs:
         if spec in built:
             continue
-        _print('Start building', spec.suffixed, 'version', spec.ver, 'with previous debs', debs)
+        _print('Building', spec.suffixed, 'version', spec.ver, 'with previous debs', debs)
         try_build(spec, debs)
         built.add(spec)
 
@@ -317,5 +292,5 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        _print('exitting due to Ctrl-C')
+        _print('Exitting due to Ctrl-C')
 
