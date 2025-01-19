@@ -1,0 +1,103 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -34,7 +34,7 @@
+ features = ["full"]
+ 
+ [dependencies.zbus]
+-version = "4.3.1"
++version = "5"
+ features = ["tokio"]
+ default-features = false
+ 
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -7,7 +7,7 @@
+ use log::Logger;
+ use parser::CliArgs;
+ use std::{collections::HashMap, error::Error, fs, process::Command};
+-use zbus::{connection, interface, Connection, SignalContext};
++use zbus::{connection, interface, Connection, object_server::SignalEmitter};
+ 
+ /// Stores and manages the resources
+ #[derive(Debug, PartialEq, Eq)]
+@@ -175,7 +175,7 @@
+     }
+ 
+     /// Notify clients when resource changed
+-    pub async fn emit_resources_changed(&self, ctxt: &SignalContext<'_>) {
++    pub async fn emit_resources_changed(&self, ctxt: &SignalEmitter<'_>) {
+         if let Err(e) = self.resources_changed(&ctxt).await {
+             self.logger.error(&format!("{e}"));
+         }
+@@ -197,7 +197,7 @@
+     /// DBus Interface to load resources from file
+     async fn load(
+         &mut self,
+-        #[zbus(signal_context)] ctxt: SignalContext<'_>,
++        #[zbus(signal_context)] ctxt: SignalEmitter<'_>,
+         path: &str,
+         nocpp: bool,
+     ) {
+@@ -208,7 +208,7 @@
+     /// DBus Interface to merge resources from file
+     async fn merge(
+         &mut self,
+-        #[zbus(signal_context)] ctxt: SignalContext<'_>,
++        #[zbus(signal_context)] ctxt: SignalEmitter<'_>,
+         path: &str,
+         nocpp: bool,
+     ) {
+@@ -219,7 +219,7 @@
+     /// DBus Interface to load resources from file using custom preprocessor
+     async fn load_cpp(
+         &mut self,
+-        #[zbus(signal_context)] ctxt: SignalContext<'_>,
++        #[zbus(signal_context)] ctxt: SignalEmitter<'_>,
+         path: &str,
+         cpp: &str,
+         args: &str,
+@@ -231,7 +231,7 @@
+     /// DBus Interface to merge resources from file using custom preprocessor
+     async fn merge_cpp(
+         &mut self,
+-        #[zbus(signal_context)] ctxt: SignalContext<'_>,
++        #[zbus(signal_context)] ctxt: SignalEmitter<'_>,
+         path: &str,
+         cpp: &str,
+         args: &str,
+@@ -279,7 +279,7 @@
+     /// in'resources' property value
+     pub async fn set_resource(
+         &mut self,
+-        #[zbus(signal_context)] ctxt: SignalContext<'_>,
++        #[zbus(signal_context)] ctxt: SignalEmitter<'_>,
+         key: String,
+         val: String,
+     ) {
+@@ -303,7 +303,7 @@
+     /// TODO: Separate implementation to make more testable
+     pub async fn add_resource(
+         &mut self,
+-        #[zbus(signal_context)] ctxt: SignalContext<'_>,
++        #[zbus(signal_context)] ctxt: SignalEmitter<'_>,
+         key: String,
+         val: String,
+     ) {
+@@ -320,7 +320,7 @@
+     }
+ 
+     /// Dbus interface to remove all entries from config manager
+-    pub async fn remove_all(&mut self, #[zbus(signal_context)] ctxt: SignalContext<'_>) {
++    pub async fn remove_all(&mut self, #[zbus(signal_context)] ctxt: SignalEmitter<'_>) {
+         let num_of_resources = self.resources.len();
+         self.resources.clear();
+         if num_of_resources > 0 {
+@@ -330,7 +330,7 @@
+     }
+ 
+     /// Dbus interface to remove single entry from config manager
+-    pub async fn remove_one(&mut self, #[zbus(signal_context)] ctxt: SignalContext<'_>, key: &str) {
++    pub async fn remove_one(&mut self, #[zbus(signal_context)] ctxt: SignalEmitter<'_>, key: &str) {
+         let key_trimmed = trim_str(key);
+         let removed_entry = self.handle_remove_one(key_trimmed);
+         if let Some(pair) = removed_entry {
