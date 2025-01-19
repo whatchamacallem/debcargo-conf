@@ -1,0 +1,53 @@
+Description: Disable hedge feature with failed to build dep hdrhistogram
+ hdrhistogram fails to build on i386, blocking itself and tower from migrating
+ to testing
+Bug: https://github.com/HdrHistogram/HdrHistogram_rust/issues/111
+Bug-Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1014034
+Last-Update: 2022-11-13
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -37,2 +37,3 @@
+ repository = "https://github.com/tower-rs/tower"
++autoexamples = false
+ 
+@@ -48,3 +49,3 @@
+ 
+-[[example]]
++[[disabled.example]]
+ name = "tower-balance"
+@@ -63,3 +64,3 @@
+ 
+-[dependencies.hdrhistogram]
++[disabled.dependencies.hdrhistogram]
+ version = "7.0"
+@@ -118,3 +119,3 @@
+ 
+-[dev-dependencies.hdrhistogram]
++[disabled.dev-dependencies.hdrhistogram]
+ version = "7.0"
+@@ -188,3 +189,3 @@
+     "filter",
+-    "hedge",
++#    "hedge",
+     "limit",
+@@ -201,10 +202,10 @@
+ ]
+-hedge = [
+-    "util",
+-    "filter",
+-    "futures-util",
+-    "hdrhistogram",
+-    "tokio/time",
+-    "tracing",
+-]
++#hedge = [
++#    "util",
++#    "filter",
++#    "futures-util",
++#    "hdrhistogram",
++#    "tokio/time",
++#    "tracing",
++#]
+ limit = [
