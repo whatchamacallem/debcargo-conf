@@ -1,0 +1,56 @@
+From e4f651bb6425393cb0c9b8079f23c1811f3d31aa Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Fabian=20Gr=C3=BCnbichler?= <git@fabian.gruenbichler.email>
+Date: Sat, 18 Jan 2025 20:35:13 +0100
+Subject: [PATCH] Dirent: drop From<&Path>, change From<&str> to From<&CStr>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+this fixes #97 , although there might be more similar issues that the tests
+don't expose..
+
+Signed-off-by: Fabian Grünbichler <git@fabian.gruenbichler.email>
+---
+ src/client.rs |  3 ++-
+ src/dirent.rs | 10 ++--------
+ 2 files changed, 4 insertions(+), 9 deletions(-)
+
+diff --git a/src/client.rs b/src/client.rs
+index 1a57133..6325b5d 100644
+--- a/src/client.rs
++++ b/src/client.rs
+@@ -1445,7 +1445,8 @@ mod tests {
+         let mut repos = crate::repos::Repos::create(&repo_path).unwrap();
+         assert_eq!(repos.path(), td.path().join("repo"));
+         let mut ctx = Context::new().unwrap();
+-        let dirent = crate::dirent::Dirent::from(repo_path.to_str().unwrap());
++        let repo_path = std::ffi::CString::new(repo_path.to_str().unwrap()).unwrap();
++        let dirent = crate::dirent::Dirent::from(repo_path.as_c_str());
+         let url = dirent.canonicalize().to_file_url().unwrap();
+         let revnum = ctx
+             .checkout(
+diff --git a/src/dirent.rs b/src/dirent.rs
+index 05cafba..517cd6d 100644
+--- a/src/dirent.rs
++++ b/src/dirent.rs
+@@ -262,18 +262,12 @@ impl From<Dirent<'_>> for &str {
+     }
+ }
+ 
+-impl<'a> From<&'a str> for Dirent<'a> {
+-    fn from(s: &'a str) -> Self {
++impl<'a> From<&'a std::ffi::CStr> for Dirent<'a> {
++    fn from(s: &'a std::ffi::CStr) -> Self {
+         Self(s.as_ptr() as *const i8, std::marker::PhantomData)
+     }
+ }
+ 
+-impl<'a> From<&'a std::path::Path> for Dirent<'a> {
+-    fn from(path: &'a std::path::Path) -> Self {
+-        Self::from(path.to_str().unwrap())
+-    }
+-}
+-
+ impl<'a> From<Dirent<'a>> for std::path::PathBuf {
+     fn from(dirent: Dirent<'a>) -> Self {
+         let c = unsafe { std::ffi::CStr::from_ptr(dirent.as_ptr()) };
