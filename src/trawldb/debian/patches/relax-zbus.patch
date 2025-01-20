@@ -1,0 +1,29 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -31,7 +31,7 @@
+ features = ["full"]
+ 
+ [dependencies.zbus]
+-version = "4.3.1"
++version = "5"
+ features = ["tokio"]
+ default-features = false
+ 
+--- a/src/manager.rs
++++ b/src/manager.rs
+@@ -6,7 +6,6 @@
+     default_path = "/org/regolith/Trawl",
+     interface = "org.regolith.trawl1"
+ )]
+-#[dbus_proxy]
+ pub trait ResourceManager {
+     fn load(&self, path: &str, nocpp: bool) -> Result<()>;
+     fn merge(&self, path: &str, nocpp: bool) -> Result<()>;
+@@ -20,6 +19,6 @@
+     fn remove_one(&self, key: &str) -> Result<()>;
+     fn remove_all(&self) -> Result<()>;
+ 
+-    #[dbus_proxy(property)]
++    #[zbus(property)]
+     fn resources(&self) -> Result<HashMap<String, String>>;
+ }
