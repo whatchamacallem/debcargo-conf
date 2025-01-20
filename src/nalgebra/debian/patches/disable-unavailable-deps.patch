@@ -1,0 +1,153 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -77,3 +77,3 @@
+ 
+-[[example]]
++[[disabled.example]]
+ name = "matrixcompare"
+@@ -153,3 +153,3 @@
+ 
+-[dependencies.glam014]
++[disabled.dependencies.glam014]
+ version = "0.14"
+@@ -158,3 +158,3 @@
+ 
+-[dependencies.glam015]
++[disabled.dependencies.glam015]
+ version = "0.15"
+@@ -163,3 +163,3 @@
+ 
+-[dependencies.glam016]
++[disabled.dependencies.glam016]
+ version = "0.16"
+@@ -168,3 +168,3 @@
+ 
+-[dependencies.glam017]
++[disabled.dependencies.glam017]
+ version = "0.17"
+@@ -173,3 +173,3 @@
+ 
+-[dependencies.glam018]
++[disabled.dependencies.glam018]
+ version = "0.18"
+@@ -178,3 +178,3 @@
+ 
+-[dependencies.glam019]
++[disabled.dependencies.glam019]
+ version = "0.19"
+@@ -183,3 +183,3 @@
+ 
+-[dependencies.glam020]
++[disabled.dependencies.glam020]
+ version = "0.20"
+@@ -188,3 +188,3 @@
+ 
+-[dependencies.glam021]
++[disabled.dependencies.glam021]
+ version = "0.21"
+@@ -193,3 +193,3 @@
+ 
+-[dependencies.glam022]
++[disabled.dependencies.glam022]
+ version = "0.22"
+@@ -198,3 +198,3 @@
+ 
+-[dependencies.glam023]
++[disabled.dependencies.glam023]
+ version = "0.23"
+@@ -203,3 +203,3 @@
+ 
+-[dependencies.glam024]
++[disabled.dependencies.glam024]
+ version = "0.24"
+@@ -208,3 +208,3 @@
+ 
+-[dependencies.glam025]
++[disabled.dependencies.glam025]
+ version = "0.25"
+@@ -213,3 +213,3 @@
+ 
+-[dependencies.glam027]
++[disabled.dependencies.glam027]
+ version = "0.27"
+@@ -223,3 +223,3 @@
+ 
+-[dependencies.glam029]
++[disabled.dependencies.glam029]
+ version = "0.29"
+@@ -228,3 +228,3 @@
+ 
+-[dependencies.matrixcompare-core]
++[disabled.dependencies.matrixcompare-core]
+ version = "0.1"
+@@ -307,3 +307,3 @@
+ 
+-[dev-dependencies.cool_asserts]
++[disabled.dev-dependencies.cool_asserts]
+ version = "2.0.3"
+@@ -317,3 +317,3 @@
+ 
+-[dev-dependencies.matrixcompare]
++[disabled.dev-dependencies.matrixcompare]
+ version = "0.3.0"
+@@ -335,3 +335,3 @@
+ arbitrary = ["quickcheck"]
+-compare = ["matrixcompare-core"]
++#compare = ["matrixcompare-core"]
+ convert-bytemuck = [
+@@ -340,17 +340,17 @@
+ ]
+-convert-glam014 = ["glam014"]
+-convert-glam015 = ["glam015"]
+-convert-glam016 = ["glam016"]
+-convert-glam017 = ["glam017"]
+-convert-glam018 = ["glam018"]
+-convert-glam019 = ["glam019"]
+-convert-glam020 = ["glam020"]
+-convert-glam021 = ["glam021"]
+-convert-glam022 = ["glam022"]
+-convert-glam023 = ["glam023"]
+-convert-glam024 = ["glam024"]
+-convert-glam025 = ["glam025"]
+-convert-glam027 = ["glam027"]
+-convert-glam028 = ["glam028"]
+-convert-glam029 = ["glam029"]
++#convert-glam014 = ["glam014"]
++#convert-glam015 = ["glam015"]
++#convert-glam016 = ["glam016"]
++#convert-glam017 = ["glam017"]
++#convert-glam018 = ["glam018"]
++#convert-glam019 = ["glam019"]
++#convert-glam020 = ["glam020"]
++#convert-glam021 = ["glam021"]
++#convert-glam022 = ["glam022"]
++#convert-glam023 = ["glam023"]
++#convert-glam024 = ["glam024"]
++#convert-glam025 = ["glam025"]
++#convert-glam027 = ["glam027"]
++#convert-glam028 = ["glam028"]
++#convert-glam029 = ["glam029"]
+ convert-mint = ["mint"]
+--- a/tests/macros/stack.rs
++++ b/tests/macros/stack.rs
+@@ -1,3 +1,3 @@
+ use crate::macros::assert_eq_and_type;
+-use cool_asserts::assert_panics;
++//use cool_asserts::assert_panics;
+ use na::VecStorage;
+@@ -12,2 +12,15 @@
+ 
++macro_rules! assert_panics {
++    ($ex:expr, includes($inc:expr)) => {{
++        let result = ::std::panic::catch_unwind(|| { $ex });
++        if result.is_ok() || format!("{:?}", result.unwrap_err()).contains($inc) {
++            panic!(
++                r#"assertion failed at {}:{}: `("expressionn didn't panic")`"#,
++                ::std::file!(),
++                ::std::line!(),
++            );
++        }
++    }}
++}
++
+ /// Simple implementation that stacks dynamic matrices.
