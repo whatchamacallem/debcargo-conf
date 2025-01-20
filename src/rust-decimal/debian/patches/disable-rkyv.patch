@@ -1,0 +1,26 @@
+Description: Temporarily disable rkyv
+ Nothing in Debian currently depends on rust_decimal+rkyv, so temporarily
+ disable to allow upgrading rkyv to 0.8.
+ .
+ Upstream held off such an upgrade, while providing an example to use the
+ "remote derive" from rkyv: https://github.com/paupino/rust-decimal#rkyv.
+ If needed while upstream still has yet to upgrade, try that for dependents of
+ rust_decimal.
+Author: Blair Noctis <ncts@debian.org>
+Forwarded: not-needed
+Last-Update: 2025-01-20
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -128 +128 @@
+-[dependencies.rkyv]
++[disabled.dependencies.rkyv]
+@@ -254,2 +254,2 @@
+-rkyv = ["dep:rkyv"]
+-rkyv-safe = ["rkyv/validation"]
++#rkyv = ["dep:rkyv"]
++#rkyv-safe = ["rkyv/validation"]
+@@ -275 +275 @@
+-    "rkyv?/std",
++    #"rkyv?/std",
