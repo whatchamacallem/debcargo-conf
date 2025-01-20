@@ -1,0 +1,39 @@
+Index: h2/src/lib.rs
+===================================================================
+--- h2.orig/src/lib.rs
++++ h2/src/lib.rs
+@@ -105,6 +105,10 @@ macro_rules! ready {
+     };
+ }
+ 
++#[cfg(feature = "legacy")]
++#[path = "../legacy/lib.rs"]
++pub mod legacy;
++
+ #[cfg_attr(feature = "unstable", allow(missing_docs))]
+ mod codec;
+ mod error;
+Index: h2/Cargo.toml
+===================================================================
+--- h2.orig/Cargo.toml
++++ h2/Cargo.toml
+@@ -88,6 +88,11 @@ default-features = false
+ [dependencies.http]
+ version = "1"
+ 
++[dependencies.http_02]
++version = "0.2"
++package = "http"
++optional = true
++
+ [dependencies.indexmap]
+ version = "2"
+ features = ["std"]
+@@ -152,6 +157,7 @@ version = "0.26"
+ [features]
+ stream = []
+ unstable = []
++legacy = ["dep:http_02"]
+ 
+ [lints.rust.unexpected_cfgs]
+ level = "warn"
