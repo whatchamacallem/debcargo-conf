@@ -1,0 +1,129 @@
+From 77690775a759140ea7b85c71c8291006b34c3c76 Mon Sep 17 00:00:00 2001
+From: NoisyCoil <noisycoil@tutanota.com>
+Date: Mon, 20 Jan 2025 19:43:37 +0100
+Subject: [PATCH] Update zbus to v5
+
+---
+ src/blocking/collection.rs | 2 +-
+ src/blocking/item.rs       | 2 +-
+ src/collection.rs          | 2 +-
+ src/item.rs                | 2 +-
+ src/proxy/collection.rs    | 2 +-
+ src/proxy/item.rs          | 2 +-
+ src/proxy/prompt.rs        | 2 +-
+ src/proxy/service.rs       | 2 +-
+ src/util.rs                | 2 +-
+ 9 files changed, 9 insertions(+), 9 deletions(-)
+
+--- a/src/blocking/collection.rs
++++ b/src/blocking/collection.rs
+@@ -16,7 +16,7 @@
+ use std::collections::HashMap;
+ use zbus::{
+     zvariant::{Dict, ObjectPath, OwnedObjectPath, Value},
+-    CacheProperties,
++    proxy::CacheProperties,
+ };
+ 
+ // Collection struct.
+--- a/src/blocking/item.rs
++++ b/src/blocking/item.rs
+@@ -14,7 +14,7 @@
+ use crate::util::{exec_prompt_blocking, format_secret, lock_or_unlock_blocking, LockAction};
+ 
+ use std::collections::HashMap;
+-use zbus::{zvariant::OwnedObjectPath, CacheProperties};
++use zbus::{zvariant::OwnedObjectPath, proxy::CacheProperties};
+ 
+ pub struct Item<'a> {
+     conn: zbus::blocking::Connection,
+--- a/src/collection.rs
++++ b/src/collection.rs
+@@ -16,7 +16,7 @@
+ use std::collections::HashMap;
+ use zbus::{
+     zvariant::{Dict, ObjectPath, OwnedObjectPath, Value},
+-    CacheProperties,
++    proxy::CacheProperties,
+ };
+ 
+ // Collection struct.
+--- a/src/item.rs
++++ b/src/item.rs
+@@ -14,7 +14,7 @@
+ use crate::util::{exec_prompt, format_secret, lock_or_unlock, LockAction};
+ 
+ use std::collections::HashMap;
+-use zbus::{zvariant::OwnedObjectPath, CacheProperties};
++use zbus::{zvariant::OwnedObjectPath, proxy::CacheProperties};
+ 
+ pub struct Item<'a> {
+     conn: zbus::Connection,
+--- a/src/proxy/collection.rs
++++ b/src/proxy/collection.rs
+@@ -22,7 +22,7 @@
+     interface = "org.freedesktop.Secret.Collection",
+     default_service = "org.freedesktop.Secret.Collection"
+ )]
+-trait Collection {
++pub(crate) trait Collection {
+     /// Returns prompt: ObjectPath
+     fn delete(&self) -> zbus::Result<OwnedObjectPath>;
+ 
+--- a/src/proxy/item.rs
++++ b/src/proxy/item.rs
+@@ -19,7 +19,7 @@
+     interface = "org.freedesktop.Secret.Item",
+     default_service = "org.freedesktop.Secret.Item"
+ )]
+-trait Item {
++pub(crate) trait Item {
+     fn delete(&self) -> zbus::Result<OwnedObjectPath>;
+ 
+     /// returns `Secret`
+--- a/src/proxy/prompt.rs
++++ b/src/proxy/prompt.rs
+@@ -18,7 +18,7 @@
+     interface = "org.freedesktop.Secret.Prompt",
+     default_service = "org.freedesktop.Secret.Prompt"
+ )]
+-trait Prompt {
++pub(crate) trait Prompt {
+     fn prompt(&self, window_id: &str) -> zbus::Result<()>;
+ 
+     fn dismiss(&self) -> zbus::Result<()>;
+--- a/src/proxy/service.rs
++++ b/src/proxy/service.rs
+@@ -22,7 +22,7 @@
+     default_service = "org.freedesktop.secrets",
+     default_path = "/org/freedesktop/secrets"
+ )]
+-trait Service {
++pub(crate) trait Service {
+     fn open_session(&self, algorithm: &str, input: Value<'_>) -> zbus::Result<OpenSessionResult>;
+ 
+     fn create_collection(
+--- a/src/util.rs
++++ b/src/util.rs
+@@ -22,7 +22,7 @@
+ use zbus::export::ordered_stream::OrderedStreamExt;
+ use zbus::{
+     zvariant::{self, ObjectPath},
+-    CacheProperties,
++    proxy::CacheProperties,
+ };
+ 
+ // Helper enum for locking
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -75,8 +75,9 @@
+ optional = true
+ 
+ [dependencies.zbus]
+-version = "4"
++version = "5"
+ default-features = false
++features = ["blocking-api"]
+ 
+ [dev-dependencies.test-with]
+ version = "0.12"
