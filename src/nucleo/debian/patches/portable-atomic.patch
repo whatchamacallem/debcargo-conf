@@ -1,0 +1,27 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -37,3 +37,6 @@
+ 
+ [dependencies.rayon]
+ version = "1.7.0"
++
++[target.'cfg(not(target_has_atomic = "64"))'.dependencies]
++portable-atomic = "1.10"
+--- a/src/boxcar.rs
++++ b/src/boxcar.rs
+@@ -24,9 +24,14 @@
+ use std::alloc::Layout;
+ use std::cell::UnsafeCell;
+ use std::mem::MaybeUninit;
+-use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU64, Ordering};
++use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
+ use std::{ptr, slice};
+ 
++#[cfg(not(target_has_atomic = "64"))]
++use portable_atomic::AtomicU64;
++#[cfg(target_has_atomic = "64")]
++use std::sync::atomic::AtomicU64;
++
+ use crate::{Item, Utf32String};
+ 
+ const BUCKETS: u32 = u32::BITS - SKIP_BUCKET;
