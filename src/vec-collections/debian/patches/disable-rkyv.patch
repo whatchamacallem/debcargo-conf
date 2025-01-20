@@ -1,0 +1,122 @@
+Description: Temporarily disable rkyv
+ Nothing in Debian currently depends on vec-collections+rkyv, so temporarily
+ disable to allow upgrading rkyv to 0.8.
+Author: Blair Noctis <ncts@debian.org>
+Forwarded: not-needed
+Last-Update: 2025-01-20
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -47,3 +47,3 @@
+ 
+-[dependencies.rkyv]
++[disabled.dependencies.rkyv]
+ version = "0.7"
+@@ -94,3 +94,3 @@
+ 
+-[dev-dependencies.rkyv]
++[disabled.dev-dependencies.rkyv]
+ version = "0.7.19"
+@@ -110,3 +110,3 @@
+ radixtree = []
+-rkyv_validated = ["rkyv", "bytecheck"]
++#rkyv_validated = ["rkyv", "bytecheck"]
+ std_support = []
+--- a/src/btree_map.rs
++++ b/src/btree_map.rs
+@@ -3,3 +3,3 @@
+ //!
+-use rkyv::collections::ArchivedBTreeMap;
++//use rkyv::collections::ArchivedBTreeMap;
+ 
+@@ -13,3 +13,3 @@
+     BTreeMap(btree_map::Iter<'a, K, V>),
+-    ArchivedBTreeMap(rkyv::collections::btree_map::Iter<'a, K, V>),
++    //ArchivedBTreeMap(rkyv::collections::btree_map::Iter<'a, K, V>),
+ }
+@@ -22,3 +22,3 @@
+             AbstractBTreeMapIter::BTreeMap(x) => x.next(),
+-            AbstractBTreeMapIter::ArchivedBTreeMap(x) => x.next(),
++            //AbstractBTreeMapIter::ArchivedBTreeMap(x) => x.next(),
+         }
+@@ -41,2 +41,3 @@
+ 
++#[cfg(feature = "rkyv")]
+ impl<K, V> AbstractBTreeMap<K, V> for ArchivedBTreeMap<K, V> {
+--- a/src/radix_tree/lazy_radix_tree.rs
++++ b/src/radix_tree/lazy_radix_tree.rs
+@@ -1,2 +1,3 @@
+ use super::{internals, location, offset_from, AbstractRadixTree, Fragment, RadixTree, TKey};
++#[cfg(feature = "rkyv")]
+ use rkyv::{
+@@ -8,5 +9,5 @@
+ 
+-pub trait TValue: Debug + Clone + Archive<Archived = Self> + Send + Sync + 'static {}
++pub trait TValue: Debug + Clone + Send + Sync + 'static {}
+ 
+-impl<T: Debug + Clone + Archive<Archived = Self> + Send + Sync + 'static> TValue for T {}
++impl<T: Debug + Clone + Send + Sync + 'static> TValue for T {}
+ 
+@@ -28,3 +29,3 @@
+     /// the children are lazy loaded at the time of first access.
+-    children: Lazy<&'a [Archived<LazyRadixTree<'a, K, V>>], Arc<Vec<Self>>>,
++    children: Lazy<&'a [LazyRadixTree<'a, K, V>], Arc<Vec<Self>>>,
+ }
+@@ -121,2 +122,3 @@
+ 
++#[cfg(feature = "rkyv")]
+ impl<'a, K: TKey + Archive<Archived = K>, V: TValue + Archive<Archived = V>>
+@@ -135,2 +137,3 @@
+ 
++#[cfg(feature = "rkyv")]
+ impl<K: TKey, V: TValue> AbstractRadixTree<K, V> for ArchivedLazyRadixTree<K, V> {
+@@ -151,5 +154,5 @@
+ 
+-fn materialize_shallow<K: TKey, V: TValue>(
+-    children: &[ArchivedLazyRadixTree<K, V>],
+-) -> Arc<Vec<LazyRadixTree<K, V>>> {
++fn materialize_shallow<'a, K: TKey, V: TValue>(
++    children: &[LazyRadixTree<'a, K, V>],
++) -> Arc<Vec<LazyRadixTree<'a, K, V>>> {
+     Arc::new(
+@@ -160,3 +163,3 @@
+                 value: child.value.as_ref().cloned(),
+-                children: Lazy::uninitialized(child.children.as_ref()),
++                children: child.children.get().map(|arc| arc.clone()).map(Lazy::initialized).unwrap_or_default(),
+             })
+@@ -166,2 +169,3 @@
+ 
++#[cfg(feature = "rkyv")]
+ pub struct LazyRadixTreeResolver<K: TKey + Archive, V: TValue + Archive> {
+@@ -173,2 +177,3 @@
+ #[repr(C)]
++#[cfg(feature = "rkyv")]
+ pub struct ArchivedLazyRadixTree<K, V>
+@@ -183,2 +188,3 @@
+ 
++#[cfg(feature = "rkyv")]
+ impl<'a, K: TKey, V: TValue> Archive for LazyRadixTree<'a, K, V> {
+@@ -206,2 +212,3 @@
+ 
++#[cfg(feature = "rkyv")]
+ impl<'a, S, K, V> Serialize<S> for LazyRadixTree<'a, K, V>
+--- a/src/radix_tree/mod.rs
++++ b/src/radix_tree/mod.rs
+@@ -22,11 +22,12 @@
+ /// Trait for everything that is needed for a component to be a radix tree key component
+-pub trait TKey: Debug + Ord + Copy + Archive<Archived = Self> + Send + Sync + 'static {}
++pub trait TKey: Debug + Ord + Copy + Send + Sync + 'static {}
+ 
+-impl<T: Debug + Ord + Copy + Archive<Archived = T> + Send + Sync + 'static> TKey for T {}
++impl<T: Debug + Ord + Copy + Send + Sync + 'static> TKey for T {}
+ 
+ /// Trait for everything that is needed for a component to be a radix tree value
+-pub trait TValue: Debug + Clone + Archive + Send + Sync + 'static {}
++pub trait TValue: Debug + Clone + Send + Sync + 'static {}
+ 
+-impl<T: Debug + Clone + Archive + Send + Sync + 'static> TValue for T {}
++impl<T: Debug + Clone + Send + Sync + 'static> TValue for T {}
+ 
++#[cfg(feature = "rkyv")]
+ use rkyv::Archive;
