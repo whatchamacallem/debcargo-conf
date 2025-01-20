@@ -1,0 +1,108 @@
+From c0a3cea99a43cf068b1f0f76507b9988555ed90e Mon Sep 17 00:00:00 2001
+From: NoisyCoil <noisycoil@tutanota.com>
+Date: Mon, 20 Jan 2025 21:30:05 +0100
+Subject: [PATCH] Update zbus to v5
+
+For the signature changes see zbus#882.
+---
+ src/playlist.rs |  4 ++--
+ src/server.rs   | 16 +++++++++-------
+ src/time.rs     |  2 +-
+ 3 files changed, 12 insertions(+), 10 deletions(-)
+
+--- a/src/playlist.rs
++++ b/src/playlist.rs
+@@ -75,7 +75,7 @@
+ 
+     #[test]
+     fn valid_signatures() {
+-        assert_eq!(Playlist::signature(), "(oss)");
+-        assert_eq!(MaybePlaylist::signature(), "(b(oss))");
++        assert_eq!(Playlist::SIGNATURE, "(oss)");
++        assert_eq!(MaybePlaylist::SIGNATURE, "(b(oss))");
+     }
+ }
+--- a/src/server.rs
++++ b/src/server.rs
+@@ -2,10 +2,12 @@
+ 
+ use serde::Serialize;
+ use zbus::{
++    connection::Builder as ConnectionBuilder,
+     fdo,
++    object_server::{Interface, SignalEmitter},
+     names::BusName,
+     zvariant::{DynamicType, ObjectPath, Value},
+-    Connection, ConnectionBuilder, Interface, Result, SignalContext,
++    Connection, Result,
+ };
+ 
+ use crate::{
+@@ -132,7 +134,7 @@
+     }
+ 
+     #[zbus(signal)]
+-    async fn seeked(ctxt: &SignalContext<'_>, position: Time) -> Result<()>;
++    async fn seeked(ctxt: &SignalEmitter<'_>, position: Time) -> Result<()>;
+ 
+     #[zbus(property)]
+     async fn playback_status(&self) -> fdo::Result<PlaybackStatus> {
+@@ -263,24 +265,24 @@
+ 
+     #[zbus(signal)]
+     async fn track_list_replaced(
+-        ctxt: &SignalContext<'_>,
++        ctxt: &SignalEmitter<'_>,
+         tracks: Vec<TrackId>,
+         current_track: TrackId,
+     ) -> Result<()>;
+ 
+     #[zbus(signal)]
+     async fn track_added(
+-        ctxt: &SignalContext<'_>,
++        ctxt: &SignalEmitter<'_>,
+         metadata: Metadata,
+         after_track: TrackId,
+     ) -> Result<()>;
+ 
+     #[zbus(signal)]
+-    async fn track_removed(ctxt: &SignalContext<'_>, track_id: TrackId) -> Result<()>;
++    async fn track_removed(ctxt: &SignalEmitter<'_>, track_id: TrackId) -> Result<()>;
+ 
+     #[zbus(signal)]
+     async fn track_metadata_changed(
+-        ctxt: &SignalContext<'_>,
++        ctxt: &SignalEmitter<'_>,
+         track_id: TrackId,
+         metadata: Metadata,
+     ) -> Result<()>;
+@@ -322,7 +324,7 @@
+     }
+ 
+     #[zbus(signal)]
+-    async fn playlist_changed(ctxt: &SignalContext<'_>, playlist: Playlist) -> Result<()>;
++    async fn playlist_changed(ctxt: &SignalEmitter<'_>, playlist: Playlist) -> Result<()>;
+ 
+     #[zbus(property)]
+     async fn playlist_count(&self) -> fdo::Result<u32> {
+--- a/src/time.rs
++++ b/src/time.rs
+@@ -367,6 +367,6 @@
+ 
+     #[test]
+     fn valid_signature() {
+-        assert_eq!(Time::signature(), "x");
++        assert_eq!(Time::SIGNATURE, "x");
+     }
+ }
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -55,7 +55,7 @@
+ version = "0.1.2"
+ 
+ [dependencies.zbus]
+-version = "4.4"
++version = "5"
+ 
+ [dev-dependencies.async-std]
+ version = "1.12"
