@@ -1,0 +1,325 @@
+--- rust-hyper-0.14-0.14.32.orig/Cargo.toml
++++ rust-hyper-0.14-0.14.32/Cargo.toml
+@@ -108,8 +108,10 @@ version = "0.3"
+ default-features = false
+ 
+ [dependencies.h2]
+-version = "0.3.24"
++version = "0.4.7"
+ optional = true
++features = ["legacy"]
++#path = "../h2"
+ 
+ [dependencies.http]
+ version = "0.2"
+--- rust-hyper-0.14-0.14.32.orig/src/body/body.rs
++++ rust-hyper-0.14-0.14.32/src/body/body.rs
+@@ -54,7 +54,7 @@ enum Kind {
+     H2 {
+         ping: ping::Recorder,
+         content_length: DecodedLength,
+-        recv: h2::RecvStream,
++        recv: h2::legacy::RecvStream,
+     },
+     #[cfg(feature = "ffi")]
+     Ffi(crate::ffi::UserBody),
+@@ -205,7 +205,7 @@ impl Body {
+ 
+     #[cfg(all(feature = "http2", any(feature = "client", feature = "server")))]
+     pub(crate) fn h2(
+-        recv: h2::RecvStream,
++        recv: h2::legacy::RecvStream,
+         mut content_length: DecodedLength,
+         ping: ping::Recorder,
+     ) -> Self {
+@@ -328,7 +328,7 @@ impl Body {
+                 Some(Err(e)) => match e.reason() {
+                     // These reasons should cause stop of body reading, but nor fail it.
+                     // The same logic as for `AsyncRead for H2Upgraded` is applied here.
+-                    Some(h2::Reason::NO_ERROR) | Some(h2::Reason::CANCEL) => Poll::Ready(None),
++                    Some(h2::legacy::Reason::NO_ERROR) | Some(h2::legacy::Reason::CANCEL) => Poll::Ready(None),
+                     _ => Poll::Ready(Some(Err(crate::Error::new_body(e)))),
+                 },
+                 None => Poll::Ready(None),
+--- rust-hyper-0.14-0.14.32.orig/src/error.rs
++++ rust-hyper-0.14-0.14.32/src/error.rs
+@@ -262,12 +262,12 @@ impl Error {
+     }
+ 
+     #[cfg(feature = "http2")]
+-    pub(super) fn h2_reason(&self) -> h2::Reason {
+-        // Find an h2::Reason somewhere in the cause stack, if it exists,
++    pub(super) fn h2_reason(&self) -> h2::legacy::Reason {
++        // Find an h2::legacy::Reason somewhere in the cause stack, if it exists,
+         // otherwise assume an INTERNAL_ERROR.
+-        self.find_source::<h2::Error>()
++        self.find_source::<h2::legacy::Error>()
+             .and_then(|h2_err| h2_err.reason())
+-            .unwrap_or(h2::Reason::INTERNAL_ERROR)
++            .unwrap_or(h2::legacy::Reason::INTERNAL_ERROR)
+     }
+ 
+     pub(super) fn new_canceled() -> Error {
+@@ -419,9 +419,9 @@ impl Error {
+     }
+ 
+     #[cfg(feature = "http2")]
+-    pub(super) fn new_h2(cause: ::h2::Error) -> Error {
++    pub(super) fn new_h2(cause: ::h2::legacy::Error) -> Error {
+         if cause.is_io() {
+-            Error::new_io(cause.into_io().expect("h2::Error::is_io"))
++            Error::new_io(cause.into_io().expect("h2::legacy::Error::is_io"))
+         } else {
+             Error::new(Kind::Http2).with(cause)
+         }
+@@ -642,22 +642,22 @@ mod tests {
+     #[test]
+     fn h2_reason_unknown() {
+         let closed = Error::new_closed();
+-        assert_eq!(closed.h2_reason(), h2::Reason::INTERNAL_ERROR);
++        assert_eq!(closed.h2_reason(), h2::legacy::Reason::INTERNAL_ERROR);
+     }
+ 
+     #[cfg(feature = "http2")]
+     #[test]
+     fn h2_reason_one_level() {
+-        let body_err = Error::new_user_body(h2::Error::from(h2::Reason::ENHANCE_YOUR_CALM));
+-        assert_eq!(body_err.h2_reason(), h2::Reason::ENHANCE_YOUR_CALM);
++        let body_err = Error::new_user_body(h2::legacy::Error::from(h2::legacy::Reason::ENHANCE_YOUR_CALM));
++        assert_eq!(body_err.h2_reason(), h2::legacy::Reason::ENHANCE_YOUR_CALM);
+     }
+ 
+     #[cfg(feature = "http2")]
+     #[test]
+     fn h2_reason_nested() {
+-        let recvd = Error::new_h2(h2::Error::from(h2::Reason::HTTP_1_1_REQUIRED));
++        let recvd = Error::new_h2(h2::legacy::Error::from(h2::legacy::Reason::HTTP_1_1_REQUIRED));
+         // Suppose a user were proxying the received error
+         let svc_err = Error::new_user_service(recvd);
+-        assert_eq!(svc_err.h2_reason(), h2::Reason::HTTP_1_1_REQUIRED);
++        assert_eq!(svc_err.h2_reason(), h2::legacy::Reason::HTTP_1_1_REQUIRED);
+     }
+ }
+--- rust-hyper-0.14-0.14.32.orig/src/ext.rs
++++ rust-hyper-0.14-0.14.32/src/ext.rs
+@@ -23,7 +23,7 @@ pub use h1_reason_phrase::ReasonPhrase;
+ /// [Extended CONNECT Protocol]: https://datatracker.ietf.org/doc/html/rfc8441#section-4
+ #[derive(Clone, Eq, PartialEq)]
+ pub struct Protocol {
+-    inner: h2::ext::Protocol,
++    inner: h2::legacy::ext::Protocol,
+ }
+ 
+ #[cfg(feature = "http2")]
+@@ -31,7 +31,7 @@ impl Protocol {
+     /// Converts a static string to a protocol name.
+     pub const fn from_static(value: &'static str) -> Self {
+         Self {
+-            inner: h2::ext::Protocol::from_static(value),
++            inner: h2::legacy::ext::Protocol::from_static(value),
+         }
+     }
+ 
+@@ -41,11 +41,11 @@ impl Protocol {
+     }
+ 
+     #[cfg(feature = "server")]
+-    pub(crate) fn from_inner(inner: h2::ext::Protocol) -> Self {
++    pub(crate) fn from_inner(inner: h2::legacy::ext::Protocol) -> Self {
+         Self { inner }
+     }
+ 
+-    pub(crate) fn into_inner(self) -> h2::ext::Protocol {
++    pub(crate) fn into_inner(self) -> h2::legacy::ext::Protocol {
+         self.inner
+     }
+ }
+@@ -54,7 +54,7 @@ impl Protocol {
+ impl<'a> From<&'a str> for Protocol {
+     fn from(value: &'a str) -> Self {
+         Self {
+-            inner: h2::ext::Protocol::from(value),
++            inner: h2::legacy::ext::Protocol::from(value),
+         }
+     }
+ }
+--- rust-hyper-0.14-0.14.32.orig/src/proto/h2/client.rs
++++ rust-hyper-0.14-0.14.32/src/proto/h2/client.rs
+@@ -11,8 +11,8 @@ use bytes::Bytes;
+ use futures_channel::{mpsc, oneshot};
+ use futures_util::future::{self, Either, FutureExt as _, TryFutureExt as _};
+ use futures_util::stream::StreamExt as _;
+-use h2::client::{Builder, SendRequest};
+-use h2::SendStream;
++use h2::legacy::client::{Builder, SendRequest};
++use h2::legacy::SendStream;
+ use http::{Method, StatusCode};
+ use tokio::io::{AsyncRead, AsyncWrite};
+ use tracing::{debug, trace, warn};
+@@ -27,7 +27,7 @@ use crate::proto::h2::UpgradedSendStream
+ use crate::proto::Dispatched;
+ use crate::upgrade::Upgraded;
+ use crate::{Body, Request, Response};
+-use h2::client::ResponseFuture;
++use h2::legacy::client::ResponseFuture;
+ 
+ type ClientRx<B> = crate::client::dispatch::Receiver<Request<B>, Response<Body>>;
+ 
+@@ -290,9 +290,9 @@ where
+                     if content_length.map_or(false, |len| len != 0) {
+                         warn!("h2 connect response with non-zero body not supported");
+ 
+-                        send_stream.send_reset(h2::Reason::INTERNAL_ERROR);
++                        send_stream.send_reset(h2::legacy::Reason::INTERNAL_ERROR);
+                         return Err((
+-                            crate::Error::new_h2(h2::Reason::INTERNAL_ERROR.into()),
++                            crate::Error::new_h2(h2::legacy::Reason::INTERNAL_ERROR.into()),
+                             None,
+                         ));
+                     }
+@@ -345,7 +345,7 @@ where
+                 Ok(()) => (),
+                 Err(err) => {
+                     self.ping.ensure_not_timed_out()?;
+-                    return if err.reason() == Some(::h2::Reason::NO_ERROR) {
++                    return if err.reason() == Some(::h2::legacy::Reason::NO_ERROR) {
+                         trace!("connection gracefully shutdown");
+                         Poll::Ready(Ok(Dispatched::Shutdown))
+                     } else {
+@@ -389,7 +389,7 @@ where
+                         {
+                             warn!("h2 connect request with non-zero body not supported");
+                             cb.send(Err((
+-                                crate::Error::new_h2(h2::Reason::INTERNAL_ERROR.into()),
++                                crate::Error::new_h2(h2::legacy::Reason::INTERNAL_ERROR.into()),
+                                 None,
+                             )));
+                             continue;
+--- rust-hyper-0.14-0.14.32.orig/src/proto/h2/mod.rs
++++ rust-hyper-0.14-0.14.32/src/proto/h2/mod.rs
+@@ -1,5 +1,5 @@
+ use bytes::{Buf, Bytes};
+-use h2::{Reason, RecvStream, SendStream};
++use h2::legacy::{Reason, RecvStream, SendStream};
+ use http::header::{HeaderName, CONNECTION, TE, TRAILER, TRANSFER_ENCODING, UPGRADE};
+ use http::HeaderMap;
+ use pin_project_lite::pin_project;
+@@ -150,7 +150,7 @@ where
+                     .map_err(crate::Error::new_body_write)?
+                 {
+                     debug!("stream received RST_STREAM: {:?}", reason);
+-                    return Poll::Ready(Err(crate::Error::new_body_write(::h2::Error::from(
++                    return Poll::Ready(Err(crate::Error::new_body_write(::h2::legacy::Error::from(
+                         reason,
+                     ))));
+                 }
+@@ -192,7 +192,7 @@ where
+                     .map_err(crate::Error::new_body_write)?
+                 {
+                     debug!("stream received RST_STREAM: {:?}", reason);
+-                    return Poll::Ready(Err(crate::Error::new_body_write(::h2::Error::from(
++                    return Poll::Ready(Err(crate::Error::new_body_write(::h2::legacy::Error::from(
+                         reason,
+                     ))));
+                 }
+@@ -400,7 +400,7 @@ where
+     }
+ }
+ 
+-fn h2_to_io_error(e: h2::Error) -> io::Error {
++fn h2_to_io_error(e: h2::legacy::Error) -> io::Error {
+     if e.is_io() {
+         e.into_io().unwrap()
+     } else {
+@@ -423,11 +423,11 @@ where
+         unsafe { self.as_inner_unchecked().reserve_capacity(cnt) }
+     }
+ 
+-    fn poll_capacity(&mut self, cx: &mut Context<'_>) -> Poll<Option<Result<usize, h2::Error>>> {
++    fn poll_capacity(&mut self, cx: &mut Context<'_>) -> Poll<Option<Result<usize, h2::legacy::Error>>> {
+         unsafe { self.as_inner_unchecked().poll_capacity(cx) }
+     }
+ 
+-    fn poll_reset(&mut self, cx: &mut Context<'_>) -> Poll<Result<h2::Reason, h2::Error>> {
++    fn poll_reset(&mut self, cx: &mut Context<'_>) -> Poll<Result<h2::legacy::Reason, h2::legacy::Error>> {
+         unsafe { self.as_inner_unchecked().poll_reset(cx) }
+     }
+ 
+--- rust-hyper-0.14-0.14.32.orig/src/proto/h2/ping.rs
++++ rust-hyper-0.14-0.14.32/src/proto/h2/ping.rs
+@@ -31,7 +31,7 @@ use std::time::Duration;
+ #[cfg(not(feature = "runtime"))]
+ use std::time::Instant;
+ 
+-use h2::{Ping, PingPong};
++use h2::legacy::{Ping, PingPong};
+ #[cfg(feature = "runtime")]
+ use tokio::time::{Instant, Sleep};
+ use tracing::{debug, trace};
+@@ -265,7 +265,7 @@ impl Recorder {
+     /// If the incoming stream is already closed, convert self into
+     /// a disabled reporter.
+     #[cfg(feature = "client")]
+-    pub(super) fn for_stream(self, stream: &h2::RecvStream) -> Self {
++    pub(super) fn for_stream(self, stream: &h2::legacy::RecvStream) -> Self {
+         if stream.is_end_stream() {
+             disabled()
+         } else {
+--- rust-hyper-0.14-0.14.32.orig/src/proto/h2/server.rs
++++ rust-hyper-0.14-0.14.32/src/proto/h2/server.rs
+@@ -7,8 +7,8 @@ use std::task::{Context, Poll};
+ use std::time::Duration;
+ 
+ use bytes::Bytes;
+-use h2::server::{Connection, Handshake, SendResponse};
+-use h2::{Reason, RecvStream};
++use h2::legacy::server::{Connection, Handshake, SendResponse};
++use h2::legacy::{Reason, RecvStream};
+ use http::{Method, Request};
+ use pin_project_lite::pin_project;
+ use tokio::io::{AsyncRead, AsyncWrite};
+@@ -122,7 +122,7 @@ where
+     E: ConnStreamExec<S::Future, B>,
+ {
+     pub(crate) fn new(io: T, service: S, config: &Config, exec: E) -> Server<T, S, B, E> {
+-        let mut builder = h2::server::Builder::default();
++        let mut builder = h2::legacy::server::Builder::default();
+         builder
+             .initial_window_size(config.initial_stream_window_size)
+             .initial_connection_window_size(config.initial_conn_window_size)
+@@ -313,7 +313,7 @@ where
+                         } else {
+                             if content_length.map_or(false, |len| len != 0) {
+                                 warn!("h2 connect request with non-zero body not supported");
+-                                respond.send_reset(h2::Reason::INTERNAL_ERROR);
++                                respond.send_reset(h2::legacy::Reason::INTERNAL_ERROR);
+                                 return Poll::Ready(Ok(()));
+                             }
+                             let (pending, upgrade) = crate::upgrade::pending();
+@@ -329,7 +329,7 @@ where
+                             )
+                         };
+ 
+-                        if let Some(protocol) = req.extensions_mut().remove::<h2::ext::Protocol>() {
++                        if let Some(protocol) = req.extensions_mut().remove::<h2::legacy::ext::Protocol>() {
+                             req.extensions_mut().insert(Protocol::from_inner(protocol));
+                         }
+ 
+@@ -372,7 +372,7 @@ where
+                 #[cfg(feature = "runtime")]
+                 Poll::Ready(ping::Ponged::KeepAliveTimedOut) => {
+                     debug!("keep-alive timed out, closing connection");
+-                    self.conn.abrupt_shutdown(h2::Reason::NO_ERROR);
++                    self.conn.abrupt_shutdown(h2::legacy::Reason::NO_ERROR);
+                 }
+                 Poll::Pending => {}
+             }
+@@ -497,7 +497,7 @@ where
+                                 .map_or(false, |len| len != 0)
+                             {
+                                 warn!("h2 successful response to CONNECT request with body not supported");
+-                                me.reply.send_reset(h2::Reason::INTERNAL_ERROR);
++                                me.reply.send_reset(h2::legacy::Reason::INTERNAL_ERROR);
+                                 return Poll::Ready(Err(crate::Error::new_user_header()));
+                             }
+                             let send_stream = reply!(me, res, false);
