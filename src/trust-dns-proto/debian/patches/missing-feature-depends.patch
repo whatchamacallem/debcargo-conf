@@ -1,0 +1,49 @@
+Backported from:
+
+https://github.com/bluejekyll/trust-dns/commit/5657ba68bd939a69437170489cdb59683edeca3d
+https://github.com/bluejekyll/trust-dns/commit/160a32d42bbdaa7822409a39b5b9b4741ab2504c
+https://github.com/bluejekyll/trust-dns/commit/5782dbfc32847a372bb32acc21208e9bc876d159
+https://github.com/bluejekyll/trust-dns/commit/17d324bef5da98b160b374a37d9036ea4dacda1c
+
+to fix some dependencies uncovered by autopkgtest
+
+Index: trust-dns-proto/Cargo.toml
+===================================================================
+--- trust-dns-proto.orig/Cargo.toml
++++ trust-dns-proto/Cargo.toml
+@@ -224,24 +224,25 @@ features = [
+ default = ["tokio-runtime"]
+ dns-over-https = [
+     "bytes",
+-    "dns-over-tls",
++    "dns-over-rustls",
+     "h2",
+     "http",
+     "rustls-native-certs",
+ ]
+ dns-over-https-rustls = [
+     "dns-over-https",
+-    "dns-over-rustls",
+ ]
+ dns-over-native-tls = [
+     "dns-over-tls",
+     "native-tls",
+     "tokio-native-tls",
++    "dns-over-rustls",
+ ]
+ dns-over-openssl = [
+     "dns-over-tls",
+     "openssl",
+     "tokio-openssl",
++    "tokio-runtime",
+ ]
+ dns-over-quic = [
+     "quinn",
+@@ -254,6 +255,7 @@ dns-over-rustls = [
+     "dns-over-tls",
+     "rustls",
+     "rustls-pemfile",
++    "tokio-runtime",
+     "tokio-rustls",
+     "webpki",
+ ]

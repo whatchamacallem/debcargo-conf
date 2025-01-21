@@ -1,0 +1,22 @@
+overlay = "."
+uploaders = ["kpcyrd <git@rxv.cc>"]
+collapse_features = true
+excludes = ["benches/**"]
+
+[source]
+# cf. #1026769
+build_depends = ["librust-ring-dev"]
+
+[packages.lib]
+# to ensure trust-dns packages are built against a consistent version of rustls.
+extra_lines = ["Breaks: librust-trust-dns-client-dev (<< 0.22.0-3), librust-trust-dns-resolver-dev (<< 0.22.0-3), librust-trust-dns-server-dev (<< 0.22.0-3)"]
+
+#error[E0599]: no method named `to_vec` found for reference `&Digest` in the current scope
+#  --> tests/dnssec_presentation_format_tests.rs:53:25
+[packages."lib+dnssec"]
+test_is_broken = true
+
+# something weird with importing the tokio runtime?
+# error[E0599]: no function or associated item named `new` found for struct `Runtime` in the current scope
+[packages."lib+mdns"]
+test_is_broken = true

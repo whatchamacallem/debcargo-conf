@@ -1,0 +1,100 @@
+Index: trust-dns-proto/src/https/https_client_stream.rs
+===================================================================
+--- trust-dns-proto.orig/src/https/https_client_stream.rs
++++ trust-dns-proto/src/https/https_client_stream.rs
+@@ -656,15 +656,12 @@ mod tests {
+     }
+ 
+     fn client_config_tls12_webpki_roots() -> ClientConfig {
+-        use rustls::{OwnedTrustAnchor, RootCertStore};
+-        let mut root_store = RootCertStore::empty();
+-        root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.0.iter().map(|ta| {
+-            OwnedTrustAnchor::from_subject_spki_name_constraints(
+-                ta.subject,
+-                ta.spki,
+-                ta.name_constraints,
+-            )
+-        }));
++        let mut root_store = rustls::RootCertStore::empty();
++        for cert in rustls_native_certs::load_native_certs()
++            .expect("Failed to load system root certificatis")
++        {
++            root_store.add(&rustls::Certificate(cert.0)).unwrap()
++        }
+ 
+         let mut client_config = ClientConfig::builder()
+             .with_safe_default_cipher_suites()
+Index: trust-dns-proto/Cargo.toml
+===================================================================
+--- trust-dns-proto.orig/Cargo.toml
++++ trust-dns-proto/Cargo.toml
+@@ -132,6 +132,10 @@ optional = true
+ version = "0.20.0"
+ optional = true
+ 
++[dependencies.rustls-native-certs]
++version = "0.6.2"
++optional = true
++
+ [dependencies.rustls-pemfile]
+ version = "1.0.0"
+ optional = true
+@@ -188,10 +192,6 @@ package = "wasm-bindgen"
+ version = "0.22.0"
+ optional = true
+ 
+-[dependencies.webpki-roots]
+-version = "0.22.1"
+-optional = true
+-
+ [dev-dependencies.futures-executor]
+ version = "0.3.5"
+ features = ["std"]
+@@ -227,11 +227,11 @@ dns-over-https = [
+     "dns-over-tls",
+     "h2",
+     "http",
++    "rustls-native-certs",
+ ]
+ dns-over-https-rustls = [
+     "dns-over-https",
+     "dns-over-rustls",
+-    "webpki-roots",
+ ]
+ dns-over-native-tls = [
+     "dns-over-tls",
+@@ -248,7 +248,7 @@ dns-over-quic = [
+     "rustls/quic",
+     "dns-over-rustls",
+     "bytes",
+-    "webpki-roots",
++    "rustls-native-certs",
+ ]
+ dns-over-rustls = [
+     "dns-over-tls",
+Index: trust-dns-proto/src/quic/quic_client_stream.rs
+===================================================================
+--- trust-dns-proto.orig/src/quic/quic_client_stream.rs
++++ trust-dns-proto/src/quic/quic_client_stream.rs
+@@ -230,15 +230,12 @@ impl QuicClientStreamBuilder {
+ 
+ /// Default crypto options for quic
+ pub fn client_config_tls13_webpki_roots() -> TlsClientConfig {
+-    use rustls::{OwnedTrustAnchor, RootCertStore};
+-    let mut root_store = RootCertStore::empty();
+-    root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.0.iter().map(|ta| {
+-        OwnedTrustAnchor::from_subject_spki_name_constraints(
+-            ta.subject,
+-            ta.spki,
+-            ta.name_constraints,
+-        )
+-    }));
++    let mut root_store = rustls::RootCertStore::empty();
++    for cert in
++        rustls_native_certs::load_native_certs().expect("Failed to load system root certificatis")
++    {
++        root_store.add(&rustls::Certificate(cert.0)).unwrap()
++    }
+ 
+     TlsClientConfig::builder()
+         .with_safe_default_cipher_suites()
