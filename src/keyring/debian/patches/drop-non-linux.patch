@@ -1,5 +1,6 @@
 Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-Description: Avoid trying to build anything for ios, macos, or windows.  Debian doesn't need it, and we don't necessarily have straightforward access to the dependencies
+Description: Avoid trying to build anything for ios, macos, windows or {open,free}bsd.
+ Debian doesn't need it, and we don't necessarily have straightforward access to the dependencies
 
 --- a/Cargo.toml
 +++ b/Cargo.toml
@@ -32,7 +33,7 @@ Description: Avoid trying to build anything for ios, macos, or windows.  Debian 
  async-io = ["zbus?/async-io"]
  async-secret-service = [
      "dep:secret-service",
-@@ -114,14 +106,6 @@
+@@ -114,26 +106,6 @@
      "dbus-secret-service?/vendored",
      "openssl?/vendored",
  ]
@@ -44,13 +45,37 @@ Description: Avoid trying to build anything for ios, macos, or windows.  Debian 
 -[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies.security-framework]
 -version = "2"
 -optional = true
+-
+-[target.'cfg(target_os = "freebsd")'.dependencies.dbus-secret-service]
+-version = "4.0.1"
+-optional = true
+-
+-[target.'cfg(target_os = "freebsd")'.dependencies.secret-service]
+-version = "4"
+-optional = true
+-
+-[target.'cfg(target_os = "freebsd")'.dependencies.zbus]
+-version = "4"
+-optional = true
  
- [target.'cfg(target_os = "freebsd")'.dependencies.dbus-secret-service]
- version = "4.0.1"
-@@ -163,15 +147,3 @@
- [target.'cfg(target_os = "openbsd")'.dependencies.zbus]
+ [target.'cfg(target_os = "linux")'.dependencies.dbus-secret-service]
+ version = "4.0.0-rc.2"
+@@ -151,27 +123,3 @@
+ [target.'cfg(target_os = "linux")'.dependencies.zbus]
  version = "4"
  optional = true
+-
+-[target.'cfg(target_os = "openbsd")'.dependencies.dbus-secret-service]
+-version = "4.0.0-rc.1"
+-optional = true
+-
+-[target.'cfg(target_os = "openbsd")'.dependencies.secret-service]
+-version = "4"
+-optional = true
+-
+-[target.'cfg(target_os = "openbsd")'.dependencies.zbus]
+-version = "4"
+-optional = true
 -
 -[target.'cfg(target_os = "windows")'.dependencies.byteorder]
 -version = "1.2"
