@@ -1,0 +1,491 @@
+Index: trust-dns-server/tests/config_tests.rs
+===================================================================
+--- trust-dns-server.orig/tests/config_tests.rs
++++ trust-dns-server/tests/config_tests.rs
+@@ -22,88 +22,6 @@ use trust_dns_server::authority::ZoneTyp
+ use trust_dns_server::config::*;
+ 
+ #[test]
+-fn test_read_config() {
+-    let server_path = env::var("TDNS_WORKSPACE_ROOT").unwrap_or_else(|_| "../..".to_owned());
+-    let path: PathBuf =
+-        PathBuf::from(server_path).join("tests/test-data/named_test_configs/example.toml");
+-
+-    if !path.exists() {
+-        panic!("can't locate example.toml and other configs: {:?}", path)
+-    }
+-
+-    println!("reading config");
+-    let config: Config = Config::read_config(&path).unwrap();
+-
+-    assert_eq!(config.get_listen_port(), 53);
+-    assert_eq!(config.get_listen_addrs_ipv4(), Ok(Vec::<Ipv4Addr>::new()));
+-    assert_eq!(config.get_listen_addrs_ipv6(), Ok(Vec::<Ipv6Addr>::new()));
+-    assert_eq!(config.get_tcp_request_timeout(), Duration::from_secs(5));
+-    assert_eq!(config.get_log_level(), tracing::Level::INFO);
+-    assert_eq!(config.get_directory(), Path::new("/var/named"));
+-    assert_eq!(
+-        config.get_zones(),
+-        [
+-            ZoneConfig::new(
+-                "localhost".into(),
+-                ZoneType::Primary,
+-                "default/localhost.zone".into(),
+-                None,
+-                None,
+-                None,
+-                vec![],
+-            ),
+-            ZoneConfig::new(
+-                "0.0.127.in-addr.arpa".into(),
+-                ZoneType::Primary,
+-                "default/127.0.0.1.zone".into(),
+-                None,
+-                None,
+-                None,
+-                vec![],
+-            ),
+-            ZoneConfig::new(
+-                "0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.\
+-                 ip6.arpa"
+-                    .into(),
+-                ZoneType::Primary,
+-                "default/ipv6_1.zone".into(),
+-                None,
+-                None,
+-                None,
+-                vec![],
+-            ),
+-            ZoneConfig::new(
+-                "255.in-addr.arpa".into(),
+-                ZoneType::Primary,
+-                "default/255.zone".into(),
+-                None,
+-                None,
+-                None,
+-                vec![],
+-            ),
+-            ZoneConfig::new(
+-                "0.in-addr.arpa".into(),
+-                ZoneType::Primary,
+-                "default/0.zone".into(),
+-                None,
+-                None,
+-                None,
+-                vec![],
+-            ),
+-            ZoneConfig::new(
+-                "example.com".into(),
+-                ZoneType::Primary,
+-                "example.com.zone".into(),
+-                None,
+-                None,
+-                None,
+-                vec![],
+-            )
+-        ]
+-    );
+-}
+-
+-#[test]
+ fn test_parse_toml() {
+     let config: Config = "listen_port = 2053".parse().unwrap();
+     assert_eq!(config.get_listen_port(), 2053);
+@@ -236,39 +154,3 @@ tls_listen_port = 8853
+         Path::new("path/to/some.pkcs12")
+     );
+ }
+-
+-fn test_config(path: &str) {
+-    let workspace = env::var("TDNS_WORKSPACE_ROOT").unwrap_or_else(|_| "../..".to_owned());
+-    let path = PathBuf::from(workspace)
+-        .join("tests/test-data/named_test_configs")
+-        .join(path)
+-        .with_extension("toml");
+-    assert!(path.exists(), "does not exist: {}", path.display());
+-    println!("reading: {}", path.display());
+-    Config::read_config(&path).expect("failed to read");
+-}
+-
+-macro_rules! define_test_config {
+-    ($name:ident) => {
+-        #[test]
+-        fn $name() {
+-            test_config(stringify!($name));
+-        }
+-    };
+-}
+-
+-define_test_config!(all_supported_dnssec);
+-define_test_config!(dns_over_https);
+-define_test_config!(dns_over_tls_rustls_and_openssl);
+-define_test_config!(dns_over_tls);
+-#[cfg(feature = "sqlite")]
+-define_test_config!(dnssec_with_update);
+-define_test_config!(dnssec_with_update_deprecated);
+-define_test_config!(example);
+-define_test_config!(ipv4_and_ipv6);
+-define_test_config!(ipv4_only);
+-define_test_config!(ipv6_only);
+-define_test_config!(openssl_dnssec);
+-define_test_config!(ring_dnssec);
+-#[cfg(feature = "trust-dns-resolver")]
+-define_test_config!(example_forwarder);
+Index: trust-dns-server/tests/authority_battery/basic.rs
+===================================================================
+--- trust-dns-server.orig/tests/authority_battery/basic.rs
++++ trust-dns-server/tests/authority_battery/basic.rs
+@@ -714,50 +714,3 @@ pub fn test_invalid_lookup<A: Authority<
+         _ => panic!("invalid error enum variant"),
+     }
+ }
+-
+-// test some additional record collections
+-
+-macro_rules! define_basic_test {
+-    ($new:ident; $( $f:ident, )*) => {
+-        $(
+-            #[test]
+-            fn $f () {
+-                // Useful for getting debug logs
+-                // env_logger::try_init().ok();
+-
+-                let authority = crate::$new("../../tests/test-data/named_test_configs/example.com.zone", module_path!(), stringify!($f));
+-                crate::authority_battery::basic::$f(authority);
+-            }
+-        )*
+-    }
+-}
+-
+-macro_rules! basic_battery {
+-    ($new:ident) => {
+-        #[cfg(test)]
+-        mod basic {
+-            mod $new {
+-                define_basic_test!($new;
+-                    test_a_lookup,
+-                    test_soa,
+-                    test_ns,
+-                    test_ns_lookup,
+-                    test_mx,
+-                    test_mx_to_null,
+-                    test_cname,
+-                    test_cname_alias,
+-                    test_cname_chain,
+-                    test_aname,
+-                    test_aname_a_lookup,
+-                    test_aname_chain,
+-                    test_update_errors,
+-                    test_dots_in_name,
+-                    test_wildcard,
+-                    test_wildcard_chain,
+-                    test_srv,
+-                    test_invalid_lookup,
+-                );
+-            }
+-        }
+-    };
+-}
+Index: trust-dns-server/tests/authority_battery/dnssec.rs
+===================================================================
+--- trust-dns-server.orig/tests/authority_battery/dnssec.rs
++++ trust-dns-server/tests/authority_battery/dnssec.rs
+@@ -368,122 +368,3 @@ pub fn verify(records: &[Record], rrsig_
+             .is_ok())));
+ }
+ 
+-pub fn add_signers<A: DnssecAuthority>(authority: &mut A) -> Vec<DNSKEY> {
+-    use trust_dns_server::config::dnssec::*;
+-    let signer_name = Name::from(authority.origin().to_owned());
+-
+-    let mut keys = Vec::<DNSKEY>::new();
+-
+-    // TODO: support RSA signing with ring
+-    #[cfg(feature = "dnssec-openssl")]
+-    // rsa
+-    {
+-        let key_config = KeyConfig {
+-            key_path: "../../tests/test-data/named_test_configs/dnssec/rsa_2048.pem".to_string(),
+-            password: Some("123456".to_string()),
+-            algorithm: Algorithm::RSASHA512.to_string(),
+-            signer_name: Some(signer_name.to_string()),
+-            is_zone_signing_key: Some(true),
+-            is_zone_update_auth: Some(false),
+-        };
+-
+-        let signer = key_config
+-            .try_into_signer(signer_name.clone())
+-            .expect("failed to read key_config");
+-        keys.push(signer.to_dnskey().expect("failed to create DNSKEY"));
+-        block_on(authority.add_zone_signing_key(signer)).expect("failed to add signer to zone");
+-        block_on(authority.secure_zone()).expect("failed to sign zone");
+-    }
+-
+-    // // TODO: why are ecdsa tests failing in this context?
+-    // // ecdsa_p256
+-    // {
+-    //     let key_config = KeyConfig {
+-    //         key_path: "../../tests/test-data/named_test_configs/dnssec/ecdsa_p256.pem".to_string(),
+-    //         password: None,
+-    //         algorithm: Algorithm::ECDSAP256SHA256.to_string(),
+-    //         signer_name: Some(signer_name.clone().to_string()),
+-    //         is_zone_signing_key: Some(true),
+-    //         is_zone_update_auth: Some(false),
+-    //     };
+-
+-    //     let signer = key_config.try_into_signer(signer_name.clone()).expect("failed to read key_config");
+-    //     keys.push(signer.to_dnskey().expect("failed to create DNSKEY"));
+-    //     authority.add_zone_signing_key(signer).expect("failed to add signer to zone");
+-    //     authority.secure_zone().expect("failed to sign zone");
+-    // }
+-
+-    // // ecdsa_p384
+-    // {
+-    //     let key_config = KeyConfig {
+-    //         key_path: "../../tests/test-data/named_test_configs/dnssec/ecdsa_p384.pem".to_string(),
+-    //         password: None,
+-    //         algorithm: Algorithm::ECDSAP384SHA384.to_string(),
+-    //         signer_name: Some(signer_name.clone().to_string()),
+-    //         is_zone_signing_key: Some(true),
+-    //         is_zone_update_auth: Some(false),
+-    //     };
+-
+-    //     let signer = key_config.try_into_signer(signer_name.clone()).expect("failed to read key_config");
+-    //     keys.push(signer.to_dnskey().expect("failed to create DNSKEY"));
+-    //     authority.add_zone_signing_key(signer).expect("failed to add signer to zone");
+-    //     authority.secure_zone().expect("failed to sign zone");
+-    // }
+-
+-    // ed 25519
+-    #[cfg(feature = "dnssec-ring")]
+-    {
+-        let key_config = KeyConfig {
+-            key_path: "../../tests/test-data/named_test_configs/dnssec/ed25519.pk8".to_string(),
+-            password: None,
+-            algorithm: Algorithm::ED25519.to_string(),
+-            signer_name: Some(signer_name.to_string()),
+-            is_zone_signing_key: Some(true),
+-            is_zone_update_auth: Some(false),
+-        };
+-
+-        let signer = key_config
+-            .try_into_signer(signer_name)
+-            .expect("failed to read key_config");
+-        keys.push(signer.to_dnskey().expect("failed to create DNSKEY"));
+-        block_on(authority.add_zone_signing_key(signer)).expect("failed to add signer to zone");
+-        block_on(authority.secure_zone()).expect("failed to sign zone");
+-    }
+-
+-    keys
+-}
+-
+-macro_rules! define_dnssec_test {
+-    ($new:ident; $( $f:ident, )*) => {
+-        $(
+-            #[test]
+-            fn $f () {
+-                let mut authority = crate::$new("../../tests/test-data/named_test_configs/example.com.zone", module_path!(), stringify!($f));
+-                let keys = crate::authority_battery::dnssec::add_signers(&mut authority);
+-                crate::authority_battery::dnssec::$f(authority, &keys);
+-            }
+-        )*
+-    }
+-}
+-
+-macro_rules! dnssec_battery {
+-    ($new:ident) => {
+-        #[cfg(test)]
+-        mod dnssec {
+-            mod $new {
+-                define_dnssec_test!($new;
+-                    test_a_lookup,
+-                    test_soa,
+-                    test_ns,
+-                    test_aname_lookup,
+-                    test_wildcard,
+-                    test_nsec_nodata,
+-                    test_nsec_nxdomain_start,
+-                    test_nsec_nxdomain_middle,
+-                    test_nsec_nxdomain_wraps_end,
+-                    test_rfc_6975_supported_algorithms,
+-                );
+-            }
+-        }
+-    };
+-}
+Index: trust-dns-server/tests/authority_battery/dynamic_update.rs
+===================================================================
+--- trust-dns-server.orig/tests/authority_battery/dynamic_update.rs
++++ trust-dns-server/tests/authority_battery/dynamic_update.rs
+@@ -775,137 +775,3 @@ pub fn test_delete_all<A: Authority<Look
+     }
+ }
+ 
+-pub fn add_auth<A: DnssecAuthority>(authority: &mut A) -> Vec<SigSigner> {
+-    use trust_dns_client::rr::rdata::key::KeyUsage;
+-    use trust_dns_server::config::dnssec::*;
+-
+-    let update_name = Name::from_str("update")
+-        .unwrap()
+-        .append_domain(&authority.origin().to_owned().into())
+-        .unwrap();
+-
+-    let mut keys = Vec::<SigSigner>::new();
+-
+-    // TODO: support RSA signing with ring
+-    // rsa
+-    #[cfg(feature = "dnssec-openssl")]
+-    {
+-        let key_config = KeyConfig {
+-            key_path: "../../tests/test-data/named_test_configs/dnssec/rsa_2048.pem".to_string(),
+-            password: Some("123456".to_string()),
+-            algorithm: Algorithm::RSASHA512.to_string(),
+-            signer_name: Some(update_name.to_string()),
+-            is_zone_signing_key: Some(true),
+-            is_zone_update_auth: Some(false),
+-        };
+-
+-        let signer = key_config
+-            .try_into_signer(update_name.clone())
+-            .expect("failed to read key_config");
+-        let public_key = signer
+-            .key()
+-            .to_sig0key_with_usage(Algorithm::RSASHA512, KeyUsage::Host)
+-            .expect("failed to get sig0 key");
+-
+-        block_on(authority.add_update_auth_key(update_name.clone(), public_key))
+-            .expect("failed to add signer to zone");
+-        keys.push(signer);
+-    }
+-
+-    // // TODO: why are ecdsa tests failing in this context?
+-    // // ecdsa_p256
+-    // {
+-    //     let key_config = KeyConfig {
+-    //         key_path: "tests/test-data/named_test_configs/dnssec/ecdsa_p256.pem".to_string(),
+-    //         password: None,
+-    //         algorithm: Algorithm::ECDSAP256SHA256.to_string(),
+-    //         signer_name: Some(signer_name.clone().to_string()),
+-    //         is_zone_signing_key: Some(true),
+-    //         is_zone_update_auth: Some(false),
+-    //     };
+-
+-    //     let signer = key_config.try_into_signer(signer_name.clone()).expect("failed to read key_config");
+-    //     keys.push(signer.to_dnskey().expect("failed to create DNSKEY"));
+-    //     authority.add_zone_signing_key(signer).expect("failed to add signer to zone");
+-    //     authority.secure_zone().expect("failed to sign zone");
+-    // }
+-
+-    // // ecdsa_p384
+-    // {
+-    //     let key_config = KeyConfig {
+-    //         key_path: "../../tests/test-data/named_test_configs/dnssec/ecdsa_p384.pem".to_string(),
+-    //         password: None,
+-    //         algorithm: Algorithm::ECDSAP384SHA384.to_string(),
+-    //         signer_name: Some(signer_name.clone().to_string()),
+-    //         is_zone_signing_key: Some(true),
+-    //         is_zone_update_auth: Some(false),
+-    //     };
+-
+-    //     let signer = key_config.try_into_signer(signer_name.clone()).expect("failed to read key_config");
+-    //     keys.push(signer.to_dnskey().expect("failed to create DNSKEY"));
+-    //     authority.add_zone_signing_key(signer).expect("failed to add signer to zone");
+-    //     authority.secure_zone().expect("failed to sign zone");
+-    // }
+-
+-    // ed 25519
+-    #[cfg(feature = "dnssec-ring")]
+-    {
+-        let key_config = KeyConfig {
+-            key_path: "../../tests/test-data/named_test_configs/dnssec/ed25519.pk8".to_string(),
+-            password: None,
+-            algorithm: Algorithm::ED25519.to_string(),
+-            signer_name: Some(update_name.to_string()),
+-            is_zone_signing_key: Some(true),
+-            is_zone_update_auth: Some(false),
+-        };
+-
+-        let signer = key_config
+-            .try_into_signer(update_name.clone())
+-            .expect("failed to read key_config");
+-        let public_key = signer
+-            .key()
+-            .to_sig0key_with_usage(Algorithm::ED25519, KeyUsage::Host)
+-            .expect("failed to get sig0 key");
+-
+-        block_on(authority.add_update_auth_key(update_name, public_key))
+-            .expect("failed to add signer to zone");
+-        keys.push(signer);
+-    }
+-
+-    keys
+-}
+-
+-macro_rules! define_update_test {
+-    ($new:ident; $( $f:ident, )*) => {
+-        $(
+-            #[test]
+-            fn $f () {
+-                let mut authority = crate::$new("../../tests/test-data/named_test_configs/example.com.zone", module_path!(), stringify!($f));
+-                let keys = crate::authority_battery::dynamic_update::add_auth(&mut authority);
+-                crate::authority_battery::dynamic_update::$f(authority, &keys);
+-            }
+-        )*
+-    }
+-}
+-
+-macro_rules! dynamic_update {
+-    ($new:ident) => {
+-        #[cfg(test)]
+-        mod dynamic_update {
+-            mod $new {
+-                define_update_test!($new;
+-                    test_create,
+-                    test_create_multi,
+-                    test_append,
+-                    test_append_multi,
+-                    test_compare_and_swap,
+-                    test_compare_and_swap_multi,
+-                    test_delete_by_rdata,
+-                    test_delete_by_rdata_multi,
+-                    test_delete_rrset,
+-                    test_delete_all,
+-                );
+-            }
+-        }
+-    };
+-}
+Index: trust-dns-server/tests/store_file_tests.rs
+===================================================================
+--- trust-dns-server.orig/tests/store_file_tests.rs
++++ trust-dns-server/tests/store_file_tests.rs
+@@ -22,29 +22,3 @@ fn file(master_file_path: &str, _module:
+     )
+     .expect("failed to load file")
+ }
+-
+-basic_battery!(file);
+-#[cfg(feature = "dnssec")]
+-dnssec_battery!(file);
+-
+-#[test]
+-fn test_all_lines_are_loaded() {
+-    let config = FileConfig {
+-        zone_file_path: "../../tests/test-data/named_test_configs/default/nonewline.zone"
+-            .to_string(),
+-    };
+-
+-    let mut authority = FileAuthority::try_from_config(
+-        Name::from_str("example.com.").unwrap(),
+-        ZoneType::Primary,
+-        false,
+-        None,
+-        &config,
+-    )
+-    .expect("failed to load");
+-    let rrkey = RrKey {
+-        record_type: RecordType::A,
+-        name: LowerName::from(Name::from_ascii("ensure.nonewline.").unwrap()),
+-    };
+-    assert!(authority.records_get_mut().get(&rrkey).is_some())
+-}

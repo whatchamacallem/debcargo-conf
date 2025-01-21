@@ -1,0 +1,29 @@
+overlay = "."
+uploaders = ["Reinhard Tartler <siretart@tauware.de>"]
+collapse_features = true
+
+[packages.lib]
+#to ensure that trust-dns-client, trust-dns-proto and trust-dns-server use the same
+#version of rustls
+depends = ["librust-trust-dns-proto-dev (>= 0.22.0-4)", "librust-trust-dns-client-dev (>= 0.22.0-3)"]
+
+# error[E0433]: failed to resolve: use of undeclared crate or module `rustls_native_certs`
+[packages."lib+dns-over-tls"]
+test_is_broken = true
+
+# error[E0433]: failed to resolve: could not find `dnssec` in `rr`
+[packages."lib+dnssec"]
+test_is_broken = true
+
+# error[E0433]: failed to resolve: use of undeclared crate or module `rustls_native_certs`
+[packages."lib+dns-over-https-rustls"]
+test_is_broken = true
+
+# error[E0433]: failed to resolve: use of undeclared crate or module `rustls_native_certs`
+[packages."lib+dns-over-rustls"]
+test_is_broken = true
+
+# error: cannot find macro `basic_battery` in this scope
+[packages."lib+sqlite"]
+test_is_broken = true
+

@@ -1,0 +1,74 @@
+--- a/src/store/file/authority.rs
++++ b/src/store/file/authority.rs
+@@ -351,71 +351,3 @@
+     }
+ }
+ 
+-#[cfg(test)]
+-mod tests {
+-    use std::net::Ipv4Addr;
+-    use std::str::FromStr;
+-
+-    use crate::client::rr::RData;
+-    use futures_executor::block_on;
+-
+-    use super::*;
+-    use crate::authority::ZoneType;
+-
+-    #[test]
+-    fn test_load_zone() {
+-        #[cfg(feature = "dnssec")]
+-        let config = FileConfig {
+-            zone_file_path: "../../tests/test-data/named_test_configs/dnssec/example.com.zone"
+-                .to_string(),
+-        };
+-        #[cfg(not(feature = "dnssec"))]
+-        let config = FileConfig {
+-            zone_file_path: "../../tests/test-data/named_test_configs/example.com.zone".to_string(),
+-        };
+-        let authority = FileAuthority::try_from_config(
+-            Name::from_str("example.com.").unwrap(),
+-            ZoneType::Primary,
+-            false,
+-            None,
+-            &config,
+-        )
+-        .expect("failed to load file");
+-
+-        let lookup = block_on(Authority::lookup(
+-            &authority,
+-            &LowerName::from_str("www.example.com.").unwrap(),
+-            RecordType::A,
+-            LookupOptions::default(),
+-        ))
+-        .expect("lookup failed");
+-
+-        match lookup
+-            .into_iter()
+-            .next()
+-            .expect("A record not found in authity")
+-            .data()
+-        {
+-            Some(RData::A(ip)) => assert_eq!(Ipv4Addr::new(127, 0, 0, 1), *ip),
+-            _ => panic!("wrong rdata type returned"),
+-        }
+-
+-        let include_lookup = block_on(Authority::lookup(
+-            &authority,
+-            &LowerName::from_str("include.alias.example.com.").unwrap(),
+-            RecordType::A,
+-            LookupOptions::default(),
+-        ))
+-        .expect("INCLUDE lookup failed");
+-
+-        match include_lookup
+-            .into_iter()
+-            .next()
+-            .expect("A record not found in authity")
+-            .data()
+-        {
+-            Some(RData::A(ip)) => assert_eq!(Ipv4Addr::new(127, 0, 0, 5), *ip),
+-            _ => panic!("wrong rdata type returned"),
+-        }
+-    }
+-}
