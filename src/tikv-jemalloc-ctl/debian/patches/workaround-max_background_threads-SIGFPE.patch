@@ -1,0 +1,85 @@
+Description: Work around max_background_threads being written 0
+ Upstream disabled these tests for mips64el in 996e5b3926, without explanation;
+ though right after fd6f565209, which did comment that test_ptr2str failed on
+ mips64el due to SIGFPE, presumably for the same reason (I don't see how the
+ ptr2str function in src/raw.rs would SIGFPE).
+ .
+ The symptom is the tests randomly fail due to SIGFPE. When I first saw this,
+ it only appeared in s390x debci runs. The s390x porterbox, zelenka, didn't
+ show this behavior (though now does with a bigger sample size), while debci
+ worker ci-worker-s390x-01 does. Thanks to elbrus, I managed to pinpoint the
+ culprit there, and seeing the SIGFPE disabling suspiciously similar,
+ reproduced the same on the mips64el porterbox, eberlin. Now that the reason is
+ clear, even on my own amd64 box with a few hundred runs.
+ .
+ Core dump points to jemalloc function background_thread_create_locked(), at
+ the opening of which:
+ 	size_t thread_ind = arena_ind % max_background_threads;
+ .. and here, `max_background_threads_write_test()` writes into the latter
+ `libc::size_t::default()`, which is 0, thus dividing by zero. Due to the
+ random order tests ran in parallel, this zero division may or may not occur.
+Author: Blair Noctis <ncts@debian.org>
+Last-Update: 2025-01-21
+--- a/src/macros.rs
++++ b/src/macros.rs
+@@ -43,2 +43,7 @@
+ 
++macro_rules! wu_value {
++    (max_background_threads => libc::size_t) => { 1 };
++    ($id:ident => $ret_ty:ty) => { <$ret_ty>::default() };
++}
++
+ /// Read
+@@ -114,5 +119,4 @@
+             #[test]
+-            #[cfg(not(target_arch = "mips64el"))]
+             fn [<$id _write_test>]() {
+-                match stringify!($id) {
++                let value = match stringify!($id) {
+                     "background_thread" |
+@@ -120,9 +124,9 @@
+                         if cfg!(target_os = "macos") => return,
+-                    _ => (),
+-                }
++                    _ => wu_value!($id => $ret_ty),
++                };
+ 
+-                let _ = $id::write($ret_ty::default()).unwrap();
++                let _ = $id::write(value).unwrap();
+ 
+                 let mib = $id::mib().unwrap();
+-                let _ = mib.write($ret_ty::default()).unwrap();
++                let _ = mib.write(value).unwrap();
+ 
+@@ -133,3 +137,3 @@
+                         " (write): \"{}\""),
+-                    $ret_ty::default()
++                    value
+                 );
+@@ -163,6 +167,5 @@
+             #[test]
+-            #[cfg(not(target_arch = "mips64el"))]
+             #[allow(unused)]
+             fn [<$id _update_test>]() {
+-                match stringify!($id) {
++                let value = match stringify!($id) {
+                     "background_thread" |
+@@ -170,9 +173,9 @@
+                         if cfg!(target_os = "macos") => return,
+-                    _ => (),
+-                }
++                    _ => wu_value!($id => $ret_ty),
++                };
+ 
+-                let a = $id::update($ret_ty::default()).unwrap();
++                let a = $id::update(value).unwrap();
+ 
+                 let mib = $id::mib().unwrap();
+-                let b = mib.update($ret_ty::default()).unwrap();
++                let b = mib.update(value).unwrap();
+ 
+@@ -183,3 +186,3 @@
+                         " (update): (\"{}\", \"{}\") - \"{}\""),
+-                    a, b, $ret_ty::default()
++                    a, b, value
+                 );
