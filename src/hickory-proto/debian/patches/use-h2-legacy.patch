@@ -1,0 +1,98 @@
+--- rust-hickory-proto-0.24.1.orig/Cargo.toml
++++ rust-hickory-proto-0.24.1/Cargo.toml
+@@ -84,8 +84,9 @@ features = ["std"]
+ default-features = false
+ 
+ [dependencies.h2]
+-version = "0.3.0"
+-features = ["stream"]
++version = "0.4.7"
++features = ["stream","legacy"]
++#path = "../h2"
+ optional = true
+ 
+ [dependencies.h3]
+--- rust-hickory-proto-0.24.1.orig/src/h2/h2_client_stream.rs
++++ rust-hickory-proto-0.24.1/src/h2/h2_client_stream.rs
+@@ -19,7 +19,7 @@ use bytes::{Buf, Bytes, BytesMut};
+ use futures_util::future::{FutureExt, TryFutureExt};
+ use futures_util::ready;
+ use futures_util::stream::Stream;
+-use h2::client::{Connection, SendRequest};
++use h2::legacy::client::{Connection, SendRequest};
+ use http::header::{self, CONTENT_LENGTH};
+ use rustls::ClientConfig;
+ use tokio_rustls::{
+@@ -410,7 +410,7 @@ where
+                                 SendRequest<Bytes>,
+                                 Connection<TokioTlsClientStream<AsyncIoStdAsTokio<S>>, Bytes>,
+                             ),
+-                            h2::Error,
++                            h2::legacy::Error,
+                         >,
+                     > + Send,
+             >,
+@@ -467,7 +467,7 @@ where
+                 } => {
+                     let tls = ready!(tls.poll_unpin(cx))?;
+                     debug!("tls connection established to: {}", name_server);
+-                    let mut handshake = h2::client::Builder::new();
++                    let mut handshake = h2::legacy::client::Builder::new();
+                     handshake.enable_push(false);
+ 
+                     let handshake = handshake.handshake(tls);
+--- rust-hickory-proto-0.24.1.orig/src/h2/h2_server.rs
++++ rust-hickory-proto-0.24.1/src/h2/h2_server.rs
+@@ -30,7 +30,7 @@ pub async fn message_from<R>(
+     request: Request<R>,
+ ) -> Result<BytesMut, HttpsError>
+ where
+-    R: Stream<Item = Result<Bytes, h2::Error>> + 'static + Send + Debug + Unpin,
++    R: Stream<Item = Result<Bytes, h2::legacy::Error>> + 'static + Send + Debug + Unpin,
+ {
+     debug!("Received request: {:#?}", request);
+ 
+@@ -61,7 +61,7 @@ pub(crate) async fn message_from_post<R>
+     length: Option<usize>,
+ ) -> Result<BytesMut, HttpsError>
+ where
+-    R: Stream<Item = Result<Bytes, h2::Error>> + 'static + Send + Debug + Unpin,
++    R: Stream<Item = Result<Bytes, h2::legacy::Error>> + 'static + Send + Debug + Unpin,
+ {
+     let mut bytes = BytesMut::with_capacity(length.unwrap_or(0).clamp(512, 4096));
+ 
+@@ -104,10 +104,10 @@ mod tests {
+     use super::*;
+ 
+     #[derive(Debug)]
+-    struct TestBytesStream(Vec<Result<Bytes, h2::Error>>);
++    struct TestBytesStream(Vec<Result<Bytes, h2::legacy::Error>>);
+ 
+     impl Stream for TestBytesStream {
+-        type Item = Result<Bytes, h2::Error>;
++        type Item = Result<Bytes, h2::legacy::Error>;
+ 
+         fn poll_next(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+             match self.0.pop() {
+--- rust-hickory-proto-0.24.1.orig/src/http/error.rs
++++ rust-hickory-proto-0.24.1/src/http/error.rs
+@@ -43,7 +43,7 @@ pub enum ErrorKind {
+ 
+     #[error("h2: {0}")]
+     #[cfg(feature = "dns-over-https")]
+-    H2(#[from] h2::Error),
++    H2(#[from] h2::legacy::Error),
+ 
+     #[error("h3: {0}")]
+     #[cfg(feature = "dns-over-h3")]
+@@ -123,8 +123,8 @@ impl From<ProtoError> for Error {
+ }
+ 
+ #[cfg(feature = "dns-over-https")]
+-impl From<h2::Error> for Error {
+-    fn from(msg: h2::Error) -> Self {
++impl From<h2::legacy::Error> for Error {
++    fn from(msg: h2::legacy::Error) -> Self {
+         ErrorKind::H2(msg).into()
+     }
+ }
