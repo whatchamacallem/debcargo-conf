@@ -186,6 +186,8 @@ if ! check_build_deps; then
 	fi
 fi
 
+unset APT_CONFIG
+
 if [ "$SOURCEONLY" = 1 ]; then
 	exit
 fi
