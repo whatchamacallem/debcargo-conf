@@ -1,0 +1,49 @@
+--- rust-async-backtrace-0.2.7.orig/tests/consolidate.rs
++++ rust-async-backtrace-0.2.7/tests/consolidate.rs
+@@ -33,9 +33,9 @@ async fn ready() {
+     pretty_assertions::assert_str_eq!(
+         util::strip(dump),
+         "\
+-╼ consolidate::selecting::{{closure}} at backtrace/tests/consolidate.rs:LINE:COL
+-  ├╼ consolidate::ready::{{closure}} at backtrace/tests/consolidate.rs:LINE:COL
+-  └╼ 2x consolidate::yielding_outer::{{closure}} at backtrace/tests/consolidate.rs:LINE:COL
+-     └╼ consolidate::yielding_inner::{{closure}} at backtrace/tests/consolidate.rs:LINE:COL"
++╼ consolidate::selecting::{{closure}} at tests/consolidate.rs:LINE:COL
++  ├╼ consolidate::ready::{{closure}} at tests/consolidate.rs:LINE:COL
++  └╼ 2x consolidate::yielding_outer::{{closure}} at tests/consolidate.rs:LINE:COL
++     └╼ consolidate::yielding_inner::{{closure}} at tests/consolidate.rs:LINE:COL"
+     );
+ }
+--- rust-async-backtrace-0.2.7.orig/tests/poll-in-drop.rs
++++ rust-async-backtrace-0.2.7/tests/poll-in-drop.rs
+@@ -20,7 +20,7 @@ fn poll_in_drop() {
+     async fn inner() {
+         let dump = async_backtrace::taskdump_tree(true);
+         pretty_assertions::assert_str_eq!(util::strip(dump), "\
+-╼ poll_in_drop::poll_in_drop::outer<poll_in_drop::util::Defer<poll_in_drop::poll_in_drop::{{closure}}::{{closure}}, ()>>::{{closure}} at backtrace/tests/poll-in-drop.rs:LINE:COL
+-  └╼ poll_in_drop::poll_in_drop::inner::{{closure}} at backtrace/tests/poll-in-drop.rs:LINE:COL");
++╼ poll_in_drop::poll_in_drop::outer<poll_in_drop::util::Defer<poll_in_drop::poll_in_drop::{{closure}}::{{closure}}, ()>>::{{closure}} at tests/poll-in-drop.rs:LINE:COL
++  └╼ poll_in_drop::poll_in_drop::inner::{{closure}} at tests/poll-in-drop.rs:LINE:COL");
+     }
+ }
+--- rust-async-backtrace-0.2.7.orig/tests/reentrant.rs
++++ rust-async-backtrace-0.2.7/tests/reentrant.rs
+@@ -14,7 +14,7 @@ async fn outer() {
+     pretty_assertions::assert_str_eq!(
+         util::strip(dump),
+         "\
+-╼ reentrant::outer::{{closure}} at backtrace/tests/reentrant.rs:LINE:COL"
++╼ reentrant::outer::{{closure}} at tests/reentrant.rs:LINE:COL"
+     );
+     inner().await;
+ }
+@@ -25,7 +25,7 @@ async fn inner() {
+     pretty_assertions::assert_str_eq!(
+         util::strip(dump),
+         "\
+-╼ reentrant::outer::{{closure}} at backtrace/tests/reentrant.rs:LINE:COL
+-  └╼ reentrant::inner::{{closure}} at backtrace/tests/reentrant.rs:LINE:COL"
++╼ reentrant::outer::{{closure}} at tests/reentrant.rs:LINE:COL
++  └╼ reentrant::inner::{{closure}} at tests/reentrant.rs:LINE:COL"
+     );
+ }
