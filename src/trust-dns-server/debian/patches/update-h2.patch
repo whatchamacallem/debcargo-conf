@@ -1,13 +1,37 @@
-diff --git a/Cargo.toml b/Cargo.toml
-index 1c8641e..546d229 100644
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -76,7 +76,7 @@ features = ["std"]
+Index: trust-dns-server/Cargo.toml
+===================================================================
+--- trust-dns-server.orig/Cargo.toml
++++ trust-dns-server/Cargo.toml
+@@ -76,8 +76,8 @@ features = ["std"]
  default-features = false
  
  [dependencies.h2]
 -version = "0.3.0"
-+version = "0.4"
- features = ["stream"]
+-features = ["stream"]
++version = "0.4.7"
++features = ["stream","legacy"]
  optional = true
  
+ [dependencies.http]
+Index: trust-dns-server/src/server/https_handler.rs
+===================================================================
+--- trust-dns-server.orig/src/server/https_handler.rs
++++ trust-dns-server/src/server/https_handler.rs
+@@ -9,7 +9,7 @@ use std::{io, net::SocketAddr, sync::Arc
+ 
+ use bytes::{Bytes, BytesMut};
+ use futures_util::lock::Mutex;
+-use h2::server;
++use h2::legacy::server;
+ use tokio::io::{AsyncRead, AsyncWrite};
+ use tracing::{debug, warn};
+ use trust_dns_proto::rr::Record;
+@@ -80,7 +80,7 @@ async fn handle_request<T>(
+ }
+ 
+ #[derive(Clone)]
+-struct HttpsResponseHandle(Arc<Mutex<::h2::server::SendResponse<Bytes>>>);
++struct HttpsResponseHandle(Arc<Mutex<::h2::legacy::server::SendResponse<Bytes>>>);
+ 
+ #[async_trait::async_trait]
+ impl ResponseHandler for HttpsResponseHandle {
