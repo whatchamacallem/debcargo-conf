@@ -1,0 +1,125 @@
+From 879d29deb6776e9dd9de2df4fc10bfccfb1292e7 Mon Sep 17 00:00:00 2001
+From: Eliah Kagan <degeneracypressure@gmail.com>
+Date: Fri, 10 Jan 2025 04:05:00 -0500
+Subject: [PATCH 2/4] fix: Don't set extra permissions with +x on existing file
+
+This fixes a bug that occurred when a regular file tracked as
+executable was checked out in a non-exclusive checkout on a
+Unix-like system (where the destination is a filesystem that
+supports Unix-style executable permissions). This occurs when
+`destination_is_initially_empty: true` is not explicitly set.
+
+Whether the file existed before or not, it is created without
+attempting to set its permissions to include executable bits, then
+the executable bits are added afterwards. On Unix-like systems, the
+file was given unrestricted 0777 permissions and was thus world
+writable. This happened regardless of the process umask or any
+other contextual factors.
+
+Although `0o777` is given as the mode both when permissions are set
+on creation (using `OpenOptionsExt::mode` and `OpenOptions::open`,
+which delegates to `open`), and when they are set after creation
+(using `PermissionsExt::set_mode` and `std::fs::set_permissions`,
+which delegates to `chmod`), the cases do not treat their mode
+arguments equivalently.
+
+- The first situation worked correctly because `open` automatically
+  respects the current process umask. (The system takes care of
+  this, as it is part of the semantics of creating a new file and
+  specifying desired permissions.) So 777 was really expressing the
+  idea of maximal permissions of those considered safe under the
+  current configuration, including executable permissions.
+
+- But the second situation did not work correctly, because `chmod`
+  calls try to set the exact permissions specified (and usually
+  succeed). Unlike `open`, with `chmod` there is no implicit use of
+  the umask.
+
+Various fixes are possible. The fix implemented here hews to the
+existing design as much as possible while avoiding setting any
+write permissions (though existing write permissions are preserved)
+and also avoiding setting executable permissions for whoever does
+not have read permissions. We:
+
+1. Unset the setuid, setgid, and sticky bits, in the rare case that
+   any of them are set. Keeping them could be unsafe or have
+   unexpected effects when set for a file that may conceptually
+   hold different data or serve a different purpose (since this is
+   a checkout).
+
+   For the setuid and setgid bits, it would be unsafe to keep them
+   when adding new executable permissions. The intent of setuid
+   and setgit bits is ambiguous in this situation, since they may
+   have been meant only to apply to an earlier version of the file,
+   especially since users may expect the file to be deleted and a
+   new file of the same name to be created, rather than to confer
+   extra abilities when executable bits are added in the future.
+   Unsetting them makes adding executable bits where read bits are
+   already present (which we will do) a reasonably safe operation.
+
+   In the case of the setgid bit, another reason to remove it is
+   that, on some systems, the setgid bit in the absence of any
+   executable bits has the different meaning of enabling mandatory
+   file locking. If the setgid bit was set for this purpose, then
+   the effect of setting the EGID and potentialy elevating the
+   privileges of the user who runs it is surely not intended.
+
+2. Check which read bits (for owner, group, and other) are already
+   set on the file. We do this only by looking at the mode. For
+   example, ACLs do not participate.
+
+3. Set executable bits corresponding to the preexisting read bits.
+   That is, for each of the owner, group, and others, if it can
+   read (according to the file mode), set it to be able to execute
+   as well.
+
+   In some cases, this may have a different effect from what would
+   happen if the file were created anew with the desired
+   permissions specified by a broad mode (e.g. 777) and subject to
+   the umask. This is because it is possible to have a umask that
+   limits read and execute permissions differently. Also, the file
+   may have had its permissions modified in some other way since
+   creation.
+
+The idea here is to keep the idea behind the way it worked before,
+but avoid adding any write permissions or giving permissions to
+users who don't already have any. This fixes the bug where
+executable files were sometimes checked out with unrestricted,
+world-writable permissions. However, this is not necessarily the
+approach that will be kept long-term.
+
+This does not attempt to avoid effects that are fundamental to the
+reuse of an existing file (versus the creation of a new one). In
+particular, this currently assumes that observing changes due to a
+checkout through other hard links to a file (whose link count is
+higher than 1) is an intended or otherwise acceptable effect of
+using multiple hard links.
+
+Another aspect of the current approach that is preserved so far but
+that may eventually change is that some operations are done through
+an open file object while others are done using the path, and there
+may be unusual situations, perhaps involving long-running process
+smudge filters and separate concurrent modification of the working
+tree, where they diverge. However, the specific scenario of path
+coming to refer to something that is no longer a regular file will
+be covered in a subsequent commit.
+---
+ src/checkout/entry.rs | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+Index: gix-worktree-state/src/checkout/entry.rs
+===================================================================
+--- gix-worktree-state.orig/src/checkout/entry.rs
++++ gix-worktree-state/src/checkout/entry.rs
+@@ -287,7 +287,10 @@ pub(crate) fn finalize_entry(
+     if let Some(path) = set_executable_after_creation {
+         use std::os::unix::fs::PermissionsExt;
+         let mut perm = std::fs::symlink_metadata(path)?.permissions();
+-        perm.set_mode(0o777);
++        let mut mode = perm.mode();
++        mode &= 0o777; // Clear non-rwx bits (setuid, setgid, sticky).
++        mode |= (mode & 0o444) >> 2; // Let readers also execute.
++        perm.set_mode(mode);
+         std::fs::set_permissions(path, perm)?;
+     }
+     // NOTE: we don't call `file.sync_all()` here knowing that some filesystems don't handle this well.
