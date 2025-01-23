@@ -1,0 +1,54 @@
+--- a/src/services/fs/serve_dir/tests.rs
++++ b/src/services/fs/serve_dir/tests.rs
+@@ -18,6 +18,6 @@
+ const H_CT_TXT: &str = "text/plain";
+-const SERVE_DIR: &str = "..";
++const SERVE_DIR: &str = ".";
+ const SERVE_DIR_FILE: &str = "/README.md";
+-const SERVE_FILE: &str = "../README.md";
+-const SERVE_DIR_TF: &str = "../test-files";
++const SERVE_FILE: &str = "./README.md";
++const SERVE_DIR_TF: &str = "./test-files";
+ const SERVE_DIR_TF_FILE: &str = "/precompressed.txt";
+@@ -94,3 +94,3 @@
+     assert_eq!(res.headers()["content-encoding"], "gzip");
+-    assert_eq!(res.headers()["content-length"], "39");
++    assert_eq!(res.headers()["content-length"], "30");
+ 
+@@ -323,3 +323,3 @@
+     let req = Request::builder()
+-        .uri("/tower-http/Cargo.toml")
++        .uri("/Cargo.toml")
+         .body(Body::empty())
+@@ -676,3 +676,3 @@
+     assert_eq!(res.status(), StatusCode::OK);
+-    let readme_bytes = include_bytes!("../../../../../README.md");
++    let readme_bytes = include_bytes!("../../../../README.md");
+     let body = res.into_body().collect().await.unwrap().to_bytes();
+--- a/src/services/fs/serve_file.rs
++++ b/src/services/fs/serve_file.rs
+@@ -162,9 +162,9 @@
+     const H_CT_TXT: &str = "text/plain";
+-    const SERVE_FILE: &str = "../README.md";
++    const SERVE_FILE: &str = "./README.md";
+     const SERVE_FILE_START: &str = "# Tower HTTP";
+-    const SERVE_FILE_PRECOMP: &str = "../test-files/precompressed.txt";
++    const SERVE_FILE_PRECOMP: &str = "./test-files/precompressed.txt";
+     const SERVE_FILE_PRECOMP_START: &str = "Test file";
+-    const SERVE_FILE_MISSING_PRECOMP: &str = "../test-files/missing_precompressed.txt";
+-    const SERVE_FILE_ONLY_GZIP: &str = "../test-files/only_gzipped.txt";
+-    const SERVE_FILE_PRECOMP_BR: &str = "../test-files/precompressed_br.txt";
++    const SERVE_FILE_MISSING_PRECOMP: &str = "./test-files/missing_precompressed.txt";
++    const SERVE_FILE_ONLY_GZIP: &str = "./test-files/only_gzipped.txt";
++    const SERVE_FILE_PRECOMP_BR: &str = "./test-files/precompressed_br.txt";
+ 
+@@ -225,3 +225,3 @@
+         assert_eq!(res.headers()["content-encoding"], "gzip");
+-        assert_eq!(res.headers()["content-length"], "39");
++        assert_eq!(res.headers()["content-length"], "30");
+ 
+@@ -543,3 +543,3 @@
+         assert_eq!(res.status(), StatusCode::OK);
+-        let readme_bytes = include_bytes!("../../../../README.md");
++        let readme_bytes = include_bytes!("../../../README.md");
+         let body = res.into_body().collect().await.unwrap().to_bytes();
