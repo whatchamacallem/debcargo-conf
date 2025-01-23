@@ -1,0 +1,910 @@
+From: Dirkjan Ochtman <dirkjan@ochtman.nl>
+From: Maytham Alsudany <maytha8thedev@gmail.com>
+Origin: upstream, https://github.com/hickory-dns/hickory-dns/commit/a3b12b5f94705f74da30c2ba46f8ef69dceb7e60
+Forwarded: not-needed
+Subject: [PATCH] Upgrade to rustls 0.23, quinn 0.11, etc
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -151,12 +151,16 @@
+ ]
+ optional = true
+ 
++[dependencies.pin-project-lite]
++version = "0.2"
++optional = true
++
+ [dependencies.quinn]
+-version = "0.10"
++version = "0.11"
+ features = [
+     "log",
+     "runtime-tokio",
+-    "tls-rustls",
++    "rustls",
+ ]
+ optional = true
+ default-features = false
+@@ -170,7 +174,13 @@
+ optional = true
+ 
+ [dependencies.rustls]
+-version = "0.21.6"
++version = "0.23"
++default-features = false
++features = [
++    "logging",
++    "std",
++    "tls12"
++]
+ optional = true
+ 
+ [dependencies.rustls-native-certs]
+@@ -178,7 +188,7 @@
+ optional = true
+ 
+ [dependencies.rustls-pemfile]
+-version = "1.0.0"
++version = "2"
+ optional = true
+ 
+ [dependencies.serde]
+@@ -199,7 +209,7 @@
+ 
+ [dependencies.tokio]
+ version = "1.21"
+-features = ["io-util"]
++features = ["io-util", "macros"]
+ optional = true
+ 
+ [dependencies.tokio-native-tls]
+@@ -211,7 +221,8 @@
+ optional = true
+ 
+ [dependencies.tokio-rustls]
+-version = "0.24.0"
++version = "0.26"
++default-features = false
+ features = ["early-data"]
+ optional = true
+ 
+@@ -289,14 +300,15 @@
+ ]
+ dns-over-quic = [
+     "quinn",
+-    "rustls/quic",
+     "dns-over-rustls",
+     "bytes",
++    "dep:pin-project-lite",
+     "tokio-runtime",
+ ]
+ dns-over-rustls = [
+     "dns-over-tls",
+     "rustls",
++    "rustls/ring",
+     "rustls-pemfile",
+     "tokio-rustls",
+     "tokio-runtime",
+--- a/src/error.rs
++++ b/src/error.rs
+@@ -276,11 +276,21 @@
+     #[error("error writing to quic read: {0}")]
+     QuinnReadError(#[from] quinn::ReadExactError),
+ 
++    /// A Quinn (QUIC) read error occurred
++    #[cfg(feature = "quinn")]
++    #[error("referenced a closed QUIC stream: {0}")]
++    QuinnStreamError(#[from] quinn::ClosedStream),
++
+     /// A Quinn (QUIC) configuration error occurred
+     #[cfg(feature = "quinn")]
+     #[error("error constructing quic configuration: {0}")]
+     QuinnConfigError(#[from] quinn::ConfigError),
+ 
++    /// QUIC TLS config must include an AES-128-GCM cipher suite
++    #[cfg(feature = "quinn")]
++    #[error("QUIC TLS config must include an AES-128-GCM cipher suite")]
++    QuinnTlsConfigError(#[from] quinn::crypto::rustls::NoInitialCipherSuite),
++
+     /// Unknown QUIC stream used
+     #[cfg(feature = "quinn")]
+     #[error("an unknown quic stream was used")]
+@@ -499,8 +509,12 @@
+             #[cfg(feature = "quinn")]
+             QuinnReadError(ref e) => QuinnReadError(e.clone()),
+             #[cfg(feature = "quinn")]
++            QuinnStreamError(ref e) => QuinnStreamError(e.clone()),
++            #[cfg(feature = "quinn")]
+             QuinnConfigError(ref e) => QuinnConfigError(e.clone()),
+             #[cfg(feature = "quinn")]
++            QuinnTlsConfigError(ref e) => QuinnTlsConfigError(e.clone()),
++            #[cfg(feature = "quinn")]
+             QuinnUnknownStreamError => QuinnUnknownStreamError,
+             #[cfg(feature = "rustls")]
+             RustlsError(ref e) => RustlsError(e.clone()),
+--- a/src/h2/h2_client_stream.rs
++++ b/src/h2/h2_client_stream.rs
+@@ -21,6 +21,7 @@
+ use futures_util::stream::Stream;
+ use h2::client::{Connection, SendRequest};
+ use http::header::{self, CONTENT_LENGTH};
++use rustls::pki_types::ServerName;
+ use rustls::ClientConfig;
+ use tokio_rustls::{
+     client::TlsStream as TokioTlsClientStream, Connect as TokioTlsConnect, TlsConnector,
+@@ -444,10 +445,10 @@
+                         .expect("programming error, tls should not be None here");
+                     let name_server_name = Arc::clone(&tls.dns_name);
+ 
+-                    match tls.dns_name.as_ref().try_into() {
++                    match ServerName::try_from(&*tls.dns_name) {
+                         Ok(dns_name) => {
+                             let tls = TlsConnector::from(tls.client_config);
+-                            let tls = tls.connect(dns_name, AsyncIoStdAsTokio(tcp));
++                            let tls = tls.connect(dns_name.to_owned(), AsyncIoStdAsTokio(tcp));
+                             Self::TlsConnecting {
+                                 name_server_name,
+                                 name_server,
+@@ -762,21 +763,14 @@
+             }
+         }
+         #[cfg(feature = "webpki-roots")]
+-        root_store.add_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.iter().map(|ta| {
+-            rustls::OwnedTrustAnchor::from_subject_spki_name_constraints(
+-                ta.subject,
+-                ta.spki,
+-                ta.name_constraints,
+-            )
+-        }));
+-
+-        let mut client_config = ClientConfig::builder()
+-            .with_safe_default_cipher_suites()
+-            .with_safe_default_kx_groups()
+-            .with_safe_default_protocol_versions()
+-            .unwrap()
+-            .with_root_certificates(root_store)
+-            .with_no_client_auth();
++        root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
++
++        let mut client_config =
++            ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
++                .with_safe_default_protocol_versions()
++                .unwrap()
++                .with_root_certificates(root_store)
++                .with_no_client_auth();
+ 
+         client_config.alpn_protocols = vec![ALPN_H2.to_vec()];
+         client_config
+--- a/src/h3/h3_client_stream.rs
++++ b/src/h3/h3_client_stream.rs
+@@ -19,6 +19,7 @@
+ use h3::client::{Connection, SendRequest};
+ use h3_quinn::OpenStreams;
+ use http::header::{self, CONTENT_LENGTH};
++use quinn::crypto::rustls::QuicClientConfig;
+ use quinn::{ClientConfig, Endpoint, EndpointConfig, TransportConfig};
+ use rustls::ClientConfig as TlsClientConfig;
+ use tracing::debug;
+@@ -26,9 +27,7 @@
+ use crate::error::ProtoError;
+ use crate::http::Version;
+ use crate::op::Message;
+-use crate::quic::quic_socket::QuinnAsyncUdpSocketAdapter;
+-use crate::quic::QuicLocalAddr;
+-use crate::udp::{DnsUdpSocket, UdpSocket};
++use crate::udp::UdpSocket;
+ use crate::xfer::{DnsRequest, DnsRequestSender, DnsResponse, DnsResponseStream};
+ 
+ use super::ALPN_H3;
+@@ -311,38 +310,28 @@
+     }
+ 
+     /// Creates a new H3Stream with existing connection
+-    pub fn build_with_future<S, F>(
++    pub fn build_with_future(
+         self,
+-        future: F,
++        socket: Arc<dyn quinn::AsyncUdpSocket>,
+         name_server: SocketAddr,
+         dns_name: String,
+-    ) -> H3ClientConnect
+-    where
+-        S: DnsUdpSocket + QuicLocalAddr + 'static,
+-        F: Future<Output = std::io::Result<S>> + Send + Unpin + 'static,
+-    {
+-        H3ClientConnect(Box::pin(self.connect_with_future(future, name_server, dns_name)) as _)
++    ) -> H3ClientConnect {
++        H3ClientConnect(Box::pin(self.connect_with_future(socket, name_server, dns_name)) as _)
+     }
+ 
+-    async fn connect_with_future<S, F>(
++    async fn connect_with_future(
+         self,
+-        future: F,
++        socket: Arc<dyn quinn::AsyncUdpSocket>,
+         name_server: SocketAddr,
+-        dns_name: String,
+-    ) -> Result<H3ClientStream, ProtoError>
+-    where
+-        S: DnsUdpSocket + QuicLocalAddr + 'static,
+-        F: Future<Output = std::io::Result<S>> + Send,
+-    {
+-        let socket = future.await?;
+-        let wrapper = QuinnAsyncUdpSocketAdapter { io: socket };
++        server_name: String,
++    ) -> Result<H3ClientStream, ProtoError> {
+         let endpoint = Endpoint::new_with_abstract_socket(
+             EndpointConfig::default(),
+             None,
+-            wrapper,
++            socket,
+             Arc::new(quinn::TokioRuntime),
+         )?;
+-        self.connect_inner(endpoint, name_server, dns_name).await
++        self.connect_inner(endpoint, name_server, server_name).await
+     }
+ 
+     async fn connect(
+@@ -380,7 +369,8 @@
+         }
+         let early_data_enabled = crypto_config.enable_early_data;
+ 
+-        let mut client_config = ClientConfig::new(Arc::new(crypto_config));
++        let mut client_config =
++            ClientConfig::new(Arc::new(QuicClientConfig::try_from(crypto_config)?));
+         client_config.transport_config(self.transport_config.clone());
+ 
+         endpoint.set_default_client_config(client_config);
+--- a/src/h3/h3_server.rs
++++ b/src/h3/h3_server.rs
+@@ -13,8 +13,11 @@
+ use h3::server::{Connection, RequestStream};
+ use h3_quinn::{BidiStream, Endpoint};
+ use http::Request;
++use quinn::crypto::rustls::QuicServerConfig;
+ use quinn::{EndpointConfig, ServerConfig};
+-use rustls::{server::ServerConfig as TlsServerConfig, version::TLS13, Certificate, PrivateKey};
++use rustls::pki_types::{CertificateDer, PrivateKeyDer};
++use rustls::server::ServerConfig as TlsServerConfig;
++use rustls::version::TLS13;
+ 
+ use crate::{error::ProtoError, udp::UdpSocket};
+ 
+@@ -29,8 +32,8 @@
+     /// Construct the new Acceptor with the associated pkcs12 data
+     pub async fn new(
+         name_server: SocketAddr,
+-        cert: Vec<Certificate>,
+-        key: PrivateKey,
++        cert: Vec<CertificateDer<'static>>,
++        key: PrivateKeyDer<'static>,
+     ) -> Result<Self, ProtoError> {
+         // setup a new socket for the server to use
+         let socket = <tokio::net::UdpSocket as UdpSocket>::bind(name_server).await?;
+@@ -40,20 +43,21 @@
+     /// Construct the new server with an existing socket
+     pub fn with_socket(
+         socket: tokio::net::UdpSocket,
+-        cert: Vec<Certificate>,
+-        key: PrivateKey,
++        cert: Vec<CertificateDer<'static>>,
++        key: PrivateKeyDer<'static>,
+     ) -> Result<Self, ProtoError> {
+-        let mut config = TlsServerConfig::builder()
+-            .with_safe_default_cipher_suites()
+-            .with_safe_default_kx_groups()
+-            .with_protocol_versions(&[&TLS13])
+-            .expect("TLS1.3 not supported")
+-            .with_no_client_auth()
+-            .with_single_cert(cert, key)?;
++        let mut config = TlsServerConfig::builder_with_provider(Arc::new(
++            rustls::crypto::ring::default_provider(),
++        ))
++        .with_protocol_versions(&[&TLS13])
++        .expect("TLS1.3 not supported")
++        .with_no_client_auth()
++        .with_single_cert(cert, key)?;
+ 
+         config.alpn_protocols = vec![ALPN_H3.to_vec()];
+ 
+-        let mut server_config = ServerConfig::with_crypto(Arc::new(config));
++        let mut server_config =
++            ServerConfig::with_crypto(Arc::new(QuicServerConfig::try_from(config).unwrap()));
+         server_config.transport = Arc::new(super::transport());
+ 
+         let socket = socket.into_std()?;
+--- a/src/quic/mod.rs
++++ b/src/quic/mod.rs
+@@ -10,7 +10,6 @@
+ mod quic_client_stream;
+ mod quic_config;
+ mod quic_server;
+-pub(crate) mod quic_socket;
+ mod quic_stream;
+ 
+ pub use self::quic_client_stream::{
+@@ -19,7 +18,6 @@
+ };
+ pub use self::quic_server::{QuicServer, QuicStreams};
+ pub use self::quic_stream::{DoqErrorCode, QuicStream};
+-pub use crate::udp::QuicLocalAddr;
+ 
+ #[cfg(test)]
+ mod tests;
+--- a/src/quic/quic_client_stream.rs
++++ b/src/quic/quic_client_stream.rs
+@@ -15,13 +15,13 @@
+ };
+ 
+ use futures_util::{future::FutureExt, stream::Stream};
+-use quinn::{ClientConfig, Connection, Endpoint, TransportConfig, VarInt};
++use quinn::{
++    crypto::rustls::QuicClientConfig, ClientConfig, Connection, Endpoint, TransportConfig, VarInt,
++};
+ use rustls::{version::TLS13, ClientConfig as TlsClientConfig};
+ 
+-use crate::udp::{DnsUdpSocket, QuicLocalAddr};
+ use crate::{
+     error::ProtoError,
+-    quic::quic_socket::QuinnAsyncUdpSocketAdapter,
+     quic::quic_stream::{DoqErrorCode, QuicStream},
+     udp::UdpSocket,
+     xfer::{DnsRequest, DnsRequestSender, DnsResponse, DnsResponseStream},
+@@ -177,36 +177,26 @@
+     }
+ 
+     /// Create a QuicStream with existing connection
+-    pub fn build_with_future<S, F>(
++    pub fn build_with_future(
+         self,
+-        future: F,
++        socket: Arc<dyn quinn::AsyncUdpSocket>,
+         name_server: SocketAddr,
+         dns_name: String,
+-    ) -> QuicClientConnect
+-    where
+-        S: DnsUdpSocket + QuicLocalAddr + 'static,
+-        F: Future<Output = std::io::Result<S>> + Send + 'static,
+-    {
+-        QuicClientConnect(Box::pin(self.connect_with_future(future, name_server, dns_name)) as _)
++    ) -> QuicClientConnect {
++        QuicClientConnect(Box::pin(self.connect_with_future(socket, name_server, dns_name)) as _)
+     }
+ 
+-    async fn connect_with_future<S, F>(
++    async fn connect_with_future(
+         self,
+-        future: F,
++        socket: Arc<dyn quinn::AsyncUdpSocket>,
+         name_server: SocketAddr,
+         dns_name: String,
+-    ) -> Result<QuicClientStream, ProtoError>
+-    where
+-        S: DnsUdpSocket + QuicLocalAddr + 'static,
+-        F: Future<Output = std::io::Result<S>> + Send,
+-    {
+-        let socket = future.await?;
++    ) -> Result<QuicClientStream, ProtoError> {
+         let endpoint_config = quic_config::endpoint();
+-        let wrapper = QuinnAsyncUdpSocketAdapter { io: socket };
+         let endpoint = Endpoint::new_with_abstract_socket(
+             endpoint_config,
+             None,
+-            wrapper,
++            socket,
+             Arc::new(quinn::TokioRuntime),
+         )?;
+         self.connect_inner(endpoint, name_server, dns_name).await
+@@ -247,7 +237,8 @@
+         }
+         let early_data_enabled = crypto_config.enable_early_data;
+ 
+-        let mut client_config = ClientConfig::new(Arc::new(crypto_config));
++        let mut client_config =
++            ClientConfig::new(Arc::new(QuicClientConfig::try_from(crypto_config)?));
+         client_config.transport_config(self.transport_config.clone());
+ 
+         endpoint.set_default_client_config(client_config);
+@@ -286,7 +277,7 @@
+         use crate::error::ProtoErrorKind;
+ 
+         let (added, ignored) =
+-            root_store.add_parsable_certificates(&rustls_native_certs::load_native_certs()?);
++            root_store.add_parsable_certificates(rustls_native_certs::load_native_certs()?);
+ 
+         if ignored > 0 {
+             tracing::warn!(
+@@ -300,21 +291,15 @@
+         }
+     }
+     #[cfg(feature = "webpki-roots")]
+-    root_store.add_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.iter().map(|ta| {
+-        rustls::OwnedTrustAnchor::from_subject_spki_name_constraints(
+-            ta.subject,
+-            ta.spki,
+-            ta.name_constraints,
+-        )
+-    }));
++    root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+ 
+-    Ok(TlsClientConfig::builder()
+-        .with_safe_default_cipher_suites()
+-        .with_safe_default_kx_groups()
+-        .with_protocol_versions(&[&TLS13])
+-        .expect("TLS 1.3 not supported")
+-        .with_root_certificates(root_store)
+-        .with_no_client_auth())
++    Ok(
++        TlsClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
++            .with_protocol_versions(&[&TLS13])
++            .unwrap() // The ring default provider is guaranteed to support TLS 1.3
++            .with_root_certificates(root_store)
++            .with_no_client_auth(),
++    )
+ }
+ 
+ impl Default for QuicClientStreamBuilder {
+--- a/src/quic/quic_server.rs
++++ b/src/quic/quic_server.rs
+@@ -7,8 +7,11 @@
+ 
+ use std::{io, net::SocketAddr, sync::Arc};
+ 
++use quinn::crypto::rustls::QuicServerConfig;
+ use quinn::{Connection, Endpoint, ServerConfig};
+-use rustls::{server::ServerConfig as TlsServerConfig, version::TLS13, Certificate, PrivateKey};
++use rustls::pki_types::{CertificateDer, PrivateKeyDer};
++use rustls::server::ServerConfig as TlsServerConfig;
++use rustls::version::TLS13;
+ 
+ use crate::{error::ProtoError, udp::UdpSocket};
+ 
+@@ -26,8 +29,8 @@
+     /// Construct the new Acceptor with the associated pkcs12 data
+     pub async fn new(
+         name_server: SocketAddr,
+-        cert: Vec<Certificate>,
+-        key: PrivateKey,
++        cert: Vec<CertificateDer<'static>>,
++        key: PrivateKeyDer<'static>,
+     ) -> Result<Self, ProtoError> {
+         // setup a new socket for the server to use
+         let socket = <tokio::net::UdpSocket as UdpSocket>::bind(name_server).await?;
+@@ -37,20 +40,21 @@
+     /// Construct the new server with an existing socket
+     pub fn with_socket(
+         socket: tokio::net::UdpSocket,
+-        cert: Vec<Certificate>,
+-        key: PrivateKey,
++        cert: Vec<CertificateDer<'static>>,
++        key: PrivateKeyDer<'static>,
+     ) -> Result<Self, ProtoError> {
+-        let mut config = TlsServerConfig::builder()
+-            .with_safe_default_cipher_suites()
+-            .with_safe_default_kx_groups()
+-            .with_protocol_versions(&[&TLS13])
+-            .expect("TLS1.3 not supported")
+-            .with_no_client_auth()
+-            .with_single_cert(cert, key)?;
++        let mut config = TlsServerConfig::builder_with_provider(Arc::new(
++            rustls::crypto::ring::default_provider(),
++        ))
++        .with_protocol_versions(&[&TLS13])
++        .unwrap() // The ring default provider is guaranteed to support TLS 1.3
++        .with_no_client_auth()
++        .with_single_cert(cert, key)?;
+ 
+         config.alpn_protocols = vec![quic_stream::DOQ_ALPN.to_vec()];
+ 
+-        let mut server_config = ServerConfig::with_crypto(Arc::new(config));
++        let mut server_config =
++            ServerConfig::with_crypto(Arc::new(QuicServerConfig::try_from(config)?));
+         server_config.transport = Arc::new(quic_config::transport());
+ 
+         let socket = socket.into_std()?;
+--- a/src/quic/quic_socket.rs
++++ /dev/null
+@@ -1,113 +0,0 @@
+-// Copyright 2015-2022 Benjamin Fry <benjaminfry@me.com>
+-//
+-// Licensed under the Apache License, Version 2.0, <LICENSE-APACHE or
+-// https://apache.org/licenses/LICENSE-2.0> or the MIT license <LICENSE-MIT or
+-// https://opensource.org/licenses/MIT>, at your option. This file may not be
+-// copied, modified, or distributed except according to those terms.
+-
+-use std::fmt::{Debug, Formatter};
+-use std::{
+-    fmt,
+-    task::{Context, Poll},
+-};
+-
+-use quinn::AsyncUdpSocket;
+-
+-use crate::udp::{DnsUdpSocket, QuicLocalAddr};
+-
+-/// Wrapper used for quinn::Endpoint::new_with_abstract_socket
+-pub(crate) struct QuinnAsyncUdpSocketAdapter<S: DnsUdpSocket + QuicLocalAddr> {
+-    pub(crate) io: S,
+-}
+-
+-impl<S: DnsUdpSocket + QuicLocalAddr> Debug for QuinnAsyncUdpSocketAdapter<S> {
+-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+-        f.write_str("Wrapper for quinn::AsyncUdpSocket")
+-    }
+-}
+-
+-/// TODO: Naive implementation. Look forward to future improvements.
+-impl<S: DnsUdpSocket + QuicLocalAddr + 'static> AsyncUdpSocket for QuinnAsyncUdpSocketAdapter<S> {
+-    fn poll_send(
+-        &self,
+-        _state: &quinn::udp::UdpState,
+-        cx: &mut Context<'_>,
+-        transmits: &[quinn::udp::Transmit],
+-    ) -> Poll<std::io::Result<usize>> {
+-        // logics from quinn-udp::fallback.rs
+-        let io = &self.io;
+-        let mut sent = 0;
+-        for transmit in transmits {
+-            match io.poll_send_to(cx, &transmit.contents, transmit.destination) {
+-                Poll::Ready(ready) => match ready {
+-                    Ok(_) => {
+-                        sent += 1;
+-                    }
+-                    // We need to report that some packets were sent in this case, so we rely on
+-                    // errors being either harmlessly transient (in the case of WouldBlock) or
+-                    // recurring on the next call.
+-                    Err(_) if sent != 0 => return Poll::Ready(Ok(sent)),
+-                    Err(e) => {
+-                        if e.kind() == std::io::ErrorKind::WouldBlock {
+-                            return Poll::Ready(Err(e));
+-                        }
+-
+-                        // Other errors are ignored, since they will ususally be handled
+-                        // by higher level retransmits and timeouts.
+-                        // - PermissionDenied errors have been observed due to iptable rules.
+-                        //   Those are not fatal errors, since the
+-                        //   configuration can be dynamically changed.
+-                        // - Destination unreachable errors have been observed for other
+-                        // log_sendmsg_error(&mut self.last_send_error, e, transmit);
+-                        sent += 1;
+-                    }
+-                },
+-                Poll::Pending => {
+-                    return if sent == 0 {
+-                        Poll::Pending
+-                    } else {
+-                        Poll::Ready(Ok(sent))
+-                    }
+-                }
+-            }
+-        }
+-        Poll::Ready(Ok(sent))
+-    }
+-
+-    fn poll_recv(
+-        &self,
+-        cx: &mut Context<'_>,
+-        bufs: &mut [std::io::IoSliceMut<'_>],
+-        meta: &mut [quinn::udp::RecvMeta],
+-    ) -> Poll<std::io::Result<usize>> {
+-        // logics from quinn-udp::fallback.rs
+-
+-        let io = &self.io;
+-        let Some(buf) = bufs.get_mut(0) else {
+-            return Poll::Ready(Err(std::io::Error::new(
+-                std::io::ErrorKind::InvalidInput,
+-                "no buf",
+-            )));
+-        };
+-        match io.poll_recv_from(cx, buf.as_mut()) {
+-            Poll::Ready(res) => match res {
+-                Ok((len, addr)) => {
+-                    meta[0] = quinn::udp::RecvMeta {
+-                        len,
+-                        stride: len,
+-                        addr,
+-                        ecn: None,
+-                        dst_ip: None,
+-                    };
+-                    Poll::Ready(Ok(1))
+-                }
+-                Err(err) => Poll::Ready(Err(err)),
+-            },
+-            Poll::Pending => Poll::Pending,
+-        }
+-    }
+-
+-    fn local_addr(&self) -> std::io::Result<std::net::SocketAddr> {
+-        self.io.local_addr()
+-    }
+-}
+--- a/src/quic/quic_stream.rs
++++ b/src/quic/quic_stream.rs
+@@ -152,7 +152,7 @@
+ 
+     /// finishes the send stream, i.e. there will be no more data sent to the remote
+     pub async fn finish(&mut self) -> Result<(), ProtoError> {
+-        self.send_stream.finish().await?;
++        self.send_stream.finish()?;
+         Ok(())
+     }
+ 
+--- a/src/quic/tests.rs
++++ b/src/quic/tests.rs
+@@ -59,7 +59,7 @@
+     )))
+     .map_err(|e| format!("error reading cert: {e}"))
+     .unwrap();
+-    let key = tls_server::read_key_from_pem(Path::new(&format!(
++    let key = tls_server::read_key(Path::new(&format!(
+         "{server_path}/tests/test-data/cert.key"
+     )))
+     .unwrap();
+@@ -76,13 +76,15 @@
+ 
+     // now construct the client
+     let mut roots = rustls::RootCertStore::empty();
+-    ca.iter()
+-        .try_for_each(|ca| roots.add(ca))
+-        .expect("failed to build roots");
+-    let mut client_config = ClientConfig::builder()
+-        .with_safe_defaults()
+-        .with_root_certificates(roots)
+-        .with_no_client_auth();
++    let (_, ignored) = roots.add_parsable_certificates(ca.into_iter());
++    assert_eq!(ignored, 0);
++
++    let mut client_config =
++        ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
++            .with_safe_default_protocol_versions()
++            .unwrap()
++            .with_root_certificates(roots)
++            .with_no_client_auth();
+ 
+     client_config.key_log = Arc::new(KeyLogFile::new());
+ 
+--- a/src/rustls/tests.rs
++++ b/src/rustls/tests.rs
+@@ -23,6 +23,7 @@
+ use openssl::x509::*;
+ 
+ use futures_util::stream::StreamExt;
++use rustls::pki_types::CertificateDer;
+ use rustls::ClientConfig;
+ use tokio::net::TcpStream as TokioTcpStream;
+ use tokio::runtime::Runtime;
+@@ -81,7 +82,8 @@
+     let server_path = env::var("TDNS_WORKSPACE_ROOT").unwrap_or_else(|_| "../..".to_owned());
+     println!("using server src path: {server_path}");
+ 
+-    let root_cert_der = read_file(&format!("{server_path}/tests/test-data/ca.der"));
++    let root_cert_der =
++        CertificateDer::from(read_file(&format!("{server_path}/tests/test-data/ca.der")));
+ 
+     // Generate X509 certificate
+     let ca = X509::from_der(&root_cert_der).expect("could not read CA");
+@@ -177,12 +179,14 @@
+     // let timeout = Timeout::new(Duration::from_secs(5));
+ 
+     let mut roots = rustls::RootCertStore::empty();
+-    let (_, ignored) = roots.add_parsable_certificates(&[root_cert_der]);
++    let (_, ignored) = roots.add_parsable_certificates([root_cert_der]);
+     assert_eq!(ignored, 0, "bad certificate!");
+-    let mut config = ClientConfig::builder()
+-        .with_safe_defaults()
+-        .with_root_certificates(roots)
+-        .with_no_client_auth();
++    let mut config =
++        ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
++            .with_safe_default_protocol_versions()
++            .unwrap()
++            .with_root_certificates(roots)
++            .with_no_client_auth();
+ 
+     let (stream, mut sender) = tls_connect::<AsyncIoTokioAsStd<TokioTcpStream>>(
+         server_addr,
+--- a/src/rustls/tls_server.rs
++++ b/src/rustls/tls_server.rs
+@@ -10,65 +10,62 @@
+ use std::fs::File;
+ use std::io::{BufReader, Read};
+ use std::path::Path;
++use std::sync::Arc;
+ 
+-use rustls::{self, Certificate, PrivateKey, ServerConfig};
+-use rustls_pemfile::{certs, read_one, Item};
++use rustls::pki_types::{CertificateDer, PrivateKeyDer};
++use rustls::{self, ServerConfig};
+ 
+ use crate::error::{ProtoError, ProtoResult};
+ 
+ /// Read the certificate from the specified path.
+ ///
+ /// If the password is specified, then it will be used to decode the Certificate
+-pub fn read_cert(cert_path: &Path) -> ProtoResult<Vec<Certificate>> {
++pub fn read_cert(cert_path: &Path) -> ProtoResult<Vec<CertificateDer<'static>>> {
+     let mut cert_file = File::open(cert_path)
+         .map_err(|e| format!("error opening cert file: {cert_path:?}: {e}"))?;
+ 
+     let mut reader = BufReader::new(&mut cert_file);
+-    match certs(&mut reader) {
+-        Ok(certs) => Ok(certs.into_iter().map(Certificate).collect()),
+-        Err(_) => Err(ProtoError::from(format!(
+-            "failed to read certs from: {}",
+-            cert_path.display()
+-        ))),
+-    }
++    rustls_pemfile::certs(&mut reader)
++        .collect::<Result<Vec<_>, _>>()
++        .map_err(|_| {
++            ProtoError::from(format!(
++                "failed to read certs from: {}",
++                cert_path.display()
++            ))
++        })
+ }
+ 
+-/// Reads a private key from a pkcs8 formatted, and possibly encoded file
++/// Reads a private key from a PEM-encoded file
+ ///
+ /// ## Accepted formats
+ ///
+ /// - A Sec1-encoded plaintext private key; as specified in RFC5915
+ /// - A DER-encoded plaintext RSA private key; as specified in PKCS#1/RFC3447
+ /// - DER-encoded plaintext private key; as specified in PKCS#8/RFC5958
+-pub fn read_key(path: &Path) -> ProtoResult<PrivateKey> {
++///
++/// ## Errors
++///
++/// Returns a [ProtoError] in either cases:
++///
++/// - Unable to open key at given `path`
++/// - Encountered an IO error
++/// - Unable to read key: either no key or no key found in the right format
++pub fn read_key(path: &Path) -> ProtoResult<PrivateKeyDer<'static>> {
+     let mut file = BufReader::new(File::open(path)?);
+-
+-    loop {
+-        match read_one(&mut file)? {
+-            Some(Item::ECKey(key)) => return Ok(PrivateKey(key)),
+-            Some(Item::RSAKey(key)) => return Ok(PrivateKey(key)),
+-            Some(Item::PKCS8Key(key)) => return Ok(PrivateKey(key)),
+-            Some(_) => continue,
+-            None => return Err(format!("no keys available in: {}", path.display()).into()),
+-        };
++    match rustls_pemfile::private_key(&mut file) {
++        Ok(Some(key)) => Ok(key),
++        Ok(None) => Err(format!("no keys available in: {}", path.display()).into()),
++        Err(e) => Err(e.into()),
+     }
+ }
+ 
+-/// Reads a private key from a der formatted file
+-pub fn read_key_from_der(path: &Path) -> ProtoResult<PrivateKey> {
+-    let mut file = File::open(path)?;
+-    let mut buf = Vec::new();
+-    file.read_to_end(&mut buf)?;
+-
+-    Ok(PrivateKey(buf))
+-}
+-
+-/// Attempts to read a private key from a PEM formatted file.
++/// Reads a private key from a DER-encoded file
+ ///
+ /// ## Accepted formats
+ ///
+-/// - DER-encoded plaintext RSA private key; as specified in PKCS#1/RFC3447
+-/// - DER-encoded plaintext RSA private key; as specified in PKCS#8/RFC5958 default with openssl v3
++/// - A Sec1-encoded plaintext private key; as specified in RFC5915
++/// - A DER-encoded plaintext RSA private key; as specified in PKCS#1/RFC3447
++/// - DER-encoded plaintext private key; as specified in PKCS#8/RFC5958
+ ///
+ /// ## Errors
+ ///
+@@ -77,28 +74,24 @@
+ /// - Unable to open key at given `path`
+ /// - Encountered an IO error
+ /// - Unable to read key: either no key or no key found in the right format
+-pub fn read_key_from_pem(path: &Path) -> ProtoResult<PrivateKey> {
+-    let file = File::open(path)?;
+-    let mut file = BufReader::new(file);
+-
+-    loop {
+-        match rustls_pemfile::read_one(&mut file)? {
+-            None => return Err(format!("No RSA keys in file: {}", path.display()).into()),
+-            Some(Item::RSAKey(key)) | Some(Item::PKCS8Key(key)) => return Ok(PrivateKey(key)),
+-            Some(_) => continue,
+-        }
+-    }
++pub fn read_key_from_der(path: &Path) -> ProtoResult<PrivateKeyDer<'static>> {
++    let mut file = File::open(path)?;
++    let mut buf = Vec::new();
++    file.read_to_end(&mut buf)?;
++
++    Ok(PrivateKeyDer::try_from(buf)?)
+ }
+ 
+ /// Construct the new Acceptor with the associated pkcs12 data
+ pub fn new_acceptor(
+-    cert: Vec<Certificate>,
+-    key: PrivateKey,
++    cert: Vec<CertificateDer<'static>>,
++    key: PrivateKeyDer<'static>,
+ ) -> Result<ServerConfig, rustls::Error> {
+-    let mut config = ServerConfig::builder()
+-        .with_safe_defaults()
+-        .with_no_client_auth()
+-        .with_single_cert(cert, key)?;
++    let mut config =
++        ServerConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
++            .with_safe_default_protocol_versions()?
++            .with_no_client_auth()
++            .with_single_cert(cert, key)?;
+ 
+     config.alpn_protocols = vec![b"h2".to_vec()];
+     Ok(config)
+--- a/src/rustls/tls_stream.rs
++++ b/src/rustls/tls_stream.rs
+@@ -13,6 +13,7 @@
+ use std::pin::Pin;
+ use std::sync::Arc;
+ 
++use rustls::pki_types::ServerName;
+ use rustls::ClientConfig;
+ use tokio;
+ use tokio::net::TcpStream as TokioTcpStream;
+@@ -196,14 +197,14 @@
+     tls_connector: TlsConnector,
+     future: F,
+     name_server: SocketAddr,
+-    dns_name: String,
++    server_name: String,
+     outbound_messages: StreamReceiver,
+ ) -> io::Result<TcpStream<AsyncIoTokioAsStd<TokioTlsClientStream<S>>>>
+ where
+     S: DnsTcpStream,
+     F: Future<Output = io::Result<S>> + Send + Unpin,
+ {
+-    let dns_name = match dns_name.as_str().try_into() {
++    let dns_name = match ServerName::try_from(server_name) {
+         Ok(name) => name,
+         Err(_) => return Err(io::Error::new(io::ErrorKind::InvalidInput, "bad dns_name")),
+     };
+--- a/src/udp/mod.rs
++++ b/src/udp/mod.rs
+@@ -20,7 +20,7 @@
+ mod udp_stream;
+ 
+ pub use self::udp_client_stream::{UdpClientConnect, UdpClientStream};
+-pub use self::udp_stream::{DnsUdpSocket, QuicLocalAddr, UdpSocket, UdpStream};
++pub use self::udp_stream::{DnsUdpSocket, UdpSocket, UdpStream};
+ 
+ /// Max size for the UDP receive buffer as recommended by
+ /// [RFC6891](https://datatracker.ietf.org/doc/html/rfc6891#section-6.2.5).
+--- a/src/udp/udp_stream.rs
++++ b/src/udp/udp_stream.rs
+@@ -89,24 +89,6 @@
+     outbound_messages: StreamReceiver,
+ }
+ 
+-/// To implement quinn::AsyncUdpSocket, we need our custom socket capable of getting local address.
+-pub trait QuicLocalAddr {
+-    /// Get local address
+-    fn local_addr(&self) -> std::io::Result<std::net::SocketAddr>;
+-}
+-
+-#[cfg(feature = "tokio-runtime")]
+-use tokio::net::UdpSocket as TokioUdpSocket;
+-
+-#[cfg(feature = "tokio-runtime")]
+-#[cfg_attr(docsrs, doc(cfg(feature = "tokio-runtime")))]
+-#[allow(unreachable_pub)]
+-impl QuicLocalAddr for TokioUdpSocket {
+-    fn local_addr(&self) -> std::io::Result<SocketAddr> {
+-        self.local_addr()
+-    }
+-}
+-
+ impl<S: UdpSocket + Send + 'static> UdpStream<S> {
+     /// This method is intended for client connections, see `with_bound` for a method better for
+     ///  straight listening. It is expected that the resolver wrapper will be responsible for
