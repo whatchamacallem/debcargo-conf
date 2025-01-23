@@ -1,0 +1,26 @@
+--- a/src/transform.rs
++++ b/src/transform.rs
+@@ -225,4 +225,2 @@
+ 
+-    use actix_utils::future::{ready, Ready};
+-
+     use super::*;
+@@ -234,18 +232,2 @@
+     }
+-
+-    // pseudo-doctest for Transform trait
+-    impl<S: Service<Req>, Req> Transform<S, Req> for TimeoutTransform {
+-        type Response = S::Response;
+-        type Error = S::Error;
+-        type InitError = S::Error;
+-        type Transform = Timeout<S>;
+-        type Future = Ready<Result<Self::Transform, Self::InitError>>;
+-
+-        fn new_transform(&self, service: S) -> Self::Future {
+-            ready(Ok(Timeout {
+-                service,
+-                _timeout: self.timeout,
+-            }))
+-        }
+-    }
+ 
