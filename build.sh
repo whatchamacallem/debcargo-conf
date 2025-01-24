@@ -186,6 +186,8 @@ if ! check_build_deps; then
 	fi
 fi
 
+unset APT_CONFIG
+
 if [ "$SOURCEONLY" = 1 ]; then
 	exit
 fi
@@ -203,7 +205,7 @@ if [ -n "${EXTRA_DEBS[*]}" ]; then
 fi
 
 if [ "$CHROOT_MODE" = "unshare" ]; then
-	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=--apt-upgrade -- unshare -t ${CHROOT} ${DISTRO:+-r $DISTRO}")
+	AUTOPKGTEST_OPTS=("--run-autopkgtest")
 else
 	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=-- schroot ${CHROOT}")
 fi
