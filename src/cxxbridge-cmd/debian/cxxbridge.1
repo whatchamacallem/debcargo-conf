@@ -1,0 +1,73 @@
+.TH CXXBRIDGE "1" "January 2025" "cxxbridge 1.0.137" "User Commands"
+.SH NAME
+cxxbridge \- generate C++ code from rust source files
+.SH DESCRIPTION
+.SS "Usage:"
+.TP
+cxxbridge <input>.rs
+Emit .cc file for bridge to stdout
+.TP
+cxxbridge <input>.rs \fB\-\-header\fR
+Emit .h file for bridge to stdout
+.TP
+cxxbridge \fB\-\-header\fR
+Emit "rust/cxx.h" header to stdout
+.SS "Arguments:"
+.IP
+[input]
+.IP
+Input Rust source file containing #[cxx::bridge].
+.SH OPTIONS
+.HP
+\fB\-\-cfg\fR <name="value" | name[=true] | name=false>
+.IP
+Compilation configuration matching what will be used to build
+the Rust side of the bridge.
+.HP
+\fB\-\-cxx\-impl\-annotations\fR <annotation>
+.IP
+Optional annotation for implementations of C++ function wrappers
+that may be exposed to Rust. You may for example need to provide
+__declspec(dllexport) or __attribute__((visibility("default")))
+if Rust code from one shared object or executable depends on
+these C++ functions in another.
+.HP
+\fB\-\-header\fR
+.IP
+Emit header with declarations only. Optional if using `\-o` with
+a path ending in `.h`.
+.HP
+\fB\-\-help\fR
+.IP
+Print help information.
+.HP
+\fB\-i\fR, \fB\-\-include\fR <include>
+.IP
+Any additional headers to #include. The cxxbridge tool does not
+parse or even require the given paths to exist; they simply go
+into the generated C++ code as #include lines.
+.HP
+\fB\-o\fR, \fB\-\-output\fR <output>
+.IP
+Path of file to write as output. Output goes to stdout if \fB\-o\fR is
+not specified.
+.HP
+\fB\-\-version\fR
+.IP
+Print version information.
+.SH AUTHOR
+.TP
+Matthias Geiger <werdahias@debian.org>
+.SH COPYRIGHT
+.PP
+Copyright \[co] 2025 Matthias Geiger
+.PP
+This manual page was written for the Debian system (and may be used by
+others).
+.PP
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU General Public License, Version 3 or (at your
+option) any later version published by the Free Software Foundation.
+.PP
+On Debian systems, the complete text of the GNU General Public License
+can be found in /usr/share/common-licenses/GPL.
