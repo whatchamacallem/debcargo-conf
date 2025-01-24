@@ -1,0 +1,49 @@
+Description: Replace unavailable dep digest_auth with available http-auth
+Forwarded: not-needed
+Last-Update: 2025-01-24
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -118,4 +118,4 @@
+ 
+-[dependencies.digest_auth]
+-version = "0.3.0"
++[dependencies.http-auth] # Debian: was digest_auth
++version = "0.1"
+ 
+--- a/src/auth.rs
++++ b/src/auth.rs
+@@ -78,12 +78,24 @@
+             Some(wwwauth) if response.status() == StatusCode::UNAUTHORIZED => {
+-                let mut context = digest_auth::AuthContext::new(
+-                    self.username,
+-                    self.password,
+-                    request.url().path(),
+-                );
+-                if let Some(cnonc) = std::env::var_os("XH_TEST_DIGEST_AUTH_CNONCE") {
+-                    context.set_custom_cnonce(cnonc.to_string_lossy().to_string());
+-                }
+-                let mut prompt = digest_auth::parse(wwwauth.to_str()?)?;
+-                let answer = prompt.respond(&context)?.to_header_string();
++                let pw_client = http_auth::PasswordClient::try_from(wwwauth.to_str()?);
++                let mut pw_client = match pw_client {
++                    Ok(http_auth::PasswordClient::Digest(client)) => client,
++                    Ok(_) => anyhow::bail!("expected digest auth, got else"),
++                    Err(e) => anyhow::bail!("failed to parse auth header: {e:?}"),
++                };
++                let pw_params = http_auth::PasswordParams {
++                    username: self.username,
++                    password: self.password,
++                    uri: request.url().path(),
++                    method: request.method().as_str(),
++                    body: None,
++                };
++                let answer = if let Some(cnonc) = std::env::var_os("XH_TEST_DIGEST_AUTH_CNONCE") {
++                    pw_client.respond_with_testing_cnonce(&pw_params, &cnonc.to_string_lossy())
++                } else {
++                    pw_client.respond(&pw_params)
++                };
++                let answer = match answer {
++                    Ok(answer) => answer,
++                    Err(e) => anyhow::bail!("failed to respond to digest auth: {e:?}"),
++                };
+                 request
