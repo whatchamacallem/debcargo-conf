@@ -1,0 +1,31 @@
+commit 03b8a098d4530be6f6d1b51dd9d26a8776478eef
+Author: Oleg `Kanedias` Chernovskiy <kanedias@house-of-maker.online>
+Date:   Sun Jan 12 22:31:46 2025 +0200
+
+    Fix unit-tests
+
+diff --git a/tests/unit.rs b/tests/unit.rs
+index 3c2d582ea..b706cc185 100644
+--- a/tests/unit.rs
++++ b/tests/unit.rs
+@@ -24,10 +24,9 @@ fn test_anchor2() {
+ #[test]
+ fn test_anchor3() {
+     let md = parse_html(r#"<p><a href="http://ya.ru">APOSIMZ</a><p/><a href="http://yandex.ru">SIDONIA</a></p>"#);
+-    assert_eq!(md, "\
+-[APOSIMZ](http://ya.ru)
++    assert_eq!(md, "[APOSIMZ](http://ya.ru)\n\n[SIDONIA](http://yandex.ru)")
++}    
+ 
+-[SIDONIA](http://yandex.ru)")
+ #[test]
+ fn test_anchor_with_name_attribute_is_preserved() {
+     let md = parse_html(r#"<p><a name="part1"></a></p>"#);
+@@ -114,4 +113,5 @@ fn test_escaping_start_hyphen() {
+ fn test_escaping_start_hyphen_space() {
+     let md = parse_html(r#"<p>This is NOT a header!<br/>     -------</p>"#);
+     assert_eq!(md, "This is NOT a header!  \n \\-------")
+-}
+\ No newline at end of file
++}
++
