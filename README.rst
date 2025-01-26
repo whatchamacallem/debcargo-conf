@@ -342,7 +342,7 @@ disable tests for all combinations of features. Sometimes this is correct e.g.
 if the test actually breaks for all features. Sometimes this is *not* correct,
 e.g. if the test only breaks for ``--no-default-features``. In the latter case
 you should instead patch the crate to ignore those tests when the relevant
-features are absent - e.g. ``src/regex-automata/debian/patches/ignore-std-tests.patch``.
+features are absent - e.g. ``src/ansi-to-tui/debian/patches/fix-tests-no-default-features.patch``.
 
 Binary-crate has "required-features"
 ------------------------------------
