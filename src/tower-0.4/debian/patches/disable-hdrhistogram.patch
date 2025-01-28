@@ -6,33 +6,73 @@ Bug-Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1014034
 Last-Update: 2022-11-13
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -37,2 +37,3 @@
+Index: tower/Cargo.toml
+===================================================================
+--- tower.orig/Cargo.toml
++++ tower/Cargo.toml
+@@ -35,6 +35,7 @@ categories = [
+ ]
+ license = "MIT"
  repository = "https://github.com/tower-rs/tower"
 +autoexamples = false
  
-@@ -48,3 +49,3 @@
+ [package.metadata.docs.rs]
+ all-features = true
+@@ -46,10 +47,10 @@ rustdoc-args = [
+ [package.metadata.playground]
+ features = ["full"]
  
 -[[example]]
-+[[disabled.example]]
- name = "tower-balance"
-@@ -63,3 +64,3 @@
+-name = "tower-balance"
+-path = "examples/tower-balance.rs"
+-required-features = ["full"]
++#[[example]]
++#name = "tower-balance"
++#path = "examples/tower-balance.rs"
++#required-features = ["full"]
+ 
+ [dependencies.futures-core]
+ version = "0.3"
+@@ -61,10 +62,10 @@ features = ["alloc"]
+ optional = true
+ default-features = false
  
 -[dependencies.hdrhistogram]
-+[disabled.dependencies.hdrhistogram]
- version = "7.0"
-@@ -118,3 +119,3 @@
+-version = "7.0"
+-optional = true
+-default-features = false
++#[dependencies.hdrhistogram]
++#version = "7.0"
++#optional = true
++#default-features = false
+ 
+ [dependencies.indexmap]
+ version = "1.0.2"
+@@ -116,9 +117,9 @@ default-features = false
+ [dev-dependencies.futures]
+ version = "0.3"
  
 -[dev-dependencies.hdrhistogram]
-+[disabled.dev-dependencies.hdrhistogram]
- version = "7.0"
-@@ -188,3 +189,3 @@
+-version = "7.0"
+-default-features = false
++#[dev-dependencies.hdrhistogram]
++#version = "7.0"
++#default-features = false
+ 
+ [dev-dependencies.http]
+ version = "0.2"
+@@ -186,7 +187,7 @@ full = [
+     "buffer",
+     "discover",
      "filter",
 -    "hedge",
 +#    "hedge",
      "limit",
-@@ -201,10 +202,10 @@
+     "load",
+     "load-shed",
+@@ -199,14 +200,14 @@ full = [
+     "timeout",
+     "util",
  ]
 -hedge = [
 -    "util",
@@ -51,3 +91,5 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 +#    "tracing",
 +#]
  limit = [
+     "__common",
+     "tokio/time",

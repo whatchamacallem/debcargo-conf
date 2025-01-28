@@ -1,62 +1,77 @@
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -147,3 +147,3 @@
+Index: tower/Cargo.toml
+===================================================================
+--- tower.orig/Cargo.toml
++++ tower/Cargo.toml
+@@ -36,6 +36,19 @@ categories = [
+ license = "MIT"
+ repository = "https://github.com/tower-rs/tower"
+ autoexamples = false
++autotests = false
++
++[[test]]
++name = "util"
++
++[[test]]
++name = "hedge"
++
++[[test]]
++name = "steer"
++
++[[test]]
++name = "support"
+ 
+ [package.metadata.docs.rs]
+ all-features = true
+@@ -145,9 +158,6 @@ version = "0.1"
+ [dev-dependencies.tokio-test]
+ version = "0.4"
  
 -[dev-dependencies.tower-test]
-+[disabled.dev-dependencies.tower-test]
- version = "0.4"
---- a/src/balance/p2c/test.rs
-+++ b/src/balance/p2c/test.rs
-@@ -1 +1,2 @@
-+#![cfg(feature = "tower-test")]
- use crate::discover::ServiceList;
---- a/src/balance/pool/test.rs
-+++ b/src/balance/pool/test.rs
-@@ -1 +1,2 @@
-+#![cfg(feature = "tower-test")]
- use crate::load;
---- a/tests/load_shed/main.rs
-+++ b/tests/load_shed/main.rs
-@@ -1 +1,2 @@
-+#![cfg(feature = "tower-test")]
- #![cfg(feature = "load-shed")]
---- a/tests/ready_cache/main.rs
-+++ b/tests/ready_cache/main.rs
-@@ -1 +1,2 @@
-+#![cfg(feature = "tower-test")]
- #![cfg(feature = "ready-cache")]
---- a/tests/spawn_ready/main.rs
-+++ b/tests/spawn_ready/main.rs
-@@ -1 +1,2 @@
-+#![cfg(feature = "tower-test")]
- #![cfg(feature = "spawn-ready")]
---- a/tests/retry/main.rs
-+++ b/tests/retry/main.rs
-@@ -1 +1,2 @@
-+#![cfg(feature = "tower-test")]
- #![cfg(feature = "retry")]
---- a/tests/builder.rs
-+++ b/tests/builder.rs
-@@ -1 +1,2 @@
-+#![cfg(feature = "tower-test")]
- #![cfg(all(feature = "buffer", feature = "limit", feature = "retry"))]
---- a/tests/balance/main.rs
-+++ b/tests/balance/main.rs
-@@ -1 +1,2 @@
-+#![cfg(feature = "tower-test")]
- #![cfg(feature = "balance")]
---- a/tests/buffer/main.rs
-+++ b/tests/buffer/main.rs
-@@ -1 +1,2 @@
-+#![cfg(feature = "tower-test")]
- #![cfg(feature = "buffer")]
---- a/tests/limit/concurrency.rs
-+++ b/tests/limit/concurrency.rs
-@@ -1 +1,2 @@
-+#![cfg(feature = "tower-test")]
+-version = "0.4"
+-
+ [dev-dependencies.tracing-subscriber]
+ version = "0.3"
+ features = [
+Index: tower/src/balance/p2c/mod.rs
+===================================================================
+--- tower.orig/src/balance/p2c/mod.rs
++++ tower/src/balance/p2c/mod.rs
+@@ -33,8 +33,8 @@ mod layer;
+ mod make;
+ mod service;
+ 
+-#[cfg(test)]
+-mod test;
++//#[cfg(test)]
++//mod test;
+ 
+ pub use layer::MakeBalanceLayer;
+ pub use make::{MakeBalance, MakeFuture};
+Index: tower/src/balance/pool/mod.rs
+===================================================================
+--- tower.orig/src/balance/pool/mod.rs
++++ tower/src/balance/pool/mod.rs
+@@ -29,8 +29,8 @@ use std::{
+ };
+ use tower_service::Service;
+ 
+-#[cfg(test)]
+-mod test;
++//#[cfg(test)]
++//mod test;
+ 
+ #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+ enum Level {
+Index: tower/tests/util/main.rs
+===================================================================
+--- tower.orig/tests/util/main.rs
++++ tower/tests/util/main.rs
+@@ -1,7 +1,7 @@
+ #![cfg(feature = "util")]
+ #![allow(clippy::type_complexity)]
+ 
+-mod call_all;
++//mod call_all;
+ mod oneshot;
+ mod service_fn;
  #[path = "../support.rs"]
---- a/tests/util/call_all.rs
-+++ b/tests/util/call_all.rs
-@@ -1 +1,2 @@
-+#![cfg(feature = "tower-test")]
- use super::support;

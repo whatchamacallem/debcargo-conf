@@ -1,6 +1,24 @@
---- a/src/load/peak_ewma.rs
-+++ b/src/load/peak_ewma.rs
-@@ -307,7 +307,7 @@
+Index: tower/Cargo.toml
+===================================================================
+--- tower.orig/Cargo.toml
++++ tower/Cargo.toml
+@@ -127,6 +127,11 @@ features = ["std"]
+ optional = true
+ default-features = false
+ 
++[dev-dependencies.tracing]
++version = "0.1.2"
++features = ["std"]
++default-features = false
++
+ [dev-dependencies.futures]
+ version = "0.3"
+ 
+Index: tower/src/load/peak_ewma.rs
+===================================================================
+--- tower.orig/src/load/peak_ewma.rs
++++ tower/src/load/peak_ewma.rs
+@@ -308,7 +308,7 @@ fn nanos(d: Duration) -> f64 {
      n + s
  }
  
@@ -9,9 +27,11 @@
  mod tests {
      use futures_util::future;
      use std::time::Duration;
---- a/src/load/pending_requests.rs
-+++ b/src/load/pending_requests.rs
-@@ -145,7 +145,7 @@
+Index: tower/src/load/pending_requests.rs
+===================================================================
+--- tower.orig/src/load/pending_requests.rs
++++ tower/src/load/pending_requests.rs
+@@ -144,7 +144,7 @@ impl RefCount {
      }
  }
  
@@ -20,9 +40,11 @@
  mod tests {
      use super::*;
      use futures_util::future;
---- a/src/make/make_service/shared.rs
-+++ b/src/make/make_service/shared.rs
-@@ -102,7 +102,7 @@
+Index: tower/src/make/make_service/shared.rs
+===================================================================
+--- tower.orig/src/make/make_service/shared.rs
++++ tower/src/make/make_service/shared.rs
+@@ -102,7 +102,7 @@ opaque_future! {
      pub type SharedFuture<S> = futures_util::future::Ready<Result<S, Infallible>>;
  }
  
@@ -31,22 +53,13 @@
  mod tests {
      use super::*;
      use crate::make::MakeService;
---- a/tests/steer/main.rs
-+++ b/tests/steer/main.rs
+Index: tower/tests/steer/main.rs
+===================================================================
+--- tower.orig/tests/steer/main.rs
++++ tower/tests/steer/main.rs
 @@ -1,4 +1,4 @@
 -#![cfg(feature = "steer")]
 +#![cfg(all(feature = "steer", feature = "futures-util"))]
  #[path = "../support.rs"]
  mod support;
  
---- a/src/util/rng.rs
-+++ b/src/util/rng.rs
-@@ -125,7 +125,7 @@
-     [aidx, bidx]
- }
- 
--#[cfg(test)]
-+#[cfg(all(test, feature = "balance"))]
- mod tests {
-     use super::*;
-     use quickcheck::*;
