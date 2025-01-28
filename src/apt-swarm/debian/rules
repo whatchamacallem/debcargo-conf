@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+execute_before_dh_install:
+	debian/apt-swarm/usr/bin/apt-swarm plumbing completions bash > debian/apt-swarm.bash
+	debian/apt-swarm/usr/bin/apt-swarm plumbing completions fish > debian/apt-swarm.fish
+	debian/apt-swarm/usr/bin/apt-swarm plumbing completions zsh > debian/_apt-swarm
+
+execute_before_dh_installman:
+	help2man \
+		--name apt-swarm \
+		--no-info \
+		debian/apt-swarm/usr/bin/apt-swarm > debian/apt-swarm.1
+
+override_dh_dwz:
+	# Don't do anything. fails because of the
+	# https://github.com/rust-lang/rust/issues/66118
