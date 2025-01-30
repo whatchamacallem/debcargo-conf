@@ -1,12 +1,8 @@
-Origin: vendor
-Subject: Relax dependencies to work well with other rust crates in Debian
-Forwarded: not-needed
-
 diff --git a/Cargo.toml b/Cargo.toml
-index 9a37877..1821f35 100644
+index 4519d34..e1f227b 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -53,7 +53,7 @@
+@@ -63,7 +63,7 @@ version = "0.8.1"
  version = "5"
  
  [dependencies.gethostname]
@@ -15,12 +11,46 @@ index 9a37877..1821f35 100644
  
  [dependencies.num_cpus]
  version = "1"
-@@ -65,7 +65,7 @@
+@@ -75,7 +75,7 @@ version = "0.3.2"
  version = "1"
  
  [dependencies.rusqlite]
--version = ">=0.29, <0.32"
+-version = ">=0.29, <0.33"
 +version = "0.29"
  features = [
      "collation",
      "blob",
+@@ -90,6 +90,7 @@ default-features = false
+ [dependencies.sequoia-openpgp]
+ version = "1.21.1"
+ default-features = false
++features = ["crypto-nettle"]
+ 
+ [dependencies.smallvec]
+ version = "1.1"
+@@ -121,25 +122,5 @@ keyserver = [
+     "dep:tokio",
+ ]
+ 
+-[target."cfg(not(windows))".dev-dependencies.sequoia-openpgp]
+-version = "1"
+-features = [
+-    "crypto-nettle",
+-    "__implicit-crypto-backend-for-tests",
+-]
+-default-features = false
+-
+-[target."cfg(windows)".dependencies.rusqlite]
+-version = ">=0.29, <0.33"
+-features = ["bundled"]
+-
+-[target."cfg(windows)".dev-dependencies.sequoia-openpgp]
+-version = "1"
+-features = [
+-    "crypto-cng",
+-    "__implicit-crypto-backend-for-tests",
+-]
+-default-features = false
+-
+ [badges.maintenance]
+ status = "actively-developed"
