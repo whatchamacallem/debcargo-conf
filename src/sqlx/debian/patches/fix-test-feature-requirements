@@ -1,0 +1,32 @@
+Index: sqlx/tests/mysql/derives.rs
+===================================================================
+--- sqlx.orig/tests/mysql/derives.rs
++++ sqlx/tests/mysql/derives.rs
+@@ -2,6 +2,7 @@ use sqlx_mysql::MySql;
+ use sqlx_test::new;
+ 
+ #[sqlx::test]
++#[cfg(any(feature = "runtime-async-std", feature = "runtime-tokio"))]
+ async fn test_derive_strong_enum() -> anyhow::Result<()> {
+     #[derive(sqlx::Type, PartialEq, Eq, Debug)]
+     #[sqlx(rename_all = "PascalCase")]
+@@ -144,6 +145,7 @@ async fn test_derive_strong_enum() -> an
+ }
+ 
+ #[sqlx::test]
++#[cfg(any(feature = "runtime-async-std", feature = "runtime-tokio"))]
+ async fn test_derive_weak_enum() -> anyhow::Result<()> {
+     #[derive(sqlx::Type, Debug, PartialEq, Eq)]
+     #[repr(i8)]
+Index: sqlx/tests/mysql/macros.rs
+===================================================================
+--- sqlx.orig/tests/mysql/macros.rs
++++ sqlx/tests/mysql/macros.rs
+@@ -404,6 +404,7 @@ async fn test_try_from_attr_for_custom_t
+ }
+ 
+ #[sqlx_macros::test]
++#[cfg(any(feature = "runtime-async-std", feature = "runtime-tokio"))]
+ async fn test_try_from_attr_with_flatten() -> anyhow::Result<()> {
+     #[derive(sqlx::FromRow)]
+     struct Record {

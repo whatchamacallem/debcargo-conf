@@ -28,7 +28,7 @@ Index: sqlx/Cargo.toml
  
  #[[test]]
  #name = "migrate-macro"
-@@ -53,46 +55,53 @@ required-features = ["any"]
+@@ -53,33 +55,38 @@ required-features = ["any"]
  #    "migrate",
  #]
  
@@ -88,6 +88,12 @@ Index: sqlx/Cargo.toml
 +#    "macros",
 +#]
  
+ [[test]]
+ name = "sqlite-unbundled-macros"
+@@ -89,18 +96,20 @@ required-features = [
+     "macros",
+ ]
+ 
 -[[test]]
 -name = "sqlite-derives"
 -path = "tests/sqlite/derives.rs"
@@ -116,9 +122,9 @@ Index: sqlx/Cargo.toml
  
  [[test]]
  name = "sqlite-sqlcipher"
-@@ -122,41 +131,47 @@ name = "sqlite-rustsec"
- path = "tests/sqlite/rustsec.rs"
- required-features = ["sqlite"]
+@@ -189,41 +198,47 @@ name = "mysql-rustsec"
+ path = "tests/mysql/rustsec.rs"
+ required-features = ["mysql"]
  
 -[[test]]
 -name = "postgres"
@@ -194,7 +200,7 @@ Index: sqlx/Cargo.toml
  
  #[[test]]
  #name = "postgres-test-attr"
-@@ -176,10 +191,11 @@ required-features = ["postgres"]
+@@ -243,10 +258,11 @@ required-features = ["postgres"]
  #    "migrate",
  #]
  
@@ -210,7 +216,7 @@ Index: sqlx/Cargo.toml
  
  # requires database
  #[[test]]
-@@ -191,11 +207,12 @@ required-features = ["postgres"]
+@@ -258,11 +274,12 @@ required-features = ["postgres"]
  #    "migrate",
  #]
  
@@ -227,4 +233,494 @@ Index: sqlx/Cargo.toml
 +#required-features = ["sqlite"]
  
  [dependencies.sqlx-core]
- version = "=0.8.2"
+ version = "=0.8.3"
+Index: sqlx/tests/mysql/error.rs
+===================================================================
+--- sqlx.orig/tests/mysql/error.rs
++++ sqlx/tests/mysql/error.rs
+@@ -1,7 +1,7 @@
+ use sqlx::{error::ErrorKind, mysql::MySql, Connection};
+-use sqlx_test::new;
++//use sqlx_test::new;
+ 
+-#[sqlx_macros::test]
++/*#[sqlx_macros::test]
+ async fn it_fails_with_unique_violation() -> anyhow::Result<()> {
+     let mut conn = new::<MySql>().await?;
+     let mut tx = conn.begin().await?;
+@@ -73,4 +73,4 @@ async fn it_fails_with_check_violation()
+     assert_eq!(err.kind(), ErrorKind::CheckViolation);
+ 
+     Ok(())
+-}
++}*/
+Index: sqlx/tests/sqlite/macros.rs
+===================================================================
+--- sqlx.orig/tests/sqlite/macros.rs
++++ sqlx/tests/sqlite/macros.rs
+@@ -1,7 +1,7 @@
+ use sqlx::Sqlite;
+-use sqlx_test::new;
++//use sqlx_test::new;
+ 
+-#[sqlx_macros::test]
++/*#[sqlx_macros::test]
+ async fn macro_select() -> anyhow::Result<()> {
+     let mut conn = new::<Sqlite>().await?;
+ 
+@@ -14,9 +14,9 @@ async fn macro_select() -> anyhow::Resul
+     assert_eq!(account.is_active, Some(true));
+ 
+     Ok(())
+-}
++}*/
+ 
+-macro_rules! gen_macro_select_concats {
++/*macro_rules! gen_macro_select_concats {
+     ($param:literal) => {
+         #[sqlx_macros::test]
+         async fn macro_select_concat_single() -> anyhow::Result<()> {
+@@ -86,7 +86,7 @@ async fn macro_select_bind() -> anyhow::
+     assert_eq!(account.is_active, Some(true));
+ 
+     Ok(())
+-}
++}*/
+ 
+ #[derive(Debug)]
+ struct RawAccount {
+@@ -95,7 +95,7 @@ struct RawAccount {
+     is_active: Option<bool>,
+ }
+ 
+-#[sqlx_macros::test]
++/*#[sqlx_macros::test]
+ async fn test_query_as_raw() -> anyhow::Result<()> {
+     let mut conn = new::<Sqlite>().await?;
+ 
+@@ -215,7 +215,7 @@ async fn test_column_override_nullable()
+     assert_eq!(record.text.as_deref(), Some("#sqlx is pretty cool!"));
+ 
+     Ok(())
+-}
++}*/
+ 
+ #[derive(PartialEq, Eq, Debug, sqlx::Type)]
+ #[sqlx(transparent)]
+@@ -229,7 +229,7 @@ struct OptionalRecord {
+     id: Option<MyInt>,
+ }
+ 
+-#[sqlx_macros::test]
++/*#[sqlx_macros::test]
+ async fn test_column_override_wildcard() -> anyhow::Result<()> {
+     let mut conn = new::<Sqlite>().await?;
+ 
+@@ -331,6 +331,6 @@ async fn test_column_override_exact_null
+     assert_eq!(record.id, Some(MyInt(1)));
+ 
+     Ok(())
+-}
++}*/
+ 
+ // we don't emit bind parameter typechecks for SQLite so testing the overrides is redundant
+Index: sqlx/tests/mysql/mysql.rs
+===================================================================
+--- sqlx.orig/tests/mysql/mysql.rs
++++ sqlx/tests/mysql/mysql.rs
+@@ -4,11 +4,11 @@ use sqlx::mysql::{MySql, MySqlConnection
+ use sqlx::{Column, Connection, Executor, Row, Statement, TypeInfo};
+ use sqlx_core::connection::ConnectOptions;
+ use sqlx_mysql::MySqlConnectOptions;
+-use sqlx_test::{new, setup_if_needed};
++//use sqlx_test::{new, setup_if_needed};
+ use std::env;
+ use url::Url;
+ 
+-#[sqlx_macros::test]
++/*#[sqlx_macros::test]
+ async fn it_connects() -> anyhow::Result<()> {
+     let mut conn = new::<MySql>().await?;
+ 
+@@ -121,9 +121,9 @@ async fn it_executes_with_pool() -> anyh
+     assert_eq!(count, 2);
+ 
+     Ok(())
+-}
++}*/
+ 
+-#[sqlx_macros::test]
++/*#[sqlx_macros::test]
+ async fn it_works_with_cache_disabled() -> anyhow::Result<()> {
+     setup_if_needed();
+ 
+@@ -141,9 +141,9 @@ async fn it_works_with_cache_disabled()
+     }
+ 
+     Ok(())
+-}
++}*/
+ 
+-#[sqlx_macros::test]
++/*#[sqlx_macros::test]
+ async fn it_drops_results_in_affected_rows() -> anyhow::Result<()> {
+     let mut conn = new::<MySql>().await?;
+ 
+@@ -602,4 +602,4 @@ async fn select_statement_count(conn: &m
+     )
+     .fetch_one(conn)
+     .await
+-}
++}*/
+Index: sqlx/tests/mysql/derives.rs
+===================================================================
+--- sqlx.orig/tests/mysql/derives.rs
++++ sqlx/tests/mysql/derives.rs
+@@ -1,5 +1,5 @@
+ use sqlx_mysql::MySql;
+-use sqlx_test::new;
++//use sqlx_test::new;
+ 
+ #[sqlx::test]
+ #[cfg(any(feature = "runtime-async-std", feature = "runtime-tokio"))]
+@@ -79,7 +79,7 @@ async fn test_derive_strong_enum() -> an
+         default_case: DefaultCaseEnum,
+     }
+ 
+-    let mut conn = new::<MySql>().await?;
++    /*let mut conn = new::<MySql>().await?;
+ 
+     sqlx::raw_sql(
+         r#"
+@@ -139,7 +139,7 @@ async fn test_derive_strong_enum() -> an
+         .fetch_one(&mut conn)
+         .await?;
+ 
+-    assert_eq!(input, output);
++    assert_eq!(input, output);*/
+ 
+     Ok(())
+ }
+@@ -226,7 +226,7 @@ async fn test_derive_weak_enum() -> anyh
+         u64: WeakEnumU64,
+     }
+ 
+-    let mut conn = new::<MySql>().await?;
++    /*let mut conn = new::<MySql>().await?;
+ 
+     sqlx::raw_sql(
+         r#"
+@@ -301,7 +301,7 @@ async fn test_derive_weak_enum() -> anyh
+         .fetch_all(&mut conn)
+         .await?;
+ 
+-    assert_eq!(rows_in, rows_out);
++    assert_eq!(rows_in, rows_out);*/
+ 
+     Ok(())
+ }
+Index: sqlx/tests/mysql/macros.rs
+===================================================================
+--- sqlx.orig/tests/mysql/macros.rs
++++ sqlx/tests/mysql/macros.rs
+@@ -1,7 +1,7 @@
+ use sqlx::{Connection, MySql, MySqlConnection, Transaction};
+-use sqlx_test::new;
++//use sqlx_test::new;
+ 
+-#[sqlx_macros::test]
++/*#[sqlx_macros::test]
+ async fn macro_select_from_cte() -> anyhow::Result<()> {
+     let mut conn = new::<MySql>().await?;
+     let account =
+@@ -31,7 +31,7 @@ async fn macro_select_from_cte_bind() ->
+     println!("{}: {}", account.id, account.name);
+ 
+     Ok(())
+-}
++}*/
+ 
+ #[derive(Debug)]
+ struct RawAccount {
+@@ -39,7 +39,7 @@ struct RawAccount {
+     name: Option<String>,
+ }
+ 
+-#[sqlx_macros::test]
++/*#[sqlx_macros::test]
+ async fn test_query_as_raw() -> anyhow::Result<()> {
+     let mut conn = new::<MySql>().await?;
+ 
+@@ -184,7 +184,7 @@ async fn test_column_override_nullable()
+     assert_eq!(record.id, Some(1));
+ 
+     Ok(())
+-}
++}*/
+ 
+ /*async fn with_test_row<'a>(
+     conn: &'a mut MySqlConnection,
+@@ -209,7 +209,7 @@ struct OptionalRecord {
+     id: Option<MyInt>,
+ }
+ 
+-#[sqlx_macros::test]
++/*#[sqlx_macros::test]
+ async fn test_column_override_wildcard() -> anyhow::Result<()> {
+     let mut conn = new::<MySql>().await?;
+     let (mut conn, id) = with_test_row(&mut conn).await?;
+@@ -401,7 +401,7 @@ async fn test_try_from_attr_for_custom_t
+     assert_eq!(record.id, Id(id.0));
+ 
+     Ok(())
+-}
++}*/
+ 
+ #[sqlx_macros::test]
+ #[cfg(any(feature = "runtime-async-std", feature = "runtime-tokio"))]
+@@ -424,19 +424,19 @@ async fn test_try_from_attr_with_flatten
+         }
+     }
+ 
+-    let mut conn = new::<MySql>().await?;
++    /*let mut conn = new::<MySql>().await?;
+     let (mut conn, id) = with_test_row(&mut conn).await?;
+ 
+     let record = sqlx::query_as::<_, Record>("select id from tweet")
+         .fetch_one(&mut *conn)
+         .await?;
+ 
+-    assert_eq!(record.id, id.0 as u64);
++    assert_eq!(record.id, id.0 as u64);*/
+ 
+     Ok(())
+ }
+ 
+-#[sqlx_macros::test]
++/*#[sqlx_macros::test]
+ async fn test_try_from_attr_with_complex_type() -> anyhow::Result<()> {
+     mod m {
+         #[derive(sqlx::Type)]
+@@ -529,6 +529,6 @@ async fn test_from_row_json_try_from_att
+     assert_eq!(record.j.sum, 3);
+ 
+     Ok(())
+-}
++}*/
+ 
+ // we don't emit bind parameter type-checks for MySQL so testing the overrides is redundant
+Index: sqlx/tests/mysql/types.rs
+===================================================================
+--- sqlx.orig/tests/mysql/types.rs
++++ sqlx/tests/mysql/types.rs
+@@ -12,9 +12,9 @@ use sqlx::types::Text;
+ use sqlx::mysql::types::MySqlTime;
+ use sqlx_mysql::types::MySqlTimeSign;
+ 
+-use sqlx_test::{new, test_type};
++//use sqlx_test::{new, test_type};
+ 
+-test_type!(bool(MySql, "false" == false, "true" == true));
++/*test_type!(bool(MySql, "false" == false, "true" == true));
+ 
+ test_type!(u8(MySql, "CAST(253 AS UNSIGNED)" == 253_u8));
+ test_type!(i8(MySql, "5" == 5_i8, "0" == 0_i8));
+@@ -38,9 +38,9 @@ test_type!(f32(MySql, "3.141000032424926
+ test_type!(string<String>(MySql,
+     "'helloworld'" == "helloworld",
+     "''" == ""
+-));
++));*/
+ 
+-test_type!(bytes<Vec<u8>>(MySql,
++/*test_type!(bytes<Vec<u8>>(MySql,
+     "X'DEADBEEF'"
+         == vec![0xDE_u8, 0xAD, 0xBE, 0xEF],
+     "X''"
+@@ -82,7 +82,7 @@ test_type!(mysql_time<MySqlTime>(MySql,
+     "TIME '-123:45:56.890'" == MySqlTime::new(MySqlTimeSign::Negative, 123, 45, 56, 890_000).unwrap(),
+     "TIME '123:45:56.890011'" == MySqlTime::new(MySqlTimeSign::Positive, 123, 45, 56, 890_011).unwrap(),
+     "TIME '-123:45:56.890011'" == MySqlTime::new(MySqlTimeSign::Negative, 123, 45, 56, 890_011).unwrap(),
+-));
++));*/
+ 
+ #[cfg(feature = "chrono")]
+ mod chrono {
+@@ -90,7 +90,7 @@ mod chrono {
+ 
+     use super::*;
+ 
+-    test_type!(chrono_date<NaiveDate>(MySql,
++    /*test_type!(chrono_date<NaiveDate>(MySql,
+         "DATE '2001-01-05'" == NaiveDate::from_ymd_opt(2001, 1, 5).unwrap(),
+         "DATE '2050-11-23'" == NaiveDate::from_ymd_opt(2050, 11, 23).unwrap()
+     ));
+@@ -112,9 +112,9 @@ mod chrono {
+             == Utc.from_utc_datetime(
+                 &NaiveDate::from_ymd_opt(2019, 1, 2).unwrap().and_hms_micro_opt(5, 10, 20, 115100).unwrap(),
+             )
+-    ));
++    ));*/
+ 
+-    #[sqlx_macros::test]
++    /*#[sqlx_macros::test]
+     async fn test_type_chrono_zero_date() -> anyhow::Result<()> {
+         let mut conn = sqlx_test::new::<MySql>().await?;
+ 
+@@ -150,7 +150,7 @@ mod chrono {
+         assert!(row.try_get::<NaiveDateTime, _>(0).is_err());
+ 
+         Ok(())
+-    }
++    }*/
+ }
+ 
+ #[cfg(feature = "time")]
+@@ -161,7 +161,7 @@ mod time_tests {
+ 
+     use super::*;
+ 
+-    test_type!(time_date<Date>(
++    /*test_type!(time_date<Date>(
+         MySql,
+         "DATE '2001-01-05'" == date!(2001 - 1 - 5),
+         "DATE '2050-11-23'" == date!(2050 - 11 - 23)
+@@ -190,9 +190,9 @@ mod time_tests {
+             == date!(2019 - 1 - 2)
+                 .with_time(time!(5:10:20.115100))
+                 .assume_utc()
+-    ));
++    ));*/
+ 
+-    #[sqlx_macros::test]
++    /*#[sqlx_macros::test]
+     async fn test_type_time_zero_date() -> anyhow::Result<()> {
+         let mut conn = sqlx_test::new::<MySql>().await?;
+ 
+@@ -228,10 +228,10 @@ mod time_tests {
+         assert!(row.try_get::<PrimitiveDateTime, _>(0).is_err());
+ 
+         Ok(())
+-    }
++    }*/
+ }
+ 
+-#[cfg(feature = "bigdecimal")]
++/*#[cfg(feature = "bigdecimal")]
+ test_type!(bigdecimal<sqlx::types::BigDecimal>(
+     MySql,
+     "CAST(0 as DECIMAL(0, 0))" == "0".parse::<sqlx::types::BigDecimal>().unwrap(),
+@@ -252,18 +252,18 @@ test_type!(decimal<sqlx::types::Decimal>
+     "CAST(0.01234 AS DECIMAL(6, 5))" == sqlx::types::Decimal::from_str("0.01234").unwrap(),
+     "CAST(12.34 AS DECIMAL(4, 2))" == sqlx::types::Decimal::from_str("12.34").unwrap(),
+     "CAST(12345.6789 AS DECIMAL(9, 4))" == sqlx::types::Decimal::from_str("12345.6789").unwrap(),
+-));
++));*/
+ 
+ #[cfg(feature = "json")]
+ mod json_tests {
+     use serde_json::{json, Value as JsonValue};
+ 
+     use sqlx::types::Json;
+-    use sqlx_test::test_type;
++    //use sqlx_test::test_type;
+ 
+     use super::*;
+ 
+-    test_type!(json<JsonValue>(
++    /*test_type!(json<JsonValue>(
+         MySql,
+         // MySQL 8.0.27 changed `<=>` to return an unsigned integer
+         "SELECT CAST(CAST({0} AS BINARY) <=> CAST(? AS BINARY) AS SIGNED INTEGER), CAST({0} AS BINARY) as _2, ? as _3",
+@@ -271,7 +271,7 @@ mod json_tests {
+         "'\"😎\"'" == json!("😎"),
+         "'\"🙋‍♀️\"'" == json!("🙋‍♀️"),
+         "'[\"Hello\",\"World!\"]'" == json!(["Hello", "World!"])
+-    ));
++    ));*/
+ 
+     #[derive(serde::Deserialize, serde::Serialize, Debug, PartialEq)]
+     struct Friend {
+@@ -279,12 +279,12 @@ mod json_tests {
+         age: u32,
+     }
+ 
+-    test_type!(json_struct<Json<Friend>>(
++    /*test_type!(json_struct<Json<Friend>>(
+         MySql,
+         // MySQL 8.0.27 changed `<=>` to return an unsigned integer
+         "SELECT CAST(CAST({0} AS BINARY) <=> CAST(? AS BINARY) AS SIGNED INTEGER), CAST({0} AS BINARY) as _2, ? as _3",
+         "\'{\"name\":\"Joe\",\"age\":33}\'" == Json(Friend { name: "Joe".to_string(), age: 33 })
+-    ));
++    ));*/
+ 
+     // NOTE: This is testing recursive (and transparent) usage of the `Json` wrapper. You don't
+     //       need to wrap the Vec in Json<_> to make the example work.
+@@ -294,13 +294,13 @@ mod json_tests {
+         json_column: Json<Vec<i64>>,
+     }
+ 
+-    test_type!(json_struct_json_column<Json<Customer>>(
++    /*test_type!(json_struct_json_column<Json<Customer>>(
+         MySql,
+         "\'{\"json_column\":[1,2]}\'" == Json(Customer { json_column: Json(vec![1, 2]) })
+-    ));
++    ));*/
+ }
+ 
+-#[sqlx_macros::test]
++/*#[sqlx_macros::test]
+ async fn test_bits() -> anyhow::Result<()> {
+     let mut conn = new::<MySql>().await?;
+ 
+@@ -383,4 +383,4 @@ CREATE TEMPORARY TABLE user_login (
+     assert_eq!(*last_login.socket_addr, socket_addr);
+ 
+     Ok(())
+-}
++}*/
+Index: sqlx/tests/mysql/describe.rs
+===================================================================
+--- sqlx.orig/tests/mysql/describe.rs
++++ sqlx/tests/mysql/describe.rs
+@@ -1,8 +1,8 @@
+ use sqlx::mysql::MySql;
+ use sqlx::{Column, Executor, Type, TypeInfo};
+-use sqlx_test::new;
++//use sqlx_test::new;
+ 
+-#[sqlx_macros::test]
++/*#[sqlx_macros::test]
+ async fn it_describes_simple() -> anyhow::Result<()> {
+     let mut conn = new::<MySql>().await?;
+ 
+@@ -68,4 +68,4 @@ async fn uses_alias_name() -> anyhow::Re
+     assert_eq!(d.columns()[0].name(), "tweet_text");
+ 
+     Ok(())
+-}
++}*/
+--- rust-sqlx-0.8.3.orig/tests/mysql/rustsec.rs
++++ rust-sqlx-0.8.3/tests/mysql/rustsec.rs
+@@ -1,13 +1,13 @@
+ use sqlx::{Error, MySql};
+ use std::io;
+ 
+-use sqlx_test::new;
++//use sqlx_test::new;
+ 
+ // https://rustsec.org/advisories/RUSTSEC-2024-0363.html
+ //
+ // During the audit the MySQL driver was found to be *unlikely* to be vulnerable to the exploit,
+ // so this just serves as a sanity check.
+-#[sqlx::test]
++/*#[sqlx::test]
+ async fn rustsec_2024_0363() -> anyhow::Result<()> {
+     let overflow_len = 4 * 1024 * 1024 * 1024; // 4 GiB
+ 
+@@ -64,4 +64,4 @@ async fn rustsec_2024_0363() -> anyhow::
+ 
+     // Injection didn't affect our database; we're happy.
+     Ok(())
+-}
++}*/
