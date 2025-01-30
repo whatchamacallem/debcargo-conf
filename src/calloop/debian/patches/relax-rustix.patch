@@ -1,0 +1,31 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -66,7 +66,7 @@
+ version = "3.0.0"
+ 
+ [dependencies.rustix]
+-version = "0.38"
++version = "1"
+ features = [
+     "event",
+     "fs",
+@@ -85,7 +85,7 @@
+ version = "0.3.5"
+ 
+ [dev-dependencies.rustix]
+-version = "0.38"
++version = "1"
+ features = ["net"]
+ default-features = false
+ 
+--- a/src/loop_logic.rs
++++ b/src/loop_logic.rs
+@@ -1368,7 +1368,7 @@
+             let mut buf = [0u8; 32];
+             loop {
+                 match recv(&*fd, &mut buf, RecvFlags::DONTWAIT) {
+-                    Ok(0) => break, // closed pipe, we are now inert
++                    Ok((0, _)) => break, // closed pipe, we are now inert
+                     Ok(_) => {}
+                     Err(e) => {
+                         let e: std::io::Error = e.into();
