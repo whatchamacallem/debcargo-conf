@@ -1,0 +1,315 @@
+Index: fancy-regex/Cargo.toml
+===================================================================
+--- fancy-regex.orig/Cargo.toml
++++ fancy-regex/Cargo.toml
+@@ -31,6 +31,7 @@ repository = "https://github.com/fancy-r
+ [[bench]]
+ name = "bench"
+ harness = false
++required-features = ["unicode"]
+ 
+ [dependencies.bit-set]
+ version = "0.8"
+Index: fancy-regex/src/analyze.rs
+===================================================================
+--- fancy-regex.orig/src/analyze.rs
++++ fancy-regex/src/analyze.rs
+@@ -260,6 +260,7 @@ mod tests {
+     use regex;
+ 
+     #[test]
++    #[cfg(feature = "unicode")]
+     fn case_folding_safe() {
+         let re = regex::Regex::new("(?i:ß)").unwrap();
+         if re.is_match("SS") {
+Index: fancy-regex/tests/matching.rs
+===================================================================
+--- fancy-regex.orig/tests/matching.rs
++++ fancy-regex/tests/matching.rs
+@@ -14,6 +14,7 @@ fn control_character_escapes() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn character_class_escapes() {
+     assert_match(r"[\[]", "[");
+     assert_match(r"[\^]", "^");
+@@ -45,6 +46,7 @@ fn character_class_nested() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn character_class_intersection() {
+     assert_match(r"[\w&&a-c]", "c");
+     assert_no_match(r"[\w&&a-c]", "d");
+@@ -67,11 +69,13 @@ fn alternation_with_empty_arm() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn case_insensitive_character_class() {
+     assert_match(r"^(?i)[a-z]+$", "aB");
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn case_insensitive_escape() {
+     // `\x61` is lowercase `a`
+     assert_match(r"(?i)\x61", "A");
+@@ -91,6 +95,7 @@ fn atomic_group() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn backtrack_limit() {
+     let re = RegexBuilder::new("(?i)(a|b|ab)*(?=c)")
+         .backtrack_limit(100_000)
+@@ -136,6 +141,7 @@ fn conditional_with_backref_validity() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn conditional_with_consuming_condition() {
+     assert_match(r"^(?(ab)c|d)$", "abc");
+     assert_no_match(r"^(?(ab)c|d)$", "abd");
+@@ -146,6 +152,7 @@ fn conditional_with_consuming_condition(
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn conditional_with_lookaround_condition() {
+     assert_match(r"^(?((?=\d))\w+|!)$", "!");
+     assert_match(r"^(?((?=\d))\w+|!)$", "5abc");
+Index: fancy-regex/tests/replace.rs
+===================================================================
+--- fancy-regex.orig/tests/replace.rs
++++ fancy-regex/tests/replace.rs
+@@ -4,6 +4,7 @@ use std::borrow::Cow;
+ mod common;
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn replacer_string() {
+     let regex = common::regex(
+         r"\b([sS])uc(?:cs|s?)e(ed(?:ed|ing|s?)|ss(?:es|ful(?:ly)?|i(?:ons?|ve(?:ly)?)|ors?)?)\b",
+@@ -24,6 +25,7 @@ fn replacer_string() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn replacer_cow() {
+     let regex = common::regex(r"\b([oO])mmi(?=t)t?(t(?:ed|ing)|s)\b");
+ 
+@@ -41,6 +43,7 @@ fn replacer_cow() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn replacer_noexpand() {
+     let regex = common::regex(r"\b([aA])n+ull(ar|ments?|s?)\b");
+ 
+@@ -50,6 +53,7 @@ fn replacer_noexpand() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn replacer_callback() {
+     let regex = common::regex(r"\b([aA])p(?:p[or]|ro)x\.?(?=[ \)\n])");
+ 
+Index: fancy-regex/tests/captures.rs
+===================================================================
+--- fancy-regex.orig/tests/captures.rs
++++ fancy-regex/tests/captures.rs
+@@ -12,6 +12,7 @@ fn capture_names() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn captures_fancy() {
+     let captures = captures(r"\s*(\w+)(?=\.)", "foo bar.");
+     assert_eq!(captures.len(), 2);
+@@ -21,6 +22,7 @@ fn captures_fancy() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn captures_fancy_named() {
+     let captures = captures(r"\s*(?<name>\w+)(?=\.)", "foo bar.");
+     assert_eq!(captures.len(), 2);
+@@ -32,6 +34,7 @@ fn captures_fancy_named() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn captures_fancy_unmatched_group() {
+     let captures = captures(r"(\w+)(?=\.)|(\w+)(?=!)", "foo! bar.");
+     assert_eq!(captures.len(), 3);
+@@ -41,6 +44,7 @@ fn captures_fancy_unmatched_group() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn captures_after_lookbehind() {
+     let captures = captures(
+         r"\s*(?<=[() ])(@\w+)(\([^)]*\))?\s*",
+@@ -51,6 +55,7 @@ fn captures_after_lookbehind() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn captures_with_keepout_inside_at_end() {
+     let captures = captures(r"\s*(\w+\K)(?=\.)", "foo bar.");
+     assert_eq!(captures.len(), 2);
+@@ -60,6 +65,7 @@ fn captures_with_keepout_inside_at_end()
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn captures_with_keepout_inside_in_middle() {
+     let captures = captures(r"\s*(b\Kar)(?=\.)", "foo bar.");
+     assert_eq!(captures.len(), 2);
+@@ -69,6 +75,7 @@ fn captures_with_keepout_inside_in_middl
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn captures_with_keepout_between() {
+     let captures = captures(r"(\w+)\K\s*(\w+)(?=\.)", "foo bar.");
+     assert_eq!(captures.len(), 3);
+@@ -79,6 +86,7 @@ fn captures_with_keepout_between() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn captures_with_nested_keepout() {
+     let captures = captures(r"(\w\K)+\s*(\w+)(?=\.)", "foo bar.");
+     assert_eq!(captures.len(), 3);
+@@ -98,6 +106,7 @@ fn captures_with_conditional() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn captures_iter() {
+     let text = "11 21 33";
+ 
+@@ -129,6 +138,7 @@ fn captures_iter() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn captures_iter_attributes() {
+     let text = "11 21 33";
+     let regex = common::regex(r"(?P<num>\d)\d");
+@@ -140,6 +150,7 @@ fn captures_iter_attributes() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn captures_from_pos() {
+     let text = "11 21 33";
+ 
+@@ -185,6 +196,7 @@ fn captures_from_pos() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn captures_from_pos_looking_left() {
+     let regex = common::regex(r"\b(\w)");
+ 
+Index: fancy-regex/tests/finding.rs
+===================================================================
+--- fancy-regex.orig/tests/finding.rs
++++ fancy-regex/tests/finding.rs
+@@ -4,6 +4,7 @@ use fancy_regex::{Match, Regex};
+ use std::ops::Range;
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn match_api() {
+     let m = find_match(r"(\w+)", "... test").unwrap();
+     assert_eq!(m.range(), (4..8));
+@@ -12,12 +13,14 @@ fn match_api() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn find_wrap() {
+     assert_eq!(find(r"(\w+)", "... test"), Some((4, 8)));
+     assert_eq!(find(r"(?m)^yes$", "foo\nyes\n"), Some((4, 7)));
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn find_fancy_case_insensitive() {
+     assert_eq!(find(r"(x|xy)\1", "XX"), None);
+     assert_eq!(find(r"(x|xy)\1", "xx"), Some((0, 2)));
+@@ -75,6 +78,7 @@ fn negative_lookbehind_variable_sized_al
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn lookahead_looks_left() {
+     assert_eq!(find(r"a(?=\b)", "ab"), None);
+     assert_eq!(find(r"a(?=\b)", "a."), Some((0, 1)));
+@@ -129,6 +133,7 @@ fn any_match_unicode_scalar_value() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn delegates_match_unicode_scalar_value() {
+     assert_eq!(find(r".(?=a)", "\u{1F60A}a"), Some((0, 4)));
+     assert_eq!(find(r".(?=\ba+)", "\u{1F60A}a"), Some((0, 4)));
+@@ -151,11 +156,13 @@ fn keepout_in_lookarounds_match_in_corre
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn find_no_matches_when_continuing_from_previous_match_end_and_no_match_at_start_of_text() {
+     assert_eq!(find(r"\G(\d)\d", " 1122 33"), None);
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn find_iter() {
+     let text = "11 22 33";
+ 
+@@ -190,6 +197,7 @@ fn find_iter_overlapping_lookahead() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn find_iter_zero_length() {
+     let text = "ab1c2";
+ 
+@@ -206,6 +214,7 @@ fn find_iter_zero_length() {
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn find_iter_zero_length_longer_codepoint() {
+     let text = "é1é";
+ 
+@@ -221,6 +230,7 @@ fn find_iter_zero_length_longer_codepoin
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn find_iter_continue_from_previous_match_end() {
+     let text = "1122 33";
+ 
+@@ -236,6 +246,7 @@ fn find_iter_continue_from_previous_matc
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn find_iter_continue_from_previous_match_end_with_zero_width_match() {
+     let text = "1122 33";
+ 
+@@ -250,6 +261,7 @@ fn find_iter_continue_from_previous_matc
+ }
+ 
+ #[test]
++#[cfg(feature = "unicode")]
+ fn find_iter_attributes() {
+     let text = "ab1c2";
+     let regex = common::regex(r"\d*(?=[a-z])");
