@@ -1,0 +1,38 @@
+From: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Date: Thu, 30 Jan 2025 13:00:15 -0500
+Subject: Avoid unstable-curve448
+-
+The x448 crate hasn't had a release in over 2 years, while several of
+its dependencies are still rather unstable (in particular,
+ed448-goldilocks and rand_core have had at least one
+semver-incompatible bump since the x448 release, and ed448-goldilocks
+itself probably needs another release as well, since there are many
+useful cleanup changes pending there).
+
+This makes me think that x448 isn't quite ready for prime time in the
+existing rust ecosystem.  Given that ed448 itself is also not
+supported yet, it seems like any work with Curve448 might be premature
+to make available by default.
+
+So, we avoid the x448 stuff for debian for now.
+
+See also https://github.com/rpgp/rpgp/pull/426
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -308,10 +308,6 @@
+ ]
+ default-features = false
+ 
+-[dependencies.x448]
+-version = "0.6"
+-optional = true
+-
+ [dependencies.zeroize]
+ version = "1.7"
+ features = ["zeroize_derive"]
+@@ -355,4 +351,3 @@
+     "md-5/asm",
+ ]
+ default = []
+-unstable-curve448 = ["dep:x448"]
