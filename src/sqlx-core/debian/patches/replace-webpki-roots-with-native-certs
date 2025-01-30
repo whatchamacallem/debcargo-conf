@@ -2,14 +2,10 @@ Index: sqlx-core/Cargo.toml
 ===================================================================
 --- sqlx-core.orig/Cargo.toml
 +++ sqlx-core/Cargo.toml
-@@ -182,6 +182,14 @@ features = [
+@@ -147,6 +147,10 @@ default-features = false
+ version = "0.8.0"
  optional = true
- default-features = false
  
-+[dependencies.rustls-native-certs]
-+version = "0.6.3"
-+optional = true
-+
 +[dependencies.rustls-webpki]
 +version = "0.101.7"
 +optional = true
@@ -17,13 +13,68 @@ Index: sqlx-core/Cargo.toml
  [dependencies.rustls-pemfile]
  version = "2"
  optional = true
-@@ -292,7 +300,8 @@ _tls-none = []
- _tls-rustls = [
-     "rustls",
-     "rustls-pemfile",
--    "webpki-roots",
-+    "dep:rustls-native-certs",
-+    "dep:rustls-webpki",
- ]
+@@ -213,10 +217,6 @@ version = "2.2.2"
+ version = "1.1.2"
+ optional = true
+ 
+-[dependencies.webpki-roots]
+-version = "0.26"
+-optional = true
+-
+ [dev-dependencies.sqlx]
+ version = "=0.8.3"
+ features = [
+@@ -252,18 +252,14 @@ _tls-rustls = [
  _tls-rustls-aws-lc-rs = [
      "_tls-rustls",
+     "rustls/aws-lc-rs",
+-    "webpki-roots",
++    "rustls-native-certs",
++    "dep:rustls-webpki",
+ ]
+ _tls-rustls-ring-native-roots = [
+     "_tls-rustls",
+     "rustls/ring",
+     "rustls-native-certs",
+ ]
+-_tls-rustls-ring-webpki = [
+-    "_tls-rustls",
+-    "rustls/ring",
+-    "webpki-roots",
+-]
+ any = []
+ default = []
+ json = [
+Index: sqlx-core/src/net/tls/tls_rustls.rs
+===================================================================
+--- sqlx-core.orig/src/net/tls/tls_rustls.rs
++++ sqlx-core/src/net/tls/tls_rustls.rs
+@@ -134,9 +134,9 @@ where
+                 .with_no_client_auth()
+         }
+     } else {
+-        #[cfg(any(feature = "_tls-rustls-aws-lc-rs", feature = "_tls-rustls-ring-webpki"))]
+-        let mut cert_store = certs_from_webpki();
+-        #[cfg(feature = "_tls-rustls-ring-native-roots")]
++        //#[cfg(any(feature = "_tls-rustls-aws-lc-rs", feature = "_tls-rustls-ring-webpki"))]
++        //let mut cert_store = certs_from_webpki();
++        //#[cfg(feature = "_tls-rustls-ring-native-roots")]
+         let mut cert_store = certs_from_native_store();
+ 
+         if let Some(ca) = tls_config.root_cert_path {
+@@ -213,12 +213,12 @@ fn private_key_from_pem(pem: Vec<u8>) ->
+     }
+ }
+ 
+-#[cfg(any(feature = "_tls-rustls-aws-lc-rs", feature = "_tls-rustls-ring-webpki"))]
++/*#[cfg(any(feature = "_tls-rustls-aws-lc-rs", feature = "_tls-rustls-ring-webpki"))]
+ fn certs_from_webpki() -> RootCertStore {
+     RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned())
+-}
++}*/
+ 
+-#[cfg(feature = "_tls-rustls-ring-native-roots")]
++//#[cfg(feature = "_tls-rustls-ring-native-roots")]
+ fn certs_from_native_store() -> RootCertStore {
+     let mut root_cert_store = RootCertStore::empty();
+ 
