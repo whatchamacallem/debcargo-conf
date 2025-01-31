@@ -1,3 +1,26 @@
+rust-virtiofsd (1.13.0-5) unstable; urgency=medium
+
+  [ Luca Boccassi ]
+  * virtiofsd: fix autopkgtest in debci
+
+    Depend on the new version of mkosi, which pulls in the required
+    dependencies itself.
+
+    Also restrict the test to isolation-machine, as it turns out in debci
+    the vhost socket is not accessible in isolation-container, so the
+    test cannot work.
+
+    Also skip the test if the dependencies are not available (due to versioning,
+    in case of backports), and if the kernel is too old, as mkosi requires
+    a kernel API that was added in 5.12.
+
+    The test also needs to download package, so add needs-internet.
+
+  [ Michael Tokarev ]
+  * Package virtiofsd 1.13.0 from crates.io using debcargo 2.7.7+alpha.0
+
+ -- Michael Tokarev <mjt@tls.msk.ru>  Fri, 31 Jan 2025 14:10:04 +0300
+
 rust-virtiofsd (1.13.0-4) unstable; urgency=medium
 
   * Package virtiofsd 1.13.0 from crates.io using debcargo 2.7.6
