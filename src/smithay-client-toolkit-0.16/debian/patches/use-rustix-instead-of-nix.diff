@@ -11,11 +11,9 @@ Date:   Fri Sep 22 15:09:36 2023 -0700
     
     `calloop` is already using `rustix`.
 
-Index: smithay-client-toolkit/src/data_device/offer.rs
-===================================================================
---- smithay-client-toolkit.orig/src/data_device/offer.rs
-+++ smithay-client-toolkit/src/data_device/offer.rs
-@@ -3,6 +3,7 @@ use std::{
+--- a/src/data_device/offer.rs
++++ b/src/data_device/offer.rs
+@@ -3,6 +3,7 @@
      os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd},
      sync::{Arc, Mutex},
  };
@@ -23,7 +21,7 @@ Index: smithay-client-toolkit/src/data_device/offer.rs
  
  use wayland_client::protocol::wl_data_device_manager::DndAction;
  use wayland_client::protocol::wl_data_offer;
-@@ -92,18 +93,13 @@ impl DataOffer {
+@@ -92,18 +93,13 @@
      /// Fails if too many file descriptors were already open and a pipe
      /// could not be created.
      pub fn receive(&self, mime_type: String) -> std::io::Result<ReadPipe> {
@@ -46,7 +44,7 @@ Index: smithay-client-toolkit/src/data_device/offer.rs
      }
  
      /// Receive data to the write end of a raw file descriptor. If you have the read end, you can read from it.
-@@ -122,13 +118,10 @@ impl DataOffer {
+@@ -122,13 +118,10 @@
      /// The provided file destructor must be a valid FD for writing, and will be closed
      /// once the contents are written.
      pub unsafe fn receive_to_fd(&self, mime_type: String, writefd: RawFd) {
@@ -61,10 +59,8 @@ Index: smithay-client-toolkit/src/data_device/offer.rs
      }
  
      /// Notify the send and compositor of the dnd actions you accept
-Index: smithay-client-toolkit/src/primary_selection/offer.rs
-===================================================================
---- smithay-client-toolkit.orig/src/primary_selection/offer.rs
-+++ smithay-client-toolkit/src/primary_selection/offer.rs
+--- a/src/primary_selection/offer.rs
++++ b/src/primary_selection/offer.rs
 @@ -1,4 +1,6 @@
  use std::os::unix::io::FromRawFd;
 +use rustix::fd::IntoRawFd;
@@ -72,7 +68,7 @@ Index: smithay-client-toolkit/src/primary_selection/offer.rs
  use std::sync::{Arc, Mutex};
  
  use wayland_client::Main;
-@@ -36,25 +38,20 @@ impl PrimarySelectionOffer {
+@@ -36,25 +38,20 @@
      /// Note that you should **not** read the contents right away in a blocking way,
      /// as you may deadlock your application.
      pub fn receive(&self, mime_type: String) -> Result<ReadPipe, std::io::Error> {
@@ -103,18 +99,16 @@ Index: smithay-client-toolkit/src/primary_selection/offer.rs
      }
  
      /// Initialize `PrimarySelectionOffer` from the `Zwp` offer.
-Index: smithay-client-toolkit/Cargo.toml
-===================================================================
---- smithay-client-toolkit.orig/Cargo.toml
-+++ smithay-client-toolkit/Cargo.toml
-@@ -44,13 +44,13 @@ version = "0.4"
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -44,13 +44,13 @@
  [dependencies.memmap2]
  version = "0.9.0"
  
 -[dependencies.nix]
 -version = ">= 0.24"
 +[dependencies.rustix]
-+version = "0.38.15"
++version = "1"
  features = [
 -    "mman",
      "fs",
@@ -125,11 +119,9 @@ Index: smithay-client-toolkit/Cargo.toml
  
  [dependencies.wayland-client]
  version = "0.29"
-Index: smithay-client-toolkit/src/shm/mempool.rs
-===================================================================
---- smithay-client-toolkit.orig/src/shm/mempool.rs
-+++ smithay-client-toolkit/src/shm/mempool.rs
-@@ -10,14 +10,12 @@ use std::{
+--- a/src/shm/mempool.rs
++++ b/src/shm/mempool.rs
+@@ -10,14 +10,12 @@
      time::UNIX_EPOCH,
  };
  
@@ -142,14 +134,23 @@ Index: smithay-client-toolkit/src/shm/mempool.rs
 -    unistd,
 +use rustix::{
 +    io::Errno,
-+    shm::{Mode, ShmOFlags},
++    shm::{Mode, OFlags},
  };
 +use rustix::fd::OwnedFd;
 +use rustix::fd::AsRawFd;
  
  use memmap2::MmapMut;
  
-@@ -111,10 +109,10 @@ struct Inner {
+@@ -26,6 +24,8 @@
+     Attached, Main,
+ };
+ 
++type ShmOFlags = OFlags;
++
+ /// A Double memory pool, for convenient double-buffering
+ ///
+ /// This type wraps two internal memory pool, and can be
+@@ -111,10 +111,10 @@
  impl Inner {
      fn new(shm: Attached<wl_shm::WlShm>) -> io::Result<Self> {
          let mem_fd = create_shm_fd()?;
@@ -162,7 +163,7 @@ Index: smithay-client-toolkit/src/shm/mempool.rs
  
          let mmap = unsafe { MmapMut::map_mut(&mem_file).unwrap() };
  
-@@ -457,26 +455,24 @@ impl AutoMemPool {
+@@ -457,26 +457,24 @@
      }
  }
  
@@ -197,12 +198,12 @@ Index: smithay-client-toolkit/src/shm/mempool.rs
              Err(errno) => return Err(errno.into()),
          }
      }
-@@ -488,22 +484,18 @@ fn create_shm_fd() -> io::Result<RawFd>
+@@ -488,22 +486,18 @@
          sys_time.duration_since(UNIX_EPOCH).unwrap().subsec_nanos()
      );
      loop {
 -        match mman::shm_open(
-+        match rustix::shm::shm_open(
++        match rustix::shm::open(
              mem_file_handle.as_str(),
 -            fcntl::OFlag::O_CREAT
 -                | fcntl::OFlag::O_EXCL
@@ -215,7 +216,7 @@ Index: smithay-client-toolkit/src/shm/mempool.rs
 +            Mode::RUSR | Mode::WUSR,
          ) {
 -            Ok(fd) => match mman::shm_unlink(mem_file_handle.as_str()) {
-+            Ok(fd) => match rustix::shm::shm_unlink(mem_file_handle.as_str()) {
++            Ok(fd) => match rustix::shm::unlink(mem_file_handle.as_str()) {
                  Ok(_) => return Ok(fd),
 -                Err(errno) => match unistd::close(fd) {
 -                    Ok(_) => return Err(errno.into()),
@@ -228,7 +229,7 @@ Index: smithay-client-toolkit/src/shm/mempool.rs
                  // If a file with that handle exists then change the handle
                  mem_file_handle = format!(
                      "/smithay-client-toolkit-{}",
-@@ -511,7 +503,7 @@ fn create_shm_fd() -> io::Result<RawFd>
+@@ -511,7 +505,7 @@
                  );
                  continue;
              }
