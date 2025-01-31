@@ -1,0 +1,42 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -72,7 +72,7 @@
+ version = "0.9.0"
+ 
+ [dependencies.rustix]
+-version = "0.38.15"
++version = "1"
+ features = [
+     "fs",
+     "pipe",
+--- a/src/shm/raw.rs
++++ b/src/shm/raw.rs
+@@ -5,7 +5,7 @@
+ 
+ use rustix::{
+     io::Errno,
+-    shm::{Mode, ShmOFlags},
++    shm::{Mode, OFlags},
+ };
+ use std::{
+     fs::File,
+@@ -26,6 +26,8 @@
+ 
+ use super::CreatePoolError;
+ 
++type ShmOFlags = OFlags;
++
+ /// A raw handler for file backed shared memory pools.
+ ///
+ /// This type of pool will create the SHM memory pool and provide a way to resize the pool.
+@@ -192,8 +194,8 @@
+ 
+             let mode = Mode::RUSR | Mode::WUSR;
+ 
+-            match rustix::shm::shm_open(mem_file_handle.as_str(), flags, mode) {
+-                Ok(fd) => match rustix::shm::shm_unlink(mem_file_handle.as_str()) {
++            match rustix::shm::open(mem_file_handle.as_str(), flags, mode) {
++                Ok(fd) => match rustix::shm::unlink(mem_file_handle.as_str()) {
+                     Ok(_) => return Ok(fd),
+ 
+                     Err(errno) => {
