@@ -1,0 +1,48 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -66,7 +66,7 @@
+ optional = true
+ 
+ [dependencies.rustix]
+-version = "0.38.3"
++version = "1"
+ features = [
+     "event",
+     "fs",
+--- a/src/util.rs
++++ b/src/util.rs
+@@ -6,6 +6,7 @@
+ use std::{
+     collections::VecDeque,
+     fs, io, ops,
++    mem::MaybeUninit,
+     os::unix::{
+         fs::OpenOptionsExt,
+         io::{AsFd, BorrowedFd, OwnedFd},
+@@ -32,7 +33,7 @@
+     fds: &[BorrowedFd],
+ ) -> rustix::io::Result<usize> {
+     #[allow(clippy::manual_slice_size_calculation)]
+-    let mut cmsg_space = vec![0; rustix::cmsg_space!(ScmRights(fds.len()))];
++    let mut cmsg_space = vec![MaybeUninit::uninit(); rustix::cmsg_space!(ScmRights(fds.len()))];
+     let mut cmsg_buffer = net::SendAncillaryBuffer::new(&mut cmsg_space);
+     cmsg_buffer.push(net::SendAncillaryMessage::ScmRights(fds));
+     retry_on_intr(|| net::sendmsg(socket, buf, &mut cmsg_buffer, net::SendFlags::NOSIGNAL))
+@@ -46,7 +47,7 @@
+     const MAX_FDS: usize = 32;
+ 
+     #[allow(clippy::manual_slice_size_calculation)]
+-    let mut cmsg_space = vec![0; rustix::cmsg_space!(ScmRights(MAX_FDS))];
++    let mut cmsg_space = [MaybeUninit::uninit(); rustix::cmsg_space!(ScmRights(MAX_FDS))];
+     let mut cmsg_buffer = net::RecvAncillaryBuffer::new(&mut cmsg_space);
+     let response = retry_on_intr(|| {
+         net::recvmsg(
+@@ -126,7 +127,7 @@
+     rustix::io::retry_on_intr(|| {
+         rustix::event::poll(
+             &mut [rustix::event::PollFd::new(fd, rustix::event::PollFlags::IN)],
+-            0,
++            Some(&rustix::event::Timespec{ tv_sec: 0, tv_nsec: 0}),
+         )
+     })?;
+     Ok(())
