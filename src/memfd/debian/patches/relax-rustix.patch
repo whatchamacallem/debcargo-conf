@@ -1,0 +1,20 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -53,5 +53,5 @@
+ tag-message = "memfd {{version}}"
+ 
+ [dependencies.rustix]
+-version = "0.38.8"
++version = "1"
+ features = ["fs"]
+--- a/tests/memfd.rs
++++ b/tests/memfd.rs
+@@ -50,6 +50,6 @@
+ 
+ /// Check if the close-on-exec flag is set for the memfd.
+ pub fn get_close_on_exec(memfd: &memfd::Memfd) -> std::io::Result<bool> {
+-    let flags = rustix::fs::fcntl_getfd(memfd.as_file())?;
+-    Ok(flags.contains(rustix::fs::FdFlags::CLOEXEC))
++    let flags = rustix::io::fcntl_getfd(memfd.as_file())?;
++    Ok(flags.contains(rustix::io::FdFlags::CLOEXEC))
+ }
