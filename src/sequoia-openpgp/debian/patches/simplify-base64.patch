@@ -1,19 +1,8 @@
-Subject: Simplify base64 dependency.
-
-Debian currently has rust-base64 version 0.21.7.  Updating debian to
-rust-base64 0.22 potentially affects dozens of packages.
-
-The debian build daemons don't really handle "or"ed build-deps safely:
-they choose the first one, and ignore the rest, which means that
-they'll take the highest-value.  So, to simplify the update in debian,
-we tighten this dependency.  if rust-base64 0.22 lands in debian, this
-patch should be removed.
-
-See https://bugs.debian.org/1069207
-
+diff --git a/Cargo.toml b/Cargo.toml
+index 8cf814b..9d89a64 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -72,7 +72,7 @@
+@@ -140,7 +140,7 @@ optional = true
  version = "1.0.18"
  
  [dependencies.base64]
@@ -22,3 +11,30 @@ See https://bugs.debian.org/1069207
  
  [dependencies.block-padding]
  version = "0.3"
+@@ -152,7 +152,7 @@ features = ["zeroize"]
+ optional = true
+ 
+ [dependencies.botan]
+-version = ">= 0.10.6, < 0.12"
++version = "0.10.6"
+ optional = true
+ 
+ [dependencies.buffered-reader]
+@@ -160,7 +160,7 @@ version = "1.3.0"
+ default-features = false
+ 
+ [dependencies.bzip2]
+-version = ">= 0.4, < 0.6"
++version = "0.4"
+ optional = true
+ 
+ [dependencies.camellia]
+@@ -258,7 +258,7 @@ features = ["oid"]
+ optional = true
+ 
+ [dependencies.memsec]
+-version = ">=0.5, <0.8"
++version = "0.7"
+ default-features = false
+ 
+ [dependencies.nettle]
