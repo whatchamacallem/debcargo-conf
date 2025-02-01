@@ -1,11 +1,9 @@
 Debian runs tests with stdin/stdout/stderr not connected to terminals, so testing against
 the users terminal doesn't work, we instead create a pseudo terminal specifically to use
 for testing.
-Index: terminal-size/src/unix.rs
-===================================================================
---- terminal-size.orig/src/unix.rs
-+++ terminal-size/src/unix.rs
-@@ -60,6 +60,31 @@ pub unsafe fn terminal_size_using_fd(fd:
+--- a/src/unix.rs
++++ b/src/unix.rs
+@@ -60,6 +60,31 @@
  fn compare_with_stty() {
      use std::process::Command;
      use std::process::Stdio;
@@ -37,7 +35,7 @@ Index: terminal-size/src/unix.rs
  
      let (rows, cols) = if cfg!(target_os = "illumos") {
          // illumos stty(1) does not accept a device argument, instead using
-@@ -96,14 +121,14 @@ fn compare_with_stty() {
+@@ -96,14 +121,14 @@
              Command::new("stty")
                  .arg("size")
                  .arg("-F")
@@ -54,7 +52,7 @@ Index: terminal-size/src/unix.rs
                  .arg("size")
                  .stderr(Stdio::inherit())
                  .output()
-@@ -121,7 +146,7 @@ fn compare_with_stty() {
+@@ -121,7 +146,7 @@
      };
      println!("{} {}", rows, cols);
  
@@ -63,12 +61,10 @@ Index: terminal-size/src/unix.rs
          assert_eq!(rows, h);
          assert_eq!(cols, w);
      } else {
-Index: terminal-size/Cargo.toml
-===================================================================
---- terminal-size.orig/Cargo.toml
-+++ terminal-size/Cargo.toml
-@@ -46,6 +46,9 @@ path = "examples/get_size.rs"
- version = "0.38.0"
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -46,6 +46,9 @@
+ version = "1.0.1"
  features = ["termios"]
  
 +[target."cfg(not(windows))".dev-dependencies.libc]
