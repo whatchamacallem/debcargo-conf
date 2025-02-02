@@ -1,13 +1,22 @@
-Index: effective-limits/src/lib.rs
-===================================================================
---- effective-limits.orig/src/lib.rs
-+++ effective-limits/src/lib.rs
+From 70a75ef94984cee42e789896cf905368b7b3284c Mon Sep 17 00:00:00 2001
+From: Fabio Valentini <decathorpe@gmail.com>
+Date: Sun, 5 Nov 2023 01:44:45 +0100
+Subject: [PATCH 1/2] fix test compilation issues on various architectures
+
+---
+ src/lib.rs | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/lib.rs b/src/lib.rs
+index f7fda6f..dab9586 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
 @@ -377,7 +377,7 @@ mod tests {
                      unsafe {
                          cmd.pre_exec(move || {
                              let lim = libc::rlimit {
 -                                rlim_cur: ulimit,
-+                                rlim_cur: ulimit as libc::rlim_t,
++                                rlim_cur: ulimit as _,
                                  rlim_max: libc::RLIM_INFINITY,
                              };
                              match libc::setrlimit(rlimit_as, &lim as *const libc::rlimit) {
