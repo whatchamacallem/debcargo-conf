@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "configure" ]; then
+	if [ -z "$2" ]; then
+		# debhelper does not start disabled, non-running services
+		# use udevadm to start asahi-btsync on install if/when the
+		# hardware allows it
+		udevadm trigger --action=change --subsystem-match=mtd || true
+	fi
+fi
+
+
+#DEBHELPER#
