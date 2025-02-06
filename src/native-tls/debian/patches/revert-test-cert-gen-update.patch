@@ -1,17 +1,18 @@
-Revert upstream update of test-cert-gen from 0.1 to 0.7, we patch out the
+Revert upstream update of test-cert-gen from 0.1 to 0.9, we patch out the
 use of test-cert-gen in a later patch, but this is needed so that said patch
 has the correct baseline to work with.
 
 This patch is based on a revert of upstream commits
-7493a48efe60b05d2caa7995e865da291059f06b and
-f5e5e6d6be8b66e16da4efcb2c614f835dfd2849, adapted for use in the Debian package
+7493a48efe60b05d2caa7995e865da291059f06b, 
+f5e5e6d6be8b66e16da4efcb2c614f835dfd2849, and part of 
+a30fedc051b3eb2c17d3d2508b63485b6fc230d3 adapted for use in the Debian package
 by Peter Michael Green.
 
 Index: native-tls/src/test.rs
 ===================================================================
 --- native-tls.orig/src/test.rs
 +++ native-tls/src/test.rs
-@@ -56,8 +56,8 @@ fn server_no_root_certs() {
+@@ -56,8 +56,8 @@ fn server_no_root_certs() { 1
      let keys = test_cert_gen::keys();
  
      let identity = p!(Identity::from_pkcs12(
@@ -22,7 +23,7 @@ Index: native-tls/src/test.rs
      ));
      let builder = p!(TlsAcceptor::new(identity));
  
-@@ -75,7 +75,7 @@ fn server_no_root_certs() {
+@@ -75,7 +75,7 @@ fn server_no_root_certs() { 2
          p!(socket.write_all(b"world"));
      });
  
@@ -31,7 +32,7 @@ Index: native-tls/src/test.rs
  
      let socket = p!(TcpStream::connect(("localhost", port)));
      let builder = p!(TlsConnector::builder()
-@@ -97,8 +97,8 @@ fn server() {
+@@ -97,8 +97,8 @@ fn server() { 3
      let keys = test_cert_gen::keys();
  
      let identity = p!(Identity::from_pkcs12(
@@ -42,7 +43,7 @@ Index: native-tls/src/test.rs
      ));
      let builder = p!(TlsAcceptor::new(identity));
  
-@@ -116,7 +116,7 @@ fn server() {
+@@ -116,7 +116,7 @@ fn server() { 4
          p!(socket.write_all(b"world"));
      });
  
@@ -51,11 +52,11 @@ Index: native-tls/src/test.rs
  
      let socket = p!(TcpStream::connect(("localhost", port)));
      let builder = p!(TlsConnector::builder()
-@@ -138,7 +138,7 @@ fn certificate_from_pem() {
+@@ -138,7 +138,7 @@ fn certificate_from_pem() { 5
      let keys = test_cert_gen::keys();
  
      let der_path = dir.path().join("cert.der");
--    fs::write(&der_path, &keys.client.ca.get_der()).unwrap();
+-    fs::write(&der_path, keys.client.ca.get_der()).unwrap();
 +    fs::write(&der_path, &keys.client.cert_der).unwrap();
      let output = Command::new("openssl")
          .arg("x509")
@@ -208,7 +209,7 @@ Index: native-tls/Cargo.toml
  version = "3.0"
  
  [dev-dependencies.test-cert-gen]
--version = "0.7"
+-version = "0.9"
 +version = "0.1"
  
  [features]
