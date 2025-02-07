@@ -1,0 +1,35 @@
+Description: Disable failing tests
+ Those rely on files which are not present in the crate as published on
+ crates.io.
+Author: Arnaud Ferraris <aferraris@debian.org>
+Forwarded: not-needed
+Last-Update: 2025-02-07
+---
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -143,6 +143,7 @@
+ 	}
+ 
+ 	#[test]
++	#[ignore = "missing test file"]
+ 	fn opus_ident_header() {
+ 		let expected = Page {
+ 			content: vec![
+@@ -169,6 +170,7 @@
+ 	}
+ 
+ 	#[test]
++	#[ignore = "missing test file"]
+ 	fn paginate_large() {
+ 		let packet = std::fs::read("test_assets/large_comment_packet.page").unwrap();
+ 
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -42,6 +42,7 @@
+ [lib]
+ name = "ogg_pager"
+ path = "src/lib.rs"
++doctest = false
+ 
+ [dependencies.byteorder]
+ version = "1.5.0"
