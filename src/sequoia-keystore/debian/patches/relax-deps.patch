@@ -7,10 +7,10 @@ Hardcode the crypto-nettle backend, as that is used everywhere else in Debian.
 Remove env-filter as that doesn't exist in Debian.
 
 diff --git a/Cargo.toml b/Cargo.toml
-index ed14e5d..fe7e5fb 100644
+index cb3035a..1fbb517 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -40,7 +40,7 @@ version = "0.19"
+@@ -51,7 +51,7 @@ version = "0.19"
  version = "5"
  
  [dependencies.env_logger]
@@ -19,7 +19,7 @@ index ed14e5d..fe7e5fb 100644
  
  [dependencies.lazy_static]
  version = "1.4.0"
-@@ -63,6 +63,7 @@ version = "0.2"
+@@ -90,6 +90,7 @@ optional = true
  [dependencies.sequoia-openpgp]
  version = "1.17"
  default-features = false
@@ -27,7 +27,7 @@ index ed14e5d..fe7e5fb 100644
  
  [dependencies.thiserror]
  version = "1.0.2"
-@@ -84,7 +85,7 @@ features = ["compat"]
+@@ -111,7 +112,7 @@ features = ["compat"]
  version = "0.3"
  
  [dev-dependencies.env_logger]
@@ -36,13 +36,18 @@ index ed14e5d..fe7e5fb 100644
  
  [dev-dependencies.test-log]
  version = "0.2.10"
-@@ -96,5 +97,4 @@
+@@ -122,7 +123,6 @@ default-features = false
+ 
  [dev-dependencies.tracing-subscriber]
  version = "0.3"
 -features = ["env-filter"]
  default-features = false
  
-@@ -110,7 +110,0 @@
+ [build-dependencies.capnpc]
+@@ -138,21 +138,5 @@ openpgp-card = ["dep:sequoia-keystore-openpgp-card"]
+ softkeys = ["dep:sequoia-keystore-softkeys"]
+ tpm = ["dep:sequoia-keystore-tpm"]
+ 
 -[target."cfg(not(windows))".dev-dependencies.sequoia-openpgp]
 -version = "1"
 -features = [
@@ -50,7 +55,7 @@ index ed14e5d..fe7e5fb 100644
 -    "__implicit-crypto-backend-for-tests",
 -]
 -default-features = false
-@@ -120,7 +110,0 @@
+-
 -[target."cfg(windows)".dev-dependencies.sequoia-openpgp]
 -version = "1"
 -features = [
@@ -58,3 +63,6 @@ index ed14e5d..fe7e5fb 100644
 -    "__implicit-crypto-backend-for-tests",
 -]
 -default-features = false
+-
+ [badges.maintenance]
+ status = "actively-developed"
