@@ -14,18 +14,17 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 +#    "getrandom/js",
 +#    "instant/stdweb",
 +#]
-@@ -251,7 +251,7 @@
+@@ -251,4 +251,4 @@
 -wasm-bindgen = [
 -    "getrandom/js",
 -    "instant/wasm-bindgen",
 -]
--
--[target."cfg(target_family = \"wasm\")".dependencies.instant]
--version = "0.1.10"
 +#wasm-bindgen = [
 +#    "getrandom/js",
 +#    "instant/wasm-bindgen",
 +#]
-+#
-+#[target."cfg(target_family = \"wasm\")".dependencies.instant]
+@@ -260,2 +260,2 @@
+-[target.'cfg(target_family = "wasm")'.dependencies.instant]
+-version = "0.1.10"
++#[target.'cfg(target_family = "wasm")'.dependencies.instant]
 +#version = "0.1.10"
