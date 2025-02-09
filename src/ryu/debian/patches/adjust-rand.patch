@@ -1,0 +1,32 @@
+Index: ryu/Cargo.toml
+===================================================================
+--- ryu.orig/Cargo.toml
++++ ryu/Cargo.toml
+@@ -98,7 +98,5 @@ optional = true
+ version = "1.8"
+ 
+ [dev-dependencies.rand]
+-version = "0.9"
++version = ">= 0.8, < 0.10"
+ 
+-[dev-dependencies.rand_xorshift]
+-version = "0.4"
+Index: ryu/examples/upstream_benchmark.rs
+===================================================================
+--- ryu.orig/examples/upstream_benchmark.rs
++++ ryu/examples/upstream_benchmark.rs
+@@ -40,12 +40,12 @@ impl MeanAndVariance {
+ macro_rules! benchmark {
+     ($name:ident, $ty:ident) => {
+         fn $name() -> usize {
+-            let mut rng = rand_xorshift::XorShiftRng::from_seed([123u8; 16]);
++            let mut rng = rand::rngs::StdRng::from_seed([123u8; 32]);
+             let mut mv = MeanAndVariance::new();
+             let mut throwaway = 0;
+             for _ in 0..SAMPLES {
+                 let f = loop {
+-                    let f = $ty::from_bits(rng.random());
++                    let f = $ty::from_bits(rng.gen());
+                     if f.is_finite() {
+                         break f;
+                     }
