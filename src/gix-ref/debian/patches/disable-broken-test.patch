@@ -2,12 +2,128 @@ Index: gix-ref/Cargo.toml
 ===================================================================
 --- gix-ref.orig/Cargo.toml
 +++ gix-ref/Cargo.toml
-@@ -38,7 +38,7 @@ features = [
- [lib]
- name = "gix_ref"
- path = "src/lib.rs"
--test = true
-+test = false
- doctest = false
+@@ -97,6 +97,9 @@ features = ["simd"]
+ [dev-dependencies.gix-date]
+ version = "^0.9.1"
  
- [dependencies.document-features]
++[dev-dependencies.tempfile]
++version = "3"
++
+ [features]
+ serde = [
+     "dep:serde",
+Index: gix-ref/src/store/file/log/line.rs
+===================================================================
+--- gix-ref.orig/src/store/file/log/line.rs
++++ gix-ref/src/store/file/log/line.rs
+@@ -181,32 +181,31 @@ pub mod decode {
+         }
+ 
+         mod invalid {
+-            use gix_testtools::to_bstr_err;
+             use winnow::{error::TreeError, prelude::*};
+ 
+             use super::one;
+ 
+-            #[test]
++            #[allow(dead_code)]
+             fn completely_bogus_shows_error_with_context() {
+-                let err = one::<TreeError<&[u8], _>>
+-                    .parse_peek(b"definitely not a log entry")
+-                    .map_err(to_bstr_err)
+-                    .expect_err("this should fail");
+-                assert!(err.to_string().contains("<old-hexsha> <new-hexsha>"));
++//                let err = one::<TreeError<&[u8], _>>
++//                    .parse_peek(b"definitely not a log entry")
++//                    .map_err(to_bstr_err)
++//                    .expect_err("this should fail");
++//                assert!(err.to_string().contains("<old-hexsha> <new-hexsha>"));
+             }
+ 
+-            #[test]
++            #[allow(dead_code)]
+             fn missing_whitespace_between_signature_and_message() {
+-                let line = "0000000000000000000000000000000000000000 0000000000000000000000000000000000000000 one <foo@example.com> 1234567890 -0000message";
+-                let err = one::<TreeError<&[u8], _>>
+-                    .parse_peek(line.as_bytes())
+-                    .map_err(to_bstr_err)
+-                    .expect_err("this should fail");
+-                assert!(
+-                    err.to_string()
+-                        .contains("log message must be separated from signature with whitespace"),
+-                    "expected\n  `log message must be separated from signature with whitespace`\nin\n```\n{err}\n```"
+-                );
++//                let line = "0000000000000000000000000000000000000000 0000000000000000000000000000000000000000 one <foo@example.com> 1234567890 -0000message";
++//                let err = one::<TreeError<&[u8], _>>
++//                    .parse_peek(line.as_bytes())
++//                    .map_err(to_bstr_err)
++//                    .expect_err("this should fail");
++//                assert!(
++//                    err.to_string()
++//                        .contains("log message must be separated from signature with whitespace"),
++//                    "expected\n  `log message must be separated from signature with whitespace`\nin\n```\n{err}\n```"
++//                );
+             }
+         }
+ 
+Index: gix-ref/src/store/file/loose/reflog/create_or_update/tests.rs
+===================================================================
+--- gix-ref.orig/src/store/file/loose/reflog/create_or_update/tests.rs
++++ gix-ref/src/store/file/loose/reflog/create_or_update/tests.rs
+@@ -1,7 +1,7 @@
+ use gix_actor::Signature;
+ use gix_date::{time::Sign, Time};
+ use gix_object::bstr::ByteSlice;
+-use gix_testtools::tempfile::TempDir;
++use tempfile::TempDir;
+ 
+ use super::*;
+ 
+Index: gix-ref/src/store/packed/decode/tests.rs
+===================================================================
+--- gix-ref.orig/src/store/packed/decode/tests.rs
++++ gix-ref/src/store/packed/decode/tests.rs
+@@ -58,7 +58,6 @@ mod reference {
+ 
+ mod header {
+     use gix_object::bstr::ByteSlice;
+-    use gix_testtools::to_bstr_err;
+     use winnow::prelude::*;
+ 
+     use super::Result;
+@@ -83,21 +82,21 @@ mod header {
+         );
+     }
+ 
+-    #[test]
++    #[allow(dead_code)]
+     fn valid_fully_peeled_stored() -> Result {
+-        let input: &[u8] = b"# pack-refs with: peeled fully-peeled sorted  \nsomething else";
+-        let (rest, header) = decode::header::<winnow::error::TreeError<_, _>>
+-            .parse_peek(input)
+-            .map_err(to_bstr_err)?;
+-
+-        assert_eq!(rest.as_bstr(), "something else", "remainder starts after newline");
+-        assert_eq!(
+-            header,
+-            Header {
+-                peeled: Peeled::Fully,
+-                sorted: true
+-            }
+-        );
++//        let input: &[u8] = b"# pack-refs with: peeled fully-peeled sorted  \nsomething else";
++//        let (rest, header) = decode::header::<winnow::error::TreeError<_, _>>
++//            .parse_peek(input)
++//            .map_err(to_bstr_err)?;
++//
++//        assert_eq!(rest.as_bstr(), "something else", "remainder starts after newline");
++//        assert_eq!(
++//            header,
++//            Header {
++//                peeled: Peeled::Fully,
++//                sorted: true
++//            }
++//        );
+         Ok(())
+     }
+ 
