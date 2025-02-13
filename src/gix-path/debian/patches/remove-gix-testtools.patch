@@ -2,25 +2,18 @@ Index: gix-path/src/env/git/tests.rs
 ===================================================================
 --- gix-path.orig/src/env/git/tests.rs
 +++ gix-path/src/env/git/tests.rs
-@@ -361,10 +361,10 @@ mod exe_info {
+@@ -361,7 +361,7 @@ mod exe_info {
      use std::path::{Path, PathBuf};
  
      use crate::env::git::{exe_info, NULL_DEVICE};
 -    use gix_testtools::tempfile;
-+    //use gix_testtools::tempfile;
++    use tempfile;
      use serial_test::serial;
  
--    /// Wrapper for a valid path to a plausible location, kept from accidentally existing (until drop).
-+    /* /// Wrapper for a valid path to a plausible location, kept from accidentally existing (until drop).
-     #[derive(Debug)]
-     struct NonexistentLocation {
-         _empty: tempfile::TempDir,
-@@ -392,9 +392,9 @@ mod exe_info {
-         fn path(&self) -> &Path {
-             &self.nonexistent
+     /// Wrapper for a valid path to a plausible location, kept from accidentally existing (until drop).
+@@ -394,7 +394,7 @@ mod exe_info {
          }
--    }
-+    }*/
+     }
  
 -    fn set_temp_env_vars<'a>(path: &Path) -> gix_testtools::Env<'a> {
 +    /*fn set_temp_env_vars<'a>(path: &Path) -> gix_testtools::Env<'a> {
@@ -132,12 +125,38 @@ Index: gix-path/src/env/git/tests.rs
      #[serial]
      fn never_from_local_scope_even_if_temp_is_here_nosystem() {
          let repo = gix_testtools::scripted_fixture_read_only("local_config.sh")
-@@ -574,7 +574,7 @@ mod exe_info {
+@@ -574,9 +574,9 @@ mod exe_info {
              maybe_path, None,
              "Should find no config path if the config would be local even in a `/tmp`-like dir (suppressed system config)"
          );
 -    }
 +    }*/
  
-     #[test]
+-    #[test]
++    /*#[test]
      #[serial]
+     fn never_from_git_config_env_var() {
+         let repo = gix_testtools::scripted_fixture_read_only("local_config.sh").expect("script succeeds");
+@@ -601,7 +601,7 @@ mod exe_info {
+             maybe_path, None,
+             "Should find no config path from GIT_CONFIG (even if nonempty)"
+         );
+-    }
++    }*/
+ 
+     #[test]
+     fn first_file_from_config_with_origin() {
+Index: gix-path/Cargo.toml
+===================================================================
+--- gix-path.orig/Cargo.toml
++++ gix-path/Cargo.toml
+@@ -52,6 +52,9 @@ version = "2.0.0"
+ version = "3.1.0"
+ default-features = false
+ 
++[dev-dependencies.tempfile]
++version = "3"
++
+ [target.'cfg(not(target_family = "wasm"))'.dependencies.home]
+ version = "0.5.5"
+ 
