@@ -107,8 +107,6 @@ With schroot::
 With sbuild + unshare::
 
 $ sudo apt install devscripts mmdebstrap sbuild uidmap dh-cargo autopkgtest quilt
-$ mkdir -p ~/.cache/sbuild
-$ mmdebstrap --variant=buildd --include ccache,gnupg,dh-cargo,cargo,lintian,perl-openssl-defaults unstable ~/.cache/sbuild/debcargo-unstable-amd64.tar.zst
 
 Note that you need to set CHROOT_MODE=unshare to use ./build.sh with unshare.
 

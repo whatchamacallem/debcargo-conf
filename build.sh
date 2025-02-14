@@ -63,14 +63,8 @@ BUILDNAME="${DEBSRC}_${DEBVER}_${DEB_HOST_ARCH}"
 
 if [ -z "$CHROOT" ]; then
 	if [ "$CHROOT_MODE" = "unshare" ]; then
-		CHROOT="$(find ~/.cache/sbuild -iname "debcargo-*-$DEB_HOST_ARCH*" | head -n1)"
-		if [ -z "$CHROOT" ]; then
-			CHROOT="unstable-${DEB_HOST_ARCH}"
-			echo >&2 "Automatically using sbuild tarball unstable-${DEB_HOST_ARCH}; however it's"
-			echo >&2 "strongly recommended to create a separate tarball debcargo-unstable-${DEB_HOST_ARCH}"
-			echo >&2 "so your builds won't have to re-download & re-install cargo, rustc, and llvm every time."
-			echo >&2 "See README.rst section \"Build environment\" for details."
-		fi
+		# nothing to do here, mmdebstrap will create a new chroot tarball on demand
+		CHROOT="debcargo-unstable-${DEB_HOST_ARCH}-sbuild"
 	elif schroot -i -c "debcargo-unstable-${DEB_HOST_ARCH}-sbuild" >/dev/null 2>&1; then
 		CHROOT="debcargo-unstable-${DEB_HOST_ARCH}-sbuild"
 	elif schroot -i -c "unstable-${DEB_HOST_ARCH}-sbuild" >/dev/null 2>&1; then
