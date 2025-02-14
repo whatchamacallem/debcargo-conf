@@ -1,0 +1,55 @@
+Index: yaxpeax-x86/test/bench.rs
+===================================================================
+--- yaxpeax-x86.orig/test/bench.rs
++++ yaxpeax-x86/test/bench.rs
+@@ -93,7 +93,7 @@ fn do_decode_swathe() {
+     loop {
+         match decoder.decode_into(&mut result, &mut reader) {
+             Ok(()) => {
+-                #[cfg(feature = "capstone_bench")]
++                #[cfg(all(feature = "capstone_bench", feature = "fmt"))]
+                 test::black_box(write!(&mut buf[..], "{}", result));
+                 test::black_box(&result);
+             },
+Index: yaxpeax-x86/test/long_mode/descriptions.rs
+===================================================================
+--- yaxpeax-x86.orig/test/long_mode/descriptions.rs
++++ yaxpeax-x86/test/long_mode/descriptions.rs
+@@ -165,7 +165,9 @@ fn test_annotations_under(decoder: &Inst
+     let mut inst = Instruction::default();
+     match decoder.decode_with_annotation(&mut inst, &mut reader, &mut sink) {
+         Ok(()) => {
++            #[cfg(feature = "fmt")]
+             let text = format!("{}", inst);
++            #[cfg(feature = "fmt")]
+             assert!(
+                 text == expected,
+                 "display error for {}:\n  decoded: {:?} under decoder {}\n displayed: {}\n expected: {}\n",
+@@ -230,7 +232,11 @@ fn test_annotations_under(decoder: &Inst
+             }
+ 
+             if failed {
++                #[cfg(not(feature = "fmt"))]
++                eprintln!("[!] annotation check failed, enable the fmt feature for more info");
++                #[cfg(feature = "fmt")]
+                 eprintln!("[!] annotation check for {}, `{}`, failed:", hex, inst);
++                #[cfg(feature = "fmt")]
+                 for ((bit_start, bit_end, desc), check) in matches {
+                     let mut desc = format!("bit {}:{}; {}", bit_start, bit_end, desc);
+                     while desc.len() < 60 {
+@@ -254,6 +260,7 @@ fn test_annotations_under(decoder: &Inst
+                     };
+                     eprintln!(" - {}{}", desc, comment);
+                 }
++                #[cfg(feature = "fmt")]
+                 for check in extra_checks {
+                     eprintln!(" !  \x1b[31mextra check\x1b[0m: {}", check);
+                 }
+@@ -279,6 +286,7 @@ fn test_annotations_under(decoder: &Inst
+ }
+ 
+ #[test]
++#[cfg(feature = "fmt")]
+ fn test_modrm_decode() {
+     test_annotations(&[0xff, 0xc0], "inc eax", &[
+         AnnotationCheck::exact(11, 13, InnerDescription::Opcode(Opcode::INC)),
