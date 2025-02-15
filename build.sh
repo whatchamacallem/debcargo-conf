@@ -199,7 +199,8 @@ if [ -n "${EXTRA_DEBS[*]}" ]; then
 fi
 
 if [ "$CHROOT_MODE" = "unshare" ]; then
-	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=--apt-upgrade -- unshare -t ${CHROOT} ${DISTRO:+-r $DISTRO}")
+	CACHE_DIR=${XDG_CACHE_HOME:-${HOME}/.cache}
+	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=--apt-upgrade -- unshare -t ${CACHE_DIR}/sbuild/${CHROOT}.tar ${DISTRO:+-r $DISTRO}")
 else
 	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=-- schroot ${CHROOT}")
 fi
