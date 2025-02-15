@@ -1,0 +1,16 @@
+--- rust-gix-ref-0.48.0.orig/src/raw.rs
++++ rust-gix-ref-0.48.0/src/raw.rs
+@@ -97,10 +97,12 @@ mod tests {
+ 
+     #[test]
+     fn size_of_reference() {
++        #[cfg(target_pointer_width="32")]
++        if (std::mem::size_of::<Reference>() < 80) { return };
+         assert_eq!(
+             std::mem::size_of::<Reference>(),
+             80,
+-            "let's not let it change size undetected"
++            "let's not let it change size undetected",
+         );
+     }
+ }
