@@ -1,18 +1,10 @@
-Index: glutin/Cargo.toml
-===================================================================
---- glutin.orig/Cargo.toml
-+++ glutin/Cargo.toml
-@@ -63,7 +63,6 @@ default = [
-     "glx",
-     "x11",
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -75,3 +75,2 @@ default = [
      "wayland",
 -    "wgl",
  ]
- egl = [
-     "glutin_egl_sys",
-@@ -78,10 +77,7 @@ wayland = [
-     "wayland-sys",
-     "egl",
+@@ -90,6 +89,3 @@ wayland = [
  ]
 -wgl = [
 -    "glutin_wgl_sys",
@@ -20,51 +12,53 @@ Index: glutin/Cargo.toml
 -]
 +wgl = []
  x11 = ["x11-dl"]
- 
- [target."cfg(any(target_os = \"linux\", target_os = \"freebsd\", target_os = \"dragonfly\", target_os = \"netbsd\", target_os = \"openbsd\"))".dependencies.glutin_egl_sys]
-@@ -105,50 +101,3 @@ default-features = false
- [target."cfg(any(target_os = \"linux\", target_os = \"freebsd\", target_os = \"dragonfly\", target_os = \"netbsd\", target_os = \"openbsd\"))".dependencies.x11-dl]
- version = "2.20.0"
+@@ -117,54 +113 @@ version = "2.20.0"
  optional = true
 -
--[target."cfg(any(target_os = \"macos\"))".dependencies.cgl]
+-[target.'cfg(any(target_os = "macos"))'.dependencies.cgl]
 -version = "0.3.2"
 -
--[target."cfg(any(target_os = \"macos\"))".dependencies.core-foundation]
+-[target.'cfg(any(target_os = "macos"))'.dependencies.core-foundation]
 -version = "0.9.3"
 -
--[target."cfg(any(target_os = \"macos\"))".dependencies.dispatch]
+-[target.'cfg(any(target_os = "macos"))'.dependencies.dispatch]
 -version = "0.2.0"
 -
--[target."cfg(any(target_os = \"macos\"))".dependencies.icrate]
--version = "0.0.4"
+-[target.'cfg(any(target_os = "macos"))'.dependencies.objc2]
+-version = "0.5.1"
+-
+-[target.'cfg(any(target_os = "macos"))'.dependencies.objc2-app-kit]
+-version = "0.2.0"
 -features = [
--    "dispatch",
--    "Foundation",
--    "Foundation_NSArray",
--    "Foundation_NSThread",
--    "AppKit",
--    "AppKit_NSView",
--    "AppKit_NSWindow",
+-    "NSApplication",
+-    "NSResponder",
+-    "NSView",
+-    "NSWindow",
+-    "NSOpenGL",
+-    "NSOpenGLView",
 -]
 -
--[target."cfg(any(target_os = \"macos\"))".dependencies.objc2]
--version = "0.4.1"
--features = ["relax-void-encoding"]
+-[target.'cfg(any(target_os = "macos"))'.dependencies.objc2-foundation]
+-version = "0.2.0"
+-features = [
+-    "dispatch",
+-    "NSArray",
+-    "NSThread",
+-]
 -
--[target."cfg(target_os = \"android\")".dependencies.glutin_egl_sys]
--version = "0.6.0"
+-[target.'cfg(target_os = "android")'.dependencies.glutin_egl_sys]
+-version = "0.7.1"
 -
 -[target."cfg(windows)".dependencies.glutin_egl_sys]
--version = "0.6.0"
+-version = "0.7.1"
 -optional = true
 -
 -[target."cfg(windows)".dependencies.glutin_wgl_sys]
--version = "0.5.0"
+-version = "0.6.1"
 -optional = true
 -
 -[target."cfg(windows)".dependencies.windows-sys]
--version = "0.48"
+-version = "0.52"
 -features = [
 -    "Win32_Foundation",
 -    "Win32_Graphics_Gdi",
