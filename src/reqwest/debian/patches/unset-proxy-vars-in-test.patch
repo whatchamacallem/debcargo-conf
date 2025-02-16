@@ -2,24 +2,28 @@ Index: reqwest/src/proxy.rs
 ===================================================================
 --- reqwest.orig/src/proxy.rs
 +++ reqwest/src/proxy.rs
-@@ -1291,6 +1291,7 @@ mod tests {
+@@ -1291,6 +1291,9 @@ mod tests {
          let _g1 = env_guard("HTTP_PROXY");
          let _g2 = env_guard("http_proxy");
          let _g3 = env_guard("ALL_PROXY");
 +        let _g4 = env_guard("HTTPS_PROXY");
++        let _g5 = env_guard("all_proxy");
++        let _g6 = env_guard("https_proxy");
  
          // Mock ENV, get the results, before doing assertions
          // to avoid assert! -> panic! -> Mutex Poisoned.
-@@ -1308,6 +1309,8 @@ mod tests {
+@@ -1308,6 +1311,10 @@ mod tests {
          // reset user setting when guards drop
          drop(_g1);
          drop(_g2);
 +        drop(_g3);
 +        drop(_g4);
++        drop(_g5);
++        drop(_g6);
          // Let other threads run now
          drop(_lock);
  
-@@ -1397,9 +1400,13 @@ mod tests {
+@@ -1397,9 +1404,13 @@ mod tests {
          // save system setting first.
          let _g1 = env_guard("REQUEST_METHOD");
          let _g2 = env_guard("HTTP_PROXY");
@@ -33,7 +37,7 @@ Index: reqwest/src/proxy.rs
          env::set_var("HTTP_PROXY", "http://evil/");
  
          let baseline_proxies = get_sys_proxies(None);
-@@ -1411,6 +1418,8 @@ mod tests {
+@@ -1411,6 +1422,8 @@ mod tests {
          // reset user setting when guards drop
          drop(_g1);
          drop(_g2);
