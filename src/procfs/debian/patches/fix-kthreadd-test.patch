@@ -1,0 +1,16 @@
+Index: procfs/src/process/tests.rs
+===================================================================
+--- procfs.orig/src/process/tests.rs
++++ procfs/src/process/tests.rs
+@@ -713,6 +713,11 @@ fn test_proc_status_for_kthreadd() {
+     let status = kthreadd.status().unwrap();
+     println!("{:?}", status);
+ 
++    // PID 2 might be there but something else, e.g. in namespaces/containers
++    if status.name != "kthreadd" {
++        return;
++    }
++
+     assert_eq!(status.pid, 2);
+     assert_eq!(status.vmpeak, None);
+     assert_eq!(status.vmsize, None);
