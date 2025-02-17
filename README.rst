@@ -83,9 +83,9 @@ Repackaging the existing revision
 In order to build a package A already in ``debcargo-conf/src``
 in the exact version which is present here, do the following::
 
+  $ rm -rf build/A
   $ ./repackage.sh A
-  $ cd build
-  $ ./build.sh A
+  $ env --chdir=build ./build.sh A
 
 If this package is already in the archive and you want to recreate that
 exactly, you will need to use the exact same version of debcargo that was
@@ -158,7 +158,7 @@ If you want to create separate non-master branches, that is fine - just don't
 call them ``pending-*`` and don't run ``./release.sh`` on those branches. If you
 want to test your crate, instead run::
 
-  cd build && [SOURCEONLY=1] ./build.sh <rust-crate-name> [<old-version>]
+  env --chdir=./build [SOURCEONLY=1] ./build.sh <rust-crate-name> [<old-version>]
 
 omitting or not omitting the stuff in [] as needed.
 
@@ -370,7 +370,7 @@ To achieve that, after ``./update.sh``, try::
   $ quilt header -e --dep3
   $ quilt refresh
   $ cargo build # check that it works. if it does, then
-  $ cp -R patches ../../src/<package>/debian
+  $ cp -R debian/patches ../../src/<package>/debian
 
 Suppose you want to change the dependency from 0.3 to 0.5. If the crate builds
 with no further source changes, then we would change the required version in
