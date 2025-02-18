@@ -11,3 +11,18 @@ Index: ntp-proto/Cargo.toml
  
  [dependencies.rand]
  version = "0.8.0"
+Index: ntp-proto/src/tls_utils.rs
+===================================================================
+--- ntp-proto.orig/src/tls_utils.rs
++++ ntp-proto/src/tls_utils.rs
+@@ -192,6 +192,10 @@ mod rustls21_shim {
+     pub use rustls21::ServerConfig;
+     pub use rustls21::ServerConnection;
+ 
++    #[cfg(feature = "nts-pool")]
++    #[derive(Debug)]
++    pub struct AllowAnyAnonymousOrCertificateBearingClient;
++
+     pub fn client_config_builder(
+     ) -> rustls21::ConfigBuilder<rustls21::ClientConfig, rustls21::WantsVerifier> {
+         ClientConfig::builder().with_safe_defaults()
