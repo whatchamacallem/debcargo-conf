@@ -1,18 +1,8 @@
 Forwarded: not-needed
-Last-Update: 2025-01-09
+Last-Update: 2025-02-18
 --- a/src/main.rs
 +++ b/src/main.rs
-@@ -17,3 +17,3 @@
- mod utils;
--mod vendored;
-+//mod vendored;
- 
-@@ -48,3 +48,3 @@
- use crate::utils::{test_mode, test_pretend_term, url_with_query};
--use crate::vendored::reqwest_cookie_store;
-+//use crate::vendored::reqwest_cookie_store;
- 
-@@ -62,2 +62,38 @@
+@@ -63,2 +63,38 @@
  
 +#[derive(Default)]
 +struct CookieJar(std::sync::Mutex<CookieStore>);
@@ -51,8 +41,15 @@ Last-Update: 2025-01-09
 +}
 +
  fn main() {
-@@ -284,3 +320,3 @@
+@@ -290,3 +326,3 @@
  
 -    let cookie_jar = Arc::new(reqwest_cookie_store::CookieStoreMutex::default());
 +    let cookie_jar = Arc::new(CookieJar::default());
      client = client.cookie_provider(cookie_jar.clone());
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -194,3 +194,3 @@
+ 
+-[dependencies.reqwest_cookie_store]
++[disabled.dependencies.reqwest_cookie_store]
+ version = "0.8.0"

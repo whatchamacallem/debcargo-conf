@@ -1,0 +1,36 @@
+Description: Disable clap_complete_nushell which somehow lacks dependencies
+Forwarded: not-needed
+Last-Update: 2025-02-18
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -113,3 +113,3 @@
+ 
+-[dependencies.clap_complete_nushell]
++[disabled.dependencies.clap_complete_nushell]
+ version = "4.4"
+--- a/src/generation.rs
++++ b/src/generation.rs
+@@ -3,3 +3,3 @@
+ use clap_complete::Shell;
+-use clap_complete_nushell::Nushell;
++//use clap_complete_nushell::Nushell;
+ 
+@@ -23,5 +23,5 @@
+         }
+-        Generate::CompleteNushell => {
++        /*Generate::CompleteNushell => {
+             clap_complete::generate(Nushell, &mut app, bin_name, &mut io::stdout());
+-        }
++        }*/
+         Generate::CompletePowershell => {
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -391,3 +391,2 @@
+     complete-fish
+-    complete-nushell
+     complete-powershell
+@@ -1194,3 +1193,3 @@
+     CompleteFish,
+-    CompleteNushell,
++    //CompleteNushell,
+     CompletePowershell,
