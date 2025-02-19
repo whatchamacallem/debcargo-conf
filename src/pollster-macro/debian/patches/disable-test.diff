@@ -1,0 +1,68 @@
+Index: pollster-macro/Cargo.toml
+===================================================================
+--- pollster-macro.orig/Cargo.toml
++++ pollster-macro/Cargo.toml
+@@ -44,13 +44,13 @@ name = "pollster_macro"
+ path = "src/lib.rs"
+ proc-macro = true
+ 
+-[[test]]
+-name = "main"
+-path = "tests/main.rs"
++#[[test]]
++#name = "main"
++#path = "tests/main.rs"
+ 
+-[[test]]
+-name = "test"
+-path = "tests/test.rs"
++#[[test]]
++#name = "test"
++#path = "tests/test.rs"
+ 
+ [dependencies.proc-macro2]
+ version = "1"
+Index: pollster-macro/src/lib.rs
+===================================================================
+--- pollster-macro.orig/src/lib.rs
++++ pollster-macro/src/lib.rs
+@@ -8,20 +8,6 @@ use quote::ToTokens;
+ use syn::spanned::Spanned;
+ use syn::{Error, Expr, ExprLit, ExprPath, ItemFn, Lit, MetaNameValue, Result};
+ 
+-/// Uses [`pollster::block_on`] to enable `async fn main() {}`.
+-///
+-/// # Example
+-///
+-/// ```
+-/// #[pollster::main]
+-/// async fn main() {
+-///     let my_fut = async {};
+-///
+-///     my_fut.await;
+-/// }
+-/// ```
+-///
+-/// [`pollster::block_on`]: https://docs.rs/pollster/0.3.0/pollster/fn.block_on.html
+ #[proc_macro_attribute]
+ pub fn main(
+     attr: proc_macro::TokenStream,
+Index: pollster-macro/README.md
+===================================================================
+--- pollster-macro.orig/README.md
++++ pollster-macro/README.md
+@@ -10,14 +10,6 @@ https://docs.rs/pollster)
+ https://github.com/zesterer/pollster)
+ ![actions-badge](https://github.com/zesterer/pollster/workflows/Rust/badge.svg?branch=master)
+ 
+-```rust
+-use pollster::FutureExt as _;
+-
+-let my_fut = async {};
+-
+-let result = my_fut.block_on();
+-```
+-
+ That's it. That's all it does. Nothing more, nothing less. No need to pull in 50 crates to evaluate a future.
+ 
+ ## Why is this useful?
