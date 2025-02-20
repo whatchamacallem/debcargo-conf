@@ -4,34 +4,80 @@ Forwarded: not-needed
 Last-Update: 2024-10-13
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -544,4 +544,4 @@
+@@ -569,8 +569,8 @@
+     "tokio",
+ ]
  
 -[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies.libflate]
 -version = "2.1"
 +[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies.flate2]
 +version = "1"
  
+ [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies.rustls]
+ version = "0.23"
 --- a/tests/gzip.rs
 +++ b/tests/gzip.rs
-@@ -94,3 +94,3 @@
+@@ -94,13 +94,13 @@
+         .into_iter()
+         .map(|i| format!("test {i}"))
          .collect();
 -    let mut encoder = libflate::gzip::Encoder::new(Vec::new()).unwrap();
 +    let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
      match encoder.write(content.as_bytes()) {
-@@ -100,3 +100,3 @@
+         Ok(n) => assert!(n > 0, "Failed to write to encoder."),
+         _ => panic!("Failed to gzip encode string."),
+     };
  
 -    let gzipped_content = encoder.finish().into_result().unwrap();
 +    let gzipped_content = encoder.finish().unwrap();
  
+     let mut response = format!(
+         "\
+@@ -160,12 +160,12 @@
+ const RESPONSE_CONTENT: &str = "some message here";
+ 
+ fn gzip_compress(input: &[u8]) -> Vec<u8> {
+-    let mut encoder = libflate::gzip::Encoder::new(Vec::new()).unwrap();
++    let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+     match encoder.write(input) {
+         Ok(n) => assert!(n > 0, "Failed to write to encoder."),
+         _ => panic!("Failed to gzip encode string."),
+     };
+-    encoder.finish().into_result().unwrap()
++    encoder.finish().unwrap()
+ }
+ 
+ #[tokio::test]
 --- a/tests/deflate.rs
 +++ b/tests/deflate.rs
-@@ -93,3 +93,3 @@
+@@ -92,13 +92,13 @@
+         .into_iter()
+         .map(|i| format!("test {i}"))
          .collect();
 -    let mut encoder = libflate::zlib::Encoder::new(Vec::new()).unwrap();
 +    let mut encoder = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
      match encoder.write(content.as_bytes()) {
-@@ -99,3 +99,3 @@
+         Ok(n) => assert!(n > 0, "Failed to write to encoder."),
+         _ => panic!("Failed to deflate encode string."),
+     };
  
 -    let deflated_content = encoder.finish().into_result().unwrap();
 +    let deflated_content = encoder.finish().unwrap();
  
+     let mut response = format!(
+         "\
+@@ -158,12 +158,12 @@
+ const RESPONSE_CONTENT: &str = "some message here";
+ 
+ fn deflate_compress(input: &[u8]) -> Vec<u8> {
+-    let mut encoder = libflate::zlib::Encoder::new(Vec::new()).unwrap();
++    let mut encoder = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
+     match encoder.write(input) {
+         Ok(n) => assert!(n > 0, "Failed to write to encoder."),
+         _ => panic!("Failed to deflate encode string."),
+     };
+-    encoder.finish().into_result().unwrap()
++    encoder.finish().unwrap()
+ }
+ 
+ #[tokio::test]

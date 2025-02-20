@@ -5,7 +5,9 @@ Description: Use a different file for testing instead of unavailable Cargo.lock
 Last-Update: 2024-11-02
 --- a/tests/multipart.rs
 +++ b/tests/multipart.rs
-@@ -127,6 +127,6 @@
+@@ -125,15 +125,15 @@
+     let _ = env_logger::try_init();
+ 
      let form = reqwest::blocking::multipart::Form::new()
 -        .file("foo", "Cargo.lock")
 +        .file("foo", "LICENSE-APACHE")
@@ -14,27 +16,31 @@ Last-Update: 2024-11-02
 -    let fcontents = std::fs::read_to_string("Cargo.lock").unwrap();
 +    let fcontents = std::fs::read_to_string("LICENSE-APACHE").unwrap();
  
-@@ -135,3 +135,3 @@
+     let expected_body = format!(
+         "\
           --{0}\r\n\
 -         Content-Disposition: form-data; name=\"foo\"; filename=\"Cargo.lock\"\r\n\
 +         Content-Disposition: form-data; name=\"foo\"; filename=\"LICENSE-APACHE\"\r\n\
           Content-Type: application/octet-stream\r\n\r\n\
-@@ -184,3 +184,3 @@
+          {1}\r\n\
+          --{0}--\r\n\
+@@ -182,16 +182,16 @@
+     let _ = env_logger::try_init();
+ 
      let form = reqwest::multipart::Form::new()
 -        .file("foo", "Cargo.lock")
 +        .file("foo", "LICENSE-APACHE")
          .await
-@@ -188,3 +188,3 @@
+         .unwrap();
  
 -    let fcontents = std::fs::read_to_string("Cargo.lock").unwrap();
 +    let fcontents = std::fs::read_to_string("LICENSE-APACHE").unwrap();
  
-@@ -193,3 +193,3 @@
+     let expected_body = format!(
+         "\
           --{0}\r\n\
 -         Content-Disposition: form-data; name=\"foo\"; filename=\"Cargo.lock\"\r\n\
 +         Content-Disposition: form-data; name=\"foo\"; filename=\"LICENSE-APACHE\"\r\n\
           Content-Type: application/octet-stream\r\n\r\n\
-@@ -210,3 +210,2 @@
-             assert_eq!(req.headers()["content-type"], ct);
--            assert_eq!(req.headers()["transfer-encoding"], "chunked");
- 
+          {1}\r\n\
+          --{0}--\r\n\
