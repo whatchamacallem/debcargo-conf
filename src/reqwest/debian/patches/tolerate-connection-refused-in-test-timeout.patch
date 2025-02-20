@@ -1,0 +1,22 @@
+Index: reqwest/tests/timeouts.rs
+===================================================================
+--- reqwest.orig/tests/timeouts.rs
++++ reqwest/tests/timeouts.rs
+@@ -86,6 +86,17 @@ async fn connect_timeout() {
+ 
+     let err = res.unwrap_err();
+ 
++    // some networks (particularly those used by Ubuntu autopkgtest runners) 
++    // refuse connections to unknown IPs instead of rejecting them, tolerate this.
++    use std::error::Error;
++    let mut source = err.source();
++    while let Some(err) = source {
++        if let Some(io) = err.downcast_ref::<std::io::Error>() {
++            if io.kind() == std::io::ErrorKind::ConnectionRefused { return; }
++        }
++        source = err.source();
++    }
++
+     assert!(err.is_connect() && err.is_timeout(),"assertion failed err.is_connect() && err.is_timeout(), err={:?}",err);
+ }
+ 
