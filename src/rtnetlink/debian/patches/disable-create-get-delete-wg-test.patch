@@ -8,9 +8,11 @@ Description: disable create_get_delete_wg test
 Author: Peter Michael Green <plugwash@debian.org>
 Last-Update: 2022-08-23
 
---- rust-rtnetlink-0.10.1.orig/src/link/test.rs
-+++ rust-rtnetlink-0.10.1/src/link/test.rs
-@@ -15,11 +15,11 @@ use crate::{
+Index: rtnetlink/src/link/test.rs
+===================================================================
+--- rtnetlink.orig/src/link/test.rs
++++ rtnetlink/src/link/test.rs
+@@ -10,11 +10,11 @@ use crate::{new_connection, Error, LinkH
  
  const IFACE_NAME: &str = "wg142"; // rand?
  
@@ -22,14 +24,10 @@ Last-Update: 2022-08-23
 -    assert!(handle.is_ok());
 +    //assert!(handle.is_ok()); //this assert is pointeless, the unwrap below will achive the same thing with a more informative error.
      let mut handle = handle.unwrap();
-     let msg = rt.block_on(_get_wg(&mut handle));
+     let msg = rt.block_on(_get_iface(&mut handle, IFACE_NAME.to_owned()));
      assert!(msg.is_ok());
-@@ -33,7 +33,7 @@ fn create_get_delete_wg() {
- 
- fn has_nla(msg: &LinkMessage, nla: &Nla) -> bool {
-     msg.nlas.iter().any(|x| x == nla)
--}
-+}*/
- 
- async fn _create_wg() -> Result<LinkHandle, Error> {
-     let (conn, handle, _) = new_connection().unwrap();
+@@ -128,3 +128,4 @@ async fn _create_macvlan(
+     req.execute().await?;
+     Ok(link_handle)
+ }
++*/

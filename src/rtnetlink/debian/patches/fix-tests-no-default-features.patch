@@ -77,7 +77,7 @@ Index: rtnetlink/examples/create_macvlan.rs
 +#![cfg(feature = "tokio_socket")]
  
  use futures::stream::TryStreamExt;
- use rtnetlink::{new_connection, Error, Handle};
+ use macaddr::MacAddr;
 Index: rtnetlink/examples/create_veth.rs
 ===================================================================
 --- rtnetlink.orig/examples/create_veth.rs
@@ -197,7 +197,7 @@ Index: rtnetlink/examples/property_altname.rs
 +#![cfg(feature = "tokio_socket")]
  
  use futures::stream::TryStreamExt;
- use netlink_packet_route::{
+ use netlink_packet_route::link::{LinkAttribute, LinkMessage, Prop};
 Index: rtnetlink/examples/set_link_down.rs
 ===================================================================
 --- rtnetlink.orig/examples/set_link_down.rs
@@ -222,14 +222,14 @@ Index: rtnetlink/src/traffic_control/add_filter.rs
 ===================================================================
 --- rtnetlink.orig/src/traffic_control/add_filter.rs
 +++ rtnetlink/src/traffic_control/add_filter.rs
-@@ -160,6 +160,7 @@ impl TrafficFilterNewRequest {
+@@ -172,6 +172,7 @@ impl TrafficFilterNewRequest {
      }
  }
  
 +#[cfg(feature = "tokio_socket")]
  #[cfg(test)]
  mod test {
-     use std::{fs::File, os::unix::io::AsRawFd, path::Path};
+     use std::{fs::File, os::fd::AsFd, path::Path};
 Index: rtnetlink/src/traffic_control/test.rs
 ===================================================================
 --- rtnetlink.orig/src/traffic_control/test.rs
@@ -257,15 +257,15 @@ Index: rtnetlink/src/traffic_control/test.rs
  #[test]
  fn test_get_qdiscs() {
      let qdiscs = Runtime::new().unwrap().block_on(_get_qdiscs());
-@@ -38,6 +42,7 @@ fn test_get_qdiscs() {
-     assert_eq!(qdisc_of_loopback_nic.nlas[1], HwOffload(0));
+@@ -44,6 +48,7 @@ fn test_get_qdiscs() {
+     );
  }
  
 +#[cfg(feature = "tokio_socket")]
  async fn _get_tclasses(ifindex: i32) -> Vec<TcMessage> {
      let (connection, handle, _) = new_connection().unwrap();
      tokio::spawn(connection);
-@@ -206,6 +211,7 @@ fn _remove_test_filter_from_dummy() {
+@@ -212,6 +217,7 @@ fn _remove_test_filter_from_dummy() {
          });
  }
  
@@ -273,7 +273,7 @@ Index: rtnetlink/src/traffic_control/test.rs
  async fn _get_filters(ifindex: i32) -> Vec<TcMessage> {
      let (connection, handle, _) = new_connection().unwrap();
      tokio::spawn(connection);
-@@ -217,6 +223,7 @@ async fn _get_filters(ifindex: i32) -> V
+@@ -223,6 +229,7 @@ async fn _get_filters(ifindex: i32) -> V
      filters
  }
  
@@ -281,7 +281,7 @@ Index: rtnetlink/src/traffic_control/test.rs
  async fn _get_chains(ifindex: i32) -> Vec<TcMessage> {
      let (connection, handle, _) = new_connection().unwrap();
      tokio::spawn(connection);
-@@ -251,6 +258,7 @@ async fn _get_chains(ifindex: i32) -> Ve
+@@ -257,6 +264,7 @@ async fn _get_chains(ifindex: i32) -> Ve
  // of create random named veth/dummy for test, just place class, filter, and
  // chain query test in one test case is much simpler.
  #[test]
@@ -293,14 +293,14 @@ Index: rtnetlink/src/traffic_control/add_qdisc.rs
 ===================================================================
 --- rtnetlink.orig/src/traffic_control/add_qdisc.rs
 +++ rtnetlink/src/traffic_control/add_qdisc.rs
-@@ -71,6 +71,7 @@ impl QDiscNewRequest {
+@@ -73,6 +73,7 @@ impl QDiscNewRequest {
      }
  }
  
 +#[cfg(feature = "tokio_socket")]
  #[cfg(test)]
  mod test {
-     use std::{fs::File, os::unix::io::AsRawFd, path::Path};
+     use std::{fs::File, os::fd::AsFd, path::Path};
 Index: rtnetlink/examples/get_links_thread_builder.rs
 ===================================================================
 --- rtnetlink.orig/examples/get_links_thread_builder.rs
@@ -310,7 +310,7 @@ Index: rtnetlink/examples/get_links_thread_builder.rs
 +#![cfg(feature = "tokio_socket")]
  
  use futures::stream::TryStreamExt;
- use netlink_packet_route::{link::nlas::Nla, AF_BRIDGE, RTEXT_FILTER_BRVLAN};
+ use netlink_packet_route::{
 Index: rtnetlink/examples/create_bond.rs
 ===================================================================
 --- rtnetlink.orig/examples/create_bond.rs

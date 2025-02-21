@@ -1,0 +1,87 @@
+From: Markus Wanner <markus@bluegap.ch>
+Date: Thu, 10 Oct 2024 13:05:40 +0200
+Subject: Update dependencies, most notably to netlink-route-packet 0.21
+Upstream: https://github.com/rust-netlink/rtnetlink/commit/23ff71ea8337f73b48577baea7d97fa1e2359799.patch
+
+Minor API break: LinkMessageBuilder::arp_validate now requires an
+argument of type BondArpValidate instead of u32 as before.
+---
+ Cargo.toml        | 8 ++++----
+ src/link/bond.rs  | 6 ++++--
+ src/link/vxlan.rs | 8 ++++----
+ 3 files changed, 12 insertions(+), 10 deletions(-)
+
+Index: rtnetlink/Cargo.toml
+===================================================================
+--- rtnetlink.orig/Cargo.toml
++++ rtnetlink/Cargo.toml
+@@ -40,7 +40,7 @@ version = "0.4.8"
+ version = "0.7"
+ 
+ [dependencies.netlink-packet-route]
+-version = "0.20"
++version = "0.21"
+ 
+ [dependencies.netlink-packet-utils]
+ version = "0.5"
+Index: rtnetlink/src/link/add.rs
+===================================================================
+--- rtnetlink.orig/src/link/add.rs
++++ rtnetlink/src/link/add.rs
+@@ -13,10 +13,7 @@ use netlink_packet_core::{
+ 
+ use netlink_packet_route::{
+     link::{
+-        BondMode, InfoBond, InfoData, InfoKind, InfoMacVlan, InfoMacVtap,
+-        InfoVeth, InfoVlan, InfoVxlan, InfoXfrm, LinkAttribute,
+-        LinkFlags, LinkInfo, LinkMessage, MacVlanMode, MacVtapMode,
+-        VlanQosMapping,
++        BondArpValidate, BondMode, InfoBond, InfoData, InfoKind, InfoMacVlan, InfoMacVtap, InfoVeth, InfoVlan, InfoVxlan, InfoXfrm, LinkAttribute, LinkFlags, LinkInfo, LinkMessage, MacVlanMode, MacVtapMode, VlanQosMapping
+     },
+     RouteNetlinkMessage,
+ };
+@@ -107,7 +104,7 @@ impl BondAddRequest {
+     /// Adds the `arp_validate` attribute to the bond
+     /// This is equivalent to `ip link add name NAME type bond arp_validate
+     /// ARP_VALIDATE`.
+-    pub fn arp_validate(mut self, arp_validate: u32) -> Self {
++    pub fn arp_validate(mut self, arp_validate: BondArpValidate) -> Self {
+         self.info_data.push(InfoBond::ArpValidate(arp_validate));
+         self
+     }
+@@ -357,7 +354,7 @@ impl VxlanAddRequest {
+     /// WARNING: only one between `remote` and `group` can be present.
+     pub fn group(mut self, addr: std::net::Ipv4Addr) -> Self {
+         self.info_data
+-            .push(InfoVxlan::Group(addr.octets().to_vec()));
++            .push(InfoVxlan::Group(addr));
+         self
+     }
+ 
+@@ -368,7 +365,7 @@ impl VxlanAddRequest {
+     /// WARNING: only one between `remote` and `group` can be present.
+     pub fn group6(mut self, addr: std::net::Ipv6Addr) -> Self {
+         self.info_data
+-            .push(InfoVxlan::Group6(addr.octets().to_vec()));
++            .push(InfoVxlan::Group6(addr));
+         self
+     }
+ 
+@@ -402,7 +399,7 @@ impl VxlanAddRequest {
+     /// outgoing packets. This function takes an IPv4 address.
+     pub fn local(mut self, addr: std::net::Ipv4Addr) -> Self {
+         self.info_data
+-            .push(InfoVxlan::Local(addr.octets().to_vec()));
++            .push(InfoVxlan::Local(addr));
+         self
+     }
+ 
+@@ -412,7 +409,7 @@ impl VxlanAddRequest {
+     /// outgoing packets. This function takes an IPv6 address.
+     pub fn local6(mut self, addr: std::net::Ipv6Addr) -> Self {
+         self.info_data
+-            .push(InfoVxlan::Local6(addr.octets().to_vec()));
++            .push(InfoVxlan::Local6(addr));
+         self
+     }
+ 
