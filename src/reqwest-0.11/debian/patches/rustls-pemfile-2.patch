@@ -1,0 +1,84 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 872af0c7bc2d1128f7120e52e2ccb1c365fb94a7
+Author: Dirkjan Ochtman <dirkjan@ochtman.nl>
+Date:   Fri Mar 29 13:52:42 2024 +0100
+
+    refactor: upgrade to rustls-pemfile 2 (#2222)
+
+Index: reqwest-0.11/src/tls.rs
+===================================================================
+--- reqwest-0.11.orig/src/tls.rs
++++ reqwest-0.11/src/tls.rs
+@@ -198,7 +198,11 @@ impl Certificate {
+ 
+     fn read_pem_certs(reader: &mut impl BufRead) -> crate::Result<Vec<Vec<u8>>> {
+         rustls_pemfile::certs(reader)
+-            .map_err(|_| crate::error::builder("invalid certificate encoding"))
++            .map(|result| match result {
++                Ok(cert) => Ok(cert.as_ref().to_vec()),
++                Err(_) => Err(crate::error::builder("invalid certificate encoding")),
++            })
++            .collect()
+     }
+ }
+ 
+@@ -304,6 +308,7 @@ impl Identity {
+     /// This requires the `rustls-tls(-...)` Cargo feature enabled.
+     #[cfg(feature = "__rustls")]
+     pub fn from_pem(buf: &[u8]) -> crate::Result<Identity> {
++        use rustls_pemfile::Item;
+         use std::io::Cursor;
+ 
+         let (key, certs) = {
+@@ -311,23 +316,24 @@ impl Identity {
+             let mut sk = Vec::<rustls::PrivateKey>::new();
+             let mut certs = Vec::<rustls::Certificate>::new();
+ 
+-            for item in std::iter::from_fn(|| rustls_pemfile::read_one(&mut pem).transpose()) {
+-                match item.map_err(|_| {
+-                    crate::error::builder(TLSError::General(String::from(
+-                        "Invalid identity PEM file",
+-                    )))
+-                })? {
+-                    rustls_pemfile::Item::X509Certificate(cert) => {
+-                        certs.push(rustls::Certificate(cert))
++            for result in rustls_pemfile::read_all(&mut pem) {
++                match result {
++                    Ok(Item::X509Certificate(cert)) => {
++                        certs.push(rustls::Certificate(cert.to_vec()))
+                     }
+-                    rustls_pemfile::Item::PKCS8Key(key) => sk.push(rustls::PrivateKey(key)),
+-                    rustls_pemfile::Item::RSAKey(key) => sk.push(rustls::PrivateKey(key)),
+-                    rustls_pemfile::Item::ECKey(key) => sk.push(rustls::PrivateKey(key)),
+-                    _ => {
++                    Ok(Item::Pkcs1Key(key)) => sk.push(rustls::PrivateKey(key.secret_pkcs1_der().to_vec())),
++                    Ok(Item::Pkcs8Key(key)) => sk.push(rustls::PrivateKey(key.secret_pkcs8_der().to_vec())),
++                    Ok(Item::Sec1Key(key)) => sk.push(rustls::PrivateKey(key.secret_sec1_der().to_vec())),
++                    Ok(_) => {
+                         return Err(crate::error::builder(TLSError::General(String::from(
+                             "No valid certificate was found",
+                         ))))
+                     }
++                    Err(_) => {
++                        return Err(crate::error::builder(TLSError::General(String::from(
++                            "Invalid identity PEM file",
++                        ))))
++                    }
+                 }
+             }
+ 
+Index: reqwest-0.11/Cargo.toml
+===================================================================
+--- reqwest-0.11.orig/Cargo.toml
++++ reqwest-0.11/Cargo.toml
+@@ -322,7 +322,7 @@ version = "0.6"
+ optional = true
+ 
+ [target."cfg(not(target_arch = \"wasm32\"))".dependencies.rustls-pemfile]
+-version = "1.0"
++version = "2.0"
+ optional = true
+ 
+ [target."cfg(not(target_arch = \"wasm32\"))".dependencies.tokio]

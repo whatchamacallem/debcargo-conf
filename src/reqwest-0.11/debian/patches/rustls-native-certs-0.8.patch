@@ -1,0 +1,64 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit d85f44b217f36f8bef065fe95877eab98c52c2e5
+Author: Jake Shadle <jake.shadle@embark-studios.com>
+Date:   Fri Sep 20 20:41:31 2024 +0200
+
+    Bump rustls-native-certs (#2427)
+
+Index: reqwest-0.11.bak/src/async_impl/client.rs
+===================================================================
+--- reqwest-0.11.bak.orig/src/async_impl/client.rs
++++ reqwest-0.11.bak/src/async_impl/client.rs
+@@ -482,9 +482,9 @@ impl ClientBuilder {
+                     if config.tls_built_in_root_certs {
+                         let mut valid_count = 0;
+                         let mut invalid_count = 0;
+-                        for cert in rustls_native_certs::load_native_certs()
+-                            .map_err(crate::error::builder)?
+-                        {
++
++                        let load_results = rustls_native_certs::load_native_certs();
++                        for cert in load_results.certs {
+                             let cert = rustls::Certificate(cert.to_vec());
+                             // Continue on parsing errors, as native stores often include ancient or syntactically
+                             // invalid certificates, like root certificates without any X509 extensions.
+@@ -500,9 +500,21 @@ impl ClientBuilder {
+                             }
+                         }
+                         if valid_count == 0 && invalid_count > 0 {
+-                            return Err(crate::error::builder(
+-                                "zero valid certificates found in native root store",
+-                            ));
++                            let err = if load_results.errors.is_empty() {
++                                crate::error::builder(
++                                    "zero valid certificates found in native root store",
++                                )
++                            } else {
++                                use std::fmt::Write as _;
++                                let mut acc = String::new();
++                                for err in load_results.errors {
++                                    let _ = writeln!(&mut acc, "{err}");
++                                }
++
++                                crate::error::builder(acc)
++                            };
++
++                            return Err(err);
+                         }
+                     }
+ 
+Index: reqwest-0.11.bak/Cargo.toml
+===================================================================
+--- reqwest-0.11.bak.orig/Cargo.toml
++++ reqwest-0.11.bak/Cargo.toml
+@@ -293,7 +293,7 @@ features = ["dangerous_configuration"]
+ optional = true
+ 
+ [target."cfg(not(target_arch = \"wasm32\"))".dependencies.rustls-native-certs]
+-version = "0.7"
++version = "0.8"
+ optional = true
+ 
+ [target."cfg(not(target_arch = \"wasm32\"))".dependencies.rustls-pemfile]

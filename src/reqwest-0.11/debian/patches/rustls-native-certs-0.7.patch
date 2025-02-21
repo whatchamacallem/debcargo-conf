@@ -1,0 +1,22 @@
+--- rust-reqwest-0.11-0.11.27.orig/Cargo.toml
++++ rust-reqwest-0.11-0.11.27/Cargo.toml
+@@ -293,7 +293,7 @@ features = ["dangerous_configuration"]
+ optional = true
+ 
+ [target."cfg(not(target_arch = \"wasm32\"))".dependencies.rustls-native-certs]
+-version = "0.6"
++version = "0.7"
+ optional = true
+ 
+ [target."cfg(not(target_arch = \"wasm32\"))".dependencies.rustls-pemfile]
+--- rust-reqwest-0.11-0.11.27.orig/src/async_impl/client.rs
++++ rust-reqwest-0.11-0.11.27/src/async_impl/client.rs
+@@ -485,7 +485,7 @@ impl ClientBuilder {
+                         for cert in rustls_native_certs::load_native_certs()
+                             .map_err(crate::error::builder)?
+                         {
+-                            let cert = rustls::Certificate(cert.0);
++                            let cert = rustls::Certificate(cert.to_vec());
+                             // Continue on parsing errors, as native stores often include ancient or syntactically
+                             // invalid certificates, like root certificates without any X509 extensions.
+                             // Inspiration: https://github.com/rustls/rustls/blob/633bf4ba9d9521a95f68766d04c22e2b01e68318/rustls/src/anchors.rs#L105-L112
