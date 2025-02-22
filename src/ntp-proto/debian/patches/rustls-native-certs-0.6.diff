@@ -1,0 +1,62 @@
+Index: ntp-proto/Cargo.toml
+===================================================================
+--- ntp-proto.orig/Cargo.toml
++++ ntp-proto/Cargo.toml
+@@ -52,11 +52,6 @@ version = "0.6"
+ optional = true
+ package = "rustls-native-certs"
+ 
+-[dependencies.rustls-native-certs7]
+-version = "0.7"
+-optional = true
+-package = "rustls-native-certs"
+-
+ [dependencies.rustls-pemfile1]
+ version = "1.0"
+ optional = true
+@@ -130,11 +125,11 @@ rustls21 = [
+ rustls22 = [
+     "dep:rustls22",
+     "dep:rustls-pemfile2",
+-    "dep:rustls-native-certs7",
++    "dep:rustls-native-certs6",
+     "dep:rustls-pki-types",
+ ]
+ rustls23 = [
+     "dep:rustls23",
+     "dep:rustls-pemfile2",
+-    "dep:rustls-native-certs7",
++    "dep:rustls-native-certs6",
+ ]
+Index: ntp-proto/src/tls_utils.rs
+===================================================================
+--- ntp-proto.orig/src/tls_utils.rs
++++ ntp-proto/src/tls_utils.rs
+@@ -88,7 +88,12 @@ mod rustls23_shim {
+     pub type PrivateKey = rustls23::pki_types::PrivateKeyDer<'static>;
+ 
+     pub mod pemfile {
+-        pub use rustls_native_certs7::load_native_certs;
++        pub fn load_native_certs() -> Result<Vec<super::Certificate>, std::io::Error> {
++            Ok(rustls_native_certs6::load_native_certs()?
++                .into_iter()
++                .map(|v| v.0.into())
++                .collect())
++        }
+         pub use rustls_pemfile2::certs;
+         pub use rustls_pemfile2::pkcs8_private_keys;
+         pub use rustls_pemfile2::private_key;
+@@ -141,7 +146,12 @@ mod rustls22_shim {
+     pub type PrivateKey = rustls_pki_types::PrivateKeyDer<'static>;
+ 
+     pub mod pemfile {
+-        pub use rustls_native_certs7::load_native_certs;
++        pub fn load_native_certs() -> Result<Vec<super::Certificate>, std::io::Error> {
++            Ok(rustls_native_certs6::load_native_certs()?
++                .into_iter()
++                .map(|v| v.0.into())
++                .collect())
++        }
+         pub use rustls_pemfile2::certs;
+         pub use rustls_pemfile2::pkcs8_private_keys;
+         pub use rustls_pemfile2::private_key;
