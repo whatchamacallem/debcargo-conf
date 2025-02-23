@@ -1,17 +1,21 @@
 These tests depends on the cargo workspace being present, and it's not.
 
---- a/src/lib.rs
-+++ b/src/lib.rs
-@@ -45,6 +45,4 @@
+Index: h3/src/lib.rs
+===================================================================
+--- h3.orig/src/lib.rs
++++ h3/src/lib.rs
+@@ -45,6 +45,4 @@ mod webtransport;
  #[allow(dead_code)]
  mod qpack;
  #[cfg(test)]
 -mod tests;
 -#[cfg(test)]
  extern crate self as h3;
---- a/tests/examples_server_client.rs
-+++ b/tests/examples_server_client.rs
-@@ -16,7 +16,7 @@
+Index: h3/tests/examples_server_client.rs
+===================================================================
+--- h3.orig/tests/examples_server_client.rs
++++ h3/tests/examples_server_client.rs
+@@ -16,7 +16,7 @@ impl Drop for ChildGuard {
      }
  }
  
@@ -20,3 +24,18 @@ These tests depends on the cargo workspace being present, and it's not.
  fn server_and_client_should_connect_successfully() {
      // A little hack since CARGO_BIN_EXE_<name> is not set for examples
      let mut command = PathBuf::from(std::env!("CARGO_MANIFEST_DIR"));
+Index: h3/src/tests/mod.rs
+===================================================================
+--- h3.orig/src/tests/mod.rs
++++ h3/src/tests/mod.rs
+@@ -5,8 +5,8 @@
+ // Having a dev-dependency on h3_quinn would work as far as cargo is
+ // concerned, but quic traits wouldn't match between the "h3" crate that
+ // comes before h3_quinn and the one that comes after and runs the tests
+-#[path = "../../../h3-quinn/src/lib.rs"]
+-mod h3_quinn;
++//#[path = "../../../h3-quinn/src/lib.rs"]
++//mod h3_quinn;
+ 
+ mod connection;
+ mod request;
