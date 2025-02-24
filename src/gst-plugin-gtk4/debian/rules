@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 
 include /usr/share/dpkg/architecture.mk
+include /usr/share/rustc/architecture.mk
 
 ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
 	NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
@@ -24,6 +25,14 @@ execute_after_dh_auto_build:
 	CARGO_HOME=debian/cargo_home \
 		/usr/share/cargo/bin/cargo cbuild $(CARGO_C_FLAGS)
 
+# We still need this unfortunately
+override_dh_auto_install:
+	dh_auto_install || true
+	mkdir -p $(CURDIR)/debian/gstreamer1.0-gtk4/usr/lib/$(DEB_HOST_MULTIARCH)/gstreamer-1.0
+	cp $(CURDIR)/target/$(DEB_HOST_RUST_TYPE)/release/libgstgtk4.so $(CURDIR)/debian/gstreamer1.0-gtk4/usr/lib/$(DEB_HOST_MULTIARCH)/gstreamer-1.0/libgstgtk4.so
+# same here
+override_dh_install:
+	dh_install || true
 
 execute_after_dh_install:
 	find debian -name Cargo.lock -delete
