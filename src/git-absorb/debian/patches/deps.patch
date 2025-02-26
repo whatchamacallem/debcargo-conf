@@ -1,39 +1,35 @@
-Index: git-absorb/Cargo.toml
-===================================================================
---- git-absorb.orig/Cargo.toml
-+++ git-absorb/Cargo.toml
-@@ -30,26 +30,26 @@ name = "git-absorb"
- path = "src/main.rs"
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -44,11 +44,8 @@ features = [
+ [dependencies.clap_complete]
+ version = "4"
  
- [dependencies.anyhow]
--version = "~1.0"
-+version = "1.0"
- 
- [dependencies.clap]
--version = "~2.33"
-+version = "2.33"
- 
+-[dependencies.clap_complete_nushell]
+-version = "4"
+-
  [dependencies.git2]
--version = "~0.18"
+-version = "0.20"
 +version = "0.19"
  default-features = false
  
  [dependencies.memchr]
--version = "~2.3"
-+version = "2.3"
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -3,7 +3,7 @@ extern crate slog;
  
- [dependencies.slog]
--version = "~2.5"
-+version = "2.5"
+ use clap::{CommandFactory, Parser as _};
+ use clap_complete::{generate, Shell};
+-use clap_complete_nushell::Nushell;
++//use clap_complete_nushell::Nushell;
+ use slog::Drain;
+ use std::io;
  
- [dependencies.slog-async]
--version = "~2.5"
-+version = "2.5"
- 
- [dependencies.slog-term]
--version = "~2.6"
-+version = "2.6"
- 
- [dev-dependencies.tempfile]
--version = "~3.1"
-+version = "3.1"
+@@ -55,7 +55,7 @@ fn main() {
+         match shell.as_str() {
+             "bash" => generate(Shell::Bash, &mut cmd, app_name, &mut io::stdout()),
+             "fish" => generate(Shell::Fish, &mut cmd, app_name, &mut io::stdout()),
+-            "nushell" => generate(Nushell, &mut cmd, app_name, &mut io::stdout()),
++            //"nushell" => generate(Nushell, &mut cmd, app_name, &mut io::stdout()),
+             "zsh" => generate(Shell::Zsh, &mut cmd, app_name, &mut io::stdout()),
+             "powershell" => generate(Shell::PowerShell, &mut cmd, app_name, &mut io::stdout()),
+             "elvish" => generate(Shell::Elvish, &mut cmd, app_name, &mut io::stdout()),
