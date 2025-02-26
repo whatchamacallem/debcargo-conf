@@ -2,7 +2,9 @@
 %:
 	dh $@ --buildsystem cargo
 
-override_dh_auto_install:
-	dh_auto_install
+execute_after_dh_auto_install:
 	mkdir -p debian/git-absorb/usr/lib/git-core
 	mv debian/git-absorb/usr/bin/* debian/git-absorb/usr/lib/git-core
+
+execute_before_dh_installman:
+	make -C debian/doc
