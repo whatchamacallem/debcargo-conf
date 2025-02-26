@@ -1,0 +1,198 @@
+:man source:   git-absorb
+:man version:  {man-version}
+:man manual:   git absorb
+
+git-absorb(1)
+=============
+
+NAME
+----
+git-absorb - Automatically absorb staged changes into your current branch
+
+SYNOPSIS
+--------
+[verse]
+'git absorb' [FLAGS] [OPTIONS]
+
+DESCRIPTION
+-----------
+
+You have a feature branch with a few commits. Your teammate reviewed the
+branch and pointed out a few bugs. You have fixes for the bugs, but you
+don't want to shove them all into an opaque commit that says `fixes`,
+because you believe in atomic commits. Instead of manually finding commit
+SHAs for `git commit --fixup`, or running a manual interactive rebase, do
+this:
+
+.............................................................................
+$ git add $FILES_YOU_FIXED
+
+$ git absorb --and-rebase
+  (or)
+$ git absorb
+$ git rebase -i --autosquash master
+.............................................................................
+
+`git absorb` will automatically identify which commits are safe to modify,
+and which indexed changes belong to each of those commits. It will then
+write `fixup!` commits for each of those changes. You can check its output
+manually if you don't trust it, and then fold the fixups into your feature
+branch with git's built-in autosquash functionality.
+
+FLAGS
+-----
+
+-r::
+--and-rebase::
+        Run rebase if successful
+
+-n::
+--dry-run::
+        Don't make any actual changes
+
+--force-author::
+        Generate fixups to commits not made by you
+
+-F::
+--one-fixup-per-commit::
+        Only generate one fixup per commit
+
+-f::
+--force::
+        Skip all safety checks.
+        Generate fixups to commits not made by you (as if by --force-author) and to non-branch HEADs
+
+-w::
+--whole-file::
+        Match the first commit touching the same file as the current hunk.
+        Use this with care!
+
+-h::
+--help::
+        Prints help information
+
+-V::
+--version::
+        Prints version information
+
+-v::
+--verbose::
+        Display more output
+
+OPTIONS
+-------
+
+-b <base>::
+--base <base>::
+        Use this commit as the base of the absorb stack
+
+--gen-completions <SHELL>::
+        Generate completions
+        [possible values: bash, fish, nushell, zsh, powershell, elvish]
+
+USAGE
+-----
+
+1. `git add` any changes that you want to absorb. By design, `git absorb`
+will only consider content in the git index.
+
+2. `git absorb`. This will create a sequence of commits on `HEAD`. Each
+commit will have a `fixup!` message indicating the message (if unique) or
+SHA of the commit it should be squashed into.
+
+3. If you are satisfied with the output, `git rebase -i --autosquash` to
+squash the `fixup!` commits into their predecessors. You can set the
+https://stackoverflow.com/a/29094904[GIT_SEQUENCE_EDITOR] environment
+variable if you don't need to edit the rebase TODO file.
+
+4. If you are not satisfied (or if something bad happened), `git reset
+--soft` to the pre-absorption commit to recover your old state. (You can
+find the commit in question with `git reflog`.) And if you think
+`git absorb` is at fault, please
+https://github.com/tummychow/git-absorb/issues/new[file an issue].
+
+CONFIGURATION
+-------------
+
+STACK SIZE
+~~~~~~~~~~
+
+When run without `--base`, git-absorb will only search for candidate
+commits to fixup within a certain range (by default 10). If you get an
+error like this:
+
+.............................................................................
+WARN stack limit reached, limit: 10
+.............................................................................
+
+edit your local or global `.gitconfig` and add the following section:
+
+.............................................................................
+[absorb]
+    maxStack=50 # Or any other reasonable value for your project
+.............................................................................
+
+ONE FIXUP PER FIXABLE COMMIT
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, git-absorb will generate separate fixup commits for every
+absorbable hunk. To always generate only 1 fixup commit for all hunks that
+absorb into the same commit, edit your local or global `.gitconfig` and add
+the following section:
+
+.............................................................................
+[absorb]
+    oneFixupPerCommit = true
+.............................................................................
+
+AUTO-STAGE ALL CHANGES IF NOTHING STAGED
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, git-absorb will only consider files that you've staged to the index
+via `git add`. However, sometimes one wants to try and absorb from all changes,
+which would require to stage them first via `git add .`. To avoid this extra
+step, set
+
+.............................................................................
+[absorb]
+    autoStageIfNothingStaged = true
+.............................................................................
+
+which tells git-absorb, when no changes are staged, to auto-stage them all,
+create fixup commits where possible, and unstage remaining changes from the
+index.
+
+FIXUP TARGET ALWAYS SHA
+~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, git-absorb will create fixup commits with their messages pointing
+to the target commit's summary, and if there are duplicate summaries, will
+fall back to pointing to the target's SHA. Instead, can always point to the
+target's SHA via:
+
+.............................................................................
+[absorb]
+    fixupTargetAlwaysSHA = true
+.............................................................................
+
+GENERATE FIXUPS FOR COMMITS NOT AUTHORED BY YOU
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, git-absorb will only generate fixup commits for commits that were
+authored by you. To always generate fixups for any author's commits,
+edit your local or global `.gitconfig` and add the following section:
+
+.............................................................................
+[absorb]
+    forceAuthor = true
+.............................................................................
+
+GITHUB PROJECT
+--------------
+
+https://github.com/tummychow/git-absorb
+
+AUTHOR
+------
+
+Stephen Jung <tummychow511@gmail.com>
