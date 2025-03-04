@@ -1,0 +1,45 @@
+Author: Blair Noctis <ncts@debian.org>
+Last-Update: 2025-03-04
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -43,3 +43,3 @@
+ [dependencies.config]
+-version = "0.11.0"
++version = "0.15"
+ features = ["toml"]
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -1390,6 +1390,6 @@
+             if let Some(store_dir) = password_store_dir_opt {
+-                let password_store_dir = Some(PathBuf::from(store_dir.clone().into_str()?));
++                let password_store_dir = Some(PathBuf::from(store_dir.clone().into_string()?));
+ 
+                 let valid_signing_keys = match valid_signing_keys_opt {
+-                    Some(k) => match k.clone().into_str() {
++                    Some(k) => match k.clone().into_string() {
+                         Err(_) => None,
+@@ -1406,3 +1406,3 @@
+                 let style_path_opt = match store.get("style_path") {
+-                    Some(path) => match path.clone().into_str() {
++                    Some(path) => match path.clone().into_string() {
+                         Ok(p) => Some(PathBuf::from(p)),
+@@ -1414,3 +1414,3 @@
+                 let pgp_impl = match store.get("pgp") {
+-                    Some(pgp_str) => CryptoImpl::try_from(pgp_str.clone().into_str()?.as_str()),
++                    Some(pgp_str) => CryptoImpl::try_from(pgp_str.clone().into_string()?.as_str()),
+                     None => Ok(CryptoImpl::GpgMe),
+@@ -1421,3 +1421,3 @@
+                     None => None,
+-                    Some(k) => match k.clone().into_str() {
++                    Some(k) => match k.clone().into_string() {
+                         Err(_) => None,
+@@ -1479,3 +1479,3 @@
+             if let Some(p) = password_store_dir_opt {
+-                let p_path = PathBuf::from(p.clone().into_str().unwrap());
++                let p_path = PathBuf::from(p.clone().into_string().unwrap());
+                 let gpg_id = p_path.clone().join(".gpg-id");
+@@ -1483,3 +1483,3 @@
+                 if !p_path.exists() || !gpg_id.exists() {
+-                    incomplete_stores.push(PathBuf::from(p.clone().into_str().unwrap()));
++                    incomplete_stores.push(PathBuf::from(p.clone().into_string().unwrap()));
+                 }
