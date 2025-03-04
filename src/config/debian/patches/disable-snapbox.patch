@@ -1,0 +1,18 @@
+Description: Disable snapbox due to incompatibility with packaged version
+Forwarded: not-needed
+Author: Blair Noctis <ncts@debian.org>
+Last-Update: 2025-03-04
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -236,3 +236,3 @@
+ 
+-[dev-dependencies.snapbox]
++[disabled.dev-dependencies.snapbox]
+ version = "0.6.21"
+--- a/src/path/parser.rs
++++ b/src/path/parser.rs
+@@ -78,3 +78,3 @@
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature = "snapbox"))]
+ mod test {
