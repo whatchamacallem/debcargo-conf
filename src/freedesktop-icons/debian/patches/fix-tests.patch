@@ -15,7 +15,7 @@ Debian icons and existing themes.
 
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -318,13 +318,14 @@
+@@ -385,13 +385,14 @@
  
      #[test]
      fn simple_lookup() {
@@ -33,7 +33,7 @@ Debian icons and existing themes.
              ));
      }
  
-@@ -342,30 +343,32 @@
+@@ -409,11 +410,12 @@
  
      #[test]
      fn should_fallback_to_parent_theme() {
@@ -48,10 +48,7 @@ Debian icons and existing themes.
              .that(&icon)
              .is_some()
              .is_equal_to(PathBuf::from(
--                "/usr/share/icons/Adwaita/scalable/devices/video-single-display-symbolic.svg",
-+                "/usr/share/icons/Adwaita/symbolic/devices/video-single-display-symbolic.svg",
-             ));
-     }
+@@ -423,16 +425,17 @@
  
      #[test]
      fn should_fallback_to_pixmaps_utlimately() {
@@ -74,16 +71,17 @@ Debian icons and existing themes.
      /*#[test]
 --- a/src/theme/mod.rs
 +++ b/src/theme/mod.rs
-@@ -228,23 +228,25 @@
+@@ -234,25 +234,27 @@
  
      #[test]
      fn should_get_png_first() {
 +        // Blueman pulls in a ton of dependencies, use the Debian emblem instead
          let themes = THEMES.get("hicolor").unwrap();
-         let icon = themes
-             .iter()
--            .find_map(|t| t.try_get_icon_exact_size("blueman", 24, 1, true));
-+            .find_map(|t| t.try_get_icon_exact_size("emblem-debian", 24, 1, true));
+         let icon = themes.iter().find_map(|t| {
+             let file = crate::theme::read_ini_theme(&t.index);
+-            t.try_get_icon_exact_size(file.as_str(), "blueman", 24, 1, true)
++            t.try_get_icon_exact_size(file.as_str(), "emblem-debian", 24, 1, true)
+         });
          assert_that!(icon).is_some().is_equal_to(PathBuf::from(
 -            "/usr/share/icons/hicolor/scalable/apps/blueman.svg",
 +            "/usr/share/icons/hicolor/scalable/emblems/emblem-debian.svg",
@@ -94,10 +92,11 @@ Debian icons and existing themes.
      fn should_get_svg_first() {
 +        // Blueman pulls in a ton of dependencies, use the Debian emblem instead
          let themes = THEMES.get("hicolor").unwrap();
-         let icon = themes
-             .iter()
--            .find_map(|t| t.try_get_icon_exact_size("blueman", 24, 1, false));
-+            .find_map(|t| t.try_get_icon_exact_size("emblem-debian", 24, 1, false));
+         let icon = themes.iter().find_map(|t| {
+             let file = crate::theme::read_ini_theme(&t.index);
+-            t.try_get_icon_exact_size(file.as_str(), "blueman", 24, 1, false)
++            t.try_get_icon_exact_size(file.as_str(), "emblem-debian", 24, 1, false)
+         });
          assert_that!(icon).is_some().is_equal_to(PathBuf::from(
 -            "/usr/share/icons/hicolor/22x22/apps/blueman.png",
 +            "/usr/share/icons/hicolor/22x22/emblems/emblem-debian.png",
@@ -106,14 +105,15 @@ Debian icons and existing themes.
  }
 --- a/src/theme/parse.rs
 +++ b/src/theme/parse.rs
-@@ -88,17 +88,14 @@
+@@ -126,18 +126,15 @@
  
      #[test]
      fn should_get_theme_parents() {
 -        for theme in THEMES.get("Arc").unwrap() {
 +        // Debian does not package the Arc icon theme, use HighContrast instead
 +        for theme in THEMES.get("HighContrast").unwrap() {
-             let parents = theme.inherits();
+             let file = crate::theme::read_ini_theme(&theme.index);
+             let parents = theme.inherits(&file);
  
              assert_that!(parents).does_not_contain("hicolor");
  
