@@ -1,7 +1,7 @@
-Index: rust-gix-index-0.32.1/src/access/mod.rs
+Index: gix-index/src/access/mod.rs
 ===================================================================
---- rust-gix-index-0.32.1.orig/src/access/mod.rs
-+++ rust-gix-index-0.32.1/src/access/mod.rs
+--- gix-index.orig/src/access/mod.rs
++++ gix-index/src/access/mod.rs
 @@ -573,6 +573,7 @@ mod tests {
      use std::path::{Path, PathBuf};
  
@@ -10,27 +10,27 @@ Index: rust-gix-index-0.32.1/src/access/mod.rs
      fn entry_by_path_with_conflicting_file() {
          let file = PathBuf::from("tests")
              .join("fixtures")
-Index: rust-gix-index-0.32.1/src/extension/tree/mod.rs
+Index: gix-index/src/extension/tree/mod.rs
 ===================================================================
---- rust-gix-index-0.32.1.orig/src/extension/tree/mod.rs
-+++ rust-gix-index-0.32.1/src/extension/tree/mod.rs
-@@ -16,6 +16,7 @@ mod write;
+--- gix-index.orig/src/extension/tree/mod.rs
++++ gix-index/src/extension/tree/mod.rs
+@@ -13,14 +13,17 @@ mod write;
+ 
+ #[cfg(test)]
  mod tests {
+-    use gix_testtools::size_ok;
  
      #[test]
-+    #[cfg(target_pointer_bits = "64")]
      fn size_of_tree() {
-         assert_eq!(std::mem::size_of::<crate::extension::Tree>(), 88);
+         let actual = std::mem::size_of::<crate::extension::Tree>();
+         let expected = 88;
++        #[cfg(target_pointer_width = "64")]
++        let okay = actual == expected;
++        #[cfg(target_pointer_width = "32")]
++        let okay = actual <= expected;
+         assert!(
+-            size_ok(actual, expected),
++            okay,
+             "the size of this structure should not change unexpectedly: {actual} <~ {expected}"
+         );
      }
-Index: rust-gix-index-0.32.1/src/lib.rs
-===================================================================
---- rust-gix-index-0.32.1.orig/src/lib.rs
-+++ rust-gix-index-0.32.1/src/lib.rs
-@@ -226,6 +226,7 @@ pub(crate) mod util {
- }
- 
- #[test]
-+#[cfg(target_pointer_bits = "64")]
- fn size_of_entry() {
-     assert_eq!(std::mem::size_of::<crate::Entry>(), 80);
- 
