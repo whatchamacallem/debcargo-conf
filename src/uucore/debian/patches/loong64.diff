@@ -1,0 +1,50 @@
+Origin: https://github.com/uutils/coreutils/commit/550f3b0c488451bbe9f930e0520d558f01e3c891
+From 550f3b0c488451bbe9f930e0520d558f01e3c891 Mon Sep 17 00:00:00 2001
+From: zoze0 <licardoooo@gmail.com>
+Date: Fri, 24 Nov 2023 00:41:11 +0800
+Subject: [PATCH] uucore: add support for loongarch64 (#5574)
+
+* uucore: add support for loongarch64
+
+* add loongarch
+
+---------
+
+Co-authored-by: Sylvestre Ledru <sylvestre@debian.org>
+---
+ .vscode/cspell.dictionaries/acronyms+names.wordlist.txt | 1 +
+ src/uucore/src/lib/features/fs.rs                       | 2 ++
+ 2 files changed, 3 insertions(+)
+
+#diff --git a/.vscode/cspell.dictionaries/acronyms+names.wordlist.txt b/.vscode/cspell.dictionaries/acronyms+names.wordlist.txt
+#index c004ea2f822..4a59ed094bd 100644
+#--- a/.vscode/cspell.dictionaries/acronyms+names.wordlist.txt
+#+++ b/.vscode/cspell.dictionaries/acronyms+names.wordlist.txt
+#@@ -37,6 +37,7 @@ aarch
+# flac
+# impls
+# lzma
+#+loongarch
+# 
+# # * names
+# BusyBox
+diff --git a/src/lib/features/fs.rs b/src/lib/features/fs.rs
+index f8593dfede5..de4c0b08dbe 100644
+--- a/src/lib/features/fs.rs
++++ b/src/lib/features/fs.rs
+@@ -119,6 +119,7 @@ impl FileInformation {
+             not(target_os = "solaris"),
+             not(target_arch = "aarch64"),
+             not(target_arch = "riscv64"),
++            not(target_arch = "loongarch64"),
+             target_pointer_width = "64"
+         ))]
+         return self.0.st_nlink;
+@@ -133,6 +134,7 @@ impl FileInformation {
+                 target_os = "solaris",
+                 target_arch = "aarch64",
+                 target_arch = "riscv64",
++                target_arch = "loongarch64",
+                 not(target_pointer_width = "64")
+             )
+         ))]
