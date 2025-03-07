@@ -4,7 +4,7 @@ Index: gix-ref/Cargo.toml
 +++ gix-ref/Cargo.toml
 @@ -97,6 +97,9 @@ features = ["simd"]
  [dev-dependencies.gix-date]
- version = "^0.9.1"
+ version = "^0.9.3"
  
 +[dev-dependencies.tempfile]
 +version = "3"
@@ -16,7 +16,7 @@ Index: gix-ref/src/store/file/log/line.rs
 ===================================================================
 --- gix-ref.orig/src/store/file/log/line.rs
 +++ gix-ref/src/store/file/log/line.rs
-@@ -181,32 +181,31 @@ pub mod decode {
+@@ -203,32 +203,31 @@ pub mod decode {
          }
  
          mod invalid {
@@ -127,3 +127,27 @@ Index: gix-ref/src/store/packed/decode/tests.rs
          Ok(())
      }
  
+Index: gix-ref/src/raw.rs
+===================================================================
+--- gix-ref.orig/src/raw.rs
++++ gix-ref/src/raw.rs
+@@ -94,14 +94,17 @@ mod access {
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+-    use gix_testtools::size_ok;
+ 
+     #[test]
+     fn size_of_reference() {
+         let actual = std::mem::size_of::<Reference>();
+         let expected = 80;
++        #[cfg(target_pointer_width = "64")]
++        let okay = actual == expected;
++        #[cfg(target_pointer_width = "32")]
++        let okay = actual <= expected;
+         assert!(
+-            size_ok(actual, expected),
++            okay,
+             "let's not let it change size undetected: {actual} <~ {expected}"
+         );
+     }
