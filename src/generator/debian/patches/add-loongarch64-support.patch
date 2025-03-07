@@ -1,0 +1,222 @@
+Description: Add support for LoongArch64 targets
+Sigened-Off-By: heiher
+Pull-Request: https://github.com/Xudong-Huang/generator-rs/pull/48
+Last-Update: 2024-06-28
+
+--- rust-generator-0.7.1.orig/README.md
++++ rust-generator-0.7.1/README.md
+@@ -75,10 +75,11 @@ fn main() {
+     - x86_64 MacOs
+     - x86_64 Windows
+     - aarch64 Linux
++    - loongarch64 Linux
+ 
+ ## License
+ 
+ This project is licensed under either of the following, at your option:
+ 
+  * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- * MIT License ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+\ No newline at end of file
++ * MIT License ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+--- rust-generator-0.7.1.orig/build.rs
++++ rust-generator-0.7.1/build.rs
+@@ -22,6 +22,7 @@ fn main() {
+         // "mips" | "mipsel" => "mips32",
+         // "powerpc" => "ppc32",
+         // "powerpc64" => "ppc64",
++        "loongarch64" => "loongarch64",
+         "x86_64" => "x86_64",
+         _ => {
+             panic!("Unsupported architecture: {}", target);
+--- /dev/null
++++ rust-generator-0.7.1/src/detail/asm/asm_loongarch64_sysv_elf_gas.S
+@@ -0,0 +1,74 @@
++.text
++.globl prefetch
++.type prefetch,@function
++.align 16
++prefetch:
++    preld 0, $a0, 0
++    ret
++.size prefetch,.-prefetch
++
++.text
++.globl bootstrap_green_task
++.type bootstrap_green_task,@function
++.align 16
++bootstrap_green_task:
++    move $a0, $s0   // arg0
++    move $a1, $s1   // arg1
++    move $ra, $zero // clear LR
++    jirl $zero, $s2, 0
++.size bootstrap_green_task,.-bootstrap_green_task
++
++.text
++.globl swap_registers
++.type swap_registers,@function
++.align 16
++swap_registers:
++    st.d $ra, $a0, 0
++    st.d $sp, $a0, 8
++    st.d $fp, $a0, 16
++    st.d $s0, $a0, 24
++    st.d $s1, $a0, 32
++    st.d $s2, $a0, 40
++    st.d $s3, $a0, 48
++    st.d $s4, $a0, 56
++    st.d $s5, $a0, 64
++    st.d $s6, $a0, 72
++    st.d $s7, $a0, 80
++    st.d $s8, $a0, 88
++
++    fst.d $fs0, $a0, 96
++    fst.d $fs1, $a0, 104
++    fst.d $fs2, $a0, 112
++    fst.d $fs3, $a0, 120
++    fst.d $fs4, $a0, 128
++    fst.d $fs5, $a0, 136
++    fst.d $fs6, $a0, 144
++    fst.d $fs7, $a0, 152
++
++    ld.d $ra, $a1, 0
++    ld.d $sp, $a1, 8
++    ld.d $fp, $a1, 16
++    ld.d $s0, $a1, 24
++    ld.d $s1, $a1, 32
++    ld.d $s2, $a1, 40
++    ld.d $s3, $a1, 48
++    ld.d $s4, $a1, 56
++    ld.d $s5, $a1, 64
++    ld.d $s6, $a1, 72
++    ld.d $s7, $a1, 80
++    ld.d $s8, $a1, 88
++
++    fld.d $fs0, $a1, 96
++    fld.d $fs1, $a1, 104
++    fld.d $fs2, $a1, 112
++    fld.d $fs3, $a1, 120
++    fld.d $fs4, $a1, 128
++    fld.d $fs5, $a1, 136
++    fld.d $fs6, $a1, 144
++    fld.d $fs7, $a1, 152
++
++    ret
++.size swap_registers,.-swap_registers
++
++/* Mark that we don't need executable stack. */
++.section .note.GNU-stack,"",%progbits
+--- /dev/null
++++ rust-generator-0.7.1/src/detail/loongarch64_unix.rs
+@@ -0,0 +1,85 @@
++use crate::detail::align_down;
++use crate::reg_context::InitFn;
++use crate::stack::Stack;
++
++#[link(name = "asm", kind = "static")]
++extern "C" {
++    pub fn bootstrap_green_task();
++    pub fn prefetch(data: *const usize);
++    pub fn swap_registers(out_regs: *mut Registers, in_regs: *const Registers);
++}
++
++#[repr(C, align(16))]
++#[derive(Debug)]
++pub struct Registers {
++    // We save the 12 callee-saved registers:
++    //  0: ra
++    //  1: sp
++    //  2: fp
++    //  3: s0
++    //  4: s1
++    //  5: s2
++    //  6: s3
++    //  7: s4
++    //  8: s5
++    //  9: s6
++    // 10: s7
++    // 11: s8
++    // and the 8 callee-saved floating point registers:
++    // 12: fs0
++    // 13: fs1
++    // 14: fs2
++    // 15: fs3
++    // 16: fs4
++    // 17: fs5
++    // 18: fs6
++    // 19: fs7
++    gpr: [usize; 20],
++}
++
++impl Registers {
++    pub fn new() -> Registers {
++        Registers { gpr: [0; 20] }
++    }
++
++    #[inline]
++    pub fn prefetch(&self) {
++        let ptr = self.gpr[1] as *const usize;
++        unsafe {
++            prefetch(ptr); // SP
++            prefetch(ptr.add(8)); // SP + 8
++        }
++    }
++}
++
++pub fn initialize_call_frame(
++    regs: &mut Registers,
++    fptr: InitFn,
++    arg: usize,
++    arg2: *mut usize,
++    stack: &Stack,
++) {
++    const RA: usize = 0;
++    const SP: usize = 1;
++    const FP: usize = 2;
++    const S0: usize = 3;
++    const S1: usize = 4;
++    const S2: usize = 5;
++
++    let sp = align_down(stack.end());
++
++    // These registers are frobbed by bootstrap_green_task into the right
++    // location so we can invoke the "real init function", `fptr`.
++    regs.gpr[S0] = arg;
++    regs.gpr[S1] = arg2 as usize;
++    regs.gpr[S2] = fptr as usize;
++
++    // LoongArch64 current stack frame pointer
++    regs.gpr[FP] = sp as usize;
++
++    regs.gpr[RA] = bootstrap_green_task as usize;
++
++    // setup the init stack
++    // this is prepared for the swap context
++    regs.gpr[SP] = sp as usize;
++}
+--- rust-generator-0.7.1.orig/src/detail/mod.rs
++++ rust-generator-0.7.1/src/detail/mod.rs
+@@ -33,6 +33,10 @@ pub mod asm;
+ #[path = "aarch64_unix.rs"]
+ pub mod asm;
+ 
++#[cfg(all(unix, target_arch = "loongarch64"))]
++#[path = "loongarch64_unix.rs"]
++pub mod asm;
++
+ pub use self::asm::{initialize_call_frame, prefetch, swap_registers, Registers};
+ 
+ #[inline]
+--- rust-generator-0.7.1.orig/src/stack/mod.rs
++++ rust-generator-0.7.1/src/stack/mod.rs
+@@ -17,6 +17,10 @@ pub mod sys;
+ #[path = "unix.rs"]
+ pub mod sys;
+ 
++#[cfg(all(unix, target_arch = "loongarch64"))]
++#[path = "unix.rs"]
++pub mod sys;
++
+ #[cfg(all(windows, target_arch = "x86_64"))]
+ #[path = "windows.rs"]
+ pub mod sys;
