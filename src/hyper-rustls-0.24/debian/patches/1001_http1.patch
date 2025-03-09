@@ -1,0 +1,17 @@
+Description: fix fence test requiring feature http2
+Author: Jonas Smedegaard <dr@jones.dk>
+Bug: https://github.com/tokio-rs/tls/issues/107
+Last-Update: 2022-06-28
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/connector/builder.rs
++++ b/src/connector/builder.rs
+@@ -292,7 +292,7 @@
+     }
+ 
+     #[test]
+-    #[cfg(feature = "http1")]
++    #[cfg(all(feature = "http1", feature = "http2"))]
+     #[should_panic(expected = "ALPN protocols should not be pre-defined")]
+     fn test_reject_predefined_alpn() {
+         let roots = rustls::RootCertStore::empty();
