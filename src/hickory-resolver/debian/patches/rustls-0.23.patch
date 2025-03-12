@@ -1,0 +1,475 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit a3b12b5f94705f74da30c2ba46f8ef69dceb7e60
+Author: Dirkjan Ochtman <dirkjan@ochtman.nl>
+Date:   Fri May 3 16:22:38 2024 +0200
+
+    Upgrade to rustls 0.23, quinn 0.11, etc
+
+Index: hickory-resolver/src/config.rs
+===================================================================
+--- hickory-resolver.orig/src/config.rs
++++ hickory-resolver/src/config.rs
+@@ -273,26 +273,16 @@ impl ResolverConfig {
+     /// ```
+     /// use std::sync::Arc;
+     ///
+-    /// use rustls::{ClientConfig, ProtocolVersion, RootCertStore, OwnedTrustAnchor};
++    /// use rustls::{ClientConfig, ProtocolVersion, RootCertStore};
+     /// use hickory_resolver::config::ResolverConfig;
+     /// # #[cfg(feature = "webpki-roots")]
+     /// use webpki_roots;
+     ///
+     /// let mut root_store = RootCertStore::empty();
+     /// # #[cfg(feature = "webpki-roots")]
+-    /// root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.iter().map(|ta| {
+-    ///     OwnedTrustAnchor::from_subject_spki_name_constraints(
+-    ///         ta.subject,
+-    ///         ta.spki,
+-    ///         ta.name_constraints,
+-    ///     )
+-    /// }));
++    /// root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+     ///
+     /// let mut client_config = ClientConfig::builder()
+-    ///     .with_safe_default_cipher_suites()
+-    ///     .with_safe_default_kx_groups()
+-    ///     .with_protocol_versions(&[&rustls::version::TLS12])
+-    ///     .unwrap()
+     ///     .with_root_certificates(root_store)
+     ///     .with_no_client_auth();
+     ///
+Index: hickory-resolver/src/h3.rs
+===================================================================
+--- hickory-resolver.orig/src/h3.rs
++++ hickory-resolver/src/h3.rs
+@@ -5,8 +5,8 @@
+ // https://opensource.org/licenses/MIT>, at your option. This file may not be
+ // copied, modified, or distributed except according to those terms.
+ 
+-use std::future::Future;
+ use std::net::SocketAddr;
++use std::sync::Arc;
+ 
+ use crate::config::TlsClientConfig;
+ use crate::tls::CLIENT_CONFIG;
+@@ -15,7 +15,6 @@ use proto::h3::{H3ClientConnect, H3Clien
+ use proto::xfer::{DnsExchange, DnsExchangeConnect};
+ use proto::TokioTime;
+ 
+-use hickory_proto::udp::{DnsUdpSocket, QuicLocalAddr};
+ use rustls::ClientConfig as CryptoConfig;
+ 
+ #[allow(clippy::type_complexity)]
+@@ -48,16 +47,12 @@ pub(crate) fn new_h3_stream(
+ }
+ 
+ #[allow(clippy::type_complexity)]
+-pub(crate) fn new_h3_stream_with_future<S, F>(
+-    future: F,
++pub(crate) fn new_h3_stream_with_future(
++    socket: Arc<dyn quinn::AsyncUdpSocket>,
+     socket_addr: SocketAddr,
+     dns_name: String,
+     client_config: Option<TlsClientConfig>,
+-) -> DnsExchangeConnect<H3ClientConnect, H3ClientStream, TokioTime>
+-where
+-    S: DnsUdpSocket + QuicLocalAddr + 'static,
+-    F: Future<Output = std::io::Result<S>> + Send + Unpin + 'static,
+-{
++) -> DnsExchangeConnect<H3ClientConnect, H3ClientStream, TokioTime> {
+     let client_config = if let Some(TlsClientConfig(client_config)) = client_config {
+         client_config
+     } else {
+@@ -73,7 +68,7 @@ where
+     let crypto_config: CryptoConfig = (*client_config).clone();
+ 
+     h3_builder.crypto_config(crypto_config);
+-    DnsExchange::connect(h3_builder.build_with_future(future, socket_addr, dns_name))
++    DnsExchange::connect(h3_builder.build_with_future(socket, socket_addr, dns_name))
+ }
+ 
+ #[cfg(all(test, any(feature = "native-certs", feature = "webpki-roots")))]
+Index: hickory-resolver/src/name_server/connection_provider.rs
+===================================================================
+--- hickory-resolver.orig/src/name_server/connection_provider.rs
++++ hickory-resolver/src/name_server/connection_provider.rs
+@@ -31,8 +31,6 @@ use tokio_openssl::SslStream as TokioTls
+ use tokio_rustls::client::TlsStream as TokioTlsStream;
+ 
+ use crate::config::{NameServerConfig, Protocol, ResolverOpts};
+-#[cfg(any(feature = "dns-over-quic", feature = "dns-over-h3"))]
+-use hickory_proto::udp::QuicLocalAddr;
+ #[cfg(feature = "dns-over-https")]
+ use proto::h2::{HttpsClientConnect, HttpsClientStream};
+ #[cfg(feature = "dns-over-h3")]
+@@ -68,12 +66,8 @@ pub trait RuntimeProvider: Clone + Send
+     /// Timer
+     type Timer: Time + Send + Unpin;
+ 
+-    #[cfg(not(any(feature = "dns-over-quic", feature = "dns-over-h3")))]
+     /// UdpSocket
+     type Udp: DnsUdpSocket + Send;
+-    #[cfg(any(feature = "dns-over-quic", feature = "dns-over-h3"))]
+-    /// UdpSocket, where `QuicLocalAddr` is for `quinn` crate.
+-    type Udp: DnsUdpSocket + QuicLocalAddr + Send;
+ 
+     /// TcpStream
+     type Tcp: DnsTcpStream;
+@@ -94,6 +88,28 @@ pub trait RuntimeProvider: Clone + Send
+         local_addr: SocketAddr,
+         server_addr: SocketAddr,
+     ) -> Pin<Box<dyn Send + Future<Output = io::Result<Self::Udp>>>>;
++
++    /// Yields an object that knows how to bind a QUIC socket.
++    //
++    // Use some indirection here to avoid exposing the `quinn` crate in the public API
++    // even for runtimes that might not (want to) provide QUIC support.
++    fn quic_binder(&self) -> Option<&dyn QuicSocketBinder> {
++        None
++    }
++}
++
++/// Noop trait for when the `quinn` dependency is not available.
++#[cfg(not(any(feature = "dns-over-quic", feature = "dns-over-h3")))]
++pub trait QuicSocketBinder {}
++
++#[cfg(any(feature = "dns-over-quic", feature = "dns-over-h3"))]
++pub trait QuicSocketBinder {
++    /// Create a UDP socket for QUIC usage.
++    fn bind_quic(
++        &self,
++        _local_addr: SocketAddr,
++        _server_addr: SocketAddr,
++    ) -> Result<Arc<dyn quinn::AsyncUdpSocket>, io::Error>;
+ }
+ 
+ /// Create `DnsHandle` with the help of `RuntimeProvider`.
+@@ -107,8 +123,11 @@ pub trait ConnectionProvider: 'static +
+     type RuntimeProvider: RuntimeProvider;
+ 
+     /// Create a new connection.
+-    fn new_connection(&self, config: &NameServerConfig, options: &ResolverOpts)
+-        -> Self::FutureConn;
++    fn new_connection(
++        &self,
++        config: &NameServerConfig,
++        options: &ResolverOpts,
++    ) -> Result<Self::FutureConn, io::Error>;
+ }
+ 
+ /// A type defines the Handle which can spawn future.
+@@ -262,9 +281,9 @@ impl<P: RuntimeProvider> ConnectionProvi
+         &self,
+         config: &NameServerConfig,
+         options: &ResolverOpts,
+-    ) -> Self::FutureConn {
+-        let dns_connect = match config.protocol {
+-            Protocol::Udp => {
++    ) -> Result<Self::FutureConn, io::Error> {
++        let dns_connect = match (config.protocol, self.runtime_provider.quic_binder()) {
++            (Protocol::Udp, _) => {
+                 let provider_handle = self.runtime_provider.clone();
+                 let closure = move |local_addr: SocketAddr, server_addr: SocketAddr| {
+                     provider_handle.bind_udp(local_addr, server_addr)
+@@ -278,7 +297,7 @@ impl<P: RuntimeProvider> ConnectionProvi
+                 let exchange = DnsExchange::connect(stream);
+                 ConnectionConnect::Udp(exchange)
+             }
+-            Protocol::Tcp => {
++            (Protocol::Tcp, _) => {
+                 let socket_addr = config.socket_addr;
+                 let timeout = options.timeout;
+                 let tcp_future = self.runtime_provider.connect_tcp(socket_addr);
+@@ -297,7 +316,7 @@ impl<P: RuntimeProvider> ConnectionProvi
+                 ConnectionConnect::Tcp(exchange)
+             }
+             #[cfg(feature = "dns-over-tls")]
+-            Protocol::Tls => {
++            (Protocol::Tls, _) => {
+                 let socket_addr = config.socket_addr;
+                 let timeout = options.timeout;
+                 let tls_dns_name = config.tls_dns_name.clone().unwrap_or_default();
+@@ -331,7 +350,7 @@ impl<P: RuntimeProvider> ConnectionProvi
+                 ConnectionConnect::Tls(exchange)
+             }
+             #[cfg(feature = "dns-over-https")]
+-            Protocol::Https => {
++            (Protocol::Https, _) => {
+                 let socket_addr = config.socket_addr;
+                 let tls_dns_name = config.tls_dns_name.clone().unwrap_or_default();
+                 #[cfg(feature = "dns-over-rustls")]
+@@ -347,7 +366,7 @@ impl<P: RuntimeProvider> ConnectionProvi
+                 ConnectionConnect::Https(exchange)
+             }
+             #[cfg(feature = "dns-over-quic")]
+-            Protocol::Quic => {
++            (Protocol::Quic, Some(binder)) => {
+                 let socket_addr = config.socket_addr;
+                 let bind_addr = config.bind_addr.unwrap_or(match socket_addr {
+                     SocketAddr::V4(_) => SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), 0),
+@@ -358,10 +377,10 @@ impl<P: RuntimeProvider> ConnectionProvi
+                 let tls_dns_name = config.tls_dns_name.clone().unwrap_or_default();
+                 #[cfg(feature = "dns-over-rustls")]
+                 let client_config = config.tls_config.clone();
+-                let udp_future = self.runtime_provider.bind_udp(bind_addr, socket_addr);
++                let socket = binder.bind_quic(bind_addr, socket_addr)?;
+ 
+                 let exchange = crate::quic::new_quic_stream_with_future(
+-                    udp_future,
++                    socket,
+                     socket_addr,
+                     tls_dns_name,
+                     client_config,
+@@ -369,7 +388,7 @@ impl<P: RuntimeProvider> ConnectionProvi
+                 ConnectionConnect::Quic(exchange)
+             }
+             #[cfg(feature = "dns-over-h3")]
+-            Protocol::H3 => {
++            (Protocol::H3, Some(binder)) => {
+                 let socket_addr = config.socket_addr;
+                 let bind_addr = config.bind_addr.unwrap_or(match socket_addr {
+                     SocketAddr::V4(_) => SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), 0),
+@@ -379,22 +398,29 @@ impl<P: RuntimeProvider> ConnectionProvi
+                 });
+                 let tls_dns_name = config.tls_dns_name.clone().unwrap_or_default();
+                 let client_config = config.tls_config.clone();
+-                let udp_future = self.runtime_provider.bind_udp(bind_addr, socket_addr);
++                let socket = binder.bind_quic(bind_addr, socket_addr)?;
+ 
+                 let exchange = crate::h3::new_h3_stream_with_future(
+-                    udp_future,
++                    socket,
+                     socket_addr,
+                     tls_dns_name,
+                     client_config,
+                 );
+                 ConnectionConnect::H3(exchange)
+             }
++            #[cfg(any(feature = "dns-over-quic", feature = "dns-over-h3"))]
++            (protocol, _) => {
++                return Err(io::Error::new(
++                    io::ErrorKind::InvalidInput,
++                    format!("unsupported protocol: {protocol:?}"),
++                ));
++            }
+         };
+ 
+-        ConnectionFuture::<P> {
++        Ok(ConnectionFuture::<P> {
+             connect: dns_connect,
+             spawner: self.runtime_provider.create_handle(),
+-        }
++        })
+     }
+ }
+ 
+@@ -415,6 +441,8 @@ impl Stream for ConnectionResponse {
+ #[allow(unreachable_pub)]
+ pub mod tokio_runtime {
+     use super::*;
++    #[cfg(any(feature = "dns-over-quic", feature = "dns-over-h3"))]
++    use quinn::Runtime;
+     use std::sync::{Arc, Mutex};
+     use tokio::net::UdpSocket as TokioUdpSocket;
+     use tokio::task::JoinSet;
+@@ -475,6 +503,11 @@ pub mod tokio_runtime {
+         ) -> Pin<Box<dyn Send + Future<Output = io::Result<Self::Udp>>>> {
+             Box::pin(tokio::net::UdpSocket::bind(local_addr))
+         }
++
++        #[cfg(any(feature = "dns-over-quic", feature = "dns-over-h3"))]
++        fn quic_binder(&self) -> Option<&dyn QuicSocketBinder> {
++            Some(&TokioQuicSocketBinder)
++        }
+     }
+ 
+     /// Reap finished tasks from a `JoinSet`, without awaiting or blocking.
+@@ -485,6 +518,21 @@ pub mod tokio_runtime {
+         {}
+     }
+ 
++    #[cfg(any(feature = "dns-over-quic", feature = "dns-over-h3"))]
++    struct TokioQuicSocketBinder;
++
++    #[cfg(any(feature = "dns-over-quic", feature = "dns-over-h3"))]
++    impl QuicSocketBinder for TokioQuicSocketBinder {
++        fn bind_quic(
++            &self,
++            local_addr: SocketAddr,
++            _server_addr: SocketAddr,
++        ) -> Result<Arc<dyn quinn::AsyncUdpSocket>, io::Error> {
++            let socket = std::net::UdpSocket::bind(local_addr)?;
++            quinn::TokioRuntime.wrap_udp_socket(socket)
++        }
++    }
++
+     /// Default ConnectionProvider with `GenericConnection`.
+     pub type TokioConnectionProvider = GenericConnector<TokioRuntimeProvider>;
+ }
+Index: hickory-resolver/src/name_server/name_server.rs
+===================================================================
+--- hickory-resolver.orig/src/name_server/name_server.rs
++++ hickory-resolver/src/name_server/name_server.rs
+@@ -105,7 +105,7 @@ where
+ 
+             let new_client = Box::pin(
+                 self.connection_provider
+-                    .new_connection(&self.config, &self.options),
++                    .new_connection(&self.config, &self.options)?,
+             )
+             .await?;
+ 
+Index: hickory-resolver/src/quic.rs
+===================================================================
+--- hickory-resolver.orig/src/quic.rs
++++ hickory-resolver/src/quic.rs
+@@ -5,13 +5,11 @@
+ // https://opensource.org/licenses/MIT>, at your option. This file may not be
+ // copied, modified, or distributed except according to those terms.
+ 
+-use hickory_proto::udp::QuicLocalAddr;
+ use rustls::ClientConfig as CryptoConfig;
+-use std::future::Future;
+ use std::net::SocketAddr;
++use std::sync::Arc;
+ 
+ use hickory_proto::quic::{QuicClientConnect, QuicClientStream};
+-use proto::udp::DnsUdpSocket;
+ use proto::xfer::{DnsExchange, DnsExchangeConnect};
+ use proto::TokioTime;
+ 
+@@ -48,16 +46,12 @@ pub(crate) fn new_quic_stream(
+ }
+ 
+ #[allow(clippy::type_complexity)]
+-pub(crate) fn new_quic_stream_with_future<S, F>(
+-    future: F,
++pub(crate) fn new_quic_stream_with_future(
++    socket: Arc<dyn quinn::AsyncUdpSocket>,
+     socket_addr: SocketAddr,
+     dns_name: String,
+     client_config: Option<TlsClientConfig>,
+-) -> DnsExchangeConnect<QuicClientConnect, QuicClientStream, TokioTime>
+-where
+-    S: DnsUdpSocket + QuicLocalAddr + 'static,
+-    F: Future<Output = std::io::Result<S>> + Send + 'static,
+-{
++) -> DnsExchangeConnect<QuicClientConnect, QuicClientStream, TokioTime> {
+     let client_config = if let Some(TlsClientConfig(client_config)) = client_config {
+         client_config
+     } else {
+@@ -73,7 +67,7 @@ where
+     let crypto_config: CryptoConfig = (*client_config).clone();
+ 
+     quic_builder.crypto_config(crypto_config);
+-    DnsExchange::connect(quic_builder.build_with_future(future, socket_addr, dns_name))
++    DnsExchange::connect(quic_builder.build_with_future(socket, socket_addr, dns_name))
+ }
+ 
+ #[cfg(all(test, any(feature = "native-certs", feature = "webpki-roots")))]
+Index: hickory-resolver/src/tls/dns_over_rustls.rs
+===================================================================
+--- hickory-resolver.orig/src/tls/dns_over_rustls.rs
++++ hickory-resolver/src/tls/dns_over_rustls.rs
+@@ -37,7 +37,7 @@ pub(crate) static CLIENT_CONFIG: Lazy<Re
+         use proto::error::ProtoErrorKind;
+ 
+         let (added, ignored) =
+-            root_store.add_parsable_certificates(&rustls_native_certs::load_native_certs()?);
++            root_store.add_parsable_certificates(rustls_native_certs::load_native_certs()?);
+ 
+         if ignored > 0 {
+             tracing::warn!(
+@@ -51,21 +51,14 @@ pub(crate) static CLIENT_CONFIG: Lazy<Re
+         }
+     }
+     #[cfg(feature = "webpki-roots")]
+-    root_store.add_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.iter().map(|ta| {
+-        rustls::OwnedTrustAnchor::from_subject_spki_name_constraints(
+-            ta.subject,
+-            ta.spki,
+-            ta.name_constraints,
+-        )
+-    }));
++    root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+ 
+-    let mut client_config = ClientConfig::builder()
+-        .with_safe_default_cipher_suites()
+-        .with_safe_default_kx_groups()
+-        .with_safe_default_protocol_versions()
+-        .unwrap()
+-        .with_root_certificates(root_store)
+-        .with_no_client_auth();
++    let mut client_config =
++        ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
++            .with_safe_default_protocol_versions()
++            .unwrap()
++            .with_root_certificates(root_store)
++            .with_no_client_auth();
+ 
+     // The port (853) of DOT is for dns dedicated, SNI is unnecessary. (ISP block by the SNI name)
+     client_config.enable_sni = false;
+Index: hickory-resolver/Cargo.toml
+===================================================================
+--- hickory-resolver.orig/Cargo.toml
++++ hickory-resolver/Cargo.toml
+@@ -98,3 +98,3 @@ default-features = false
+ [dependencies.hickory-proto]
+-version = "0.24.0"
++version = "0.24.3"
+ default-features = false
+@@ -117,11 +118,13 @@ features = ["system"]
+ optional = true
+ 
+ [dependencies.rustls]
+-version = "0.21.6"
++version = "0.23"
++default-features = false
++features = ["logging", "std", "tls12"]
+ optional = true
+ 
+ [dependencies.rustls-native-certs]
+-version = "0.6.3"
++version = "0.7"
+ optional = true
+ 
+ [dependencies.serde]
+@@ -148,12 +151,18 @@ version = "0.6.0"
+ optional = true
+ 
+ [dependencies.tokio-rustls]
+-version = "0.24.0"
++version = "0.26.0"
+ optional = true
+ 
+ [dependencies.tracing]
+ version = "0.1.30"
+ 
++[dependencies.quinn]
++version = "0.11.2"
++default-features = false
++optional = true
++features = ["log", "runtime-tokio", "rustls"]
++
+ #[dependencies.webpki-roots]
+ #version = "0.25.0"
+ #optional = true
+@@ -188,6 +197,7 @@ default = [
+     "tokio-runtime",
+ ]
+ dns-over-h3 = [
++    "dep:quinn",
+     "dns-over-rustls",
+     "hickory-proto/dns-over-h3",
+ ]
+@@ -208,7 +218,7 @@ dns-over-openssl = [
+     "tokio-openssl",
+ ]
+ dns-over-quic = [
+-    "rustls/quic",
++    "dep:quinn",
+     "dns-over-rustls",
+     "hickory-proto/dns-over-quic",
+ ]
