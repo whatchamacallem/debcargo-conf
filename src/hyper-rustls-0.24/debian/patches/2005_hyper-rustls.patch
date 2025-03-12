@@ -1,0 +1,49 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -87,3 +87,3 @@
+ [dev-dependencies.rustls-pemfile]
+-version = "1.0.0"
++version = "2"
+ 
+diff --git a/examples/client.rs b/examples/client.rs
+index 4659b6d..99ff64e 100644
+--- a/examples/client.rs
++++ b/examples/client.rs
+@@ -48,6 +48,7 @@ async fn run_client() -> io::Result<()> {
+         Some(ref mut rd) => {
+             // Read trust roots
+             let certs = rustls_pemfile::certs(rd)
++                .collect::<Result<Vec<_>, _>>()
+                 .map_err(|_| error("failed to load custom CA store".into()))?;
+             let mut roots = RootCertStore::empty();
+             roots.add_parsable_certificates(&certs);
+diff --git a/examples/server.rs b/examples/server.rs
+index 964303b..ed73884 100644
+--- a/examples/server.rs
++++ b/examples/server.rs
+@@ -88,10 +88,11 @@ fn load_certs(filename: &str) -> io::Result<Vec<rustls::Certificate>> {
+ 
+     // Load and return certificate.
+     let certs = rustls_pemfile::certs(&mut reader)
++        .collect::<Result<Vec<_>, _>>()
+         .map_err(|_| error("failed to load certificate".into()))?;
+     Ok(certs
+         .into_iter()
+-        .map(rustls::Certificate)
++        .map(|cert| rustls::Certificate(cert.as_ref().to_owned()))
+         .collect())
+ }
+ 
+@@ -104,10 +105,11 @@ fn load_private_key(filename: &str) -> io::Result<rustls::PrivateKey> {
+ 
+     // Load and return a single private key.
+     let keys = rustls_pemfile::rsa_private_keys(&mut reader)
++        .collect::<Result<Vec<_>, _>>()
+         .map_err(|_| error("failed to load private key".into()))?;
+     if keys.len() != 1 {
+         return Err(error("expected a single private key".into()));
+     }
+ 
+-    Ok(rustls::PrivateKey(keys[0].clone()))
++    Ok(rustls::PrivateKey(keys[0].secret_pkcs1_der().to_owned()))
+ }
