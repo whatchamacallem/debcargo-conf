@@ -1,0 +1,80 @@
+Index: railway-core/Cargo.toml
+===================================================================
+--- railway-core.orig/Cargo.toml
++++ railway-core/Cargo.toml
+@@ -68,7 +68,7 @@ version = "0.21"
+ optional = true
+ 
+ [dependencies.rustls-pemfile]
+-version = "2.1"
++version = ">= 1, < 3"
+ optional = true
+ 
+ [dependencies.serde]
+Index: railway-core/src/requester/hyper.rs
+===================================================================
+--- railway-core.orig/src/requester/hyper.rs
++++ railway-core/src/requester/hyper.rs
+@@ -40,6 +40,39 @@ pub struct HyperRustlsRequesterBuilder(
+     HttpsConnectorBuilder<WantsProtocols2>,
+ );
+ 
++trait MyFrom<T>: Sized {
++    fn myfrom(value: T) -> Self;
++}
++
++impl<T> MyFrom<T> for T {
++    fn myfrom(t: T) -> T {
++        t
++    }
++}
++
++impl<T> MyFrom<T> for Result<T,String> where T : Iterator {
++    fn myfrom(t: T) -> Self {
++        Ok(t)
++    }
++}
++
++trait MyFrom2<T>: Sized {
++    fn myfrom(value: T) -> Self;
++}
++
++impl<T> MyFrom2<T> for T {
++    fn myfrom(t: T) -> T {
++        t
++    }
++}
++
++impl MyFrom2<Vec<u8>> for Result<Vec<u8>,String> {
++    fn myfrom(t: Vec<u8>) -> Self {
++        Ok(t)
++    }
++}
++
++
+ impl RequesterBuilder for HyperRustlsRequesterBuilder {
+     type Requester = HyperRustlsRequester;
+ 
+@@ -49,8 +82,10 @@ impl RequesterBuilder for HyperRustlsReq
+         self.1 = HttpsConnectorBuilder::new()
+             .with_tls_config({
+                 let mut store = rustls::RootCertStore::empty();
+-                let certs = rustls_pemfile::certs(&mut bytes);
+-                for cert in certs.into_iter() {
++                let certs: Result<_,_> = MyFrom::myfrom(rustls_pemfile::certs(&mut bytes));
++                if let Ok(certs) = certs {
++                  for cert in certs.into_iter() {
++                    let cert = MyFrom2::myfrom(cert);
+                     if let Ok(cert) = cert {
+                         if let Err(e) = store.add(&rustls::Certificate(cert.to_vec())) {
+                             log::error!("Failed to add certificate: {}", e);
+@@ -58,6 +93,9 @@ impl RequesterBuilder for HyperRustlsReq
+                     } else {
+                         log::error!("Failed to read certificate");
+                     }
++                  }
++                } else {
++                    log::error!("Failed to read certificate");
+                 }
+ 
+                 rustls::ClientConfig::builder()
