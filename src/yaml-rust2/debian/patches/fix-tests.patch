@@ -1,0 +1,47 @@
+--- a/src/yaml.rs
++++ b/src/yaml.rs
+@@ -839,8 +839,11 @@
+ 
+ #[cfg(test)]
+ mod test {
+-    use super::{YAMLDecodingTrap, Yaml, YamlDecoder};
++    #[cfg(feature = "encoding")]
++    use super::{YAMLDecodingTrap, YamlDecoder};
++    use super::Yaml;
+ 
++    #[cfg(feature = "encoding")]
+     #[test]
+     fn test_read_bom() {
+         let s = b"\xef\xbb\xbf---
+@@ -856,6 +859,7 @@
+         assert!(doc["d"][0].is_badvalue());
+     }
+ 
++    #[cfg(feature = "encoding")]
+     #[test]
+     fn test_read_utf16le() {
+         let s = b"\xff\xfe-\x00-\x00-\x00
+@@ -872,6 +876,7 @@
+         assert!(doc["d"][0].is_badvalue());
+     }
+ 
++    #[cfg(feature = "encoding")]
+     #[test]
+     fn test_read_utf16be() {
+         let s = b"\xfe\xff\x00-\x00-\x00-\x00
+@@ -888,6 +893,7 @@
+         assert!(doc["d"][0].is_badvalue());
+     }
+ 
++    #[cfg(feature = "encoding")]
+     #[test]
+     fn test_read_utf16le_nobom() {
+         let s = b"-\x00-\x00-\x00
+@@ -904,6 +910,7 @@
+         assert!(doc["d"][0].is_badvalue());
+     }
+ 
++    #[cfg(feature = "encoding")]
+     #[test]
+     fn test_read_trap() {
+         let s = b"---
