@@ -1,0 +1,118 @@
+commit 527602248fb70b4d6eda86db214a00415142a309
+Author: Daniel Hofstetter <daniel.hofstetter@42dh.com>
+Date:   Thu Jan 30 09:09:12 2025 +0100
+
+    shuf: adapt to API changes of rand
+
+diff --git b/src/uu/shuf/src/rand_read_adapter.rs a/src/uu/shuf/src/rand_read_adapter.rs
+index 589f05106..728bc0cfb 100644
+--- b/src/uu/shuf/src/rand_read_adapter.rs
++++ a/src/uu/shuf/src/rand_read_adapter.rs
+@@ -16,7 +16,7 @@
+ use std::fmt;
+ use std::io::Read;
+ 
+-use rand_core::{impls, RngCore};
++use rand_core::{impls, Error, RngCore};
+ 
+ /// An RNG that reads random bytes straight from any type supporting
+ /// [`std::io::Read`], for example files.
+@@ -30,10 +30,11 @@ use rand_core::{impls, RngCore};
+ ///
+ /// `ReadRng` uses [`std::io::Read::read_exact`], which retries on interrupts.
+ /// All other errors from the underlying reader, including when it does not
+-/// have enough data, will only be reported through `try_fill_bytes`.
++/// have enough data, will only be reported through [`try_fill_bytes`].
+ /// The other [`RngCore`] methods will panic in case of an error.
+ ///
+ /// [`OsRng`]: rand::rngs::OsRng
++/// [`try_fill_bytes`]: RngCore::try_fill_bytes
+ #[derive(Debug)]
+ pub struct ReadRng<R> {
+     reader: R,
+@@ -44,14 +45,6 @@ impl<R: Read> ReadRng<R> {
+     pub fn new(r: R) -> Self {
+         Self { reader: r }
+     }
+-
+-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), ReadError> {
+-        if dest.is_empty() {
+-            return Ok(());
+-        }
+-        // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
+-        self.reader.read_exact(dest).map_err(ReadError)
+-    }
+ }
+ 
+ impl<R: Read> RngCore for ReadRng<R> {
+@@ -68,6 +61,16 @@ impl<R: Read> RngCore for ReadRng<R> {
+             panic!("reading random bytes from Read implementation failed; error: {err}");
+         });
+     }
++
++    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
++        if dest.is_empty() {
++            return Ok(());
++        }
++        // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
++        self.reader
++            .read_exact(dest)
++            .map_err(|e| Error::new(ReadError(e)))
++    }
+ }
+ 
+ /// `ReadRng` error type
+diff --git b/src/uu/shuf/src/shuf.rs a/src/uu/shuf/src/shuf.rs
+index cb0b91d2a..2d8023448 100644
+--- b/src/uu/shuf/src/shuf.rs
++++ a/src/uu/shuf/src/shuf.rs
+@@ -7,7 +7,7 @@
+ 
+ use clap::{crate_version, Arg, ArgAction, Command};
+ use memchr::memchr_iter;
+-use rand::prelude::{IndexedRandom, SliceRandom};
++use rand::prelude::SliceRandom;
+ use rand::{Rng, RngCore};
+ use std::collections::HashSet;
+ use std::fs::File;
+@@ -299,7 +299,7 @@ impl Shufable for RangeInclusive<usize> {
+         self.is_empty()
+     }
+     fn choose(&self, rng: &mut WrappedRng) -> usize {
+-        rng.random_range(self.clone())
++        rng.gen_range(self.clone())
+     }
+     type PartialShuffleIterator<'b>
+         = NonrepeatingIterator<'b>
+@@ -348,7 +348,7 @@ impl<'a> NonrepeatingIterator<'a> {
+         match &mut self.buf {
+             NumberSet::AlreadyListed(already_listed) => {
+                 let chosen = loop {
+-                    let guess = self.rng.random_range(self.range.clone());
++                    let guess = self.rng.gen_range(self.range.clone());
+                     let newly_inserted = already_listed.insert(guess);
+                     if newly_inserted {
+                         break guess;
+@@ -435,7 +435,7 @@ fn shuf_exec(input: &mut impl Shufable, opts: Options) -> UResult<()> {
+                 .map_err_context(|| format!("failed to open random source {}", r.quote()))?;
+             WrappedRng::RngFile(rand_read_adapter::ReadRng::new(file))
+         }
+-        None => WrappedRng::RngDefault(rand::rng()),
++        None => WrappedRng::RngDefault(rand::thread_rng()),
+     };
+ 
+     if opts.repeat {
+@@ -520,6 +520,13 @@ impl RngCore for WrappedRng {
+             Self::RngDefault(r) => r.fill_bytes(dest),
+         }
+     }
++
++    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), rand::Error> {
++        match self {
++            Self::RngFile(r) => r.try_fill_bytes(dest),
++            Self::RngDefault(r) => r.try_fill_bytes(dest),
++        }
++    }
+ }
+ 
+ #[cfg(test)]
