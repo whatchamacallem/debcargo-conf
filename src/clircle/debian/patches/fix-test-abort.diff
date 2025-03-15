@@ -1,0 +1,15 @@
+Index: clircle/src/clircle_unix.rs
+===================================================================
+--- clircle.orig/src/clircle_unix.rs
++++ clircle/src/clircle_unix.rs
+@@ -169,8 +169,9 @@ mod tests {
+         let ident = unsafe { Identifier::try_from_raw_fd(fd.as_raw_fd(), true) }
+             .expect("failed to create identifier");
+         drop(ident);
++        let fd = fd.into_raw_fd();
+         #[cfg(feature = "test-close-again")]
+-        close(fd.into_raw_fd())
++        close(fd)
+             .expect_err("the fd should have already been closed by dropping the identifier");
+     }
+ 
