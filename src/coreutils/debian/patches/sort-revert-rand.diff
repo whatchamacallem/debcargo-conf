@@ -1,0 +1,41 @@
+commit a5fb8f952bd1c0f7f22f8efbec1dae0def9b25de
+Author: Daniel Hofstetter <daniel.hofstetter@42dh.com>
+Date:   Wed Jan 29 14:51:20 2025 +0100
+
+    sort: adapt to API changes of rand
+
+Index: coreutils/src/uu/sort/src/sort.rs
+===================================================================
+--- coreutils.orig/src/uu/sort/src/sort.rs
++++ coreutils/src/uu/sort/src/sort.rs
+@@ -26,7 +26,7 @@ use fnv::FnvHasher;
+ #[cfg(target_os = "linux")]
+ use nix::libc::{getrlimit, rlimit, RLIMIT_NOFILE};
+ use numeric_str_cmp::{human_numeric_str_cmp, numeric_str_cmp, NumInfo, NumInfoParseSettings};
+-use rand::{rng, Rng};
++use rand::{thread_rng, Rng};
+ use rayon::prelude::*;
+ use std::cmp::Ordering;
+ use std::env;
+@@ -1743,7 +1743,7 @@ fn general_numeric_compare(a: &GeneralF6
+ }
+ 
+ fn get_rand_string() -> [u8; 16] {
+-    rng().sample(rand::distr::StandardUniform)
++    thread_rng().sample(rand::distributions::Standard)
+ }
+ 
+ fn get_hash<T: Hash>(t: &T) -> u64 {
+Index: coreutils/tests/by-util/test_sort.rs
+===================================================================
+--- coreutils.orig/tests/by-util/test_sort.rs
++++ coreutils/tests/by-util/test_sort.rs
+@@ -1260,7 +1260,7 @@ fn test_tmp_files_deleted_on_sigint() {
+         // approximately 20 MB
+         for _ in 0..40 {
+             let lines = SmallRng::seed_from_u64(123)
+-                .sample_iter(rand::distr::uniform::Uniform::new(0, 10000).unwrap())
++                .sample_iter(rand::distributions::uniform::Uniform::new(0, 10000))
+                 .take(100_000)
+                 .map(|x| x.to_string() + "\n")
+                 .collect::<String>();

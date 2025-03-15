@@ -1,0 +1,28 @@
+commit ddb027231f66591dd677926ef3117a912bec1d24
+Author: Daniel Hofstetter <daniel.hofstetter@42dh.com>
+Date:   Wed Jan 29 14:59:47 2025 +0100
+
+    shred: adapt to API changes of rand
+
+diff --git b/src/uu/shred/src/shred.rs a/src/uu/shred/src/shred.rs
+index 9107bcde5..763d6cfd4 100644
+--- b/src/uu/shred/src/shred.rs
++++ a/src/uu/shred/src/shred.rs
+@@ -176,7 +176,7 @@ impl BytesWriter {
+     fn from_pass_type(pass: &PassType) -> Self {
+         match pass {
+             PassType::Random => Self::Random {
+-                rng: StdRng::from_os_rng(),
++                rng: StdRng::from_entropy(),
+                 buffer: [0; BLOCK_SIZE],
+             },
+             PassType::Pattern(pattern) => {
+@@ -452,7 +452,7 @@ fn wipe_file(
+             for pattern in PATTERNS.into_iter().take(remainder) {
+                 pass_sequence.push(PassType::Pattern(pattern));
+             }
+-            let mut rng = rand::rng();
++            let mut rng = rand::thread_rng();
+             pass_sequence.shuffle(&mut rng); // randomize the order of application
+ 
+             let n_random = 3 + n_passes / 10; // Minimum 3 random passes; ratio of 10 after
