@@ -1,0 +1,479 @@
+--- a/src/bbox.rs
++++ b/src/bbox.rs
+@@ -355,6 +355,7 @@
+     use nom::error::make_error;
+     use test_case::test_case;
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("exif.heic")]
+     fn travel_heic(path: &str) {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+@@ -402,6 +403,7 @@
+         );
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("meta.mov")]
+     fn travel_mov(path: &str) {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+@@ -457,6 +459,7 @@
+         assert_eq!(boxes, ["hdlr", "keys", "ilst"],);
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("meta.mp4")]
+     fn travel_mp4(path: &str) {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+@@ -544,6 +547,7 @@
+ 
+     // For mp4 files, Android phones store GPS info in the `moov/udta/©xyz`
+     // atom.
++    #[ignore = "test file not shipped"]
+     #[test_case("meta.mp4")]
+     fn find_android_gps_box(path: &str) {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+--- a/src/bbox/ilst.rs
++++ b/src/bbox/ilst.rs
+@@ -141,6 +141,7 @@
+     use super::*;
+     use test_case::test_case;
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("meta.mov")]
+     fn ilst_box(path: &str) {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+@@ -172,6 +173,7 @@
+                 );
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("embedded-in-heic.mov")]
+     fn heic_mov_ilst(path: &str) {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+--- a/src/bbox/keys.rs
++++ b/src/bbox/keys.rs
+@@ -76,6 +76,7 @@
+     use super::*;
+     use test_case::test_case;
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("meta.mov", 4133, 0x01b9, 0xc9)]
+     fn keys_box(path: &str, moov_size: u64, meta_size: u64, keys_size: u64) {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+@@ -127,6 +128,7 @@
+         );
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("embedded-in-heic.mov", 0x1790, 0x0372, 0x1ce)]
+     fn heic_mov_keys(path: &str, moov_size: u64, meta_size: u64, keys_size: u64) {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+--- a/src/bbox/meta.rs
++++ b/src/bbox/meta.rs
+@@ -162,6 +162,7 @@
+     use super::*;
+     use test_case::test_case;
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("exif.heic", 2618)]
+     fn meta(path: &str, meta_size: usize) {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+--- a/src/bbox/mvhd.rs
++++ b/src/bbox/mvhd.rs
+@@ -91,6 +91,7 @@
+     use chrono::FixedOffset;
+     use test_case::test_case;
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case(
+         "meta.mov",
+         "2024-02-02T08:09:57.000000Z",
+--- a/src/bbox/tkhd.rs
++++ b/src/bbox/tkhd.rs
+@@ -147,6 +147,7 @@
+     use super::*;
+     use test_case::test_case;
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("meta.mov", 720, 1280)]
+     #[test_case("meta.mp4", 1920, 1080)]
+     fn tkhd_box(path: &str, width: u32, height: u32) {
+@@ -162,6 +163,7 @@
+         assert_eq!(tkhd.height, height);
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("crash_moov-trak")]
+     fn tkhd_crash(path: &str) {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+--- a/src/exif.rs
++++ b/src/exif.rs
+@@ -252,6 +252,7 @@
+ 
+     use super::*;
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("exif.heic", "+43.29013+084.22713+1595.950CRSWGS_84/")]
+     #[test_case("exif.jpg", "+22.53113+114.02148/")]
+     #[test_case("invalid-gps", "-")]
+@@ -277,6 +278,7 @@
+         }
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[cfg(feature = "async")]
+     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+     #[test_case("exif.heic", "+43.29013+084.22713+1595.950CRSWGS_84/")]
+@@ -300,6 +302,7 @@
+         .await;
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case(
+         "exif.jpg",
+         'N',
+@@ -349,6 +352,7 @@
+         )
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("exif.heic")]
+     fn tag_values(path: &str) {
+         let f = open_sample(path).unwrap();
+@@ -363,6 +367,7 @@
+         assert_eq!(res.join(", "), "Make => Apple, Model => iPhone 12 Pro");
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test]
+     fn endless_loop() {
+         let (sender, receiver) = mpsc::channel();
+--- a/src/exif/exif_exif.rs
++++ b/src/exif/exif_exif.rs
+@@ -41,7 +41,7 @@
+     ///
+     ///   ## Example
+     ///
+-    ///   ```rust
++    ///   ```rust no_run
+     ///   use nom_exif::*;
+     ///
+     ///   fn main() -> Result<()> {
+@@ -75,7 +75,7 @@
+     ///
+     ///   ## Example
+     ///
+-    ///   ```rust
++    ///   ```rust no_run
+     ///   use nom_exif::*;
+     ///
+     ///   fn main() -> Result<()> {
+@@ -291,6 +291,7 @@
+         );
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("exif.jpg")]
+     fn exif_iter_gps(path: &str) {
+         let buf = read_sample(path).unwrap();
+@@ -304,6 +305,7 @@
+         assert_eq!(gps.format_iso6709(), "+22.53113+114.02148/");
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("exif.jpg")]
+     fn clone_exif_iter_to_thread(path: &str) {
+         let buf = read_sample(path).unwrap();
+--- a/src/exif/exif_iter.rs
++++ b/src/exif/exif_iter.rs
+@@ -903,6 +903,7 @@
+     use crate::Exif;
+     use test_case::test_case;
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("exif.jpg", "+08:00", "2023-07-09T20:36:33+08:00", MimeImage::Jpeg)]
+     #[test_case("exif-no-tz.jpg", "", "2023-07-09 20:36:33", MimeImage::Jpeg)]
+     #[test_case("broken.jpg", "-", "2014-09-21 15:51:22", MimeImage::Jpeg)]
+--- a/src/file.rs
++++ b/src/file.rs
+@@ -368,6 +368,7 @@
+ 
+     use crate::testkit::{open_sample, read_sample};
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("exif.heic", Image(Heic))]
+     #[test_case("exif.jpg", Image(Jpeg))]
+     #[test_case("fujifilm_x_t1_01.raf.meta", Image(Raf))]
+@@ -385,6 +386,7 @@
+         assert_eq!(m, mime);
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("exif.heic", FileFormat::Heif)]
+     #[test_case("exif.jpg", FileFormat::Jpeg)]
+     #[test_case("meta.mov", FileFormat::QuickTime)]
+@@ -397,6 +399,7 @@
+         assert_eq!(ff, expect);
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("compatible-brands-fail.mov")]
+     fn file_format_error(path: &str) {
+         let f = open_sample(path).unwrap();
+--- a/src/heif.rs
++++ b/src/heif.rs
+@@ -21,7 +21,7 @@
+ ///
+ /// # Usage
+ ///
+-/// ```rust
++/// ```rust no_run
+ /// use nom_exif::*;
+ /// use nom_exif::ExifTag::*;
+ ///
+@@ -105,6 +105,7 @@
+     use crate::testkit::*;
+     use test_case::test_case;
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("exif.heic")]
+     fn heif(path: &str) {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+@@ -120,6 +121,7 @@
+         assert_eq!(sorted_exif_entries(&exif).join("\n"), expect.trim());
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("ramdisk.img")]
+     fn invalid_heic(path: &str) {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+@@ -128,6 +130,7 @@
+         parse_heif_exif(reader).expect_err("should be ParseFailed error");
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("exif-one-entry.heic", 0x24-10)]
+     #[test_case("exif.heic", 0xa3a-10)]
+     fn heic_exif_data(path: &str, exif_size: usize) {
+--- a/src/jpeg.rs
++++ b/src/jpeg.rs
+@@ -15,7 +15,7 @@
+ ///
+ /// # Usage
+ ///
+-/// ```rust
++/// ```rust no_run
+ /// use nom_exif::*;
+ /// use nom_exif::ExifTag::*;
+ ///
+@@ -292,6 +292,7 @@
+     use crate::testkit::*;
+     use test_case::test_case;
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("exif.jpg", true)]
+     #[test_case("broken.jpg", true)]
+     #[test_case("no-exif.jpg", false)]
+@@ -301,6 +302,7 @@
+         assert_eq!(ok, has_exif);
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("exif.jpg")]
+     #[allow(deprecated)]
+     fn jpeg(path: &str) {
+@@ -347,6 +349,7 @@
+         );
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("no-exif.jpg", 0)]
+     #[test_case("exif.jpg", 0x4569-2)]
+     fn jpeg_find_exif(path: &str, exif_size: usize) {
+@@ -362,6 +365,7 @@
+         }
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("no-exif.jpg", 0)]
+     #[test_case("exif.jpg", 0x4569-8)]
+     fn jpeg_exif_data(path: &str, exif_size: usize) {
+@@ -377,6 +381,7 @@
+         }
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("no-exif.jpg", 4089704, 0x000c0301, 0xb3b3e43f)]
+     #[test_case("exif.jpg", 3564768, 0x000c0301, 0x84a297a9)]
+     fn jpeg_image_data(path: &str, len: usize, start: u32, end: u32) {
+@@ -393,6 +398,7 @@
+     }
+ 
+     #[allow(deprecated)]
++    #[ignore = "test file not shipped"]
+     #[test]
+     fn broken_jpg() {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -67,7 +67,7 @@
+ //!
+ //! Here's an example:
+ //!
+-//! ```rust
++//! ```rust no_run
+ //! use nom_exif::*;
+ //!
+ //! fn main() -> Result<()> {
+@@ -111,7 +111,7 @@
+ //!
+ //! Example:
+ //!
+-//! ```rust
++//! ```rust no_run
+ //! use nom_exif::*;
+ //!
+ //! fn main() -> Result<()> {
+@@ -172,7 +172,7 @@
+ //! `ExifIter` provides a convenience method for parsing gps information. (`Exif` &
+ //! `TrackInfo` also provide a `get_gps_info` method).
+ //!     
+-//! ```rust
++//! ```rust no_run
+ //! use nom_exif::*;
+ //!
+ //! fn main() -> Result<()> {
+--- a/src/mov.rs
++++ b/src/mov.rs
+@@ -32,7 +32,7 @@
+ ///
+ /// # Usage
+ ///
+-/// ```rust
++/// ```rust no_run
+ /// use nom_exif::*;
+ ///
+ /// use std::fs::File;
+@@ -281,7 +281,7 @@
+ ///
+ /// # Usage
+ ///
+-/// ```rust
++/// ```rust no_run
+ /// use nom_exif::*;
+ ///
+ /// use std::fs::File;
+@@ -463,6 +463,7 @@
+     use crate::testkit::*;
+     use test_case::test_case;
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("meta.mov")]
+     fn mov_parse(path: &str) {
+         let reader = open_sample(path).unwrap();
+@@ -484,6 +485,7 @@
+         );
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("meta.mov")]
+     fn mov_extract_mov(path: &str) {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+@@ -507,6 +509,7 @@
+         );
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("meta.mp4")]
+     fn parse_mp4(path: &str) {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+@@ -526,6 +529,7 @@
+         );
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("embedded-in-heic.mov")]
+     fn parse_embedded_mov(path: &str) {
+         let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+--- a/src/parser.rs
++++ b/src/parser.rs
+@@ -344,7 +344,7 @@
+ ///
+ /// ## Example
+ ///
+-/// ```rust
++/// ```rust no_run
+ /// use nom_exif::*;
+ /// use chrono::DateTime;
+ ///
+@@ -515,6 +515,7 @@
+         PARSER.lock().unwrap()
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[case("3gp_640x360.3gp", Track)]
+     #[case("broken.jpg", Exif)]
+     #[case("compatible-brands-fail.heic", Invalid)]
+@@ -586,6 +587,7 @@
+ 
+     use crate::video::TrackInfoTag::*;
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("mkv_640x360.mkv", ImageWidth, 640_u32.into())]
+     #[test_case("mkv_640x360.mkv", ImageHeight, 360_u32.into())]
+     #[test_case("mkv_640x360.mkv", DurationMs, 13346_u64.into())]
+@@ -612,6 +614,7 @@
+         assert_eq!(info.get(tag).unwrap(), &v);
+     }
+ 
++    #[ignore = "test file not shipped"]
+     #[test_case("crash_moov-trak")]
+     #[test_case("crash_skip_large")]
+     #[test_case("crash_add_large")]
+--- a/src/parser_async.rs
++++ b/src/parser_async.rs
+@@ -469,6 +469,7 @@
+     use TrackExif::*;
+ 
+     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
++    #[ignore = "test file not shipped"]
+     #[case("3gp_640x360.3gp", Track)]
+     #[case("broken.jpg", Exif)]
+     #[case("compatible-brands-fail.heic", Invalid)]
+@@ -538,6 +539,7 @@
+     use crate::video::TrackInfoTag::*;
+ 
+     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
++    #[ignore = "test file not shipped"]
+     #[test_case("mkv_640x360.mkv", ImageWidth, 640_u32.into())]
+     #[test_case("mkv_640x360.mkv", ImageHeight, 360_u32.into())]
+     #[test_case("mkv_640x360.mkv", DurationMs, 13346_u64.into())]
+--- a/src/raf.rs
++++ b/src/raf.rs
+@@ -78,6 +78,7 @@
+ 
+     use super::*;
+ 
++    #[ignore = "test file not shipped"]
+     #[case("fujifilm_x_t1_01.raf.meta")]
+     fn test_check_raf(path: &str) {
+         let data = read_sample(path).unwrap();
+@@ -85,6 +86,7 @@
+     }
+ 
+     // #[case("fujifilm_x_t1_01.raf", b"0201", b"FF119503", "X-T1", 0x94)]
++    #[ignore = "test file not shipped"]
+     #[case("fujifilm_x_t1_01.raf.meta", b"0201", b"FF119503", "X-T1", 0x94)]
+     fn test_extract_exif(
+         path: &str,
+--- a/src/video.rs
++++ b/src/video.rs
+@@ -123,7 +123,7 @@
+ ///
+ /// ## Examples
+ ///
+-/// ```rust
++/// ```rust no_run
+ /// use nom_exif::*;
+ /// use std::fs::File;
+ /// use chrono::DateTime;
