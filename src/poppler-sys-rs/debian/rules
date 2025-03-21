@@ -1,0 +1,37 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+# regenerating the source code
+# the xmlstarlet fixes are taken from upstream here: https://github.com/gtk-rs/gir-files/blob/master/fix.sh
+execute_before_dh_auto_build:
+	cp /usr/share/gir-1.0/GLib-2.0.gir $(CURDIR)
+	cp /usr/share/gir-1.0/GModule-2.0.gir $(CURDIR)
+	cp /usr/share/gir-1.0/Gio-2.0.gir $(CURDIR)
+	cp /usr/share/gir-1.0/GObject-2.0.gir $(CURDIR)
+	cp /usr/share/gir-1.0/Poppler-0.18.gir $(CURDIR)
+	cp /usr/share/gir-1.0/cairo-1.0.gir $(CURDIR)
+	xmlstarlet ed -L \
+	-u '//*[@glib:error-domain="g-option-context-error-quark"]/@glib:error-domain' -v g-option-error-quark \
+	-u '//_:record[@name="KeyFile"]/_:method[@name="set_boolean_list"]//_:parameter[@name="list"]/_:array/@c:type' -v "gboolean*" \
+	-u '//_:record[@name="KeyFile"]/_:method[@name="set_double_list"]//_:parameter[@name="list"]/_:array/@c:type' -v "gdouble*" \
+	-u '//_:record[@name="KeyFile"]/_:method[@name="set_integer_list"]//_:parameter[@name="list"]/_:array/@c:type' -v "gint*" \
+	-u '//_:record[@name="KeyFile"]/_:method[@name="set_locale_string_list"]//_:parameter[@name="list"]/_:array/@c:type' -v "const gchar* const*" \
+	-u '//_:record[@name="KeyFile"]/_:method[@name="set_string_list"]//_:parameter[@name="list"]/_:array/@c:type' -v "const gchar* const*" \
+	GLib-2.0.gir
+	xmlstarlet ed -L \
+	-u '//_:class[@name="Object"]/_:method[@name="getv"]//_:parameter[@name="names"]/_:array/@c:type' -v "const gchar**" \
+	-u '//_:class[@name="Object"]/_:method[@name="getv"]//_:parameter[@name="values"]/_:array/@c:type' -v "GValue*" \
+	-u '//_:class[@name="Object"]/_:method[@name="setv"]//_:parameter[@name="names"]/_:array/@c:type' -v "const gchar**" \
+	-u '//_:class[@name="Object"]/_:method[@name="setv"]//_:parameter[@name="values"]/_:array/@c:type' -v "const GValue*" \
+	-u '//_:class[@name="Object"]/_:constructor[@name="new_with_properties"]//_:parameter[@name="names"]/_:array/@c:type' -v "const char**" \
+	-u '//_:class[@name="Object"]/_:constructor[@name="new_with_properties"]//_:parameter[@name="values"]/_:array/@c:type' -v "const GValue*" \
+	-i '//_:interface[@name="TypePlugin" and not(@glib:type-struct)]' -t 'attr' -n 'glib:type-struct' -v 'TypePluginClass' \
+	-i '//_:record[@name="TypePluginClass" and not(@glib:is-gtype-struct-for)]' -t 'attr' -n 'glib:is-gtype-struct-for' -v 'TypePlugin' \
+	GObject-2.0.gir
+	xmlstarlet ed -L -d  '///_:doc-version[@xml:space="preserve"]' Poppler-0.18.gir 
+	sed -i 's/girs_directories\s=\s\[\"\.\.\/\.\.\/gir-files\"\]/girs_directories=\[\".\"\]/' $(CURDIR)/Gir.toml
+
+# Remove the .gir file before install
+execute_before_dh_auto_install:
+	rm $(CURDIR)/*.gir
