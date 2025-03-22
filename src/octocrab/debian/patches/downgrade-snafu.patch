@@ -1,0 +1,186 @@
+This patch is based on reverts of upstream commits
+c86b47ef8402cadfa307c95e8492e737ce84e422,
+65489d6eb453fb0fc0e8d67366697c0ea81d7735,
+and part of 42af5be951e506500a0e98c00c9a89453c54d8df
+
+Index: octocrab/src/api/orgs/secrets.rs
+===================================================================
+--- octocrab.orig/src/api/orgs/secrets.rs
++++ octocrab/src/api/orgs/secrets.rs
+@@ -1,4 +1,5 @@
+ use http::StatusCode;
++use snafu::GenerateImplicitData;
+ 
+ use super::OrgHandler;
+ use crate::models::orgs::secrets::{CreateOrganizationSecret, CreateOrganizationSecretResponse};
+@@ -128,7 +129,7 @@ impl<'octo> OrgSecretsHandler<'octo> {
+                     status_code.as_str()
+                 )
+                 .into(),
+-                backtrace: snafu::Backtrace::capture(),
++                backtrace: snafu::Backtrace::generate(),
+             }),
+         }
+     }
+Index: octocrab/src/api/repos/secrets.rs
+===================================================================
+--- octocrab.orig/src/api/repos/secrets.rs
++++ octocrab/src/api/repos/secrets.rs
+@@ -1,4 +1,5 @@
+ use http::StatusCode;
++use snafu::GenerateImplicitData;
+ 
+ use super::RepoHandler;
+ use crate::models::repos::secrets::{CreateRepositorySecret, CreateRepositorySecretResponse};
+@@ -125,7 +126,7 @@ impl<'octo> RepoSecretsHandler<'octo> {
+                     status_code.as_str()
+                 )
+                 .into(),
+-                backtrace: snafu::Backtrace::capture(),
++                backtrace: snafu::Backtrace::generate(),
+             }),
+         }
+     }
+Index: octocrab/src/api/users.rs
+===================================================================
+--- octocrab.orig/src/api/users.rs
++++ octocrab/src/api/users.rs
+@@ -1,8 +1,9 @@
+ //! The users API.
+ 
+-use std::backtrace::Backtrace;
++use snafu::Backtrace;
+ 
+ use http::StatusCode;
++use snafu::GenerateImplicitData;
+ 
+ pub use self::follow::{ListUserFollowerBuilder, ListUserFollowingBuilder};
+ use self::user_repos::ListUserReposBuilder;
+@@ -125,7 +126,7 @@ impl<'octo> UserHandler<'octo> {
+                     errors: None,
+                     message: "".to_string(),
+                 }),
+-                backtrace: Backtrace::capture(),
++                backtrace: Backtrace::generate(),
+             }),
+             Err(_v) => Ok(()),
+         }
+Index: octocrab/src/body.rs
+===================================================================
+--- octocrab.orig/src/body.rs
++++ octocrab/src/body.rs
+@@ -2,7 +2,7 @@ use http_body_util::BodyExt;
+ 
+ use bytes::Bytes;
+ use http_body::Frame;
+-use snafu::Backtrace;
++use snafu::{Backtrace, GenerateImplicitData};
+ use std::pin::Pin;
+ use std::sync::{Arc, RwLock};
+ use std::task::{Context, Poll};
+@@ -18,7 +18,7 @@ where
+     try_downcast(body).unwrap_or_else(|body| {
+         body.map_err(|e| crate::Error::Other {
+             source: e.into(),
+-            backtrace: Backtrace::capture(),
++            backtrace: Backtrace::generate(),
+         })
+         .boxed()
+     })
+Index: octocrab/src/etag.rs
+===================================================================
+--- octocrab.orig/src/etag.rs
++++ octocrab/src/etag.rs
+@@ -5,6 +5,7 @@ use std::{
+ };
+ 
+ use http::header::{HeaderMap, InvalidHeaderValue};
++use snafu::GenerateImplicitData;
+ 
+ /// Represents resources identified by etags.
+ #[derive(Debug, PartialEq)]
+@@ -81,7 +82,7 @@ impl EntityTag {
+                 .parse()
+                 .map_err(|err: InvalidHeaderValue| crate::Error::InvalidHeaderValue {
+                     source: err,
+-                    backtrace: snafu::Backtrace::capture(),
++                    backtrace: snafu::Backtrace::generate(),
+                 })?,
+         );
+         Ok(())
+Index: octocrab/src/lib.rs
+===================================================================
+--- octocrab.orig/src/lib.rs
++++ octocrab/src/lib.rs
+@@ -331,7 +331,7 @@ pub async fn map_github_error(
+                 errors,
+                 message,
+             }),
+-            backtrace: Backtrace::capture(),
++            backtrace: Backtrace::generate(),
+         })
+     }
+ }
+@@ -1080,7 +1080,7 @@ impl Octocrab {
+             app_auth.clone()
+         } else {
+             return Err(Error::Installation {
+-                backtrace: Backtrace::capture(),
++                backtrace: Backtrace::generate(),
+             });
+         };
+         Ok(Octocrab {
+@@ -1580,7 +1580,7 @@ impl Octocrab {
+             (app, installation, token)
+         } else {
+             return Err(Error::Installation {
+-                backtrace: Backtrace::capture(),
++                backtrace: Backtrace::generate(),
+             });
+         };
+         let mut request = Builder::new();
+@@ -1612,7 +1612,7 @@ impl Octocrab {
+             .map(|time| {
+                 DateTime::<Utc>::from_str(&time).map_err(|e| error::Error::Other {
+                     source: Box::new(e),
+-                    backtrace: snafu::Backtrace::capture(),
++                    backtrace: snafu::Backtrace::generate(),
+                 })
+             })
+             .transpose()?;
+Index: octocrab/src/page.rs
+===================================================================
+--- octocrab.orig/src/page.rs
++++ octocrab/src/page.rs
+@@ -6,7 +6,7 @@ use std::slice::Iter;
+ use std::str::FromStr;
+ 
+ use crate::error::{SerdeSnafu, UriSnafu};
+-use snafu::ResultExt;
++use snafu::{GenerateImplicitData, ResultExt};
+ use url::form_urlencoded;
+ 
+ cfg_if::cfg_if! {
+@@ -242,7 +242,7 @@ fn get_links(headers: &http::header::Hea
+     if let Some(link) = headers.get("Link") {
+         let links = link.to_str().map_err(|err| crate::Error::Other {
+             source: Box::new(err),
+-            backtrace: snafu::Backtrace::capture(),
++            backtrace: snafu::Backtrace::generate(),
+         })?;
+ 
+         for url_with_params in links.split(',') {
+Index: octocrab/Cargo.toml
+===================================================================
+--- octocrab.orig/Cargo.toml
++++ octocrab/Cargo.toml
+@@ -289,7 +289,8 @@ version = "0.1.4"
+ version = "0.7.1"
+ 
+ [dependencies.snafu]
+-version = "0.8"
++version = "0.7"
++features = ["backtraces"]
+ 
+ [dependencies.tokio]
+ version = "1.17.0"
