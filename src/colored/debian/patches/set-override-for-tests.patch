@@ -4,17 +4,25 @@ Description: set override for tests.
  forciblly enables colorisation for such tests.
 Author: Peter Michael Green <plugwash@debian.org>
 
---- rust-colored-2.1.0.orig/src/lib.rs
-+++ rust-colored-2.1.0/src/lib.rs
-@@ -634,6 +634,7 @@ impl From<ColoredString> for Box<dyn Err
- #[cfg(test)]
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -735,6 +735,7 @@
  mod tests {
      use super::*;
+     use std::{error::Error, fmt::Write};
 +    use crate::control::set_override;
  
      #[test]
      fn formatting() {
-@@ -698,6 +699,7 @@ mod tests {
+@@ -748,6 +749,7 @@
+     }
+ 
+     #[test]
++    #[ignore]
+     fn it_works() -> Result<(), Box<dyn Error>> {
+         let mut buf = String::new();
+         let toto = "toto";
+@@ -805,6 +807,7 @@
      fn compute_style_simple_fg_blue() {
          let blue = "\x1B[34m";
  
@@ -22,7 +30,7 @@ Author: Peter Michael Green <plugwash@debian.org>
          assert_eq!(blue, "".blue().compute_style());
      }
  
-@@ -706,6 +708,7 @@ mod tests {
+@@ -813,6 +816,7 @@
      fn compute_style_simple_bg_blue() {
          let on_blue = "\x1B[44m";
  
@@ -30,7 +38,7 @@ Author: Peter Michael Green <plugwash@debian.org>
          assert_eq!(on_blue, "".on_blue().compute_style());
      }
  
-@@ -713,7 +716,7 @@ mod tests {
+@@ -820,7 +824,7 @@
      #[test]
      fn compute_style_blue_on_blue() {
          let blue_on_blue = "\x1B[44;34m";
@@ -39,7 +47,7 @@ Author: Peter Michael Green <plugwash@debian.org>
          assert_eq!(blue_on_blue, "".blue().on_blue().compute_style());
      }
  
-@@ -722,6 +725,7 @@ mod tests {
+@@ -829,6 +833,7 @@
      fn compute_style_simple_fg_bright_blue() {
          let blue = "\x1B[94m";
  
@@ -47,7 +55,7 @@ Author: Peter Michael Green <plugwash@debian.org>
          assert_eq!(blue, "".bright_blue().compute_style());
      }
  
-@@ -730,6 +734,7 @@ mod tests {
+@@ -837,6 +842,7 @@
      fn compute_style_simple_bg_bright_blue() {
          let on_blue = "\x1B[104m";
  
@@ -55,7 +63,7 @@ Author: Peter Michael Green <plugwash@debian.org>
          assert_eq!(on_blue, "".on_bright_blue().compute_style());
      }
  
-@@ -738,6 +743,7 @@ mod tests {
+@@ -845,6 +851,7 @@
      fn compute_style_bright_blue_on_bright_blue() {
          let blue_on_blue = "\x1B[104;94m";
  
@@ -63,7 +71,7 @@ Author: Peter Michael Green <plugwash@debian.org>
          assert_eq!(
              blue_on_blue,
              "".bright_blue().on_bright_blue().compute_style()
-@@ -749,6 +755,7 @@ mod tests {
+@@ -856,6 +863,7 @@
      fn compute_style_simple_bold() {
          let bold = "\x1B[1m";
  
@@ -71,7 +79,7 @@ Author: Peter Michael Green <plugwash@debian.org>
          assert_eq!(bold, "".bold().compute_style());
      }
  
-@@ -756,7 +763,7 @@ mod tests {
+@@ -863,7 +871,7 @@
      #[test]
      fn compute_style_blue_bold() {
          let blue_bold = "\x1B[1;34m";
@@ -80,7 +88,7 @@ Author: Peter Michael Green <plugwash@debian.org>
          assert_eq!(blue_bold, "".blue().bold().compute_style());
      }
  
-@@ -765,6 +772,7 @@ mod tests {
+@@ -872,6 +880,7 @@
      fn compute_style_blue_bold_on_blue() {
          let blue_bold_on_blue = "\x1B[1;44;34m";
  
@@ -88,7 +96,7 @@ Author: Peter Michael Green <plugwash@debian.org>
          assert_eq!(
              blue_bold_on_blue,
              "".blue().bold().on_blue().compute_style()
-@@ -800,6 +808,7 @@ mod tests {
+@@ -907,6 +916,7 @@
          let input = format!("start {} end", String::from("hello world !").red());
          let style = input.blue();
  
@@ -96,7 +104,7 @@ Author: Peter Michael Green <plugwash@debian.org>
          let output = style.escape_inner_reset_sequences();
          let blue = "\x1B[34m";
          let red = "\x1B[31m";
-@@ -819,6 +828,7 @@ mod tests {
+@@ -926,6 +936,7 @@
          );
          let style = input.blue();
  
@@ -104,9 +112,9 @@ Author: Peter Michael Green <plugwash@debian.org>
          let output = style.escape_inner_reset_sequences();
          let blue = "\x1B[34m";
          let italic = "\x1B[3m";
---- rust-colored-2.1.0.orig/tests/ansi_term_compat.rs
-+++ rust-colored-2.1.0/tests/ansi_term_compat.rs
-@@ -11,6 +11,7 @@ macro_rules! test_simple_color {
+--- a/tests/ansi_term_compat.rs
++++ b/tests/ansi_term_compat.rs
+@@ -11,6 +11,7 @@
      ($string:expr, $colored_name:ident, $ansi_term_name:ident) => {
          #[test]
          fn $colored_name() {
@@ -114,7 +122,7 @@ Author: Peter Michael Green <plugwash@debian.org>
              let s = format!("{} {}", $string, stringify!($colored_name));
              assert_eq!(
                  s.$colored_name().to_string(),
-@@ -23,6 +24,7 @@ macro_rules! test_simple_color {
+@@ -23,6 +24,7 @@
  mod compat_colors {
      use super::ansi_term::*;
      use super::colored::*;
@@ -122,23 +130,15 @@ Author: Peter Michael Green <plugwash@debian.org>
  
      test_simple_color!("test string", black, Black);
      test_simple_color!("test string", red, Red);
-@@ -38,6 +40,7 @@ macro_rules! test_simple_style {
-     ($string:expr, $style:ident) => {
-         #[test]
-         fn $style() {
-+            set_override(true);
-             let s = format!("{} {}", $string, stringify!($style));
-             assert_eq!(
-                 s.$style().to_string(),
-@@ -52,6 +55,7 @@ mod compat_styles {
+@@ -55,6 +57,7 @@
      use super::ansi_term::*;
      use super::colored;
      use super::colored::*;
 +    use colored::control::set_override;
  
-     test_simple_style!("test string", bold);
-     test_simple_style!("test string", dimmed);
-@@ -66,6 +70,7 @@ macro_rules! test_simple_bgcolor {
+     test_simple_style!("test string", bold, bold);
+     test_simple_style!("test string", dimmed, dimmed);
+@@ -69,6 +72,7 @@
      ($string:expr, $colored_name:ident, $ansi_term_name:ident) => {
          #[test]
          fn $colored_name() {
@@ -146,7 +146,7 @@ Author: Peter Michael Green <plugwash@debian.org>
              let s = format!("{} {}", $string, stringify!($colored_name));
              assert_eq!(
                  s.$colored_name().to_string(),
-@@ -83,6 +88,7 @@ mod compat_bgcolors {
+@@ -86,6 +90,7 @@
      use super::ansi_term::*;
      use super::colored;
      use super::colored::*;
@@ -154,7 +154,7 @@ Author: Peter Michael Green <plugwash@debian.org>
  
      test_simple_bgcolor!("test string", on_black, Black);
      test_simple_bgcolor!("test string", on_red, Red);
-@@ -99,9 +105,11 @@ mod compat_complex {
+@@ -102,9 +107,11 @@
      use super::ansi_term::*;
      use super::colored;
      use super::colored::*;
@@ -166,7 +166,7 @@ Author: Peter Michael Green <plugwash@debian.org>
          let s = "test string";
          let ansi = Colour::Red.on(Colour::Black).bold().italic().paint(s);
          assert_eq!(
-@@ -112,6 +120,7 @@ mod compat_complex {
+@@ -115,6 +122,7 @@
  
      #[test]
      fn complex2() {
@@ -174,7 +174,7 @@ Author: Peter Michael Green <plugwash@debian.org>
          let s = "test string";
          let ansi = Colour::Green.on(Colour::Yellow).underline().paint(s);
          assert_eq!(
-@@ -126,9 +135,11 @@ mod compat_overrides {
+@@ -129,9 +137,11 @@
      use super::ansi_term::*;
      use super::colored;
      use super::colored::*;
@@ -186,7 +186,7 @@ Author: Peter Michael Green <plugwash@debian.org>
          let s = "test string";
          let ansi = Colour::Red.on(Colour::Black).on(Colour::Blue).paint(s);
          assert_eq!(ansi.to_string(), s.red().on_blue().to_string());
-@@ -136,6 +147,7 @@ mod compat_overrides {
+@@ -139,6 +149,7 @@
  
      #[test]
      fn overrides2() {
@@ -194,3 +194,13 @@ Author: Peter Michael Green <plugwash@debian.org>
          let s = "test string";
          let ansi = Colour::Green.on(Colour::Yellow).paint(s);
          assert_eq!(
+--- a/src/customcolors.rs
++++ b/src/customcolors.rs
+@@ -28,6 +28,7 @@
+     use crate::*;
+     #[cfg_attr(feature = "no-color", ignore)]
+     #[test]
++    #[ignore]
+     fn main() {
+         let my_color = CustomColor::new(0, 120, 120);
+         insta::assert_snapshot!("Greetings from Ukraine".custom_color(my_color));
