@@ -1,0 +1,23 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -39,3 +39,3 @@
+ [dependencies.cargo_metadata]
+-version = "0.14"
++version = "0.19"
+ 
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -9,3 +9,3 @@
+ use cargo_metadata::camino::Utf8Component;
+-use cargo_metadata::{Artifact, CargoOpt, Message, Metadata, MetadataCommand};
++use cargo_metadata::{Artifact, CargoOpt, Message, Metadata, MetadataCommand, TargetKind};
+ use clap::{App, AppSettings, Arg, ArgMatches};
+@@ -137,6 +137,6 @@
+                 .iter()
+-                .any(|s| s == "bin" || s == "example"),
++                .any(|s| s == &TargetKind::Bin || s == &TargetKind::Example),
+             // Since LibKind can be an arbitrary string `LibKind:Other(String)` we filter by what it can't be
+             BuildType::Lib => artifact.target.kind.iter().any(|s| {
+-                s != "bin" && s != "example" && s != "test" && s != "custom-build" && s != "bench"
++                s != &TargetKind::Bin && s != &TargetKind::Example && s != &TargetKind::Test && s != &TargetKind::CustomBuild && s != &TargetKind::Bench
+             }),
