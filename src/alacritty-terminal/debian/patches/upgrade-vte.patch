@@ -1,0 +1,32 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -84,5 +84,5 @@
+ [dependencies.vte]
+-version = "0.13.0"
++version = "0.15"
+ features = ["ansi"]
+-default-features = false
++#default-features = false # default = ["std"], needed for ansi::Processor<T = StdSyncHandler>
+ 
+--- a/src/event_loop.rs
++++ b/src/event_loop.rs
+@@ -153,5 +153,5 @@
+             // Parse the incoming bytes.
+-            for byte in &buf[..unprocessed] {
+-                state.parser.advance(&mut **terminal, *byte);
+-            }
++            //for byte in &buf[..unprocessed] {
++                state.parser.advance(&mut **terminal, &buf[..unprocessed]);
++            //}
+ 
+--- a/tests/ref.rs
++++ b/tests/ref.rs
+@@ -114,5 +114,5 @@
+ 
+-    for byte in recording {
+-        parser.advance(&mut terminal, byte);
+-    }
++    //for byte in recording {
++        parser.advance(&mut terminal, &recording);
++    //}
+ 
