@@ -1,0 +1,21 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -28,3 +28,3 @@
+ [dependencies.cargo_metadata]
+-version = "0.9.1"
++version = "0.19"
+ default-features = false
+--- a/src/bundle.rs
++++ b/src/bundle.rs
+@@ -536,3 +536,3 @@
+                 license,
+-                package.manifest_path.parent().unwrap().display()
++                package.manifest_path.parent().unwrap().as_std_path().display()
+             );
+--- a/src/licensed.rs
++++ b/src/licensed.rs
+@@ -13,3 +13,3 @@
+             .and_then(|license| license.parse::<License>().ok())
+-            .or_else(|| self.license_file().map(License::File))
++            .or_else(|| self.license_file().map(|x| License::File(x.into_std_path_buf())))
+             .unwrap_or_default()
