@@ -1,21 +1,34 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -32,15 +32,15 @@ repository = "https://gitlab.com/ijackso
- name = "shellexpand"
- 
+@@ -34,3 +34,3 @@
  [dependencies.bstr]
 -version = "1.0.0-pre.2"
 +version = "1.5"
  optional = true
- 
+@@ -38,3 +38,3 @@
  [dependencies.dirs]
 -version = ">=4, <6"
 +version = "5"
  optional = true
- 
+@@ -42,3 +42,3 @@
  [dependencies.os_str_bytes]
 -version = ">=5, <7"
-+version = "6"
++version = "7"
  optional = true
- 
- [features]
+--- a/src/path.rs
++++ b/src/path.rs
+@@ -36,3 +36,3 @@
+ impl<P: AsRef<Path> + ?Sized> AsRefXstrExt for P {
+-    fn into_winput(&self) -> Cow<'_, RawOsStr> { RawOsStr::new(self.as_ref().as_os_str()) }
++    fn into_winput(&self) -> Cow<'_, RawOsStr> { Cow::Borrowed(RawOsStr::new(self.as_ref().as_os_str())) }
+     fn into_ocow(&self) -> Cow<'_, Path> { self.as_ref().into() }
+@@ -42,3 +42,3 @@
+     fn as_str(&self) -> Option<&str> { self.to_str() }
+-    fn len(&self) -> usize { self.raw_len() }
++    fn len(&self) -> usize { self.as_encoded_bytes().len() }
+     fn to_ostring(&self) -> OsString { self.to_os_str().into_owned() }
+@@ -63,3 +63,3 @@
+     fn chars_approx(self) -> bstr::Chars<'s> {
+-        self.as_raw_bytes().chars()
++        self.as_encoded_bytes().chars()
+     }
