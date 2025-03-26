@@ -1,0 +1,49 @@
+Description: Make tests use temp dir due to permission problems
+ Was going to use fs_extra::dir::copy but it somehow complains
+ io::ErrorKind::NotFound.
+Author: Blair Noctis <ncts@debian.org>
+Last-Update: 2025-03-26
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -119,2 +119,6 @@
+ 
++[dev-dependencies.tempfile]
++version = "3"
++[dev-dependencies.fs_extra]
++version = "1"
+ [dev-dependencies.winnow]
+--- a/src/shadow.rs
++++ b/src/shadow.rs
+@@ -331,7 +331,11 @@
+     fn test_build() -> SdResult<()> {
++        let dir = tempfile::tempdir()?;
++        let path = dir.path();
++        let path_str = path.to_str().unwrap();
++        std::process::Command::new("cp").arg("-r").arg(&std::env::current_dir()?).arg(path).status().expect("failed to copy crate to test temp dir");
+         ShadowBuilder::builder()
+-            .src_path("./")
+-            .out_path("./")
++            .src_path(path_str)
++            .out_path(path_str)
+             .build()?;
+-        let shadow = fs::read_to_string(DEFINE_SHADOW_RS)?;
++        let shadow = fs::read_to_string(path.join(DEFINE_SHADOW_RS))?;
+         assert!(!shadow.is_empty());
+@@ -339,7 +343,7 @@
+ 
+-        fs::remove_file(DEFINE_SHADOW_RS)?;
++        //fs::remove_file(DEFINE_SHADOW_RS)?;
+ 
+         ShadowBuilder::builder()
+-            .src_path("./")
+-            .out_path("./")
++            .src_path(path_str)
++            .out_path(path_str)
+             .deny_const(BTreeSet::from([CARGO_TREE]))
+@@ -347,3 +351,3 @@
+ 
+-        let content = fs::read_to_string(DEFINE_SHADOW_RS)?;
++        let content = fs::read_to_string(path.join(DEFINE_SHADOW_RS))?;
+         assert!(!content.is_empty());
