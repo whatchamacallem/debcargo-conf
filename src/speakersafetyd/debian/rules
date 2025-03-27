@@ -14,6 +14,8 @@ execute_after_dh_install:
 		DESTDIR="debian/speakersafetyd" \
 		UNITDIR="$(shell pkg-config --variable=systemdsystemunitdir systemd)" \
 		UDEVDIR="$(shell pkg-config --variable=udevdir udev)/rules.d"
+	# add sysusers snippets to maintscripts. drop at compat >= 14
+	dh_installsysusers
 
 override_dh_installsystemd:
 	dh_installsystemd --no-enable
