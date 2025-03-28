@@ -1,0 +1,18 @@
+--- a/build.rs
++++ b/build.rs
+@@ -1,13 +1,12 @@
+ include!("src/opt.rs");
+ 
+ fn main() {
+-    if let Ok(path) = std::env::var("COMPLETION_PATH") {
+-        let out_dir = PathBuf::from(path);
++        let out_dir = PathBuf::from("debian/build_artifacts");
++        if std::fs::create_dir_all(&out_dir).is_err() { return; }
+ 
+         gen_completion(Shell::Bash, &out_dir).unwrap();
+         gen_completion(Shell::Elvish, &out_dir).unwrap();
+         gen_completion(Shell::Fish, &out_dir).unwrap();
+         gen_completion(Shell::PowerShell, &out_dir).unwrap();
+         gen_completion(Shell::Zsh, &out_dir).unwrap();
+-    }
+ }
