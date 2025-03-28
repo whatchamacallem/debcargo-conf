@@ -1,8 +1,8 @@
-diff --git a/Cargo.toml b/Cargo.toml
-index e00d530..8167d2e 100644
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -223,13 +223,13 @@ features = ["std"]
+Index: sequoia-openpgp/Cargo.toml
+===================================================================
+--- sequoia-openpgp.orig/Cargo.toml
++++ sequoia-openpgp/Cargo.toml
+@@ -158,13 +158,13 @@ features = ["std"]
  optional = true
  default-features = false
  
@@ -23,7 +23,7 @@ index e00d530..8167d2e 100644
  
  [dependencies.flate2]
  version = "1.0.1"
-@@ -241,7 +241,7 @@ features = ["zeroize"]
+@@ -180,7 +180,7 @@ features = ["zeroize"]
  optional = true
  
  [dependencies.idna]
@@ -32,7 +32,7 @@ index e00d530..8167d2e 100644
  
  [dependencies.lalrpop-util]
  version = "0.20"
-@@ -297,13 +297,13 @@ features = [
+@@ -235,13 +235,13 @@ features = [
  ]
  optional = true
  
@@ -53,7 +53,7 @@ index e00d530..8167d2e 100644
  
  [dependencies.rand]
  version = "0.8"
-@@ -325,9 +325,9 @@ version = "0.1"
+@@ -263,9 +263,9 @@ version = "0.1"
  features = ["oid"]
  optional = true
  
@@ -66,7 +66,7 @@ index e00d530..8167d2e 100644
  
  [dependencies.sha1collisiondetection]
  version = "0.3.1"
-@@ -351,14 +351,14 @@ optional = true
+@@ -294,14 +294,14 @@ optional = true
  version = "1.12.0"
  optional = true
  
@@ -89,7 +89,7 @@ index e00d530..8167d2e 100644
  
  [dependencies.xxhash-rust]
  version = "0.8"
-@@ -408,90 +408,90 @@ crypto-botan = [
+@@ -351,97 +351,17 @@ crypto-botan = [
      "botan?/botan3",
  ]
  crypto-botan2 = ["dep:botan"]
@@ -103,18 +103,10 @@ index e00d530..8167d2e 100644
 -    "dep:num-bigint-dig",
 -    "dep:aes-gcm",
 -    "dep:rand_core",
+-    "dep:hkdf",
+-    "dep:sha2",
+-    "dep:ocb3",
 -]
-+#crypto-cng = [
-+#    "dep:cipher",
-+#    "dep:eax",
-+#    "dep:winapi",
-+#    "dep:win-crypto-ng",
-+#    "dep:ed25519",
-+#    "dep:ed25519-dalek",
-+#    "dep:num-bigint-dig",
-+#    "dep:aes-gcm",
-+#    "dep:rand_core",
-+#]
  crypto-fuzzing = []
  crypto-nettle = ["dep:nettle"]
  crypto-openssl = [
@@ -141,11 +133,13 @@ index e00d530..8167d2e 100644
 -    "dep:ripemd",
 -    "dep:rsa",
 -    "dep:sha2",
+-    "dep:sha3",
 -    "sha1collisiondetection/digest-trait",
 -    "sha1collisiondetection/oid",
 -    "dep:twofish",
 -    "dep:typenum",
 -    "dep:x25519-dalek",
+-    "dep:ocb3",
 -    "dep:p256",
 -    "dep:p384",
 -    "dep:p521",
@@ -156,49 +150,14 @@ index e00d530..8167d2e 100644
 -    "dep:ecdsa",
 -    "dep:aes-gcm",
 -    "dep:dsa",
+-    "dep:hkdf",
 -]
-+#crypto-rust = [
-+#    "dep:aes",
-+#    "dep:block-padding",
-+#    "dep:blowfish",
-+#    "dep:camellia",
-+#    "dep:cast5",
-+#    "dep:cfb-mode",
-+#    "dep:cipher",
-+#    "dep:des",
-+#    "dep:digest",
-+#    "dep:eax",
-+#    "dep:ecb",
-+#    "dep:ed25519",
-+#    "dep:ed25519-dalek",
-+#    "dep:idea",
-+#    "dep:md-5",
-+#    "dep:num-bigint-dig",
-+#    "dep:ripemd",
-+#    "dep:rsa",
-+#    "dep:sha2",
-+#    "sha1collisiondetection/digest-trait",
-+#    "sha1collisiondetection/oid",
-+#    "dep:twofish",
-+#    "dep:typenum",
-+#    "dep:x25519-dalek",
-+#    "dep:p256",
-+#    "dep:p384",
-+#    "dep:p521",
-+#    "dep:rand",
-+#    "rand?/getrandom",
-+#    "dep:rand_core",
-+#    "rand_core?/getrandom",
-+#    "dep:ecdsa",
-+#    "dep:aes-gcm",
-+#    "dep:dsa",
-+#]
  default = [
      "compression",
      "crypto-nettle",
  ]
  
--[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies.chrono]
+-[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.chrono]
 -version = "0.4.10"
 -features = [
 -    "std",
@@ -207,7 +166,7 @@ index e00d530..8167d2e 100644
 -]
 -default-features = false
 -
--[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies.getrandom]
+-[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.getrandom]
 -version = "0.2"
 -features = ["js"]
 -
@@ -224,32 +183,7 @@ index e00d530..8167d2e 100644
 -features = ["bcrypt"]
 -optional = true
 -default-features = false
-+#[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies.chrono]
-+#version = "0.4.10"
-+#features = [
-+#    "std",
-+#    "wasmbind",
-+#    "clock",
-+#]
-+#default-features = false
-+
-+#[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies.getrandom]
-+#version = "0.2"
-+#features = ["js"]
-+
-+#[target."cfg(windows)".dependencies.win-crypto-ng]
-+#version = "0.5.1"
-+#features = [
-+#    "rand",
-+#    "block-cipher",
-+#]
-+#optional = true
-+
-+#[target."cfg(windows)".dependencies.winapi]
-+#version = "0.3.8"
-+#features = ["bcrypt"]
-+#optional = true
-+#default-features = false
- 
+-
  [badges.gitlab]
  repository = "sequoia-pgp/sequoia"
+ 
