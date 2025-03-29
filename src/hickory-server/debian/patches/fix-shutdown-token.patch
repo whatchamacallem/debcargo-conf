@@ -1,0 +1,18 @@
+Forwarded: not-needed
+Author: Blair Noctis <ncts@debian.org>
+Last-Update: 2025-03-29
+
+I'm not sure how this went into upstream code..
+
+--- a/src/server/server_future.rs
++++ b/src/server/server_future.rs
+@@ -282,3 +282,3 @@
+         // for each incoming request...
+-        let shutdown = self.shutdown_watch.clone();
++        let shutdown = self.shutdown_token.clone();
+         self.join_set.spawn(async move {
+@@ -297,3 +297,3 @@
+                     },
+-                    _ = shutdown.clone().signaled() => {
++                    _ = shutdown.cancelled() => {
+                         // A graceful shutdown was initiated. Break out of the loop.

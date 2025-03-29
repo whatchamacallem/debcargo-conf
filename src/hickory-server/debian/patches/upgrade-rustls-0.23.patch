@@ -1,0 +1,67 @@
+Forwarded: not-needed
+Author: Blair Noctis <ncts@debian.org>
+Last-Update: 2025-03-29
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -172,3 +172,3 @@
+ [dependencies.rustls]
+-version = "0.21.6"
++version = "0.23"
+ optional = true
+--- a/src/config/dnssec.rs
++++ b/src/config/dnssec.rs
+@@ -14,3 +14,3 @@
+ #[cfg(feature = "dns-over-rustls")]
+-use rustls::{Certificate, PrivateKey};
++use rustls::pki_types::{CertificateDer as Certificate, PrivateKeyDer as PrivateKey};
+ use serde::Deserialize;
+@@ -346,3 +346,6 @@
+             info!("loading TLS PKCS12 certificate from: {:?}", path);
+-            return read_cert_pkcs12(&path, password).map_err(Into::into);
++            let ((cert, chain), key) = read_cert_pkcs12(&path, password).map_err(|e| format!("{e}"))?;
++            let cert = cert.ok_or_else(|| format!("No certificate found"))?;
++            let key = key.ok_or_else(|| format!("No private key found"))?;
++            return Ok(((cert, chain), key));
+         }
+@@ -373,6 +376,6 @@
+ #[cfg_attr(docsrs, doc(cfg(feature = "dns-over-rustls")))]
+-pub fn load_cert(
++pub fn load_cert<'c>(
+     zone_dir: &Path,
+-    tls_cert_config: &TlsCertConfig,
+-) -> Result<(Vec<Certificate>, PrivateKey), String> {
++    tls_cert_config: &'c TlsCertConfig,
++) -> Result<(Vec<Certificate<'c>>, PrivateKey<'c>), String> {
+     use tracing::{info, warn};
+--- a/src/server/server_future.rs
++++ b/src/server/server_future.rs
+@@ -16,3 +16,3 @@
+ #[cfg(feature = "dns-over-rustls")]
+-use rustls::{Certificate, PrivateKey, ServerConfig};
++use rustls::{pki_types::{CertificateDer as Certificate, PrivateKeyDer as PrivateKey}, ServerConfig};
+ use tokio::{net, task::JoinSet};
+@@ -551,3 +551,3 @@
+ 
+-        let tls_acceptor = tls_server::new_acceptor(certificate_and_key.0, certificate_and_key.1)
++        let tls_acceptor = tls_server::new_acceptor(certificate_and_key.0.into_iter().map(|c| c.into_owned()).collect::<Vec<_>>(), certificate_and_key.1.clone_key())
+             .map_err(|e| {
+@@ -595,3 +595,3 @@
+ 
+-        let tls_acceptor = tls_server::new_acceptor(certificate_and_key.0, certificate_and_key.1)
++        let tls_acceptor = tls_server::new_acceptor(certificate_and_key.0.into_iter().map(|c| c.into_owned()).collect::<Vec<_>>(), certificate_and_key.1.clone_key())
+             .map_err(|e| {
+@@ -708,3 +708,3 @@
+         let mut server =
+-            QuicServer::with_socket(socket, certificate_and_key.0, certificate_and_key.1)?;
++            QuicServer::with_socket(socket, certificate_and_key.0.into_iter().map(|c| c.into_owned()).collect::<Vec<_>>(), certificate_and_key.1.clone_key())?;
+ 
+@@ -799,3 +799,3 @@
+         let mut server =
+-            H3Server::with_socket(socket, certificate_and_key.0, certificate_and_key.1)?;
++            H3Server::with_socket(socket, certificate_and_key.0.into_iter().map(|c| c.into_owned()).collect::<Vec<_>>(), certificate_and_key.1.clone_key())?;
+ 
+@@ -1146,3 +1146,3 @@
+     #[cfg(feature = "dns-over-rustls")]
+-    use rustls::{Certificate, PrivateKey};
++    use rustls::pki_types::{CertificateDer as Certificate, PrivateKeyDer as PrivateKey};
+     use std::net::SocketAddr;

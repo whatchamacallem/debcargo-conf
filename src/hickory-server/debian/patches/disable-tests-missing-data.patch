@@ -1,0 +1,68 @@
+Forwarded: not-needed
+Last-Update: 2025-03-29
+--- a/tests/config_tests.rs
++++ b/tests/config_tests.rs
+@@ -27,2 +27,3 @@
+ #[test]
++#[ignore]
+ fn test_read_config() {
+@@ -254,2 +255,3 @@
+         #[test]
++        #[ignore]
+         fn $name() {
+--- a/tests/authority_battery/dynamic_update.rs
++++ b/tests/authority_battery/dynamic_update.rs
+@@ -880,2 +880,3 @@
+             #[test]
++            #[ignore]
+             fn $f () {
+--- a/tests/store_file_tests.rs
++++ b/tests/store_file_tests.rs
+@@ -29,2 +29,3 @@
+ #[test]
++#[ignore]
+ fn test_all_lines_are_loaded() {
+@@ -50,2 +51,3 @@
+ #[test]
++#[ignore]
+ fn test_implicit_in_class() {
+@@ -66,2 +68,3 @@
+ #[tokio::test]
++#[ignore]
+ async fn test_ttl_wilcard() {
+--- a/tests/authority_battery/basic.rs
++++ b/tests/authority_battery/basic.rs
+@@ -734,2 +734,3 @@
+             #[test]
++            #[ignore]
+             fn $f () {
+--- a/tests/authority_battery/dnssec.rs
++++ b/tests/authority_battery/dnssec.rs
+@@ -466,2 +466,3 @@
+             #[test]
++            #[ignore]
+             fn $f () {
+--- a/src/store/file/authority.rs
++++ b/src/store/file/authority.rs
+@@ -246,2 +246,3 @@
+     #[test]
++    #[ignore = "test data unavailable in Debian"]
+     fn test_load_zone() {
+--- a/src/server/server_future.rs
++++ b/src/server/server_future.rs
+@@ -1152,2 +1152,3 @@
+     #[tokio::test]
++    #[cfg(any())]
+     async fn abort() {
+@@ -1169,2 +1170,3 @@
+     #[tokio::test]
++    #[cfg(any())]
+     async fn graceful_shutdown() {
+@@ -1253,2 +1255,3 @@
+ 
++        #[cfg(any())]
+         async fn register<T: RequestHandler>(&self, server: &mut ServerFuture<T>) {
+@@ -1338,2 +1341,3 @@
+     #[cfg(feature = "dns-over-rustls")]
++    #[cfg(any())] // can't just #[ignore] due to rustls 0.23 changes
+     fn rustls_cert_key() -> (Vec<Certificate>, PrivateKey) {

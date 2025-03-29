@@ -1,0 +1,100 @@
+Description: Fix some features making imports impossible
+ and convert some implicit deps to dep: syntax to reduce tested features.
+Forwarded: not-needed
+Author: Blair Noctis <ncts@debian.org>
+Last-Update: 2025-03-29
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -234,2 +234,2 @@
+-    "h3",
+-    "h3-quinn",
++    "dep:h3",
++    "dep:h3-quinn",
+@@ -240,2 +240,2 @@
+-    "h2",
+-    "http",
++    "dep:h2",
++    "dep:http",
+@@ -249 +249 @@
+-    "tokio-rustls",
++    "dep:tokio-rustls",
+@@ -255 +255 @@
+-    "tokio-openssl",
++    "dep:tokio-openssl",
+@@ -266 +266 @@
+-    "rustls",
++    "dep:rustls",
+@@ -269 +269 @@
+-    "tokio-rustls",
++    "dep:tokio-rustls",
+@@ -271,2 +271,2 @@
+-dns-over-tls = []
+-dnssec = []
++dns-over-tls = ["dnssec"] # hickory_proto::rr::dnssec::KeyFormat
++dnssec = ["hickory-proto/dnssec"] # hickory_proto::rr::dnssec
+@@ -275 +275 @@
+-    "openssl",
++    "dep:openssl",
+@@ -285,3 +285,3 @@
+-recursor = ["hickory-recursor"]
+-resolver = ["hickory-resolver"]
+-sqlite = ["rusqlite"]
++recursor = ["dep:hickory-recursor", "resolver"] # Debian: needs some types
++resolver = ["dep:hickory-resolver"]
++sqlite = ["dep:rusqlite"]
+@@ -290 +290 @@
+-tls-openssl = ["dns-over-openssl"]
++#tls-openssl = ["dns-over-openssl"] # deprecated
+--- a/tests/config_tests.rs
++++ b/tests/config_tests.rs
+@@ -276 +276 @@
+-#[cfg(feature = "hickory-resolver")]
++#[cfg(feature = "resolver")]
+--- a/src/authority/error.rs
++++ b/src/authority/error.rs
+@@ -14 +14 @@
+-#[cfg(feature = "hickory-resolver")]
++#[cfg(feature = "resolver")]
+@@ -30 +30 @@
+-    #[cfg(feature = "hickory-resolver")]
++    #[cfg(feature = "resolver")]
+@@ -35 +35 @@
+-    #[cfg(feature = "hickory-recursor")]
++    #[cfg(feature = "recursor")]
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -50 +50 @@
+-#[cfg(feature = "hickory-recursor")]
++#[cfg(feature = "recursor")]
+@@ -53 +53 @@
+-#[cfg(feature = "hickory-resolver")]
++#[cfg(feature = "resolver")]
+--- a/src/store/config.rs
++++ b/src/store/config.rs
+@@ -13 +13 @@
+-#[cfg(feature = "hickory-resolver")]
++#[cfg(feature = "resolver")]
+@@ -15 +15 @@
+-#[cfg(feature = "hickory-recursor")]
++#[cfg(feature = "recursor")]
+@@ -33 +33 @@
+-    #[cfg(feature = "hickory-resolver")]
++    #[cfg(feature = "resolver")]
+@@ -37 +37 @@
+-    #[cfg(feature = "hickory-recursor")]
++    #[cfg(feature = "recursor")]
+--- a/src/store/forwarder/mod.rs
++++ b/src/store/forwarder/mod.rs
+@@ -8 +8 @@
+-#![cfg(feature = "hickory-resolver")]
++#![cfg(feature = "resolver")]
+--- a/src/store/recursor/mod.rs
++++ b/src/store/recursor/mod.rs
+@@ -8 +8 @@
+-#![cfg(feature = "hickory-recursor")]
++#![cfg(feature = "recursor")]
+--- a/tests/forwarder.rs
++++ b/tests/forwarder.rs
+@@ -2 +2 @@
+-#![cfg(feature = "hickory-resolver")]
++#![cfg(feature = "resolver")]
