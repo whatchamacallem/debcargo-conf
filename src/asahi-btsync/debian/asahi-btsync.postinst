@@ -2,11 +2,13 @@
 set -e
 
 if [ "$1" = "configure" ]; then
-	if [ -z "$2" ]; then
-		# debhelper does not start static units. use udevadm to start
-		# asahi-btsync on install if/when the hardware allows it
-		udevadm trigger --action=change --subsystem-match=mtd || true
-	fi
+  if [ -z "$2" ]; then
+    # debhelper does not start static units. use udevadm to start
+    # asahi-btsync on install if/when the hardware allows it
+    if command -v udevadm >/dev/null 2>&1; then
+      udevadm trigger --action=change --subsystem-match=mtd || true
+    fi
+  fi
 fi
 
 
