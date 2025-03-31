@@ -23,7 +23,13 @@ endif
 %:
 	dh $@ --buildsystem cargo
 
-override_dh_install:
+# skip these targets on arch:all builds
+override_dh_auto_test-indep:
+override_dh_auto_build-indep:
+override_dh_auto_install-indep:
+	dh_install
+
+override_dh_install-arch:
 	mkdir -p debian/gpg-sq/usr/bin/
 	mv debian/gpgv-sq/usr/bin/gpg-sq debian/gpg-sq/usr/bin/
 
