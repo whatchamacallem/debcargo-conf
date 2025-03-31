@@ -18,5 +18,9 @@ CARGO = /usr/share/cargo/bin/cargo
 override_dh_auto_configure:
 	$(CARGO) prepare-debian $(CURDIR)/registry --link-from-system
 
+execute_before_dh_auto_build:
+	# we are not using dh-cargo, hence we need to add this workaround:
+	rm -f Cargo.lock
+
 override_dh_auto_build:
 	$(CARGO) build --release
