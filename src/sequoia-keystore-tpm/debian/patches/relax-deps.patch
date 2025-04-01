@@ -2,19 +2,19 @@ Origin: vendor
 Subject: Relax dependencies to work well with other rust crates in Debian
 Forwarded: not-needed
 
-diff --git a/Cargo.toml b/Cargo.toml
-index 41fd48f..4158ab8 100644
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -53,6 +53,7 @@ version = "0.6"
- [dependencies.sequoia-openpgp]
- version = "1.17"
- default-features = false
-+features = ["compression", "crypto-nettle"]
+Index: sequoia-keystore-tpm/Cargo.toml
+===================================================================
+--- sequoia-keystore-tpm.orig/Cargo.toml
++++ sequoia-keystore-tpm/Cargo.toml
+@@ -56,7 +56,6 @@ version = "0.4.17"
  
- [dependencies.sequoia-tpm]
- version = "0.1.0"
-@@ -61,7 +62,7 @@ version = "0.1.0"
+ [dependencies.openpgp-cert-d]
+ version = "0.3.4"
+-default-features = false
+ 
+ [dependencies.sequoia-ipc]
+ version = "0.36"
+@@ -76,7 +75,7 @@ version = "0.1.0"
  version = "1"
  
  [dependencies.serde_yaml]
@@ -23,37 +23,27 @@ index 41fd48f..4158ab8 100644
  
  [dependencies.tokio]
  version = "1.19"
-@@ -74,11 +75,6 @@ features = [
+@@ -89,11 +88,6 @@ features = [
  [dev-dependencies.env_logger]
  version = ">=0.10, <0.12"
  
 -[dev-dependencies.sequoia-openpgp]
--version = "1"
+-version = "2"
 -features = ["compression"]
 -default-features = false
 -
  [dev-dependencies.tracing]
  version = "0.1"
  default-features = false
-@@ -88,21 +84,5 @@ version = "0.3"
- features = ["env-filter"]
+@@ -110,11 +104,3 @@ features = [
+     "__implicit-crypto-backend-for-tests",
+ ]
  default-features = false
- 
--[target."cfg(not(windows))".dev-dependencies.sequoia-openpgp]
--version = "1"
--features = [
--    "crypto-nettle",
--    "__implicit-crypto-backend-for-tests",
--]
--default-features = false
 -
 -[target."cfg(windows)".dev-dependencies.sequoia-openpgp]
--version = "1"
+-version = "2"
 -features = [
 -    "crypto-cng",
 -    "__implicit-crypto-backend-for-tests",
 -]
 -default-features = false
--
- [badges.maintenance]
- status = "actively-developed"
