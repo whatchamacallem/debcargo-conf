@@ -1,0 +1,28 @@
+From 7d8f74122e5f64f9b0d98aa83412c6b26221c79e Mon Sep 17 00:00:00 2001
+From: "Neal H. Walfield" <neal@sequoia-pgp.org>
+Date: Tue, 1 Apr 2025 09:34:17 +0200
+Subject: [PATCH] tests: Make sure sq-git is available.
+
+  - Before running a test, make sure `sq-git` is available by first
+    running `sq-git version`.
+---
+ tests/common.rs | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/tests/common.rs b/tests/common.rs
+index 52075d0..47ea017 100644
+--- a/tests/common.rs
++++ b/tests/common.rs
+@@ -296,6 +296,9 @@ impl Environment {
+         e.git(&["config", "--local", "user.signingkey", "0xDEADBEEF"])?;
+         e.git(&["config", "--local", "commit.gpgsign", "false"])?;
+ 
++        // Make sure sq-git works.
++        e.sq_git(&["version"])?;
++
+         Ok(e)
+     }
+ 
+-- 
+GitLab
+
