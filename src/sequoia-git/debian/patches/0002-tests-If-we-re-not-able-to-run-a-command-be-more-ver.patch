@@ -1,0 +1,35 @@
+From 8e4e41b4ccfa14cfc2b185b510dc4490d3a09fda Mon Sep 17 00:00:00 2001
+From: "Neal H. Walfield" <neal@sequoia-pgp.org>
+Date: Tue, 1 Apr 2025 09:33:54 +0200
+Subject: [PATCH 2/5] tests: If we're not able to run a command, be more
+ version.
+
+---
+ tests/common.rs | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/tests/common.rs b/tests/common.rs
+index 7904b79..52075d0 100644
+--- a/tests/common.rs
++++ b/tests/common.rs
+@@ -585,7 +585,16 @@ impl Environment {
+ 
+         eprintln!("$ {}", cmd);
+ 
+-        let output = self.spawn(c)?.wait_with_output()?;
++        let output = self.spawn(c)
++            .map_err(|err| {
++                eprintln!(" -> failed to spawn command: {}", err);
++                err
++            })?
++            .wait_with_output()
++            .map_err(|err| {
++                eprintln!(" -> waiting for command to complete: {}", err);
++                err
++            })?;
+ 
+         if output.status.success() {
+             eprintln!(" -> success");
+-- 
+2.43.0
+
