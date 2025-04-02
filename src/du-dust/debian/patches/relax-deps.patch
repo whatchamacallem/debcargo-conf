@@ -1,6 +1,6 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -117,10 +117,11 @@
+@@ -115,10 +115,11 @@
  version = "3.4"
  
  [dependencies.directories]
@@ -14,7 +14,7 @@
  
  [dependencies.rayon]
  version = "1"
-@@ -139,10 +140,10 @@
+@@ -137,10 +138,10 @@
  version = "0.2"
  
  [dependencies.sysinfo]
@@ -27,7 +27,7 @@
  
  [dependencies.thousands]
  version = "0.2"
-@@ -168,11 +169,5 @@
+@@ -166,12 +167,6 @@
  [target.'cfg(not(target_has_atomic = "64"))'.dependencies.portable-atomic]
  version = "1.4"
  
@@ -37,16 +37,17 @@
 -[target."cfg(windows)".dependencies.winapi-util]
 -version = "0.1"
 -
- [badges.travis-ci]
- repository = "https://travis-ci.org/bootandy/dust"
+ [profile.release]
+ lto = true
+ codegen-units = 1
 --- a/src/main.rs
 +++ b/src/main.rs
-@@ -28,7 +28,7 @@
- use std::sync::atomic::Ordering;
+@@ -26,7 +26,7 @@
+ use std::process;
  use std::sync::Arc;
  use std::sync::Mutex;
 -use sysinfo::{System, SystemExt};
 +use sysinfo::System;
+ use utils::canonicalize_absolute_path;
  
  use self::display::draw_it;
- use config::get_config;
