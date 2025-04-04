@@ -1,0 +1,31 @@
+Description: Remove dependency only relevant on wasm32 platform
+Author: Antonin Delpeuch <antonin@delpeuch.eu>
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -30,7 +30,7 @@ license = "Apache-2.0"
+ repository = "https://github.com/typst/typst"
+ 
+ [features]
+-wasm = ["dep:web-sys"]
++wasm = []
+ 
+ [lib]
+ name = "typst_timing"
+@@ -46,15 +46,6 @@ features = ["derive"]
+ [dependencies.serde_json]
+ version = "1"
+ 
+-[target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
+-version = "0.3"
+-features = [
+-    "Window",
+-    "WorkerGlobalScope",
+-    "Performance",
+-]
+-optional = true
+-
+ [lints.clippy]
+ blocks_in_conditions = "allow"
+ comparison_chain = "allow"
