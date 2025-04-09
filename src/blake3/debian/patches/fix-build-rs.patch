@@ -1,38 +1,21 @@
-Description: debianize
-
+Description: Annotate built-using
+Forwarded: not-needed
 Last-Update: 2020-12-18
-
 --- a/build.rs
 +++ b/build.rs
-@@ -160,6 +160,7 @@
-     println!("cargo:rustc-cfg=blake3_sse2_ffi");
-     println!("cargo:rustc-cfg=blake3_sse41_ffi");
+@@ -212,2 +212,3 @@
      println!("cargo:rustc-cfg=blake3_avx2_ffi");
 +    println!("dh-cargo:deb-built-using=blake3_sse2_sse41_avx2_assembly=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
      let mut build = new_build();
-     if is_windows_msvc() {
-         build.file("c/blake3_sse2_x86-64_windows_msvc.asm");
-@@ -184,6 +185,7 @@
-     // This is required on 32-bit x86 targets, since the assembly
-     // implementation doesn't support those.
+@@ -238,2 +239,3 @@
      println!("cargo:rustc-cfg=blake3_avx512_ffi");
 +    println!("dh-cargo:deb-built-using=blake3_avx512_intrinsics=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
      let mut build = new_build();
-     build.file("c/blake3_avx512.c");
-     if is_windows_msvc() {
-@@ -204,6 +206,7 @@
-     // only supports x86_64.
-     assert!(is_x86_64());
+@@ -258,2 +260,3 @@
      println!("cargo:rustc-cfg=blake3_avx512_ffi");
 +    println!("dh-cargo:deb-built-using=blake3_avx512_assembly=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
      let mut build = new_build();
-     if is_windows_msvc() {
-         build.file("c/blake3_avx512_x86-64_windows_msvc.asm");
-@@ -237,6 +240,7 @@
-         build.flag("-mfloat-abi=hard");
-     }
+@@ -293,2 +296,3 @@
      build.compile("blake3_neon");
 +    println!("dh-cargo:deb-built-using=blake3_neon=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
  }
- 
- fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -1,0 +1,38 @@
+Forwarded: not-needed
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -125,6 +125,6 @@
+ [dev-dependencies.rand]
+-version = "0.9.0"
++version = "0.8.0"
+ 
+ [dev-dependencies.rand_chacha]
+-version = "0.9.0"
++version = "0.3.1"
+ 
+--- a/src/hazmat.rs
++++ b/src/hazmat.rs
+@@ -341,3 +341,3 @@
+ ///
+-/// ```
++/// ```ignore
+ /// # #[cfg(feature = "std")] {
+--- a/src/test.rs
++++ b/src/test.rs
+@@ -537,3 +537,3 @@
+         for _ in 0..3 {
+-            let input_len = rng.random_range(0..(INPUT_MAX + 1));
++            let input_len = rng.gen_range(0..(INPUT_MAX + 1));
+             #[cfg(feature = "std")]
+@@ -566,3 +566,3 @@
+         let mut output_buf = [0; 31 * CHUNK_LEN];
+-        let input_len = rng.random_range(0..input_buf.len());
++        let input_len = rng.gen_range(0..input_buf.len());
+         let mut xof = crate::Hasher::new()
+@@ -570,4 +570,4 @@
+             .finalize_xof();
+-        let partial_start = rng.random_range(0..output_buf.len());
+-        let partial_end = rng.random_range(partial_start..output_buf.len());
++        let partial_start = rng.gen_range(0..output_buf.len());
++        let partial_end = rng.gen_range(partial_start..output_buf.len());
+         xof.fill(&mut output_buf[..partial_start]);
