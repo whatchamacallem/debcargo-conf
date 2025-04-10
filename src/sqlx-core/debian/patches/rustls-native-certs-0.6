@@ -1,0 +1,35 @@
+--- rust-sqlx-core-0.8.3.orig/Cargo.toml
++++ rust-sqlx-core-0.8.3/Cargo.toml
+@@ -144,7 +144,7 @@ optional = true
+ default-features = false
+ 
+ [dependencies.rustls-native-certs]
+-version = "0.8.0"
++version = "0.6.3"
+ optional = true
+ 
+ [dependencies.rustls-webpki]
+--- rust-sqlx-core-0.8.3.orig/src/net/tls/tls_rustls.rs
++++ rust-sqlx-core-0.8.3/src/net/tls/tls_rustls.rs
+@@ -223,13 +223,17 @@ fn certs_from_native_store() -> RootCert
+     let mut root_cert_store = RootCertStore::empty();
+ 
+     let load_results = rustls_native_certs::load_native_certs();
+-    for e in load_results.errors {
++    match load_results {
++      Err(e) => {
+         log::warn!("Error loading native certificates: {e:?}");
+-    }
+-    for cert in load_results.certs {
+-        if let Err(e) = root_cert_store.add(cert.into()) {
++      }
++      Ok(certs) => {
++        for cert in certs {
++          if let Err(e) = root_cert_store.add(cert.0.into()) {
+             log::warn!("rustls failed to parse native certificate: {e:?}");
++          }
+         }
++      }
+     }
+ 
+     root_cert_store
