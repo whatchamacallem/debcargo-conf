@@ -1,0 +1,87 @@
+Forwarded: not-needed
+Last-Update: 2025-04-11
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -129,3 +129,3 @@
+ [dependencies.prost]
+-version = "0.13.0"
++version = "0.12"
+ 
+@@ -136,3 +136,3 @@
+ [dependencies.prost-types]
+-version = "0.13.0"
++version = "0.12"
+ 
+@@ -157,3 +157,3 @@
+ [dev-dependencies.prost-build]
+-version = "0.13.0"
++version = "0.12"
+ 
+--- a/src/descriptor/api.rs
++++ b/src/descriptor/api.rs
+@@ -347,3 +347,3 @@
+         impl Message for FileDescriptorSet<'_> {
+-            fn encode_raw(&self, buf: &mut impl BufMut)
++            fn encode_raw<B: BufMut>(&self, buf: &mut B)
+             where
+@@ -371,3 +371,3 @@
+ 
+-            fn merge_field(
++            fn merge_field<B: Buf>(
+                 &mut self,
+@@ -375,3 +375,3 @@
+                 _: WireType,
+-                _: &mut impl Buf,
++                _: &mut B,
+                 _: DecodeContext,
+--- a/src/descriptor/types.rs
++++ b/src/descriptor/types.rs
+@@ -525,3 +525,3 @@
+ {
+-    fn encode_raw(&self, buf: &mut impl BufMut)
++    fn encode_raw<B: BufMut>(&self, buf: &mut B)
+     where
+@@ -532,3 +532,3 @@
+ 
+-    fn merge_field(
++    fn merge_field<B: Buf>(
+         &mut self,
+@@ -536,3 +536,3 @@
+         wire_type: WireType,
+-        buf: &mut impl Buf,
++        buf: &mut B,
+         ctx: DecodeContext,
+--- a/src/dynamic/message.rs
++++ b/src/dynamic/message.rs
+@@ -17,3 +17,3 @@
+ impl Message for DynamicMessage {
+-    fn encode_raw(&self, buf: &mut impl BufMut)
++    fn encode_raw<B: BufMut>(&self, buf: &mut B)
+     where
+@@ -34,3 +34,3 @@
+ 
+-    fn merge_field(
++    fn merge_field<B: Buf>(
+         &mut self,
+@@ -38,3 +38,3 @@
+         wire_type: WireType,
+-        buf: &mut impl Buf,
++        buf: &mut B,
+         ctx: DecodeContext,
+--- a/src/dynamic/unknown.rs
++++ b/src/dynamic/unknown.rs
+@@ -240,3 +240,3 @@
+ impl Message for UnknownFieldSet {
+-    fn encode_raw(&self, buf: &mut impl BufMut)
++    fn encode_raw<B: BufMut>(&self, buf: &mut B)
+     where
+@@ -249,3 +249,3 @@
+ 
+-    fn merge_field(
++    fn merge_field<B: Buf>(
+         &mut self,
+@@ -253,3 +253,3 @@
+         wire_type: WireType,
+-        buf: &mut impl Buf,
++        buf: &mut B,
+         ctx: DecodeContext,
