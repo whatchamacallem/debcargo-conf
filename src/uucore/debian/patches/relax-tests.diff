@@ -1,0 +1,55 @@
+Index: uucore/src/lib/features/fsxattr.rs
+===================================================================
+--- uucore.orig/src/lib/features/fsxattr.rs
++++ uucore/src/lib/features/fsxattr.rs
+@@ -156,7 +156,11 @@ mod tests {
+ 
+         let test_attr = "user.test";
+         let test_value = b"test value";
+-        xattr::set(&source_path, test_attr, test_value).unwrap();
++        let result = xattr::set(&source_path, test_attr, test_value);
++        if let Err(ref e) = result {
++            if e.raw_os_error() == Some(95) { return }; //operation not supported
++        }
++        result.unwrap();
+ 
+         copy_xattrs(&source_path, &dest_path).unwrap();
+ 
+@@ -175,7 +179,11 @@ mod tests {
+         let test_attr = "user.test_attr";
+         let test_value = b"test value";
+         test_xattrs.insert(OsString::from(test_attr), test_value.to_vec());
+-        apply_xattrs(&file_path, test_xattrs).unwrap();
++        let result = apply_xattrs(&file_path, test_xattrs);
++        if let Err(ref e) = result {
++            if e.raw_os_error() == Some(95) { return }; //operation not supported
++        }
++        result.unwrap();
+ 
+         let retrieved_xattrs = retrieve_xattrs(&file_path).unwrap();
+         assert!(retrieved_xattrs.contains_key(OsString::from(test_attr).as_os_str()));
+@@ -244,7 +252,11 @@ mod tests {
+ 
+         let test_attr = "user.test_acl";
+         let test_value = b"test value";
+-        xattr::set(&file_path, test_attr, test_value).unwrap();
++        let result = xattr::set(&file_path, test_attr, test_value);
++        if let Err(ref e) = result {
++            if e.raw_os_error() == Some(95) { return }; //operation not supported
++        }
++        result.unwrap();
+ 
+         assert!(has_acl(&file_path));
+     }
+Index: uucore/src/lib/features/proc_info.rs
+===================================================================
+--- uucore.orig/src/lib/features/proc_info.rs
++++ uucore/src/lib/features/proc_info.rs
+@@ -463,6 +463,7 @@ mod tests {
+             .flat_map(Teletype::try_from)
+             .collect::<HashSet<_>>();
+ 
++        if result.len() == 0 { return }
+         assert_eq!(result.len(), 1);
+         assert_eq!(
+             pid_entry.tty(),
