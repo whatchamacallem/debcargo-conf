@@ -1,0 +1,184 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -14,7 +14,7 @@
+ //! use fslock::LockFile;
+ //! fn main() -> Result<(), fslock::Error> {
+ //!
+-//!     let mut file = LockFile::open("testfiles/mylock.lock")?;
++//!     let mut file = LockFile::open("/tmp/mylock.lock")?;
+ //!     file.lock()?;
+ //!     do_stuff();
+ //!     file.unlock()?;
+@@ -58,7 +58,7 @@
+ /// # fn main() -> Result<(), fslock::Error> {
+ /// use fslock::LockFile;
+ ///
+-/// let mut file = LockFile::open("testfiles/mylock.lock")?;
++/// let mut file = LockFile::open("/tmp/mylock.lock")?;
+ /// file.lock()?;
+ /// do_stuff();
+ /// file.unlock()?;
+@@ -96,7 +96,7 @@
+     /// # fn main() -> Result<(), fslock::Error> {
+     /// use fslock::LockFile;
+     ///
+-    /// let mut file = LockFile::open("testfiles/regular.lock")?;
++    /// let mut file = LockFile::open("/tmp/regular.lock")?;
+     ///
+     /// # Ok(())
+     /// # }
+@@ -135,7 +135,7 @@
+     /// # fn main() -> Result<(), fslock::Error> {
+     /// use fslock::LockFile;
+     ///
+-    /// let mut file = LockFile::open("testfiles/target.lock")?;
++    /// let mut file = LockFile::open("/tmp/target.lock")?;
+     /// file.lock()?;
+     /// do_stuff();
+     /// file.unlock()?;
+@@ -153,7 +153,7 @@
+     /// # fn main() -> Result<(), fslock::Error> {
+     /// use fslock::LockFile;
+     ///
+-    /// let mut file = LockFile::open("testfiles/panicking.lock")?;
++    /// let mut file = LockFile::open("/tmp/panicking.lock")?;
+     /// file.lock()?;
+     /// file.lock()?;
+     ///
+@@ -185,7 +185,7 @@
+     /// # #[cfg(feature = "std")]
+     /// use std::fs::read_to_string;
+     ///
+-    /// let mut file = LockFile::open("testfiles/withpid.lock")?;
++    /// let mut file = LockFile::open("/tmp/withpid.lock")?;
+     /// file.lock_with_pid()?;
+     /// # #[cfg(feature = "std")]
+     /// # {
+@@ -195,7 +195,7 @@
+     ///
+     /// # #[cfg(feature = "std")]
+     /// fn do_stuff() -> Result<(), fslock::Error> {
+-    ///     let mut content = read_to_string("testfiles/withpid.lock")?;
++    ///     let mut content = read_to_string("/tmp/withpid.lock")?;
+     ///     assert!(content.trim().len() > 0);
+     ///     assert!(content.trim().chars().all(|ch| ch.is_ascii_digit()));
+     ///     Ok(())
+@@ -230,7 +230,7 @@
+     /// # fn main() -> Result<(), fslock::Error> {
+     /// use fslock::LockFile;
+     ///
+-    /// let mut file = LockFile::open("testfiles/attempt.lock")?;
++    /// let mut file = LockFile::open("/tmp/attempt.lock")?;
+     /// if file.try_lock()? {
+     ///     do_stuff();
+     ///     file.unlock()?;
+@@ -249,7 +249,7 @@
+     /// # fn main() -> Result<(), fslock::Error> {
+     /// use fslock::LockFile;
+     ///
+-    /// let mut file = LockFile::open("testfiles/attempt_panic.lock")?;
++    /// let mut file = LockFile::open("/tmp/attempt_panic.lock")?;
+     /// file.lock()?;
+     /// file.try_lock()?;
+     ///
+@@ -284,7 +284,7 @@
+     /// # fn main() -> Result<(), fslock::Error> {
+     /// use fslock::LockFile;
+     ///
+-    /// let mut file = LockFile::open("testfiles/pid_attempt.lock")?;
++    /// let mut file = LockFile::open("/tmp/pid_attempt.lock")?;
+     /// if file.try_lock_with_pid()? {
+     ///     # #[cfg(feature = "std")]
+     ///     # {
+@@ -297,7 +297,7 @@
+     /// # }
+     /// # #[cfg(feature = "std")]
+     /// fn do_stuff() -> Result<(), fslock::Error> {
+-    ///     let mut content = read_to_string("testfiles/pid_attempt.lock")?;
++    ///     let mut content = read_to_string("/tmp/pid_attempt.lock")?;
+     ///     assert!(content.trim().len() > 0);
+     ///     assert!(content.trim().chars().all(|ch| ch.is_ascii_digit()));
+     ///     Ok(())
+@@ -310,7 +310,7 @@
+     /// # fn main() -> Result<(), fslock::Error> {
+     /// use fslock::LockFile;
+     ///
+-    /// let mut file = LockFile::open("testfiles/pid_attempt_panic.lock")?;
++    /// let mut file = LockFile::open("/tmp/pid_attempt_panic.lock")?;
+     /// file.lock_with_pid()?;
+     /// file.try_lock_with_pid()?;
+     ///
+@@ -339,7 +339,7 @@
+     /// use fslock::LockFile;
+     /// # fn main() -> Result<(), fslock::Error> {
+     ///
+-    /// let mut file = LockFile::open("testfiles/maybeowned.lock")?;
++    /// let mut file = LockFile::open("/tmp/maybeowned.lock")?;
+     /// do_stuff_with_lock(&mut file);
+     /// if !file.owns_lock() {
+     ///     file.lock()?;
+@@ -372,7 +372,7 @@
+     /// # fn main() -> Result<(), fslock::Error> {
+     /// use fslock::LockFile;
+     ///
+-    /// let mut file = LockFile::open("testfiles/endinglock.lock")?;
++    /// let mut file = LockFile::open("/tmp/endinglock.lock")?;
+     /// file.lock()?;
+     /// do_stuff();
+     /// file.unlock()?;
+@@ -390,7 +390,7 @@
+     /// # fn main() -> Result<(), fslock::Error> {
+     /// use fslock::LockFile;
+     ///
+-    /// let mut file = LockFile::open("testfiles/endinglock.lock")?;
++    /// let mut file = LockFile::open("/tmp/endinglock.lock")?;
+     /// file.unlock()?;
+     ///
+     /// # Ok(())
+--- a/src/test.rs
++++ b/src/test.rs
+@@ -6,7 +6,7 @@
+ fn read_pid() -> Result<(), Error> {
+     use std::fs::read_to_string;
+ 
+-    let path = "testfiles/read_pid.lock";
++    let path = "/tmp/read_pid.lock";
+     let mut file = LockFile::open(path)?;
+     file.lock_with_pid()?;
+ 
+@@ -25,7 +25,7 @@
+ fn try_read_pid() -> Result<(), Error> {
+     use std::fs::read_to_string;
+ 
+-    let path = "testfiles/try_read_pid.lock";
++    let path = "/tmp/try_read_pid.lock";
+     let mut file = LockFile::open(path)?;
+     assert!(file.try_lock_with_pid()?);
+ 
+@@ -107,7 +107,7 @@
+ #[cfg(feature = "std")]
+ #[test]
+ fn other_process() -> Result<(), Error> {
+-    let path = "testfiles/other_process.lock";
++    let path = "/tmp/other_process.lock";
+     let mut file = LockFile::open(path)?;
+     file.lock()?;
+     check_try_lock_example(path, b"FAILURE\n")?;
+@@ -121,7 +121,7 @@
+ fn other_process_pid() -> Result<(), Error> {
+     use std::fs::read_to_string;
+ 
+-    let path = "testfiles/other_process_pid.lock";
++    let path = "/tmp/other_process_pid.lock";
+     let mut file = LockFile::open(path)?;
+     assert!(file.try_lock_with_pid()?);
+ 
+@@ -165,7 +165,7 @@
+ fn other_process_but_curr_reads() -> Result<(), Error> {
+     use std::fs::read_to_string;
+ 
+-    let path = "testfiles/other_process_but_curr_reads.lock";
++    let path = "/tmp/other_process_but_curr_reads.lock";
+     let mut file = LockFile::open(path)?;
+     file.lock()?;
+ 
