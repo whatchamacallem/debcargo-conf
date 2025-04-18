@@ -1,87 +1,139 @@
 Forwarded: not-needed
 Last-Update: 2025-04-11
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -129,3 +129,3 @@
+Index: prost-reflect/Cargo.toml
+===================================================================
+--- prost-reflect.orig/Cargo.toml
++++ prost-reflect/Cargo.toml
+@@ -127,14 +127,14 @@ version = "7.0.0"
+ optional = true
+ 
  [dependencies.prost]
 -version = "0.13.0"
 +version = "0.12"
  
-@@ -136,3 +136,3 @@
+ [dependencies.prost-reflect-derive]
+ version = "0.15.0"
+ optional = true
+ 
  [dependencies.prost-types]
 -version = "0.13.0"
 +version = "0.12"
  
-@@ -157,3 +157,3 @@
+ [dependencies.serde]
+ version = "1.0.132"
+@@ -155,7 +155,7 @@ version = "1.13.0"
+ version = "1.0.0"
+ 
  [dev-dependencies.prost-build]
 -version = "0.13.0"
 +version = "0.12"
  
---- a/src/descriptor/api.rs
-+++ b/src/descriptor/api.rs
-@@ -347,3 +347,3 @@
+ [dev-dependencies.serde_json]
+ version = "1.0.106"
+Index: prost-reflect/src/descriptor/api.rs
+===================================================================
+--- prost-reflect.orig/src/descriptor/api.rs
++++ prost-reflect/src/descriptor/api.rs
+@@ -345,7 +345,7 @@ impl DescriptorPool {
+         }
+ 
          impl Message for FileDescriptorSet<'_> {
 -            fn encode_raw(&self, buf: &mut impl BufMut)
 +            fn encode_raw<B: BufMut>(&self, buf: &mut B)
              where
-@@ -371,3 +371,3 @@
+                 Self: Sized,
+             {
+@@ -369,11 +369,11 @@ impl DescriptorPool {
+                         .sum::<usize>()
+             }
  
 -            fn merge_field(
 +            fn merge_field<B: Buf>(
                  &mut self,
-@@ -375,3 +375,3 @@
+                 _: u32,
                  _: WireType,
 -                _: &mut impl Buf,
 +                _: &mut B,
                  _: DecodeContext,
---- a/src/descriptor/types.rs
-+++ b/src/descriptor/types.rs
-@@ -525,3 +525,3 @@
+             ) -> Result<(), DecodeError>
+             where
+Index: prost-reflect/src/descriptor/types.rs
+===================================================================
+--- prost-reflect.orig/src/descriptor/types.rs
++++ prost-reflect/src/descriptor/types.rs
+@@ -523,18 +523,18 @@ impl<T> Message for Options<T>
+ where
+     T: Message + Default,
  {
 -    fn encode_raw(&self, buf: &mut impl BufMut)
 +    fn encode_raw<B: BufMut>(&self, buf: &mut B)
      where
-@@ -532,3 +532,3 @@
+         Self: Sized,
+     {
+         buf.put(self.encoded.as_slice());
+     }
  
 -    fn merge_field(
 +    fn merge_field<B: Buf>(
          &mut self,
-@@ -536,3 +536,3 @@
+         tag: u32,
          wire_type: WireType,
 -        buf: &mut impl Buf,
 +        buf: &mut B,
          ctx: DecodeContext,
---- a/src/dynamic/message.rs
-+++ b/src/dynamic/message.rs
-@@ -17,3 +17,3 @@
+     ) -> Result<(), DecodeError>
+     where
+Index: prost-reflect/src/dynamic/message.rs
+===================================================================
+--- prost-reflect.orig/src/dynamic/message.rs
++++ prost-reflect/src/dynamic/message.rs
+@@ -15,7 +15,7 @@ use super::{
+ };
+ 
  impl Message for DynamicMessage {
 -    fn encode_raw(&self, buf: &mut impl BufMut)
 +    fn encode_raw<B: BufMut>(&self, buf: &mut B)
      where
-@@ -34,3 +34,3 @@
+         Self: Sized,
+     {
+@@ -32,11 +32,11 @@ impl Message for DynamicMessage {
+         }
+     }
  
 -    fn merge_field(
 +    fn merge_field<B: Buf>(
          &mut self,
-@@ -38,3 +38,3 @@
+         number: u32,
          wire_type: WireType,
 -        buf: &mut impl Buf,
 +        buf: &mut B,
          ctx: DecodeContext,
---- a/src/dynamic/unknown.rs
-+++ b/src/dynamic/unknown.rs
-@@ -240,3 +240,3 @@
+     ) -> Result<(), DecodeError>
+     where
+Index: prost-reflect/src/dynamic/unknown.rs
+===================================================================
+--- prost-reflect.orig/src/dynamic/unknown.rs
++++ prost-reflect/src/dynamic/unknown.rs
+@@ -238,7 +238,7 @@ impl UnknownFieldSet {
+ }
+ 
  impl Message for UnknownFieldSet {
 -    fn encode_raw(&self, buf: &mut impl BufMut)
 +    fn encode_raw<B: BufMut>(&self, buf: &mut B)
      where
-@@ -249,3 +249,3 @@
+         Self: Sized,
+     {
+@@ -247,11 +247,11 @@ impl Message for UnknownFieldSet {
+         }
+     }
  
 -    fn merge_field(
 +    fn merge_field<B: Buf>(
          &mut self,
-@@ -253,3 +253,3 @@
+         number: u32,
          wire_type: WireType,
 -        buf: &mut impl Buf,
 +        buf: &mut B,
          ctx: DecodeContext,
+     ) -> Result<(), DecodeError>
+     where
