@@ -1,0 +1,51 @@
+From 208119234f5e1df046e1b777bea4e364cb59c314 Mon Sep 17 00:00:00 2001
+From: Adam Kern <akern40@gmail.com>
+Date: Wed, 23 Oct 2024 22:48:01 -0400
+Subject: [PATCH 1/2] Fixes no_std + approx combination
+Origin: https://github.com/rust-ndarray/ndarray/pull/1448
+
+These two features can coexist; fixing them included:
+- Slightly altering tests to avoid `std` fns
+- Adding `feature = "std"` on some "approx" tests
+- Adding a line to the test script to catch this in the future
+
+--- a/scripts/all-tests.sh
++++ b/scripts/all-tests.sh
+@@ -13,6 +13,8 @@
+ 
+ # ndarray with no features
+ cargo test -p ndarray -v --no-default-features
++# ndarray with no_std-compatible features
++cargo test -p ndarray -v --no-default-features --features approx
+ # all with features
+ cargo test -v --features "$FEATURES" $QC_FEAT
+ # all with features and release (ignore test crates which is already optimized)
+--- a/tests/numeric.rs
++++ b/tests/numeric.rs
+@@ -163,6 +163,7 @@
+ 
+ #[test]
+ #[cfg(feature = "approx")]
++#[cfg(feature = "std")]
+ fn var_axis()
+ {
+     use ndarray::{aview0, aview2};
+@@ -222,6 +223,7 @@
+ 
+ #[test]
+ #[cfg(feature = "approx")]
++#[cfg(feature = "std")]
+ fn std_axis()
+ {
+     use ndarray::aview2;
+--- a/tests/azip.rs
++++ b/tests/azip.rs
+@@ -232,7 +232,7 @@
+         *a += b / 10.;
+         *c = a.sin();
+     });
+-    let res = Array::linspace(0., 3.1, 32).mapv_into(f32::sin);
++    let res = Array::from_iter(0..32).mapv(|x| f32::sin(x as f32 / 10.));
+     assert_abs_diff_eq!(res, ArrayView::from(&c), epsilon = 1e-4);
+ }
+ 

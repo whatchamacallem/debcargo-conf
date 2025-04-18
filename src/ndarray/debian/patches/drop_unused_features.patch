@@ -1,0 +1,55 @@
+Description: Drop unused features
+ - blas: would require to package cblas-sys, openblas-src, openblas-build...
+ .
+ - matrixmultiply/threading would require thread-tree that is a dep only of
+ matrixmultiply
+ .
+ - portable-atomic-critical-section: requires portable-atomic-util
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -225,15 +225,6 @@
+ optional = true
+ default-features = false
+ 
+-[dependencies.cblas-sys]
+-version = "0.1.4"
+-optional = true
+-default-features = false
+-
+-[dependencies.libc]
+-version = "0.2.82"
+-optional = true
+-
+ [dependencies.matrixmultiply]
+ version = "0.3.2"
+ features = ["cgemm"]
+@@ -281,18 +272,12 @@
+ default-features = false
+ 
+ [features]
+-blas = [
+-    "dep:cblas-sys",
+-    "dep:libc",
+-]
+ default = ["std"]
+ docs = [
+     "approx",
+     "serde",
+     "rayon",
+ ]
+-matrixmultiply-threading = ["matrixmultiply/threading"]
+-portable-atomic-critical-section = ["portable-atomic/critical-section"]
+ rayon = [
+     "dep:rayon",
+     "std",
+@@ -304,10 +289,3 @@
+     "matrixmultiply/std",
+ ]
+ test = []
+-
+-[target.'cfg(not(target_has_atomic = "ptr"))'.dependencies.portable-atomic]
+-version = "1.6.0"
+-
+-[target.'cfg(not(target_has_atomic = "ptr"))'.dependencies.portable-atomic-util]
+-version = "0.2.0"
+-features = ["alloc"]
