@@ -1,0 +1,35 @@
+Description: update for serde_derive_internals > 0.26
+ Between v 0.25 & 0.26 there was this commit:
+ https://github.com/serde-rs/serde/commit/ed04824f1054a7eb65a7618cb5b844fa7065499b
+ .
+ It causes build failure:
+ .
+ error[E0277]: the trait bound `serde_derive_internals::attr::RenameRule: FromStr` is not satisfied
+    --> src/attr.rs:198:42
+     |
+ 198 |                 let rule = lit_val(lit)?.parse().map_err(|_| format_err!("Invalid RenameAll rule"))?;
+     |                                          ^^^^^ the trait `FromStr` is not implemented for `serde_derive_internals::attr::RenameRule`
+     |
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -36,7 +36,7 @@
+ version = "1.0"
+ 
+ [dependencies.serde_derive_internals]
+-version = "0.25"
++version = "0.29"
+ 
+ [dependencies.syn]
+ version = "1.0"
+--- a/src/attr.rs
++++ b/src/attr.rs
+@@ -195,7 +195,7 @@
+ 
+             // #[enumeration(rename_all = "...")]
+             Meta::NameValue(MetaNameValue { path, lit, .. }) if path.is_ident("rename_all") => {
+-                let rule = lit_val(lit)?.parse().map_err(|_| format_err!("Invalid RenameAll rule"))?;
++                let rule = serde_derive_internals::attr::RenameRule::from_str(&lit_val(lit)?).map_err(|_| format_err!("Invalid RenameAll rule"))?;
+                 Ok(Attr::RenameAll(RenameRule(rule)))
+             }
+ 
