@@ -1,0 +1,35 @@
+From ada10333ad4a3123a74930d37855abb5349f642d Mon Sep 17 00:00:00 2001
+From: Charalampos Mitrodimas <charmitro@posteo.net>
+Date: Sun, 20 Apr 2025 16:49:33 +0200
+Subject: [PATCH] build: mark `max_align_t` as opaque to fix i386 build failure
+
+Avoid layout evaluation of `max_align_t` by marking it as opaque in
+the bindgen configuration. This prevents an overflow (`16_usize -
+24_usize`) on 32-bit targets such as i386.
+
+This change fixes a build failure on Debian i386 reported here[1], on
+version 0.3.4.
+
+This issue was triggered by bindgen attempting to compute the layout
+of `max_align_t`, which can vary across platforms and cause invalid
+assumptions when compiling for 32-bit architectures.
+
+[1]: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1103580
+
+Signed-off-by: Charalampos Mitrodimas <charmitro@posteo.net>
+---
+ build.rs | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/build.rs b/build.rs
+index bcd085050..e389f5cd9 100644
+--- a/build.rs
++++ b/build.rs
+@@ -57,6 +57,7 @@ fn find_libxml2() -> Option<Vec<PathBuf>> {
+ fn generate_bindings(header_dirs: Vec<PathBuf>, output_path: &Path) {
+   let bindings = bindgen::Builder::default()
+     .header("src/wrapper.h")
++    .opaque_type("max_align_t")
+     // invalidate build as soon as the wrapper changes
+     .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+     .layout_tests(true)
