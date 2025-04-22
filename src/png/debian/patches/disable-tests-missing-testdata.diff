@@ -1,6 +1,8 @@
---- a/src/decoder/mod.rs
-+++ b/src/decoder/mod.rs
-@@ -157,7 +157,7 @@
+Index: png/src/decoder/mod.rs
+===================================================================
+--- png.orig/src/decoder/mod.rs
++++ png/src/decoder/mod.rs
+@@ -157,7 +157,7 @@ impl<R: Read> Decoder<R> {
      ///
      /// Note that this is a best-effort basis.
      ///
@@ -9,9 +11,11 @@
      /// use std::fs::File;
      /// use png::{Decoder, Limits};
      /// // This image is 32×32, 1bit per pixel. The reader buffers one row which requires 4 bytes.
---- a/src/encoder.rs
-+++ b/src/encoder.rs
-@@ -1834,7 +1834,7 @@
+Index: png/src/encoder.rs
+===================================================================
+--- png.orig/src/encoder.rs
++++ png/src/encoder.rs
+@@ -1834,7 +1834,7 @@ mod tests {
          }
      }
  
@@ -20,7 +24,7 @@
      fn image_palette() -> Result<()> {
          for &bit_depth in &[1u8, 2, 4, 8] {
              // Do a reference decoding, choose a fitting palette image from pngsuite
-@@ -1872,7 +1872,7 @@
+@@ -1872,7 +1872,7 @@ mod tests {
              assert_eq!(indexed_data, redecoded);
          }
          Ok(())
@@ -29,8 +33,10 @@
  
      #[test]
      fn expect_error_on_wrong_image_len() -> Result<()> {
---- a/src/lib.rs
-+++ b/src/lib.rs
+Index: png/src/lib.rs
+===================================================================
+--- png.orig/src/lib.rs
++++ png/src/lib.rs
 @@ -10,7 +10,7 @@
  //! image data is reached.
  //!
@@ -40,9 +46,11 @@
  //! use std::fs::File;
  //! // The decoder is a build for reader and can be used to set various decoding options
  //! // via `Transformations`. The default output transformation is `Transformations::IDENTITY`.
---- a/src/decoder/stream.rs
-+++ b/src/decoder/stream.rs
-@@ -1841,7 +1841,6 @@
+Index: png/src/decoder/stream.rs
+===================================================================
+--- png.orig/src/decoder/stream.rs
++++ png/src/decoder/stream.rs
+@@ -1841,7 +1841,6 @@ mod tests {
      use std::io::{ErrorKind, Read, Write};
      use std::rc::Rc;
  
@@ -50,7 +58,7 @@
      fn image_gamma() -> Result<(), ()> {
          fn trial(path: &str, expected: Option<ScaledFloat>) {
              let decoder = crate::Decoder::new(File::open(path).unwrap());
-@@ -1882,7 +1881,6 @@
+@@ -1882,7 +1881,6 @@ mod tests {
          Ok(())
      }
  
@@ -58,7 +66,7 @@
      fn image_source_chromaticities() -> Result<(), ()> {
          fn trial(path: &str, expected: Option<SourceChromaticities>) {
              let decoder = crate::Decoder::new(File::open(path).unwrap());
-@@ -2069,7 +2067,7 @@
+@@ -2069,7 +2067,7 @@ mod tests {
          Ok(())
      }
  
@@ -67,7 +75,7 @@
      fn image_source_sbit() {
          fn trial(path: &str, expected: Option<Cow<[u8]>>) {
              let decoder = crate::Decoder::new(File::open(path).unwrap());
-@@ -2089,9 +2087,9 @@
+@@ -2089,9 +2087,9 @@ mod tests {
              "tests/sbit/rgba.png",
              Some(Cow::Owned(vec![5u8, 6u8, 5u8, 8u8])),
          );
@@ -79,7 +87,7 @@
      /// This is a regression test for https://github.com/image-rs/image/issues/1825.
      #[test]
      fn test_two_iccp_chunks() {
-@@ -2108,7 +2106,7 @@
+@@ -2108,7 +2106,7 @@ mod tests {
          // Note that the 2nd chunk in the test file has been manually altered to have a different
          // content (`b"test iccp contents"`) which would have a different CRC (797351983).
          assert_eq!(4070462061, crc32fast::hash(&icc_profile));
@@ -88,7 +96,7 @@
  
      #[test]
      fn test_iccp_roundtrip() {
-@@ -2127,16 +2125,16 @@
+@@ -2127,16 +2125,16 @@ mod tests {
          assert_eq!(dummy_icc, &**dec.info().icc_profile.as_ref().unwrap());
      }
  
@@ -108,7 +116,7 @@
      #[test]
      fn test_mdcv_and_clli_chunks() {
          let decoder = crate::Decoder::new(File::open("tests/bugfixes/cicp_pq.png").unwrap());
-@@ -2164,7 +2162,7 @@
+@@ -2164,7 +2162,7 @@ mod tests {
          let clli = info.content_light_level.unwrap();
          assert_relative_eq!(clli.max_content_light_level as f32 / 10_000.0, 4000.0);
          assert_relative_eq!(clli.max_frame_average_light_level as f32 / 10_000.0, 2627.0);
@@ -117,9 +125,11 @@
  
      /// Tests what happens then [`Reader.finish`] is called twice.
      #[test]
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -61,11 +61,6 @@
+Index: png/Cargo.toml
+===================================================================
+--- png.orig/Cargo.toml
++++ png/Cargo.toml
+@@ -61,11 +61,6 @@ name = "show"
  path = "examples/show.rs"
  
  [[bench]]
