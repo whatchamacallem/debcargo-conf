@@ -1,0 +1,35 @@
+Description: fix: convert to cstrings in PyString::from_object
+ fixes https://github.com/PyO3/pyo3/issues/5005
+ .
+ This only fixes the API, and adds a test of the API, it does not
+ deprecate the API or introduce a version which takes `&CStr` directly,
+ this can be done later.
+ .
+ Backported from v0.24.1
+Author: Zachary Dremann <dremann@gmail.com>
+Origin: backport
+Bug: https://github.com/PyO3/pyo3/issues/5005
+Applied-Upstream: https://github.com/PyO3/pyo3/pull/5008
+Reviewed-by: NoisyCoil <noisycoil@tutanota.com>
+Last-Update: 2025-04-23
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/types/string.rs
++++ b/src/types/string.rs
+@@ -10,6 +10,7 @@
+ use crate::PyNativeType;
+ use crate::{ffi, Bound, IntoPy, Py, PyAny, PyResult, Python};
+ use std::borrow::Cow;
++use std::ffi::CString;
+ use std::str;
+ 
+ /// Represents raw data backing a Python `str`.
+@@ -198,6 +199,8 @@
+         encoding: &str,
+         errors: &str,
+     ) -> PyResult<Bound<'py, PyString>> {
++        let encoding = CString::new(encoding)?;
++        let errors = CString::new(errors)?;
+         unsafe {
+             ffi::PyUnicode_FromEncodedObject(
+                 src.as_ptr(),
