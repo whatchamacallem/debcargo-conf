@@ -1,0 +1,57 @@
+From 48645b6bd144449e39331e9c8e291293ce05634d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Fabian=20Gr=C3=BCnbichler?= <git@fabian.gruenbichler.email>
+Date: Wed, 23 Apr 2025 18:07:37 +0200
+Subject: [PATCH 1/2] control: default to 'Multi-Arch: foreign' for 'bin'
+ package
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+'allowed' should be the exception, not the default.
+
+Fixes: #1103920
+
+Signed-off-by: Fabian Grünbichler <git@fabian.gruenbichler.email>
+---
+ src/debian/control.rs       | 2 +-
+ src/debian/control/tests.rs | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/debian/control.rs b/src/debian/control.rs
+index c48147f..f51f1e4 100644
+--- a/src/debian/control.rs
++++ b/src/debian/control.rs
+@@ -485,7 +485,7 @@ impl Package {
+         Package {
+             name,
+             arch: "any".to_string(),
+-            multi_arch: "allowed".to_string(),
++            multi_arch: "foreign".to_string(),
+             section: section.map(|s| s.to_string()),
+             depends: vec![
+                 "${misc:Depends}".to_string(),
+diff --git a/src/debian/control/tests.rs b/src/debian/control/tests.rs
+index bfad24b..8e49429 100644
+--- a/src/debian/control/tests.rs
++++ b/src/debian/control/tests.rs
+@@ -167,7 +167,7 @@ fn test_package_new_bin() {
+     let instance = Package::new_bin(basename, name_suffix, section, summary, description);
+ 
+     assert_eq!("any", instance.arch);
+-    assert_eq!("allowed", instance.multi_arch);
++    assert_eq!("foreign", instance.multi_arch);
+     assert_eq!(Some("rust".to_owned()), instance.section);
+     assert_eq!(
+         vec!["${misc:Depends}", "${shlibs:Depends}", "${cargo:Depends}"],
+@@ -201,7 +201,7 @@ fn test_package_display() {
+     );
+     let instance = Package::new_bin(basename, name_suffix, section, summary, description);
+ 
+-    let expected = "Package: rsa\nArchitecture: any\nMulti-Arch: allowed\nSection: rust\nDepends:\n ${misc:Depends},\n ${shlibs:Depends},\n ${cargo:Depends}\nRecommends:\n ${cargo:Recommends}\nSuggests:\n ${cargo:Suggests}\nProvides:\n ${cargo:Provides}\nBuilt-Using: ${cargo:Built-Using}\nStatic-Built-Using: ${cargo:Static-Built-Using}\nDescription: \n description_start\n .\n empty lines\n .\n description_stop\n";
++    let expected = "Package: rsa\nArchitecture: any\nMulti-Arch: foreign\nSection: rust\nDepends:\n ${misc:Depends},\n ${shlibs:Depends},\n ${cargo:Depends}\nRecommends:\n ${cargo:Recommends}\nSuggests:\n ${cargo:Suggests}\nProvides:\n ${cargo:Provides}\nBuilt-Using: ${cargo:Built-Using}\nStatic-Built-Using: ${cargo:Static-Built-Using}\nDescription: \n description_start\n .\n empty lines\n .\n description_stop\n";
+ 
+     assert_eq!(expected, instance.to_string());
+ }
+-- 
+2.49.0
+
