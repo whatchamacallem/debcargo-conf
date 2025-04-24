@@ -1,0 +1,31 @@
+Description: Tweak the release build profile for the right balance between
+ the smallest binary size and enough debug info.
+
+ - Use opt-level = "z": to optimize for size.
+ - Make the panic handler simply abort() rather then unwinding and
+   printing a backtrace.
+ - Using full LTO results in the loss of individual crate compilation unit
+   names in the debuginfo, which interferes with our copyright generation.
+   Rust's default behavior is *already* thin LTO, which only takes up 1MiB
+   of extra space but avoids this issue.
+   (This seems to work on newer Rust releases and thus either specific to
+   the Debian package or fixed in rustc/LLVM, so it might be worth re-
+   evaluating the situation once the version in Debian is updated.)
+
+Signed-off-by: Detlev Casanova <detlev.casanova@collabora.com>
+Signed-off-by: Ryan Gonzalez <ryan.gonzalez@collabora.com>
+Signed-off-by: Dylan Aïssi <dylan.aissi@collabora.com>
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -548,7 +548,9 @@
+ # sacrificing debug info. With this profile (like in the standard
+ # release profile), the debug info and the stack traces will still be available.
+ [profile.release]
+-lto = true
++lto = "thin"
++opt-level = "z"
++panic = "abort"
+ 
+ # A release-like profile that is tuned to be fast, even when being fast
+ # compromises on binary size. This includes aborting on panic.
