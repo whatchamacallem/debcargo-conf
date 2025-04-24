@@ -1,0 +1,94 @@
+From 2e74fa1763f83209c5a62c1b40477021ea71ce66 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Fabian=20Gr=C3=BCnbichler?= <git@fabian.gruenbichler.email>
+Date: Wed, 23 Apr 2025 18:07:37 +0200
+Subject: [PATCH 1/2] control: default to no Multi-Arch value for 'bin' package
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+'allowed' should be the exception, not the default.
+
+Fixes: #1103920
+
+Signed-off-by: Fabian Grünbichler <git@fabian.gruenbichler.email>
+---
+ src/debian/control.rs       | 10 ++++++----
+ src/debian/control/tests.rs |  6 +++---
+ 2 files changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/src/debian/control.rs b/src/debian/control.rs
+index c48147f..be745e7 100644
+--- a/src/debian/control.rs
++++ b/src/debian/control.rs
+@@ -35,7 +35,7 @@ pub struct Source {
+ pub struct Package {
+     name: String,
+     arch: String,
+-    multi_arch: String,
++    multi_arch: Option<String>,
+     section: Option<String>,
+     depends: Vec<String>,
+     recommends: Vec<String>,
+@@ -126,7 +126,9 @@ impl fmt::Display for Package {
+     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+         writeln!(f, "Package: {}", self.name)?;
+         writeln!(f, "Architecture: {}", self.arch)?;
+-        writeln!(f, "Multi-Arch: {}", self.multi_arch)?;
++        if let Some(ref multi_arch) = self.multi_arch {
++            writeln!(f, "Multi-Arch: {}", multi_arch)?;
++        }
+         if let Some(section) = &self.section {
+             writeln!(f, "Section: {}", section)?;
+         }
+@@ -452,7 +454,7 @@ impl Package {
+             // duplicate packages in the Debian archive. For very large crates we
+             // will eventually want to make debcargo generate -data packages that
+             // are arch:all and have the arch:any -dev packages depend on it.
+-            multi_arch: "same".to_string(),
++            multi_arch: Some("same".to_string()),
+             section: None,
+             depends,
+             recommends,
+@@ -485,7 +487,7 @@ impl Package {
+         Package {
+             name,
+             arch: "any".to_string(),
+-            multi_arch: "allowed".to_string(),
++            multi_arch: None,
+             section: section.map(|s| s.to_string()),
+             depends: vec![
+                 "${misc:Depends}".to_string(),
+diff --git a/src/debian/control/tests.rs b/src/debian/control/tests.rs
+index bfad24b..f1d16cc 100644
+--- a/src/debian/control/tests.rs
++++ b/src/debian/control/tests.rs
+@@ -136,7 +136,7 @@ fn test_package_new() {
+     assert!(instance.is_ok());
+     let instance = instance.unwrap();
+     assert_eq!("any", instance.arch);
+-    assert_eq!("same", instance.multi_arch);
++    assert_eq!(Some("same"), instance.multi_arch.as_deref());
+     assert_eq!(None, instance.section);
+     assert_eq!(vec!["${misc:Depends}"], instance.depends);
+     assert_eq!(Vec::<String>::new(), instance.recommends);
+@@ -167,7 +167,7 @@ fn test_package_new_bin() {
+     let instance = Package::new_bin(basename, name_suffix, section, summary, description);
+ 
+     assert_eq!("any", instance.arch);
+-    assert_eq!("allowed", instance.multi_arch);
++    assert_eq!(None, instance.multi_arch);
+     assert_eq!(Some("rust".to_owned()), instance.section);
+     assert_eq!(
+         vec!["${misc:Depends}", "${shlibs:Depends}", "${cargo:Depends}"],
+@@ -201,7 +201,7 @@ fn test_package_display() {
+     );
+     let instance = Package::new_bin(basename, name_suffix, section, summary, description);
+ 
+-    let expected = "Package: rsa\nArchitecture: any\nMulti-Arch: allowed\nSection: rust\nDepends:\n ${misc:Depends},\n ${shlibs:Depends},\n ${cargo:Depends}\nRecommends:\n ${cargo:Recommends}\nSuggests:\n ${cargo:Suggests}\nProvides:\n ${cargo:Provides}\nBuilt-Using: ${cargo:Built-Using}\nStatic-Built-Using: ${cargo:Static-Built-Using}\nDescription: \n description_start\n .\n empty lines\n .\n description_stop\n";
++    let expected = "Package: rsa\nArchitecture: any\nSection: rust\nDepends:\n ${misc:Depends},\n ${shlibs:Depends},\n ${cargo:Depends}\nRecommends:\n ${cargo:Recommends}\nSuggests:\n ${cargo:Suggests}\nProvides:\n ${cargo:Provides}\nBuilt-Using: ${cargo:Built-Using}\nStatic-Built-Using: ${cargo:Static-Built-Using}\nDescription: \n description_start\n .\n empty lines\n .\n description_stop\n";
+ 
+     assert_eq!(expected, instance.to_string());
+ }
+-- 
+2.49.0
+
