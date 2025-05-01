@@ -2,13 +2,13 @@ Index: cbindgen/tests/tests.rs
 ===================================================================
 --- cbindgen.orig/tests/tests.rs
 +++ cbindgen/tests/tests.rs
-@@ -212,6 +212,9 @@ fn run_compile_test(
+@@ -229,6 +229,9 @@ fn run_compile_test(
      let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
      let tests_path = Path::new(&crate_dir).join("tests");
      let mut generated_file = tests_path.join("expectations");
 +    if let Some(cargo_target_tmpdir) = option_env!("CARGO_TARGET_TMPDIR") {
 +        generated_file = Path::new(cargo_target_tmpdir).join("expectations");
 +    }
+     let mut generated_symfile = tests_path.join("expectations-symbols");
      fs::create_dir_all(&generated_file).unwrap();
- 
-     let style_ext = style
+     fs::create_dir_all(&generated_symfile).unwrap();
