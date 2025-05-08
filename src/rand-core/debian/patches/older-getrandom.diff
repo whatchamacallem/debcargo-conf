@@ -1,0 +1,83 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -58,7 +58,7 @@
+ path = "src/lib.rs"
+ 
+ [dependencies.getrandom]
+-version = "0.3.0"
++version = "0.2.0"
+ optional = true
+ 
+ [dependencies.serde]
+
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -38,6 +38,9 @@
+ #[cfg(feature = "std")]
+ extern crate std;
+ 
++#[cfg(feature = "alloc")]
++extern crate alloc;
++
+ use core::{fmt, ops::DerefMut};
+ 
+ pub mod block;
+@@ -570,7 +573,7 @@
+     #[cfg(feature = "os_rng")]
+     fn try_from_os_rng() -> Result<Self, getrandom::Error> {
+         let mut seed = Self::Seed::default();
+-        getrandom::fill(seed.as_mut())?;
++        getrandom::getrandom(seed.as_mut())?;
+         let res = Self::from_seed(seed);
+         Ok(res)
+     }
+--- a/src/os.rs
++++ b/src/os.rs
+@@ -9,7 +9,7 @@
+ //! Interface to the random number generator of the operating system.
+ 
+ use crate::{TryCryptoRng, TryRngCore};
+-
++use getrandom::getrandom;
+ /// An interface over the operating-system's random data source
+ ///
+ /// This is a zero-sized struct. It can be freely constructed with just `OsRng`.
+@@ -80,22 +80,35 @@
+     }
+ }
+ 
++    /// Extract the bare error code.
++    ///
++    /// This code can either come from the underlying OS, or be a custom error.
++    /// Use [`OsError::raw_os_error()`] to disambiguate.
++   // #[inline]
++   // pub const fn code(self) -> core::num::NonZeroU32 {
++    //    self.0.code()
++    //}
+ impl TryRngCore for OsRng {
+     type Error = OsError;
+ 
+     #[inline]
+     fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
+-        getrandom::u32().map_err(OsError)
++        let mut buf = [0u8; 4];
++        getrandom(&mut buf).map_err(OsError)?;
++        Ok(u32::from_ne_bytes(buf))
+     }
+ 
+     #[inline]
+     fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
+-        getrandom::u64().map_err(OsError)
++        let mut buf = [0u8; 8];
++        getrandom(&mut buf).map_err(OsError)?;
++        Ok(u64::from_ne_bytes(buf))
+     }
+ 
+     #[inline]
+     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Self::Error> {
+-        getrandom::fill(dest).map_err(OsError)
++        getrandom(dest).map_err(OsError)?;
++        Ok(())
+     }
+ }
+ 
