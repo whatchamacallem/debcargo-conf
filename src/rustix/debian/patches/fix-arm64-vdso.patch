@@ -94,11 +94,12 @@ following the logic in [this patch].
              bucket: null(),
              chain: null(),
              nbucket: 0,
-@@ -159,6 +175,11 @@
+@@ -159,6 +175,12 @@
                      )?
                      .as_ptr();
                  }
-+                DT_GNU_HASH => {
++		// linux-raw-sys too old / missing DT_GNU_HASH
++                0x6fff_fef5 => {
 +                    vdso.gnu_hash =
 +                        check_raw_pointer::<u32>(vdso.addr_from_elf(d.d_un.d_ptr)? as *mut _)?
 +                            .as_ptr()
@@ -106,7 +107,7 @@ following the logic in [this patch].
                  DT_VERSYM => {
                      vdso.versym =
                          check_raw_pointer::<u16>(vdso.addr_from_elf(d.d_un.d_ptr)? as *mut _)?
-@@ -183,7 +204,10 @@
+@@ -183,7 +205,10 @@
          // `check_raw_pointer` will have checked these pointers for null,
          // however they could still be null if the expected dynamic table
          // entries are absent.
@@ -118,7 +119,7 @@ following the logic in [this patch].
              return None; // Failed
          }
  
-@@ -192,10 +216,21 @@
+@@ -192,10 +217,21 @@
          }
  
          // Parse the hash table header.
@@ -144,7 +145,7 @@ following the logic in [this patch].
  
          // That's all we need.
          Some(vdso)
-@@ -261,49 +296,110 @@
+@@ -261,49 +297,110 @@
              && (name == CStr::from_ptr(self.symstrings.add(aux.vda_name as usize).cast()))
      }
  
@@ -292,7 +293,7 @@ following the logic in [this patch].
              }
          }
  
-@@ -324,32 +420,103 @@
+@@ -324,32 +421,103 @@
      }
  }
  
