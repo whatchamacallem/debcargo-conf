@@ -1,0 +1,94 @@
+From a92c89fe36379bd4ad14dd5d5905ca64dc6d9d85 Mon Sep 17 00:00:00 2001
+From: Dan Gohman <dev@sunfishcode.online>
+Date: Tue, 4 Mar 2025 08:01:12 -0800
+Subject: [PATCH] Fix compatibility with older 32-bit kernels (#1374)
+
+FG: only pick hunk for:
+
+* Fix `test_vdso` to handle older kernel versions on x86 and powerpc.
+
+Signed-off-by: Fabian Grünbichler <debian@fabian.gruenbichler.email>
+
+---
+ CHANGES.md                                |  16 ++
+ Cargo.toml                                |   5 +-
+ src/backend/libc/event/syscalls.rs        |   4 +-
+ src/backend/libc/thread/syscalls.rs       |  25 ++-
+ src/backend/libc/winsock_c.rs             |   2 +-
+ src/backend/linux_raw/event/syscalls.rs   | 231 ++++++++++++++++------
+ src/backend/linux_raw/fs/syscalls.rs      |  63 +++++-
+ src/backend/linux_raw/runtime/syscalls.rs | 113 ++++++-----
+ src/backend/linux_raw/thread/syscalls.rs  | 139 +++++++------
+ src/backend/linux_raw/vdso.rs             |  29 ++-
+ src/runtime.rs                            |   2 +-
+ src/thread/futex.rs                       |  48 +----
+ src/timespec.rs                           |  21 +-
+ tests/event/epoll_timeout.rs              |  23 ++-
+ tests/thread/futex.rs                     |   6 +-
+ 15 files changed, 486 insertions(+), 241 deletions(-)
+
+--- a/src/backend/linux_raw/vdso.rs
++++ b/src/backend/linux_raw/vdso.rs
+@@ -425,6 +425,7 @@
+ #[cfg(linux_raw)]
+ #[test]
+ #[cfg_attr(any(target_arch = "mips", target_arch = "mips64"), ignore)]
++#[allow(unused_variables)]
+ fn test_vdso() {
+     let vdso = Vdso::new().unwrap();
+     assert!(!vdso.symtab.is_null());
+@@ -450,6 +451,11 @@
+         #[cfg(any(target_arch = "mips64", target_arch = "mips64r6"))]
+         let ptr = vdso.sym(cstr!("LINUX_2.6"), cstr!("__vdso_clock_gettime"));
+ 
++        // On PowerPC, "__kernel_clock_gettime64" isn't available in
++        // Linux < 5.11.
++        // On x86, "__vdso_clock_gettime64" isn't available in
++        // Linux < 5.3.
++        #[cfg(not(any(target_arch = "powerpc", target_arch = "x86")))]
+         assert!(!ptr.is_null());
+     }
+ 
+@@ -473,6 +479,8 @@
+         #[cfg(any(target_arch = "mips64", target_arch = "mips64r6"))]
+         let ptr = vdso.sym(cstr!("LINUX_2.6"), cstr!("__vdso_clock_getres"));
+ 
++        // Some versions of Linux appear to lack "__vdso_clock_getres" on x86.
++        #[cfg(not(target_arch = "x86"))]
+         assert!(!ptr.is_null());
+     }
+ 
+@@ -496,6 +504,8 @@
+         #[cfg(any(target_arch = "mips64", target_arch = "mips64r6"))]
+         let ptr = vdso.sym(cstr!("LINUX_2.6"), cstr!("__vdso_gettimeofday"));
+ 
++        // Some versions of Linux appear to lack "__vdso_gettimeofday" on x86.
++        #[cfg(not(target_arch = "x86"))]
+         assert!(!ptr.is_null());
+     }
+ 
+@@ -503,6 +513,7 @@
+         target_arch = "x86_64",
+         target_arch = "x86",
+         target_arch = "riscv64",
++        target_arch = "powerpc",
+         target_arch = "powerpc64",
+         target_arch = "s390x",
+     ))]
+@@ -513,11 +524,16 @@
+         let ptr = vdso.sym(cstr!("LINUX_2.6"), cstr!("__vdso_getcpu"));
+         #[cfg(target_arch = "riscv64")]
+         let ptr = vdso.sym(cstr!("LINUX_4.15"), cstr!("__vdso_getcpu"));
++        #[cfg(target_arch = "powerpc")]
++        let ptr = vdso.sym(cstr!("LINUX_2.6.15"), cstr!("__kernel_getcpu"));
+         #[cfg(target_arch = "powerpc64")]
+         let ptr = vdso.sym(cstr!("LINUX_2.6.15"), cstr!("__kernel_getcpu"));
+         #[cfg(target_arch = "s390x")]
+         let ptr = vdso.sym(cstr!("LINUX_2.6.29"), cstr!("__kernel_getcpu"));
+ 
++        // On PowerPC, "__kernel_getcpu" isn't available in 32-bit kernels.
++        // Some versions of Linux appear to lack "__vdso_getcpu" on x86.
++        #[cfg(not(any(target_arch = "powerpc", target_arch = "x86")))]
+         assert!(!ptr.is_null());
+     }
+ }
