@@ -85,9 +85,7 @@ fi
 
 run_debcargo() {
 	rm -rf "$BUILDDIR" "$(dirname "$BUILDDIR")/rust-${PKGNAME}_${REALVER:-$VER}"*.orig.tar.*
-	set +e
-	$DEBCARGO package --config "$PKGCFG" --directory "$BUILDDIR" "$@" "$CRATE" "${REALVER:-$VER}"
-	if [ $? -ne 0 ]; then
+	if ! $DEBCARGO package --config "$PKGCFG" --directory "$BUILDDIR" "$@" "$CRATE" "${REALVER:-$VER}"; then
 		echo "Command failed. If the patches failed to apply, to rebase them, run":
 		echo "./dev/link-patches.sh $PKGNAME"
 		echo "cd $BUILDDIR"
@@ -99,7 +97,6 @@ run_debcargo() {
 		echo "git-add all of the patches in $PKGDIR"
 		exit 1
 	fi
-	set -e
 }
 
 shouldbuild() {
