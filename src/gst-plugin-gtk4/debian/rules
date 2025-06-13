@@ -3,6 +3,8 @@
 include /usr/share/dpkg/architecture.mk
 include /usr/share/rustc/architecture.mk
 
+export CARGO_HOME = $(CURDIR)/debian/cargo_home
+
 ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
 	NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
 else
@@ -22,15 +24,13 @@ CARGO_C_FLAGS = --release \
 	dh $@ --buildsystem cargo
 
 execute_after_dh_auto_build:
-	CARGO_HOME=debian/cargo_home \
-		/usr/share/cargo/bin/cargo cbuild $(CARGO_C_FLAGS)
+	/usr/share/cargo/bin/cargo cbuild $(CARGO_C_FLAGS)
 
 override_dh_auto_install:
 	# will fail after installing the librust-XX package, since there is no binpkg
 	# but dh-cargo thinks there is
 	dh_auto_install || true
-	CARGO_HOME=debian/cargo_home \
-		/usr/share/cargo/bin/cargo cinstall $(CARGO_C_FLAGS)
+	/usr/share/cargo/bin/cargo cinstall $(CARGO_C_FLAGS)
 
 execute_after_dh_install:
 	find debian -name Cargo.lock -delete
