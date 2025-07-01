@@ -1,0 +1,58 @@
+--- rust-io-uring-0.7.8.orig/Cargo.toml
++++ rust-io-uring-0.7.8/Cargo.toml
+@@ -37,6 +37,7 @@ repository = "https://github.com/tokio-r
+ #direct-syscall = ["sc"]
+ io_safety = []
+ #overwrite = ["bindgen"]
++bindgen = []
+ 
+ [lib]
+ name = "io_uring"
+@@ -75,4 +76,3 @@ version = "0.5"
+ 
+ [build-dependencies.bindgen]
+ version = ">= 0.69, <= 0.71"
+-optional = true
+--- rust-io-uring-0.7.8.orig/build.rs
++++ rust-io-uring-0.7.8/build.rs
+@@ -1,12 +1,12 @@
+ fn main() {
+-    #[cfg(feature = "bindgen")]
++    #[cfg(any(feature = "bindgen",not(any(target_arch = "x86_64", target_arch = "aarch64", target_arch = "riscv64", target_arch = "loongarch64", target_arch = "powerpc64"))))]
+     build();
+ 
+     println!("cargo:rustc-check-cfg=cfg(io_uring_skip_arch_check)");
+     println!("cargo:rustc-check-cfg=cfg(io_uring_use_own_sys)");
+ }
+ 
+-#[cfg(feature = "bindgen")]
++#[cfg(any(feature = "bindgen",not(any(target_arch = "x86_64", target_arch = "aarch64", target_arch = "riscv64", target_arch = "loongarch64", target_arch = "powerpc64"))))]
+ fn build() {
+     use std::env;
+     use std::path::PathBuf;
+--- rust-io-uring-0.7.8.orig/src/sys/mod.rs
++++ rust-io-uring-0.7.8/src/sys/mod.rs
+@@ -15,7 +15,7 @@ use std::io;
+ 
+ use libc::*;
+ 
+-#[cfg(all(
++/*#[cfg(all(
+     not(feature = "bindgen"),
+     not(any(
+         target_arch = "x86_64",
+@@ -30,12 +30,12 @@ compile_error!(
+     "The prebuilt `sys.rs` may not be compatible with your target,
+ please use bindgen feature to generate new `sys.rs` of your arch
+ or use `--cfg=io_uring_skip_arch_check` to skip the check."
+-);
++);*/
+ 
+ cfg_if::cfg_if! {
+     if #[cfg(io_uring_use_own_sys)] {
+         include!(env!("IO_URING_OWN_SYS_BINDING"));
+-    } else if #[cfg(all(feature = "bindgen", not(feature = "overwrite")))] {
++    } else if #[cfg(all(any(feature = "bindgen",not(any(target_arch = "x86_64", target_arch = "aarch64", target_arch = "riscv64", target_arch = "loongarch64", target_arch = "powerpc64"))), not(feature = "overwrite")))] {
+         include!(concat!(env!("OUT_DIR"), "/sys.rs"));
+     } else {
+         include!("sys.rs");

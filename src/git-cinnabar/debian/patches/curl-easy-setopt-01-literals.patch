@@ -1,0 +1,100 @@
+This patch is based on the commit below from git upstream, adapted for use in
+the Debian rust-git-cinnabar package by Peter Michael Green.
+
+commit 6f11c42e8edc5cf7d65156c9dd68e720f1b92229
+Author: Jeff King <peff@peff.net>
+Date:   Wed Jun 4 16:55:13 2025 -0400
+
+    curl: fix integer constant typechecks with curl_easy_setopt()
+    
+    The curl documentation specifies that curl_easy_setopt() takes either:
+    
+      ...a long, a function pointer, an object pointer or a curl_off_t,
+      depending on what the specific option expects.
+    
+    But when we pass an integer constant like "0", it will by default be a
+    regular non-long int. This has always been wrong, but seemed to work in
+    practice (I didn't dig into curl's implementation to see whether this
+    might actually be triggering undefined behavior, but it seems likely and
+    regardless we should do what the docs say).
+    
+    This is especially important since curl has a type-checking macro that
+    causes building against curl 8.14 to produce many warnings. The specific
+    commit is due to their 79b4e56b3 (typecheck-gcc.h: fix the typechecks,
+    2025-04-22). Curiously, it does only seem to trigger when compiled with
+    -O2 for me.
+    
+    We can fix it by just marking the constants with a long "L".
+    
+    Signed-off-by: Jeff King <peff@peff.net>
+    Signed-off-by: Junio C Hamano <gitster@pobox.com>
+
+diff --git a/git-core/http-push.c b/git-core/http-push.c
+index f9e67cabd4..591e46ab26 100644
+--- a/git-core/http-push.c
++++ b/git-core/http-push.c
+@@ -195,7 +195,7 @@ static char *xml_entities(const char *s)
+ static void curl_setup_http_get(CURL *curl, const char *url,
+ 		const char *custom_req)
+ {
+-	curl_easy_setopt(curl, CURLOPT_HTTPGET, 1);
++	curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+ 	curl_easy_setopt(curl, CURLOPT_URL, url);
+ 	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, custom_req);
+ 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwrite_null);
+diff --git a/git-core/http.c b/git-core/http.c
+index 3c029cf894..cce2ea7287 100644
+--- a/git-core/http.c
++++ b/git-core/http.c
+@@ -1000,1 +1000,1 @@
+-	curl_easy_setopt(c, CURLOPT_TCP_KEEPALIVE, 1);
++	curl_easy_setopt(c, CURLOPT_TCP_KEEPALIVE, 1L);
+@@ -1019,2 +1019,2 @@
+-		curl_easy_setopt(result, CURLOPT_SSL_VERIFYPEER, 0);
+-		curl_easy_setopt(result, CURLOPT_SSL_VERIFYHOST, 0);
++		curl_easy_setopt(result, CURLOPT_SSL_VERIFYPEER, 0L);
++		curl_easy_setopt(result, CURLOPT_SSL_VERIFYHOST, 0L);
+@@ -1030,1 +1030,1 @@
+-		curl_easy_setopt(result, CURLOPT_SSL_VERIFYPEER, 1);
++		curl_easy_setopt(result, CURLOPT_SSL_VERIFYPEER, 1L);
+@@ -1040,1 +1040,1 @@
+-		curl_easy_setopt(result, CURLOPT_SSL_VERIFYHOST, 2);
++		curl_easy_setopt(result, CURLOPT_SSL_VERIFYHOST, 2L);
+@@ -1117,7 +1117,7 @@ static CURL *get_curl_handle(void)
+ 				 curl_low_speed_time);
+ 	}
+ 
+-	curl_easy_setopt(result, CURLOPT_MAXREDIRS, 20);
++	curl_easy_setopt(result, CURLOPT_MAXREDIRS, 20L);
+ 	curl_easy_setopt(result, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
+ 
+ #ifdef GIT_CURL_HAVE_CURLOPT_PROTOCOLS_STR
+@@ -1151,7 +1151,7 @@ static CURL *get_curl_handle(void)
+ 		user_agent ? user_agent : git_user_agent());
+ 
+ 	if (curl_ftp_no_epsv)
+-		curl_easy_setopt(result, CURLOPT_FTP_USE_EPSV, 0);
++		curl_easy_setopt(result, CURLOPT_FTP_USE_EPSV, 0L);
+ 
+ 	if (curl_ssl_try)
+ 		curl_easy_setopt(result, CURLOPT_USE_SSL, CURLUSESSL_TRY);
+diff --git a/git-core/remote-curl.c b/git-core/remote-curl.c
+index 590b228f67..6183772191 100644
+--- a/git-core/remote-curl.c
++++ b/git-core/remote-curl.c
+@@ -877,12 +877,12 @@ static int probe_rpc(struct rpc_state *rpc, struct slot_results *results)
+ 	headers = curl_slist_append(headers, rpc->hdr_content_type);
+ 	headers = curl_slist_append(headers, rpc->hdr_accept);
+ 
+-	curl_easy_setopt(slot->curl, CURLOPT_NOBODY, 0);
+-	curl_easy_setopt(slot->curl, CURLOPT_POST, 1);
++	curl_easy_setopt(slot->curl, CURLOPT_NOBODY, 0L);
++	curl_easy_setopt(slot->curl, CURLOPT_POST, 1L);
+ 	curl_easy_setopt(slot->curl, CURLOPT_URL, rpc->service_url);
+ 	curl_easy_setopt(slot->curl, CURLOPT_ENCODING, NULL);
+ 	curl_easy_setopt(slot->curl, CURLOPT_POSTFIELDS, "0000");
+-	curl_easy_setopt(slot->curl, CURLOPT_POSTFIELDSIZE, 4);
++	curl_easy_setopt(slot->curl, CURLOPT_POSTFIELDSIZE, 4L);
+ 	curl_easy_setopt(slot->curl, CURLOPT_HTTPHEADER, headers);
+ 	curl_easy_setopt(slot->curl, CURLOPT_WRITEFUNCTION, fwrite_buffer);
+ 	curl_easy_setopt(slot->curl, CURLOPT_WRITEDATA, &buf);
