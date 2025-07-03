@@ -199,6 +199,15 @@ Index: rust-prometheus-client-0.22.2/src/encoding/text.rs
      fn sub_registry_with_prefix_and_label() {
          let top_level_metric_name = "my_top_level_metric";
          let mut registry = Registry::default();
+@@ -876,7 +883,7 @@ mod tests {
+                 &self,
+                 mut encoder: crate::encoding::DescriptorEncoder,
+             ) -> Result<(), std::fmt::Error> {
+-                let counter = crate::metrics::counter::ConstCounter::new(42);
++                let counter = crate::metrics::counter::ConstCounter::new(42u64);
+                 let metric_encoder = encoder.encode_descriptor(
+                     &self.name,
+                     "some help",
 Index: rust-prometheus-client-0.22.2/benches/encoding/text.rs
 ===================================================================
 --- rust-prometheus-client-0.22.2.orig/benches/encoding/text.rs
@@ -246,3 +255,21 @@ Index: rust-prometheus-client-0.22.2/src/encoding/protobuf.rs
  mod tests {
      use super::*;
      use crate::metrics::counter::Counter;
+Index: rust-prometheus-client-0.22.2/src/encoding.rs
+===================================================================
+--- rust-prometheus-client-0.22.2.orig/src/encoding.rs
++++ rust-prometheus-client-0.22.2/src/encoding.rs
+@@ -612,6 +612,13 @@ impl EncodeCounterValue for u64 {
+     }
+ }
+ 
++#[cfg(not(target_has_atomic = "64"))]
++impl EncodeCounterValue for u32 {
++    fn encode(&self, encoder: &mut CounterValueEncoder) -> Result<(), std::fmt::Error> {
++        encoder.encode_u64(*self as u64)
++    }
++}
++
+ impl EncodeCounterValue for f64 {
+     fn encode(&self, encoder: &mut CounterValueEncoder) -> Result<(), std::fmt::Error> {
+         encoder.encode_f64(*self)
