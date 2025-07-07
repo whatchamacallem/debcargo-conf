@@ -1,0 +1,26 @@
+--- rust-openssh-sftp-client-0.15.2.orig/Cargo.toml
++++ rust-openssh-sftp-client-0.15.2/Cargo.toml
+@@ -127,6 +127,9 @@ features = [
+     "macros",
+ ]
+ 
++[target.'cfg(not(target_has_atomic = "64"))'.dependencies.portable-atomic]
++version = "1.4"
++
+ [features]
+ __ci-tests = []
+ openssh = [
+--- rust-openssh-sftp-client-0.15.2.orig/src/auxiliary.rs
++++ rust-openssh-sftp-client-0.15.2/src/auxiliary.rs
+@@ -1,6 +1,10 @@
+ use crate::{lowlevel::Extensions, SftpAuxiliaryData};
+ 
+-use std::sync::atomic::{AtomicU64, AtomicU8, AtomicUsize, Ordering};
++use std::sync::atomic::{AtomicU8, AtomicUsize, Ordering};
++#[cfg(target_has_atomic = "64")]
++use std::sync::atomic::AtomicU64;
++#[cfg(not(target_has_atomic = "64"))]
++use portable_atomic::AtomicU64;
+ 
+ use once_cell::sync::OnceCell;
+ use tokio::{runtime::Handle, sync::Notify};

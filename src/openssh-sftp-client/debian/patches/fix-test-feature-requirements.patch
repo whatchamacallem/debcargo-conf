@@ -1,0 +1,24 @@
+Index: rust-openssh-sftp-client-0.15.2/Cargo.toml
+===================================================================
+--- rust-openssh-sftp-client-0.15.2.orig/Cargo.toml
++++ rust-openssh-sftp-client-0.15.2/Cargo.toml
+@@ -54,6 +54,7 @@ path = "src/lib.rs"
+ [[example]]
+ name = "openssh"
+ path = "examples/openssh.rs"
++required-features = ["openssh"]
+ 
+ [[test]]
+ name = "highlevel"
+Index: rust-openssh-sftp-client-0.15.2/tests/highlevel.rs
+===================================================================
+--- rust-openssh-sftp-client-0.15.2.orig/tests/highlevel.rs
++++ rust-openssh-sftp-client-0.15.2/tests/highlevel.rs
+@@ -107,6 +107,7 @@ async fn sftp_file_basics() {
+ }*/
+ 
+ /// Return `SftpOptions` that has `max_rw_len` set to `200`.
++#[cfg(feature = "__ci-tests")]
+ fn sftp_options_with_max_rw_len() -> SftpOptions {
+     let max_rw_len = NonZeroU32::new(200).unwrap();
+ 
