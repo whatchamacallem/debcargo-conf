@@ -1,6 +1,4 @@
-From b06274be935a93a59b788d1e21108e8ffc90eafb Mon Sep 17 00:00:00 2001
-From: Agathe Porte <989521+gagath@users.noreply.github.com>
-Date: Tue, 8 Jul 2025 16:27:31 +0200
+From: Agathe Porte <gagath@debian.org>
 Subject: [PATCH] refactor: replace instant dep with web-time
 
 The instant crate is no longer maintained since a year. Its upstream
@@ -9,6 +7,8 @@ commit does.
 
 [1] https://github.com/sebcrozet/instant/commit/d94bebae9fa470869dda4c1c916ac3686c7bc9bd
 [2] https://crates.io/crates/web-time
+
+Forwarded: https://github.com/jtroo/kanata/pull/1684
 ---
  Cargo.toml                         |  3 +-
  src/kanata/millisecond_counting.rs | 14 ++++----
@@ -221,3 +221,14 @@ commit does.
  [target.'cfg(not(target_arch = "wasm32"))'.dependencies.arboard]
  version = "3.4"
  
+--- a/src/tests/sim_tests/timing_tests.rs
++++ b/src/tests/sim_tests/timing_tests.rs
+@@ -3,7 +3,7 @@
+ 
+ use crate::Kanata;
+ 
+-use instant::Instant;
++use web_time::Instant;
+ 
+ #[test]
+ fn one_second_is_roughly_1000_counted_ticks() {
