@@ -1,0 +1,14 @@
+Index: esaxx-rs/build.rs
+===================================================================
+--- esaxx-rs.orig/build.rs
++++ esaxx-rs/build.rs
+@@ -1,6 +1,9 @@
+ #[cfg(feature = "cpp")]
+ #[cfg(not(target_os = "macos"))]
++
++use std::env;
+ fn main() {
++    println!("dh-cargo:deb-built-using=esaxx=0={}", env::var("CARGO_MANIFEST_DIR").unwrap());
+     cc::Build::new()
+         .cpp(true)
+         .flag("-std=c++11")
