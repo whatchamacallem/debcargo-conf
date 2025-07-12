@@ -1,0 +1,26 @@
+Index: hyper-rustls-0.24/Cargo.toml
+===================================================================
+--- hyper-rustls-0.24.orig/Cargo.toml
++++ hyper-rustls-0.24/Cargo.toml
+@@ -65,7 +65,7 @@ version = "0.21.6"
+ default-features = false
+ 
+ [dependencies.rustls-native-certs]
+-version = "0.6"
++version = "0.7"
+ optional = true
+ 
+ [dependencies.tokio]
+Index: hyper-rustls-0.24/src/config.rs
+===================================================================
+--- hyper-rustls-0.24.orig/src/config.rs
++++ hyper-rustls-0.24/src/config.rs
+@@ -30,7 +30,7 @@ impl ConfigBuilderExt for ConfigBuilder<
+ 
+         for cert in rustls_native_certs::load_native_certs().expect("could not load platform certs")
+         {
+-            let cert = rustls::Certificate(cert.0);
++            let cert = rustls::Certificate(cert.as_ref().to_owned());
+             match roots.add(&cert) {
+                 Ok(_) => valid_count += 1,
+                 Err(err) => {
