@@ -1,0 +1,906 @@
+Description: Update from http 0.2 stack to http 1 stack
+Author: Peter Michael Green <plugwash@debian.org>
+
+
+--- rust-dockworker-0.5.1.orig/Cargo.toml
++++ rust-dockworker-0.5.1/Cargo.toml
+@@ -51,24 +51,34 @@ features = ["std"]
+ default-features = false
+ 
+ [dependencies.http]
+-version = "0.2"
++version = "1"
+ 
+ [dependencies.hyper]
+-version = "0.14"
++version = "1"
+ features = [
+     "client",
+     "http1",
+-    "stream",
+-    "tcp",
++#    "stream",
++#    "tcp",
+ ]
+ 
++[dependencies.hyper-util]
++version = "0.1"
++features = ["client","client-legacy","http1"]
++
++[dependencies.http-body]
++version = "1"
++
++[dependencies.http-body-util]
++version = "0.1"
++
+ [dependencies.hyper-rustls]
+-version = "0.24"
++version = "0.27"
+ features = ["http2"]
+ optional = true
+ 
+ [dependencies.hyper-tls]
+-version = "0.5"
++version = "0.6"
+ optional = true
+ 
+ [dependencies.log]
+@@ -87,7 +97,7 @@ version = "0.10"
+ optional = true
+ 
+ [dependencies.rustls]
+-version = "0.21"
++version = "0.23"
+ optional = true
+ 
+ [dependencies.rustls-pemfile]
+@@ -136,7 +146,7 @@ version = "2"
+ version = "0.8"
+ 
+ [dev-dependencies.reqwest]
+-version = "0.11.24"
++version = "0.12"
+ 
+ [features]
+ default = []
+@@ -153,7 +163,7 @@ ssl-rustls = [
+ ]
+ 
+ [target."cfg(unix)".dependencies.hyperlocal]
+-version = "0.8"
++version = "0.9"
+ 
+ [badges.appveyor]
+ branch = "master"
+--- rust-dockworker-0.5.1.orig/src/docker.rs
++++ rust-dockworker-0.5.1/src/docker.rs
+@@ -29,14 +29,29 @@ use serde::de::DeserializeOwned;
+ use std::env;
+ use std::path::{Path, PathBuf};
+ use std::time::Duration;
+-
+-async fn into_aframe_stream(
+-    body: hyper::Body,
+-) -> Result<BoxStream<'static, Result<AttachResponseFrame, DwError>>, DwError> {
++use http_body_util::Full;
++use http_body_util::BodyExt;
++use hyper::body::Body;
++use core::ops::Deref;
++use std::error::Error as StdError;
++
++async fn into_aframe_stream<B>(
++    body: B
++) -> Result<BoxStream<'static, Result<AttachResponseFrame, DwError>>, DwError>
++where
++    B: Body + 'static,
++    B: Send,
++    B: Unpin,
++    <B as Body>::Error: StdError,
++    <B as Body>::Error: Send,
++    <B as Body>::Error: Sync,
++    <B as Body>::Error: 'static,
++    <B as Body>::Data: Send,
++{
+     use futures::stream::StreamExt;
+     use futures::stream::TryStreamExt;
+     let mut aread = tokio_util::io::StreamReader::new(
+-        body.map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err)),
++        body.map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err)).into_data_stream(),
+     );
+     let mut buf = [0u8; 8];
+     let src = async_stream::stream! {
+@@ -84,29 +99,55 @@ async fn into_aframe_stream(
+     Ok(src.boxed())
+ }
+ 
+-async fn into_docker_error(body: hyper::Body) -> Result<DockerError, DwError> {
+-    let body = hyper::body::to_bytes(body).await?;
++async fn into_docker_error<B>(body: B) -> Result<DockerError, DwError>
++where
++    B: Body,
++    B: Send,
++    crate::errors::Error: From<<B as Body>::Error>,
++    <B as Body>::Error: Send,
++    <B as Body>::Error: Sync,
++    <B as Body>::Error: 'static,
++    <B as Body>::Data: Send,
++{
++    //let body = hyper::body::to_bytes(body).await?;
++    let body = body.collect().await?.to_bytes();
+     let err = serde_json::from_slice::<DockerError>(body.as_ref())?;
+     Ok(err)
+ }
+ 
+-fn into_lines(body: hyper::Body) -> Result<BoxStream<'static, Result<String, DwError>>, DwError> {
++fn into_lines<B>(body: B) -> Result<BoxStream<'static, Result<String, DwError>>, DwError> 
++where
++    B: Body + 'static,
++    B: Send,
++    <B as Body>::Error: StdError, 
++    <B as Body>::Error: Send,
++    <B as Body>::Error: Sync, 
++    <B as Body>::Error: 'static,
++    <B as Body>::Data: Send,
++{
+     use futures::stream::StreamExt;
+     use futures::stream::TryStreamExt;
+     use tokio::io::AsyncBufReadExt;
+     let aread = tokio_util::io::StreamReader::new(
+-        body.map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err)),
++        body.map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err)).into_data_stream(),
+     );
+     let stream = tokio_stream::wrappers::LinesStream::new(aread.lines());
+     let stream = stream.map_err(Into::into).boxed();
+     Ok(stream)
+ }
+ 
+-pub fn into_jsonlines<T>(
+-    body: hyper::Body,
++pub fn into_jsonlines<T,B>(
++    body: B,
+ ) -> Result<BoxStream<'static, Result<T, DwError>>, DwError>
+ where
+     T: DeserializeOwned,
++    B: Body + 'static,
++    B: Send,
++    <B as Body>::Error: StdError, 
++    <B as Body>::Error: Send,
++    <B as Body>::Error: Sync, 
++    <B as Body>::Error: 'static,
++    <B as Body>::Data: Send,
+ {
+     use futures::StreamExt;
+     let o = into_lines(body)?;
+@@ -167,40 +208,40 @@ pub struct Docker {
+ }
+ 
+ /// Deserialize from json string
+-fn api_result<D: DeserializeOwned>(res: http::Response<Vec<u8>>) -> Result<D, DwError> {
++async fn api_result<D: DeserializeOwned>(res: http::Response<Full<Bytes>>) -> Result<D, DwError> {
+     if res.status().is_success() {
+-        Ok(serde_json::from_slice::<D>(res.body())?)
++        Ok(serde_json::from_slice::<D>(res.body().clone().collect().await?.to_bytes().deref())?)
+     } else {
+-        Err(serde_json::from_slice::<DockerError>(res.body())?.into())
++        Err(serde_json::from_slice::<DockerError>(res.body().clone().collect().await?.to_bytes().deref())?.into())
+     }
+ }
+ 
+ /// Expect 204 NoContent
+-fn no_content(res: http::Response<Vec<u8>>) -> Result<(), DwError> {
++async fn no_content(res: http::Response<Full<Bytes>>) -> Result<(), DwError> {
+     if res.status() == StatusCode::NO_CONTENT {
+         Ok(())
+     } else {
+-        Err(serde_json::from_slice::<DockerError>(res.body())?.into())
++        Err(serde_json::from_slice::<DockerError>(res.body().clone().collect().await?.to_bytes().deref())?.into())
+     }
+ }
+ 
+ /// Expect 204 NoContent or 304 NotModified
+-fn no_content_or_not_modified(res: http::Response<Vec<u8>>) -> Result<(), DwError> {
++async fn no_content_or_not_modified(res: http::Response<Full<Bytes>>) -> Result<(), DwError> {
+     if res.status() == StatusCode::NO_CONTENT || res.status() == StatusCode::NOT_MODIFIED {
+         Ok(())
+     } else {
+-        Err(serde_json::from_slice::<DockerError>(res.body())?.into())
++        Err(serde_json::from_slice::<DockerError>(res.body().clone().collect().await?.to_bytes().deref())?.into())
+     }
+ }
+ 
+ /// Ignore succeed response
+ ///
+ /// Read whole response body, then ignore it.
+-fn ignore_result(res: http::Response<Vec<u8>>) -> Result<(), DwError> {
++async fn ignore_result(res: http::Response<Full<Bytes>>) -> Result<(), DwError> {
+     if res.status().is_success() {
+         Ok(())
+     } else {
+-        Err(serde_json::from_slice::<DockerError>(res.body())?.into())
++        Err(serde_json::from_slice::<DockerError>(res.body().clone().collect().await?.to_bytes().deref())?.into())
+     }
+ }
+ 
+@@ -346,7 +387,7 @@ impl Docker {
+                 &format!("/containers/json?{}", param.finish()),
+             )
+             .await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Create a container
+@@ -379,7 +420,7 @@ impl Docker {
+             "application/json".parse().unwrap(),
+         );
+         let res = self.http_client().post(&headers, &path, &json_body).await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Start a container
+@@ -391,7 +432,7 @@ impl Docker {
+             .http_client()
+             .post(self.headers(), &format!("/containers/{id}/start"), "")
+             .await?;
+-        no_content(res).map_err(Into::into)
++        no_content(res).await.map_err(Into::into)
+     }
+ 
+     /// Start a container from a checkpoint
+@@ -419,7 +460,7 @@ impl Docker {
+                 "",
+             )
+             .await?;
+-        no_content(res).map_err(Into::into)
++        no_content(res).await.map_err(Into::into)
+     }
+ 
+     /// Stop a container
+@@ -437,7 +478,7 @@ impl Docker {
+                 "",
+             )
+             .await?;
+-        no_content_or_not_modified(res).map_err(Into::into)
++        no_content_or_not_modified(res).await.map_err(Into::into)
+     }
+ 
+     /// Kill a container
+@@ -455,7 +496,7 @@ impl Docker {
+                 "",
+             )
+             .await?;
+-        no_content(res).map_err(Into::into)
++        no_content(res).await.map_err(Into::into)
+     }
+ 
+     /// Restart a container
+@@ -473,7 +514,7 @@ impl Docker {
+                 "",
+             )
+             .await?;
+-        no_content(res).map_err(Into::into)
++        no_content(res).await.map_err(Into::into)
+     }
+ 
+     /// Attach to a container
+@@ -546,7 +587,7 @@ impl Docker {
+                 &format!("/containers/{}/checkpoints?{}", id, param.finish()),
+             )
+             .await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Create Checkpoint from current running container
+@@ -613,7 +654,7 @@ impl Docker {
+                 ),
+             )
+             .await?;
+-        no_content(res).map_err(Into::into)
++        no_content(res).await.map_err(Into::into)
+     }
+ 
+     /// Create Exec instance for a container
+@@ -638,7 +679,7 @@ impl Docker {
+             .http_client()
+             .post(&headers, &format!("/containers/{id}/exec"), &json_body)
+             .await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Start an exec instance
+@@ -684,7 +725,7 @@ impl Docker {
+             .http_client()
+             .get(self.headers(), &format!("/exec/{id}/json"))
+             .await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Gets current logs and tails logs from a container
+@@ -719,7 +760,7 @@ impl Docker {
+             .http_client()
+             .get(self.headers(), &format!("/containers/{container_id}/top"))
+             .await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     pub async fn processes(&self, container_id: &str) -> Result<Vec<Process>, DwError> {
+@@ -790,7 +831,7 @@ impl Docker {
+             .http_client()
+             .post(self.headers(), &format!("/containers/{id}/wait"), "")
+             .await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Remove a container
+@@ -815,7 +856,7 @@ impl Docker {
+                 &format!("/containers/{}?{}", id, param.finish()),
+             )
+             .await?;
+-        no_content(res).map_err(Into::into)
++        no_content(res).await.map_err(Into::into)
+     }
+ 
+     /// Get an archive of a filesystem resource in a container
+@@ -840,7 +881,7 @@ impl Docker {
+         if res.status().is_success() {
+             use futures::stream::StreamExt;
+             use futures::stream::TryStreamExt;
+-            Ok(res.into_body().map_err(DwError::from).boxed())
++            Ok(res.into_body().map_err(DwError::from).into_data_stream().boxed())
+         } else {
+             Err(into_docker_error(res.into_body()).await?.into())
+         }
+@@ -917,7 +958,7 @@ impl Docker {
+                 src,
+             )
+             .await?;
+-        ignore_result(res).map_err(Into::into)
++        ignore_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Build an image from a tar archive with a Dockerfile in it.
+@@ -1002,7 +1043,7 @@ impl Docker {
+             .http_client()
+             .get(self.headers(), &format!("/images/{name}/json"))
+             .await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Push an image
+@@ -1035,7 +1076,7 @@ impl Docker {
+                 "",
+             )
+             .await?;
+-        ignore_result(res).map_err(Into::into)
++        ignore_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Remove an image
+@@ -1059,7 +1100,7 @@ impl Docker {
+                 &format!("/images/{}?{}", name, param.finish()),
+             )
+             .await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Delete unused images
+@@ -1081,7 +1122,7 @@ impl Docker {
+                 "",
+             )
+             .await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// History of an image
+@@ -1094,7 +1135,7 @@ impl Docker {
+             .http_client()
+             .get(self.headers(), &format!("/images/{name}/history"))
+             .await?;
+-        api_result(res)
++        api_result(res).await
+             .map_err(Into::into)
+             .map(|mut hs: Vec<ImageLayer>| {
+                 hs.iter_mut().for_each(|change| {
+@@ -1115,7 +1156,7 @@ impl Docker {
+             .http_client()
+             .get(self.headers(), &format!("/images/json?a={}", all as u32))
+             .await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Get a tarball containing all images and metadata for a repository
+@@ -1133,7 +1174,7 @@ impl Docker {
+         if res.status().is_success() {
+             use futures::stream::StreamExt;
+             use futures::stream::TryStreamExt;
+-            Ok(res.into_body().map_err(Into::into).boxed())
++            Ok(res.into_body().map_err(Into::into).into_data_stream().boxed())
+         } else {
+             Err(into_docker_error(res.into_body()).await?.into())
+         }
+@@ -1157,7 +1198,10 @@ impl Docker {
+             .post_file(&headers, &format!("/images/load?quiet={quiet}"), path)
+             .await?;
+         if !res.status().is_success() {
+-            return Err(serde_json::from_slice::<DockerError>(res.body())?.into());
++            let body = res.body().clone();
++            let body = body.collect().await?.to_bytes();
++            let body = body.deref();
++            return Err(serde_json::from_slice::<DockerError>(body)?.into());
+         }
+         let path = path.to_owned();
+         tokio::task::spawn_blocking(move || {
+@@ -1215,7 +1259,7 @@ impl Docker {
+             .http_client()
+             .post(&headers, "/auth", &json_body)
+             .await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Get system information
+@@ -1224,7 +1268,7 @@ impl Docker {
+     /// /info
+     pub async fn system_info(&self) -> Result<SystemInfo, DwError> {
+         let res = self.http_client().get(self.headers(), "/info").await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Inspect about a container
+@@ -1236,7 +1280,7 @@ impl Docker {
+             .http_client()
+             .get(self.headers(), &format!("/containers/{container_id}/json"))
+             .await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Get changes on a container's filesystem.
+@@ -1256,7 +1300,7 @@ impl Docker {
+                 &format!("/containers/{container_id}/changes"),
+             )
+             .await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Export a container
+@@ -1280,7 +1324,7 @@ impl Docker {
+         if res.status().is_success() {
+             use futures::stream::StreamExt;
+             use futures::stream::TryStreamExt;
+-            Ok(res.into_body().map_err(Into::into).boxed())
++            Ok(res.into_body().map_err(Into::into).into_data_stream().boxed())
+         } else {
+             Err(into_docker_error(res.into_body()).await?.into())
+         }
+@@ -1293,11 +1337,11 @@ impl Docker {
+     pub async fn ping(&self) -> Result<(), DwError> {
+         let res = self.http_client().get(self.headers(), "/_ping").await?;
+         if res.status().is_success() {
+-            let buf = String::from_utf8(res.into_body().to_vec()).unwrap();
++            let buf = String::from_utf8(res.into_body().collect().await?.to_bytes().to_vec()).unwrap();
+             assert_eq!(&buf, "OK");
+             Ok(())
+         } else {
+-            Err(serde_json::from_slice::<DockerError>(res.body())?.into())
++            Err(serde_json::from_slice::<DockerError>(res.body().clone().collect().await?.to_bytes().deref())?.into())
+         }
+     }
+ 
+@@ -1307,7 +1351,7 @@ impl Docker {
+     /// /version
+     pub async fn version(&self) -> Result<Version, DwError> {
+         let res = self.http_client().get(self.headers(), "/version").await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Get monitor events
+@@ -1361,7 +1405,7 @@ impl Docker {
+             format!("/networks?{}", param.finish())
+         };
+         let res = self.http_client().get(self.headers(), &path).await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Inspect a network
+@@ -1386,7 +1430,7 @@ impl Docker {
+                 &format!("/networks/{}?{}", id, param.finish()),
+             )
+             .await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Remove a network
+@@ -1398,7 +1442,7 @@ impl Docker {
+             .http_client()
+             .delete(self.headers(), &format!("/networks/{id}"))
+             .await?;
+-        no_content(res).map_err(Into::into)
++        no_content(res).await.map_err(Into::into)
+     }
+ 
+     /// Create a network
+@@ -1419,7 +1463,7 @@ impl Docker {
+             .http_client()
+             .post(&headers, "/networks/create", &json_body)
+             .await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Connect a container to a network
+@@ -1441,7 +1485,7 @@ impl Docker {
+             .http_client()
+             .post(&headers, &format!("/networks/{id}/connect"), &json_body)
+             .await?;
+-        ignore_result(res).map_err(Into::into)
++        ignore_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Disconnect a container from a network
+@@ -1463,7 +1507,7 @@ impl Docker {
+             .http_client()
+             .post(&headers, &format!("/networks/{id}/disconnect"), &json_body)
+             .await?;
+-        ignore_result(res).map_err(Into::into)
++        ignore_result(res).await.map_err(Into::into)
+     }
+ 
+     /// Delete unused networks
+@@ -1483,7 +1527,7 @@ impl Docker {
+             format!("/networks/prune?{}", param.finish())
+         };
+         let res = self.http_client().post(self.headers(), &path, "").await?;
+-        api_result(res).map_err(Into::into)
++        api_result(res).await.map_err(Into::into)
+     }
+ }
+ 
+--- rust-dockworker-0.5.1.orig/src/errors.rs
++++ rust-dockworker-0.5.1/src/errors.rs
+@@ -2,6 +2,7 @@ use crate::response;
+ use std::env;
+ use std::io;
+ use thiserror::Error;
++use std::convert::Infallible;
+ 
+ /// Type of general docker error response
+ #[derive(Debug, serde::Deserialize, Error)]
+@@ -18,6 +19,8 @@ pub enum Error {
+     Envvar(#[from] env::VarError),
+     #[error("hyper error")]
+     Hyper(#[from] hyper::Error),
++    #[error("hyper util error")]
++    HyperUtil(#[from] hyper_util::client::legacy::Error),
+     #[error("json error")]
+     Json(#[from] serde_json::Error),
+     #[error("docker error")]
+@@ -58,3 +61,9 @@ pub enum Error {
+     #[error("unknown error: {}", message)]
+     Unknown { message: String },
+ }
++
++impl From<Infallible> for Error {
++    fn from(_ : Infallible) -> Self {
++        unreachable!();
++    }
++}
+\ No newline at end of file
+--- rust-dockworker-0.5.1.orig/src/http_client.rs
++++ rust-dockworker-0.5.1/src/http_client.rs
+@@ -1,18 +1,22 @@
+ use http::{HeaderMap, Response};
+ use std::path::Path;
++use http_body::Body;
++use http_body_util::Full;
++use bytes::Bytes;
+ 
+ /// A http client
+ #[async_trait::async_trait]
+ pub trait HttpClient {
+     type Err: Send + 'static;
++    type Incoming: Body;
+ 
+-    async fn get(&self, headers: &HeaderMap, path: &str) -> Result<Response<Vec<u8>>, Self::Err>;
++    async fn get(&self, headers: &HeaderMap, path: &str) -> Result<Response<Full<Bytes>>, Self::Err>;
+ 
+     async fn get_stream(
+         &self,
+         headers: &HeaderMap,
+         path: &str,
+-    ) -> Result<Response<hyper::Body>, Self::Err>;
++    ) -> Result<Response<Self::Incoming>, Self::Err>;
+ 
+     async fn head(&self, headers: &HeaderMap, path: &str) -> Result<HeaderMap, Self::Err>;
+ 
+@@ -21,38 +25,38 @@ pub trait HttpClient {
+         headers: &HeaderMap,
+         path: &str,
+         body: &str,
+-    ) -> Result<Response<Vec<u8>>, Self::Err>;
++    ) -> Result<Response<Full<Bytes>>, Self::Err>;
+ 
+     async fn post_stream(
+         &self,
+         headers: &HeaderMap,
+         path: &str,
+         body: &str,
+-    ) -> Result<Response<hyper::Body>, Self::Err>;
++    ) -> Result<Response<Self::Incoming>, Self::Err>;
+ 
+     async fn post_file(
+         &self,
+         headers: &HeaderMap,
+         path: &str,
+         file: &Path,
+-    ) -> Result<Response<Vec<u8>>, Self::Err>;
++    ) -> Result<Response<Full<Bytes>>, Self::Err>;
+ 
+     async fn post_file_stream(
+         &self,
+         headers: &HeaderMap,
+         path: &str,
+         file: &Path,
+-    ) -> Result<Response<hyper::Body>, Self::Err>;
++    ) -> Result<Response<Self::Incoming>, Self::Err>;
+ 
+     async fn delete(&self, headers: &HeaderMap, path: &str)
+-        -> Result<Response<Vec<u8>>, Self::Err>;
++        -> Result<Response<Full<Bytes>>, Self::Err>;
+ 
+     async fn put_file(
+         &self,
+         headers: &HeaderMap,
+         path: &str,
+         file: &Path,
+-    ) -> Result<Response<Vec<u8>>, Self::Err>;
++    ) -> Result<Response<Full<Bytes>>, Self::Err>;
+ }
+ 
+ /// Access to inner HttpClient
+--- rust-dockworker-0.5.1.orig/src/hyper_client.rs
++++ rust-dockworker-0.5.1/src/hyper_client.rs
+@@ -4,21 +4,26 @@ use http::{HeaderMap, Request, Response}
+ use hyper::Uri;
+ use std::path::Path;
+ use std::str::FromStr;
++use http_body_util::Full;
++use bytes::Bytes;
++use hyper_util::rt::TokioExecutor;
++use hyper::body::Incoming;
++use http_body_util::BodyExt;
+ 
+ #[allow(clippy::enum_variant_names)]
+ #[derive(Clone, Debug)]
+ enum Client {
+-    HttpClient(hyper::Client<hyper::client::HttpConnector>),
++    HttpClient(hyper_util::client::legacy::Client<hyper_util::client::legacy::connect::HttpConnector,Full<Bytes>>),
+     #[cfg(all(feature = "openssl", feature = "hyper-tls"))]
+-    HttpsClient(hyper::Client<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>),
++    HttpsClient(hyper_util::client::legacy::Client<hyper_tls::HttpsConnector<hyper_util::client::legacy::Client::HttpConnector,Full<Bytes>>>),
+     #[cfg(all(feature = "rustls", feature = "hyper-rustls"))]
+-    HttpsClient(hyper::Client<hyper_rustls::HttpsConnector<hyper::client::HttpConnector>>),
++    HttpsClient(hyper_util::client::legacy::Client<hyper_rustls::HttpsConnector<hyper_util::client::legacy::Client::HttpConnector,Full<Bytes>>>),
+     #[cfg(unix)]
+-    UnixClient(hyper::Client<hyperlocal::UnixConnector>),
++    UnixClient(hyper_util::client::legacy::Client<hyperlocal::UnixConnector,Full<Bytes>>),
+ }
+ 
+ impl Client {
+-    fn request(&self, req: Request<hyper::Body>) -> hyper::client::ResponseFuture {
++    fn request(&self, req: Request<Full<Bytes>>) -> hyper_util::client::legacy::ResponseFuture {
+         match self {
+             Client::HttpClient(http_client) => http_client.request(req),
+             #[cfg(all(feature = "openssl", feature = "hyper-tls"))]
+@@ -60,18 +65,18 @@ fn request_builder(
+     request
+ }
+ 
+-async fn request_with_redirect<T: Into<hyper::Body> + Sync + Send + 'static + Clone>(
++async fn request_with_redirect<T: Into<Full<Bytes>> + Sync + Send + 'static + Clone>(
+     client: Client,
+     method: http::Method,
+     uri: Uri,
+     headers: HeaderMap,
+     body: Option<T>,
+-) -> Result<http::Response<hyper::Body>, DwError> {
++) -> Result<http::Response<Incoming>, DwError> {
+     let request =
+         request_builder(&method, &uri, &headers).body(if let Some(body) = body.clone() {
+             body.into()
+         } else {
+-            hyper::Body::empty()
++            Full::new(Bytes::new())
+         })?;
+     let mut future = client.request(request);
+     let mut max_redirects = 10;
+@@ -107,11 +112,11 @@ async fn request_with_redirect<T: Into<h
+                 request = request.uri(location.clone());
+ 
+                 future = client.request(if see_other {
+-                    request.body(hyper::Body::empty()).unwrap()
++                    request.body(Full::new(Bytes::new())).unwrap()
+                 } else if let Some(body) = body.clone() {
+                     request.body(body.into()).unwrap()
+                 } else {
+-                    request.body(hyper::Body::empty()).unwrap()
++                    request.body(Full::new(Bytes::new())).unwrap()
+                 });
+ 
+                 max_redirects -= 1;
+@@ -120,10 +125,11 @@ async fn request_with_redirect<T: Into<h
+     }
+ }
+ 
+-async fn fetch_body(resp: http::Response<hyper::Body>) -> Result<http::Response<Vec<u8>>, DwError> {
++async fn fetch_body(resp: http::Response<Incoming>) -> Result<http::Response<Full<Bytes>>, DwError> {
+     let (p, b) = resp.into_parts();
+-    let b = hyper::body::to_bytes(b).await?.to_vec();
+-    Ok(Response::from_parts(p, b))
++    //let b = hyper::body::to_bytes(b).await?.to_vec();
++    let b = b.collect().await?.to_bytes();
++    Ok(Response::from_parts(p, Full::new(b)))
+ }
+ 
+ impl HyperClient {
+@@ -137,7 +143,7 @@ impl HyperClient {
+         let url = hyperlocal::Uri::new(path, "").into();
+         // Prevent from using connection pooling.
+         // See https://github.com/hyperium/hyper/issues/2312.
+-        let client: hyper::Client<_> = hyper::Client::builder()
++        let client: hyper_util::client::legacy::Client<_,_> = hyper_util::client::legacy::Client::builder(TokioExecutor::new())
+             .pool_idle_timeout(std::time::Duration::from_millis(0))
+             .pool_max_idle_per_host(0)
+             .build(hyperlocal::UnixConnector);
+@@ -171,10 +177,10 @@ impl HyperClient {
+             var: addr_https,
+             source: err,
+         })?;
+-        let mut http = hyper::client::HttpConnector::new();
++        let mut http = hyper_util::client::legacy::Client::HttpConnector::new();
+         http.enforce_http(false);
+         let https = hyper_tls::HttpsConnector::from((http, builder.build()?.into()));
+-        let client = hyper::Client::builder().build::<_, hyper::Body>(https);
++        let client = hyper_util::client::legacy::Client::builder().build::<_, Full<Bytes>>(https);
+         Ok(Self::new(Client::HttpsClient(client), url))
+     }
+ 
+@@ -236,7 +242,7 @@ impl HyperClient {
+             .https_or_http()
+             .enable_all_versions()
+             .build();
+-        let client = hyper::Client::builder().build::<_, hyper::Body>(https);
++        let client = hyper_util::client::legacy::Client::builder().build::<_, Full<Bytes>>(https);
+         Ok(Self::new(Client::HttpsClient(client), url))
+     }
+ 
+@@ -247,15 +253,16 @@ impl HyperClient {
+             var: addr_https,
+             source: err,
+         })?;
+-        Ok(Self::new(Client::HttpClient(hyper::Client::new()), url))
++        Ok(Self::new(Client::HttpClient(hyper_util::client::legacy::Client::builder(TokioExecutor::new()).build_http()), url))
+     }
+ }
+ 
+ #[async_trait::async_trait]
+ impl HttpClient for HyperClient {
+     type Err = DwError;
++    type Incoming = Incoming;
+ 
+-    async fn get(&self, headers: &HeaderMap, path: &str) -> Result<Response<Vec<u8>>, Self::Err> {
++    async fn get(&self, headers: &HeaderMap, path: &str) -> Result<Response<Full<Bytes>>, Self::Err> {
+         let url = join_uri(&self.base, path)?;
+ 
+         let res = request_with_redirect::<Vec<u8>>(
+@@ -273,7 +280,7 @@ impl HttpClient for HyperClient {
+         &self,
+         headers: &HeaderMap,
+         path: &str,
+-    ) -> Result<Response<hyper::Body>, Self::Err> {
++    ) -> Result<Response<Incoming>, Self::Err> {
+         let url = join_uri(&self.base, path)?;
+ 
+         let res = request_with_redirect::<Vec<u8>>(
+@@ -307,7 +314,7 @@ impl HttpClient for HyperClient {
+         headers: &HeaderMap,
+         path: &str,
+         body: &str,
+-    ) -> Result<Response<Vec<u8>>, Self::Err> {
++    ) -> Result<Response<Full<Bytes>>, Self::Err> {
+         let url = join_uri(&self.base, path)?;
+ 
+         let res = request_with_redirect(
+@@ -327,7 +334,7 @@ impl HttpClient for HyperClient {
+         headers: &HeaderMap,
+         path: &str,
+         body: &str,
+-    ) -> Result<Response<hyper::Body>, Self::Err> {
++    ) -> Result<Response<Incoming>, Self::Err> {
+         let url = join_uri(&self.base, path)?;
+ 
+         let res = request_with_redirect(
+@@ -346,7 +353,7 @@ impl HttpClient for HyperClient {
+         headers: &HeaderMap,
+         path: &str,
+         file: &Path,
+-    ) -> Result<Response<Vec<u8>>, Self::Err> {
++    ) -> Result<Response<Full<Bytes>>, Self::Err> {
+         let mut content = tokio::fs::File::open(file).await?;
+         let url = join_uri(&self.base, path)?;
+ 
+@@ -371,7 +378,7 @@ impl HttpClient for HyperClient {
+         headers: &HeaderMap,
+         path: &str,
+         file: &Path,
+-    ) -> Result<Response<hyper::Body>, Self::Err> {
++    ) -> Result<Response<Incoming>, Self::Err> {
+         let mut content = tokio::fs::File::open(file).await?;
+         let url = join_uri(&self.base, path)?;
+ 
+@@ -394,7 +401,7 @@ impl HttpClient for HyperClient {
+         &self,
+         headers: &HeaderMap,
+         path: &str,
+-    ) -> Result<Response<Vec<u8>>, Self::Err> {
++    ) -> Result<Response<Full<Bytes>>, Self::Err> {
+         let url = join_uri(&self.base, path)?;
+ 
+         let res = request_with_redirect::<Vec<u8>>(
+@@ -414,7 +421,7 @@ impl HttpClient for HyperClient {
+         headers: &HeaderMap,
+         path: &str,
+         file: &Path,
+-    ) -> Result<Response<Vec<u8>>, Self::Err> {
++    ) -> Result<Response<Full<Bytes>>, Self::Err> {
+         let mut content = tokio::fs::File::open(file).await?;
+         let url = join_uri(&self.base, path)?;
+ 
+--- rust-dockworker-0.5.1.orig/src/test.rs
++++ rust-dockworker-0.5.1/src/test.rs
+@@ -9,6 +9,7 @@ use crate::process::Top;
+ use crate::stats::Stats;
+ use crate::system::SystemInfo;
+ use crate::version::Version;
++use hyper::body::Incoming;
+ 
+ #[test]
+ fn get_containers() {
+@@ -32,7 +33,7 @@ fn get_stats_suspended() {
+ #[tokio::test]
+ async fn get_stats_streaming() {
+     let res = get_stats_response();
+-    let src = crate::docker::into_jsonlines::<Stats>(res.into_body()).unwrap();
++    let src = crate::docker::into_jsonlines::<Stats,_>(res.into_body()).unwrap();
+     use futures::stream::StreamExt;
+     let stats = src
+         .collect::<Vec<_>>()
+@@ -150,11 +151,11 @@ fn get_version_response() -> &'static st
+     include_str!("fixtures/version.json")
+ }
+ 
+-fn get_stats_response() -> http::Response<hyper::Body> {
++fn get_stats_response() -> http::Response<String> {
+     let response = http::Response::builder()
+         .status(http::StatusCode::OK)
+         .header("Transfer-Encoding", "chunked")
+         .header("Connection", "Close");
+     let body = include_str!("fixtures/stats_stream.json").to_string();
+-    response.body(hyper::Body::from(body)).unwrap()
++    response.body(body).unwrap()
+ }
