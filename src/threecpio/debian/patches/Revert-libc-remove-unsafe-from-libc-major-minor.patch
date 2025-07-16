@@ -1,0 +1,46 @@
+From: Benjamin Drung <bdrung@posteo.de>
+Date: Fri, 11 Apr 2025 02:14:43 +0200
+Subject: Revert "libc: remove unsafe from libc::major/minor"
+
+This reverts commit 52827a6e8136453a19805dd6e1e27fd932d24bfd.
+
+Ubuntu only has rust-libc 0.2.169-1.
+---
+ Cargo.lock  | 4 ++--
+ src/libc.rs | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/Cargo.lock b/Cargo.lock
+index 7d3826d..3a26c11 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -10,9 +10,9 @@ checksum = "9fa0e2a1fcbe2f6be6c42e342259976206b383122fc152e872795338b5a3f3a7"
+ 
+ [[package]]
+ name = "libc"
+-version = "0.2.174"
++version = "0.2.170"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "1171693293099992e19cddea4e8b849964e9846f4acee11b3948bcc337be8776"
++checksum = "875b3680cb2f8f71bdcf9a30f38d48282f5d3c95cbf9b3fa57269bb5d5c06828"
+ 
+ [[package]]
+ name = "threecpio"
+diff --git a/src/libc.rs b/src/libc.rs
+index 249aa4a..6f8a843 100644
+--- a/src/libc.rs
++++ b/src/libc.rs
+@@ -60,11 +60,11 @@ pub fn getgrgid_name(gid: u32) -> Result<Option<String>> {
+ }
+ 
+ pub fn major(dev: u64) -> u32 {
+-    libc::major(dev)
++    unsafe { libc::major(dev) }
+ }
+ 
+ pub fn minor(dev: u64) -> u32 {
+-    libc::minor(dev)
++    unsafe { libc::minor(dev) }
+ }
+ 
+ pub fn mknod(pathname: &str, mode: libc::mode_t, major: u32, minor: u32) -> Result<()> {
