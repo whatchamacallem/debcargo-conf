@@ -1,0 +1,111 @@
+Index: totp-rs/Cargo.toml
+===================================================================
+--- totp-rs.orig/Cargo.toml
++++ totp-rs/Cargo.toml
+@@ -40,7 +40,7 @@ rustdoc-args = [
+ ]
+ 
+ [dependencies.base32]
+-version = "0.4"
++version = "0.5"
+ 
+ [dependencies.constant_time_eq]
+ version = "0.3"
+Index: totp-rs/src/lib.rs
+===================================================================
+--- totp-rs.orig/src/lib.rs
++++ totp-rs/src/lib.rs
+@@ -486,7 +486,7 @@ impl TOTP {
+     /// Will return the base32 representation of the secret, which might be useful when users want to manually add the secret to their authenticator
+     pub fn get_secret_base32(&self) -> String {
+         base32::encode(
+-            base32::Alphabet::RFC4648 { padding: false },
++            base32::Alphabet::Rfc4648 { padding: false },
+             self.secret.as_ref(),
+         )
+     }
+@@ -586,7 +586,7 @@ impl TOTP {
+                 }
+                 "secret" => {
+                     secret = base32::decode(
+-                        base32::Alphabet::RFC4648 { padding: false },
++                        base32::Alphabet::Rfc4648 { padding: false },
+                         value.as_ref(),
+                     )
+                     .ok_or_else(|| TotpUrlError::Secret(value.to_string()))?;
+@@ -1056,7 +1056,7 @@ mod tests {
+         assert_eq!(
+             totp.secret,
+             base32::decode(
+-                base32::Alphabet::RFC4648 { padding: false },
++                base32::Alphabet::Rfc4648 { padding: false },
+                 "KRSXG5CTMVRXEZLUKN2XAZLSKNSWG4TFOQ"
+             )
+             .unwrap()
+@@ -1074,7 +1074,7 @@ mod tests {
+         assert_eq!(
+             totp.secret,
+             base32::decode(
+-                base32::Alphabet::RFC4648 { padding: false },
++                base32::Alphabet::Rfc4648 { padding: false },
+                 "KRSXG5CTMVRXEZLUKN2XAZLSKNSWG4TFOQ"
+             )
+             .unwrap()
+@@ -1092,7 +1092,7 @@ mod tests {
+         assert_eq!(
+             totp.secret,
+             base32::decode(
+-                base32::Alphabet::RFC4648 { padding: false },
++                base32::Alphabet::Rfc4648 { padding: false },
+                 "KRSXG5CTMVRXEZLUKN2XAZLSKNSWG4TFOQ"
+             )
+             .unwrap()
+@@ -1127,7 +1127,7 @@ mod tests {
+         assert_eq!(
+             totp.secret,
+             base32::decode(
+-                base32::Alphabet::RFC4648 { padding: false },
++                base32::Alphabet::Rfc4648 { padding: false },
+                 "KRSXG5CTMVRXEZLUKN2XAZLSKNSWG4TFOQ"
+             )
+             .unwrap()
+@@ -1201,7 +1201,7 @@ mod tests {
+         assert_eq!(
+             totp.secret,
+             base32::decode(
+-                base32::Alphabet::RFC4648 { padding: false },
++                base32::Alphabet::Rfc4648 { padding: false },
+                 "KRSXG5CTMVRXEZLUKN2XAZLSKNSWG4TFOQ"
+             )
+             .unwrap()
+Index: totp-rs/src/secret.rs
+===================================================================
+--- totp-rs.orig/src/secret.rs
++++ totp-rs/src/secret.rs
+@@ -131,7 +131,7 @@ impl Secret {
+     pub fn to_bytes(&self) -> Result<Vec<u8>, SecretParseError> {
+         match self {
+             Secret::Raw(s) => Ok(s.to_vec()),
+-            Secret::Encoded(s) => match base32::decode(Alphabet::RFC4648 { padding: false }, s) {
++            Secret::Encoded(s) => match base32::decode(Alphabet::Rfc4648 { padding: false }, s) {
+                 Some(bytes) => Ok(bytes),
+                 None => Err(SecretParseError::ParseBase32),
+             },
+@@ -142,7 +142,7 @@ impl Secret {
+     pub fn to_raw(&self) -> Result<Self, SecretParseError> {
+         match self {
+             Secret::Raw(_) => Ok(self.clone()),
+-            Secret::Encoded(s) => match base32::decode(Alphabet::RFC4648 { padding: false }, s) {
++            Secret::Encoded(s) => match base32::decode(Alphabet::Rfc4648 { padding: false }, s) {
+                 Some(buf) => Ok(Secret::Raw(buf)),
+                 None => Err(SecretParseError::ParseBase32),
+             },
+@@ -153,7 +153,7 @@ impl Secret {
+     pub fn to_encoded(&self) -> Self {
+         match self {
+             Secret::Raw(s) => {
+-                Secret::Encoded(base32::encode(Alphabet::RFC4648 { padding: false }, s))
++                Secret::Encoded(base32::encode(Alphabet::Rfc4648 { padding: false }, s))
+             }
+             Secret::Encoded(_) => self.clone(),
+         }
