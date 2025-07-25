@@ -24,7 +24,7 @@
 #     Whether to build with sbuild unshare mode
 set -e
 
-SCRIPTDIR="$(dirname $(readlink -f "$0"))"
+SCRIPTDIR="$(dirname "$(readlink -f "$0")")"
 
 abort() { local x=$1; shift; for i in "$@"; do echo >&2 "$0: abort: $i"; done; exit "$x"; }
 report() { for i in "$@"; do echo >&2 "debcargo-conf builder: $i"; done; }
