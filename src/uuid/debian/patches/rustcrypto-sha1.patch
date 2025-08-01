@@ -1,21 +1,40 @@
-Index: uuid/src/sha1.rs
-===================================================================
---- uuid.orig/src/sha1.rs
-+++ uuid/src/sha1.rs
-@@ -3 +3 @@ pub(crate) fn hash(ns: &[u8], src: &[u8]
+--- a/src/sha1.rs
++++ b/src/sha1.rs
+@@ -1,6 +1,6 @@
+ #[cfg(feature = "v5")]
+ pub(crate) fn hash(ns: &[u8], src: &[u8]) -> [u8; 16] {
 -    use sha1_smol::Sha1;
 +    use sha1::{Digest,Sha1};
-@@ -11 +11 @@ pub(crate) fn hash(ns: &[u8], src: &[u8]
+ 
+     let mut hasher = Sha1::new();
+ 
+@@ -8,7 +8,7 @@
+     hasher.update(src);
+ 
+     let mut bytes = [0; 16];
 -    bytes.copy_from_slice(&hasher.digest().bytes()[..16]);
 +    bytes.copy_from_slice(&hasher.finalize()[..16]);
-Index: uuid/Cargo.toml
-===================================================================
---- uuid.orig/Cargo.toml
-+++ uuid/Cargo.toml
-@@ -124,2 +124,2 @@ default-features = false
+ 
+     bytes
+ }
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -130,8 +130,8 @@
+ optional = true
+ default-features = false
+ 
 -[dependencies.sha1_smol]
 -version = "1"
 +[dependencies.sha1]
 +version = "0.10"
-@@ -178 +177,0 @@ rng = ["dep:getrandom"]
+ optional = true
+ default-features = false
+ 
+@@ -184,7 +184,6 @@
+ macro-diagnostics = ["dep:uuid-macro-internal"]
+ md5 = ["dep:md-5"]
+ rng = ["dep:getrandom"]
 -sha1 = ["dep:sha1_smol"]
+ std = []
+ v1 = ["atomic"]
+ v3 = ["md5"]
