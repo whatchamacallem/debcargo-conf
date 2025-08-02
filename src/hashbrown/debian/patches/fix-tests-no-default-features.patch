@@ -4,15 +4,15 @@ Index: hashbrown/src/map.rs
 ===================================================================
 --- hashbrown.orig/src/map.rs
 +++ hashbrown/src/map.rs
-@@ -6711,6 +6711,7 @@ mod test_map {
-     use super::{HashMap, RawEntryMut};
+@@ -4694,6 +4694,7 @@ mod test_map {
+     use super::Entry::{Occupied, Vacant};
+     use super::EntryRef;
+     use super::HashMap;
++    #[cfg(feature="allocator-api2")]
+     use crate::raw::{AllocError, Allocator, Global};
      use alloc::string::{String, ToString};
      use alloc::sync::Arc;
-+    #[cfg(feature="allocator-api2")]
-     use allocator_api2::alloc::{AllocError, Allocator, Global};
-     use core::alloc::Layout;
-     use core::ptr::NonNull;
-@@ -8590,6 +8656,7 @@ mod test_map {
+@@ -6141,6 +6142,7 @@ mod test_map {
          }
      }
  
@@ -20,7 +20,7 @@ Index: hashbrown/src/map.rs
      unsafe impl Allocator for MyAlloc {
          fn allocate(&self, layout: Layout) -> std::result::Result<NonNull<[u8]>, AllocError> {
              let g = Global;
-@@ -8603,6 +8670,7 @@ mod test_map {
+@@ -6154,6 +6156,7 @@ mod test_map {
      }
  
      #[test]
@@ -28,7 +28,7 @@ Index: hashbrown/src/map.rs
      fn test_hashmap_into_iter_bug() {
          let dropped: Arc<AtomicI8> = Arc::new(AtomicI8::new(1));
  
-@@ -8673,6 +8741,7 @@ mod test_map {
+@@ -6224,6 +6227,7 @@ mod test_map {
      ///
      /// This function does not panic, but returns an error as a `String`
      /// to distinguish between a test panic and an error in the input data.
@@ -36,7 +36,7 @@ Index: hashbrown/src/map.rs
      fn get_test_map<I, T, A>(
          iter: I,
          mut fun: impl FnMut(u64) -> T,
-@@ -8768,6 +8837,7 @@ mod test_map {
+@@ -6319,6 +6323,7 @@ mod test_map {
  
      #[test]
      #[should_panic = "panic in clone"]
@@ -44,7 +44,7 @@ Index: hashbrown/src/map.rs
      fn test_clone_memory_leaks_and_double_drop_one() {
          let dropped: Arc<AtomicI8> = Arc::new(AtomicI8::new(2));
  
-@@ -8794,6 +8864,7 @@ mod test_map {
+@@ -6345,6 +6350,7 @@ mod test_map {
  
      #[test]
      #[should_panic = "panic in drop"]
@@ -52,7 +52,7 @@ Index: hashbrown/src/map.rs
      fn test_clone_memory_leaks_and_double_drop_two() {
          let dropped: Arc<AtomicI8> = Arc::new(AtomicI8::new(2));
  
-@@ -8828,6 +8899,7 @@ mod test_map {
+@@ -6379,6 +6385,7 @@ mod test_map {
      /// We check that we have a working table if the clone operation from another
      /// thread ended in a panic (when buckets of maps are equal to each other).
      #[test]
@@ -60,7 +60,7 @@ Index: hashbrown/src/map.rs
      fn test_catch_panic_clone_from_when_len_is_equal() {
          use std::thread;
  
-@@ -8893,6 +8965,7 @@ mod test_map {
+@@ -6444,6 +6451,7 @@ mod test_map {
      /// We check that we have a working table if the clone operation from another
      /// thread ended in a panic (when buckets of maps are not equal to each other).
      #[test]
@@ -72,19 +72,23 @@ Index: hashbrown/src/raw/mod.rs
 ===================================================================
 --- hashbrown.orig/src/raw/mod.rs
 +++ hashbrown/src/raw/mod.rs
-@@ -4671,9 +4673,11 @@ mod test_map {
+@@ -13,6 +13,7 @@ use core::{hint, ptr};
+ 
+ mod alloc;
+ #[cfg(test)]
++#[cfg(any(feature = "nightly", feature = "allocator-api2"))]
+ pub(crate) use self::alloc::AllocError;
+ pub(crate) use self::alloc::{do_alloc, Allocator, Global};
+ 
+@@ -4290,6 +4291,7 @@ mod test_map {
      /// CHECKING THAT WE DON'T TRY TO DROP DATA IF THE `ITEMS`
      /// ARE ZERO, EVEN IF WE HAVE `FULL` CONTROL BYTES.
      #[test]
 +    #[cfg(feature="allocator-api2")]
      fn test_catch_panic_clone_from() {
+         use super::{AllocError, Allocator, Global};
          use ::alloc::sync::Arc;
-         use ::alloc::vec::Vec;
-+        #[cfg(feature="allocator-api2")]
-         use allocator_api2::alloc::{AllocError, Allocator, Global};
-         use core::sync::atomic::{AtomicI8, Ordering};
-         use std::thread;
-@@ -4694,6 +4698,7 @@ mod test_map {
+@@ -4313,6 +4315,7 @@ mod test_map {
              }
          }
  
@@ -92,3 +96,13 @@ Index: hashbrown/src/raw/mod.rs
          unsafe impl Allocator for MyAlloc {
              fn allocate(&self, layout: Layout) -> std::result::Result<NonNull<[u8]>, AllocError> {
                  let g = Global;
+Index: hashbrown/src/raw/alloc.rs
+===================================================================
+--- hashbrown.orig/src/raw/alloc.rs
++++ hashbrown/src/raw/alloc.rs
+@@ -1,4 +1,5 @@
+ #[cfg(test)]
++#[cfg(any(feature = "nightly", feature = "allocator-api2"))]
+ pub(crate) use self::inner::AllocError;
+ pub(crate) use self::inner::{do_alloc, Allocator, Global};
+ 
