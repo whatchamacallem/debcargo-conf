@@ -3,8 +3,13 @@ excludes = ["etc/**"]
 uploaders = ["Philip Rinn <rinni@debian.org>"]
 collapse_features = true
 
-[source]
-build_depends = ["libhidapi-dev"]
-
 [packages.lib]
 depends = ["libhidapi-dev"]
+
+# "Exactly one linux hidapi backend must be selected."
+#
+# There are a few backends, 3 of which are for Linux, and 2 of which has
+# certain problems, so backends-hidraw-only.patch leaves only that 1 available.
+test_is_broken = true
+[packages."lib+hidraw"]
+test_is_broken = false
