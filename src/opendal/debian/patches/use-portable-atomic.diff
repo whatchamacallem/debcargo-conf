@@ -1,30 +1,20 @@
 --- rust-opendal-0.52.0.orig/src/lib.rs
 +++ rust-opendal-0.52.0/src/lib.rs
-@@ -149,6 +149,7 @@ mod tests {
-     /// We assert our public structs here to make sure we don't introduce
-     /// unexpected struct/enum size change.
+@@ -151,2 +151,3 @@
      #[test]
 +    #[cfg(target_pointer_width = "64")]
      fn assert_size() {
-         assert_eq!(32, size_of::<Operator>());
-         assert_eq!(320, size_of::<Entry>());
 --- rust-opendal-0.52.0.orig/Cargo.toml
 +++ rust-opendal-0.52.0/Cargo.toml
-@@ -366,6 +366,9 @@ features = [
-     "v4",
- ]
+@@ -368,2 +368,5 @@
  
 +[target.'cfg(not(target_has_atomic = "64"))'.dependencies.portable-atomic]
 +version = "1.4"
 +
  [dev-dependencies.criterion]
- version = "0.5"
- features = [
 --- rust-opendal-0.52.0.orig/src/raw/atomic_util.rs
 +++ rust-opendal-0.52.0/src/raw/atomic_util.rs
-@@ -15,7 +15,11 @@
- // specific language governing permissions and limitations
- // under the License.
+@@ -17,3 +17,7 @@
  
 +#[cfg(target_has_atomic = "64")]
  use std::sync::atomic::AtomicU64;
@@ -32,5 +22,3 @@
 +use portable_atomic::AtomicU64;
 +
  use std::sync::atomic::Ordering;
- 
- /// AtomicContentLength is a wrapper of AtomicU64 that used to store content length.
