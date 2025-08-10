@@ -1,0 +1,27 @@
+Index: tokio/Cargo.toml
+===================================================================
+--- tokio.orig/Cargo.toml
++++ tokio/Cargo.toml
+@@ -790,7 +790,7 @@ default-features = false
+ version = "0.4.9"
+ 
+ [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dev-dependencies.rand]
+-version = "0.9"
++version = ">= 0.8.5, < 0.10"
+ 
+ [target.'cfg(not(target_family = "wasm"))'.dependencies.socket2]
+ version = "0.5.5"
+Index: tokio/tests/sync_broadcast.rs
+===================================================================
+--- tokio.orig/tests/sync_broadcast.rs
++++ tokio/tests/sync_broadcast.rs
+@@ -569,7 +569,8 @@ fn sender_len_random() {
+     let mut rx2 = tx.subscribe();
+ 
+     for _ in 0..1000 {
+-        match rand::random_range(0..4) {
++        use rand::Rng;
++        match rand::thread_rng().gen_range(0..4) {
+             0 => {
+                 let _ = rx1.try_recv();
+             }
