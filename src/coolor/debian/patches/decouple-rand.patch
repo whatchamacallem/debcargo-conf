@@ -1,0 +1,44 @@
+Description: Decouple the rand dev-dependency
+ rand is not actually used by the library. It is only used to write two
+ examples. Disable these examples to decouple this library from rand.
+Author: NoisyCoil <noisycoil@tutanota.com>
+Forwarded: not-needed
+Last-Update: 2025-08-12
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -45,18 +45,18 @@
+ path = "examples/ansi-grey/main.rs"
+ required-features = ["crossterm"]
+ 
+-[[example]]
+-name = "ansi-mix"
+-path = "examples/ansi-mix/main.rs"
++#[[example]]
++#name = "ansi-mix"
++#path = "examples/ansi-mix/main.rs"
+ 
+ [[example]]
+ name = "ansi-variations"
+ path = "examples/ansi-variations/main.rs"
+ 
+-[[example]]
+-name = "rgb-to-ansi"
+-path = "examples/rgb-to-ansi/main.rs"
+-required-features = ["crossterm"]
++#[[example]]
++#name = "rgb-to-ansi"
++#path = "examples/rgb-to-ansi/main.rs"
++#required-features = ["crossterm"]
+ 
+ [dependencies.crossterm]
+ version = "0.29"
+@@ -64,7 +64,3 @@
+ 
+ [dev-dependencies.crossterm]
+ version = "0.29"
+-
+-[dev-dependencies.rand]
+-version = "0.9"
+-features = ["std_rng"]
