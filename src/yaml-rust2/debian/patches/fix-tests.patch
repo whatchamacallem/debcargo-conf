@@ -1,6 +1,22 @@
 --- a/src/yaml.rs
 +++ b/src/yaml.rs
-@@ -839,8 +839,11 @@
+@@ -328,6 +328,7 @@
+     Call(YAMLDecodingTrapFn),
+ }
+ 
++#[cfg(feature = "encoding")]
+ impl PartialEq for YAMLDecodingTrap {
+     fn eq(&self, other: &YAMLDecodingTrap) -> bool {
+         match (self, other) {
+@@ -339,6 +340,7 @@
+     }
+ }
+ 
++#[cfg(feature = "encoding")]
+ impl Eq for YAMLDecodingTrap {}
+ 
+ /// `YamlDecoder` is a `YamlLoader` builder that allows you to supply your own encoding error trap.
+@@ -855,8 +857,11 @@
  
  #[cfg(test)]
  mod test {
@@ -13,7 +29,7 @@
      #[test]
      fn test_read_bom() {
          let s = b"\xef\xbb\xbf---
-@@ -856,6 +859,7 @@
+@@ -872,6 +877,7 @@
          assert!(doc["d"][0].is_badvalue());
      }
  
@@ -21,7 +37,7 @@
      #[test]
      fn test_read_utf16le() {
          let s = b"\xff\xfe-\x00-\x00-\x00
-@@ -872,6 +876,7 @@
+@@ -888,6 +894,7 @@
          assert!(doc["d"][0].is_badvalue());
      }
  
@@ -29,7 +45,7 @@
      #[test]
      fn test_read_utf16be() {
          let s = b"\xfe\xff\x00-\x00-\x00-\x00
-@@ -888,6 +893,7 @@
+@@ -904,6 +911,7 @@
          assert!(doc["d"][0].is_badvalue());
      }
  
@@ -37,7 +53,7 @@
      #[test]
      fn test_read_utf16le_nobom() {
          let s = b"-\x00-\x00-\x00
-@@ -904,6 +910,7 @@
+@@ -920,6 +928,7 @@
          assert!(doc["d"][0].is_badvalue());
      }
  
