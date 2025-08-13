@@ -1,0 +1,26 @@
+Index: launchpadlib/Cargo.toml
+===================================================================
+--- launchpadlib.orig/Cargo.toml
++++ launchpadlib/Cargo.toml
+@@ -181,7 +181,7 @@ version = "0.3.17"
+ version = "2.3.1"
+ 
+ [dependencies.rand]
+-version = "0.9.2"
++version = "0.8"
+ 
+ [dependencies.reqwest]
+ version = "0.12"
+Index: launchpadlib/src/auth.rs
+===================================================================
+--- launchpadlib.orig/src/auth.rs
++++ launchpadlib/src/auth.rs
+@@ -274,7 +274,7 @@ pub fn generate_oauth1_authorization_hea
+         .to_string();
+ 
+     let nonce: String = nonce.map_or_else(
+-        || rand::rng().random_range(100000..999999).to_string(),
++        || rand::thread_rng().random_range(100000..999999).to_string(),
+         |nonce| nonce.to_string(),
+     );
+ 
