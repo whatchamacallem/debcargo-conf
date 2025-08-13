@@ -1,0 +1,86 @@
+Index: rustyline/Cargo.toml
+===================================================================
+--- rustyline.orig/Cargo.toml
++++ rustyline/Cargo.toml
+@@ -197,7 +197,7 @@ optional = true
+ default-features = false
+ 
+ [target."cfg(unix)".dependencies.nix]
+-version = "0.30"
++version = "0.29"
+ features = [
+     "fs",
+     "ioctl",
+Index: rustyline/src/tty/unix.rs
+===================================================================
+--- rustyline.orig/src/tty/unix.rs
++++ rustyline/src/tty/unix.rs
+@@ -86,7 +86,7 @@ impl AsFd for AltFd {
+ 
+ /// Return whether or not STDIN, STDOUT or STDERR is a TTY
+ fn is_a_tty(fd: AltFd) -> bool {
+-    isatty(fd).unwrap_or(false)
++    isatty(fd.as_fd().as_raw_fd()).unwrap_or(false)
+ }
+ 
+ #[cfg(any(not(feature = "buffer-redux"), test))]
+@@ -166,7 +166,7 @@ impl TtyIn {
+     fn sig(&self) -> nix::Result<Option<Signal>> {
+         if let Some(pipe) = self.sig_pipe {
+             let mut buf = [0u8; 64];
+-            match read(pipe, &mut buf) {
++            match read(pipe.as_fd().as_raw_fd(), &mut buf) {
+                 Ok(0) => Ok(None),
+                 Ok(_) => Ok(Some(Signal::from(buf[0]))),
+                 Err(e) if e == Errno::EWOULDBLOCK || e == Errno::EINTR => Ok(None),
+@@ -1316,8 +1316,8 @@ impl Sig {
+         use nix::sys::signal;
+         let _ = unsafe { signal::sigaction(signal::SIGINT, &self.original_sigint)? };
+         let _ = unsafe { signal::sigaction(signal::SIGWINCH, &self.original_sigwinch)? };
+-        close(self.pipe)?;
+-        unsafe { close(SIG_PIPE)? };
++        close(self.pipe.as_fd().as_raw_fd())?;
++        unsafe { close(SIG_PIPE.as_fd().as_raw_fd())? };
+         unsafe { SIG_PIPE = AltFd(-1) };
+         Ok(())
+     }
+@@ -1325,7 +1325,7 @@ impl Sig {
+     #[cfg(feature = "signal-hook")]
+     fn uninstall_sigwinch_handler(self) -> Result<()> {
+         signal_hook::low_level::unregister(self.id);
+-        close(self.pipe)?;
++        close(self.pipe.into_raw_fd())?;
+         Ok(())
+     }
+ }
+@@ -1530,7 +1530,7 @@ impl Term for PosixTerminal {
+ impl Drop for PosixTerminal {
+     fn drop(&mut self) {
+         if self.close_on_drop {
+-            close(self.tty_in);
++            close(self.tty_in.into_raw_fd());
+             debug_assert_eq!(self.tty_in, self.tty_out);
+         }
+         if let Some(sig) = self.sig.take() {
+Index: rustyline/src/history.rs
+===================================================================
+--- rustyline.orig/src/history.rs
++++ rustyline/src/history.rs
+@@ -9,6 +9,8 @@ use std::collections::vec_deque;
+ use std::collections::VecDeque;
+ #[cfg(feature = "with-file-history")]
+ use std::fs::{File, OpenOptions};
++use std::os::fd::AsFd;
++use std::os::fd::AsRawFd;
+ #[cfg(feature = "with-file-history")]
+ use std::io::SeekFrom;
+ use std::ops::Index;
+@@ -830,7 +832,7 @@ cfg_if::cfg_if! {
+         }
+ 
+         fn fix_perm(file: &File) {
+-            let _ = fchmod(file, Mode::S_IRUSR | Mode::S_IWUSR);
++            let _ = fchmod(file.as_fd().as_raw_fd(), Mode::S_IRUSR | Mode::S_IWUSR);
+         }
+     }
+ }

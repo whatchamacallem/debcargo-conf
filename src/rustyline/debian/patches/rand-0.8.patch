@@ -1,0 +1,46 @@
+This patch is based on a revert of upstream commit
+fbfe56b92aa67d96f164d915c357aacf695aa55c adapted for use in the Debian
+package by Peter Michael Green.
+
+Index: rustyline/examples/external_print.rs
+===================================================================
+--- rustyline.orig/examples/external_print.rs
++++ rustyline/examples/external_print.rs
+@@ -1,7 +1,7 @@
+ use std::thread;
+ use std::time::Duration;
+ 
+-use rand::{rng, Rng};
++use rand::{thread_rng, Rng};
+ 
+ use rustyline::{DefaultEditor, ExternalPrinter, Result};
+ 
+@@ -9,13 +9,13 @@ fn main() -> Result<()> {
+     let mut rl = DefaultEditor::new()?;
+     let mut printer = rl.create_external_printer()?;
+     thread::spawn(move || {
+-        let mut rng = rng();
++        let mut rng = thread_rng();
+         let mut i = 0usize;
+         loop {
+             printer
+                 .print(format!("External message #{i}"))
+                 .expect("External print failure");
+-            let wait_ms = rng.random_range(1000..10000);
++            let wait_ms = rng.gen_range(1000..10000);
+             thread::sleep(Duration::from_millis(wait_ms));
+             i += 1;
+         }
+Index: rustyline/Cargo.toml
+===================================================================
+--- rustyline.orig/Cargo.toml
++++ rustyline/Cargo.toml
+@@ -186,7 +186,7 @@ version = "0.11"
+ default-features = false
+ 
+ [dev-dependencies.rand]
+-version = "0.9"
++version = ">= 0.8.5, < 0.10"
+ 
+ [dev-dependencies.tempfile]
+ version = "3.1.0"
