@@ -1,0 +1,80 @@
+Description: write test output to /tmp
+ Prevents: called `Result::unwrap()` on an `Err` value: Os { code: 13, kind: PermissionDenied, message: "Permission denied" }
+--- a/src/file/mofile.rs
++++ b/src/file/mofile.rs
+@@ -517,7 +517,7 @@
+ 
+     #[test]
+     fn mofile_save_as_pofile() {
+-        let tmpdir = "tests-data/tests";
++        let tmpdir = "/tmp";
+ 
+         let path = "tests-data/all.mo";
+         let file = mofile(path).unwrap();
+@@ -539,7 +539,7 @@
+         read_bytes_from_file: bool,
+         save_method_name: &str,
+     ) {
+-        let tmpdir = "tests-data/tests";
++        let tmpdir = "/tmp";
+ 
+         let path = "tests-data/all.mo";
+         let file = mofile(path).unwrap();
+--- a/src/file/pofile.rs
++++ b/src/file/pofile.rs
+@@ -577,7 +577,7 @@
+         let path = "tests-data/natural-unsorted-metadata.po";
+         let file = pofile(path).unwrap();
+ 
+-        file.save("foobar-2-out.po");
++        file.save("/tmp/foobar-2-out.po");
+         assert_eq!(
+             file.to_string(),
+             "#
+@@ -652,7 +652,7 @@
+     }
+ 
+     fn pofile_save_test(save_fn_name: &str, fname: &str) {
+-        let tmpdir = "tests-data/tests";
++        let tmpdir = "/tmp";
+ 
+         let path = "tests-data/all.po";
+         let file = pofile(path).unwrap();
+@@ -688,7 +688,7 @@
+ 
+     #[test]
+     fn pofile_save_as_mofile() {
+-        let tmpdir = "tests-data/tests";
++        let tmpdir = "/tmp";
+ 
+         let content =
+             concat!("msgid \"foo bar\"\n", "msgstr \"foo bar\"\n",);
+@@ -902,7 +902,7 @@
+     #[test]
+     fn parse_and_format_escapes() {
+         let path = "tests-data/escapes.po";
+-        let out_path = "tests-data/tests/parse_and_format_escapes.po";
++        let out_path = "/tmp/parse_and_format_escapes.po";
+ 
+         let file = pofile(path).unwrap();
+         file.save(out_path);
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -44,7 +44,7 @@
+ //! for entry in file.translated_entries() {
+ //!     println!("{}", &entry.msgid);
+ //! }
+-//! file.save("tests-data/docs/pofile_save.po");
++//! file.save("/tmp/pofile_save.po");
+ //! ```
+ //!
+ //! ### Read and save a MO file
+@@ -58,7 +58,7 @@
+ //!     // All entries are translated in MO files
+ //!     println!("{}", entry.msgid);
+ //! }
+-//! file.save("tests-data/docs/mofile_save.mo");
++//! file.save("/tmp/mofile_save.mo");
+ //! ```
+ //!
+ //! ## Features
