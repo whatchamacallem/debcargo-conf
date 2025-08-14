@@ -12,29 +12,22 @@ Index: libc/build.rs
 ===================================================================
 --- libc.orig/build.rs
 +++ libc/build.rs
-@@ -13,6 +13,7 @@ const ALLOWED_CFGS: &'static [&'static s
-     "freebsd13",
-     "freebsd14",
-     "freebsd15",
-+    "gnu_time64_abi",
-     // FIXME(ctest): this config shouldn't be needed but ctest can't parse `const extern fn`
-     "libc_const_extern_fn",
-     "libc_deny_warnings",
-@@ -79,6 +80,11 @@ fn main() {
-         Some(_) | None => (),
+@@ -134,6 +135,12 @@ fn main() {
+             }
+         }
      }
- 
 +    // Some ABIs need to redirect time related symbols to their time64 equivalents.
 +    if is_gnu_time64_abi() {
-+        set_cfg("gnu_time64_abi");
++        set_cfg("gnu_file_offset_bits64");
++        set_cfg("gnu_time_bits64");
++        set_cfg("linux_time_bits64")
 +    }
-+
      // On CI: deny all warnings
      if libc_ci {
          set_cfg("libc_deny_warnings");
-@@ -235,3 +241,32 @@ fn set_cfg(cfg: &str) {
-     }
-     println!("cargo:rustc-cfg={}", cfg);
+@@ -295,3 +303,32 @@ fn set_cfg(cfg: &str) {
+     );
+     println!("cargo:rustc-cfg={cfg}");
  }
 +
 +fn is_gnu_time64_abi() -> bool {
