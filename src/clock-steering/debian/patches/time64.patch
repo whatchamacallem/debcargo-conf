@@ -1,17 +1,26 @@
+Index: rust-clock-steering-0.2.1/src/unix.rs
+===================================================================
 --- rust-clock-steering-0.2.1.orig/src/unix.rs
 +++ rust-clock-steering-0.2.1/src/unix.rs
-@@ -295,8 +295,8 @@ impl UnixClock {
+@@ -293,12 +293,11 @@ impl UnixClock {
+         let esterror = est_error.as_nanos() as libc::c_long / 1000;
+         let maxerror = max_error.as_nanos() as libc::c_long / 1000;
  
-         libc::timex {
-             modes,
+-        libc::timex {
+-            modes,
 -            esterror,
 -            maxerror,
-+            esterror: esterror.into(),
-+            maxerror: maxerror.into(),
-             ..EMPTY_TIMEX
-         }
+-            ..EMPTY_TIMEX
+-        }
++        let mut result = EMPTY_TIMEX;
++        result.modes = modes;
++        result.esterror = esterror.into();
++        result.maxerror = maxerror.into();
++        result
      }
-@@ -308,7 +308,7 @@ impl UnixClock {
+ 
+     #[cfg(target_os = "linux")]
+@@ -308,14 +307,13 @@ impl UnixClock {
  
          let time = libc::timeval {
              tv_sec: offset.seconds,
@@ -19,8 +28,19 @@
 +            tv_usec: offset.nanos as _,
          };
  
-         libc::timex {
-@@ -386,7 +386,7 @@ impl UnixClock {
+-        libc::timex {
+-            modes,
+-            time,
+-            ..EMPTY_TIMEX
+-        }
++        let mut result = EMPTY_TIMEX;
++        result.modes = modes;
++        result.time = time;
++        result
+     }
+ 
+     #[cfg(target_os = "linux")]
+@@ -386,7 +384,7 @@ impl UnixClock {
          // Since Linux 2.6.26, the supplied value is clamped to the range (-32768000,
          // +32768000). In older kernels, an EINVAL error occurs if the supplied value is
          // out of range. (32768000 is 500 << 16)
@@ -29,7 +49,22 @@
  
          timex
      }
-@@ -652,50 +652,12 @@ fn current_time_timeval(timespec: libc::
+@@ -469,11 +467,9 @@ impl Clock for UnixClock {
+ 
+     #[cfg(target_os = "linux")]
+     fn set_tai(&self, tai_offset: i32) -> Result<(), Error> {
+-        let mut timex = libc::timex {
+-            modes: libc::ADJ_TAI,
+-            constant: tai_offset as _,
+-            ..EMPTY_TIMEX
+-        };
++        let mut timex = EMPTY_TIMEX;
++        timex.modes = libc::ADJ_TAI;
++        timex.constant = tai_offset as _;
+ 
+         self.clock_adjtime(&mut timex)
+     }
+@@ -652,50 +648,12 @@ fn current_time_timeval(timespec: libc::
      Timestamp { seconds, nanos }
  }
  
