@@ -45,7 +45,7 @@ type dch >/dev/null || \
 abort 1 "Install devscripts, we need to run dch."
 
 RELBRANCH="pending-$PKGNAME"
-timeout --foreground 15 git fetch origin --prune || abort 1 "Failed to fetch upstream to check whether we are synced, please check network"
+git fetch origin --prune || abort 1 "Failed to fetch upstream to check whether we are synced, please check network"
 
 git merge-base --is-ancestor origin/master HEAD || \
 abort 1 "You are not synced with origin/master, please do so before running this script."
