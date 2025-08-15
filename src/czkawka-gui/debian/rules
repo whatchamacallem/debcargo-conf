@@ -2,5 +2,13 @@
 %:
 	dh $@ --buildsystem cargo
 
+ENABLED_FEATURES := --all-features
+
+override_dh_auto_build:
+	dh_auto_build -- $(ENABLED_FEATURES)
+
 override_dh_auto_test:
-	dh_auto_test -- build
+	dh_auto_test -- $(ENABLED_FEATURES)
+
+override_dh_auto_install:
+	dh_auto_install -- $(ENABLED_FEATURES)
