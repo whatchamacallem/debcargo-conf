@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+ACK_FILE = $(shell dpkg -L librust-bat-dev | grep acknowledgements.bin)
+BAT_ASSETS_DIR = $(shell dirname ${ACK_FILE})
+BAT_DIR = $(shell dirname ${BAT_ASSETS_DIR})
+
+execute_after_dh_auto_clean:
+	rm -rf bat/
+
+execute_before_dh_auto_build:
+	mkdir bat
+	ln -sf ${BAT_ASSETS_DIR}/syntaxes.bin ${BAT_ASSETS_DIR}/themes.bin bat/
+	cp ${BAT_DIR}/LICENSE-MIT bat/acknowledgements.txt
+	zlib-flate -uncompress <$(ACK_FILE) >> bat/acknowledgements.txt
