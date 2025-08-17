@@ -1,0 +1,32 @@
+Index: meow-cli/Cargo.toml
+===================================================================
+--- meow-cli.orig/Cargo.toml
++++ meow-cli/Cargo.toml
+@@ -53,4 +53,4 @@ version = "0.7.4"
+ features = ["glob"]
+ 
+ [dependencies.rand]
+-version = "0.9.2"
++version = "0.8.5"
+Index: meow-cli/src/meow.rs
+===================================================================
+--- meow-cli.orig/src/meow.rs
++++ meow-cli/src/meow.rs
+@@ -7,7 +7,7 @@
+ //! - Print the catfile data and the literal string
+ 
+ use include_dir::{include_dir, Dir};
+-use rand::seq::IndexedRandom;
++use rand::seq::SliceRandom;
+ 
+ static CAT_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/cats");
+ 
+@@ -34,7 +34,7 @@ fn load_cat_paths() -> Vec<String> {
+ /// 
+ /// One of the strings in `options`, randomly picked
+ fn pick_cat(options: &Vec<String>) -> String {
+-    let mut rng: rand::prelude::ThreadRng = rand::rng();
++    let mut rng = rand::thread_rng();
+     let result: Option<&String> = options.choose(&mut rng);
+ 
+     match result {
