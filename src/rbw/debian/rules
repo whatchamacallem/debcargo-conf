@@ -1,0 +1,14 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/pkg-info.mk
+
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_installman:
+	help2man \
+		--name "unofficial command line client for Bitwarden" \
+		--no-info \
+		--version-string $(DEB_VERSION_UPSTREAM) \
+		debian/rbw/usr/bin/rbw > debian/rbw.1
+	dh_installman -O--buildsystem=cargo
