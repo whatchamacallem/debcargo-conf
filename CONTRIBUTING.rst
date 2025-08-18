@@ -9,7 +9,7 @@ To accept a new package in the Debian archive, we need the following:
 
 1. Clean copyright file
 2. Except with very good reasons, it should generate only one Debian package please use ``collapse_features = true`` in debcargo.toml to ensure that
-3. No lintian warning except ``initial-upload-closes-no-bugs`` (for libraries)
+3. No lintian warning except ``initial-upload-closes-no-bugs`` (for libraries) and ``distribution-and-changes-mismatch`` as it will be replaced before upload
 4. autopkgtest should be green (or skipped)
 5. New binaries should have an open ITP
 6. The maintainer should be on IRC: #debian-rust on OFTC
