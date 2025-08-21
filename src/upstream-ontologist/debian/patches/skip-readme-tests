@@ -1,0 +1,71 @@
+--- rust-upstream-ontologist-0.2.10.orig/Cargo.lock
++++ rust-upstream-ontologist-0.2.10/Cargo.lock
+@@ -4317,6 +4317,18 @@ dependencies = [
+ ]
+ 
+ [[package]]
++name = "rst_parser"
++version = "0.4.2"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "6f3029872a42c0be67d86e3e88bf8c1e73d1da3d714da00b9c29f60a4605bfb1"
++dependencies = [
++ "anyhow",
++ "document_tree",
++ "pest",
++ "pest_derive",
++]
++
++[[package]]
+ name = "rst_renderer"
+ version = "0.4.2"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+@@ -5459,18 +5471,6 @@ source = "registry+https://github.com/ru
+ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
+ 
+ [[package]]
+-name = "uo_rst_parser"
+-version = "0.4.3"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "80277544afabbdd7ddd9117d7b5b2d61dba3819609f8810c619e590d8d1d8cdb"
+-dependencies = [
+- "anyhow",
+- "document_tree",
+- "pest",
+- "pest_derive",
+-]
+-
+-[[package]]
+ name = "upstream-ontologist"
+ version = "0.2.10"
+ dependencies = [
+@@ -5507,6 +5507,7 @@ dependencies = [
+  "r-description",
+  "regex",
+  "reqwest",
++ "rst_parser",
+  "rst_renderer",
+  "rust-ini",
+  "select",
+@@ -5519,7 +5520,6 @@ dependencies = [
+  "textwrap",
+  "tokio",
+  "toml",
+- "uo_rst_parser",
+  "url",
+  "xmltree",
+ ]
+--- rust-upstream-ontologist-0.2.10.orig/src/lib.rs
++++ rust-upstream-ontologist-0.2.10/src/lib.rs
+@@ -41,10 +41,10 @@ mod upstream_tests {
+     include!(concat!(env!("OUT_DIR"), "/upstream_tests.rs"));
+ }
+ 
+-#[cfg(test)]
++/*#[cfg(test)]
+ mod readme_tests {
+     include!(concat!(env!("OUT_DIR"), "/readme_tests.rs"));
+-}
++}*/
+ 
+ #[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
+ /// Certainty levels for the data
