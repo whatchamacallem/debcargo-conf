@@ -2,38 +2,28 @@ Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 Description: Avoid trying to build anything for ios, macos, windows or {open,free}bsd.
  Debian doesn't need it, and we don't necessarily have straightforward access to the dependencies
 
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -39,8 +39,6 @@
- 
+Index: keyring/Cargo.toml
+===================================================================
+--- keyring.orig/Cargo.toml
++++ keyring/Cargo.toml
+@@ -41,8 +41,6 @@ repository = "https://github.com/hwchen/
  [package.metadata.docs.rs]
+ default-target = "x86_64-unknown-linux-gnu"
  features = [
 -    "apple-native",
 -    "windows-native",
-     "sync-secret-service",
+     "linux-native-sync-persistent",
      "crypto-rust",
  ]
-@@ -50,11 +48,6 @@
- path = "src/lib.rs"
- 
- [[example]]
--name = "iostest"
--crate-type = ["staticlib"]
--path = "examples/ios.rs"
--
--[[example]]
- name = "keyring-cli"
- path = "examples/cli.rs"
- 
-@@ -93,7 +86,6 @@
- version = "1"
+@@ -54,7 +52,6 @@ targets = [
+ ]
  
  [features]
 -apple-native = ["dep:security-framework"]
  async-io = ["zbus?/async-io"]
  async-secret-service = [
      "dep:secret-service",
-@@ -114,26 +106,6 @@
+@@ -83,19 +80,11 @@ vendored = [
      "dbus-secret-service?/vendored",
      "openssl?/vendored",
  ]
@@ -41,29 +31,48 @@ Description: Avoid trying to build anything for ios, macos, windows or {open,fre
 -    "dep:windows-sys",
 -    "dep:byteorder",
 -]
--
--[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies.security-framework]
--version = "2"
--optional = true
--
+ 
+ [lib]
+ name = "keyring"
+ path = "src/lib.rs"
+ 
+-[[example]]
+-name = "iostest"
+-crate-type = ["staticlib"]
+-path = "examples/ios.rs"
+ 
+ [[example]]
+ name = "keyring-cli"
+@@ -144,21 +133,9 @@ version = "2"
+ [dev-dependencies.whoami]
+ version = "1.5"
+ 
 -[target.'cfg(target_os = "freebsd")'.dependencies.dbus-secret-service]
 -version = "4.0.1"
 -optional = true
--
+ 
 -[target.'cfg(target_os = "freebsd")'.dependencies.secret-service]
 -version = "4"
 -optional = true
--
+ 
 -[target.'cfg(target_os = "freebsd")'.dependencies.zbus]
 -version = "4"
 -optional = true
  
+-[target.'cfg(target_os = "ios")'.dependencies.security-framework]
+-version = "2"
+-optional = true
+ 
  [target.'cfg(target_os = "linux")'.dependencies.dbus-secret-service]
  version = "4.0.0-rc.2"
-@@ -151,27 +123,3 @@
+@@ -176,34 +153,3 @@ optional = true
  [target.'cfg(target_os = "linux")'.dependencies.zbus]
  version = "4"
  optional = true
+-
+-[target.'cfg(target_os = "macos")'.dependencies.security-framework]
+-version = "3"
+-optional = true
 -
 -[target.'cfg(target_os = "openbsd")'.dependencies.dbus-secret-service]
 -version = "4.0.0-rc.1"
@@ -82,9 +91,12 @@ Description: Avoid trying to build anything for ios, macos, windows or {open,fre
 -optional = true
 -
 -[target.'cfg(target_os = "windows")'.dependencies.windows-sys]
--version = "0.59"
+-version = "0.60"
 -features = [
 -    "Win32_Foundation",
 -    "Win32_Security_Credentials",
 -]
 -optional = true
+-
+-[target.'cfg(target_os = "windows")'.dependencies.zeroize]
+-version = "1.8.1"
