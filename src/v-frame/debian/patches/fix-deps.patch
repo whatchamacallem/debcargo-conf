@@ -3,30 +3,21 @@ Author: Sebastian Ramacher
 Last-Update: 2022-06-23
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -30,7 +30,7 @@
- version = "0.3.0"
- 
- [dependencies.num-derive]
--version = "0.4"
-+version = "0.3"
- 
- [dependencies.num-traits]
- version = "0.2"
-@@ -44,11 +44,7 @@
+@@ -66,15 +66,5 @@
+ version = "0.1.40"
  optional = true
  
- [dependencies.tracing]
--version = "0.1.40"
--optional = true
+-[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies.criterion]
+-version = "0.6"
 -
--[dependencies.wasm-bindgen]
--version = "0.2.63"
-+version = "0.1.37"
- optional = true
- 
- [dev-dependencies.criterion]
-@@ -61,4 +57,3 @@
-     "profiling/profile-with-tracing",
-     "dep:tracing",
- ]
--wasm = ["wasm-bindgen"]
+-[target.'cfg(target_arch = "wasm32")'.dev-dependencies.criterion]
+-version = "0.6"
+-default-features = false
+-
+-[target.wasm32-unknown-unknown.dependencies.wasm-bindgen]
+-version = "0.2"
+-
+-[target.wasm32-unknown-unknown.dev-dependencies.wasm-bindgen-test]
+-version = "0.3"
++[dev-dependencies.criterion]
++version = "0.5"
