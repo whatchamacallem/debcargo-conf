@@ -1,0 +1,49 @@
+From ed77f79f5c4f3df5805b88dde80d865e226d8b75 Mon Sep 17 00:00:00 2001
+From: Clayton Ramsey <cwr3@rice.edu>
+Date: Fri, 6 Jun 2025 15:45:37 -0500
+Subject: [PATCH 1/2] remove equator dependency
+
+---
+ Cargo.toml | 1 -
+ src/lib.rs | 2 --
+ 2 files changed, 3 deletions(-)
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -48,9 +48,6 @@
+ name = "aligned_vec"
+ path = "src/lib.rs"
+ 
+-[dependencies.equator]
+-version = "0.4.1"
+-
+ [dependencies.serde]
+ version = "1.0"
+ optional = true
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -22,7 +22,6 @@
+     ops::{Deref, DerefMut},
+     ptr::{null_mut, NonNull},
+ };
+-use equator::assert;
+ use raw::ARawVec;
+ 
+ mod raw;
+@@ -1060,7 +1059,6 @@
+     use super::*;
+     use alloc::vec;
+     use core::iter::repeat;
+-    use equator::assert;
+ 
+     #[test]
+     fn new() {
+@@ -1397,7 +1395,7 @@
+     #[test]
+     fn can_limit_deserialization_size() {
+         // Malformed serialized data indicating a sequence of length u64::MAX.
+-        let ser = vec![
++        let ser = alloc::vec![
+             253, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 1, 1, 1, 1, 1, 1, 1, 1,
+         ];
+ 
