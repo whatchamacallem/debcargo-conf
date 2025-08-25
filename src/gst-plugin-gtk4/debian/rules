@@ -48,3 +48,21 @@ override_dh_auto_install:
 
 execute_after_dh_install:
 	find debian -name Cargo.lock -delete
+
+# Used by Ubuntu
+vendor:
+	dh_quilt_patch
+	rm -rf $(CARGO_VENDOR_DIR)
+	CARGO_HOME= $(CARGO) vendor-filterer --platform='*-*-linux-gnu' --platform '*-*-linux-gnueabi' \
+	  --exclude-crate-path system-deps#src/tests/lib/libteststatic.a --all-features \
+	 $(CARGO_VENDOR_DIR)
+	git add -f $(CARGO_VENDOR_DIR)
+	git commit -m "Update vendored rust crates" || true
+	git reset --hard && git clean -fdx
+
+	uscan --download-current-version --destdir=..
+	rm debian/source/include-binaries
+	dpkg-source --include-binaries -b .
+	git add debian/source/include-binaries
+	git commit -m "Update debian/source/include-binaries" || true
+	git reset --hard && git clean -fdx
