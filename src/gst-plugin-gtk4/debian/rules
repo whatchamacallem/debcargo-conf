@@ -31,14 +31,14 @@ CARGO_C_FLAGS = --release \
 execute_after_dh_auto_clean:
 	rm -rf $(CARGO_HOME)
 
-execute_before_dh_auto_configure:
+override_dh_auto_configure:
 ifeq ($(shell dpkg-vendor --query vendor),Ubuntu)
 	$(CARGO) prepare-debian $(CARGO_VENDOR_DIR)
-endif
-
 # Ubuntu's dh-cargo-vendored-sources isn't working correctly here
-override_dh_auto_configure:
 	-dh_auto_configure
+else
+	dh_auto_configure
+endif
 
 execute_after_dh_auto_build:
 	/usr/share/cargo/bin/cargo cbuild $(CARGO_C_FLAGS)
