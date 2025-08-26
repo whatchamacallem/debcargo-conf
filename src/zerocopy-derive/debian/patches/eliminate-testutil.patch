@@ -1,6 +1,29 @@
---- a/tests/trybuild.rs
-+++ b/tests/trybuild.rs
-@@ -28,6 +28,7 @@
+Index: zerocopy-derive/tests/trybuild.rs
+===================================================================
+--- zerocopy-derive.orig/tests/trybuild.rs
++++ zerocopy-derive/tests/trybuild.rs
+@@ -10,8 +10,9 @@
+ 
+ use std::env;
+ 
+-use testutil::set_rustflags_w_warnings;
++//use testutil::set_rustflags_w_warnings;
+ 
++#[cfg(any())] // disable test.
+ fn test(subdir: &str) {
+     let version = testutil::ToolchainVersion::extract_from_pwd().unwrap();
+     // See the doc comment on this method for an explanation of what this does
+@@ -20,14 +21,15 @@ fn test(subdir: &str) {
+ 
+     // Set `-Wwarnings` in the `RUSTFLAGS` environment variable to ensure that
+     // `.stderr` files reflect what the typical user would encounter.
+-    set_rustflags_w_warnings();
++    //set_rustflags_w_warnings();
+ 
+     let t = trybuild::TestCases::new();
+-    t.compile_fail(format!("tests/{}/{}/*.rs", source_files_dirname, subdir));
++    //t.compile_fail(format!("tests/{}/{}/*.rs", source_files_dirname, subdir));
+ }
  
  #[test]
  #[cfg_attr(miri, ignore)]
