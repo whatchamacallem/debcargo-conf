@@ -69,7 +69,7 @@ vendor:
 	git add debian/source/include-binaries
 	git commit -m "Update debian/source/include-binaries" || true
 	git reset --hard && git clean -fdx
-ifeq (,$(shell grep -q XS-Vendored-Sources-Rust debian/control))
+ifneq (0,$(shell grep -q XS-Vendored-Sources-Rust debian/control && echo 0))
 	sed -i "s/X-Cargo-Crate: gst-plugin-gtk4/X-Cargo-Crate: gst-plugin-gtk4\nXS-Vendored-Sources-Rust/" debian/control
 endif
 	sed -i \
