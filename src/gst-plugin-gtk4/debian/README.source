@@ -14,19 +14,6 @@ Updating vendored crates
 Run
 debian/rules vendor
 
-This next part is currently more awkward to automate so we do it manually.
-See https://launchpad.net/bugs/2115573
-
-rm Cargo.toml
-CARGO_VENDOR_DIR=debian/missing-sources/ /usr/share/cargo/bin/dh-cargo-vendored-sources
-# Use the output of that command to replace the XS-Vendored-Sources-Rust line
-# in debian/control then continue.
-# If XS-Vendored-Sources-Rust is already up to date, the command won't output
-# anything and you can skip to restoring Cargo.toml.
-git add debian/control
-git commit -m "Update XS-Vendored-Sources-Rust field"
-git reset --hard # restore Cargo.toml
-
 Debian Workflow
 ===============
 Debian uses a complex workflow to manage this package
