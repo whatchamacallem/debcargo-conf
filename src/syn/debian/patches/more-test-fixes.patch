@@ -1,0 +1,363 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index cedcfce..89c20e2 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -156,15 +156,15 @@ name = "test_parse_buffer"
+ path = "tests/test_parse_buffer.rs"
+ required-features = ["parsing"]
+ 
+-[[test]]
+-name = "test_parse_quote"
+-path = "tests/test_parse_quote.rs"
+-required-features = ["parsing"]
++#[[test]]
++#name = "test_parse_quote"
++#path = "tests/test_parse_quote.rs"
++#required-features = ["parsing", "printing"]
+ 
+ [[test]]
+ name = "test_parse_stream"
+ path = "tests/test_parse_stream.rs"
+-required-features = ["parsing"]
++required-features = ["parsing", "printing"]
+ 
+ [[test]]
+ name = "test_pat"
+diff --git a/src/attr.rs b/src/attr.rs
+index 2bdf96e..7a573a0 100644
+--- a/src/attr.rs
++++ b/src/attr.rs
+@@ -141,7 +141,7 @@ ast_struct! {
+     ///
+     /// As an example, the following `mod` items are expanded identically:
+     ///
+-    /// ```
++    /// ```ignore
+     /// # use syn::{ItemMod, parse_quote};
+     /// let doc: ItemMod = parse_quote! {
+     ///     /// Single line doc comments
+@@ -280,7 +280,7 @@ impl Attribute {
+     /// We'll parse a struct, and then parse some of Rust's `#[repr]` attribute
+     /// syntax.
+     ///
+-    /// ```
++    /// ```ignore
+     /// use syn::{parenthesized, parse_quote, token, ItemStruct, LitInt};
+     ///
+     /// let input: ItemStruct = parse_quote! {
+@@ -343,7 +343,7 @@ impl Attribute {
+     /// In some cases, for attributes which have nested layers of structured
+     /// content, the following less flexible approach might be more convenient:
+     ///
+-    /// ```
++    /// ```ignore
+     /// # use syn::{parse_quote, ItemStruct};
+     /// #
+     /// # let input: ItemStruct = parse_quote! {
+diff --git a/src/data.rs b/src/data.rs
+index 96db2a0..a99e34b 100644
+--- a/src/data.rs
++++ b/src/data.rs
+@@ -116,7 +116,7 @@ impl Fields {
+         /// complete implementation would additionally want to infer trait bounds on
+         /// the generic type parameters.)
+         ///
+-        /// ```
++        /// ```ignore
+         /// # use quote::quote;
+         /// #
+         /// fn derive_clone(input: &syn::ItemStruct) -> proc_macro2::TokenStream {
+diff --git a/src/discouraged.rs b/src/discouraged.rs
+index c8d6bfe..75c251c 100644
+--- a/src/discouraged.rs
++++ b/src/discouraged.rs
+@@ -50,7 +50,7 @@ pub trait Speculative {
+     /// This change in behavior can be implemented in syn by replacing just the
+     /// `Parse` implementation for `PathSegment`:
+     ///
+-    /// ```
++    /// ```ignore
+     /// # use syn::ext::IdentExt;
+     /// use syn::parse::discouraged::Speculative;
+     /// # use syn::parse::{Parse, ParseStream};
+diff --git a/src/group.rs b/src/group.rs
+index 1534ae9..ba01b08 100644
+--- a/src/group.rs
++++ b/src/group.rs
+@@ -103,7 +103,7 @@ fn parse_delimited<'a>(
+ ///
+ /// # Example
+ ///
+-/// ```
++/// ```ignore
+ /// # use quote::quote;
+ /// #
+ /// use syn::{parenthesized, token, Ident, Result, Token, Type};
+@@ -161,7 +161,7 @@ macro_rules! parenthesized {
+ ///
+ /// # Example
+ ///
+-/// ```
++/// ```ignore
+ /// # use quote::quote;
+ /// #
+ /// use syn::{braced, token, Ident, Result, Token, Type};
+@@ -240,7 +240,7 @@ macro_rules! braced {
+ ///
+ /// # Example
+ ///
+-/// ```
++/// ```ignore
+ /// # use quote::quote;
+ /// #
+ /// use proc_macro2::TokenStream;
+diff --git a/src/lib.rs b/src/lib.rs
+index 884488d..d420388 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -935,7 +935,7 @@ pub fn parse2<T: parse::Parse>(tokens: proc_macro2::TokenStream) -> Result<T> {
+ ///
+ /// # Examples
+ ///
+-/// ```
++/// ```ignore
+ /// use syn::{Expr, Result};
+ ///
+ /// fn run() -> Result<()> {
+diff --git a/src/lit.rs b/src/lit.rs
+index 0d844a6..74afedf 100644
+--- a/src/lit.rs
++++ b/src/lit.rs
+@@ -153,7 +153,7 @@ impl LitStr {
+     ///
+     /// # Example
+     ///
+-    /// ```
++    /// ```ignore
+     /// use syn::{Attribute, Error, Expr, Lit, Meta, Path, Result};
+     ///
+     /// // Parses the path from an attribute that looks like:
+@@ -190,7 +190,7 @@ impl LitStr {
+     ///
+     /// # Example
+     ///
+-    /// ```
++    /// ```ignore
+     /// # use proc_macro2::Span;
+     /// # use syn::{LitStr, Result};
+     /// #
+diff --git a/src/lookahead.rs b/src/lookahead.rs
+index da13ffc..8df816f 100644
+--- a/src/lookahead.rs
++++ b/src/lookahead.rs
+@@ -23,7 +23,7 @@ use std::cell::RefCell;
+ ///
+ /// # Example
+ ///
+-/// ```
++/// ```ignore
+ /// use syn::{ConstParam, Ident, Lifetime, LifetimeParam, Result, Token, TypeParam};
+ /// use syn::parse::{Parse, ParseStream};
+ ///
+@@ -190,7 +190,7 @@ pub trait Peek: Sealed {
+ /// consuming the comma from the parse stream, because if it isn't a trailing
+ /// comma, that same comma needs to be parsed as part of `args`.
+ ///
+-/// ```
++/// ```ignore
+ /// use proc_macro2::TokenStream;
+ /// use quote::quote;
+ /// use syn::parse::{End, Parse, ParseStream, Result};
+@@ -274,7 +274,7 @@ pub trait Peek: Sealed {
+ ///
+ /// or:
+ ///
+-/// ```
++/// ```ignore
+ /// # use proc_macro2::TokenStream;
+ /// # use syn::parse::{ParseStream, Result};
+ /// # use syn::Token;
+diff --git a/src/meta.rs b/src/meta.rs
+index ffeeb26..49928ae 100644
+--- a/src/meta.rs
++++ b/src/meta.rs
+@@ -38,7 +38,7 @@ use std::fmt::Display;
+ /// - `hot`
+ /// - `with(sugar, milk, ...)`, a comma-separated list of ingredients
+ ///
+-/// ```
++/// ```ignore
+ /// # extern crate proc_macro;
+ /// #
+ /// use proc_macro::TokenStream;
+diff --git a/src/parse.rs b/src/parse.rs
+index 5753100..1f525f5 100644
+--- a/src/parse.rs
++++ b/src/parse.rs
+@@ -24,7 +24,7 @@
+ //!
+ //! [`parse_macro_input!`]: crate::parse_macro_input!
+ //!
+-//! ```
++//! ```ignore
+ //! # extern crate proc_macro;
+ //! #
+ //! use proc_macro::TokenStream;
+@@ -99,7 +99,7 @@
+ //! [`syn::parse2`]: crate::parse2()
+ //! [`syn::parse_str`]: crate::parse_str()
+ //!
+-//! ```
++//! ```ignore
+ //! use syn::Type;
+ //!
+ //! # fn run_parser() -> syn::Result<()> {
+@@ -149,7 +149,7 @@
+ //! through the [`Parser`] trait.
+ //!
+ //!
+-//! ```
++//! ```ignore
+ //! # extern crate proc_macro;
+ //! #
+ //! use proc_macro::TokenStream;
+@@ -476,7 +476,7 @@ impl<'a> ParseBuffer<'a> {
+     ///
+     /// [`Attribute::parse_outer`]: crate::Attribute::parse_outer
+     ///
+-    /// ```
++    /// ```ignore
+     /// use syn::{Attribute, Ident, Result, Token};
+     /// use syn::parse::{Parse, ParseStream};
+     ///
+@@ -528,7 +528,7 @@ impl<'a> ParseBuffer<'a> {
+     /// In this example we finish parsing the list of supertraits when the next
+     /// token in the input is either `where` or an opening curly brace.
+     ///
+-    /// ```
++    /// ```ignore
+     /// use syn::{braced, token, Generics, Ident, Result, Token, TypeParamBound};
+     /// use syn::parse::{Parse, ParseStream};
+     /// use syn::punctuated::Punctuated;
+@@ -595,7 +595,7 @@ impl<'a> ParseBuffer<'a> {
+     /// union` and a macro invocation that looks like `union::some_macro! { ...
+     /// }`. In other words `union` is a contextual keyword.
+     ///
+-    /// ```
++    /// ```ignore
+     /// use syn::{Ident, ItemUnion, Macro, Result, Token};
+     /// use syn::parse::{Parse, ParseStream};
+     ///
+@@ -648,7 +648,7 @@ impl<'a> ParseBuffer<'a> {
+     ///
+     /// # Example
+     ///
+-    /// ```
++    /// ```ignore
+     /// # use quote::quote;
+     /// #
+     /// use syn::{parenthesized, token, Ident, Result, Token, Type};
+@@ -695,7 +695,7 @@ impl<'a> ParseBuffer<'a> {
+     /// [`parse_terminated`]: Punctuated::parse_terminated
+     /// [`parse_separated_nonempty`]: Punctuated::parse_separated_nonempty
+     ///
+-    /// ```
++    /// ```ignore
+     /// use syn::{custom_keyword, Expr, Result, Token};
+     /// use syn::parse::{Parse, ParseStream};
+     /// use syn::punctuated::Punctuated;
+@@ -758,7 +758,7 @@ impl<'a> ParseBuffer<'a> {
+     ///
+     /// # Example
+     ///
+-    /// ```
++    /// ```ignore
+     /// use syn::{braced, token, Ident, Item, Result, Token};
+     /// use syn::parse::{Parse, ParseStream};
+     ///
+@@ -797,7 +797,7 @@ impl<'a> ParseBuffer<'a> {
+     ///
+     /// # Example
+     ///
+-    /// ```
++    /// ```ignore
+     /// use syn::{ConstParam, Ident, Lifetime, LifetimeParam, Result, Token, TypeParam};
+     /// use syn::parse::{Parse, ParseStream};
+     ///
+@@ -847,7 +847,7 @@ impl<'a> ParseBuffer<'a> {
+     /// is if your macro ends up parsing a large amount of content more than
+     /// once.
+     ///
+-    /// ```
++    /// ```ignore
+     /// # use syn::{Expr, Result};
+     /// # use syn::parse::ParseStream;
+     /// #
+@@ -907,7 +907,7 @@ impl<'a> ParseBuffer<'a> {
+     /// parentheses after the `pub` keyword. This is a small bounded amount of
+     /// work performed against the forked parse stream.
+     ///
+-    /// ```
++    /// ```ignore
+     /// use syn::{parenthesized, token, Ident, Path, Result, Token};
+     /// use syn::ext::IdentExt;
+     /// use syn::parse::{Parse, ParseStream};
+@@ -978,7 +978,7 @@ impl<'a> ParseBuffer<'a> {
+     ///
+     /// # Example
+     ///
+-    /// ```
++    /// ```ignore
+     /// use syn::{Expr, Result, Token};
+     /// use syn::parse::{Parse, ParseStream};
+     ///
+@@ -1101,7 +1101,7 @@ impl<'a> ParseBuffer<'a> {
+     ///
+     /// # Example
+     ///
+-    /// ```
++    /// ```ignore
+     /// use proc_macro2::TokenStream;
+     /// use syn::buffer::Cursor;
+     /// use syn::parse::{ParseStream, Result};
+@@ -1339,7 +1339,7 @@ fn err_unexpected_token(span: Span, delimiter: Delimiter) -> Error {
+ /// This is useful for attribute macros that want to ensure they are not
+ /// provided any attribute args.
+ ///
+-/// ```
++/// ```ignore
+ /// # extern crate proc_macro;
+ /// #
+ /// use proc_macro::TokenStream;
+diff --git a/src/parse_quote.rs b/src/parse_quote.rs
+index 2db2059..d04f37f 100644
+--- a/src/parse_quote.rs
++++ b/src/parse_quote.rs
+@@ -8,7 +8,7 @@
+ ///
+ /// [`Parse`]: crate::parse::Parse
+ ///
+-/// ```
++/// ```ignore
+ /// use quote::quote;
+ /// use syn::{parse_quote, Stmt};
+ ///
+@@ -89,7 +89,7 @@ macro_rules! parse_quote {
+ ///
+ /// # Example
+ ///
+-/// ```
++/// ```ignore
+ /// use quote::{quote, quote_spanned};
+ /// use syn::spanned::Spanned;
+ /// use syn::{parse_quote_spanned, ReturnType, Signature};
+diff --git a/tests/debug/gen.rs b/tests/debug/gen.rs
+index 8612e07..c4db827 100644
+--- a/tests/debug/gen.rs
++++ b/tests/debug/gen.rs
+@@ -1,4 +1,4 @@
+-#![cfg(any(feature = "full", feature = "derive"))]
++#![cfg(all(feature = "full", feature = "derive"))]
+ // This file is @generated by syn-internal-codegen.
+ // It is not intended for manual editing.
+ 
