@@ -1,0 +1,105 @@
+Description: Drop and relax features for Debian
+ Dropped
+ - iron: Optional dependency. iron is in debcargo-conf, but was never uploaded
+   to Debian.
+ - twoway: Optional dependency. twoway is in debcargo-conf, but was never
+   uploaded to Debian.
+ - hyper: Optional dependency. Only 0.9..0.10 API supported, no such old hyper
+   is in Debian. Should be fixed upstream.
+ - quick-error: Optional dependency. Debian has incompatible newer major
+   version. Should be fixed upstream.
+ - buf_redux: Optional dependency. Unmaintained. Debian has forked
+   buffer-redux. Should be fixed upstream.
+ - bench: Feature, needs unstable bench attribute.
+ - server: Default feature, needs dropped dependencies.
+ - nickel: Default but optional, Not in Debian.
+ - rocket: Default but optional. Not in Debian.
+ - clippy: Default but optional. Not in Debian.
+
+ Relaxed
+ - tiny_http
+ - env_logger
+
+Author: Tobias Deiminger <tobias.deiminger@posteo.de>
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: multipart/Cargo.toml
+===================================================================
+--- multipart.orig/Cargo.toml
++++ multipart/Cargo.toml
+@@ -56,12 +56,12 @@ required-features = ["mock", "tiny_http"
+ [[example]]
+ name = "rocket"
+ required-features = ["mock", "rocket", "server"]
+-[dependencies.buf_redux]
++[disabled.dependencies.buf_redux]
+ version = "0.8"
+ optional = true
+ default-features = false
+ 
+-[dependencies.clippy]
++[disabled.dependencies.clippy]
+ version = ">=0.0, <0.1"
+ optional = true
+ 
+@@ -69,12 +69,12 @@ optional = true
+ version = "1.2"
+ optional = true
+ 
+-[dependencies.hyper]
++[disabled.dependencies.hyper]
+ version = ">=0.9, <0.11"
+ optional = true
+ default-features = false
+ 
+-[dependencies.iron]
++[disabled.dependencies.iron]
+ version = ">=0.4,<0.7"
+ optional = true
+ 
+@@ -91,18 +91,18 @@ version = "0.3.14"
+ [dependencies.mime_guess]
+ version = "2.0.1"
+ 
+-[dependencies.nickel]
++[disabled.dependencies.nickel]
+ version = ">=0.10.1"
+ optional = true
+ 
+-[dependencies.quick-error]
++[disabled.dependencies.quick-error]
+ version = "1.2"
+ optional = true
+ 
+ [dependencies.rand]
+ version = "0.8"
+ 
+-[dependencies.rocket]
++[disabled.dependencies.rocket]
+ version = "0.4"
+ optional = true
+ 
+@@ -114,19 +114,17 @@ optional = true
+ version = "3"
+ 
+ [dependencies.tiny_http]
+-version = "0.6"
++version = "0.12"
+ optional = true
+ 
+-[dependencies.twoway]
++[disabled.dependencies.twoway]
+ version = "0.1"
+ optional = true
+ [dev-dependencies.env_logger]
+-version = "0.5"
++version = "0.11"
+ 
+ [features]
+-bench = []
+ client = []
+-default = ["client", "hyper", "iron", "mock", "nickel", "server", "tiny_http"]
++default = ["client", "mock", "tiny_http"]
+ mock = []
+ nightly = []
+-server = ["buf_redux", "httparse", "quick-error", "safemem", "twoway"]
