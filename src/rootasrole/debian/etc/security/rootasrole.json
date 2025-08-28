@@ -1,0 +1,125 @@
+{
+    "version": "3.1.0",
+    "storage": {
+        "method": "json",
+        "settings": {
+            "immutable": true,
+            "path": "/etc/security/rootasrole.json"
+        }
+    },
+    "options": {
+        "timeout": {
+            "type": "ppid",
+            "duration": "00:05:00"
+        },
+        "path": {
+            "default": "delete",
+            "add": [
+                "/usr/local/sbin",
+                "/usr/local/bin",
+                "/usr/sbin",
+                "/usr/bin",
+                "/sbin",
+                "/bin",
+                "/snap/bin"
+            ]
+        },
+        "env": {
+            "default": "delete",
+            "override_behavior": false,
+            "keep": [
+                "HOME",
+                "USER",
+                "LOGNAME",
+                "COLORS",
+                "DISPLAY",
+                "HOSTNAME",
+                "KRB5CCNAME",
+                "LS_COLORS",
+                "PS1",
+                "PS2",
+                "XAUTHORY",
+                "XAUTHORIZATION",
+                "XDG_CURRENT_DESKTOP"
+            ],
+            "check": [
+                "COLORTERM",
+                "LANG",
+                "LANGUAGE",
+                "LC_.*",
+                "LINGUAS",
+                "TERM",
+                "TZ"
+            ],
+            "delete" : [
+                "PS4",
+                "SHELLOPTS",
+                "PERLLIB",
+                "PERL5LIB",
+                "PERL5OPT",
+                "PYTHONINSPECT"
+            ],
+            "set": {}
+        },
+        "authentication": "perform",
+        "root": "user",
+        "bounding": "strict",
+        "wildcard-denied": ";&|"
+    },
+    "roles": [
+        {
+            "name": "r_root",
+            "actors": [
+                {
+                    "type": "user",
+                    "name": "ROOTADMINISTRATOR"
+                },
+                {
+                    "type": "user",
+                    "name": "root"
+                }
+            ],
+            "tasks": [
+                {
+                    "name": "t_root",
+                    "purpose": "access to every commands",
+                    "cred": {
+                        "setuid": {
+                            "fallback": "root",
+                            "default": "all"
+                        },
+                        "setgid": "root",
+                        "capabilities": {
+                            "default": "all",
+                            "sub": ["CAP_LINUX_IMMUTABLE"]
+                        }
+                    },
+                    "commands": {
+                        "default": "all"
+                    },
+                    "options": {
+                        "env": {
+                            "override_behavior": true
+                        }
+                    }
+                },
+                {
+                    "name": "t_chsr",
+                    "purpose": "Configure RootAsRole",
+                    "cred": {
+                        "setuid": "root",
+                        "setgid": "root",
+                        "capabilities": ["CAP_LINUX_IMMUTABLE"]
+                    },
+                    "commands": {
+                        "default": "none",
+                        "add": [
+                            "/usr/bin/chsr .*",
+                            "/usr/bin/chattr [-+]i /etc/security/rootasrole.json"
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

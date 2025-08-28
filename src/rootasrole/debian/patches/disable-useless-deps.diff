@@ -1,0 +1,80 @@
+Author: Eddie Billoir <lechatp@outlook.fr>
+Description: Disable serial_test and test-log, we don't need them if we run with --test-threads=1
+Index: rootasrole/Cargo.toml
+===================================================================
+--- rootasrole.orig/Cargo.toml
++++ rootasrole/Cargo.toml
+@@ -192,7 +192,7 @@ name = "dosr"
+ path = "src/sr/main.rs"
+ required-features = ["finder"]
+ 
+-[[test]]
++[[disabled.test]]
+ name = "integration_tests"
+ path = "tests/integration_tests.rs"
+ required-features = ["finder"]
+@@ -314,10 +314,10 @@ version = "0.11"
+ [dev-dependencies.log]
+ version = "0.4"
+ 
+-[dev-dependencies.serial_test]
++[disabled.dev-dependencies.serial_test]
+ version = "3.2.0"
+ 
+-[dev-dependencies.test-log]
++[disabled.dev-dependencies.test-log]
+ version = "0.2"
+ 
+ [build-dependencies.serde_json]
+Index: rootasrole/src/sr/timeout.rs
+===================================================================
+--- rootasrole.orig/src/sr/timeout.rs
++++ rootasrole/src/sr/timeout.rs
+@@ -293,7 +293,7 @@ pub(crate) fn clear_cookies(user: &Cred)
+ #[cfg(test)]
+ mod test {
+     use nix::unistd::{Pid, User};
+-    use test_log::test;
++    //use test_log::test;
+ 
+     use super::*;
+ 
+Index: rootasrole/src/chsr/cli/mod.rs
+===================================================================
+--- rootasrole.orig/src/chsr/cli/mod.rs
++++ rootasrole/src/chsr/cli/mod.rs
+@@ -80,7 +80,7 @@ mod tests {
+     use capctl::Cap;
+     use chrono::TimeDelta;
+     use log::error;
+-    use test_log::test;
++    //use test_log::test;
+ 
+     pub struct Defer<F: FnOnce()>(Option<F>);
+ 
+Index: rootasrole/src/sr/finder/cmd.rs
+===================================================================
+--- rootasrole.orig/src/sr/finder/cmd.rs
++++ rootasrole/src/sr/finder/cmd.rs
+@@ -168,7 +168,7 @@ pub fn evaluate_command_match(
+ mod tests {
+     use super::*;
+ 
+-    use test_log::test;
++    //use test_log::test;
+ 
+     #[test]
+     fn test_match_path_full_wildcard() {
+Index: rootasrole/src/sr/finder/de.rs
+===================================================================
+--- rootasrole.orig/src/sr/finder/de.rs
++++ rootasrole/src/sr/finder/de.rs
+@@ -1711,7 +1711,7 @@ mod tests {
+         score::{SetUserMin, SetgidMin, SetuidMin},
+         FilterMatcher,
+     };
+-    use test_log::test;
++    //use test_log::test;
+ 
+     fn get_non_root_uid(nth: usize) -> Option<u32> {
+         // list all users
