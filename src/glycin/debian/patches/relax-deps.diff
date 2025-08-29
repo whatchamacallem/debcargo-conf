@@ -1,6 +1,8 @@
+Description: revert
+ https://gitlab.gnome.org/GNOME/glycin/-/commit/88477123
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -133,7 +133,7 @@
+@@ -132,7 +132,7 @@
  version = "0.2.152"
  
  [dependencies.libseccomp]
@@ -9,16 +11,16 @@
  
  [dependencies.memfd]
  version = "0.6.3"
-@@ -143,7 +143,7 @@
+@@ -142,7 +142,7 @@
  package = "memmap2"
  
  [dependencies.nix]
 -version = "0.30.0"
-+version = ">= 0.29"
++version = "0.29.0"
  features = [
      "fs",
      "resource",
-@@ -185,10 +185,10 @@
+@@ -184,10 +184,10 @@
  optional = true
  
  [dependencies.yeslogic-fontconfig-sys]
@@ -31,3 +33,21 @@
  features = [
      "p2p",
      "p2p",
+diff --git a/src/sandbox.rs b/src/sandbox.rs
+index 15e5d98..420f8a8 100644
+--- a/src/sandbox.rs
++++ b/src/sandbox.rs
+@@ -234,11 +234,11 @@ impl Sandbox {
+ 
+         // Allow FD to be passed to child process
+         let mut flags = nix::fcntl::FdFlag::from_bits_truncate(nix::fcntl::fcntl(
+-            &self.dbus_socket,
++            dbus_fd,
+             nix::fcntl::FcntlArg::F_GETFD,
+         )?);
+         flags.remove(nix::fcntl::FdFlag::FD_CLOEXEC);
+-        nix::fcntl::fcntl(&self.dbus_socket, nix::fcntl::FcntlArg::F_SETFD(flags))?;
++        nix::fcntl::fcntl(dbus_fd, nix::fcntl::FcntlArg::F_SETFD(flags))?;
+ 
+         command.stderr(Stdio::piped());
+         command.stdout(Stdio::piped());
