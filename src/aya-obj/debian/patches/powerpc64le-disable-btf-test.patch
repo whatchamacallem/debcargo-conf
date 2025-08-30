@@ -1,0 +1,18 @@
+Description: powerpc64le: disable btf test
+ This test attempts to read from /sys/kernel/btf/vmlinux, which doesn't exist on powerpc64le
+Author: Noah Meyerhans <noahm@debian.org>
+Forwarded: no
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: aya-obj/src/btf/btf.rs
+===================================================================
+--- aya-obj.orig/src/btf/btf.rs
++++ aya-obj/src/btf/btf.rs
+@@ -1814,6 +1814,7 @@ mod tests {
+     #[cfg(feature = "std")]
+     #[cfg_attr(miri, ignore = "`open` not available when isolation is enabled")]
+     #[cfg(target_endian = "little")]
++    #[cfg(not(target_arch = "powerpc64"))]
+     fn test_read_btf_from_sys_fs() {
+         let btf = Btf::parse_file("/sys/kernel/btf/vmlinux", Endianness::default()).unwrap();
+         let task_struct_id = btf

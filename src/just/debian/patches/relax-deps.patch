@@ -1,22 +1,22 @@
 Forwarded: not-needed
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -84,3 +84,3 @@
+@@ -80,3 +80,3 @@
  [dependencies.clap]
 -version = "4.0.0"
 +version = "4.5"
  features = [
-@@ -92,3 +92,3 @@
+@@ -88,3 +88,3 @@
  [dependencies.clap_complete]
--version = "4.0.0"
-+version = "4.5.40"
+-version = "=4.5.48"
++version = "<4.5.50" # Debian: was =4.5.48 upstream to avoid a problem in 4.5.50; we don't have it that new anyway.
  
-@@ -105,3 +105,3 @@
+@@ -101,3 +101,3 @@
  [dependencies.dirs]
 -version = "6.0.0"
 +version = "5"
  
-@@ -114,6 +114,6 @@
+@@ -110,6 +110,6 @@
  [dependencies.heck]
 -version = "0.5.0"
 +version = "0.4.0"
@@ -25,7 +25,11 @@ Forwarded: not-needed
 -version = "1.0.4"
 +version = "1.0"
  
-@@ -138,6 +138,6 @@
+@@ -131,9 +131,9 @@
+ [dependencies.rand]
+-version = "0.9.0"
++version = "0.8"
+ 
  [dependencies.regex]
 -version = "1.10.4"
 +version = "1.10"
@@ -34,18 +38,36 @@ Forwarded: not-needed
 -version = "1.0.18"
 +version = "1"
  
-@@ -167,3 +167,3 @@
+@@ -163,6 +163,6 @@
  [dependencies.snafu]
 -version = "0.8.0"
 +version = "0.7.1"
  
-@@ -183,3 +183,3 @@
+ [dependencies.strum]
+-version = "0.27.1"
++version = "0.26"
+ features = ["derive"]
+@@ -179,3 +179,3 @@
  [dependencies.unicode-width]
 -version = "0.2.0"
 +version = "0.1.14"
  
-@@ -199,3 +199,3 @@
- [dev-dependencies.which]
--version = "7.0.0"
-+version = "6"
+@@ -198,3 +198,3 @@
+ [target."cfg(unix)".dependencies.nix]
+-version = "0.30.1"
++version = "0.29"
+ features = ["user"]
+--- a/src/function.rs
++++ b/src/function.rs
+@@ -216,3 +216,3 @@
  
+-  let mut rng = rand::rng();
++  let mut rng = rand::thread_rng();
+ 
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -107,3 +107,3 @@
+   once_cell::sync::Lazy,
+-  rand::seq::IndexedRandom,
++  rand::seq::SliceRandom,
+   regex::Regex,

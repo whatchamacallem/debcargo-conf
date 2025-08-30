@@ -1,0 +1,129 @@
+Forwarded: not-needed
+Last-Update: 2025-04-11
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -127,14 +127,14 @@
+ optional = true
+ 
+ [dependencies.prost]
+-version = "0.13.0"
++version = "0.12"
+ 
+ [dependencies.prost-reflect-derive]
+ version = "0.15.0"
+ optional = true
+ 
+ [dependencies.prost-types]
+-version = "0.13.0"
++version = "0.12"
+ 
+ [dependencies.serde]
+ version = "1.0.132"
+@@ -155,7 +155,7 @@
+ version = "1.0.0"
+ 
+ [dev-dependencies.prost-build]
+-version = "0.13.0"
++version = "0.12"
+ 
+ [dev-dependencies.serde_json]
+ version = "1.0.106"
+--- a/src/descriptor/api.rs
++++ b/src/descriptor/api.rs
+@@ -345,7 +345,7 @@
+         }
+ 
+         impl Message for FileDescriptorSet<'_> {
+-            fn encode_raw(&self, buf: &mut impl BufMut)
++            fn encode_raw<B: BufMut>(&self, buf: &mut B)
+             where
+                 Self: Sized,
+             {
+@@ -369,11 +369,11 @@
+                         .sum::<usize>()
+             }
+ 
+-            fn merge_field(
++            fn merge_field<B: Buf>(
+                 &mut self,
+                 _: u32,
+                 _: WireType,
+-                _: &mut impl Buf,
++                _: &mut B,
+                 _: DecodeContext,
+             ) -> Result<(), DecodeError>
+             where
+--- a/src/descriptor/types.rs
++++ b/src/descriptor/types.rs
+@@ -523,18 +523,18 @@
+ where
+     T: Message + Default,
+ {
+-    fn encode_raw(&self, buf: &mut impl BufMut)
++    fn encode_raw<B: BufMut>(&self, buf: &mut B)
+     where
+         Self: Sized,
+     {
+         buf.put(self.encoded.as_slice());
+     }
+ 
+-    fn merge_field(
++    fn merge_field<B: Buf>(
+         &mut self,
+         tag: u32,
+         wire_type: WireType,
+-        buf: &mut impl Buf,
++        buf: &mut B,
+         ctx: DecodeContext,
+     ) -> Result<(), DecodeError>
+     where
+--- a/src/dynamic/message.rs
++++ b/src/dynamic/message.rs
+@@ -15,7 +15,7 @@
+ };
+ 
+ impl Message for DynamicMessage {
+-    fn encode_raw(&self, buf: &mut impl BufMut)
++    fn encode_raw<B: BufMut>(&self, buf: &mut B)
+     where
+         Self: Sized,
+     {
+@@ -32,11 +32,11 @@
+         }
+     }
+ 
+-    fn merge_field(
++    fn merge_field<B: Buf>(
+         &mut self,
+         number: u32,
+         wire_type: WireType,
+-        buf: &mut impl Buf,
++        buf: &mut B,
+         ctx: DecodeContext,
+     ) -> Result<(), DecodeError>
+     where
+--- a/src/dynamic/unknown.rs
++++ b/src/dynamic/unknown.rs
+@@ -238,7 +238,7 @@
+ }
+ 
+ impl Message for UnknownFieldSet {
+-    fn encode_raw(&self, buf: &mut impl BufMut)
++    fn encode_raw<B: BufMut>(&self, buf: &mut B)
+     where
+         Self: Sized,
+     {
+@@ -247,11 +247,11 @@
+         }
+     }
+ 
+-    fn merge_field(
++    fn merge_field<B: Buf>(
+         &mut self,
+         number: u32,
+         wire_type: WireType,
+-        buf: &mut impl Buf,
++        buf: &mut B,
+         ctx: DecodeContext,
+     ) -> Result<(), DecodeError>
+     where

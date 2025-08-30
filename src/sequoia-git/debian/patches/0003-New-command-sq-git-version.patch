@@ -1,0 +1,68 @@
+From 4e1efcceb97e565bc1f3232361122804b9a36a3f Mon Sep 17 00:00:00 2001
+From: "Neal H. Walfield" <neal@sequoia-pgp.org>
+Date: Tue, 1 Apr 2025 09:33:07 +0200
+Subject: [PATCH 3/5] New command sq-git version.
+
+  - Add a command to display some version information.
+---
+ NEWS           | 4 ++++
+ src/cli/mod.rs | 9 ++++++++-
+ src/main.rs    | 7 +++++++
+ 3 files changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/NEWS b/NEWS
+index 94d0401..fa879da 100644
+--- a/NEWS
++++ b/NEWS
+@@ -2,6 +2,10 @@
+ #+TITLE: sequoia-git NEWS – history of user-visible changes
+ #+STARTUP: content hidestars
+ 
++* Changes in 0.4.1
++** New functionality
++   - New command `sq-git version` displays `sq-git`'s version
++     information.
+ * Changes in 0.4.0
+ ** New functionality
+    This release adds support for RFC 9580.
+diff --git a/src/cli/mod.rs b/src/cli/mod.rs
+index 6561f34..33ad5c2 100644
+--- a/src/cli/mod.rs
++++ b/src/cli/mod.rs
+@@ -743,7 +743,14 @@ pub enum Subcommand {
+         /// Supplied as third argument to the update hook, see
+         /// `githooks(5)`.
+         new_object: String,
+-    }
++    },
++
++    /// Detailed version and output version information
++    ///
++    /// With no further options, this command lists the version of
++    /// `sq-git`, the version of the underlying OpenPGP implementation
++    /// `sequoia-openpgp`, and which cryptographic library it uses.
++    Version,
+ }
+ 
+ #[derive(clap::Args, Debug)]
+diff --git a/src/main.rs b/src/main.rs
+index 6247fb6..80a44cc 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -721,6 +721,13 @@ fn main() -> anyhow::Result<()> {
+             let _ = cache.persist();
+             result?;
+         },
++
++        cli::Subcommand::Version=> {
++            eprintln!("sq-git {}", env!("CARGO_PKG_VERSION"));
++            eprintln!("using sequoia-openpgp {}", sequoia_openpgp::VERSION);
++            eprintln!("with cryptographic backend {}",
++                      sequoia_openpgp::crypto::backend());
++        }
+     }
+     Ok(())
+ }
+-- 
+2.43.0
+

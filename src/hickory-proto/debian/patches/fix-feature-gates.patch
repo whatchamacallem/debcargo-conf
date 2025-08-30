@@ -1,0 +1,16 @@
+Description: Fix feature gates
+ not for itself, but for hickory-server: it uses
+ hickory_proto::rr::dnssec::KeyFormat, which was only available with an
+ enabled TLS backend.
+Author: Blair Noctis <ncts@debian.org>
+Forwarded: not-needed
+Last-Update: 2025-03-28
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/rr/dnssec/mod.rs
++++ b/src/rr/dnssec/mod.rs
+@@ -78,3 +78,3 @@
+ 
+-#[cfg(any(feature = "openssl", feature = "ring"))]
++#[cfg(any(feature = "openssl", feature = "ring", feature = "dnssec"))]
+ #[cfg_attr(docsrs, doc(cfg(any(feature = "openssl", feature = "ring"))))]

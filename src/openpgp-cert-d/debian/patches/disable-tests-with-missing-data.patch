@@ -1,8 +1,8 @@
-diff --git a/src/certd.rs b/src/certd.rs
-index 89f2ea6..411caa4 100644
---- a/src/certd.rs
-+++ b/src/certd.rs
-@@ -1157,17 +1157,17 @@ mod tests {
+Index: openpgp-cert-d/src/certd.rs
+===================================================================
+--- openpgp-cert-d.orig/src/certd.rs
++++ openpgp-cert-d/src/certd.rs
+@@ -1365,17 +1365,17 @@ mod tests {
  
      static ALICE: Testdata = Testdata {
          fingerprint: "eb85bb5fa33a75e15e944e63f231550c4f47e38e",
@@ -23,7 +23,7 @@ index 89f2ea6..411caa4 100644
      };
  
      fn setup_testdir(
-@@ -1178,7 +1178,7 @@ mod tests {
+@@ -1386,7 +1386,7 @@ mod tests {
              t.add_to_certd(&base);
          }
  
@@ -32,7 +32,7 @@ index 89f2ea6..411caa4 100644
          base.child("trust-root")
              .write_binary(trust_root_data)
              .unwrap();
-@@ -1189,7 +1189,7 @@ mod tests {
+@@ -1397,7 +1397,7 @@ mod tests {
  
      #[test]
      fn get_fingerprint() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -41,7 +41,7 @@ index 89f2ea6..411caa4 100644
  
          let base = test_base();
          base.child("39/d100ab67d5bd8c04010205fb3751f1587daef1")
-@@ -1225,7 +1225,7 @@ mod tests {
+@@ -1433,7 +1433,7 @@ mod tests {
  
      #[test]
      fn get_special() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -50,7 +50,7 @@ index 89f2ea6..411caa4 100644
  
          let base = test_base();
          base.child("trust-root").write_binary(data).unwrap();
-@@ -1250,9 +1250,9 @@ mod tests {
+@@ -1458,9 +1458,9 @@ mod tests {
          Ok(())
      }
  
@@ -62,7 +62,7 @@ index 89f2ea6..411caa4 100644
          let base = test_base();
  
          let file = base.child("39/d100ab67d5bd8c04010205fb3751f1587daef1");
-@@ -1282,7 +1282,7 @@ mod tests {
+@@ -1490,7 +1490,7 @@ mod tests {
  
      #[test]
      fn insert_special_locked() -> Result<()> {
@@ -71,7 +71,7 @@ index 89f2ea6..411caa4 100644
          let base = test_base();
  
          let file = base.child("trust-root");
-@@ -1313,9 +1313,9 @@ mod tests {
+@@ -1521,9 +1521,9 @@ mod tests {
          }
      }
  
@@ -83,7 +83,7 @@ index 89f2ea6..411caa4 100644
          let data = &data[..];
          let base = test_base();
  
-@@ -1337,9 +1337,9 @@ mod tests {
+@@ -1545,9 +1545,9 @@ mod tests {
          Ok(())
      }
  
@@ -95,7 +95,7 @@ index 89f2ea6..411caa4 100644
          let data = &data[..];
          let base = test_base();
  
-@@ -1363,9 +1363,9 @@ mod tests {
+@@ -1571,9 +1571,9 @@ mod tests {
          Ok(())
      }
  
@@ -107,7 +107,7 @@ index 89f2ea6..411caa4 100644
          let data = &data[..];
          let base = test_base();
  
-@@ -1388,10 +1388,10 @@ mod tests {
+@@ -1596,10 +1596,10 @@ mod tests {
          Ok(())
      }
  
@@ -120,7 +120,7 @@ index 89f2ea6..411caa4 100644
          let data = &data[..];
          let base = test_base();
  
-@@ -1416,9 +1416,9 @@ mod tests {
+@@ -1624,9 +1624,9 @@ mod tests {
          Ok(())
      }
  
@@ -132,7 +132,7 @@ index 89f2ea6..411caa4 100644
          let data = &data[..];
          let base = test_base();
  
-@@ -1699,7 +1699,7 @@ mod tests {
+@@ -1907,7 +1907,7 @@ mod tests {
          Ok(())
      }
  
@@ -141,15 +141,22 @@ index 89f2ea6..411caa4 100644
      fn certd_tag() -> Result<()> {
          let (_base, certd) = setup_testdir(&[&ALICE])?;
  
-diff --git a/src/pgp.rs b/src/pgp.rs
-index 2af9252..6ad988a 100644
---- a/src/pgp.rs
-+++ b/src/pgp.rs
-@@ -263,15 +263,15 @@ mod tests {
+Index: openpgp-cert-d/src/pgp.rs
+===================================================================
+--- openpgp-cert-d.orig/src/pgp.rs
++++ openpgp-cert-d/src/pgp.rs
+@@ -285,21 +285,21 @@ mod tests {
  
      static ALICE: Testdata = Testdata {
          fingerprint: "eb85bb5fa33a75e15e944e63f231550c4f47e38e",
 -        data: include_bytes!("../../testdata/alice.pgp"),
++        data: &[0; 0],
+     };
+ 
+     static V6_MINIMAL_CERT: Testdata = Testdata {
+         fingerprint:
+         "cb186c4f0609a697e4d52dfa6c722b0c1f1e27c18a56708f6525ec27bad9acc9",
+-        data: include_bytes!("../../testdata/v6-minimal-cert.key"),
 +        data: &[0; 0],
      };
  
@@ -164,8 +171,8 @@ index 2af9252..6ad988a 100644
      fn compute_fingerprint() {
          // old ctb
          assert_eq!(fingerprint(ALICE.data).unwrap(), ALICE.fingerprint);
-@@ -282,9 +282,9 @@ mod tests {
-         );
+@@ -312,9 +312,9 @@ mod tests {
+                    V6_MINIMAL_CERT.fingerprint);
      }
  
 -    #[test]
@@ -176,7 +183,7 @@ index 2af9252..6ad988a 100644
          assert!(matches!(
              fingerprint(data).unwrap_err(),
              Error::UnsupportedArmor
-@@ -300,10 +300,10 @@ mod tests {
+@@ -330,10 +330,10 @@ mod tests {
          ));
      }
  

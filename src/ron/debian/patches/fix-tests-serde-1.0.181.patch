@@ -9,68 +9,39 @@ Date:   Sun Aug 6 15:34:23 2023 +0300
     
     Update adjacent enum non-roundtrip tests to match https://github.com/serde-rs/serde/pull/2505
 
-Index: ron/tests/123_enum_representation.rs
-===================================================================
---- ron.orig/tests/123_enum_representation.rs
-+++ ron/tests/123_enum_representation.rs
-@@ -107,14 +107,14 @@ fn test_adjacently_a_ser() {
-         bar: 2,
-         different: Inner::Foo,
+--- a/tests/123_enum_representation.rs
++++ b/tests/123_enum_representation.rs
+@@ -109,3 +109,3 @@
      };
 -    let e = "(type:\"VariantA\",content:(foo:1,bar:2,different:Foo))";
 +    let e = "(type:VariantA,content:(foo:1,bar:2,different:Foo))";
      test_ser(&v, e);
- }
- 
- #[test]
- fn test_adjacently_b_ser() {
+@@ -116,3 +116,3 @@
      let v = EnumStructAdjacently::VariantB { foo: 1, bar: 2 };
 -    let e = "(type:\"VariantB\",content:(foo:1,bar:2))";
 +    let e = "(type:VariantB,content:(foo:1,bar:2))";
      test_ser(&v, e);
- }
- 
-@@ -174,7 +174,7 @@ fn test_internally_b_de() {
- 
- #[test]
+@@ -176,3 +176,3 @@
  fn test_adjacently_a_de() {
 -    let s = "(type:\"VariantA\",content:(foo:1,bar:2,different:Foo))";
 +    let s = "(type:VariantA,content:(foo:1,bar:2,different:Foo))";
      let e = EnumStructAdjacently::VariantA {
-         foo: 1,
-         bar: 2,
-@@ -185,7 +185,7 @@ fn test_adjacently_a_de() {
- 
- #[test]
+@@ -187,3 +187,3 @@
  fn test_adjacently_b_de() {
 -    let s = "(type:\"VariantB\",content:(foo:1,bar:2))";
 +    let s = "(type:VariantB,content:(foo:1,bar:2))";
      let e = EnumStructAdjacently::VariantB { foo: 1, bar: 2 };
-     test_de(s, e);
- }
-Index: ron/tests/207_adjacently_tagged_enum.rs
-===================================================================
---- ron.orig/tests/207_adjacently_tagged_enum.rs
-+++ ron/tests/207_adjacently_tagged_enum.rs
-@@ -14,7 +14,7 @@ fn test_adjacently_tagged() {
- 
-     let ron_string = to_string(&source).unwrap();
+--- a/tests/207_adjacently_tagged_enum.rs
++++ b/tests/207_adjacently_tagged_enum.rs
+@@ -16,3 +16,3 @@
  
 -    assert_eq!(ron_string, "(type:\"Index\",data:1)");
 +    assert_eq!(ron_string, "(type:Index,data:1)");
  
-     let deserialized = from_str::<TestEnum>(&ron_string).unwrap();
- 
-Index: ron/Cargo.toml
-===================================================================
---- ron.orig/Cargo.toml
-+++ ron/Cargo.toml
-@@ -50,7 +50,7 @@ version = "1.0.2"
- features = ["serde-1"]
- 
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -53,3 +53,3 @@
  [dependencies.serde]
 -version = "1.0.60"
 +version = "1.0.181"
  features = ["serde_derive"]
- 
- [dev-dependencies.serde_bytes]

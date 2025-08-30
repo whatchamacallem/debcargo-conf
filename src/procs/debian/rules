@@ -10,8 +10,12 @@ override_dh_installdocs:
 	dh_installdocs
 
 override_dh_installman:
-	asciidoctor -b manpage -o debian/procs.1 $(CURDIR)/man/procs.1.adoc
+	asciidoctor -b manpage -o $(CURDIR)/debian/procs.1 $(CURDIR)/man/procs.1.adoc
 	dh_installman
 
 override_dh_compress:
 	dh_compress -XREADME.md
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf $(CURDIR)/debian/procs.1 $(CURDIR)/debian/build_artifacts

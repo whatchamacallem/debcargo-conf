@@ -1,0 +1,31 @@
+enable nettle and drop windows config
+
+and we cannot link against the Windows cng interface, at any rate.
+
+Index: sequoia-openpgp-mt/Cargo.toml
+===================================================================
+--- sequoia-openpgp-mt.orig/Cargo.toml
++++ sequoia-openpgp-mt/Cargo.toml
+@@ -46,6 +46,7 @@ version = "1"
+ 
+ [dependencies.sequoia-openpgp]
+ version = "2"
++features = [ "crypto-nettle" ]
+ default-features = false
+ 
+ [target."cfg(not(windows))".dev-dependencies.sequoia-openpgp]
+@@ -55,14 +56,6 @@ features = [
+     "__implicit-crypto-backend-for-tests",
+ ]
+ default-features = false
+-
+-[target."cfg(windows)".dev-dependencies.sequoia-openpgp]
+-version = "2"
+-features = [
+-    "crypto-cng",
+-    "__implicit-crypto-backend-for-tests",
+-]
+-default-features = false
+ 
+ [badges.gitlab]
+ repository = "sequoia-pgp/sequoia-openpgp-mt"

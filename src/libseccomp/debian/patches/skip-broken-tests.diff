@@ -1,8 +1,6 @@
-Index: libseccomp/Cargo.toml
-===================================================================
---- libseccomp.orig/Cargo.toml
-+++ libseccomp/Cargo.toml
-@@ -30,6 +30,9 @@ categories = [
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -31,6 +31,9 @@
  license = "MIT OR Apache-2.0"
  repository = "https://github.com/libseccomp-rs/libseccomp-rs"
  
@@ -10,13 +8,11 @@ Index: libseccomp/Cargo.toml
 +doctest = false
 +
  [package.metadata.docs.rs]
+ all-features = true
  rustc-args = [
-     "--cfg",
-Index: libseccomp/tests/notify.rs
-===================================================================
---- libseccomp.orig/tests/notify.rs
-+++ libseccomp/tests/notify.rs
-@@ -126,6 +126,7 @@ fn test_resp_new() {
+--- a/tests/notify.rs
++++ b/tests/notify.rs
+@@ -124,6 +124,7 @@
  }
  
  #[test]
@@ -24,20 +20,18 @@ Index: libseccomp/tests/notify.rs
  fn test_error() {
      skip_if_not_supported!();
  
-Index: libseccomp/tests/tests.rs
-===================================================================
---- libseccomp.orig/tests/tests.rs
-+++ libseccomp/tests/tests.rs
-@@ -21,6 +21,8 @@ fn test_check_version() {
+--- a/tests/tests.rs
++++ b/tests/tests.rs
+@@ -21,6 +21,8 @@
  }
  
  #[test]
-+#[cfg(not(any(target_arch = "x86-64", target_arch = "arm", target_arch = "s390x", target_arch = "
-+powerpc64")))]
++#[ignore = "known to be flaky"
++]
  fn test_check_api() {
      assert!(check_api(3, ScmpVersion::from((2, 4, 0))).unwrap());
      assert!(!check_api(100, ScmpVersion::from((2, 4, 0))).unwrap());
-@@ -229,6 +231,7 @@ fn test_get_syscall_from_name() {
+@@ -266,6 +268,7 @@
  
  #[test]
  #[cfg(feature = "const-syscall")]
@@ -45,27 +39,25 @@ Index: libseccomp/tests/tests.rs
  fn test_syscall_new() {
      for name in known_syscall_names::KNOWN_SYSCALL_NAMES {
          if let Ok(nr) = ScmpSyscall::from_name(name) {
-@@ -248,6 +251,7 @@ fn test_display_syscall() {
+@@ -330,6 +333,7 @@
  }
  
  #[test]
 +#[cfg(not(target_endian = "big"))]
  fn test_arch_functions() {
-     let mut ctx = ScmpFilterContext::new_filter(ScmpAction::Allow).unwrap();
+     let mut ctx = ScmpFilterContext::new(ScmpAction::Allow).unwrap();
      ctx.add_arch(ScmpArch::X86).unwrap();
-@@ -260,6 +264,7 @@ fn test_arch_functions() {
+@@ -342,6 +346,7 @@
  }
  
  #[test]
 +#[cfg(not(target_endian = "big"))]
  fn test_merge_filters() {
-     let mut ctx1 = ScmpFilterContext::new_filter(ScmpAction::Allow).unwrap();
-     let mut ctx2 = ScmpFilterContext::new_filter(ScmpAction::Allow).unwrap();
-Index: libseccomp/src/api.rs
-===================================================================
---- libseccomp.orig/src/api.rs
-+++ libseccomp/src/api.rs
-@@ -129,6 +129,7 @@ mod tests {
+     let mut ctx1 = ScmpFilterContext::new(ScmpAction::Allow).unwrap();
+     let mut ctx2 = ScmpFilterContext::new(ScmpAction::Allow).unwrap();
+--- a/src/api.rs
++++ b/src/api.rs
+@@ -129,6 +129,7 @@
      use super::*;
  
      #[test]

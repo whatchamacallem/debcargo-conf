@@ -1,6 +1,8 @@
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -33,30 +33,11 @@
+Index: adblock/Cargo.toml
+===================================================================
+--- adblock.orig/Cargo.toml
++++ adblock/Cargo.toml
+@@ -33,30 +33,11 @@ description = "Native Rust module for Ad
  readme = "README.md"
  license = "MPL-2.0"
  repository = "https://github.com/brave/adblock-rust/"
@@ -32,9 +34,11 @@
  [dependencies.addr]
  version = "0.15"
  features = ["psl"]
---- a/src/lib.rs
-+++ b/src/lib.rs
-@@ -37,9 +37,9 @@
+Index: adblock/src/lib.rs
+===================================================================
+--- adblock.orig/src/lib.rs
++++ adblock/src/lib.rs
+@@ -37,9 +37,9 @@ pub use engine::Engine;
  #[doc(inline)]
  pub use lists::FilterSet;
  
@@ -47,9 +51,11 @@
  
  #[cfg(test)]
  mod sync_tests {
---- a/src/blocker.rs
-+++ b/src/blocker.rs
-@@ -2154,7 +2154,7 @@
+Index: adblock/src/blocker.rs
+===================================================================
+--- adblock.orig/src/blocker.rs
++++ adblock/src/blocker.rs
+@@ -2154,7 +2154,7 @@ mod placeholder_string_tests {
  
  #[cfg(test)]
  mod legacy_rule_parsing_tests {
@@ -58,7 +64,7 @@
      use crate::lists::{parse_filters, FilterFormat, ParseOptions};
      use crate::blocker::{Blocker, BlockerOptions};
      use crate::blocker::vec_hashmap_len;
-@@ -2204,7 +2204,7 @@
+@@ -2204,7 +2204,7 @@ mod legacy_rule_parsing_tests {
      const MALWARE_DOMAIN_LIST: ListCounts = ListCounts { filters: 1104, cosmetic_filters: 0, exceptions: 0, duplicates: 3 };
      const MALWARE_DOMAINS: ListCounts = ListCounts { filters: 26853, cosmetic_filters: 0, exceptions: 0, duplicates: 48 };
  
@@ -67,16 +73,18 @@
          let rules = rules_from_lists(rule_lists);
  
          let (network_filters, cosmetic_filters) = parse_filters(rules, true, ParseOptions { format, ..Default::default() });
-@@ -2321,5 +2321,5 @@
+@@ -2321,5 +2321,5 @@ mod legacy_rule_parsing_tests {
              FilterFormat::Hosts,
              expectation,
          )
 -    }
 +    }*/
  }
---- a/src/filters/network.rs
-+++ b/src/filters/network.rs
-@@ -3409,11 +3409,11 @@
+Index: adblock/src/filters/network.rs
+===================================================================
+--- adblock.orig/src/filters/network.rs
++++ adblock/src/filters/network.rs
+@@ -3406,11 +3406,11 @@ mod match_tests {
  mod hash_collision_tests {
      use super::*;
  
@@ -90,16 +98,18 @@
      fn check_rule_ids_no_collisions() {
          let rules = test_utils::rules_from_lists([
              "data/easylist.to/easylist/easylist.txt",
-@@ -3430,5 +3430,5 @@
+@@ -3427,5 +3427,5 @@ mod hash_collision_tests {
              assert!(existing_rule.is_none() || existing_rule.unwrap() == &rule, "ID {} for {} already present from {}", id, rule, existing_rule.unwrap());
              filter_ids.insert(id, rule);
          }
 -    }
 +    }*/
  }
---- a/src/regex_manager.rs
-+++ b/src/regex_manager.rs
-@@ -7,10 +7,10 @@
+Index: adblock/src/regex_manager.rs
+===================================================================
+--- adblock.orig/src/regex_manager.rs
++++ adblock/src/regex_manager.rs
+@@ -7,10 +7,10 @@ use crate::filters::network::{compile_re
  use std::collections::HashMap;
  use std::time::Duration;
  
@@ -112,7 +122,7 @@
  #[cfg(not(target_arch = "wasm32"))]
  use std::time::Instant;
  
-@@ -232,7 +232,7 @@
+@@ -232,7 +232,7 @@ mod tests {
      use crate::filters::network::NetworkMatchable;
      use crate::request;
  
@@ -121,7 +131,7 @@
  
      fn make_filter(line: &str) -> NetworkFilter {
          NetworkFilter::parse(line, true, Default::default()).unwrap()
-@@ -271,7 +271,7 @@
+@@ -271,7 +271,7 @@ mod tests {
          assert_eq!(regex_manager.get_compiled_regex_count(), 1);
          assert_eq!(get_active_regex_count(&regex_manager), 1);
  
@@ -130,7 +140,7 @@
          regex_manager.update_time();
          // The entry shouldn't be discarded because was used during
          // last REGEX_MANAGER_DISCARD_TIME.
-@@ -292,6 +292,6 @@
+@@ -292,6 +292,6 @@ mod tests {
          // The entry is recreated, get_compiled_regex_count() increased +1.
          assert!(filter.matches(&make_request("https://geo2.hltv.org/"), &mut regex_manager));
          assert_eq!(regex_manager.get_compiled_regex_count(), 2);
@@ -138,9 +148,11 @@
 +        assert_eq!(get_active_regex_count(&regex_manager), 1);*/
      }
  }
---- a/src/resources/resource_assembler.rs
-+++ b/src/resources/resource_assembler.rs
-@@ -300,7 +300,7 @@
+Index: adblock/src/resources/resource_assembler.rs
+===================================================================
+--- adblock.orig/src/resources/resource_assembler.rs
++++ adblock/src/resources/resource_assembler.rs
+@@ -300,7 +300,7 @@ pub fn assemble_scriptlet_resources(scri
  mod tests {
      use super::*;
  
@@ -149,7 +161,7 @@
      fn test_war_resource_assembly() {
          let web_accessible_resource_dir =
              Path::new("data/test/fake-uBO-files/web_accessible_resources");
-@@ -402,9 +402,9 @@
+@@ -402,9 +402,9 @@ mod tests {
              .expect("convert to utf8 string"),
              noopjs_contents,
          );
@@ -161,7 +173,7 @@
      fn test_scriptlet_resource_assembly2() {
          let scriptlets_path = Path::new("data/test/fake-uBO-files/scriptlets2.js");
          #[allow(deprecated)]
-@@ -585,5 +585,5 @@
+@@ -585,5 +585,5 @@ mod tests {
              ).expect("convert to utf8 string"),
              "(function() {\nif ( window !== window.top ) {\nreturn;\n}\nvar tstart;\nvar ttl = 30000;\nvar delay = 0;\nvar delayStep = 50;\nvar buster = function() {\nvar docEl = document.documentElement,\nbodyEl = document.body,\nvw = Math.min(docEl.clientWidth, window.innerWidth),\nvh = Math.min(docEl.clientHeight, window.innerHeight),\ntol = Math.min(vw, vh) * 0.05,\nel = document.elementFromPoint(vw/2, vh/2),\nstyle, rect;\nfor (;;) {\nif ( el === null || el.parentNode === null || el === bodyEl ) {\nbreak;\n}\nstyle = window.getComputedStyle(el);\nif ( parseInt(style.zIndex, 10) >= 1000 || style.position === 'fixed' ) {\nrect = el.getBoundingClientRect();\nif ( rect.left <= tol && rect.top <= tol && (vw - rect.right) <= tol && (vh - rect.bottom) < tol ) {\nel.parentNode.removeChild(el);\ntstart = Date.now();\nel = document.elementFromPoint(vw/2, vh/2);\nbodyEl.style.setProperty('overflow', 'auto', 'important');\ndocEl.style.setProperty('overflow', 'auto', 'important');\ncontinue;\n}\n}\nel = el.parentNode;\n}\nif ( (Date.now() - tstart) < ttl ) {\ndelay = Math.min(delay + delayStep, 1000);\nsetTimeout(buster, delay);\n}\n};\nvar domReady = function(ev) {\nif ( ev ) {\ndocument.removeEventListener(ev.type, domReady);\n}\ntstart = Date.now();\nsetTimeout(buster, delay);\n};\nif ( document.readyState === 'loading' ) {\ndocument.addEventListener('DOMContentLoaded', domReady);\n} else {\ndomReady();\n}\n})();\n",
          );

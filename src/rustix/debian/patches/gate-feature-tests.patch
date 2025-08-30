@@ -1,0 +1,29 @@
+Description: Gate feature tests behind their features
+ The fs module is enabled internally on a number of platforms, including i368,
+ even when the 'fs' feature is disabled. Gate the tests in the fs module behind
+ the 'fs' feature so tests are only run when the feature is enabled.
+Author: NoisyCoil <noisycoil@tutanota.com>
+Forwarded: no
+Last-Update: 2025-08-02
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/fs/constants.rs
++++ b/src/fs/constants.rs
+@@ -44,6 +44,7 @@
+     }
+ }
+ 
++#[cfg(feature = "fs")]
+ #[cfg(test)]
+ #[allow(unused_imports)]
+ #[allow(unsafe_code)]
+--- a/src/fs/special.rs
++++ b/src/fs/special.rs
+@@ -49,6 +49,7 @@
+ pub const ABS: BorrowedFd<'static> =
+     unsafe { BorrowedFd::<'static>::borrow_raw(c::EBADF.wrapping_neg() as RawFd) };
+ 
++#[cfg(feature = "fs")]
+ #[cfg(test)]
+ mod tests {
+     use super::*;

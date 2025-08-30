@@ -1,0 +1,32 @@
+Description: Disable terminal color scheme detection due to unavailable dep
+Forwarded: not-needed
+Author: Blair Noctis <ncts@debian.org>
+Last-Update: 2025-03-25
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -195,3 +195,3 @@
+ 
+-[dependencies.terminal-colorsaurus]
++[disabled.dependencies.terminal-colorsaurus]
+ version = "0.4"
+--- a/src/theme.rs
++++ b/src/theme.rs
+@@ -264,3 +264,4 @@
+         // since the pager is started *after* the color is detected.
+-        std::io::stdout().is_terminal()
++        std::io::stdout().is_terminal();
++        false
+     }
+@@ -268,3 +269,3 @@
+     fn detect(&self) -> Option<ColorScheme> {
+-        use terminal_colorsaurus::{color_scheme, ColorScheme as ColorsaurusScheme, QueryOptions};
++        /*use terminal_colorsaurus::{color_scheme, ColorScheme as ColorsaurusScheme, QueryOptions};
+         match color_scheme(QueryOptions::default()).ok()? {
+@@ -272,3 +273,4 @@
+             ColorsaurusScheme::Light => Some(ColorScheme::Light),
+-        }
++        }*/
++        None
+     }

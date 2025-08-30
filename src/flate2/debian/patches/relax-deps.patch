@@ -1,0 +1,69 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -228,3 +228,3 @@
+ [dependencies.miniz_oxide]
+-version = "0.8.4"
++version = "0.7"
+ features = ["with-alloc"]
+@@ -238,6 +238,6 @@
+ [dev-dependencies.rand]
+-version = "0.9"
++version = "0.8"
+ 
+ [target.'cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))'.dependencies.miniz_oxide]
+-version = "0.8.4"
++version = "0.7"
+ features = ["with-alloc"]
+--- a/src/deflate/mod.rs
++++ b/src/deflate/mod.rs
+@@ -8,3 +8,3 @@
+ 
+-    use rand::{rng, Rng};
++    use rand::{thread_rng as rng, Rng};
+ 
+@@ -19,3 +19,3 @@
+         for _ in 0..200 {
+-            let to_write = &v[..rng().random_range(0..v.len())];
++            let to_write = &v[..rng().gen_range(0..v.len())];
+             real.extend(to_write.iter().copied());
+@@ -48,3 +48,3 @@
+         for _ in 0..200 {
+-            let to_write = &v[..rng().random_range(0..v.len())];
++            let to_write = &v[..rng().gen_range(0..v.len())];
+             real.extend(to_write.iter().copied());
+--- a/src/gz/mod.rs
++++ b/src/gz/mod.rs
+@@ -447,3 +447,3 @@
+     use crate::{Compression, GzHeader};
+-    use rand::{rng, Rng};
++    use rand::{thread_rng as rng, Rng};
+ 
+@@ -476,3 +476,3 @@
+         for _ in 0..200 {
+-            let to_write = &v[..rng().random_range(0..v.len())];
++            let to_write = &v[..rng().gen_range(0..v.len())];
+             real.extend(to_write.iter().copied());
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -244,3 +244,3 @@
+ 
+-    iter::repeat(()).map(|_| rand::rng().random())
++    iter::repeat(()).map(|_| rand::random())
+ }
+--- a/src/zlib/mod.rs
++++ b/src/zlib/mod.rs
+@@ -9,3 +9,3 @@
+ 
+-    use rand::{rng, Rng};
++    use rand::{thread_rng as rng, Rng};
+ 
+@@ -20,3 +20,3 @@
+         for _ in 0..200 {
+-            let to_write = &v[..rng().random_range(0..v.len())];
++            let to_write = &v[..rng().gen_range(0..v.len())];
+             real.extend(to_write.iter().copied());
+@@ -49,3 +49,3 @@
+         for _ in 0..200 {
+-            let to_write = &v[..rng().random_range(0..v.len())];
++            let to_write = &v[..rng().gen_range(0..v.len())];
+             real.extend(to_write.iter().copied());

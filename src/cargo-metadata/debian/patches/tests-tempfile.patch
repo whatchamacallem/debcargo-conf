@@ -1,0 +1,60 @@
+Description: Use temp dir to fix permission failures
+Forwarded: not-needed
+Author: Blair Noctis <ncts@debian.org>
+Last-Update: 2025-03-25
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -41,2 +41,4 @@
+ 
++[dev-dependencies.tempfile]
++version = "3"
+ [[test]]
+--- a/tests/selftest.rs
++++ b/tests/selftest.rs
+@@ -54,4 +54,8 @@
+ fn builder_interface() {
++    let dir = tempfile::tempdir().unwrap();
++    let path = dir.path().join("Cargo.toml");
++    let path_str = path.to_str().unwrap().to_string();
++    std::fs::copy("Cargo.toml", &path).unwrap();
+     let _ = MetadataCommand::new()
+-        .manifest_path("Cargo.toml")
++        .manifest_path(path_str.as_str())
+         .exec()
+@@ -59,3 +63,3 @@
+     let _ = MetadataCommand::new()
+-        .manifest_path(String::from("Cargo.toml"))
++        .manifest_path(path_str.clone())
+         .exec()
+@@ -63,3 +67,3 @@
+     let _ = MetadataCommand::new()
+-        .manifest_path(PathBuf::from("Cargo.toml"))
++        .manifest_path(path.clone())
+         .exec()
+@@ -67,3 +71,3 @@
+     let _ = MetadataCommand::new()
+-        .manifest_path("Cargo.toml")
++        .manifest_path(&path_str)
+         .no_deps()
+@@ -72,3 +76,3 @@
+     let _ = MetadataCommand::new()
+-        .manifest_path("Cargo.toml")
++        .manifest_path(&path_str)
+         .features(CargoOpt::AllFeatures)
+@@ -77,4 +81,4 @@
+     let _ = MetadataCommand::new()
+-        .manifest_path("Cargo.toml")
+-        .current_dir(current_dir().unwrap())
++        .manifest_path(&path_str)
++        .current_dir(dir.path())
+         .exec()
+@@ -85,3 +89,3 @@
+ fn error1() {
+-    match MetadataCommand::new().manifest_path("foo").exec() {
++    match MetadataCommand::new().other_options(["--color=never".to_string()].to_vec()).manifest_path("foo").exec() {
+         Err(Error::CargoMetadata { stderr }) => assert_eq!(
+@@ -96,3 +100,3 @@
+ fn error2() {
+-    match MetadataCommand::new()
++    match MetadataCommand::new().other_options(["--color=never".to_string()].to_vec())
+         .manifest_path("foo/Cargo.toml")

@@ -1,0 +1,1585 @@
+Description: Vendor hyper-rustls for now.
+ We need hyper-rustls to have functioning rustls support in this package,
+ but the version currently in Debian uses the wrong version of rustls
+ and we may not have time to update it before trixie, so vendor it for
+ now.
+
+ This patch is based on version 0.27.5 of hyper-rustls.
+Author: Peter Michael Green <plugwash@debian.org>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout https://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: (upstream|backport|vendor|other), (<patch-url>|commit:<commit-id>)
+Bug: <upstream-bugtracker-url>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: (no|not-needed|<patch-forwarded-url>)
+Applied-Upstream: <version>, (<commit-url>|commit:<commid-id>)
+Reviewed-By: <name and email of someone who approved/reviewed the patch>
+Last-Update: 2025-03-09
+
+--- rust-reqwest-0.12.12.orig/Cargo.toml
++++ rust-reqwest-0.12.12/Cargo.toml
+@@ -60,7 +60,7 @@ features = [
+ [features]
+ __internal_proxy_sys_no_cache = []
+ __rustls = [
+-    "dep:hyper-rustls",
++    #"dep:hyper-rustls",
+     "dep:tokio-rustls",
+     "dep:rustls",
+     "__tls",
+@@ -68,7 +68,7 @@ __rustls = [
+     "dep:rustls-pki-types",
+ ]
+ __rustls-ring = [
+-    "hyper-rustls?/ring",
++    #"hyper-rustls?/ring",
+     "tokio-rustls?/ring",
+     "rustls?/ring",
+ #    "quinn?/ring",
+@@ -121,7 +121,7 @@ http2 = [
+     "h2",
+     "hyper/http2",
+     "hyper-util/http2",
+-    "hyper-rustls?/http2",
++    #"hyper-rustls?/http2",
+ ]
+ #http3 = [
+ #    "rustls-tls-manual-roots",
+@@ -156,7 +156,7 @@ rustls-tls-native-roots = [
+ ]
+ rustls-tls-native-roots-no-provider = [
+     "dep:rustls-native-certs",
+-    "hyper-rustls?/native-tokio",
++    #"hyper-rustls?/native-tokio",
+     "__rustls",
+ ]
+ rustls-tls-no-provider = ["rustls-tls-manual-roots-no-provider"]
+@@ -407,14 +407,14 @@ features = [
+     "client",
+ ]
+ 
+-[target.'cfg(not(target_arch = "wasm32"))'.dependencies.hyper-rustls]
+-version = "0.27.0"
+-features = [
+-    "http1",
+-    "tls12",
+-]
+-optional = true
+-default-features = false
++#[target.'cfg(not(target_arch = "wasm32"))'.dependencies.hyper-rustls]
++#version = "0.27.0"
++#features = [
++#    "http1",
++#    "tls12",
++#]
++#optional = true
++#default-features = false
+ 
+ [target.'cfg(not(target_arch = "wasm32"))'.dependencies.hyper-tls]
+ version = "0.6"
+--- /dev/null
++++ rust-reqwest-0.12.12/hyper-rustls/LICENSE
+@@ -0,0 +1,10 @@
++hyper-rustls is distributed under the following three licenses:
++
++- Apache License version 2.0.
++- MIT license.
++- ISC license.
++
++These are included as LICENSE-APACHE, LICENSE-MIT and LICENSE-ISC
++respectively.  You may use this software under the terms of any
++of these licenses, at your option.
++
+--- /dev/null
++++ rust-reqwest-0.12.12/hyper-rustls/LICENSE-APACHE
+@@ -0,0 +1,201 @@
++                              Apache License
++                        Version 2.0, January 2004
++                     http://www.apache.org/licenses/
++
++TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
++
++1. Definitions.
++
++   "License" shall mean the terms and conditions for use, reproduction,
++   and distribution as defined by Sections 1 through 9 of this document.
++
++   "Licensor" shall mean the copyright owner or entity authorized by
++   the copyright owner that is granting the License.
++
++   "Legal Entity" shall mean the union of the acting entity and all
++   other entities that control, are controlled by, or are under common
++   control with that entity. For the purposes of this definition,
++   "control" means (i) the power, direct or indirect, to cause the
++   direction or management of such entity, whether by contract or
++   otherwise, or (ii) ownership of fifty percent (50%) or more of the
++   outstanding shares, or (iii) beneficial ownership of such entity.
++
++   "You" (or "Your") shall mean an individual or Legal Entity
++   exercising permissions granted by this License.
++
++   "Source" form shall mean the preferred form for making modifications,
++   including but not limited to software source code, documentation
++   source, and configuration files.
++
++   "Object" form shall mean any form resulting from mechanical
++   transformation or translation of a Source form, including but
++   not limited to compiled object code, generated documentation,
++   and conversions to other media types.
++
++   "Work" shall mean the work of authorship, whether in Source or
++   Object form, made available under the License, as indicated by a
++   copyright notice that is included in or attached to the work
++   (an example is provided in the Appendix below).
++
++   "Derivative Works" shall mean any work, whether in Source or Object
++   form, that is based on (or derived from) the Work and for which the
++   editorial revisions, annotations, elaborations, or other modifications
++   represent, as a whole, an original work of authorship. For the purposes
++   of this License, Derivative Works shall not include works that remain
++   separable from, or merely link (or bind by name) to the interfaces of,
++   the Work and Derivative Works thereof.
++
++   "Contribution" shall mean any work of authorship, including
++   the original version of the Work and any modifications or additions
++   to that Work or Derivative Works thereof, that is intentionally
++   submitted to Licensor for inclusion in the Work by the copyright owner
++   or by an individual or Legal Entity authorized to submit on behalf of
++   the copyright owner. For the purposes of this definition, "submitted"
++   means any form of electronic, verbal, or written communication sent
++   to the Licensor or its representatives, including but not limited to
++   communication on electronic mailing lists, source code control systems,
++   and issue tracking systems that are managed by, or on behalf of, the
++   Licensor for the purpose of discussing and improving the Work, but
++   excluding communication that is conspicuously marked or otherwise
++   designated in writing by the copyright owner as "Not a Contribution."
++
++   "Contributor" shall mean Licensor and any individual or Legal Entity
++   on behalf of whom a Contribution has been received by Licensor and
++   subsequently incorporated within the Work.
++
++2. Grant of Copyright License. Subject to the terms and conditions of
++   this License, each Contributor hereby grants to You a perpetual,
++   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
++   copyright license to reproduce, prepare Derivative Works of,
++   publicly display, publicly perform, sublicense, and distribute the
++   Work and such Derivative Works in Source or Object form.
++
++3. Grant of Patent License. Subject to the terms and conditions of
++   this License, each Contributor hereby grants to You a perpetual,
++   worldwide, non-exclusive, no-charge, royalty-free, irrevocable
++   (except as stated in this section) patent license to make, have made,
++   use, offer to sell, sell, import, and otherwise transfer the Work,
++   where such license applies only to those patent claims licensable
++   by such Contributor that are necessarily infringed by their
++   Contribution(s) alone or by combination of their Contribution(s)
++   with the Work to which such Contribution(s) was submitted. If You
++   institute patent litigation against any entity (including a
++   cross-claim or counterclaim in a lawsuit) alleging that the Work
++   or a Contribution incorporated within the Work constitutes direct
++   or contributory patent infringement, then any patent licenses
++   granted to You under this License for that Work shall terminate
++   as of the date such litigation is filed.
++
++4. Redistribution. You may reproduce and distribute copies of the
++   Work or Derivative Works thereof in any medium, with or without
++   modifications, and in Source or Object form, provided that You
++   meet the following conditions:
++
++   (a) You must give any other recipients of the Work or
++       Derivative Works a copy of this License; and
++
++   (b) You must cause any modified files to carry prominent notices
++       stating that You changed the files; and
++
++   (c) You must retain, in the Source form of any Derivative Works
++       that You distribute, all copyright, patent, trademark, and
++       attribution notices from the Source form of the Work,
++       excluding those notices that do not pertain to any part of
++       the Derivative Works; and
++
++   (d) If the Work includes a "NOTICE" text file as part of its
++       distribution, then any Derivative Works that You distribute must
++       include a readable copy of the attribution notices contained
++       within such NOTICE file, excluding those notices that do not
++       pertain to any part of the Derivative Works, in at least one
++       of the following places: within a NOTICE text file distributed
++       as part of the Derivative Works; within the Source form or
++       documentation, if provided along with the Derivative Works; or,
++       within a display generated by the Derivative Works, if and
++       wherever such third-party notices normally appear. The contents
++       of the NOTICE file are for informational purposes only and
++       do not modify the License. You may add Your own attribution
++       notices within Derivative Works that You distribute, alongside
++       or as an addendum to the NOTICE text from the Work, provided
++       that such additional attribution notices cannot be construed
++       as modifying the License.
++
++   You may add Your own copyright statement to Your modifications and
++   may provide additional or different license terms and conditions
++   for use, reproduction, or distribution of Your modifications, or
++   for any such Derivative Works as a whole, provided Your use,
++   reproduction, and distribution of the Work otherwise complies with
++   the conditions stated in this License.
++
++5. Submission of Contributions. Unless You explicitly state otherwise,
++   any Contribution intentionally submitted for inclusion in the Work
++   by You to the Licensor shall be under the terms and conditions of
++   this License, without any additional terms or conditions.
++   Notwithstanding the above, nothing herein shall supersede or modify
++   the terms of any separate license agreement you may have executed
++   with Licensor regarding such Contributions.
++
++6. Trademarks. This License does not grant permission to use the trade
++   names, trademarks, service marks, or product names of the Licensor,
++   except as required for reasonable and customary use in describing the
++   origin of the Work and reproducing the content of the NOTICE file.
++
++7. Disclaimer of Warranty. Unless required by applicable law or
++   agreed to in writing, Licensor provides the Work (and each
++   Contributor provides its Contributions) on an "AS IS" BASIS,
++   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
++   implied, including, without limitation, any warranties or conditions
++   of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
++   PARTICULAR PURPOSE. You are solely responsible for determining the
++   appropriateness of using or redistributing the Work and assume any
++   risks associated with Your exercise of permissions under this License.
++
++8. Limitation of Liability. In no event and under no legal theory,
++   whether in tort (including negligence), contract, or otherwise,
++   unless required by applicable law (such as deliberate and grossly
++   negligent acts) or agreed to in writing, shall any Contributor be
++   liable to You for damages, including any direct, indirect, special,
++   incidental, or consequential damages of any character arising as a
++   result of this License or out of the use or inability to use the
++   Work (including but not limited to damages for loss of goodwill,
++   work stoppage, computer failure or malfunction, or any and all
++   other commercial damages or losses), even if such Contributor
++   has been advised of the possibility of such damages.
++
++9. Accepting Warranty or Additional Liability. While redistributing
++   the Work or Derivative Works thereof, You may choose to offer,
++   and charge a fee for, acceptance of support, warranty, indemnity,
++   or other liability obligations and/or rights consistent with this
++   License. However, in accepting such obligations, You may act only
++   on Your own behalf and on Your sole responsibility, not on behalf
++   of any other Contributor, and only if You agree to indemnify,
++   defend, and hold each Contributor harmless for any liability
++   incurred by, or claims asserted against, such Contributor by reason
++   of your accepting any such warranty or additional liability.
++
++END OF TERMS AND CONDITIONS
++
++APPENDIX: How to apply the Apache License to your work.
++
++   To apply the Apache License to your work, attach the following
++   boilerplate notice, with the fields enclosed by brackets "[]"
++   replaced with your own identifying information. (Don't include
++   the brackets!)  The text should be enclosed in the appropriate
++   comment syntax for the file format. We also recommend that a
++   file or class name and description of purpose be included on the
++   same "printed page" as the copyright notice for easier
++   identification within third-party archives.
++
++Copyright [yyyy] [name of copyright owner]
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++	http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
+--- /dev/null
++++ rust-reqwest-0.12.12/hyper-rustls/LICENSE-ISC
+@@ -0,0 +1,15 @@
++ISC License (ISC)
++Copyright (c) 2016, Joseph Birr-Pixton <jpixton@gmail.com>
++
++Permission to use, copy, modify, and/or distribute this software for
++any purpose with or without fee is hereby granted, provided that the
++above copyright notice and this permission notice appear in all copies.
++
++THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
++WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
++WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
++AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
++DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
++PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS
++ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
++THIS SOFTWARE.
+--- /dev/null
++++ rust-reqwest-0.12.12/hyper-rustls/LICENSE-MIT
+@@ -0,0 +1,25 @@
++Copyright (c) 2016 Joseph Birr-Pixton <jpixton@gmail.com>
++
++Permission is hereby granted, free of charge, to any
++person obtaining a copy of this software and associated
++documentation files (the "Software"), to deal in the
++Software without restriction, including without
++limitation the rights to use, copy, modify, merge,
++publish, distribute, sublicense, and/or sell copies of
++the Software, and to permit persons to whom the Software
++is furnished to do so, subject to the following
++conditions:
++
++The above copyright notice and this permission notice
++shall be included in all copies or substantial portions
++of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
++ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
++TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
++PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
++SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
++CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
++OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
++IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++DEALINGS IN THE SOFTWARE.
+--- /dev/null
++++ rust-reqwest-0.12.12/hyper-rustls/README.md
+@@ -0,0 +1,64 @@
++# hyper-rustls
++
++This is an integration between the [Rustls TLS stack](https://github.com/rustls/rustls) and the
++[hyper HTTP library](https://github.com/hyperium/hyper).
++
++[![Build Status](https://github.com/rustls/hyper-rustls/actions/workflows/build.yml/badge.svg)](https://github.com/rustls/hyper-rustls/actions)
++[![Crate](https://img.shields.io/crates/v/hyper-rustls.svg)](https://crates.io/crates/hyper-rustls)
++[![Documentation](https://docs.rs/hyper-rustls/badge.svg)](https://docs.rs/hyper-rustls)
++
++# Release history
++
++Release history can be found [on GitHub](https://github.com/rustls/hyper-rustls/releases).
++
++# License
++
++hyper-rustls is distributed under the following three licenses:
++
++- Apache License version 2.0.
++- MIT license.
++- ISC license.
++
++These are included as LICENSE-APACHE, LICENSE-MIT and LICENSE-ISC respectively. You may use this
++software under the terms of any of these licenses, at your option.
++
++## Running examples
++
++### server
++
++```bash
++cargo run --example server
++```
++
++### client
++
++```bash
++cargo run --example client "https://docs.rs/hyper-rustls/latest/hyper_rustls/"
++```
++
++## Crate features
++
++This crate exposes a number of features to add support for different portions of `hyper-util`,
++`rustls`, and other dependencies.
++
++| Feature flag | Enabled by default | Description |
++| ------------ | ------------------ | ----------- |
++| `aws-lc-rs`  | **yes** | Enables use of the [AWS-LC][aws-lc-rs] backend for [`rustls`][rustls] |
++| `http1` | **yes** | Enables HTTP/1 support in [`hyper-util`][hyper-util] |
++| `http2` | **no** | Enables HTTP/2 support in [`hyper-util`][hyper-util] |
++| `webpki-tokio` | **no** | Uses a compiled-in set of root certificates trusted by Mozilla (via [`webpki-roots`][webpki-roots]) |
++| `native-tokio` | **yes** | Use the platform's native certificate store at runtime (via [`rustls-native-certs`][rustls-native-certs]) |
++| `rustls-platform-verifier` | **no** | Use the operating system's verifier for certificate verification (via [`rustls-platform-verifier`][rustls-platform-verifier]) |
++| `ring` | **no** | Enables use of the [`ring`][ring] backend for [`rustls`][rustls] |
++| `tls12` | **yes** | Enables support for TLS 1.2 (only TLS 1.3 supported when disabled) |
++| `logging` | **yes** | Enables logging of protocol-level diagnostics and errors via [`log`][log] |
++| `fips` | **no** | Enables support for using a FIPS 140-3 compliant backend via AWS-LC (enables `aws-lc-rs` feature) |
++
++[aws-lc-rs]: https://docs.rs/aws-lc-rs
++[rustls]: https://docs.rs/rustls
++[hyper-util]: https://docs.rs/hyper-util
++[webpki-roots]: https://docs.rs/webpki-roots
++[rustls-native-certs]: https://docs.rs/rustls-native-certs
++[rustls-platform-verifier]: https://docs.rs/rustls-platform-verifier
++[ring]: https://docs.rs/ring
++[log]: https://docs.rs/log
+--- /dev/null
++++ rust-reqwest-0.12.12/hyper-rustls/config.rs
+@@ -0,0 +1,108 @@
++#[cfg(feature = "rustls-native-certs")]
++use std::io;
++#[cfg(feature = "rustls-platform-verifier")]
++use std::sync::Arc;
++
++#[cfg(any(
++    feature = "rustls-platform-verifier",
++    feature = "rustls-native-certs",
++    feature = "webpki-roots"
++))]
++use rustls::client::WantsClientCert;
++use rustls::{ClientConfig, ConfigBuilder, WantsVerifier};
++#[cfg(feature = "rustls-native-certs")]
++use rustls_native_certs::CertificateResult;
++
++/// Methods for configuring roots
++///
++/// This adds methods (gated by crate features) for easily configuring
++/// TLS server roots a rustls ClientConfig will trust.
++pub trait ConfigBuilderExt {
++    /// Use the platform's native verifier to verify server certificates.
++    ///
++    /// See the documentation for [rustls-platform-verifier] for more details.
++    ///
++    /// [rustls-platform-verifier]: https://docs.rs/rustls-platform-verifier
++    #[cfg(feature = "rustls-platform-verifier")]
++    fn with_platform_verifier(self) -> ConfigBuilder<ClientConfig, WantsClientCert>;
++
++    /// This configures the platform's trusted certs, as implemented by
++    /// rustls-native-certs
++    ///
++    /// This will return an error if no valid certs were found. In that case,
++    /// it's recommended to use `with_webpki_roots`.
++    #[cfg(feature = "rustls-native-certs")]
++    fn with_native_roots(self) -> Result<ConfigBuilder<ClientConfig, WantsClientCert>, io::Error>;
++
++    /// This configures the webpki roots, which are Mozilla's set of
++    /// trusted roots as packaged by webpki-roots.
++    #[cfg(feature = "webpki-roots")]
++    fn with_webpki_roots(self) -> ConfigBuilder<ClientConfig, WantsClientCert>;
++}
++
++impl ConfigBuilderExt for ConfigBuilder<ClientConfig, WantsVerifier> {
++    #[cfg(feature = "rustls-platform-verifier")]
++    fn with_platform_verifier(self) -> ConfigBuilder<ClientConfig, WantsClientCert> {
++        let provider = self.crypto_provider().clone();
++        self.dangerous()
++            .with_custom_certificate_verifier(Arc::new(
++                rustls_platform_verifier::Verifier::new().with_provider(provider),
++            ))
++    }
++
++    #[cfg(feature = "rustls-native-certs")]
++    #[cfg_attr(not(feature = "logging"), allow(unused_variables))]
++    fn with_native_roots(self) -> Result<ConfigBuilder<ClientConfig, WantsClientCert>, io::Error> {
++        let mut roots = rustls::RootCertStore::empty();
++        let mut valid_count = 0;
++        let mut invalid_count = 0;
++
++        let CertificateResult { certs, errors, .. } = rustls_native_certs::load_native_certs();
++        if !errors.is_empty() {
++            crate::log::warn!("native root CA certificate loading errors: {errors:?}");
++        }
++
++        if certs.is_empty() {
++            return Err(io::Error::new(
++                io::ErrorKind::NotFound,
++                format!("no native root CA certificates found (errors: {errors:?})"),
++            ));
++        }
++
++        for cert in certs {
++            match roots.add(cert) {
++                Ok(_) => valid_count += 1,
++                Err(err) => {
++                    crate::log::debug!("certificate parsing failed: {:?}", err);
++                    invalid_count += 1
++                }
++            }
++        }
++
++        crate::log::debug!(
++            "with_native_roots processed {} valid and {} invalid certs",
++            valid_count,
++            invalid_count
++        );
++        if roots.is_empty() {
++            crate::log::debug!("no valid native root CA certificates found");
++            Err(io::Error::new(
++                io::ErrorKind::NotFound,
++                format!("no valid native root CA certificates found ({invalid_count} invalid)"),
++            ))?
++        }
++
++        Ok(self.with_root_certificates(roots))
++    }
++
++    #[cfg(feature = "webpki-roots")]
++    fn with_webpki_roots(self) -> ConfigBuilder<ClientConfig, WantsClientCert> {
++        let mut roots = rustls::RootCertStore::empty();
++        roots.extend(
++            webpki_roots::TLS_SERVER_ROOTS
++                .iter()
++                .cloned(),
++        );
++        self.with_root_certificates(roots)
++    }
++}
+--- /dev/null
++++ rust-reqwest-0.12.12/hyper-rustls/connector.rs
+@@ -0,0 +1,296 @@
++use std::future::Future;
++use std::pin::Pin;
++use std::sync::Arc;
++use std::task::{Context, Poll};
++use std::{fmt, io};
++
++use http::Uri;
++use hyper::rt;
++use hyper_util::client::legacy::connect::Connection;
++use hyper_util::rt::TokioIo;
++use rustls::pki_types::ServerName;
++use tokio_rustls::TlsConnector;
++use tower_service::Service;
++
++use crate::hyper_rustls::stream::MaybeHttpsStream;
++
++pub(crate) mod builder;
++
++type BoxError = Box<dyn std::error::Error + Send + Sync>;
++
++/// A Connector for the `https` scheme.
++#[derive(Clone)]
++pub struct HttpsConnector<T> {
++    force_https: bool,
++    http: T,
++    tls_config: Arc<rustls::ClientConfig>,
++    server_name_resolver: Arc<dyn ResolveServerName + Sync + Send>,
++}
++
++impl<T> HttpsConnector<T> {
++    /// Creates a [`crate::HttpsConnectorBuilder`] to configure a `HttpsConnector`.
++    ///
++    /// This is the same as [`crate::HttpsConnectorBuilder::new()`].
++    pub fn builder() -> builder::ConnectorBuilder<builder::WantsTlsConfig> {
++        builder::ConnectorBuilder::new()
++    }
++
++    /// Force the use of HTTPS when connecting.
++    ///
++    /// If a URL is not `https` when connecting, an error is returned.
++    pub fn enforce_https(&mut self) {
++        self.force_https = true;
++    }
++}
++
++impl<T> Service<Uri> for HttpsConnector<T>
++where
++    T: Service<Uri>,
++    T::Response: Connection + rt::Read + rt::Write + Send + Unpin + 'static,
++    T::Future: Send + 'static,
++    T::Error: Into<BoxError>,
++{
++    type Response = MaybeHttpsStream<T::Response>;
++    type Error = BoxError;
++
++    #[allow(clippy::type_complexity)]
++    type Future =
++        Pin<Box<dyn Future<Output = Result<MaybeHttpsStream<T::Response>, BoxError>> + Send>>;
++
++    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
++        match self.http.poll_ready(cx) {
++            Poll::Ready(Ok(())) => Poll::Ready(Ok(())),
++            Poll::Ready(Err(e)) => Poll::Ready(Err(e.into())),
++            Poll::Pending => Poll::Pending,
++        }
++    }
++
++    fn call(&mut self, dst: Uri) -> Self::Future {
++        // dst.scheme() would need to derive Eq to be matchable;
++        // use an if cascade instead
++        match dst.scheme() {
++            Some(scheme) if scheme == &http::uri::Scheme::HTTP && !self.force_https => {
++                let future = self.http.call(dst);
++                return Box::pin(async move {
++                    Ok(MaybeHttpsStream::Http(future.await.map_err(Into::into)?))
++                });
++            }
++            Some(scheme) if scheme != &http::uri::Scheme::HTTPS => {
++                let message = format!("unsupported scheme {scheme}");
++                return Box::pin(async move {
++                    Err(io::Error::new(io::ErrorKind::Other, message).into())
++                });
++            }
++            Some(_) => {}
++            None => {
++                return Box::pin(async move {
++                    Err(io::Error::new(io::ErrorKind::Other, "missing scheme").into())
++                })
++            }
++        };
++
++        let cfg = self.tls_config.clone();
++        let hostname = match self.server_name_resolver.resolve(&dst) {
++            Ok(hostname) => hostname,
++            Err(e) => {
++                return Box::pin(async move { Err(e) });
++            }
++        };
++
++        let connecting_future = self.http.call(dst);
++        Box::pin(async move {
++            let tcp = connecting_future
++                .await
++                .map_err(Into::into)?;
++            Ok(MaybeHttpsStream::Https(TokioIo::new(
++                TlsConnector::from(cfg)
++                    .connect(hostname, TokioIo::new(tcp))
++                    .await
++                    .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?,
++            )))
++        })
++    }
++}
++
++impl<H, C> From<(H, C)> for HttpsConnector<H>
++where
++    C: Into<Arc<rustls::ClientConfig>>,
++{
++    fn from((http, cfg): (H, C)) -> Self {
++        Self {
++            force_https: false,
++            http,
++            tls_config: cfg.into(),
++            server_name_resolver: Arc::new(DefaultServerNameResolver::default()),
++        }
++    }
++}
++
++impl<T> fmt::Debug for HttpsConnector<T> {
++    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
++        f.debug_struct("HttpsConnector")
++            .field("force_https", &self.force_https)
++            .finish()
++    }
++}
++
++/// The default server name resolver, which uses the hostname in the URI.
++#[derive(Default)]
++pub struct DefaultServerNameResolver(());
++
++impl ResolveServerName for DefaultServerNameResolver {
++    fn resolve(
++        &self,
++        uri: &Uri,
++    ) -> Result<ServerName<'static>, Box<dyn std::error::Error + Sync + Send>> {
++        let mut hostname = uri.host().unwrap_or_default();
++
++        // Remove square brackets around IPv6 address.
++        if let Some(trimmed) = hostname
++            .strip_prefix('[')
++            .and_then(|h| h.strip_suffix(']'))
++        {
++            hostname = trimmed;
++        }
++
++        ServerName::try_from(hostname.to_string()).map_err(|e| Box::new(e) as _)
++    }
++}
++
++/// A server name resolver which always returns the same fixed name.
++pub struct FixedServerNameResolver {
++    name: ServerName<'static>,
++}
++
++impl FixedServerNameResolver {
++    /// Creates a new resolver returning the specified name.
++    pub fn new(name: ServerName<'static>) -> Self {
++        Self { name }
++    }
++}
++
++impl ResolveServerName for FixedServerNameResolver {
++    fn resolve(
++        &self,
++        _: &Uri,
++    ) -> Result<ServerName<'static>, Box<dyn std::error::Error + Sync + Send>> {
++        Ok(self.name.clone())
++    }
++}
++
++impl<F, E> ResolveServerName for F
++where
++    F: Fn(&Uri) -> Result<ServerName<'static>, E>,
++    E: Into<Box<dyn std::error::Error + Sync + Send>>,
++{
++    fn resolve(
++        &self,
++        uri: &Uri,
++    ) -> Result<ServerName<'static>, Box<dyn std::error::Error + Sync + Send>> {
++        self(uri).map_err(Into::into)
++    }
++}
++
++/// A trait implemented by types that can resolve a [`ServerName`] for a request.
++pub trait ResolveServerName {
++    /// Maps a [`Uri`] into a [`ServerName`].
++    fn resolve(
++        &self,
++        uri: &Uri,
++    ) -> Result<ServerName<'static>, Box<dyn std::error::Error + Sync + Send>>;
++}
++
++#[cfg(all(
++    test,
++    any(feature = "__rustls-ring", feature = "aws-lc-rs"),
++    any(
++        feature = "rustls-native-certs",
++        feature = "webpki-roots",
++        feature = "rustls-platform-verifier",
++    )
++))]
++mod tests {
++    use std::future::poll_fn;
++
++    use http::Uri;
++    use hyper_util::rt::TokioIo;
++    use tokio::net::TcpStream;
++    use tower_service::Service;
++
++    use super::*;
++    use crate::{ConfigBuilderExt, HttpsConnectorBuilder, MaybeHttpsStream};
++
++    #[tokio::test]
++    async fn connects_https() {
++        connect(Allow::Any, Scheme::Https)
++            .await
++            .unwrap();
++    }
++
++    #[tokio::test]
++    async fn connects_http() {
++        connect(Allow::Any, Scheme::Http)
++            .await
++            .unwrap();
++    }
++
++    #[tokio::test]
++    async fn connects_https_only() {
++        connect(Allow::Https, Scheme::Https)
++            .await
++            .unwrap();
++    }
++
++    #[tokio::test]
++    async fn enforces_https_only() {
++        let message = connect(Allow::Https, Scheme::Http)
++            .await
++            .unwrap_err()
++            .to_string();
++
++        assert_eq!(message, "unsupported scheme http");
++    }
++
++    async fn connect(
++        allow: Allow,
++        scheme: Scheme,
++    ) -> Result<MaybeHttpsStream<TokioIo<TcpStream>>, BoxError> {
++        let config_builder = rustls::ClientConfig::builder();
++        cfg_if::cfg_if! {
++            if #[cfg(feature = "rustls-platform-verifier")] {
++                let config_builder = config_builder.with_platform_verifier();
++            } else if #[cfg(feature = "rustls-native-certs")] {
++                let config_builder = config_builder.with_native_roots().unwrap();
++            } else if #[cfg(feature = "webpki-roots")] {
++                let config_builder = config_builder.with_webpki_roots();
++            }
++        }
++        let config = config_builder.with_no_client_auth();
++
++        let builder = HttpsConnectorBuilder::new().with_tls_config(config);
++        let mut service = match allow {
++            Allow::Https => builder.https_only(),
++            Allow::Any => builder.https_or_http(),
++        }
++        .enable_http1()
++        .build();
++
++        poll_fn(|cx| service.poll_ready(cx)).await?;
++        service
++            .call(Uri::from_static(match scheme {
++                Scheme::Https => "https://google.com",
++                Scheme::Http => "http://google.com",
++            }))
++            .await
++    }
++
++    enum Allow {
++        Https,
++        Any,
++    }
++
++    enum Scheme {
++        Https,
++        Http,
++    }
++}
+--- /dev/null
++++ rust-reqwest-0.12.12/hyper-rustls/connector/builder.rs
+@@ -0,0 +1,485 @@
++use std::sync::Arc;
++
++use hyper_util::client::legacy::connect::HttpConnector;
++#[cfg(any(
++    feature = "rustls-native-certs",
++    feature = "rustls-platform-verifier",
++    feature = "webpki-roots"
++))]
++use rustls::crypto::CryptoProvider;
++use rustls::ClientConfig;
++
++use super::{DefaultServerNameResolver, HttpsConnector, ResolveServerName};
++#[cfg(any(
++    feature = "rustls-native-certs",
++    feature = "webpki-roots",
++    feature = "rustls-platform-verifier"
++))]
++use crate::config::ConfigBuilderExt;
++use rustls::pki_types::ServerName;
++
++/// A builder for an [`HttpsConnector`]
++///
++/// This makes configuration flexible and explicit and ensures connector
++/// features match crate features
++///
++/// # Examples
++///
++/// ```
++/// use hyper_rustls::HttpsConnectorBuilder;
++///
++/// # #[cfg(all(feature = "webpki-roots", feature = "http1", feature="aws-lc-rs"))]
++/// # {
++/// # let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
++///     let https = HttpsConnectorBuilder::new()
++///     .with_webpki_roots()
++///     .https_only()
++///     .enable_http1()
++///     .build();
++/// # }
++/// ```
++pub struct ConnectorBuilder<State>(State);
++
++/// State of a builder that needs a TLS client config next
++pub struct WantsTlsConfig(());
++
++impl ConnectorBuilder<WantsTlsConfig> {
++    /// Creates a new [`ConnectorBuilder`]
++    pub fn new() -> Self {
++        Self(WantsTlsConfig(()))
++    }
++
++    /// Passes a rustls [`ClientConfig`] to configure the TLS connection
++    ///
++    /// The [`alpn_protocols`](ClientConfig::alpn_protocols) field is
++    /// required to be empty (or the function will panic) and will be
++    /// rewritten to match the enabled schemes (see
++    /// [`enable_http1`](ConnectorBuilder::enable_http1),
++    /// [`enable_http2`](ConnectorBuilder::enable_http2)) before the
++    /// connector is built.
++    pub fn with_tls_config(self, config: ClientConfig) -> ConnectorBuilder<WantsSchemes> {
++        assert!(
++            config.alpn_protocols.is_empty(),
++            "ALPN protocols should not be pre-defined"
++        );
++        ConnectorBuilder(WantsSchemes { tls_config: config })
++    }
++
++    /// Shorthand for using rustls' default crypto provider and other defaults, and
++    /// the platform verifier.
++    ///
++    /// See [`ConfigBuilderExt::with_platform_verifier()`].
++    #[cfg(all(
++        any(feature = "ring", feature = "aws-lc-rs"),
++        feature = "rustls-platform-verifier"
++    ))]
++    pub fn with_platform_verifier(self) -> ConnectorBuilder<WantsSchemes> {
++        self.with_tls_config(
++            ClientConfig::builder()
++                .with_platform_verifier()
++                .with_no_client_auth(),
++        )
++    }
++
++    /// Shorthand for using a custom [`CryptoProvider`] and the platform verifier.
++    ///
++    /// See [`ConfigBuilderExt::with_platform_verifier()`].
++    #[cfg(feature = "rustls-platform-verifier")]
++    pub fn with_provider_and_platform_verifier(
++        self,
++        provider: impl Into<Arc<CryptoProvider>>,
++    ) -> std::io::Result<ConnectorBuilder<WantsSchemes>> {
++        Ok(self.with_tls_config(
++            ClientConfig::builder_with_provider(provider.into())
++                .with_safe_default_protocol_versions()
++                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?
++                .with_platform_verifier()
++                .with_no_client_auth(),
++        ))
++    }
++
++    /// Shorthand for using rustls' default crypto provider and safe defaults, with
++    /// native roots.
++    ///
++    /// See [`ConfigBuilderExt::with_native_roots`]
++    #[cfg(all(
++        any(feature = "ring", feature = "aws-lc-rs"),
++        feature = "rustls-native-certs"
++    ))]
++    pub fn with_native_roots(self) -> std::io::Result<ConnectorBuilder<WantsSchemes>> {
++        Ok(self.with_tls_config(
++            ClientConfig::builder()
++                .with_native_roots()?
++                .with_no_client_auth(),
++        ))
++    }
++
++    /// Shorthand for using a custom [`CryptoProvider`] and native roots
++    ///
++    /// See [`ConfigBuilderExt::with_native_roots`]
++    #[cfg(feature = "rustls-native-certs")]
++    pub fn with_provider_and_native_roots(
++        self,
++        provider: impl Into<Arc<CryptoProvider>>,
++    ) -> std::io::Result<ConnectorBuilder<WantsSchemes>> {
++        Ok(self.with_tls_config(
++            ClientConfig::builder_with_provider(provider.into())
++                .with_safe_default_protocol_versions()
++                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?
++                .with_native_roots()?
++                .with_no_client_auth(),
++        ))
++    }
++
++    /// Shorthand for using rustls' default crypto provider and its
++    /// safe defaults.
++    ///
++    /// See [`ConfigBuilderExt::with_webpki_roots`]
++    #[cfg(all(any(feature = "ring", feature = "aws-lc-rs"), feature = "webpki-roots"))]
++    pub fn with_webpki_roots(self) -> ConnectorBuilder<WantsSchemes> {
++        self.with_tls_config(
++            ClientConfig::builder()
++                .with_webpki_roots()
++                .with_no_client_auth(),
++        )
++    }
++
++    /// Shorthand for using a custom [`CryptoProvider`], Rustls' safe default
++    /// protocol versions and Mozilla roots
++    ///
++    /// See [`ConfigBuilderExt::with_webpki_roots`]
++    #[cfg(feature = "webpki-roots")]
++    pub fn with_provider_and_webpki_roots(
++        self,
++        provider: impl Into<Arc<CryptoProvider>>,
++    ) -> Result<ConnectorBuilder<WantsSchemes>, rustls::Error> {
++        Ok(self.with_tls_config(
++            ClientConfig::builder_with_provider(provider.into())
++                .with_safe_default_protocol_versions()?
++                .with_webpki_roots()
++                .with_no_client_auth(),
++        ))
++    }
++}
++
++impl Default for ConnectorBuilder<WantsTlsConfig> {
++    fn default() -> Self {
++        Self::new()
++    }
++}
++
++/// State of a builder that needs schemes (https:// and http://) to be
++/// configured next
++pub struct WantsSchemes {
++    tls_config: ClientConfig,
++}
++
++impl ConnectorBuilder<WantsSchemes> {
++    /// Enforce the use of HTTPS when connecting
++    ///
++    /// Only URLs using the HTTPS scheme will be connectable.
++    pub fn https_only(self) -> ConnectorBuilder<WantsProtocols1> {
++        ConnectorBuilder(WantsProtocols1 {
++            tls_config: self.0.tls_config,
++            https_only: true,
++            server_name_resolver: None,
++        })
++    }
++
++    /// Allow both HTTPS and HTTP when connecting
++    ///
++    /// HTTPS URLs will be handled through rustls,
++    /// HTTP URLs will be handled by the lower-level connector.
++    pub fn https_or_http(self) -> ConnectorBuilder<WantsProtocols1> {
++        ConnectorBuilder(WantsProtocols1 {
++            tls_config: self.0.tls_config,
++            https_only: false,
++            server_name_resolver: None,
++        })
++    }
++}
++
++/// State of a builder that needs to have some protocols (HTTP1 or later)
++/// enabled next
++///
++/// No protocol has been enabled at this point.
++pub struct WantsProtocols1 {
++    tls_config: ClientConfig,
++    https_only: bool,
++    server_name_resolver: Option<Arc<dyn ResolveServerName + Sync + Send>>,
++}
++
++impl WantsProtocols1 {
++    fn wrap_connector<H>(self, conn: H) -> HttpsConnector<H> {
++        HttpsConnector {
++            force_https: self.https_only,
++            http: conn,
++            tls_config: std::sync::Arc::new(self.tls_config),
++            server_name_resolver: self
++                .server_name_resolver
++                .unwrap_or_else(|| Arc::new(DefaultServerNameResolver::default())),
++        }
++    }
++
++    fn build(self) -> HttpsConnector<HttpConnector> {
++        let mut http = HttpConnector::new();
++        // HttpConnector won't enforce scheme, but HttpsConnector will
++        http.enforce_http(false);
++        self.wrap_connector(http)
++    }
++}
++
++impl ConnectorBuilder<WantsProtocols1> {
++    /// Enable HTTP1
++    ///
++    /// This needs to be called explicitly, no protocol is enabled by default
++    #[cfg(feature = "http1")]
++    pub fn enable_http1(self) -> ConnectorBuilder<WantsProtocols2> {
++        ConnectorBuilder(WantsProtocols2 { inner: self.0 })
++    }
++
++    /// Enable HTTP2
++    ///
++    /// This needs to be called explicitly, no protocol is enabled by default
++    #[cfg(feature = "http2")]
++    pub fn enable_http2(mut self) -> ConnectorBuilder<WantsProtocols3> {
++        self.0.tls_config.alpn_protocols = vec![b"h2".to_vec()];
++        ConnectorBuilder(WantsProtocols3 {
++            inner: self.0,
++            enable_http1: false,
++        })
++    }
++
++    /// Enable all HTTP versions built into this library (enabled with Cargo features)
++    ///
++    /// For now, this could enable both HTTP 1 and 2, depending on active features.
++    /// In the future, other supported versions will be enabled as well.
++    #[cfg(feature = "http2")]
++    pub fn enable_all_versions(mut self) -> ConnectorBuilder<WantsProtocols3> {
++        #[cfg(feature = "http1")]
++        let alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
++        #[cfg(not(feature = "http1"))]
++        let alpn_protocols = vec![b"h2".to_vec()];
++
++        self.0.tls_config.alpn_protocols = alpn_protocols;
++        ConnectorBuilder(WantsProtocols3 {
++            inner: self.0,
++            enable_http1: cfg!(feature = "http1"),
++        })
++    }
++
++    /// Override server name for the TLS stack
++    ///
++    /// By default, for each connection hyper-rustls will extract host portion
++    /// of the destination URL and verify that server certificate contains
++    /// this value.
++    ///
++    /// If this method is called, hyper-rustls will instead use this resolver
++    /// to compute the value used to verify the server certificate.
++    pub fn with_server_name_resolver(
++        mut self,
++        resolver: impl ResolveServerName + 'static + Sync + Send,
++    ) -> Self {
++        self.0.server_name_resolver = Some(Arc::new(resolver));
++        self
++    }
++
++    /// Override server name for the TLS stack
++    ///
++    /// By default, for each connection hyper-rustls will extract host portion
++    /// of the destination URL and verify that server certificate contains
++    /// this value.
++    ///
++    /// If this method is called, hyper-rustls will instead verify that server
++    /// certificate contains `override_server_name`. Domain name included in
++    /// the URL will not affect certificate validation.
++    #[deprecated(
++        since = "0.27.1",
++        note = "use Self::with_server_name_resolver with FixedServerNameResolver instead"
++    )]
++    pub fn with_server_name(self, mut override_server_name: String) -> Self {
++        // remove square brackets around IPv6 address.
++        if let Some(trimmed) = override_server_name
++            .strip_prefix('[')
++            .and_then(|s| s.strip_suffix(']'))
++        {
++            override_server_name = trimmed.to_string();
++        }
++
++        self.with_server_name_resolver(move |_: &_| {
++            ServerName::try_from(override_server_name.clone())
++        })
++    }
++}
++
++/// State of a builder with HTTP1 enabled, that may have some other
++/// protocols (HTTP2 or later) enabled next
++///
++/// At this point a connector can be built, see
++/// [`build`](ConnectorBuilder<WantsProtocols2>::build) and
++/// [`wrap_connector`](ConnectorBuilder<WantsProtocols2>::wrap_connector).
++pub struct WantsProtocols2 {
++    inner: WantsProtocols1,
++}
++
++impl ConnectorBuilder<WantsProtocols2> {
++    /// Enable HTTP2
++    ///
++    /// This needs to be called explicitly, no protocol is enabled by default
++    #[cfg(feature = "http2")]
++    pub fn enable_http2(mut self) -> ConnectorBuilder<WantsProtocols3> {
++        self.0.inner.tls_config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
++        ConnectorBuilder(WantsProtocols3 {
++            inner: self.0.inner,
++            enable_http1: true,
++        })
++    }
++
++    /// This builds an [`HttpsConnector`] built on hyper's default [`HttpConnector`]
++    pub fn build(self) -> HttpsConnector<HttpConnector> {
++        self.0.inner.build()
++    }
++
++    /// This wraps an arbitrary low-level connector into an [`HttpsConnector`]
++    pub fn wrap_connector<H>(self, conn: H) -> HttpsConnector<H> {
++        // HTTP1-only, alpn_protocols stays empty
++        // HttpConnector doesn't have a way to say http1-only;
++        // its connection pool may still support HTTP2
++        // though it won't be used
++        self.0.inner.wrap_connector(conn)
++    }
++}
++
++/// State of a builder with HTTP2 (and possibly HTTP1) enabled
++///
++/// At this point a connector can be built, see
++/// [`build`](ConnectorBuilder<WantsProtocols3>::build) and
++/// [`wrap_connector`](ConnectorBuilder<WantsProtocols3>::wrap_connector).
++#[cfg(feature = "http2")]
++pub struct WantsProtocols3 {
++    inner: WantsProtocols1,
++    // ALPN is built piecemeal without the need to read back this field
++    #[allow(dead_code)]
++    enable_http1: bool,
++}
++
++#[cfg(feature = "http2")]
++impl ConnectorBuilder<WantsProtocols3> {
++    /// This builds an [`HttpsConnector`] built on hyper's default [`HttpConnector`]
++    pub fn build(self) -> HttpsConnector<HttpConnector> {
++        self.0.inner.build()
++    }
++
++    /// This wraps an arbitrary low-level connector into an [`HttpsConnector`]
++    pub fn wrap_connector<H>(self, conn: H) -> HttpsConnector<H> {
++        // If HTTP1 is disabled, we can set http2_only
++        // on the Client (a higher-level object that uses the connector)
++        // client.http2_only(!self.0.enable_http1);
++        self.0.inner.wrap_connector(conn)
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    // Typical usage
++    #[test]
++    #[cfg(all(feature = "webpki-roots", feature = "http1"))]
++    fn test_builder() {
++        ensure_global_state();
++        let _connector = super::ConnectorBuilder::new()
++            .with_webpki_roots()
++            .https_only()
++            .enable_http1()
++            .build();
++    }
++
++    #[test]
++    #[cfg(feature = "http1")]
++    #[should_panic(expected = "ALPN protocols should not be pre-defined")]
++    fn test_reject_predefined_alpn() {
++        ensure_global_state();
++        let roots = rustls::RootCertStore::empty();
++        let mut config_with_alpn = rustls::ClientConfig::builder()
++            .with_root_certificates(roots)
++            .with_no_client_auth();
++        config_with_alpn.alpn_protocols = vec![b"fancyprotocol".to_vec()];
++        let _connector = super::ConnectorBuilder::new()
++            .with_tls_config(config_with_alpn)
++            .https_only()
++            .enable_http1()
++            .build();
++    }
++
++    #[test]
++    #[cfg(all(feature = "http1", feature = "http2"))]
++    fn test_alpn() {
++        ensure_global_state();
++        let roots = rustls::RootCertStore::empty();
++        let tls_config = rustls::ClientConfig::builder()
++            .with_root_certificates(roots)
++            .with_no_client_auth();
++        let connector = super::ConnectorBuilder::new()
++            .with_tls_config(tls_config.clone())
++            .https_only()
++            .enable_http1()
++            .build();
++        assert!(connector
++            .tls_config
++            .alpn_protocols
++            .is_empty());
++        let connector = super::ConnectorBuilder::new()
++            .with_tls_config(tls_config.clone())
++            .https_only()
++            .enable_http2()
++            .build();
++        assert_eq!(&connector.tls_config.alpn_protocols, &[b"h2".to_vec()]);
++        let connector = super::ConnectorBuilder::new()
++            .with_tls_config(tls_config.clone())
++            .https_only()
++            .enable_http1()
++            .enable_http2()
++            .build();
++        assert_eq!(
++            &connector.tls_config.alpn_protocols,
++            &[b"h2".to_vec(), b"http/1.1".to_vec()]
++        );
++        let connector = super::ConnectorBuilder::new()
++            .with_tls_config(tls_config)
++            .https_only()
++            .enable_all_versions()
++            .build();
++        assert_eq!(
++            &connector.tls_config.alpn_protocols,
++            &[b"h2".to_vec(), b"http/1.1".to_vec()]
++        );
++    }
++
++    /*#[test]
++    #[cfg(all(not(feature = "http1"), feature = "http2"))]
++    fn test_alpn_http2() {
++        let roots = rustls::RootCertStore::empty();
++        let tls_config = rustls::ClientConfig::builder()
++            .with_safe_defaults()
++            .with_root_certificates(roots)
++            .with_no_client_auth();
++        let connector = super::ConnectorBuilder::new()
++            .with_tls_config(tls_config.clone())
++            .https_only()
++            .enable_http2()
++            .build();
++        assert_eq!(&connector.tls_config.alpn_protocols, &[b"h2".to_vec()]);
++        let connector = super::ConnectorBuilder::new()
++            .with_tls_config(tls_config)
++            .https_only()
++            .enable_all_versions()
++            .build();
++        assert_eq!(&connector.tls_config.alpn_protocols, &[b"h2".to_vec()]);
++    }*/
++
++    fn ensure_global_state() {
++        #[cfg(feature = "__rustls-ring")]
++        let _ = rustls::crypto::ring::default_provider().install_default();
++        #[cfg(feature = "aws-lc-rs")]
++        let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
++    }
++}
+--- /dev/null
++++ rust-reqwest-0.12.12/hyper-rustls/lib.rs
+@@ -0,0 +1,76 @@
++//! # hyper-rustls
++//!
++//! A pure-Rust HTTPS connector for [hyper](https://hyper.rs), based on
++//! [Rustls](https://github.com/rustls/rustls).
++//!
++//! ## Example client
++//!
++//! ```no_run
++//! # #[cfg(all(feature = "rustls-native-certs", feature = "http1"))]
++//! # fn main() {
++//! use http::StatusCode;
++//! use http_body_util::Empty;
++//! use hyper::body::Bytes;
++//! use hyper_util::client::legacy::Client;
++//! use hyper_util::rt::TokioExecutor;
++//!
++//! let mut rt = tokio::runtime::Runtime::new().unwrap();
++//! let url = ("https://hyper.rs").parse().unwrap();
++//! let https = hyper_rustls::HttpsConnectorBuilder::new()
++//!     .with_native_roots()
++//!     .expect("no native root CA certificates found")
++//!     .https_only()
++//!     .enable_http1()
++//!     .build();
++//!
++//! let client: Client<_, Empty<Bytes>> = Client::builder(TokioExecutor::new()).build(https);
++//!
++//! let res = rt.block_on(client.get(url)).unwrap();
++//! assert_eq!(res.status(), StatusCode::OK);
++//! # }
++//! # #[cfg(not(all(feature = "rustls-native-certs", feature = "http1")))]
++//! # fn main() {}
++//! ```
++
++#![warn(missing_docs, unreachable_pub, clippy::use_self)]
++#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
++
++mod config;
++mod connector;
++mod stream;
++
++#[cfg(feature = "logging")]
++mod log {
++    #[cfg(any(feature = "rustls-native-certs", feature = "webpki-roots"))]
++    pub(crate) use log::debug;
++    #[cfg(feature = "rustls-native-certs")]
++    pub(crate) use log::warn;
++}
++
++#[cfg(not(feature = "logging"))]
++mod log {
++    #[cfg(any(feature = "rustls-native-certs", feature = "webpki-roots"))]
++    macro_rules! debug    ( ($($tt:tt)*) => {{}} );
++    #[cfg(any(feature = "rustls-native-certs", feature = "webpki-roots"))]
++    pub(crate) use debug;
++    #[cfg(feature = "rustls-native-certs")]
++    macro_rules! warn_    ( ($($tt:tt)*) => {{}} );
++    #[cfg(feature = "rustls-native-certs")]
++    pub(crate) use warn_ as warn;
++}
++
++pub use crate::hyper_rustls::config::ConfigBuilderExt;
++pub use crate::hyper_rustls::connector::builder::ConnectorBuilder as HttpsConnectorBuilder;
++pub use crate::hyper_rustls::connector::{
++    DefaultServerNameResolver, FixedServerNameResolver, HttpsConnector, ResolveServerName,
++};
++pub use crate::hyper_rustls::stream::MaybeHttpsStream;
++
++/// The various states of the [`HttpsConnectorBuilder`]
++pub mod builderstates {
++    #[cfg(feature = "http2")]
++    pub use crate::hyper_rustls::connector::builder::WantsProtocols3;
++    pub use crate::hyper_rustls::connector::builder::{
++        WantsProtocols1, WantsProtocols2, WantsSchemes, WantsTlsConfig,
++    };
++}
+--- /dev/null
++++ rust-reqwest-0.12.12/hyper-rustls/stream.rs
+@@ -0,0 +1,121 @@
++// Copied from hyperium/hyper-tls#62e3376/src/stream.rs
++use std::fmt;
++use std::io;
++use std::pin::Pin;
++use std::task::{Context, Poll};
++
++use hyper::rt;
++use hyper_util::client::legacy::connect::{Connected, Connection};
++
++use hyper_util::rt::TokioIo;
++use tokio_rustls::client::TlsStream;
++
++/// A stream that might be protected with TLS.
++#[allow(clippy::large_enum_variant)]
++pub enum MaybeHttpsStream<T> {
++    /// A stream over plain text.
++    Http(T),
++    /// A stream protected with TLS.
++    Https(TokioIo<TlsStream<TokioIo<T>>>),
++}
++
++impl<T: rt::Read + rt::Write + Connection + Unpin> Connection for MaybeHttpsStream<T> {
++    fn connected(&self) -> Connected {
++        match self {
++            Self::Http(s) => s.connected(),
++            Self::Https(s) => {
++                let (tcp, tls) = s.inner().get_ref();
++                if tls.alpn_protocol() == Some(b"h2") {
++                    tcp.inner().connected().negotiated_h2()
++                } else {
++                    tcp.inner().connected()
++                }
++            }
++        }
++    }
++}
++
++impl<T: fmt::Debug> fmt::Debug for MaybeHttpsStream<T> {
++    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
++        match *self {
++            Self::Http(..) => f.pad("Http(..)"),
++            Self::Https(..) => f.pad("Https(..)"),
++        }
++    }
++}
++
++impl<T> From<T> for MaybeHttpsStream<T> {
++    fn from(inner: T) -> Self {
++        Self::Http(inner)
++    }
++}
++
++impl<T> From<TlsStream<TokioIo<T>>> for MaybeHttpsStream<T> {
++    fn from(inner: TlsStream<TokioIo<T>>) -> Self {
++        Self::Https(TokioIo::new(inner))
++    }
++}
++
++impl<T: rt::Read + rt::Write + Unpin> rt::Read for MaybeHttpsStream<T> {
++    #[inline]
++    fn poll_read(
++        self: Pin<&mut Self>,
++        cx: &mut Context,
++        buf: rt::ReadBufCursor<'_>,
++    ) -> Poll<Result<(), io::Error>> {
++        match Pin::get_mut(self) {
++            Self::Http(s) => Pin::new(s).poll_read(cx, buf),
++            Self::Https(s) => Pin::new(s).poll_read(cx, buf),
++        }
++    }
++}
++
++impl<T: rt::Write + rt::Read + Unpin> rt::Write for MaybeHttpsStream<T> {
++    #[inline]
++    fn poll_write(
++        self: Pin<&mut Self>,
++        cx: &mut Context<'_>,
++        buf: &[u8],
++    ) -> Poll<Result<usize, io::Error>> {
++        match Pin::get_mut(self) {
++            Self::Http(s) => Pin::new(s).poll_write(cx, buf),
++            Self::Https(s) => Pin::new(s).poll_write(cx, buf),
++        }
++    }
++
++    #[inline]
++    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), io::Error>> {
++        match Pin::get_mut(self) {
++            Self::Http(s) => Pin::new(s).poll_flush(cx),
++            Self::Https(s) => Pin::new(s).poll_flush(cx),
++        }
++    }
++
++    #[inline]
++    fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), io::Error>> {
++        match Pin::get_mut(self) {
++            Self::Http(s) => Pin::new(s).poll_shutdown(cx),
++            Self::Https(s) => Pin::new(s).poll_shutdown(cx),
++        }
++    }
++
++    #[inline]
++    fn is_write_vectored(&self) -> bool {
++        match self {
++            Self::Http(s) => s.is_write_vectored(),
++            Self::Https(s) => s.is_write_vectored(),
++        }
++    }
++
++    #[inline]
++    fn poll_write_vectored(
++        self: Pin<&mut Self>,
++        cx: &mut Context<'_>,
++        bufs: &[io::IoSlice<'_>],
++    ) -> Poll<Result<usize, io::Error>> {
++        match Pin::get_mut(self) {
++            Self::Http(s) => Pin::new(s).poll_write_vectored(cx, bufs),
++            Self::Https(s) => Pin::new(s).poll_write_vectored(cx, bufs),
++        }
++    }
++}
+--- rust-reqwest-0.12.12.orig/src/connect.rs
++++ rust-reqwest-0.12.12/src/connect.rs
+@@ -464,10 +464,10 @@ impl ConnectorService {
+                     http.set_nodelay(true);
+                 }
+ 
+-                let mut http = hyper_rustls::HttpsConnector::from((http, tls.clone()));
++                let mut http = crate::hyper_rustls::HttpsConnector::from((http, tls.clone()));
+                 let io = http.call(dst).await?;
+ 
+-                if let hyper_rustls::MaybeHttpsStream::Https(stream) = io {
++                if let crate::hyper_rustls::MaybeHttpsStream::Https(stream) = io {
+                     if !self.nodelay {
+                         let (io, _) = stream.inner().get_ref();
+                         io.inner().inner().set_nodelay(false)?;
+@@ -553,7 +553,7 @@ impl ConnectorService {
+                     let host = dst.host().ok_or("no host in url")?.to_string();
+                     let port = dst.port().map(|r| r.as_u16()).unwrap_or(443);
+                     let http = http.clone();
+-                    let mut http = hyper_rustls::HttpsConnector::from((http, tls_proxy.clone()));
++                    let mut http = crate::hyper_rustls::HttpsConnector::from((http, tls_proxy.clone()));
+                     let tls = tls.clone();
+                     let conn = http.call(proxy_dst).await?;
+                     log::trace!("tunneling HTTPS over proxy");
+@@ -710,7 +710,7 @@ impl TlsInfoFactory for tokio_rustls::cl
+ #[cfg(feature = "__rustls")]
+ impl TlsInfoFactory
+     for tokio_rustls::client::TlsStream<
+-        TokioIo<hyper_rustls::MaybeHttpsStream<TokioIo<tokio::net::TcpStream>>>,
++        TokioIo<crate::hyper_rustls::MaybeHttpsStream<TokioIo<tokio::net::TcpStream>>>,
+     >
+ {
+     fn tls_info(&self) -> Option<crate::tls::TlsInfo> {
+@@ -725,11 +725,11 @@ impl TlsInfoFactory
+ }
+ 
+ #[cfg(feature = "__rustls")]
+-impl TlsInfoFactory for hyper_rustls::MaybeHttpsStream<TokioIo<tokio::net::TcpStream>> {
++impl TlsInfoFactory for crate::hyper_rustls::MaybeHttpsStream<TokioIo<tokio::net::TcpStream>> {
+     fn tls_info(&self) -> Option<crate::tls::TlsInfo> {
+         match self {
+-            hyper_rustls::MaybeHttpsStream::Https(tls) => tls.tls_info(),
+-            hyper_rustls::MaybeHttpsStream::Http(_) => None,
++            crate::hyper_rustls::MaybeHttpsStream::Https(tls) => tls.tls_info(),
++            crate::hyper_rustls::MaybeHttpsStream::Http(_) => None,
+         }
+     }
+ }
+@@ -1044,7 +1044,7 @@ mod native_tls_conn {
+ mod rustls_tls_conn {
+     use super::TlsInfoFactory;
+     use hyper::rt::{Read, ReadBufCursor, Write};
+-    use hyper_rustls::MaybeHttpsStream;
++    use crate::hyper_rustls::MaybeHttpsStream;
+     use hyper_util::client::legacy::connect::{Connected, Connection};
+     use hyper_util::rt::TokioIo;
+     use pin_project_lite::pin_project;
+--- rust-reqwest-0.12.12.orig/src/lib.rs
++++ rust-reqwest-0.12.12/src/lib.rs
+@@ -242,6 +242,10 @@
+ //! [cargo-features]: https://doc.rust-lang.org/stable/cargo/reference/manifest.html#the-features-section
+ //! [sponsor]: https://seanmonstar.com/sponsor
+ 
++#[cfg(feature = "__rustls")]
++#[path = "../hyper-rustls/lib.rs"]
++mod hyper_rustls;
++
+ #[cfg(all(feature = "http3", not(reqwest_unstable)))]
+ compile_error!(
+     "\

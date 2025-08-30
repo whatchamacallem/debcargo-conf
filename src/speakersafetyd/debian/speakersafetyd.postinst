@@ -2,18 +2,20 @@
 set -e
 
 if [ "$1" = "configure" ]; then
-	if [ -z "$2" ]; then
-		# debhelper does not start disabled, non-running services
-		# use udevadm to start speakersafetyd on install if/when the
-		# hardware allows it
-		udevadm trigger --action=change --subsystem-match=sound || true
-	elif dpkg --compare-versions -- "$2" le-nl "0.1.9-2~"; then
-		# previous version mistakenly enabled speakersafetyd.service on install
-		# This can be dropped in trixie+1
-		if deb-systemd-helper --quiet was-enabled 'speakersafetyd.service'; then
-			deb-systemd-helper disable 'speakersafetyd.service' >/dev/null || true
-		fi
-	fi
+  if [ -z "$2" ]; then
+    # debhelper does not start disabled, non-running services
+    # use udevadm to start speakersafetyd on install if/when the
+    # hardware allows it
+    if command -v udevadm >/dev/null 2>&1; then
+      udevadm trigger --action=change --subsystem-match=sound || true
+    fi
+  elif dpkg --compare-versions -- "$2" le-nl "0.1.9-2~"; then
+    # previous version mistakenly enabled speakersafetyd.service on install
+    # This can be dropped in trixie+1
+    if deb-systemd-helper --quiet was-enabled 'speakersafetyd.service'; then
+      deb-systemd-helper disable 'speakersafetyd.service' >/dev/null || true
+    fi
+  fi
 fi
 
 

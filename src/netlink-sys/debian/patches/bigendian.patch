@@ -31,7 +31,7 @@ Index: netlink-sys/src/socket.rs
 ===================================================================
 --- netlink-sys.orig/src/socket.rs
 +++ netlink-sys/src/socket.rs
-@@ -400,7 +400,7 @@ impl Socket {
+@@ -426,7 +426,7 @@ impl Socket {
              libc::SOL_NETLINK,
              libc::NETLINK_PKTINFO,
          )?;
@@ -40,7 +40,7 @@ Index: netlink-sys/src/socket.rs
      }
  
      pub fn add_membership(&mut self, group: u32) -> Result<()> {
-@@ -447,7 +447,7 @@ impl Socket {
+@@ -473,7 +473,7 @@ impl Socket {
              libc::SOL_NETLINK,
              libc::NETLINK_BROADCAST_ERROR,
          )?;
@@ -49,7 +49,7 @@ Index: netlink-sys/src/socket.rs
      }
  
      /// `NETLINK_NO_ENOBUFS` (since Linux 2.6.30). This flag can be used by
-@@ -463,7 +463,7 @@ impl Socket {
+@@ -494,7 +494,7 @@ impl Socket {
              libc::SOL_NETLINK,
              libc::NETLINK_NO_ENOBUFS,
          )?;
@@ -58,7 +58,7 @@ Index: netlink-sys/src/socket.rs
      }
  
      /// `NETLINK_LISTEN_ALL_NSID` (since Linux 4.2). When set, this socket will
-@@ -487,7 +487,7 @@ impl Socket {
+@@ -518,7 +518,7 @@ impl Socket {
              libc::SOL_NETLINK,
              libc::NETLINK_LISTEN_ALL_NSID,
          )?;
@@ -67,8 +67,12 @@ Index: netlink-sys/src/socket.rs
      }
  
      /// `NETLINK_CAP_ACK` (since Linux 4.2). The kernel may fail to allocate the
-@@ -509,3 +509,3 @@ impl Socket {
+@@ -543,7 +543,7 @@ impl Socket {
+             libc::SOL_NETLINK,
+             libc::NETLINK_CAP_ACK,
          )?;
 -        Ok(res == 1)
 +        Ok(res != 0)
      }
+ 
+     /// `NETLINK_EXT_ACK`

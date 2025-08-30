@@ -24,7 +24,7 @@
 #     Whether to build with sbuild unshare mode
 set -e
 
-SCRIPTDIR="$(dirname $(readlink -f "$0"))"
+SCRIPTDIR="$(dirname "$(readlink -f "$0")")"
 
 abort() { local x=$1; shift; for i in "$@"; do echo >&2 "$0: abort: $i"; done; exit "$x"; }
 report() { for i in "$@"; do echo >&2 "debcargo-conf builder: $i"; done; }
@@ -200,7 +200,8 @@ fi
 
 if [ "$CHROOT_MODE" = "unshare" ]; then
 	CACHE_DIR=${XDG_CACHE_HOME:-${HOME}/.cache}
-	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=--apt-upgrade -- unshare -t ${CACHE_DIR}/sbuild/${CHROOT}.tar ${DISTRO:+-r $DISTRO}")
+	CHROOT_TARBALL=$(find "${CACHE_DIR}/sbuild" -name "${CHROOT}.t*" -print -quit)
+	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=--apt-upgrade -- unshare -t ${CHROOT_TARBALL} ${DISTRO:+-r $DISTRO}")
 else
 	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=-- schroot ${CHROOT}")
 fi

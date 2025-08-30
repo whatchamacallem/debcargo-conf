@@ -1,0 +1,31 @@
+Index: state/tests/main.rs
+===================================================================
+--- state.orig/tests/main.rs
++++ state/tests/main.rs
+@@ -74,7 +74,7 @@ mod type_map_tests {
+     #[test]
+     fn many_puts_only_one_succeeds() {
+         let mut threads = vec![];
+-        for _ in 0..1000 {
++        for _ in 0..100 {
+             threads.push(thread::spawn(|| {
+                 TYPE_MAP.set(10i64)
+             }))
+@@ -231,7 +231,7 @@ mod cell_tests {
+         static CELL: InitCell<u32> = InitCell::new();
+ 
+         let mut threads = vec![];
+-        for _ in 0..1000 {
++        for _ in 0..100 {
+             threads.push(thread::spawn(|| {
+                 let was_set = CELL.set(10);
+                 assert_eq!(*CELL.get(), 10);
+@@ -311,7 +311,7 @@ mod cell_tests_tls {
+         static CELL: LocalInitCell<u32> = LocalInitCell::new();
+ 
+         let mut threads = vec![];
+-        for _ in 0..1000 {
++        for _ in 0..100 {
+             threads.push(thread::spawn(|| {
+                 let was_set = CELL.set(|| 10);
+                 assert_eq!(*CELL.get(), 10);

@@ -1,15 +1,15 @@
 --- a/build.rs
 +++ b/build.rs
-@@ -16,6 +16,8 @@
+@@ -19,6 +19,8 @@
      },
  };
  
 +const OUT_DIR: &str = "debian/build_artifacts";
 +
- fn write_completions_file<G: Generator + Copy, P: AsRef<OsStr>>(generator: G, out_dir: P) {
-     let mut args = Args::command();
-     clap_complete::generate_to(
-@@ -29,7 +31,7 @@
+ fn write_completions_file<G: Generator + Copy, P: AsRef<OsStr>>(
+     generator: G,
+     out_dir: P,
+@@ -31,7 +33,7 @@
  /// write the shell completion scripts which will be added to
  /// the release archive
  fn build_completion_scripts() {
@@ -18,7 +18,7 @@
      write_completions_file(Shell::Bash, &out_dir);
      write_completions_file(Shell::Elvish, &out_dir);
      write_completions_file(Shell::Fish, &out_dir);
-@@ -39,7 +41,7 @@
+@@ -41,7 +43,7 @@
  
  /// generate the man page from the Clap configuration
  fn build_man_page() -> std::io::Result<()> {
@@ -27,7 +27,7 @@
      let out_dir = PathBuf::from(out_dir);
      let cmd = Args::command();
      let man = clap_mangen::Man::new(cmd);
-@@ -103,6 +105,7 @@
+@@ -104,6 +106,7 @@
  
  fn main() -> std::io::Result<()> {
      check_version_consistency()?;

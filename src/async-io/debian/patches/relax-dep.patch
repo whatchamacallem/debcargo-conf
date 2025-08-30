@@ -1,13 +1,11 @@
-Index: async-io/Cargo.toml
-===================================================================
---- async-io.orig/Cargo.toml
-+++ async-io/Cargo.toml
-@@ -57,13 +57,13 @@ name = "timer"
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -89,13 +89,13 @@
  harness = false
  
  [dependencies.async-lock]
 -version = "3.0.0"
-+version = ">= 2.8.0, < 4"
++version = "3"
  
  [dependencies.cfg-if]
  version = "1"
@@ -18,7 +16,7 @@ Index: async-io/Cargo.toml
  
  [dependencies.futures-io]
  version = "0.3.28"
-@@ -71,8 +71,7 @@ features = ["std"]
+@@ -103,8 +103,7 @@
  default-features = false
  
  [dependencies.futures-lite]
@@ -28,7 +26,7 @@ Index: async-io/Cargo.toml
  
  [dependencies.parking]
  version = "2.0.0"
-@@ -97,16 +96,16 @@ version = "0.1.37"
+@@ -130,21 +129,21 @@
  default-features = false
  
  [dev-dependencies.async-channel]
@@ -37,7 +35,7 @@ Index: async-io/Cargo.toml
  
  [dev-dependencies.async-net]
 -version = "2.0.0"
-+version = ">= 1.8.0, < 3.0"
++version = "2"
  
  [dev-dependencies.blocking]
  version = "1"
@@ -48,17 +46,9 @@ Index: async-io/Cargo.toml
  features = ["cargo_bench_support"]
  default-features = false
  
-@@ -120,7 +119,12 @@ version = "0.3"
- version = "3"
+ [dev-dependencies.getrandom]
+-version = "0.3"
++version = "0.2"
  
- [target."cfg(target_os = \"linux\")".dev-dependencies.timerfd]
--version = "1"
-+#older versions of timerfd do not support the asfd trait.
-+version = "1.5.0"
-+
-+#needed to avoid problems with two copies of async-io in the build.
-+[patch.crates-io]
-+async-io = { path = "." }
- 
- 
- [lints.rust.unexpected_cfgs]
+ [dev-dependencies.signal-hook]
+ version = "0.3"

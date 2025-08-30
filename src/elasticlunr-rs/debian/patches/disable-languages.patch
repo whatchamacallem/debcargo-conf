@@ -1,0 +1,123 @@
+Description: Disable most languages
+ The patched-out languages require jieba, lindera and rust-stemmers, which are
+ not packaged in Debian. At the moment of introducing this package we are
+ mostly only interested in English to gain search functionality for the Rust
+ Team Book. This patch can be removed when the aforementioned packages are
+ introduced in Debian.
+Author: NoisyCoil <noisycoil@tutanota.com>
+Forwarded: not-needed
+Last-Update: 2025-04-05
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -40,23 +40,23 @@
+ name = "bench"
+ harness = false
+ 
+-[dependencies.jieba-rs]
++[disable.dependencies.jieba-rs]
+ version = "0.6"
+ optional = true
+ 
+-[dependencies.lindera]
++[disable.dependencies.lindera]
+ version = "0.14"
+ features = ["ipadic"]
+ optional = true
+ 
+-[dependencies.lindera-core]
++[disable.dependencies.lindera-core]
+ version = "0.13.5"
+ optional = true
+ 
+ [dependencies.regex]
+ version = "1"
+ 
+-[dependencies.rust-stemmers]
++[disable.dependencies.rust-stemmers]
+ version = "1.2.0"
+ optional = true
+ 
+@@ -77,46 +77,46 @@
+ 
+ [features]
+ ar = []
+-da = ["rust-stemmers"]
+-de = ["rust-stemmers"]
+-du = ["rust-stemmers"]
+-es = ["rust-stemmers"]
+-fi = ["rust-stemmers"]
+-fr = ["rust-stemmers"]
+-hu = ["rust-stemmers"]
+-it = ["rust-stemmers"]
+-ja = [
+-    "lindera",
+-    "lindera-core",
+-]
++#da = ["rust-stemmers"]
++#de = ["rust-stemmers"]
++#du = ["rust-stemmers"]
++#es = ["rust-stemmers"]
++#fi = ["rust-stemmers"]
++#fr = ["rust-stemmers"]
++#hu = ["rust-stemmers"]
++#it = ["rust-stemmers"]
++#ja = [
++#    "lindera",
++#    "lindera-core",
++#]
+ ko = []
+ languages = [
+     "ar",
+-    "da",
+-    "de",
+-    "du",
+-    "es",
+-    "fi",
+-    "fr",
+-    "hu",
+-    "it",
+-    "ja",
++#    "da",
++#    "de",
++#    "du",
++#    "es",
++#    "fi",
++#    "fr",
++#    "hu",
++#    "it",
++#    "ja",
+     "ko",
+-    "no",
+-    "pt",
+-    "ro",
+-    "ru",
+-    "sv",
+-    "tr",
+-    "zh",
++#    "no",
++#    "pt",
++#    "ro",
++#    "ru",
++#    "sv",
++#    "tr",
++#    "zh",
+ ]
+-no = ["rust-stemmers"]
+-pt = ["rust-stemmers"]
+-ro = ["rust-stemmers"]
+-ru = ["rust-stemmers"]
+-sv = ["rust-stemmers"]
+-tr = ["rust-stemmers"]
+-zh = ["jieba-rs"]
++#no = ["rust-stemmers"]
++#pt = ["rust-stemmers"]
++#ro = ["rust-stemmers"]
++#ru = ["rust-stemmers"]
++#sv = ["rust-stemmers"]
++#tr = ["rust-stemmers"]
++#zh = ["jieba-rs"]
+ 
+ [badges.maintenance]
+ status = "passively-maintained"

@@ -1,0 +1,104 @@
+Description: remove dependency to deprecate-until
+Author: Antonin Delpeuch <antonin@delpeuch.eu>
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -199,18 +199,6 @@ source = "registry+https://github.com/ru
+ checksum = "22ec99545bb0ed0ea7bb9b8e1e9122ea386ff8a48c0922e43f36d45ab09e0e80"
+ 
+ [[package]]
+-name = "deprecate-until"
+-version = "0.1.1"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "7a3767f826efbbe5a5ae093920b58b43b01734202be697e1354914e862e8e704"
+-dependencies = [
+- "proc-macro2",
+- "quote",
+- "semver",
+- "syn 2.0.89",
+-]
+-
+-[[package]]
+ name = "either"
+ version = "1.0.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+@@ -388,7 +376,6 @@ name = "pathfinding"
+ version = "4.14.0"
+ dependencies = [
+  "codspeed-criterion-compat",
+- "deprecate-until",
+  "indexmap",
+  "integer-sqrt",
+  "itertools 0.14.0",
+@@ -567,12 +554,6 @@ dependencies = [
+ ]
+ 
+ [[package]]
+-name = "semver"
+-version = "1.0.23"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "61697e0a1c7e512e84a621326239844a24d8207b4669b41bc18b32ea5cbf988b"
+-
+-[[package]]
+ name = "serde"
+ version = "1.0.196"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -215,9 +215,6 @@ name = "separate_components"
+ path = "benches/separate_components.rs"
+ harness = false
+ 
+-[dependencies.deprecate-until]
+-version = "0.1.1"
+-
+ [dependencies.indexmap]
+ version = "2.5.0"
+ 
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -100,6 +100,7 @@
+ //! [Topological sorting]: https://en.wikipedia.org/wiki/Topological_sorting
+ //! [Yen]: https://en.wikipedia.org/wiki/Yen's_algorithm
+ 
++#[cfg(any())]
+ use deprecate_until::deprecate_until;
+ pub use num_traits;
+ 
+@@ -141,6 +142,7 @@ pub mod prelude {
+     pub use crate::utils::*;
+ }
+ 
++#[cfg(any())]
+ /// Deprecated: moved into the `directed` module.
+ #[deprecate_until(
+     note = "use directed::cycle_detection or the prelude instead",
+--- a/src/matrix.rs
++++ b/src/matrix.rs
+@@ -3,6 +3,7 @@
+ use crate::directed::bfs::bfs_reach;
+ use crate::directed::dfs::dfs_reach;
+ use crate::utils::{constrain, in_direction, move_in_direction, uint_sqrt};
++#[cfg(any())]
+ use deprecate_until::deprecate_until;
+ use num_traits::Signed;
+ use std::collections::BTreeSet;
+@@ -620,6 +621,7 @@ impl<C> Matrix<C> {
+         }
+     }
+ 
++    #[cfg(any())]
+     /// Return an iterator on the Matrix indices, first row first. The values are
+     /// computed when this method is called and will not change even if new rows are
+     /// added before the iterator is consumed.
+--- a/tests/matrix.rs
++++ b/tests/matrix.rs
+@@ -717,6 +717,7 @@ fn into_iter_is_fused() {
+     }
+ }
+ 
++#[cfg(any())]
+ #[test]
+ #[allow(deprecated)]
+ fn indices() {

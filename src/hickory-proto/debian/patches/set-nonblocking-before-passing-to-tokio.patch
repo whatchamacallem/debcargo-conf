@@ -1,0 +1,24 @@
+This patch is extracted from the upstream commit described below.
+
+commit de3abeac3cf4c2beb96afe46fa0aae9231ff7a9b
+Author: Dirkjan Ochtman <dirkjan@ochtman.nl>
+Date:   Mon Mar 17 16:11:52 2025 +0100
+
+    Update semver-compatible dependencies
+
+diff --git proto/src/multicast/mdns_stream.rs proto/src/multicast/mdns_stream.rs
+index a2b666d07c..277be89748 100644
+--- proto/src/multicast/mdns_stream.rs
++++ proto/src/multicast/mdns_stream.rs
+@@ -141,7 +141,10 @@ impl MdnsStream {
+             Box::new(
+                 next_socket
+                     .map(move |socket| match socket {
+-                        Ok(Some(socket)) => Ok(Some(UdpSocket::from_std(socket)?)),
++                        Ok(Some(socket)) => {
++                            socket.set_nonblocking(true)?;
++                            Ok(Some(UdpSocket::from_std(socket)?))
++                        }
+                         Ok(None) => Ok(None),
+                         Err(err) => Err(err),
+                     })

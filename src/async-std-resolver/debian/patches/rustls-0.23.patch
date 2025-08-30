@@ -1,0 +1,70 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit a3b12b5f94705f74da30c2ba46f8ef69dceb7e60
+Author: Dirkjan Ochtman <dirkjan@ochtman.nl>
+Date:   Fri May 3 16:22:38 2024 +0200
+
+    Upgrade to rustls 0.23, quinn 0.11, etc
+
+Index: async-std-resolver/src/net.rs
+===================================================================
+--- async-std-resolver.orig/src/net.rs
++++ async-std-resolver/src/net.rs
+@@ -15,7 +15,7 @@ use async_trait::async_trait;
+ use futures_io::{AsyncRead, AsyncWrite};
+ use futures_util::future::FutureExt;
+ use hickory_resolver::proto::tcp::{Connect, DnsTcpStream};
+-use hickory_resolver::proto::udp::{DnsUdpSocket, QuicLocalAddr, UdpSocket};
++use hickory_resolver::proto::udp::{DnsUdpSocket, UdpSocket};
+ use pin_utils::pin_mut;
+ use socket2::{Domain, Protocol, Socket, Type};
+ 
+@@ -58,12 +58,6 @@ impl DnsUdpSocket for AsyncStdUdpSocket
+     }
+ }
+ 
+-impl QuicLocalAddr for AsyncStdUdpSocket {
+-    fn local_addr(&self) -> io::Result<SocketAddr> {
+-        self.0.local_addr()
+-    }
+-}
+-
+ #[async_trait]
+ impl UdpSocket for AsyncStdUdpSocket {
+     async fn connect(addr: SocketAddr) -> io::Result<Self> {
+Index: async-std-resolver/src/runtime.rs
+===================================================================
+--- async-std-resolver.orig/src/runtime.rs
++++ async-std-resolver/src/runtime.rs
+@@ -7,6 +7,7 @@
+ 
+ use hickory_resolver::config::{NameServerConfig, ResolverOpts};
+ use std::future::Future;
++use std::io;
+ use std::net::SocketAddr;
+ use std::pin::Pin;
+ 
+@@ -126,7 +127,7 @@ impl ConnectionProvider for AsyncStdConn
+         &self,
+         config: &NameServerConfig,
+         options: &ResolverOpts,
+-    ) -> Self::FutureConn {
++    ) -> Result<Self::FutureConn, io::Error> {
+         self.connection_provider.new_connection(config, options)
+     }
+ }
+Index: async-std-resolver/Cargo.toml
+===================================================================
+--- async-std-resolver.orig/Cargo.toml
++++ async-std-resolver/Cargo.toml
+@@ -62,3 +62,3 @@ features = ["std"]
+ [dependencies.hickory-resolver]
+-version = "0.24.0"
++version = "0.24.4"
+ default-features = false
+@@ -76,3 +76,3 @@ version = "1.6"
+ [dev-dependencies.hickory-resolver]
+-version = "0.24.0"
++version = "0.24.4"
+ features = ["testing"]

@@ -1,0 +1,113 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -66,4 +66,4 @@
+ version = "0.5"
+ 
+ [dev-dependencies.rand]
+-version = "0.9"
++version = "0.8"
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -824,9 +824,9 @@
+             let mut out_a = c2r.make_output_vec();
+             let mut indata = c2r.make_input_vec();
+             let mut rustfft_check: Vec<Complex<f64>> = vec![Complex::zero(); length];
+-            let mut rng = rand::rng();
++            let mut rng = rand::thread_rng();
+             for val in indata.iter_mut() {
+-                *val = Complex::new(rng.random::<f64>(), rng.random::<f64>());
++                *val = Complex::new(rng.gen::<f64>(), rng.gen::<f64>());
+             }
+             indata[0].im = 0.0;
+             if length % 2 == 0 {
+@@ -873,9 +873,9 @@
+             let mut out_a = c2r.make_output_vec();
+             let mut indata = c2r.make_input_vec();
+             let mut rustfft_check: Vec<Complex<f32>> = vec![Complex::zero(); length];
+-            let mut rng = rand::rng();
++            let mut rng = rand::thread_rng();
+             for val in indata.iter_mut() {
+-                *val = Complex::new(rng.random::<f32>(), rng.random::<f32>());
++                *val = Complex::new(rng.gen::<f32>(), rng.gen::<f32>());
+             }
+             indata[0].im = 0.0;
+             if length % 2 == 0 {
+@@ -921,11 +921,11 @@
+         let c2r = real_planner.plan_fft_inverse(length);
+         let mut out_a = c2r.make_output_vec();
+         let mut indata = c2r.make_input_vec();
+-        let mut rng = rand::rng();
++        let mut rng = rand::thread_rng();
+ 
+         // Make some valid data
+         for val in indata.iter_mut() {
+-            *val = Complex::new(rng.random::<f64>(), rng.random::<f64>());
++            *val = Complex::new(rng.gen::<f64>(), rng.gen::<f64>());
+         }
+         indata[0].im = 0.0;
+         indata[50].im = 0.0;
+@@ -934,7 +934,7 @@
+ 
+         // Make some invalid data, first point invalid
+         for val in indata.iter_mut() {
+-            *val = Complex::new(rng.random::<f64>(), rng.random::<f64>());
++            *val = Complex::new(rng.gen::<f64>(), rng.gen::<f64>());
+         }
+         indata[50].im = 0.0;
+         let res = c2r.process(&mut indata, &mut out_a);
+@@ -943,7 +943,7 @@
+ 
+         // Make some invalid data, last point invalid
+         for val in indata.iter_mut() {
+-            *val = Complex::new(rng.random::<f64>(), rng.random::<f64>());
++            *val = Complex::new(rng.gen::<f64>(), rng.gen::<f64>());
+         }
+         indata[0].im = 0.0;
+         let res = c2r.process(&mut indata, &mut out_a);
+@@ -959,11 +959,11 @@
+         let c2r = real_planner.plan_fft_inverse(length);
+         let mut out_a = c2r.make_output_vec();
+         let mut indata = c2r.make_input_vec();
+-        let mut rng = rand::rng();
++        let mut rng = rand::thread_rng();
+ 
+         // Make some valid data
+         for val in indata.iter_mut() {
+-            *val = Complex::new(rng.random::<f64>(), rng.random::<f64>());
++            *val = Complex::new(rng.gen::<f64>(), rng.gen::<f64>());
+         }
+         indata[0].im = 0.0;
+         // this should be ok
+@@ -971,7 +971,7 @@
+ 
+         // Make some invalid data, first point invalid
+         for val in indata.iter_mut() {
+-            *val = Complex::new(rng.random::<f64>(), rng.random::<f64>());
++            *val = Complex::new(rng.gen::<f64>(), rng.gen::<f64>());
+         }
+         let res = c2r.process(&mut indata, &mut out_a);
+         assert!(res.is_err());
+@@ -986,9 +986,9 @@
+             let r2c = real_planner.plan_fft_forward(length);
+             let mut out_a = r2c.make_output_vec();
+             let mut indata = r2c.make_input_vec();
+-            let mut rng = rand::rng();
++            let mut rng = rand::thread_rng();
+             for val in indata.iter_mut() {
+-                *val = rng.random::<f64>();
++                *val = rng.gen::<f64>();
+             }
+             let mut rustfft_check = indata
+                 .iter()
+@@ -1024,9 +1024,9 @@
+             let r2c = real_planner.plan_fft_forward(length);
+             let mut out_a = r2c.make_output_vec();
+             let mut indata = r2c.make_input_vec();
+-            let mut rng = rand::rng();
++            let mut rng = rand::thread_rng();
+             for val in indata.iter_mut() {
+-                *val = rng.random::<f32>();
++                *val = rng.gen::<f32>();
+             }
+             let mut rustfft_check = indata
+                 .iter()

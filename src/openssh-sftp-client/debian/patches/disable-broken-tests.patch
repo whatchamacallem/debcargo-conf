@@ -1,0 +1,151 @@
+--- rust-openssh-sftp-client-0.15.2.orig/tests/highlevel.rs
++++ rust-openssh-sftp-client-0.15.2/tests/highlevel.rs
+@@ -17,20 +17,20 @@ use futures_util::StreamExt;
+ use openssh::{KnownHosts, Session, SessionBuilder};
+ use openssh_sftp_client::*;
+ use pretty_assertions::assert_eq;
+-use sftp_test_common::*;
++//use sftp_test_common::*;
+ use tokio::{
+     io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt},
+     time::sleep,
+ };
+ use tokio_io_utility::write_vectored_all;
+ 
+-async fn connect(options: SftpOptions) -> (process::Child, Sftp) {
++/*async fn connect(options: SftpOptions) -> (process::Child, Sftp) {
+     let (child, stdin, stdout) = launch_sftp().await;
+ 
+     (child, Sftp::new(stdin, stdout, options).await.unwrap())
+-}
++}*/
+ 
+-fn gen_path(func: &str) -> PathBuf {
++/*fn gen_path(func: &str) -> PathBuf {
+     let mut path = get_path_for_tmp_files().join("highlevel");
+     fs::create_dir_all(&path).unwrap();
+ 
+@@ -40,17 +40,17 @@ fn gen_path(func: &str) -> PathBuf {
+     fs::remove_file(&path).ok();
+ 
+     path
+-}
++}*/
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ async fn sftp_init() {
+     let (mut child, sftp) = connect(Default::default()).await;
+ 
+     sftp.close().await.unwrap();
+     assert!(child.wait().await.unwrap().success());
+-}
++}*/
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ /// Test creating new file, truncating and opening existing file,
+ /// basic read, write and removal.
+ async fn sftp_file_basics() {
+@@ -104,7 +104,7 @@ async fn sftp_file_basics() {
+     // close sftp and child
+     sftp.close().await.unwrap();
+     assert!(child.wait().await.unwrap().success());
+-}
++}*/
+ 
+ /// Return `SftpOptions` that has `max_rw_len` set to `200`.
+ fn sftp_options_with_max_rw_len() -> SftpOptions {
+@@ -115,7 +115,7 @@ fn sftp_options_with_max_rw_len() -> Sft
+         .max_read_len(max_rw_len)
+ }
+ 
+-macro_rules! def_write_all_test {
++/*macro_rules! def_write_all_test {
+     ($fname:ident, $sftp_options:expr, $file_converter:expr, $file_var:ident, $content_var:ident , $test_block:block) => {
+         #[tokio::test]
+         async fn $fname() {
+@@ -174,9 +174,9 @@ macro_rules! def_write_all_test {
+             }
+         }
+     };
+-}
++}*/
+ 
+-def_write_all_test!(
++/*def_write_all_test!(
+     sftp_file_write_all,
+     SftpOptions::new(),
+     identity,
+@@ -227,9 +227,9 @@ def_write_all_test!(
+         .await
+         .unwrap();
+     }
+-);
++);*/
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ /// Test creating new TokioCompatFile, truncating and opening existing file,
+ /// basic read, write and removal.
+ async fn sftp_tokio_compact_file_basics() {
+@@ -299,9 +299,9 @@ async fn sftp_tokio_compact_file_basics(
+     // close sftp and child
+     sftp.close().await.unwrap();
+     assert!(child.wait().await.unwrap().success());
+-}
++}*/
+ 
+-def_write_all_test!(
++/*def_write_all_test!(
+     sftp_tokio_compact_file_write_all,
+     sftp_options_with_max_rw_len(),
+     file::TokioCompatFile::from,
+@@ -332,9 +332,9 @@ def_write_all_test!(
+         .await
+         .unwrap();
+     }
+-);
++);*/
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ /// Test File::{set_len, set_permissions, metadata}.
+ async fn sftp_file_metadata() {
+     let path = gen_path("sftp_file_metadata");
+@@ -594,7 +594,7 @@ async fn sftp_file_copy_to() {
+     // close sftp and child
+     sftp.close().await.unwrap();
+     assert!(child.wait().await.unwrap().success());
+-}
++}*/
+ 
+ // Test of `Sftp::from_session`
+ 
+@@ -627,7 +627,7 @@ async fn connects_with_name() -> Vec<(Se
+     sessions
+ }
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ async fn sftp_test_from_sessions() {
+     let path = Path::new("sftp_test_from_sessions");
+ 
+@@ -680,9 +680,9 @@ async fn sftp_test_from_sessions() {
+ 
+         sftp.close().await.unwrap();
+     }
+-}
++}*/
+ 
+-#[tokio::test]
++/*#[tokio::test]
+ /// Test write buffer limit for tokio compat file
+ async fn sftp_tokio_compact_file_write_buffer_limit() {
+     let path = gen_path("sftp_tokio_compact_file_write_buffer_limit");
+@@ -749,4 +749,4 @@ async fn sftp_tokio_compact_file_write_b
+     sftp2.close().await.unwrap();
+     assert!(child.wait().await.unwrap().success());
+     assert!(child2.wait().await.unwrap().success());
+-}
++}*/

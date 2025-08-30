@@ -1,0 +1,75 @@
+Description: Downgrade bzip2, derive_more, itertools, lru and rand dependencies
+Author: Mike Hommey <glandium@debian.org>
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: git-cinnabar/Cargo.toml
+===================================================================
+--- git-cinnabar.orig/Cargo.toml
++++ git-cinnabar/Cargo.toml
+@@ -86,7 +86,7 @@ default-features = false
+ version = "1"
+ 
+ [dependencies.bzip2]
+-version = "0.5"
++version = "0.4"
+ 
+ [dependencies.cfg-if]
+ version = "1"
+@@ -106,7 +106,7 @@ optional = true
+ version = "0.2.10"
+ 
+ [dependencies.derive_more]
+-version = "2"
++version = "1"
+ features = [
+     "deref",
+     "display",
+@@ -144,7 +144,7 @@ version = "0.4"
+ version = "2"
+ 
+ [dependencies.itertools]
+-version = "0.14"
++version = "0.13"
+ 
+ [dependencies.libc]
+ version = "0.2"
+@@ -154,7 +154,7 @@ version = "0.4"
+ features = ["std"]
+ 
+ [dependencies.lru]
+-version = "0.13"
++version = "0.12"
+ default-features = false
+ 
+ [dependencies.mio]
+@@ -174,7 +174,7 @@ version = "3"
+ version = "2"
+ 
+ [dependencies.rand]
+-version = "0.9"
++version = "0.8"
+ 
+ [dependencies.regex]
+ version = "1"
+@@ -214,7 +214,7 @@ version = "3"
+ version = "1.0.46"
+ 
+ [build-dependencies.itertools]
+-version = "0.14"
++version = "0.13"
+ 
+ [build-dependencies.rustflags]
+ version = "0.1"
+Index: git-cinnabar/src/hg_connect.rs
+===================================================================
+--- git-cinnabar.orig/src/hg_connect.rs
++++ git-cinnabar/src/hg_connect.rs
+@@ -825,7 +825,7 @@ pub fn find_common(
+     hgheads: impl Into<Vec<HgChangesetId>>,
+     remote: Option<&str>,
+ ) -> Vec<HgChangesetId> {
+-    let mut rng = rand::rng();
++    let mut rng = rand::thread_rng();
+     let hgheads = hgheads.into();
+     if hgheads.is_empty() {
+         return vec![];

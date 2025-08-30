@@ -1,0 +1,46 @@
+--- a/src/opt.rs
++++ b/src/opt.rs
+@@ -165,13 +165,13 @@
+     #[clap(long = "gen-config")]
+     pub gen_config: bool,
+ 
+-    /// Generate shell completion file
++    /*/// Generate shell completion file
+     #[clap(long = "gen-completion", value_name = "shell")]
+     pub gen_completion: Option<Shell>,
+ 
+     /// Generate shell completion file and write to stdout
+     #[clap(long = "gen-completion-out", value_name = "shell")]
+-    pub gen_completion_out: Option<Shell>,
++    pub gen_completion_out: Option<Shell>,*/
+ 
+     /// Suppress header
+     #[clap(long = "no-header")]
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -121,13 +121,13 @@
+     } else if opt.list {
+         run_list();
+         Ok(())
+-    } else if let Some(shell) = opt.gen_completion {
++    } /* else if let Some(shell) = opt.gen_completion {
+         gen_completion(shell, "./")
+     } else if let Some(shell) = opt.gen_completion_out {
+         //Opt::clap().gen_completions_to("procs", shell, &mut stdout());
+         clap_complete::generate(shell, &mut Opt::command(), "procs", &mut stdout());
+         Ok(())
+-    } else {
++    } */ else {
+         let config = get_config(&opt)?;
+         if opt.watch_mode {
+             let interval = match opt.watch_interval {
+--- a/man/procs.1.adoc
++++ b/man/procs.1.adoc
+@@ -28,7 +28,6 @@
+ *--sorta <column>*:: Sort processes in ascending order by the specified column.
+ *--sortd <column>*:: Sort processes in descending order by the specified column.
+ *--insert <column>*:: Insert a new column at the position of `Slot` or `MultiSlot`.
+-*--gen-completion*:: Generate shell completion files for supported shells.
+ 
+ == EXAMPLES
+ 

@@ -1,156 +1,92 @@
-Index: vergen/src/feature/rustc.rs
-===================================================================
---- vergen.orig/src/feature/rustc.rs
-+++ vergen/src/feature/rustc.rs
-@@ -291,8 +291,8 @@ mod test {
-             .all_rustc()
-             .test_emit()?;
+--- a/src/feature/rustc.rs
++++ b/src/feature/rustc.rs
+@@ -293,4 +293,4 @@
          assert_eq!(6, config.cargo_rustc_env_map.len());
 -        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
 -        assert_eq!(0, config.warnings.len());
 +        //assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
 +        //assert_eq!(0, config.warnings.len());
          Ok(())
-     }
- 
-@@ -301,8 +301,8 @@ mod test {
-     fn rustc_all() -> Result<()> {
-         let config = EmitBuilder::builder().all_rustc().test_emit()?;
+@@ -303,4 +303,4 @@
          assert_eq!(6, config.cargo_rustc_env_map.len());
 -        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
 -        assert_eq!(0, config.warnings.len());
 +        //assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
 +        //assert_eq!(0, config.warnings.len());
          Ok(())
-     }
- 
-Index: vergen/tests/cargo_output.rs
-===================================================================
---- vergen.orig/tests/cargo_output.rs
-+++ vergen/tests/cargo_output.rs
-@@ -76,7 +76,7 @@ mod test_build {
-             .all_cargo()
-             .emit_to(&mut stdout_buf)?;
+--- a/tests/cargo_output.rs
++++ b/tests/cargo_output.rs
+@@ -78,3 +78,3 @@
          let output = String::from_utf8_lossy(&stdout_buf);
 -        assert!(CARGO_REGEX.is_match(&output));
 +        //assert!(CARGO_REGEX.is_match(&output));
          teardown();
-         Ok(())
-     }
-@@ -91,7 +91,7 @@ mod test_build {
-             .disable_cargo()
-             .emit_to(&mut stdout_buf)?;
+@@ -93,3 +93,3 @@
          let output = String::from_utf8_lossy(&stdout_buf);
 -        assert_eq!(DISABLED_OUTPUT, output);
 +        //assert_eq!(DISABLED_OUTPUT, output);
          teardown();
-         Ok(())
-     }
-@@ -106,7 +106,7 @@ mod test_build {
-             .all_cargo()
-             .emit_to(&mut stdout_buf)?;
+@@ -108,3 +108,3 @@
          let output = String::from_utf8_lossy(&stdout_buf);
 -        assert!(CARGO_REGEX.is_match(&output));
 +        //assert!(CARGO_REGEX.is_match(&output));
          teardown();
-         Ok(())
-     }
-@@ -121,7 +121,7 @@ mod test_build {
-             .cargo_dependencies_name_filter(Some("blah"))
-             .emit_to(&mut stdout_buf)?;
+@@ -123,3 +123,3 @@
          let output = String::from_utf8_lossy(&stdout_buf);
 -        assert!(CARGO_REGEX_NO_DEP.is_match(&output));
 +        //assert!(CARGO_REGEX_NO_DEP.is_match(&output));
          teardown();
-         Ok(())
-     }
-@@ -136,8 +136,8 @@ mod test_build {
-             .cargo_dependencies_name_filter(Some("anyhow"))
-             .emit_to(&mut stdout_buf)?;
+@@ -138,4 +138,4 @@
          let output = String::from_utf8_lossy(&stdout_buf);
 -        assert!(CARGO_REGEX.is_match(&output));
 -        assert!(CARGO_REGEX_NAME.is_match(&output));
 +        //assert!(CARGO_REGEX.is_match(&output));
 +        //assert!(CARGO_REGEX_NAME.is_match(&output));
          teardown();
-         Ok(())
-     }
-@@ -152,8 +152,8 @@ mod test_build {
-             .cargo_dependencies_dep_kind_filter(Some(DependencyKind::Build))
-             .emit_to(&mut stdout_buf)?;
+@@ -154,4 +154,4 @@
          let output = String::from_utf8_lossy(&stdout_buf);
 -        assert!(CARGO_REGEX_NO_DEP.is_match(&output));
 -        assert!(CARGO_REGEX_RV.is_match(&output));
 +        //assert!(CARGO_REGEX_NO_DEP.is_match(&output));
 +        //assert!(CARGO_REGEX_RV.is_match(&output));
          teardown();
-         Ok(())
-     }
-@@ -169,8 +169,8 @@ mod test_build {
-             .cargo_dependencies_dep_kind_filter(Some(DependencyKind::Development))
-             .emit_to(&mut stdout_buf)?;
+@@ -171,4 +171,4 @@
          let output = String::from_utf8_lossy(&stdout_buf);
 -        assert!(CARGO_REGEX.is_match(&output));
 -        assert!(CARGO_REGEX_DK.is_match(&output));
 +        //assert!(CARGO_REGEX.is_match(&output));
 +        //assert!(CARGO_REGEX_DK.is_match(&output));
          teardown();
-         Ok(())
-     }
-Index: vergen/tests/rustc_output.rs
-===================================================================
---- vergen.orig/tests/rustc_output.rs
-+++ vergen/tests/rustc_output.rs
-@@ -38,7 +38,7 @@ mod test_rustc {
-             .all_rustc()
-             .emit_to(&mut stdout_buf)?;
+--- a/tests/rustc_output.rs
++++ b/tests/rustc_output.rs
+@@ -40,3 +40,3 @@
          let output = String::from_utf8_lossy(&stdout_buf);
 -        assert!(RUSTC_REGEX.is_match(&output));
 +        //assert!(RUSTC_REGEX.is_match(&output));
          Ok(())
-     }
- 
-@@ -51,7 +51,7 @@ mod test_rustc {
-             .disable_rustc()
-             .emit_to(&mut stdout_buf)?;
+@@ -53,3 +53,3 @@
          let output = String::from_utf8_lossy(&stdout_buf);
 -        assert_eq!(DISABLED_OUTPUT, output);
 +        //assert_eq!(DISABLED_OUTPUT, output);
          Ok(())
-     }
- 
-@@ -63,7 +63,7 @@ mod test_rustc {
-             .all_rustc()
-             .emit_to(&mut stdout_buf)?;
+@@ -65,3 +65,3 @@
          let output = String::from_utf8_lossy(&stdout_buf);
 -        assert!(RUSTC_REGEX.is_match(&output));
 +        //assert!(RUSTC_REGEX.is_match(&output));
          Ok(())
-     }
- }
-Index: vergen/src/feature/cargo.rs
-===================================================================
---- vergen.orig/src/feature/cargo.rs
-+++ vergen/src/feature/cargo.rs
-@@ -379,8 +379,8 @@ mod test {
-             .all_cargo()
-             .test_emit()?;
+--- a/src/feature/cargo.rs
++++ b/src/feature/cargo.rs
+@@ -381,4 +381,4 @@
          assert_eq!(5, config.cargo_rustc_env_map.len());
 -        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
 -        assert_eq!(0, config.warnings.len());
 +        //assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
 +        //assert_eq!(0, config.warnings.len());
          teardown();
-         Ok(())
-     }
-@@ -391,8 +391,8 @@ mod test {
-         setup();
-         let config = EmitBuilder::builder().all_cargo().test_emit()?;
+@@ -393,4 +393,4 @@
          assert_eq!(5, config.cargo_rustc_env_map.len());
 -        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
 -        assert_eq!(0, config.warnings.len());
 +        //assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
 +        //assert_eq!(0, config.warnings.len());
          teardown();
-         Ok(())
-     }

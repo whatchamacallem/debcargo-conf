@@ -19,9 +19,9 @@ Index: coreutils/src/uu/du/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/du/Cargo.toml
 +++ coreutils/src/uu/du/Cargo.toml
-@@ -23,12 +23,6 @@ glob = { workspace = true }
- clap = { workspace = true }
+@@ -24,12 +24,6 @@ clap = { workspace = true }
  uucore = { workspace = true, features = ["format"] }
+ thiserror = { workspace = true }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
 -windows-sys = { workspace = true, features = [
@@ -53,7 +53,7 @@ Index: coreutils/src/uu/rm/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/rm/Cargo.toml
 +++ coreutils/src/uu/rm/Cargo.toml
-@@ -24,9 +24,6 @@ uucore = { workspace = true, features =
+@@ -23,9 +23,6 @@ uucore = { workspace = true, features =
  [target.'cfg(unix)'.dependencies]
  libc = { workspace = true }
  
@@ -108,8 +108,8 @@ Index: coreutils/src/uu/touch/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/touch/Cargo.toml
 +++ coreutils/src/uu/touch/Cargo.toml
-@@ -24,12 +24,6 @@ chrono = { workspace = true }
- parse_datetime = { workspace = true }
+@@ -25,12 +25,6 @@ parse_datetime = { workspace = true }
+ thiserror = { workspace = true }
  uucore = { workspace = true, features = ["libc"] }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
@@ -143,28 +143,39 @@ Index: coreutils/src/uucore/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uucore/Cargo.toml
 +++ coreutils/src/uucore/Cargo.toml
-@@ -63,13 +63,13 @@ clap = { workspace = true }
- once_cell = { workspace = true }
+@@ -68,19 +68,19 @@ xattr = { workspace = true, optional = t
+ clap = { workspace = true }
  tempfile = { workspace = true }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
 -winapi-util = { workspace = true, optional = true }
 -windows-sys = { workspace = true, optional = true, default-features = false, features = [
+-  "Wdk_System_SystemInformation",
 -  "Win32_Storage_FileSystem",
 -  "Win32_Foundation",
+-  "Win32_System_RemoteDesktop",
 -  "Win32_System_WindowsProgramming",
 -] }
-+# [target.'cfg(target_os = "windows")'.dependencies]
-+# winapi-util = { workspace = true, optional = true }
-+# windows-sys = { workspace = true, optional = true, default-features = false, features = [
-+#   "Win32_Storage_FileSystem",
-+#   "Win32_Foundation",
-+#   "Win32_System_WindowsProgramming",
-+# ] }
+-
+-[target.'cfg(target_os = "openbsd")'.dependencies]
+-utmp-classic = { workspace = true, optional = true }
++#[target.'cfg(target_os = "windows")'.dependencies]
++#winapi-util = { workspace = true, optional = true }
++#windows-sys = { workspace = true, optional = true, default-features = false, features = [
++#  "Wdk_System_SystemInformation",
++#  "Win32_Storage_FileSystem",
++#  "Win32_Foundation",
++#  "Win32_System_RemoteDesktop",
++#  "Win32_System_WindowsProgramming",
++#] }
  
++#[target.'cfg(target_os = "openbsd")'.dependencies]
++#utmp-classic = { workspace = true, optional = true }
++#
  [features]
  default = []
-@@ -79,8 +79,8 @@ colors = []
+ # * non-default features
+@@ -89,8 +89,8 @@ colors = []
  checksum = ["data-encoding", "thiserror", "regex", "sum"]
  encoding = ["data-encoding", "data-encoding-macro", "z85"]
  entries = ["libc"]
@@ -179,14 +190,14 @@ Index: coreutils/Cargo.toml
 ===================================================================
 --- coreutils.orig/Cargo.toml
 +++ coreutils/Cargo.toml
-@@ -339,8 +339,8 @@ unicode-width = "0.1.12"
- utf-8 = "0.7.6"
+@@ -345,8 +345,8 @@ utf-8 = "0.7.6"
  utmp-classic = "0.1.6"
+ uutils_term_grid = "0.6"
  walkdir = "2.5"
 -winapi-util = "0.1.8"
 -windows-sys = { version = "0.59.0", default-features = false }
 +#winapi-util = "0.1.8"
 +#windows-sys = { version = "0.59.0", default-features = false }
  xattr = "1.3.1"
- zip = { version = "1.1.4", default-features = false, features = ["deflate"] }
+ zip = { version = "2.2.2", default-features = false, features = ["deflate"] }
  

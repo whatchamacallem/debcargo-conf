@@ -1,0 +1,51 @@
+Re-vendoring rust-gst-plugin-gtk4
+===========================
+Current Ubuntu Main Inclusion policy requires that Rust apps in Ubuntu main
+be vendored.
+
+https://canonical-ubuntu-project.readthedocs-hosted.com/MIR/mir-rust/
+
+Prerequisites
+=============
+sudo apt install cargo-vendor-filterer dh-cargo-tools dpkg-dev git quilt
+
+Updating vendored crates
+========================
+Run
+debian/rules vendor
+
+Debian Workflow
+===============
+Debian uses a complex workflow to manage this package
+described at https://deb.li/rtbook
+
+The debian/ files checked into Salsa are more minimal than expected for
+a Debian package. The other files are generated.
+
+Ubuntu Workflow
+===============
+This package is managed in Ubuntu with git-ubuntu at
+https://code.launchpad.net/ubuntu/+source/rust-gst-plugin-gtk4
+
+The documentation is still a work-in-progress and is scattered across
+a few different places:
+- https://canonical-git-ubuntu.readthedocs-hosted.com/
+- https://github.com/canonical/ubuntu-maintainers-handbook/blob/main/PackageMerging.md
+- https://canonical-ubuntu-packaging-guide.readthedocs-hosted.com
+
+New Version
+===========
+If you need a new version of rust-gst-plugin-gtk4, it is generally easiest
+to get this done in Debian first and then merge it into Ubuntu. If that isn't
+practical, here are steps.
+
+# Create a local temporary empty upstream branch with these instructions
+https://honk.sigxcpu.org/projects/git-buildpackage/manual-html/gbp.import.convert.html#gbp.import.upstream.not.on.branch
+
+# Then…
+gbp import-orig --uscan --debian-branch=ubuntu/devel
+dch -i # Create a new debian/changelog with the appropriate upstream version number
+
+# Finally do a find and replace to update the version number in debian/control
+# and debian/tests/control from the old upstream version number to the new
+# upstream version number.

@@ -1,0 +1,44 @@
+Index: hashbrown/tests/set.rs
+===================================================================
+--- hashbrown.orig/tests/set.rs
++++ hashbrown/tests/set.rs
+@@ -1,7 +1,7 @@
+ #![cfg(not(miri))] // FIXME: takes too long
+ 
+ use hashbrown::HashSet;
+-use rand::{distr::Alphanumeric, rngs::SmallRng, Rng, SeedableRng};
++use rand::{rngs::SmallRng, Rng, SeedableRng};
+ use std::iter;
+ 
+ #[test]
+@@ -11,7 +11,16 @@ fn test_hashset_insert_remove() {
+ 
+     let rng = &mut SmallRng::seed_from_u64(seed);
+     let tx: Vec<Vec<char>> = iter::repeat_with(|| {
+-        rng.sample_iter(&Alphanumeric)
++        iter::repeat_with(|| {
++            let c = rng.gen_range(0..62);
++            if c < 10 {
++                c + b'0'
++            } else if c < 36 {
++                c - 10 + b'A'
++            } else {
++                c - 36 + b'a'
++            }
++        })
+             .take(32)
+             .map(char::from)
+             .collect()
+Index: hashbrown/Cargo.toml
+===================================================================
+--- hashbrown.orig/Cargo.toml
++++ hashbrown/Cargo.toml
+@@ -141,7 +141,7 @@ version = "1.0.7"
+ version = "1.4"
+ 
+ [dev-dependencies.rand]
+-version = "0.9.0"
++version = ">= 0.8.5, < 0.10"
+ features = ["small_rng"]
+ 
+ [dev-dependencies.rayon]

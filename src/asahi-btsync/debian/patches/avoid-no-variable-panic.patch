@@ -1,0 +1,29 @@
+From 5986b7891ca30311d946e91ed382d6d5758a12aa Mon Sep 17 00:00:00 2001
+From: Sasha Finkelstein <fnkl.kernel@gmail.com>
+Date: Sat, 3 May 2025 17:26:30 +0200
+Subject: [PATCH] Do nothing if there is no variable present
+
+Closes: #38
+---
+ asahi-btsync/src/main.rs | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/src/main.rs b/asahi-btsync/src/main.rs
+index 1d16d6e..28b2d14 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -85,9 +85,11 @@ fn real_main() -> Result<()> {
+     file.read_to_end(&mut data).unwrap();
+     let mut nv = nvram_parse(&data)?;
+     let active = nv.active_part_mut();
+-    let bt_devs = active
+-        .get_variable(bt_var.as_bytes(), VarType::System)
+-        .ok_or(Error::VariableNotFound)?;
++    let bt_devs = if let Some(var) = active.get_variable(bt_var.as_bytes(), VarType::System) {
++        var
++    } else {
++        return Ok(());
++    };
+ 
+     match matches.subcommand() {
+         Some(("list", _args)) => {

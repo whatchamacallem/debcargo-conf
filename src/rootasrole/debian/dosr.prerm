@@ -1,0 +1,20 @@
+#!/bin/sh
+#DEBHELPER#
+set -e
+
+# Remove immutable flag if present, ignore errors
+chattr -i /etc/security/rootasrole.json 2>/dev/null || true
+
+# Debian policy requires handling the arguments passed to prerm
+case "$1" in
+    remove|upgrade|deconfigure)
+        ;;
+    failed-upgrade)
+        ;;
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

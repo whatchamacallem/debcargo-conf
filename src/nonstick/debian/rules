@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_fixperms:
+	# Some source files incorrectly have +x.
+	# The repository is on a self hosted mercurial.
+	# But we contected the dev to remove it.
+	# So for now we'll solve it at our end.
+	find . -name '*.rs' -exec chmod -x {} +
+	dh_fixperms
+

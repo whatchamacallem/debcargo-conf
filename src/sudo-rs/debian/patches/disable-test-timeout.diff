@@ -2,29 +2,29 @@ Index: sudo-rs/src/system/mod.rs
 ===================================================================
 --- sudo-rs.orig/src/system/mod.rs
 +++ sudo-rs/src/system/mod.rs
-@@ -841,7 +841,7 @@ mod tests {
+@@ -1101,7 +1101,7 @@ mod tests {
              .is_err_and(|err| err.raw_os_error() == Some(libc::EBADF))
      }
  
 -    #[test]
 +//    #[test]
      fn close_the_universe() {
-         let ForkResult::Parent(child_pid) = fork().unwrap() else {
-             let should_close =
-@@ -872,7 +872,7 @@ mod tests {
+         let child_pid = unsafe {
+             fork_for_test(|| {
+@@ -1135,7 +1135,7 @@ mod tests {
          assert_eq!(status.exit_status(), Some(0));
      }
  
 -    #[test]
 +//    #[test]
      fn except_stdio_is_fine() {
-         let ForkResult::Parent(child_pid) = fork().unwrap() else {
-             let mut closer = super::FileCloser::new();
+         let child_pid = unsafe {
+             fork_for_test(|| {
 Index: sudo-rs/src/system/term/mod.rs
 ===================================================================
 --- sudo-rs.orig/src/system/term/mod.rs
 +++ sudo-rs/src/system/term/mod.rs
-@@ -226,7 +226,7 @@ mod tests {
+@@ -252,7 +252,7 @@ mod tests {
          assert!(path.starts_with("/dev/pts/"));
      }
  

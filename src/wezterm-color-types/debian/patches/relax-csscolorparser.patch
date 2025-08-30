@@ -1,0 +1,40 @@
+Description: relax the csscolorparser dependency to 0.7.2
+Author: Nadzeya Hutsko <nadzya.info@gmail.com>
+Forwarded: not-needed
+Last-Update: 2025-08-20
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -20,7 +20,7 @@
+ resolver = "2"
+ 
+ [dependencies.csscolorparser]
+-version = "0.6"
++version = "0.7"
+ features = ["lab"]
+ 
+ [dependencies.deltae]
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -446,15 +446,17 @@
+     }
+ 
+     pub fn to_laba(self) -> (f64, f64, f64, f64) {
+-        Color::new(self.0.into(), self.1.into(), self.2.into(), self.3.into()).to_lab()
++        let [l, a, b, alpha] = Color::new(self.0.into(), self.1.into(), self.2.into(), self.3.into()).to_laba();
++        (l as f64, a as f64, b as f64, alpha as f64)
+     }
+ 
+     pub fn to_hsla(self) -> (f64, f64, f64, f64) {
+-        Color::new(self.0.into(), self.1.into(), self.2.into(), self.3.into()).to_hsla()
++        let [h, s, l, a] = Color::new(self.0.into(), self.1.into(), self.2.into(), self.3.into()).to_hsla();
++        (h as f64, s as f64, l as f64, a as f64)
+     }
+ 
+     pub fn from_hsla(h: f64, s: f64, l: f64, a: f64) -> Self {
+-        let Color { r, g, b, a } = Color::from_hsla(h, s, l, a);
++        let Color { r, g, b, a } = Color::from_hsla(h as f32, s as f32, l as f32, a as f32);
+         Self(r as f32, g as f32, b as f32, a as f32)
+     }
+ 

@@ -1,0 +1,201 @@
+Index: reqsign/Cargo.toml
+===================================================================
+--- reqsign.orig/Cargo.toml
++++ reqsign/Cargo.toml
+@@ -191,9 +191,6 @@ features = [
+     "html_reports",
+ ]
+ 
+-[dev-dependencies.dotenv]
+-version = "0.15"
+-
+ [dev-dependencies.env_logger]
+ version = "0.11"
+ 
+Index: reqsign/src/aliyun/credential.rs
+===================================================================
+--- reqsign.orig/src/aliyun/credential.rs
++++ reqsign/src/aliyun/credential.rs
+@@ -253,7 +253,7 @@ mod tests {
+         Ok(())
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_signer_with_oidc() -> Result<()> {
+         let _ = env_logger::builder().is_test(true).try_init();
+ 
+@@ -350,9 +350,9 @@ mod tests {
+         );
+ 
+         Ok(())
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_signer_with_oidc_query() -> Result<()> {
+         let _ = env_logger::builder().try_init();
+ 
+@@ -448,5 +448,5 @@ mod tests {
+             },
+         );
+         Ok(())
+-    }
++    }*/
+ }
+Index: reqsign/src/aws/credential.rs
+===================================================================
+--- reqsign.orig/src/aws/credential.rs
++++ reqsign/src/aws/credential.rs
+@@ -753,7 +753,7 @@ mod tests {
+         );
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_signer_with_web_loader() -> Result<()> {
+         let _ = env_logger::builder().is_test(true).try_init();
+ 
+@@ -826,9 +826,9 @@ mod tests {
+         );
+ 
+         Ok(())
+-    }
++    }*/
+ 
+-    #[test]
++    /*#[test]
+     fn test_signer_with_web_loader_assume_role() -> Result<()> {
+         let _ = env_logger::builder().is_test(true).try_init();
+ 
+@@ -911,7 +911,7 @@ mod tests {
+             },
+         );
+         Ok(())
+-    }
++    }*/
+ 
+     #[test]
+     fn test_parse_assume_role_with_web_identity_response() -> Result<()> {
+Index: reqsign/src/tencent/credential.rs
+===================================================================
+--- reqsign.orig/src/tencent/credential.rs
++++ reqsign/src/tencent/credential.rs
+@@ -284,7 +284,7 @@ mod tests {
+         Ok(())
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn test_signer_with_web_identidy_token() -> Result<()> {
+         let _ = env_logger::builder().is_test(true).try_init();
+ 
+@@ -367,5 +367,5 @@ mod tests {
+         );
+ 
+         Ok(())
+-    }
++    }*/
+ }
+Index: reqsign/tests/aliyun/oss.rs
+===================================================================
+--- reqsign.orig/tests/aliyun/oss.rs
++++ reqsign/tests/aliyun/oss.rs
+@@ -18,7 +18,7 @@ use reqwest::Client;
+ fn init_signer() -> Option<(AliyunLoader, AliyunOssSigner)> {
+     let _ = env_logger::builder().is_test(true).try_init();
+ 
+-    dotenv::from_filename(".env").ok();
++    //dotenv::from_filename(".env").ok();
+ 
+     if env::var("REQSIGN_ALIYUN_OSS_TEST").is_err()
+         || env::var("REQSIGN_ALIYUN_OSS_TEST").unwrap() != "on"
+Index: reqsign/tests/aws/v4.rs
+===================================================================
+--- reqsign.orig/tests/aws/v4.rs
++++ reqsign/tests/aws/v4.rs
+@@ -19,7 +19,7 @@ use sha2::Sha256;
+ fn init_signer() -> Option<(AwsDefaultLoader, AwsV4Signer)> {
+     let _ = env_logger::builder().is_test(true).try_init();
+ 
+-    dotenv::from_filename(".env").ok();
++    //dotenv::from_filename(".env").ok();
+ 
+     if env::var("REQSIGN_AWS_V4_TEST").is_err() || env::var("REQSIGN_AWS_V4_TEST").unwrap() != "on"
+     {
+Index: reqsign/tests/azure/storage.rs
+===================================================================
+--- reqsign.orig/tests/azure/storage.rs
++++ reqsign/tests/azure/storage.rs
+@@ -16,7 +16,7 @@ use reqwest::Client;
+ fn init_signer() -> Option<(AzureStorageLoader, AzureStorageSigner)> {
+     let _ = env_logger::builder().is_test(true).try_init();
+ 
+-    dotenv::from_filename(".env").ok();
++    //dotenv::from_filename(".env").ok();
+ 
+     if env::var("REQSIGN_AZURE_STORAGE_TEST").is_err()
+         || env::var("REQSIGN_AZURE_STORAGE_TEST").unwrap() != "on"
+@@ -268,7 +268,7 @@ async fn test_can_list_container_blobs()
+ #[tokio::test]
+ async fn test_head_blob_with_ldms() -> Result<()> {
+     let _ = env_logger::builder().is_test(true).try_init();
+-    dotenv::from_filename(".env").ok();
++    //dotenv::from_filename(".env").ok();
+ 
+     if env::var("REQSIGN_AZURE_STORAGE_TEST").is_err()
+         || env::var("REQSIGN_AZURE_STORAGE_TEST").unwrap() != "on"
+@@ -318,7 +318,7 @@ async fn test_head_blob_with_ldms() -> R
+ #[tokio::test]
+ async fn test_can_list_container_blobs_with_ldms() -> Result<()> {
+     let _ = env_logger::builder().is_test(true).try_init();
+-    dotenv::from_filename(".env").ok();
++    //dotenv::from_filename(".env").ok();
+ 
+     if env::var("REQSIGN_AZURE_STORAGE_TEST").is_err()
+         || env::var("REQSIGN_AZURE_STORAGE_TEST").unwrap() != "on"
+@@ -377,7 +377,7 @@ async fn test_can_list_container_blobs_w
+ async fn test_head_blob_with_client_secret() -> Result<()> {
+     let _ = env_logger::builder().is_test(true).try_init();
+ 
+-    dotenv::from_filename(".env").ok();
++    //dotenv::from_filename(".env").ok();
+ 
+     if env::var("REQSIGN_AZURE_STORAGE_TEST").is_err()
+         || env::var("REQSIGN_AZURE_STORAGE_TEST").unwrap() != "on"
+@@ -441,7 +441,7 @@ async fn test_head_blob_with_client_secr
+ async fn test_can_list_container_blobs_client_secret() -> Result<()> {
+     let _ = env_logger::builder().is_test(true).try_init();
+ 
+-    dotenv::from_filename(".env").ok();
++    //dotenv::from_filename(".env").ok();
+ 
+     if env::var("REQSIGN_AZURE_STORAGE_TEST").is_err()
+         || env::var("REQSIGN_AZURE_STORAGE_TEST").unwrap() != "on"
+Index: reqsign/tests/google/storage.rs
+===================================================================
+--- reqsign.orig/tests/google/storage.rs
++++ reqsign/tests/google/storage.rs
+@@ -13,7 +13,7 @@ use reqwest::Client;
+ async fn init_signer() -> Option<(GoogleCredentialLoader, GoogleTokenLoader, GoogleSigner)> {
+     let _ = env_logger::builder().is_test(true).try_init();
+ 
+-    dotenv::from_filename(".env").ok();
++    //dotenv::from_filename(".env").ok();
+ 
+     if env::var("REQSIGN_GOOGLE_TEST").is_err() || env::var("REQSIGN_GOOGLE_TEST").unwrap() != "on"
+     {
+Index: reqsign/tests/tencent/cos.rs
+===================================================================
+--- reqsign.orig/tests/tencent/cos.rs
++++ reqsign/tests/tencent/cos.rs
+@@ -19,7 +19,7 @@ use reqwest::Client;
+ fn init_signer() -> Option<(TencentCosCredentialLoader, TencentCosSigner)> {
+     let _ = env_logger::builder().is_test(true).try_init();
+ 
+-    dotenv::from_filename(".env").ok();
++    //dotenv::from_filename(".env").ok();
+     if env::var("REQSIGN_TENCENT_COS_TEST").is_err()
+         || env::var("REQSIGN_TENCENT_COS_TEST").unwrap() != "on"
+     {

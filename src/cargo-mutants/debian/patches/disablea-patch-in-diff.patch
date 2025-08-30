@@ -1,0 +1,39 @@
+Description: Disable unavailable dep patch thus --in-diff option
+Author: Blair Noctis <ncts@debian.org>
+Forwarded: not-needed
+Last-Update: 2025-03-26
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -191,3 +191,3 @@
+ 
+-[dependencies.patch]
++[disabled.dependencies.patch]
+ version = "0.7"
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -17,3 +17,3 @@
+ mod glob;
+-mod in_diff;
++//mod in_diff;
+ mod interrupt;
+@@ -60,3 +60,3 @@
+ use crate::console::Console;
+-use crate::in_diff::diff_filter;
++//use crate::in_diff::diff_filter;
+ use crate::interrupt::check_interrupted;
+@@ -293,2 +293,3 @@
+ 
++    /// (Disabled in Debian due to unavailable dependency.)
+     /// Include only mutants in code touched by this diff.
+@@ -504,6 +505,7 @@
+     if let Some(in_diff) = &args.in_diff {
+-        mutants = diff_filter(
++        panic!("--in-diff is disabled in Debian due to unavailable dependency.");
++        /*mutants = diff_filter(
+             mutants,
+             &read_to_string(in_diff).context("Failed to read filter diff")?,
+-        )?;
++        )?;*/
+     }

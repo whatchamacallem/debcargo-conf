@@ -1,0 +1,42 @@
+Index: gbm-sys/Cargo.toml
+===================================================================
+--- gbm-sys.orig/Cargo.toml
++++ gbm-sys/Cargo.toml
+@@ -40,20 +40,13 @@ version = "0.2"
+ 
+ [build-dependencies.bindgen]
+ version = ">= 0.69"
+-optional = true
+ 
+ [build-dependencies.proc-macro2]
+ version = "1.0.69"
+-optional = true
+ 
+ [build-dependencies.regex]
+ version = "1.10"
+-optional = true
+ 
+ [features]
+-update_bindings = ["use_bindgen"]
+-use_bindgen = [
+-    "bindgen",
+-    "dep:proc-macro2",
+-    "dep:regex",
+-]
++bindgen = []
++use_bindgen = []
+Index: gbm-sys/build.rs
+===================================================================
+--- gbm-sys.orig/build.rs
++++ gbm-sys/build.rs
+@@ -1,10 +1,5 @@
+-#[cfg(feature = "use_bindgen")]
+ extern crate bindgen;
+ 
+-#[cfg(not(feature = "use_bindgen"))]
+-fn main() {}
+-
+-#[cfg(feature = "use_bindgen")]
+ fn main() {
+     use std::{env, path::Path};
+ 

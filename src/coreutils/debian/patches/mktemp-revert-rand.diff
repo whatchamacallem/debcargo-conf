@@ -1,0 +1,19 @@
+commit 7cff766bdcd1b823e4d18bff610c2c73607371cb
+Author: Daniel Hofstetter <daniel.hofstetter@42dh.com>
+Date:   Wed Jan 29 15:10:23 2025 +0100
+
+    mktemp: adapt to API change of rand
+
+diff --git b/src/uu/mktemp/src/mktemp.rs a/src/uu/mktemp/src/mktemp.rs
+index cd5d965bc..f00ee2d72 100644
+--- b/src/uu/mktemp/src/mktemp.rs
++++ a/src/uu/mktemp/src/mktemp.rs
+@@ -429,7 +429,7 @@ fn dry_exec(tmpdir: &Path, prefix: &str, rand: usize, suffix: &str) -> UResult<P
+ 
+     // Randomize.
+     let bytes = &mut buf[prefix.len()..prefix.len() + rand];
+-    rand::rng().fill(bytes);
++    rand::thread_rng().fill(bytes);
+     for byte in bytes {
+         *byte = match *byte % 62 {
+             v @ 0..=9 => v + b'0',

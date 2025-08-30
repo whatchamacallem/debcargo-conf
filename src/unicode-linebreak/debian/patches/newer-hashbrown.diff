@@ -1,0 +1,36 @@
+Index: unicode-linebreak/Cargo.toml
+===================================================================
+--- unicode-linebreak.orig/Cargo.toml
++++ unicode-linebreak/Cargo.toml
+@@ -25,7 +25,7 @@ license = "Apache-2.0"
+ repository = "https://github.com/axelf4/unicode-linebreak"
+ resolver = "2"
+ [build-dependencies.hashbrown]
+-version = "0.12.3"
++version = ">= 0.12.3, < 1.0"
+ 
+ [build-dependencies.regex]
+ version = "1"
+--- rust-unicode-linebreak-0.1.4.orig/build.rs
++++ rust-unicode-linebreak-0.1.4/build.rs
+@@ -10,8 +10,9 @@ the extra state BSP is employed in the p
+ */
+ #![recursion_limit = "512"]
+ 
+-use hashbrown::hash_map::{Entry, RawEntryMut};
+-use hashbrown::HashMap;
++// wildcard imports used because DefaultHashBuilder moved in hashbrown 0.15.
++use hashbrown::hash_map::*;
++use hashbrown::*;
+ use regex::Regex;
+ use std::borrow::Borrow;
+ use std::cmp::{max, min};
+@@ -631,7 +632,7 @@ impl<T: PartialEq + Hash> BlockIndex<T>
+         &mut self,
+         data: &[T],
+         block: I,
+-    ) -> RawEntryMut<u32, (), hashbrown::hash_map::DefaultHashBuilder>
++    ) -> RawEntryMut<u32, (), DefaultHashBuilder>
+     where
+         I::Item: Borrow<T>,
+         I::IntoIter: Clone,

@@ -1,0 +1,119 @@
+Index: rust-clock-steering-0.2.1/src/unix.rs
+===================================================================
+--- rust-clock-steering-0.2.1.orig/src/unix.rs
++++ rust-clock-steering-0.2.1/src/unix.rs
+@@ -293,12 +293,11 @@ impl UnixClock {
+         let esterror = est_error.as_nanos() as libc::c_long / 1000;
+         let maxerror = max_error.as_nanos() as libc::c_long / 1000;
+ 
+-        libc::timex {
+-            modes,
+-            esterror,
+-            maxerror,
+-            ..EMPTY_TIMEX
+-        }
++        let mut result = EMPTY_TIMEX;
++        result.modes = modes;
++        result.esterror = esterror.into();
++        result.maxerror = maxerror.into();
++        result
+     }
+ 
+     #[cfg(target_os = "linux")]
+@@ -308,14 +307,13 @@ impl UnixClock {
+ 
+         let time = libc::timeval {
+             tv_sec: offset.seconds,
+-            tv_usec: offset.nanos as libc::suseconds_t,
++            tv_usec: offset.nanos as _,
+         };
+ 
+-        libc::timex {
+-            modes,
+-            time,
+-            ..EMPTY_TIMEX
+-        }
++        let mut result = EMPTY_TIMEX;
++        result.modes = modes;
++        result.time = time;
++        result
+     }
+ 
+     #[cfg(target_os = "linux")]
+@@ -386,7 +384,7 @@ impl UnixClock {
+         // Since Linux 2.6.26, the supplied value is clamped to the range (-32768000,
+         // +32768000). In older kernels, an EINVAL error occurs if the supplied value is
+         // out of range. (32768000 is 500 << 16)
+-        timex.freq = frequency.clamp(-32_768_000 + 1, 32_768_000 - 1);
++        timex.freq = frequency.clamp(-32_768_000 + 1, 32_768_000 - 1).into();
+ 
+         timex
+     }
+@@ -469,11 +467,9 @@ impl Clock for UnixClock {
+ 
+     #[cfg(target_os = "linux")]
+     fn set_tai(&self, tai_offset: i32) -> Result<(), Error> {
+-        let mut timex = libc::timex {
+-            modes: libc::ADJ_TAI,
+-            constant: tai_offset as _,
+-            ..EMPTY_TIMEX
+-        };
++        let mut timex = EMPTY_TIMEX;
++        timex.modes = libc::ADJ_TAI;
++        timex.constant = tai_offset as _;
+ 
+         self.clock_adjtime(&mut timex)
+     }
+@@ -652,50 +648,12 @@ fn current_time_timeval(timespec: libc::
+     Timestamp { seconds, nanos }
+ }
+ 
+-const EMPTY_TIMESPEC: libc::timespec = libc::timespec {
+-    tv_sec: 0,
+-    tv_nsec: 0,
+-};
++const EMPTY_TIMESPEC: libc::timespec = unsafe { core::mem::zeroed() };
+ 
+ // Libc has no good other way of obtaining this, so let's at least make our
+ // functions more readable.
+ #[cfg(all(target_os = "linux", target_env = "gnu"))]
+-pub const EMPTY_TIMEX: libc::timex = libc::timex {
+-    modes: 0,
+-    offset: 0,
+-    freq: 0,
+-    maxerror: 0,
+-    esterror: 0,
+-    status: 0,
+-    constant: 0,
+-    precision: 0,
+-    tolerance: 0,
+-    time: libc::timeval {
+-        tv_sec: 0,
+-        tv_usec: 0,
+-    },
+-    tick: 0,
+-    ppsfreq: 0,
+-    jitter: 0,
+-    shift: 0,
+-    stabil: 0,
+-    jitcnt: 0,
+-    calcnt: 0,
+-    errcnt: 0,
+-    stbcnt: 0,
+-    tai: 0,
+-    __unused1: 0,
+-    __unused2: 0,
+-    __unused3: 0,
+-    __unused4: 0,
+-    __unused5: 0,
+-    __unused6: 0,
+-    __unused7: 0,
+-    __unused8: 0,
+-    __unused9: 0,
+-    __unused10: 0,
+-    __unused11: 0,
+-};
++pub const EMPTY_TIMEX: libc::timex = unsafe { core::mem::zeroed() };
+ 
+ #[cfg(all(target_os = "linux", target_env = "musl"))]
+ pub const EMPTY_TIMEX: libc::timex = libc::timex {

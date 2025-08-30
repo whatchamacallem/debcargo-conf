@@ -1,0 +1,85 @@
+Index: coreutils/src/uu/tr/src/operation.rs
+===================================================================
+--- coreutils.orig/src/uu/tr/src/operation.rs
++++ coreutils/src/uu/tr/src/operation.rs
+@@ -25,6 +25,7 @@ use std::{
+ };
+ use uucore::error::{UError, UResult, USimpleError};
+ use uucore::show_warning;
++use nom::sequence::pair;
+ 
+ #[derive(Debug, Clone)]
+ pub enum BadSequence {
+@@ -496,39 +497,40 @@ impl Sequence {
+         .parse(input)
+     }
+ 
+-    fn parse_char_equal(input: &[u8]) -> IResult<&[u8], Result<Self, BadSequence>> {
+-        preceded(
+-            tag("[="),
+-            (
+-                alt((
+-                    value(Err(()), peek(tag("=]"))),
+-                    map(Self::parse_backslash_or_char, Ok),
+-                )),
+-                map(terminated(take_until("=]"), tag("=]")), |v: &[u8]| {
+-                    if v.is_empty() {
+-                        Ok(())
+-                    } else {
+-                        Err(v)
+-                    }
+-                }),
+-            ),
++fn parse_char_equal(input: &[u8]) -> IResult<&[u8], Result<Self, BadSequence>> {
++    preceded(
++        tag("[="),
++        pair(
++            alt((
++                value(Err(()), peek(tag("=]"))),
++                map(Self::parse_backslash_or_char, Ok),
++            )),
++            map(terminated(take_until("=]"), tag("=]")), |v: &[u8]| {
++                if v.is_empty() {
++                    Ok(())
++                } else {
++                    Err(v)
++                }
++            }),
++        ),
++    )
++    .parse(input)
++    .map(|(l, (a, b))| {
++        (
++            l,
++            match (a, b) {
++                (Err(()), _) => Err(BadSequence::MissingEquivalentClassChar),
++                (Ok(c), Ok(())) => Ok(Self::Char(c)),
++                (Ok(c), Err(v)) => Err(BadSequence::MultipleCharInEquivalence(format!(
++                    "{}{}",
++                    String::from_utf8_lossy(&[c]).into_owned(),
++                    String::from_utf8_lossy(v).into_owned()
++                ))),
++            },
+         )
+-        .parse(input)
+-        .map(|(l, (a, b))| {
+-            (
+-                l,
+-                match (a, b) {
+-                    (Err(()), _) => Err(BadSequence::MissingEquivalentClassChar),
+-                    (Ok(c), Ok(())) => Ok(Self::Char(c)),
+-                    (Ok(c), Err(v)) => Err(BadSequence::MultipleCharInEquivalence(format!(
+-                        "{}{}",
+-                        String::from_utf8_lossy(&[c]).into_owned(),
+-                        String::from_utf8_lossy(v).into_owned()
+-                    ))),
+-                },
+-            )
+-        })
+-    }
++    })
++}
++
+ }
+ 
+ pub trait SymbolTranslator {

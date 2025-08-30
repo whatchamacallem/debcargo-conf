@@ -1,0 +1,23 @@
+From 597bdeddaf759120e620208112f6d51191688760 Mon Sep 17 00:00:00 2001
+From: NoisyCoil <noisycoil@tutanota.com>
+Date: Wed, 2 Apr 2025 14:04:39 +0200
+Subject: [PATCH] Do not print separators in JSON output
+
+Closes: #761
+---
+ src/view.rs | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/view.rs b/src/view.rs
+index 7fb0299d8..c731ef949 100644
+--- a/src/view.rs
++++ b/src/view.rs
+@@ -569,7 +569,7 @@ impl View {
+             let mut line = "{".to_string();
+             let len_column = self.columns.len();
+             for (j, c) in self.columns.iter().enumerate() {
+-                if c.visible {
++                if c.visible && c.kind != ConfigColumnKind::Separator {
+                     let text = c.column.display_json(*pid);
+                     line.push_str(&text);
+                     if j != len_column - 1 {

@@ -1,0 +1,21 @@
+Description: Fix mod import for arm64 Neon code
+ While running autopkgtests for zune-jpeg with neon feature enabled
+ (with Rust 1.84), we run into:
+ error[E0433]: failed to resolve: use of undeclared crate or module std
+ The import should be from core::arch instead of std::arch
+Author: Pragyansh Chaturvedi <pragyansh.chaturvedi@canonical.com>
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/rust-zune-jpeg/+bug/2115606
+Forwarded: https://github.com/etemesi254/zune-image/pull/279
+Last-Update: 2025-06-30
+---
+--- a/src/color_convert/neon64.rs
++++ b/src/color_convert/neon64.rs
+@@ -10,7 +10,7 @@
+ //! NEON is mandatory on aarch64.
+ 
+ #![cfg(all(feature = "neon", target_arch = "aarch64"))]
+-use std::arch::aarch64::*;
++use core::arch::aarch64::*;
+ 
+ use crate::color_convert::scalar::{CB_CF, CR_CF, C_G_CB_COEF_2, C_G_CR_COEF_1, YUV_RND, Y_CF};
+ 

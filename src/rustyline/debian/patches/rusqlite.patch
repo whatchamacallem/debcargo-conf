@@ -1,0 +1,26 @@
+Index: rustyline/Cargo.toml
+===================================================================
+--- rustyline.orig/Cargo.toml
++++ rustyline/Cargo.toml
+@@ -158,7 +158,7 @@ version = "1.10"
+ optional = true
+ 
+ [dependencies.rusqlite]
+-version = "0.37.0"
++version = ">= 0.29.0, < 0.36"
+ features = [
+     "backup",
+ ]
+Index: rustyline/src/sqlite_history.rs
+===================================================================
+--- rustyline.orig/src/sqlite_history.rs
++++ rustyline/src/sqlite_history.rs
+@@ -334,7 +334,7 @@ PRAGMA incremental_vacuum;
+             }
+         } else {
+             // TODO Validate: backup whole history
+-            self.conn.backup(c"main", path, None)?;
++            self.conn.backup(rusqlite::DatabaseName::Main, path, None)?;
+             // TODO Validate: keep using original path
+         }
+         Ok(())

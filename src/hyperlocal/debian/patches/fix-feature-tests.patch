@@ -12,20 +12,18 @@ diff --git a/examples/client.rs b/examples/client.rs
 index b429464..c8a2501 100644
 --- a/examples/client.rs
 +++ b/examples/client.rs
-@@ -1,9 +1,12 @@
+@@ -1,1 +1,2 @@
 +#![allow(unused_imports)]
- use hyper::{body::HttpBody, Client};
+ use http_body_util::{BodyExt, Full};
+@@ -10,2 +10,3 @@
+ use hyper_util::client::legacy::Client;
 +#[cfg(feature = "client")]
- use hyperlocal::{UnixClientExt, Uri};
- use std::error::Error;
- use tokio::io::{self, AsyncWriteExt as _};
- 
+ use hyperlocal::{UnixClientExt, UnixConnector, Uri};
+@@ -20,2 +20,3 @@
  #[tokio::main]
 +#[cfg(feature = "client")]
  async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-     let url = Uri::new("/tmp/hyperlocal.sock", "/").into();
- 
-@@ -18,3 +21,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+@@ -30,3 +30,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
  
      Ok(())
  }
@@ -36,24 +34,18 @@ diff --git a/examples/server.rs b/examples/server.rs
 index 4792ad8..f870d76 100644
 --- a/examples/server.rs
 +++ b/examples/server.rs
-@@ -1,13 +1,17 @@
+@@ -1,1 +1,3 @@
 +#![allow(unused_imports)]
 +#![allow(dead_code)]
- use hyper::{
-     service::{make_service_fn, service_fn},
-     Body, Response, Server,
- };
-+#[cfg(feature = "server")]
- use hyperlocal::UnixServerExt;
  use std::{error::Error, fs, path::Path};
+@@ -10,2 +10,3 @@
  
- const PHRASE: &str = "It's a Unix system. I know this.";
- 
++#[cfg(feature = "server")]
+ use hyperlocal::UnixListenerExt;
+@@ -20,2 +20,3 @@
  #[tokio::main]
 +#[cfg(feature = "server")]
  async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-     let path = Path::new("/tmp/hyperlocal.sock");
- 
 @@ -25,3 +29,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
  
      Ok(())
@@ -65,20 +57,14 @@ diff --git a/tests/server_client.rs b/tests/server_client.rs
 index 7930a3d..dd186c2 100644
 --- a/tests/server_client.rs
 +++ b/tests/server_client.rs
-@@ -1,3 +1,4 @@
+@@ -1,1 +1,2 @@
 +#![allow(unused_imports)]
- use std::{error::Error, fs, path::Path};
- 
- use hyper::{
-@@ -5,9 +6,11 @@ use hyper::{
-     service::{make_service_fn, service_fn},
-     Body, Client, Response, Server,
- };
+ use http_body_util::{BodyExt, Full};
+@@ -5,2 +6,3 @@
+ use hyper_util::{client::legacy::Client, rt::TokioIo};
 +#[cfg(all(feature = "client", feature = "server"))]
- use hyperlocal::{UnixClientExt, UnixServerExt, Uri};
- 
+ use hyperlocal::{UnixClientExt, UnixConnector, Uri};
+@@ -20,2 +20,3 @@
  #[tokio::test]
 +#[cfg(all(feature = "client", feature = "server"))]
  async fn test_server_client() -> Result<(), Box<dyn Error + Send + Sync>> {
-     let path = Path::new("/tmp/hyperlocal.sock");
- 

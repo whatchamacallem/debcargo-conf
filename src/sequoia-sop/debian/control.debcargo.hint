@@ -3,21 +3,21 @@ Section: utils
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
  dh-sequence-cargo,
- cargo:native,
- rustc:native,
+ bash-completion
+Build-Depends-Arch: cargo:native,
+ rustc:native (>= 1.79),
  libstd-rust-dev,
  librust-anyhow-1+default-dev (>= 1.0.18-~~),
- librust-sequoia-openpgp-1+default-dev (>= 1.20-~~),
- librust-sequoia-openpgp-1-dev (>= 1.20-~~),
- librust-sequoia-wot-0.13-dev,
- librust-sop-0.8+default-dev (>= 0.8.1-~~),
- bash-completion
+ librust-sequoia-openpgp-2+default-dev,
+ librust-sequoia-openpgp-2-dev,
+ librust-sequoia-wot-0.15-dev,
+ librust-sop-0.8+default-dev (>= 0.8.1-~~)
 Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
 Uploaders:
  Alexander Kjäll <alexander.kjall@gmail.com>,
  Daniel Kahn Gillmor <dkg@fifthhorseman.net>,
  Holger Levsen <holger@debian.org>
-Standards-Version: 4.7.0
+Standards-Version: 4.7.2
 Vcs-Git: https://salsa.debian.org/rust-team/debcargo-conf.git [src/sequoia-sop]
 Vcs-Browser: https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/sequoia-sop
 Homepage: https://sequoia-pgp.org/
@@ -30,9 +30,10 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev (>= 1.0.18-~~),
- librust-sequoia-openpgp-1+default-dev (>= 1.20-~~),
- librust-sequoia-openpgp-1-dev (>= 1.20-~~),
- librust-sequoia-wot-0.13-dev,
+ librust-sequoia-openpgp-2+default-dev,
+ librust-sequoia-openpgp-2-dev,
+ librust-sequoia-policy-config-0.8-dev,
+ librust-sequoia-wot-0.15-dev,
  librust-sop-0.8+cli-dev (>= 0.8.1-~~),
  librust-sop-0.8+cliv-dev (>= 0.8.1-~~),
  librust-sop-0.8+default-dev (>= 0.8.1-~~)
@@ -44,14 +45,14 @@ Provides:
  librust-sequoia-sop-0+cli-dev (= ${binary:Version}),
  librust-sequoia-sop-0+cliv-dev (= ${binary:Version}),
  librust-sequoia-sop-0+default-dev (= ${binary:Version}),
- librust-sequoia-sop-0.36-dev (= ${binary:Version}),
- librust-sequoia-sop-0.36+cli-dev (= ${binary:Version}),
- librust-sequoia-sop-0.36+cliv-dev (= ${binary:Version}),
- librust-sequoia-sop-0.36+default-dev (= ${binary:Version}),
- librust-sequoia-sop-0.36.1-dev (= ${binary:Version}),
- librust-sequoia-sop-0.36.1+cli-dev (= ${binary:Version}),
- librust-sequoia-sop-0.36.1+cliv-dev (= ${binary:Version}),
- librust-sequoia-sop-0.36.1+default-dev (= ${binary:Version})
+ librust-sequoia-sop-0.37-dev (= ${binary:Version}),
+ librust-sequoia-sop-0.37+cli-dev (= ${binary:Version}),
+ librust-sequoia-sop-0.37+cliv-dev (= ${binary:Version}),
+ librust-sequoia-sop-0.37+default-dev (= ${binary:Version}),
+ librust-sequoia-sop-0.37.2-dev (= ${binary:Version}),
+ librust-sequoia-sop-0.37.2+cli-dev (= ${binary:Version}),
+ librust-sequoia-sop-0.37.2+cliv-dev (= ${binary:Version}),
+ librust-sequoia-sop-0.37.2+default-dev (= ${binary:Version})
 Description: Stateless OpenPGP Command Line Interface using Sequoia - Rust source code
  sqop offers a Rust-based implementation of the Stateless OpenPGP
  Command Line Interface.
@@ -64,14 +65,14 @@ Description: Stateless OpenPGP Command Line Interface using Sequoia - Rust sourc
 
 Package: sqop
 Architecture: any
-Multi-Arch: allowed
 Section: utils
 Depends:
  ${misc:Depends},
  ${shlibs:Depends},
  ${cargo:Depends}
 Recommends:
- ${cargo:Recommends}
+ ${cargo:Recommends},
+ sopv-doc
 Suggests:
  ${cargo:Suggests}
 Provides:

@@ -1,0 +1,18 @@
+Description: add feature guards ensuring runtime is available
+ tests_alpn_http2 fails to build if no runtime is enabled
+Author: Peter Michael Green <plugwash@debian.org>
+Last-Update: 2023-12-12
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+
+--- a/src/connector/builder.rs
++++ b/src/connector/builder.rs
+@@ -353,7 +353,7 @@
+     }
+ 
+     #[test]
+-    #[cfg(all(not(feature = "http1"), feature = "http2"))]
++    #[cfg(all(not(feature = "http1"), feature = "http2", any(feature = "native-tokio", feature = "tokio-runtime")))]
+     fn test_alpn_http2() {
+         let roots = rustls::RootCertStore::empty();
+         let tls_config = rustls::ClientConfig::builder()

@@ -1,6 +1,6 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -55,7 +55,7 @@
+@@ -54,7 +54,7 @@
  ]
  
  [dependencies.clap-verbosity-flag]
@@ -9,8 +9,12 @@
  
  [dependencies.flate2]
  version = "1"
-@@ -74,7 +74,7 @@
- version = "0.17"
+@@ -70,10 +70,10 @@
+ version = "1"
+ 
+ [dependencies.indicatif]
+-version = "0.18"
++version = "0.17"
  
  [dependencies.itertools]
 -version = "0.14"
@@ -18,7 +22,7 @@
  
  [dependencies.log]
  version = "0.4"
-@@ -95,7 +95,7 @@
+@@ -94,7 +94,7 @@
  version = "0.9"
  
  [dependencies.stderrlog]
@@ -27,7 +31,16 @@
  
  [dependencies.thiserror]
  version = "2"
-@@ -129,7 +129,7 @@
+@@ -111,7 +111,7 @@
+ version = "1.14"
+ 
+ [dependencies.xdg]
+-version = "3.0"
++version = "2.0"
+ 
+ [dependencies.xz2]
+ version = "0.1"
+@@ -128,7 +128,7 @@
  ]
  
  [build-dependencies.clap-verbosity-flag]
@@ -36,3 +49,14 @@
  
  [build-dependencies.clap_complete]
  version = "4.4"
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -257,7 +257,7 @@
+ impl Cache {
+     pub async fn new(force_download: bool, archive_mirror: &str) -> Result<Self> {
+         let mut cache = Self {
+-            base_directory: BaseDirectories::with_prefix("Debian-RT-tools"),
++            base_directory: BaseDirectories::with_prefix("Debian-RT-tools")?,
+             downloader: Downloader::new(force_download),
+             archive_mirror: archive_mirror.into(),
+             unstable: empty_release(),

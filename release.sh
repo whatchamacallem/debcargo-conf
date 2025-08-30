@@ -45,7 +45,7 @@ type dch >/dev/null || \
 abort 1 "Install devscripts, we need to run dch."
 
 RELBRANCH="pending-$PKGNAME"
-timeout --foreground 15 git fetch origin --prune || abort 1 "Failed to fetch upstream to check whether we are synced, please check network"
+git fetch origin --prune || abort 1 "Failed to fetch upstream to check whether we are synced, please check network"
 
 git merge-base --is-ancestor origin/master HEAD || \
 abort 1 "You are not synced with origin/master, please do so before running this script."
@@ -142,9 +142,14 @@ fi
 
 DEBVER=$(dpkg-parsechangelog -l $BUILDDIR/debian/changelog -SVersion)
 DEBSRC=$(dpkg-parsechangelog -l $BUILDDIR/debian/changelog -SSource)
+DEBDIST=$(dpkg-parsechangelog -l $BUILDDIR/debian/changelog -SDistribution)
 DEB_HOST_ARCH=$(dpkg-architecture -q DEB_HOST_ARCH)
 
-git commit -m "$PKGNAME: release $DEBVER"
+RELEASE_COMMIT_MESSAGE="$PKGNAME: release $DEBVER"
+if [ "$DEBDIST" != "unstable" ]; then
+	RELEASE_COMMIT_MESSAGE+=" to $DEBDIST"
+fi
+git commit -m "$RELEASE_COMMIT_MESSAGE"
 
 if [ "$RERELEASE" = 1 ]; then
 

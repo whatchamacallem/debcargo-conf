@@ -1,0 +1,36 @@
+Description: Disable the deprecated hyper-requester feature
+ and avoid some big migrations
+Bug: https://gitlab.com/schmiddi-on-mobile/railway-backend/-/issues/15
+Forwarded: not-needed
+Author: Blair Noctis <ncts@debian.org>
+Last-Update: 2025-04-01
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -69,2 +69,3 @@
+ package = "railway-core"
++features = ["reqwest-requester"]
+ 
+--- a/src/profile/sncf.rs
++++ b/src/profile/sncf.rs
+@@ -126,3 +126,3 @@
+         api::journeys::JourneysOptions, client::HafasClient,
+-        requester::hyper::HyperRustlsRequester, Place, Stop,
++        requester::reqwest::ReqwestRequester, Place, Stop,
+     };
+@@ -134,3 +134,3 @@
+     async fn test_path_available() -> Result<(), Box<dyn Error>> {
+-        let client = HafasClient::new(SncfProfile {}, HyperRustlsRequester::new());
++        let client = HafasClient::new(SncfProfile {}, Reqwest::new());
+         let journeys = client
+--- a/src/profile/tpg.rs
++++ b/src/profile/tpg.rs
+@@ -128,3 +128,3 @@
+         api::journeys::JourneysOptions, client::HafasClient,
+-        requester::hyper::HyperRustlsRequester, Place, Stop,
++        requester::reqwest::ReqwestRequester, Place, Stop,
+     };
+@@ -136,3 +136,3 @@
+     async fn test_path_available() -> Result<(), Box<dyn Error>> {
+-        let client = HafasClient::new(TpgProfile {}, HyperRustlsRequester::new());
++        let client = HafasClient::new(TpgProfile {}, ReqwestRequester::new());
+         let journeys = client

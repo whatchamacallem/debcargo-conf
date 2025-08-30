@@ -1,0 +1,536 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 2c2cd21935e65232238595d476489c63463eb8ce
+Author: Jacob Pratt <jacob@jhpratt.dev>
+Date:   Thu Mar 6 05:51:50 2025 -0500
+
+    Update to rand 0.9
+
+Index: quickcheck/Cargo.toml
+===================================================================
+--- quickcheck.orig/Cargo.toml
++++ quickcheck/Cargo.toml
+@@ -37,8 +37,8 @@ version = "0.4"
+ optional = true
+ 
+ [dependencies.rand]
+-version = "0.8"
+-features = ["getrandom", "small_rng"]
++version = "0.9"
++features = ["os_rng", "small_rng"]
+ default-features = false
+ 
+ [features]
+Index: quickcheck/src/arbitrary.rs
+===================================================================
+--- quickcheck.orig/src/arbitrary.rs
++++ quickcheck/src/arbitrary.rs
+@@ -21,8 +21,8 @@ use std::path::PathBuf;
+ use std::sync::Arc;
+ use std::time::{Duration, SystemTime, UNIX_EPOCH};
+ 
+-use rand::seq::SliceRandom;
+-use rand::{self, Rng, SeedableRng};
++use rand::prelude::*;
++use rand::{Rng, SeedableRng};
+ 
+ /// Gen represents a PRNG.
+ ///
+@@ -47,7 +47,7 @@ impl Gen {
+     /// randomly generated number. (Unless that number is used to control the
+     /// size of a data structure.)
+     pub fn new(size: usize) -> Gen {
+-        Gen { rng: rand::rngs::SmallRng::from_entropy(), size: size }
++        Gen { rng: rand::rngs::SmallRng::from_os_rng(), size: size }
+     }
+ 
+     /// Returns the size configured with this generator.
+@@ -62,19 +62,19 @@ impl Gen {
+         slice.choose(&mut self.rng)
+     }
+ 
+-    fn gen<T>(&mut self) -> T
++    fn random<T>(&mut self) -> T
+     where
+-        rand::distributions::Standard: rand::distributions::Distribution<T>,
++        rand::distr::StandardUniform: rand::distr::Distribution<T>,
+     {
+-        self.rng.gen()
++        self.rng.random()
+     }
+ 
+-    fn gen_range<T, R>(&mut self, range: R) -> T
++    fn random_range<T, R>(&mut self, range: R) -> T
+     where
+-        T: rand::distributions::uniform::SampleUniform,
+-        R: rand::distributions::uniform::SampleRange<T>,
++        T: rand::distr::uniform::SampleUniform,
++        R: rand::distr::uniform::SampleRange<T>,
+     {
+-        self.rng.gen_range(range)
++        self.rng.random_range(range)
+     }
+ }
+ 
+@@ -92,24 +92,24 @@ pub fn single_shrinker<A: 'static>(value
+ /// shrunk.
+ ///
+ /// Aside from shrinking, `Arbitrary` is different from typical RNGs in that
+-/// it respects `Gen::size()` for controlling how much memory a particular
+-/// value uses, for practical purposes. For example, `Vec::arbitrary()`
+-/// respects `Gen::size()` to decide the maximum `len()` of the vector.
+-/// This behavior is necessary due to practical speed and size limitations.
+-/// Conversely, `i32::arbitrary()` ignores `size()` since all `i32` values
+-/// require `O(1)` memory and operations between `i32`s require `O(1)` time
+-/// (with the exception of exponentiation).
++/// it respects `Gen::size()` for controlling how much memory a
++/// particular value uses, for practical purposes. For example,
++/// `Vec::arbitrary()` respects `Gen::size()` to decide the maximum
++/// `len()` of the vector. This behavior is necessary due to practical speed
++/// and size limitations. Conversely, `i32::arbitrary()` ignores `size()` since
++/// all `i32` values require `O(1)` memory and operations between `i32`s
++/// require `O(1)` time (with the exception of exponentiation).
+ ///
+ /// Additionally, all types that implement `Arbitrary` must also implement
+ /// `Clone`.
+ pub trait Arbitrary: Clone + 'static {
+     /// Return an arbitrary value.
+     ///
+-    /// Implementations should respect `Gen::size()` when decisions about how
+-    /// big a particular value should be. Implementations should generally
+-    /// defer to other `Arbitrary` implementations to generate other random
+-    /// values when necessary. The `Gen` type also offers a few RNG helper
+-    /// routines.
++    /// Implementations should respect `Gen::size()` when decisions
++    /// about how big a particular value should be. Implementations should
++    /// generally defer to other `Arbitrary` implementations to generate
++    /// other random values when necessary. The `Gen` type also
++    /// offers a few RNG helper routines.
+     fn arbitrary(g: &mut Gen) -> Self;
+ 
+     /// Return an iterator of values that are smaller than itself.
+@@ -138,7 +138,7 @@ impl Arbitrary for () {
+ 
+ impl Arbitrary for bool {
+     fn arbitrary(g: &mut Gen) -> bool {
+-        g.gen()
++        g.random()
+     }
+ 
+     fn shrink(&self) -> Box<dyn Iterator<Item = bool>> {
+@@ -152,7 +152,7 @@ impl Arbitrary for bool {
+ 
+ impl<A: Arbitrary> Arbitrary for Option<A> {
+     fn arbitrary(g: &mut Gen) -> Option<A> {
+-        if g.gen() {
++        if g.random() {
+             None
+         } else {
+             Some(Arbitrary::arbitrary(g))
+@@ -172,7 +172,7 @@ impl<A: Arbitrary> Arbitrary for Option<
+ 
+ impl<A: Arbitrary, B: Arbitrary> Arbitrary for Result<A, B> {
+     fn arbitrary(g: &mut Gen) -> Result<A, B> {
+-        if g.gen() {
++        if g.random() {
+             Ok(Arbitrary::arbitrary(g))
+         } else {
+             Err(Arbitrary::arbitrary(g))
+@@ -252,7 +252,7 @@ impl<A: Arbitrary> Arbitrary for Vec<A>
+     fn arbitrary(g: &mut Gen) -> Vec<A> {
+         let size = {
+             let s = g.size();
+-            g.gen_range(0..s)
++            g.random_range(0..s)
+         };
+         (0..size).map(|_| A::arbitrary(g)).collect()
+     }
+@@ -461,7 +461,7 @@ impl<T: Arbitrary> Arbitrary for VecDequ
+ 
+ impl Arbitrary for IpAddr {
+     fn arbitrary(g: &mut Gen) -> IpAddr {
+-        let ipv4: bool = g.gen();
++        let ipv4: bool = g.random();
+         if ipv4 {
+             IpAddr::V4(Arbitrary::arbitrary(g))
+         } else {
+@@ -472,40 +472,45 @@ impl Arbitrary for IpAddr {
+ 
+ impl Arbitrary for Ipv4Addr {
+     fn arbitrary(g: &mut Gen) -> Ipv4Addr {
+-        Ipv4Addr::new(g.gen(), g.gen(), g.gen(), g.gen())
++        Ipv4Addr::new(g.random(), g.random(), g.random(), g.random())
+     }
+ }
+ 
+ impl Arbitrary for Ipv6Addr {
+     fn arbitrary(g: &mut Gen) -> Ipv6Addr {
+         Ipv6Addr::new(
+-            g.gen(),
+-            g.gen(),
+-            g.gen(),
+-            g.gen(),
+-            g.gen(),
+-            g.gen(),
+-            g.gen(),
+-            g.gen(),
++            g.random(),
++            g.random(),
++            g.random(),
++            g.random(),
++            g.random(),
++            g.random(),
++            g.random(),
++            g.random(),
+         )
+     }
+ }
+ 
+ impl Arbitrary for SocketAddr {
+     fn arbitrary(g: &mut Gen) -> SocketAddr {
+-        SocketAddr::new(Arbitrary::arbitrary(g), g.gen())
++        SocketAddr::new(Arbitrary::arbitrary(g), g.random())
+     }
+ }
+ 
+ impl Arbitrary for SocketAddrV4 {
+     fn arbitrary(g: &mut Gen) -> SocketAddrV4 {
+-        SocketAddrV4::new(Arbitrary::arbitrary(g), g.gen())
++        SocketAddrV4::new(Arbitrary::arbitrary(g), g.random())
+     }
+ }
+ 
+ impl Arbitrary for SocketAddrV6 {
+     fn arbitrary(g: &mut Gen) -> SocketAddrV6 {
+-        SocketAddrV6::new(Arbitrary::arbitrary(g), g.gen(), g.gen(), g.gen())
++        SocketAddrV6::new(
++            Arbitrary::arbitrary(g),
++            g.random(),
++            g.random(),
++            g.random(),
++        )
+     }
+ }
+ 
+@@ -575,7 +580,7 @@ impl Arbitrary for String {
+     fn arbitrary(g: &mut Gen) -> String {
+         let size = {
+             let s = g.size();
+-            g.gen_range(0..s)
++            g.random_range(0..s)
+         };
+         (0..size).map(|_| char::arbitrary(g)).collect()
+     }
+@@ -591,10 +596,10 @@ impl Arbitrary for CString {
+     fn arbitrary(g: &mut Gen) -> Self {
+         let size = {
+             let s = g.size();
+-            g.gen_range(0..s)
++            g.random_range(0..s)
+         };
+         // Use either random bytes or random UTF-8 encoded codepoints.
+-        let utf8: bool = g.gen();
++        let utf8: bool = g.random();
+         if utf8 {
+             CString::new(
+                 (0..)
+@@ -629,16 +634,17 @@ impl Arbitrary for CString {
+ 
+ impl Arbitrary for char {
+     fn arbitrary(g: &mut Gen) -> char {
+-        let mode = g.gen_range(0..100);
++        let mode = g.random_range(0..100);
+         match mode {
+             0..=49 => {
+                 // ASCII + some control characters
+-                g.gen_range(0..0xB0) as u8 as char
++                g.random_range(0..0xB0) as u8 as char
+             }
+             50..=59 => {
+                 // Unicode BMP characters
+                 loop {
+-                    if let Some(x) = char::from_u32(g.gen_range(0..0x10000)) {
++                    if let Some(x) = char::from_u32(g.random_range(0..0x10000))
++                    {
+                         return x;
+                     }
+                     // ignore surrogate pairs
+@@ -714,11 +720,11 @@ impl Arbitrary for char {
+             }
+             90..=94 => {
+                 // Tricky unicode, part 2
+-                char::from_u32(g.gen_range(0x2000..0x2070)).unwrap()
++                char::from_u32(g.random_range(0x2000..0x2070)).unwrap()
+             }
+             95..=99 => {
+                 // Completely arbitrary characters
+-                g.gen()
++                g.random()
+             }
+             _ => unreachable!(),
+         }
+@@ -778,11 +784,9 @@ macro_rules! unsigned_arbitrary {
+         $(
+             impl Arbitrary for $ty {
+                 fn arbitrary(g: &mut Gen) -> $ty {
+-                    match g.gen_range(0..10) {
+-                        0 => {
+-                            *g.choose(unsigned_problem_values!($ty)).unwrap()
+-                        },
+-                        _ => g.gen()
++                    match g.random_range(0..10) {
++                        0 => *g.choose(unsigned_problem_values!($ty)).unwrap(),
++                        _ => g.random()
+                     }
+                 }
+                 fn shrink(&self) -> Box<dyn Iterator<Item=$ty>> {
+@@ -795,7 +799,33 @@ macro_rules! unsigned_arbitrary {
+ }
+ 
+ unsigned_arbitrary! {
+-    usize, u8, u16, u32, u64, u128
++    u8, u16, u32, u64, u128
++}
++
++impl Arbitrary for usize {
++    fn arbitrary(g: &mut Gen) -> usize {
++        match g.random_range(0..10) {
++            0 => *g.choose(unsigned_problem_values!(usize)).unwrap(),
++            _ => {
++                #[cfg(target_pointer_width = "16")]
++                {
++                    g.random::<u16>() as usize
++                }
++                #[cfg(target_pointer_width = "32")]
++                {
++                    g.random::<u32>() as usize
++                }
++                #[cfg(target_pointer_width = "64")]
++                {
++                    g.random::<u64>() as usize
++                }
++            }
++        }
++    }
++    fn shrink(&self) -> Box<dyn Iterator<Item = usize>> {
++        unsigned_shrinker!(usize);
++        shrinker::UnsignedShrinker::new(*self)
++    }
+ }
+ 
+ macro_rules! signed_shrinker {
+@@ -850,11 +880,9 @@ macro_rules! signed_arbitrary {
+         $(
+             impl Arbitrary for $ty {
+                 fn arbitrary(g: &mut Gen) -> $ty {
+-                    match g.gen_range(0..10) {
+-                        0 => {
+-                            *g.choose(signed_problem_values!($ty)).unwrap()
+-                        },
+-                        _ => g.gen()
++                    match g.random_range(0..10) {
++                        0 => *g.choose(signed_problem_values!($ty)).unwrap(),
++                        _ => g.random()
+                     }
+                 }
+                 fn shrink(&self) -> Box<dyn Iterator<Item=$ty>> {
+@@ -867,7 +895,33 @@ macro_rules! signed_arbitrary {
+ }
+ 
+ signed_arbitrary! {
+-    isize, i8, i16, i32, i64, i128
++    i8, i16, i32, i64, i128
++}
++
++impl Arbitrary for isize {
++    fn arbitrary(g: &mut Gen) -> isize {
++        match g.random_range(0..10) {
++            0 => *g.choose(signed_problem_values!(isize)).unwrap(),
++            _ => {
++                #[cfg(target_pointer_width = "16")]
++                {
++                    g.random::<i16>() as isize
++                }
++                #[cfg(target_pointer_width = "32")]
++                {
++                    g.random::<i32>() as isize
++                }
++                #[cfg(target_pointer_width = "64")]
++                {
++                    g.random::<i64>() as isize
++                }
++            }
++        }
++    }
++    fn shrink(&self) -> Box<dyn Iterator<Item = isize>> {
++        signed_shrinker!(isize);
++        shrinker::SignedShrinker::new(*self)
++    }
+ }
+ 
+ macro_rules! float_problem_values {
+@@ -882,12 +936,12 @@ macro_rules! float_arbitrary {
+     ($($t:ty, $path:path, $shrinkable:ty),+) => {$(
+         impl Arbitrary for $t {
+             fn arbitrary(g: &mut Gen) -> $t {
+-                match g.gen_range(0..10) {
++                match g.random_range(0..10) {
+                     0 => *g.choose(float_problem_values!($path)).unwrap(),
+                     _ => {
+                         use $path as p;
+-                        let exp = g.gen_range((0.)..p::MAX_EXP as i16 as $t);
+-                        let mantissa = g.gen_range((1.)..2.);
++                        let exp = g.random_range((0.)..p::MAX_EXP as i16 as $t);
++                        let mantissa = g.random_range((1.)..2.);
+                         let sign = *g.choose(&[-1., 1.]).unwrap();
+                         sign * mantissa * exp.exp2()
+                     }
+@@ -950,11 +1004,11 @@ macro_rules! unsigned_non_zero_arbitrary
+         $(
+             impl Arbitrary for $ty {
+                 fn arbitrary(g: &mut Gen) -> $ty {
+-                    let mut v: $inner = g.gen();
++                    let mut v = $inner::arbitrary(g);
+                     if v == 0 {
+                         v += 1;
+                     }
+-                    $ty::new(v).expect("non-zero value contsturction failed")
++                    $ty::new(v).expect("non-zero value construction failed")
+                 }
+ 
+                 fn shrink(&self) -> Box<dyn Iterator<Item = $ty>> {
+@@ -988,7 +1042,7 @@ impl<T: Arbitrary> Arbitrary for Wrappin
+ 
+ impl<T: Arbitrary> Arbitrary for Bound<T> {
+     fn arbitrary(g: &mut Gen) -> Bound<T> {
+-        match g.gen_range(0..3) {
++        match g.random_range(0..3) {
+             0 => Bound::Included(T::arbitrary(g)),
+             1 => Bound::Excluded(T::arbitrary(g)),
+             _ => Bound::Unbounded,
+@@ -1066,8 +1120,8 @@ impl Arbitrary for RangeFull {
+ 
+ impl Arbitrary for Duration {
+     fn arbitrary(gen: &mut Gen) -> Self {
+-        let seconds = gen.gen_range(0..gen.size() as u64);
+-        let nanoseconds = gen.gen_range(0..1_000_000);
++        let seconds = gen.random_range(0..gen.size() as u64);
++        let nanoseconds = gen.random_range(0..1_000_000);
+         Duration::new(seconds, nanoseconds)
+     }
+ 
+Index: quickcheck/src/lib.rs
+===================================================================
+--- quickcheck.orig/src/lib.rs
++++ quickcheck/src/lib.rs
+@@ -14,7 +14,9 @@ new kind of witness being generated. The
+ semver compatible releases.
+ */
+ 
+-pub use crate::arbitrary::{empty_shrinker, single_shrinker, Arbitrary, Gen};
++pub use crate::arbitrary::{
++    empty_shrinker, single_shrinker, Arbitrary, Gen,
++};
+ pub use crate::tester::{quickcheck, QuickCheck, TestResult, Testable};
+ 
+ /// A macro for writing quickcheck tests.
+Index: quickcheck/src/tester.rs
+===================================================================
+--- quickcheck.orig/src/tester.rs
++++ quickcheck/src/tester.rs
+@@ -8,7 +8,8 @@ use crate::{
+     Arbitrary, Gen,
+ };
+ 
+-/// The main QuickCheck type for setting configuration and running QuickCheck.
++/// The main `QuickCheck` type for setting configuration and running
++/// `QuickCheck`.
+ pub struct QuickCheck {
+     tests: u64,
+     max_tests: u64,
+@@ -49,11 +50,11 @@ fn qc_min_tests_passed() -> u64 {
+ }
+ 
+ impl QuickCheck {
+-    /// Creates a new QuickCheck value.
++    /// Creates a new `QuickCheck` value.
+     ///
+-    /// This can be used to run QuickCheck on things that implement `Testable`.
+-    /// You may also adjust the configuration, such as the number of tests to
+-    /// run.
++    /// This can be used to run `QuickCheck` on things that implement
++    /// `Testable`. You may also adjust the configuration, such as the
++    /// number of tests to run.
+     ///
+     /// By default, the maximum number of passed tests is set to `100`, the max
+     /// number of overall tests is set to `10000` and the generator is created
+@@ -67,7 +68,7 @@ impl QuickCheck {
+         QuickCheck { tests, max_tests, min_tests_passed, gen }
+     }
+ 
+-    /// Set the random number generator to be used by QuickCheck.
++    /// Set the random number generator to be used by `QuickCheck`.
+     pub fn gen(self, gen: Gen) -> QuickCheck {
+         QuickCheck { gen, ..self }
+     }
+@@ -86,7 +87,7 @@ impl QuickCheck {
+     /// Set the maximum number of tests to run.
+     ///
+     /// The number of invocations of a property will never exceed this number.
+-    /// This is necessary to cap the number of tests because QuickCheck
++    /// This is necessary to cap the number of tests because `QuickCheck`
+     /// properties can discard tests.
+     pub fn max_tests(mut self, max_tests: u64) -> QuickCheck {
+         self.max_tests = max_tests;
+@@ -137,7 +138,7 @@ impl QuickCheck {
+     ///
+     /// Note that if the environment variable `RUST_LOG` is set to enable
+     /// `info` level log messages for the `quickcheck` crate, then this will
+-    /// include output on how many QuickCheck tests were passed.
++    /// include output on how many `QuickCheck` tests were passed.
+     ///
+     /// # Example
+     ///
+@@ -176,7 +177,7 @@ impl QuickCheck {
+     }
+ }
+ 
+-/// Convenience function for running QuickCheck.
++/// Convenience function for running `QuickCheck`.
+ ///
+ /// This is an alias for `QuickCheck::new().quickcheck(f)`.
+ pub fn quickcheck<A: Testable>(f: A) {
+@@ -418,7 +419,7 @@ impl<A: Arbitrary + Debug> AShow for A {
+ 
+ #[cfg(test)]
+ mod test {
+-    use crate::{Gen, QuickCheck};
++    use crate::{QuickCheck, Gen};
+ 
+     #[test]
+     fn shrinking_regression_issue_126() {
+@@ -437,7 +438,9 @@ mod test {
+         fn t(_: i8) -> bool {
+             true
+         }
+-        QuickCheck::new().gen(Gen::new(129)).quickcheck(t as fn(i8) -> bool);
++        QuickCheck::new()
++            .gen(Gen::new(129))
++            .quickcheck(t as fn(i8) -> bool);
+     }
+ 
+     #[test]
+Index: quickcheck/src/tests.rs
+===================================================================
+--- quickcheck.orig/src/tests.rs
++++ quickcheck/src/tests.rs
+@@ -5,7 +5,7 @@ use std::ffi::CString;
+ use std::hash::BuildHasherDefault;
+ use std::path::PathBuf;
+ 
+-use super::{quickcheck, Gen, QuickCheck, TestResult};
++use super::{quickcheck, QuickCheck, Gen, TestResult};
+ 
+ #[test]
+ fn prop_oob() {

@@ -1,0 +1,31 @@
+commit 7c7b410c3017aeab0dfc74a6144e4cb8e186a10a
+Author: Jean-Christophe Amiel <jeanchristophe.amiel@orange.com>
+Date:   Sun Apr 20 23:30:51 2025 +0200
+
+    Replace deprecated libxml2 initGenericErrorDefaultFunc with xmlSetGenericErrorFunc.
+
+diff --git hurl/native/libxml.c hurl/native/libxml.c
+index a6bf1851f4..c3e575d4fb 100644
+--- hurl/native/libxml.c
++++ hurl/native/libxml.c
+@@ -1,5 +1,4 @@
+ // This callback will prevent from outputting error messages
+ // It could not be implemented in Rust, because the function is variadic
+-void silentErrorFunc(void *ctx, const char * msg, ...)
+-{
++void silentErrorFunc(void *ctx, const char * msg, ...) {
+ }
+\ No newline at end of file
+diff --git hurl/src/runner/xpath.rs hurl/src/runner/xpath.rs
+index ec20a66ae3..df891acf83 100644
+--- hurl/src/runner/xpath.rs
++++ hurl/src/runner/xpath.rs
+@@ -168,7 +168,7 @@ fn libxml_eval_xpath(
+ 
+     // libxml2 prints to stdout warning and errors, so we mut it.
+     unsafe {
+-        libxml::bindings::initGenericErrorDefaultFunc(&mut Some(silentErrorFunc));
++        libxml::bindings::xmlSetGenericErrorFunc(ptr::null_mut(), Some(silentErrorFunc));
+     }
+ 
+     if support_ns {

@@ -6,28 +6,28 @@ Tweak env_logger to be the version in Debian.
 Hardcode the crypto-nettle backend, as that is used everywhere else in Debian.
 Remove env-filter as that doesn't exist in Debian.
 
-diff --git a/Cargo.toml b/Cargo.toml
-index cb3035a..1fbb517 100644
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -51,7 +51,7 @@ version = "0.19"
+Index: sequoia-keystore/Cargo.toml
+===================================================================
+--- sequoia-keystore.orig/Cargo.toml
++++ sequoia-keystore/Cargo.toml
+@@ -65,7 +65,7 @@ version = "0.19"
  version = "5"
  
  [dependencies.env_logger]
 -version = ">=0.10, <0.12"
 +version = "<0.12"
  
- [dependencies.lazy_static]
- version = "1.4.0"
-@@ -90,6 +90,7 @@ optional = true
+ [dependencies.log]
+ version = "0.4.17"
+@@ -102,6 +102,7 @@ optional = true
  [dependencies.sequoia-openpgp]
- version = "1.17"
+ version = "2"
  default-features = false
 +features = ["crypto-nettle"]
  
  [dependencies.thiserror]
- version = "1.0.2"
-@@ -111,7 +112,7 @@ features = ["compat"]
+ version = ">=1, <3"
+@@ -123,7 +124,7 @@ features = ["compat"]
  version = "0.3"
  
  [dev-dependencies.env_logger]
@@ -36,7 +36,7 @@ index cb3035a..1fbb517 100644
  
  [dev-dependencies.test-log]
  version = "0.2.10"
-@@ -122,7 +123,6 @@ default-features = false
+@@ -134,7 +135,6 @@ default-features = false
  
  [dev-dependencies.tracing-subscriber]
  version = "0.3"
@@ -44,25 +44,15 @@ index cb3035a..1fbb517 100644
  default-features = false
  
  [build-dependencies.capnpc]
-@@ -138,21 +138,5 @@ openpgp-card = ["dep:sequoia-keystore-openpgp-card"]
- softkeys = ["dep:sequoia-keystore-softkeys"]
- tpm = ["dep:sequoia-keystore-tpm"]
- 
--[target."cfg(not(windows))".dev-dependencies.sequoia-openpgp]
--version = "1"
--features = [
--    "crypto-nettle",
--    "__implicit-crypto-backend-for-tests",
--]
--default-features = false
+@@ -147,11 +147,3 @@ features = [
+     "__implicit-crypto-backend-for-tests",
+ ]
+ default-features = false
 -
 -[target."cfg(windows)".dev-dependencies.sequoia-openpgp]
--version = "1"
+-version = "2"
 -features = [
 -    "crypto-cng",
 -    "__implicit-crypto-backend-for-tests",
 -]
 -default-features = false
--
- [badges.maintenance]
- status = "actively-developed"

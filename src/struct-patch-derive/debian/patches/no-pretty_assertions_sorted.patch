@@ -1,0 +1,32 @@
+Description: Remove dependency on pretty_assertions_sorted
+ This is not strictly needed and complicates packaging.
+Author: Johann Felix Soden <johfel@debian.org>
+Forwarded: not-needed
+Last-Updated: 2025-04-27
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -53,5 +53,3 @@
+ version = "2.0"
+ features = ["parsing"]
+ 
+-[dev-dependencies.pretty_assertions_sorted]
+-version = "1.2.3"
+--- a/src/patch.rs
++++ b/src/patch.rs
+@@ -558,7 +558,6 @@
+ 
+ #[cfg(test)]
+ mod tests {
+-    use pretty_assertions_sorted::assert_eq_sorted;
+     use syn::token::Pub;
+ 
+     use super::*;
+@@ -594,7 +593,7 @@
+             }],
+         };
+         let result = Patch::from_ast(syn::parse2(input).unwrap()).unwrap();
+-        assert_eq_sorted!(
++        assert_eq!(
+             format!("{:?}", result.to_token_stream()),
+             format!("{:?}", expected.to_token_stream())
+         );

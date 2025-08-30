@@ -16,7 +16,7 @@ Subject: [PATCH] Upgrade to rustls-native-certs 0.8
 +        }
 +
          let (added, ignored) =
--            root_store.add_parsable_certificates(rustls_native_certs::load_native_certs()?);
+-            root_store.add_parsable_certificates(rustls_native_certs::load_native_certs()?.into_iter().map(|cert| rustls::pki_types::CertificateDer::from(cert.0)));
 +            root_store.add_parsable_certificates(result.certs);
  
          if ignored > 0 {
@@ -57,7 +57,7 @@ Subject: [PATCH] Upgrade to rustls-native-certs 0.8
          #[cfg(all(feature = "native-certs", not(feature = "webpki-roots")))]
          {
              let (added, ignored) = root_store
--                .add_parsable_certificates(&rustls_native_certs::load_native_certs().unwrap());
+-                .add_parsable_certificates(rustls_native_certs::load_native_certs().unwrap().into_iter().map(|cert| rustls::pki_types::CertificateDer::from(cert.0)));
 +                .add_parsable_certificates(rustls_native_certs::load_native_certs().unwrap());
  
              if ignored > 0 {

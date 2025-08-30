@@ -1,0 +1,54 @@
+Description: Inline stripped down version of unavailable dependency execute
+Forwarded: not-needed
+Author: Blair Noctis <ncts@debian.org>
+Last-Update: 2025-03-25
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -141,3 +141,3 @@
+ 
+-[dependencies.execute]
++[disabled.dependencies.execute]
+ version = "0.2.13"
+@@ -291,3 +291,3 @@
+ git = ["git2"]
+-lessopen = ["execute"]
++lessopen = [] #["execute"]
+ minimal-application = [
+--- a/src/lessopen.rs
++++ b/src/lessopen.rs
+@@ -10,3 +10,32 @@
+ use clircle::{Clircle, Identifier};
+-use execute::{shell, Execute};
++//use execute::{shell, Execute};
++use std::process::Command;
++
++trait Execute {
++    fn execute_output(&mut self) -> std::result::Result<std::process::Output, std::io::Error>;
++    fn execute_input_output<D: ?Sized + AsRef<[u8]>>(&mut self, data: &D) -> std::result::Result<std::process::Output, std::io::Error>;
++}
++
++impl Execute for Command {
++    fn execute_output(&mut self) -> std::result::Result<std::process::Output, std::io::Error> {
++        self.spawn()?.wait_with_output()
++    }
++    fn execute_input_output<D: ?Sized + AsRef<[u8]>>(&mut self, data: &D) -> std::result::Result<std::process::Output, std::io::Error> {
++        use std::io::Write;
++        self.stdin(Stdio::piped());
++        let mut child = self.spawn()?;
++        child.stdin.as_mut().unwrap().write_all(data.as_ref())?;
++        child.wait_with_output()
++    }
++}
++
++fn shell<S: AsRef<std::ffi::OsStr>>(cmd: S) -> Command {
++    use std::{ffi::OsString, sync::OnceLock};
++    static SHELL: OnceLock<OsString> = OnceLock::new();
++    let shell = SHELL.get_or_init(|| env::var_os("SHELL").unwrap_or_else(|| OsString::from("sh")));
++    let mut command = Command::new(shell);
++    command.arg("-c");
++    command.arg(cmd);
++    command
++}
+ 

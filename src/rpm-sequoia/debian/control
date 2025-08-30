@@ -2,20 +2,19 @@ Source: rust-rpm-sequoia
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
- rustc:native (>= 1.73) <!nocheck>,
- libstd-rust-dev <!nocheck>,
- librust-anyhow-1+default-dev <!nocheck>,
- librust-buffered-reader-1-dev <!nocheck>,
- librust-cdylib-link-lines-0.1+default-dev (>= 0.1.4-~~) <!nocheck>,
- librust-chrono-0.4+std-dev <!nocheck>,
- librust-lazy-static-1+default-dev <!nocheck>,
- librust-libc-0.2+default-dev <!nocheck>,
- librust-sequoia-openpgp-1+crypto-nettle-dev (>= 1.21.1-~~) <!nocheck>,
- librust-sequoia-openpgp-1-dev (>= 1.21.1-~~) <!nocheck>,
- librust-sequoia-policy-config-0.7+default-dev <!nocheck>,
- librust-thiserror-1+default-dev <!nocheck>
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native,
+ rustc:native (>= 1.79),
+ libstd-rust-dev,
+ librust-anyhow-1+default-dev,
+ librust-cdylib-link-lines-0.1+default-dev (>= 0.1.4-~~),
+ librust-chrono-0.4+std-dev,
+ librust-lazy-static-1+default-dev,
+ librust-libc-0.2+default-dev,
+ librust-sequoia-openpgp-2+crypto-nettle-dev,
+ librust-sequoia-openpgp-2-dev,
+ librust-sequoia-policy-config-0.8+default-dev,
+ librust-thiserror-1+default-dev
 Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
 Uploaders:
  Alexander Kjäll <alexander.kjall@gmail.com>,
@@ -40,8 +39,13 @@ Description: Provides an implementation of the
 Package: librpm-sequoia-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Depends:
  ${misc:Depends},
  librpm-sequoia-1 (= ${binary:Version}),
+Replaces:
+ librpm-sequoia-1 (<< 1.7.0-3),
+Breaks:
+ librpm-sequoia-1 (<< 1.7.0-3),
 Description: Provides an implementation of the
  rpm's pgp interface using Sequoia.

@@ -2,7 +2,7 @@ Index: findutils/src/find/matchers/mod.rs
 ===================================================================
 --- findutils.orig/src/find/matchers/mod.rs
 +++ findutils/src/find/matchers/mod.rs
-@@ -1658,7 +1658,7 @@ mod tests {
+@@ -1798,7 +1798,7 @@ mod tests {
          assert!(config.version_requested);
      }
  
@@ -11,7 +11,7 @@ Index: findutils/src/find/matchers/mod.rs
      fn get_or_create_file_test() {
          use std::fs;
  
-@@ -1682,5 +1682,5 @@ mod tests {
+@@ -1822,5 +1822,5 @@ mod tests {
          }
  
          let _ = fs::remove_file("test_data/get_or_create_file_test");
@@ -22,7 +22,7 @@ Index: findutils/src/find/mod.rs
 ===================================================================
 --- findutils.orig/src/find/mod.rs
 +++ findutils/src/find/mod.rs
-@@ -829,7 +829,7 @@ mod tests {
+@@ -867,7 +867,7 @@ mod tests {
          assert_eq!(deps.get_output_as_string(), "");
      }
  
@@ -31,7 +31,7 @@ Index: findutils/src/find/mod.rs
      fn find_name_links() {
          create_file_link();
  
-@@ -849,9 +849,9 @@ mod tests {
+@@ -887,9 +887,9 @@ mod tests {
              deps.get_output_as_string(),
              fix_up_slashes("./test_data/links/abbbc\n")
          );
@@ -43,7 +43,7 @@ Index: findutils/src/find/mod.rs
      fn find_lname_links() {
          create_file_link();
  
-@@ -872,9 +872,9 @@ mod tests {
+@@ -910,9 +910,9 @@ mod tests {
              deps.get_output_as_string(),
              fix_up_slashes("./test_data/links/link-f\n")
          );
@@ -55,7 +55,7 @@ Index: findutils/src/find/mod.rs
      fn find_ilname_links() {
          create_file_link();
  
-@@ -894,7 +894,7 @@ mod tests {
+@@ -932,7 +932,7 @@ mod tests {
              deps.get_output_as_string(),
              fix_up_slashes("./test_data/links/link-f\n")
          );
@@ -64,7 +64,7 @@ Index: findutils/src/find/mod.rs
  
      #[test]
      fn find_print_then_quit() {
-@@ -1069,7 +1069,7 @@ mod tests {
+@@ -1107,7 +1107,7 @@ mod tests {
          }
      }
  
@@ -73,7 +73,7 @@ Index: findutils/src/find/mod.rs
      #[cfg(target_os = "linux")]
      fn test_no_permission_file_error() {
          use std::{path::Path, process::Command};
-@@ -1099,7 +1099,7 @@ mod tests {
+@@ -1137,7 +1137,7 @@ mod tests {
                  .output()
                  .expect("cannot set file permission");
          }
@@ -82,25 +82,25 @@ Index: findutils/src/find/mod.rs
  
      #[test]
      #[cfg(target_os = "linux")]
-@@ -1337,7 +1337,7 @@ mod tests {
+@@ -1411,7 +1411,7 @@ mod tests {
          assert_eq!(rc, 0);
      }
  
 -    #[test]
-+    /*#[test]
-     fn find_fprint() {
-         let deps = FakeDependencies::new();
-         let rc = find_main(
-@@ -1352,7 +1352,7 @@ mod tests {
-         assert_eq!(rc, 0);
++/*    #[test]
+     fn find_fprinter() {
+         let printer = ["fprint", "fprint0"];
  
-         let _ = fs::remove_file("test_data/find_fprint");
--    }
-+    }*/
- 
+@@ -1431,7 +1431,7 @@ mod tests {
+             let _ = fs::remove_file(format!("test_data/find_{p}"));
+         }
+     }
+-
++*/
      #[test]
      fn test_follow() {
-@@ -1361,7 +1361,7 @@ mod tests {
+         let deps = FakeDependencies::new();
+@@ -1439,7 +1439,7 @@ mod tests {
          assert_eq!(rc, 0);
      }
  
@@ -109,7 +109,7 @@ Index: findutils/src/find/mod.rs
      #[test]
      fn test_h_flag() {
          let deps = FakeDependencies::new();
-@@ -1428,7 +1428,7 @@ mod tests {
+@@ -1506,7 +1506,7 @@ mod tests {
              deps.get_output_as_string(),
              fix_up_slashes("./test_data/links/link-d\n")
          );
@@ -117,7 +117,7 @@ Index: findutils/src/find/mod.rs
 +    }*/
  
      #[test]
-     #[cfg(unix)]
+     fn find_fprintf() {
 Index: findutils/src/find/matchers/access.rs
 ===================================================================
 --- findutils.orig/src/find/matchers/access.rs
@@ -159,7 +159,7 @@ Index: findutils/src/find/matchers/name.rs
 ===================================================================
 --- findutils.orig/src/find/matchers/name.rs
 +++ findutils/src/find/matchers/name.rs
-@@ -83,7 +83,7 @@ mod tests {
+@@ -91,7 +91,7 @@ mod tests {
          assert!(!matcher.matches(&abbbc, &mut deps.new_matcher_io()));
      }
  
@@ -168,7 +168,7 @@ Index: findutils/src/find/matchers/name.rs
      fn matches_against_link_file_name() {
          create_file_link();
  
-@@ -91,7 +91,7 @@ mod tests {
+@@ -99,7 +99,7 @@ mod tests {
          let matcher = NameMatcher::new("link?f", false);
          let deps = FakeDependencies::new();
          assert!(matcher.matches(&link_f, &mut deps.new_matcher_io()));
@@ -177,7 +177,7 @@ Index: findutils/src/find/matchers/name.rs
  
      #[test]
      fn caseless_matching_with_wrong_case_returns_true() {
-@@ -117,7 +117,7 @@ mod tests {
+@@ -125,7 +125,7 @@ mod tests {
          assert!(!matcher.matches(&abbbc, &mut deps.new_matcher_io()));
      }
  
@@ -186,18 +186,19 @@ Index: findutils/src/find/matchers/name.rs
      fn caseless_matches_against_link_file_name() {
          create_file_link();
  
-@@ -125,5 +125,5 @@ mod tests {
-         let matcher = NameMatcher::new("linK?f", true);
+@@ -134,6 +134,7 @@ mod tests {
          let deps = FakeDependencies::new();
          assert!(matcher.matches(&link_f, &mut deps.new_matcher_io()));
--    }
-+    }*/
- }
+     }
++    */
+ 
+     #[test]
+     #[cfg(unix)]
 Index: findutils/src/find/matchers/printf.rs
 ===================================================================
 --- findutils.orig/src/find/matchers/printf.rs
 +++ findutils/src/find/matchers/printf.rs
-@@ -909,7 +909,7 @@ mod tests {
+@@ -923,7 +923,7 @@ mod tests {
          assert_eq!("512", deps.get_output_as_string());
      }
  
@@ -206,7 +207,7 @@ Index: findutils/src/find/matchers/printf.rs
      fn test_printf_symlinks() {
          #[cfg(unix)]
          {
-@@ -1010,7 +1010,7 @@ mod tests {
+@@ -1024,7 +1024,7 @@ mod tests {
              ],
              deps.get_output_as_string().lines().collect::<Vec<_>>()
          );
@@ -277,7 +278,7 @@ Index: findutils/tests/find_cmd_tests.rs
 ===================================================================
 --- findutils.orig/tests/find_cmd_tests.rs
 +++ findutils/tests/find_cmd_tests.rs
-@@ -277,7 +277,7 @@ fn empty_files() {
+@@ -397,7 +397,7 @@ fn empty_files() {
          )));
  }
  
@@ -286,7 +287,7 @@ Index: findutils/tests/find_cmd_tests.rs
  #[test]
  fn find_printf() {
      #[cfg(unix)]
-@@ -395,7 +395,7 @@ fn find_printf() {
+@@ -537,7 +537,7 @@ fn find_printf() {
              ]
              .join(""),
          ));
@@ -295,7 +296,7 @@ Index: findutils/tests/find_cmd_tests.rs
  
  #[cfg(unix)]
  #[serial(working_dir)]
-@@ -501,7 +501,7 @@ fn find_mount_xdev() {
+@@ -643,7 +643,7 @@ fn find_mount_xdev() {
          .stdout(predicate::str::contains("abbbc"));
  }
  
@@ -304,7 +305,7 @@ Index: findutils/tests/find_cmd_tests.rs
  #[test]
  fn find_accessible() {
      Command::cargo_bin("find")
-@@ -528,7 +528,7 @@ fn find_accessible() {
+@@ -670,7 +670,7 @@ fn find_accessible() {
          .success()
          .stderr(predicate::str::is_empty())
          .stdout(predicate::str::contains("abbbc").not());
@@ -313,7 +314,7 @@ Index: findutils/tests/find_cmd_tests.rs
  
  #[serial(working_dir)]
  #[test]
-@@ -794,7 +794,7 @@ fn find_age_range() {
+@@ -936,7 +936,7 @@ fn find_age_range() {
      }
  }
  
@@ -322,7 +323,7 @@ Index: findutils/tests/find_cmd_tests.rs
  #[cfg(unix)]
  #[serial(working_dir)]
  fn find_fs() {
-@@ -857,9 +857,9 @@ fn find_fs() {
+@@ -999,9 +999,9 @@ fn find_fs() {
          .success()
          .stdout(predicate::str::contains("./test_data/links/link-missing"))
          .stderr(predicate::str::is_empty());
@@ -334,7 +335,7 @@ Index: findutils/tests/find_cmd_tests.rs
  #[serial(working_dir)]
  fn find_samefile() {
      use std::fs;
-@@ -911,7 +911,7 @@ fn find_samefile() {
+@@ -1053,7 +1053,7 @@ fn find_samefile() {
          .stderr(predicate::str::contains("not-exist-file"));
  
      fs::remove_file("test_data/links/hard_link").unwrap();
@@ -343,28 +344,27 @@ Index: findutils/tests/find_cmd_tests.rs
  
  #[test]
  #[serial(working_dir)]
-@@ -950,7 +950,7 @@ fn find_daystart() {
+@@ -1092,7 +1092,7 @@ fn find_daystart() {
          .stderr(predicate::str::is_empty());
  }
  
 -#[test]
 +/*#[test]
  #[serial(working_dir)]
- fn find_fprint() {
-     let _ = fs::remove_file("test_data/find_fprint");
-@@ -970,9 +970,9 @@ fn find_fprint() {
-     assert!(contents.contains("test_data/simple"));
- 
-     let _ = fs::remove_file("test_data/find_fprint");
--}
-+}*/
+ fn find_fprinter() {
+     let printer = ["fprint", "fprint0"];
+@@ -1121,8 +1121,9 @@ fn find_fprinter() {
+         let _ = fs::remove_file(format!("test_data/find_{p}"));
+     }
+ }
++*/
  
 -#[test]
 +/*#[test]
  #[serial(working_dir)]
  fn find_follow() {
      Command::cargo_bin("find")
-@@ -982,7 +982,7 @@ fn find_follow() {
+@@ -1132,7 +1133,7 @@ fn find_follow() {
          .success()
          .stdout(predicate::str::contains("test_data/links/link-f"))
          .stderr(predicate::str::is_empty());

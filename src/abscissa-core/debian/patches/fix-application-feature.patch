@@ -1,5 +1,40 @@
+diff --git a/src/config.rs b/src/config.rs
+index 4a952b5..cbccad8 100644
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -16,7 +16,7 @@ use serde::de::DeserializeOwned;
+ use std::{fmt::Debug, io::Read};
+ 
+ /// Configuration reader.
+-#[cfg(feature = "application")]
++#[cfg(all(feature = "default", feature = "application"))]
+ pub type Reader<C> = std::sync::Arc<C>;
+ 
+ /// Trait for Abscissa configuration data structures.
+diff --git a/src/error/framework.rs b/src/error/framework.rs
+index f686668..45083d8 100644
+--- a/src/error/framework.rs
++++ b/src/error/framework.rs
+@@ -42,7 +42,7 @@ impl std::error::Error for FrameworkError {
+ #[derive(Clone, Debug, Eq, PartialEq)]
+ pub enum FrameworkErrorKind {
+     /// Errors relating to components
+-    #[cfg(feature = "application")]
++    #[cfg(all(feature = "default", feature = "application"))]
+     ComponentError,
+ 
+     /// Error reading configuration file
+@@ -79,7 +79,7 @@ impl FrameworkErrorKind {
+     /// Get a message to display for this error
+     pub fn msg(&self) -> &'static str {
+         match self {
+-            #[cfg(feature = "application")]
++            #[cfg(all(feature = "default", feature = "application"))]
+             FrameworkErrorKind::ComponentError => "component error",
+             FrameworkErrorKind::ConfigError => "config error",
+             FrameworkErrorKind::IoError => "I/O operation failed",
 diff --git a/src/lib.rs b/src/lib.rs
-index ef24b0e..972759f 100644
+index 034a076..ef40cd9 100644
 --- a/src/lib.rs
 +++ b/src/lib.rs
 @@ -28,19 +28,19 @@ pub mod terminal;
@@ -38,7 +73,7 @@ index ef24b0e..972759f 100644
 @@ -78,5 +78,5 @@ pub use fs_err as fs;
  pub use secrecy as secret;
  #[cfg(feature = "secrets")]
- pub use secrecy::Secret;
+ pub use secrecy::{SecretBox, SecretSlice, SecretString};
 -#[cfg(feature = "application")]
 +#[cfg(all(feature = "default", feature = "application"))]
  pub use semver::Version;

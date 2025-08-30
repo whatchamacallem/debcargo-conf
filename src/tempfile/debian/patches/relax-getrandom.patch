@@ -1,0 +1,25 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -86,7 +86,7 @@
+ features = ["fs"]
+ 
+ [target.'cfg(any(unix, windows, target_os = "wasi"))'.dependencies.getrandom]
+-version = "0.3.0"
++version = "0.2"
+ optional = true
+ default-features = false
+ 
+--- a/src/util.rs
++++ b/src/util.rs
+@@ -58,8 +58,9 @@
+             any(windows, unix, target_os = "redox", target_os = "wasi")
+         ))]
+         if i == 3 {
+-            if let Ok(seed) = getrandom::u64() {
+-                rng.seed(seed);
++            let mut seed = [0u8; 8];
++            if getrandom::getrandom(&mut seed).is_ok() {
++                rng.seed(u64::from_ne_bytes(seed));
+             }
+         }
+         let _ = i; // avoid unused variable warning for the above.

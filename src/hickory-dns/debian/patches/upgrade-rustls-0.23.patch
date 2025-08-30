@@ -1,0 +1,30 @@
+Forwarded: not-needed
+Last-Update: 2025-03-31
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -108,3 +108,3 @@
+ [dependencies.rustls]
+-version = "0.21.6"
++version = "0.23"
+ optional = true
+--- a/tests/named_rustls_tests.rs
++++ b/tests/named_rustls_tests.rs
+@@ -18,3 +18,3 @@
+ 
+-use rustls::Certificate;
++use rustls::pki_types::CertificateDer as Certificate;
+ use rustls::ClientConfig;
+@@ -56,6 +56,6 @@
+             let mut root_store = RootCertStore::empty();
+-            root_store.add(&cert).expect("bad certificate");
++            root_store.add(cert).expect("bad certificate");
+ 
+             let config = ClientConfig::builder()
+-                .with_safe_defaults()
++                //.with_safe_defaults()
+                 .with_root_certificates(root_store)
+@@ -100,3 +100,3 @@
+ fn to_trust_anchor(cert_der: &[u8]) -> Certificate {
+-    Certificate(cert_der.to_vec())
++    Certificate::from_slice(cert_der)
+ }

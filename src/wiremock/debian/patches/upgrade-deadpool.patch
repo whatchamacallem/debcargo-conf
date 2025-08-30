@@ -1,0 +1,39 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 9d7716e..0c9c0e5 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -64,14 +64,11 @@ path = "tests/tokio.rs"
+ [dependencies.assert-json-diff]
+ version = "2.0.1"
+ 
+-[dependencies.async-trait]
+-version = "0.1"
+-
+ [dependencies.base64]
+ version = "0.22"
+ 
+ [dependencies.deadpool]
+-version = "0.10.0"
++version = "0.12"
+ 
+ [dependencies.futures]
+ version = "0.3.5"
+diff --git a/src/mock_server/pool.rs b/src/mock_server/pool.rs
+index 6cea1b6..50644f4 100644
+--- a/src/mock_server/pool.rs
++++ b/src/mock_server/pool.rs
+@@ -1,6 +1,5 @@
+ use crate::mock_server::bare_server::BareMockServer;
+ use crate::MockServer;
+-use async_trait::async_trait;
+ use deadpool::managed::{Metrics, Object, Pool};
+ use once_cell::sync::Lazy;
+ use std::convert::Infallible;
+@@ -52,7 +51,6 @@ pub(crate) async fn get_pooled_mock_server() -> PooledMockServer {
+ #[derive(Debug)]
+ pub(crate) struct MockServerPoolManager;
+ 
+-#[async_trait]
+ impl deadpool::managed::Manager for MockServerPoolManager {
+     type Error = Infallible;
+     type Type = BareMockServer;

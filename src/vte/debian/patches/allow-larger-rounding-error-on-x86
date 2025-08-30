@@ -1,32 +1,27 @@
-Index: vte/src/ansi.rs
-===================================================================
---- vte.orig/src/ansi.rs
-+++ vte/src/ansi.rs
-@@ -2234,19 +2234,23 @@ mod tests {
-     #[test]
-     #[cfg(not(feature = "no_std"))]
+--- a/src/ansi.rs
++++ b/src/ansi.rs
+@@ -2442,8 +2442,12 @@
      fn contrast() {
 +        #[cfg(target_arch = "x86")]
 +        let maxerror = f64::EPSILON * 10.0;
 +        #[cfg(not(target_arch = "x86"))]
 +        let maxerror = f64::EPSILON;
-         let rgb1 = Rgb { r: 0xff, g: 0xff, b: 0xff };
+         let rgb1 = Rgb { r: 0xFF, g: 0xFF, b: 0xFF };
          let rgb2 = Rgb { r: 0x00, g: 0x00, b: 0x00 };
 -        assert!((rgb1.contrast(rgb2) - 21.).abs() < f64::EPSILON);
 +        assert!((rgb1.contrast(rgb2) - 21.).abs() < maxerror);
  
-         let rgb1 = Rgb { r: 0xff, g: 0xff, b: 0xff };
+         let rgb1 = Rgb { r: 0xFF, g: 0xFF, b: 0xFF };
 -        assert!((rgb1.contrast(rgb1) - 1.).abs() < f64::EPSILON);
 +        assert!((rgb1.contrast(rgb1) - 1.).abs() < maxerror);
  
-         let rgb1 = Rgb { r: 0xff, g: 0x00, b: 0xff };
-         let rgb2 = Rgb { r: 0x00, g: 0xff, b: 0x00 };
+@@ -2451,3 +2455,3 @@
+         let rgb2 = Rgb { r: 0x00, g: 0xFF, b: 0x00 };
 -        assert!((rgb1.contrast(rgb2) - 2.285_543_608_124_253_3).abs() < f64::EPSILON);
 +        assert!((rgb1.contrast(rgb2) - 2.285_543_608_124_253_3).abs() < maxerror);
  
-         let rgb1 = Rgb { r: 0x12, g: 0x34, b: 0x56 };
-         let rgb2 = Rgb { r: 0xfe, g: 0xdc, b: 0xba };
+@@ -2455,3 +2459,3 @@
+         let rgb2 = Rgb { r: 0xFE, g: 0xDC, b: 0xBA };
 -        assert!((rgb1.contrast(rgb2) - 9.786_558_997_257_74).abs() < f64::EPSILON);
 +        assert!((rgb1.contrast(rgb2) - 9.786_558_997_257_74).abs() < maxerror);
      }
- }

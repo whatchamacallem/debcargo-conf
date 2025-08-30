@@ -1,0 +1,67 @@
+Description: Fix or disable tests missing data/fixtures
+Forwarded: not-needed
+Author: Blair Noctis <ncts@debian.org>
+Last-Update: 2025-03-25
+--- a/tests/test_samples.rs
++++ b/tests/test_samples.rs
+@@ -172,2 +172,3 @@
+ #[test]
++#[cfg(any())]
+ fn all_the_fields() {
+@@ -550,4 +551,9 @@
+ fn current_dir() {
++    const manifest: &str = "[package]\nname = 'namedep'\n[lib]\nname = 'different_name'";
++    let dir = tempfile::tempdir().unwrap();
++    std::fs::create_dir(dir.path().join("src")).unwrap();
++    std::fs::write(dir.path().join("Cargo.toml"), manifest).unwrap();
++    std::fs::write(dir.path().join("src").join("lib.rs"), "").unwrap();
+     let meta = MetadataCommand::new()
+-        .current_dir("tests/all/namedep")
++        .current_dir(dir.path())
+         .exec()
+@@ -580,2 +586,3 @@
+ #[test]
++#[cfg(any())]
+ fn advanced_feature_configuration() {
+@@ -655,5 +662,15 @@
+ fn basic_workspace_root_package_exists() {
++    const root_manifest: &str = "[package]\nname = 'ex_bin'\n[dependencies]\nex_lib = { path = './ex_lib' }\n[workspace]";
++    const ex_lib_manifest: &str = "[package]\nname = 'ex_lib'";
++    let dir = tempfile::tempdir().unwrap();
++    std::fs::create_dir(dir.path().join("src")).unwrap();
++    std::fs::create_dir(dir.path().join("ex_lib")).unwrap();
++    std::fs::create_dir(dir.path().join("ex_lib").join("src")).unwrap();
++    std::fs::write(dir.path().join("Cargo.toml"), root_manifest).unwrap();
++    std::fs::write(dir.path().join("ex_lib").join("Cargo.toml"), ex_lib_manifest).unwrap();
++    std::fs::write(dir.path().join("src").join("lib.rs"), "").unwrap();
++    std::fs::write(dir.path().join("ex_lib").join("src").join("lib.rs"), "").unwrap();
+     // First try with dependencies
+     let meta = MetadataCommand::new()
+-        .manifest_path("tests/basic_workspace/Cargo.toml")
++        .manifest_path(dir.path().join("Cargo.toml"))
+         .exec()
+@@ -663,3 +680,3 @@
+     let meta = MetadataCommand::new()
+-        .manifest_path("tests/basic_workspace/Cargo.toml")
++        .manifest_path(dir.path().join("Cargo.toml"))
+         .no_deps()
+--- a/tests/selftest.rs
++++ b/tests/selftest.rs
+@@ -126,4 +126,7 @@
+     std::env::set_var("CARGO_PROFILE", "3");
++    let dir = tempfile::tempdir().unwrap();
++    let path = dir.path().join("Cargo.toml");
++    std::fs::copy("Cargo.toml", &path).unwrap();
+     let metadata = MetadataCommand::new()
+-        .manifest_path("Cargo.toml")
++        .manifest_path(path)
+         .exec()
+@@ -170,4 +173,7 @@
+ fn workspace_default_packages() {
++    let dir = tempfile::tempdir().unwrap();
++    let path = dir.path().join("Cargo.toml");
++    std::fs::copy("Cargo.toml", &path).unwrap();
+     let metadata = MetadataCommand::new()
+-        .manifest_path("Cargo.toml")
++        .manifest_path(path)
+         .exec()

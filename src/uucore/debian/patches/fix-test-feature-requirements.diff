@@ -2,7 +2,7 @@ Index: uucore/src/lib/features/entries.rs
 ===================================================================
 --- uucore.orig/src/lib/features/entries.rs
 +++ uucore/src/lib/features/entries.rs
-@@ -363,6 +363,7 @@ pub fn grp2gid(name: &str) -> IOResult<g
+@@ -361,6 +361,7 @@ pub fn grp2gid(name: &str) -> IOResult<g
  }
  
  #[cfg(test)]
@@ -10,3 +10,23 @@ Index: uucore/src/lib/features/entries.rs
  mod test {
      use super::*;
  
+Index: uucore/src/lib/features/proc_info.rs
+===================================================================
+--- uucore.orig/src/lib/features/proc_info.rs
++++ uucore/src/lib/features/proc_info.rs
+@@ -472,6 +472,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(feature = "libc")]
+     fn test_thread_ids() {
+         let main_tid = unsafe { crate::libc::gettid() };
+         std::thread::spawn(move || {
+@@ -503,6 +504,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(feature = "process")]
+     fn test_uid_gid() {
+         let mut pid_entry = ProcessInformation::try_new(
+             PathBuf::from_str(&format!("/proc/{}", current_pid())).unwrap(),

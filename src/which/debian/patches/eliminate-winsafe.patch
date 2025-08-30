@@ -1,75 +1,19 @@
-This patch is based on a revert of upstream commits
-071683c2d5af17f3b0a61f8f706e47a430f08555,
-part of 7151f40062cb46b4f47598b1e324035808125d53 and
-b2b8068d28562a955ddf3432244eda6a3c91676a adapted for use in the Debian package
-by Peter Michael Green
-
---- which.orig/src/checker.rs
-+++ which/src/checker.rs
-@@ -13,3 +13,3 @@
- impl Checker for ExecutableChecker {
--    #[cfg(any(unix, target_os = "wasi", target_os = "redox"))]
-+    #[cfg(any(unix, target_os = "wasi"))]
-     fn is_valid(&self, path: &Path) -> bool {
-@@ -52,3 +52,3 @@
-             .unwrap_or(false)
--            && (path.extension().is_some() || matches_arch(path));
-+            ;
-         #[cfg(feature = "tracing")]
-@@ -75,8 +75,0 @@
--
--#[cfg(target_os = "windows")]
--fn matches_arch(path: &Path) -> bool {
--    let ret = winsafe::GetBinaryType(&path.display().to_string()).is_ok();
--    #[cfg(feature = "tracing")]
--    tracing::trace!("{} matches_arch() = {ret}", path.display());
--    ret
--}
---- which.orig/src/lib.rs
-+++ which/src/lib.rs
-@@ -18,4 +18,2 @@
- 
--#![forbid(unsafe_code)]
--
- mod checker;
---- which.orig/src/finder.rs
-+++ which/src/finder.rs
-@@ -230,2 +230,3 @@
-                 } else {
-+                    let bare_file = p.extension().map(|_| p.clone());
-                     #[cfg(feature = "tracing")]
-@@ -243,11 +244,13 @@
-                     Box::new(
--                        iter::once(p.clone()).chain(path_extensions.iter().map(move |e| {
--                            // Append the extension.
--                            let mut p = p.clone().into_os_string();
--                            p.push(e);
--                            let ret = PathBuf::from(p);
--                            #[cfg(feature = "tracing")]
--                            tracing::trace!("possible extension: {}", ret.display());
--                            ret
--                        })),
-+                        bare_file
-+                            .into_iter()
-+                            .chain(path_extensions.iter().map(move |e| {
-+                                // Append the extension.
-+                                let mut p = p.clone().into_os_string();
-+                                p.push(e);
-+                                let ret = PathBuf::from(p);
-+                                #[cfg(feature = "tracing")]
-+                                tracing::trace!("possible extension: {}", ret.display());
-+                                ret
-+                            })),
-                     )
---- which.orig/Cargo.toml
-+++ which/Cargo.toml
-@@ -55,3 +55,3 @@
- 
--[target."cfg(any(unix, target_os = \"wasi\", target_os = \"redox\"))".dependencies.rustix]
-+[dependencies.rustix]
- version = "0.38.30"
-@@ -66,4 +66 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -45,7 +45,6 @@
+ real-sys = [
+     "dep:env_home",
+     "dep:rustix",
+-    "dep:winsafe",
+ ]
+ regex = ["dep:regex"]
+ tracing = ["dep:tracing"]
+@@ -83,7 +82,3 @@
+ version = "0.1.0"
+ optional = true
  
 -[target."cfg(windows)".dependencies.winsafe]
 -version = "0.0.19"
 -features = ["kernel"]
+-optional = true
+

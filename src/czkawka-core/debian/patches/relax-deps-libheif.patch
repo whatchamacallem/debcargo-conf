@@ -1,0 +1,46 @@
+Decription: adapt code to build with libheif-rs 0.20
+ czkawka normally depends on libheif-rs 0.18
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -120,11 +120,11 @@
+ default-features = false
+ 
+ [dependencies.libheif-rs]
+-version = "=0.18.0"
++version = "2.3"
+ optional = true
+ 
+ [dependencies.libheif-sys]
+-version = "=1.14.2"
++version = "5.0"
+ optional = true
+ 
+ [dependencies.libraw-rs]
+--- a/src/common_image.rs
++++ b/src/common_image.rs
+@@ -30,8 +30,8 @@
+ 
+ use crate::common;
+ use crate::common::{create_crash_message, HEIC_EXTENSIONS, IMAGE_RS_EXTENSIONS, IMAGE_RS_SIMILAR_IMAGES_EXTENSIONS, JXL_IMAGE_EXTENSIONS, RAW_IMAGE_EXTENSIONS};
+-// #[cfg(feature = "heif")]
+-// use libheif_rs::LibHeif;
++#[cfg(feature = "heif")]
++use libheif_rs::LibHeif;
+ 
+ // TODO this code is ugly - this should exists in image-rs or be taken from official example of jxl-oxide
+ // Its presence offends everything good in this world
+@@ -99,11 +99,11 @@
+ 
+ #[cfg(feature = "heif")]
+ pub fn get_dynamic_image_from_heic(path: &str) -> anyhow::Result<DynamicImage> {
+-    // let libheif = LibHeif::new();
++    let libheif = LibHeif::new();
+     let im = HeifContext::read_from_file(path)?;
+     let handle = im.primary_image_handle()?;
+-    // let image = libheif.decode(&handle, ColorSpace::Rgb(RgbChroma::Rgb), None)?; // Enable when using libheif 0.19
+-    let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb), None)?;
++    let image = libheif.decode(&handle, ColorSpace::Rgb(RgbChroma::Rgb), None)?; // Enable when using libheif 0.19
++    //let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb), None)?;
+     let width = image.width();
+     let height = image.height();
+     let planes = image.planes();

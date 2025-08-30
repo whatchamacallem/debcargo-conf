@@ -1,0 +1,182 @@
+Description: When running tests for serde only feature, some tests were failing
+ due to the need of the 'help' feature to be enabled.
+Author: Andre Paiusco <debian@paiusco.org>
+Forwarded: https://github.com/google/argh/pull/202
+Subject: [PATCH] Add cfg feature for specific test scenarios
+
+---
+ argh/tests/lib.rs | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/tests/lib.rs b/tests/lib.rs
+index 6a54ac3..f289968 100644
+--- a/tests/lib.rs
++++ b/tests/lib.rs
+@@ -82,6 +82,7 @@ fn custom_from_str_example() {
+ }
+ 
+ #[test]
++#[cfg(feature = "help")]
+ fn help_trigger_example() {
+     /// Height options
+     #[derive(FromArgs)]
+@@ -301,6 +302,7 @@ fn dynamic_subcommand_example() {
+ }
+ 
+ #[test]
++#[cfg(feature = "help")]
+ fn multiline_doc_comment_description() {
+     #[derive(FromArgs)]
+     /// Short description
+@@ -327,6 +329,7 @@ Options:
+ }
+ 
+ #[test]
++#[cfg(feature = "help")]
+ fn escaped_doc_comment_description() {
+     #[derive(FromArgs)]
+     /// A \description\:
+@@ -437,6 +440,7 @@ fn missing_option_value() {
+     assert!(e.status.is_err());
+ }
+ 
++#[cfg(feature = "help")]
+ fn assert_help_string<T: FromArgs>(help_str: &str) {
+     match T::from_args(&["test_arg_0"], &["--help"]) {
+         Ok(_) => panic!("help was parsed as args"),
+@@ -488,6 +492,7 @@ mod options {
+     }
+ 
+     #[test]
++    #[cfg(feature = "help")]
+     fn repeating() {
+         assert_help_string::<Repeating>(
+             r###"Usage: test_arg_0 [-n <n...>]
+@@ -510,6 +515,7 @@ Options:
+     }
+ 
+     #[test]
++    #[cfg(feature = "help")]
+     fn with_arg_name() {
+         assert_help_string::<WithArgName>(
+             r###"Usage: test_arg_0 [--option-name <name>]
+@@ -539,6 +545,7 @@ mod positional {
+     }
+ 
+     #[test]
++    #[cfg(feature = "help")]
+     fn repeating() {
+         assert_output(&["5"], LastRepeating { a: 5, b: vec![] });
+         assert_output(&["5", "foo"], LastRepeating { a: 5, b: vec!["foo".into()] });
+@@ -579,6 +586,7 @@ Options:
+     }
+ 
+     #[test]
++    #[cfg(feature = "help")]
+     fn positional_greedy() {
+         assert_output(&["5"], LastRepeatingGreedy { a: 5, b: false, c: None, d: vec![] });
+         assert_output(
+@@ -1038,12 +1046,14 @@ mod fuchsia_commandline_tools_rubric {
+     /// Second subcommand for testing `help`.
+     struct HelpSecondSub {}
+ 
++    #[cfg(feature = "help")]
+     fn expect_help(args: &[&str], expected_help_string: &str) {
+         let e = HelpTopLevel::from_args(&["cmdname"], args).expect_err("should exit early");
+         assert_eq!(expected_help_string, e.output);
+         e.status.expect("help returned an error");
+     }
+ 
++    #[cfg(feature = "help")]
+     const MAIN_HELP_STRING: &str = r###"Usage: cmdname <command> [<args>]
+ 
+ A type for testing `--help`/`help`
+@@ -1055,6 +1065,7 @@ Commands:
+   first             First subcommmand for testing `help`.
+ "###;
+ 
++    #[cfg(feature = "help")]
+     const FIRST_HELP_STRING: &str = r###"Usage: cmdname first <command> [<args>]
+ 
+ First subcommmand for testing `help`.
+@@ -1066,6 +1077,7 @@ Commands:
+   second            Second subcommand for testing `help`.
+ "###;
+ 
++    #[cfg(feature = "help")]
+     const SECOND_HELP_STRING: &str = r###"Usage: cmdname first second
+ 
+ Second subcommand for testing `help`.
+@@ -1075,31 +1087,37 @@ Options:
+ "###;
+ 
+     #[test]
++    #[cfg(feature = "help")]
+     fn help_keyword_main() {
+         expect_help(&["help"], MAIN_HELP_STRING)
+     }
+ 
+     #[test]
++    #[cfg(feature = "help")]
+     fn help_keyword_with_following_subcommand() {
+         expect_help(&["help", "first"], FIRST_HELP_STRING);
+     }
+ 
+     #[test]
++    #[cfg(feature = "help")]
+     fn help_keyword_between_subcommands() {
+         expect_help(&["first", "help", "second"], SECOND_HELP_STRING);
+     }
+ 
+     #[test]
++    #[cfg(feature = "help")]
+     fn help_keyword_with_two_trailing_subcommands() {
+         expect_help(&["help", "first", "second"], SECOND_HELP_STRING);
+     }
+ 
+     #[test]
++    #[cfg(feature = "help")]
+     fn help_flag_main() {
+         expect_help(&["--help"], MAIN_HELP_STRING);
+     }
+ 
+     #[test]
++    #[cfg(feature = "help")]
+     fn help_flag_subcommand() {
+         expect_help(&["first", "--help"], FIRST_HELP_STRING);
+     }
+@@ -1239,6 +1257,7 @@ Options:
+     }
+ 
+     #[test]
++    #[cfg(feature = "help")]
+     fn help_example() {
+         assert_help_string::<HelpExample>(
+             r###"Usage: test_arg_0 [-f] [--really-really-really-long-name-for-pat] -s <scribble> [-v] <command> [<args>]
+@@ -1282,6 +1301,7 @@ Error codes:
+     }
+ 
+     #[test]
++    #[cfg(feature = "help")]
+     fn with_arg_name() {
+         assert_help_string::<WithArgName>(
+             r###"Usage: test_arg_0 <name>
+@@ -1298,6 +1318,7 @@ Options:
+     }
+ 
+     #[test]
++    #[cfg(feature = "help")]
+     fn hidden_help_attribute() {
+         #[derive(FromArgs)]
+         /// Short description
+@@ -1669,6 +1690,7 @@ fn redact_arg_values_subcommand_with_space_in_name() {
+ }
+ 
+ #[test]
++#[cfg(feature = "help")]
+ fn redact_arg_values_produces_help() {
+     #[derive(argh::FromArgs, Debug, PartialEq)]
+     /// Woot
+-- 
+2.47.2
+

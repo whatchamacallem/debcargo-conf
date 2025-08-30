@@ -10,6 +10,14 @@ collapse_features = true
 # seems to have a bug and generates a feature for every optional
 # dependency even when they use the dep: syntax
 
+# avoid timeout on riscv64
+[packages.lib]
+test_architecture = ["!riscv64"]
+
+# but attempt at least the default set
+[packages."lib+default"]
+test_architecture = []
+
 [packages."lib+@"]
 # exactly one crypto backend must be enabled.  Tests that enable both
 # nettle and openssl (e.g. --all-features) are implausible:
