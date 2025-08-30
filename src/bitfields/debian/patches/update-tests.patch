@@ -1,0 +1,54 @@
+Description: Adapt tests' stderr to Debian's rust toolchain
+ Tests in this package expect the stderr of compile failures to be produced by
+ version nightly-2024-12-15 of the rust toolchain (as per the source
+ repository's rust-toolchain.toml). Our current toolchain outputs slightly
+ different text, so the expected stderr needs to be adapted. This patch
+ introduces no functional differences. It must not be forwarded since upstream
+ made an intentional choice of toolchain which is not compatible with this
+ patch.
+Author: NoisyCoil <noisycoil@tutanota.com>
+Forwarded: not-needed
+Last-Update: 2025-07-14
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/tests/compile_error_cases/bitfield_field_defined_bits_0.stderr
++++ b/tests/compile_error_cases/bitfield_field_defined_bits_0.stderr
+@@ -2,4 +2,4 @@
+  --> tests/compile_error_cases/bitfield_field_defined_bits_0.rs:5:7
+   |
+ 5 |     #[bits(0)]
+-  |       ^^^^^^^
++  |       ^^^^
+--- a/tests/compile_error_cases/bitfield_field_nested_bitfield_without_defined_bits.stderr
++++ b/tests/compile_error_cases/bitfield_field_nested_bitfield_without_defined_bits.stderr
+@@ -1,6 +1,5 @@
+ error: Custom and nested field types require a defined bit size, otherwise we can't determine the size of the field.
+  --> tests/compile_error_cases/bitfield_field_nested_bitfield_without_defined_bits.rs:7:5
+   |
+-7 | /     #[bits(default = NestedBitfield::new())]
+-8 | |     nested_field: NestedBitfield,
+-  | |________________________________^
++7 |     #[bits(default = NestedBitfield::new())]
++  |     ^
+--- a/tests/compile_error_cases/bitfield_padding_field_with_access.stderr
++++ b/tests/compile_error_cases/bitfield_padding_field_with_access.stderr
+@@ -2,4 +2,4 @@
+  --> tests/compile_error_cases/bitfield_padding_field_with_access.rs:5:7
+   |
+ 5 |     #[bits(access = ro)]
+-  |       ^^^^^^^^^^^^^^^^^
++  |       ^^^^
+--- a/tests/compile_error_cases/bitfield_unsupported_type.stderr
++++ b/tests/compile_error_cases/bitfield_unsupported_type.stderr
+@@ -1,9 +1,5 @@
+ error: The 'bitfield' attribute must have an unsigned integer type as its first argument.
+  --> tests/compile_error_cases/bitfield_unsupported_type.rs:4:1
+   |
+-4 | / pub struct Bitfield {
+-5 | |     a: u8,
+-6 | |     b: u8,
+-7 | |     c: u8,
+-8 | | }
+-  | |_^
++4 | pub struct Bitfield {
++  | ^^^
