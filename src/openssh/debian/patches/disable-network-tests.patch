@@ -1,0 +1,29 @@
+--- a/tests/openssh.rs
++++ b/tests/openssh.rs
+@@ -792,26 +792,6 @@
+ }
+ 
+ #[tokio::test]
+-async fn auth_failed() {
+-    let addr = if cfg!(ci) {
+-        // prefer the known-accessible test server when available
+-        addr().replace("test-user", "bad-user")
+-    } else {
+-        String::from("ssh://openssh-tester@login.csail.mit.edu")
+-    };
+-
+-    for err in connects_err(&addr).await {
+-        match err {
+-            Error::Connect(e) => {
+-                eprintln!("{:?}", e);
+-                assert_eq!(e.kind(), io::ErrorKind::PermissionDenied);
+-            }
+-            e => unreachable!("{:?}", e),
+-        }
+-    }
+-}
+-
+-#[tokio::test]
+ #[cfg_attr(not(ci), ignore)]
+ async fn remote_socket_forward() {
+     let sessions = connects().await;
