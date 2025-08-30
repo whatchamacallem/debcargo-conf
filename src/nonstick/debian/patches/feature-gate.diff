@@ -1,0 +1,36 @@
+Description: link feature is not a default but required for the package.
+Author: Eddie Billoir <lechatp@outlook.fr>
+Index: nonstick/src/lib.rs
+===================================================================
+--- nonstick.orig/src/lib.rs
++++ nonstick/src/lib.rs
+@@ -269,6 +269,9 @@ pub use crate::{
+     handle::{ModuleClient, PamShared, Transaction},
+     module::PamModule,
+ };
++
++#[cfg(feature = "link")]
+ #[doc(inline)]
+ pub use libpam_sys::pam_impl;
++#[cfg(feature = "link")]
+ use libpam_sys::pam_impl_name;
+Index: nonstick/Cargo.toml
+===================================================================
+--- nonstick.orig/Cargo.toml
++++ nonstick/Cargo.toml
+@@ -62,13 +62,13 @@ version = "0.2.0"
+ version = "0.2.0"
+ 
+ [features]
+-basic-ext = []
++basic-ext = ["link"]
+ default = ["link"]
+ link = [
+     "dep:libc",
+     "dep:libpam-sys",
+     "dep:libpam-sys-helpers",
+ ]
+-linux-pam-ext = []
++linux-pam-ext = ["link"]
+ #openpam-ext = []
+ #sun-ext = []

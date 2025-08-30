@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_auto_test:
+	cp -r debian/missing-source/.cargo ./
+	export RAR_AUTHENTICATION="skip"
+	export RAR_CFG_PATH="target/rootasrole.json"
+	export SKIP_BUILD="true"
+	dh_auto_test -- test --all-features --tests
+
+
+override_dh_auto_install:
+	DEB_CARGO_INSTALL_PREFIX=/usr/lib/cargo dh_auto_install -- --bin dosr --features finder 
+	DEB_CARGO_INSTALL_PREFIX=/usr/lib/cargo dh_auto_install -- --bin chsr --features editor 
+	pandoc -s -t man resources/man/en_US.md -o dosr.8
+	pandoc -s -t man resources/man/fr_FR.md  -o dosr.fr.8
