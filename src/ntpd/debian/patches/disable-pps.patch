@@ -1,0 +1,37 @@
+Index: ntpd/Cargo.toml
+===================================================================
+--- ntpd.orig/Cargo.toml
++++ ntpd/Cargo.toml
+@@ -228,9 +228,7 @@ mode = "644"
+ source = "../README.md"
+ 
+ [features]
+-default = ["pps"]
+ hardware-timestamping = []
+-pps = ["dep:pps-time"]
+ unstable_nts-pool = ["ntp-proto/nts-pool"]
+ 
+ [lib]
+@@ -267,10 +265,6 @@ version = "1.6.2"
+ features = ["__internal-api"]
+ default-features = false
+ 
+-[dependencies.pps-time]
+-version = "0.2.3"
+-optional = true
+-
+ [dependencies.rand]
+ version = "0.8.0"
+ 
+Index: ntpd/src/daemon/config/mod.rs
+===================================================================
+--- ntpd.orig/src/daemon/config/mod.rs
++++ ntpd/src/daemon/config/mod.rs
+@@ -478,6 +478,7 @@ impl Config {
+ 
+         if self.sources.iter().any(|config| match config {
+             NtpSourceConfig::Sock(_) => false,
++            #[cfg(feature = "pps")]
+             NtpSourceConfig::Pps(_) => false,
+             NtpSourceConfig::Standard(config) => {
+                 matches!(config.first.ntp_version, ProtocolVersion::V5)
