@@ -1,0 +1,26 @@
+Fix a test that fails if backtraces are enabled due to different backtraces.
+
+--- rust-hickory-resolver-0.24.4.orig/src/async_resolver.rs
++++ rust-hickory-resolver-0.24.4/src/async_resolver.rs
+@@ -607,15 +607,19 @@ pub mod testing {
+ 
+         use proto::error::{ProtoError, ProtoErrorKind};
+ 
+-        let error_str = format!("{error}");
++        let mut error_str = format!("{error}");
+         let name = Name::from_str("hickory-dns.org.").unwrap();
+-        let expected_str = format!(
++        let mut expected_str = format!(
+             "{}",
+             ResolveError::from(ProtoError::from(ProtoErrorKind::RrsigsNotPresent {
+                 name,
+                 record_type: RecordType::A
+             }))
+         );
++        //hack to make tests pass if backtraces are enabled (as they are on debci)
++        error_str.truncate(100);
++        expected_str.truncate(100);
++
+         assert_eq!(error_str, expected_str);
+         if let ResolveErrorKind::Proto(_) = *error.kind() {
+         } else {

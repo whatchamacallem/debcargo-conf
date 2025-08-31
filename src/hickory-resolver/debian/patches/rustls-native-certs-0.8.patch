@@ -2,7 +2,7 @@ Index: hickory-resolver/Cargo.toml
 ===================================================================
 --- hickory-resolver.orig/Cargo.toml
 +++ hickory-resolver/Cargo.toml
-@@ -123,7 +124,7 @@ features = ["logging", "std", "tls12"]
+@@ -123,7 +123,7 @@ features = ["logging", "std", "tls12"]
  optional = true
  
  [dependencies.rustls-native-certs]
@@ -11,3 +11,30 @@ Index: hickory-resolver/Cargo.toml
  optional = true
  
  [dependencies.serde]
+Index: hickory-resolver/src/tls/dns_over_rustls.rs
+===================================================================
+--- hickory-resolver.orig/src/tls/dns_over_rustls.rs
++++ hickory-resolver/src/tls/dns_over_rustls.rs
+@@ -35,9 +35,20 @@ pub(crate) static CLIENT_CONFIG: Lazy<Re
+     #[cfg(all(feature = "native-certs", not(feature = "webpki-roots")))]
+     {
+         use proto::error::ProtoErrorKind;
+-
++        let certs = rustls_native_certs::load_native_certs();
++        if certs.errors.len() > 0 {
++            if certs.certs.len() == 0 {
++                return Err(format!("{:?}",certs.errors).into());
++            } else {
++                tracing::warn!(
++                    "load_native_certs returned {} certs and {} errors",
++                    certs.certs.len(),
++                    certs.errors.len(),
++                );
++            }
++        }
+         let (added, ignored) =
+-            root_store.add_parsable_certificates(rustls_native_certs::load_native_certs()?);
++            root_store.add_parsable_certificates(certs.certs);
+ 
+         if ignored > 0 {
+             tracing::warn!(
