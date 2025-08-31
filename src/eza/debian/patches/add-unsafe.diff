@@ -2,19 +2,19 @@ Index: eza/src/fs/file.rs
 ===================================================================
 --- eza.orig/src/fs/file.rs
 +++ eza/src/fs/file.rs
-@@ -608,6 +608,7 @@ impl<'dir> File<'dir> {
-             // allow it to compile cleanly on Linux.
-             #[allow(trivial_numeric_casts)]
-             #[allow(clippy::unnecessary_cast, clippy::useless_conversion)]
-+            unsafe {
-             f::Size::DeviceIDs(f::DeviceIDs {
-                 major: libc::major(
-                     device_id
-@@ -620,6 +621,7 @@ impl<'dir> File<'dir> {
-                         .expect("Malformed device major ID when getting filesize"),
-                 ) as u32,
+@@ -542,6 +542,7 @@ impl<'dir> File<'dir> {
+             self.recursive_size.map_or(f::Blocksize::None, |_, blocks| {
+                 f::Blocksize::Some(blocks * 512)
              })
 +            }
          } else if self.is_file() {
-             f::Size::Some(self.metadata().map_or(0, std::fs::Metadata::len))
-         } else {
+             // Note that metadata.blocks returns the number of blocks
+             // for 512 byte blocks according to the POSIX standard
+@@ -616,6 +617,7 @@ impl<'dir> File<'dir> {
+                 let device_id = device_id
+                     .try_into()
+                     .expect("Malformed device major ID when getting filesize");
++                unsafe {
+                 f::Size::DeviceIDs(f::DeviceIDs {
+                     major: unsafe { libc::major(device_id) as u32 },
+                     minor: unsafe { libc::minor(device_id) as u32 },
