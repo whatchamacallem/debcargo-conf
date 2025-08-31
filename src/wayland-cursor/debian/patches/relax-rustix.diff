@@ -1,0 +1,42 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 566dc66..9ca64ad 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -47,7 +47,7 @@ name = "wayland_cursor"
+ path = "src/lib.rs"
+ 
+ [dependencies.rustix]
+-version = "1.0.2"
++version = "0.38"
+ features = ["shm"]
+ 
+ [dependencies.wayland-client]
+diff --git a/src/lib.rs b/src/lib.rs
+index 9993801..bc1751f 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -59,7 +59,7 @@ use rustix::fs::Mode;
+ #[cfg(any(target_os = "linux", target_os = "android"))]
+ use rustix::fs::{memfd_create, MemfdFlags};
+ use rustix::io::Errno;
+-use rustix::shm;
++use rustix::shm::{shm_open, shm_unlink, ShmOFlags};
+ #[cfg(any(target_os = "linux", target_os = "android"))]
+ use std::ffi::CStr;
+ 
+@@ -457,12 +457,12 @@ fn create_shm_fd() -> IoResult<OwnedFd> {
+         sys_time.duration_since(UNIX_EPOCH).unwrap().subsec_nanos()
+     );
+     loop {
+-        match shm::open(
++        match shm_open(
+             mem_file_handle.as_str(),
+-            shm::OFlags::CREATE | shm::OFlags::EXCL | shm::OFlags::RDWR,
++            ShmOFlags::CREATE | ShmOFlags::EXCL | ShmOFlags::RDWR,
+             Mode::RUSR | Mode::WUSR,
+         ) {
+-            Ok(fd) => match shm::unlink(mem_file_handle.as_str()) {
++            Ok(fd) => match shm_unlink(mem_file_handle.as_str()) {
+                 Ok(_) => return Ok(fd),
+                 Err(errno) => return Err(IoError::from(errno)),
+             },
