@@ -1,0 +1,146 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index ac3eb3b..f593394 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -70,7 +70,7 @@ version = "0.5.0"
+ optional = true
+ 
+ [dependencies.rustix]
+-version = "1.0.2"
++version = ">= 0.38"
+ features = [
+     "event",
+     "fs",
+diff --git a/src/rs/server_impl/client.rs b/src/rs/server_impl/client.rs
+index 39a37ec..0065616 100644
+--- a/src/rs/server_impl/client.rs
++++ b/src/rs/server_impl/client.rs
+@@ -300,7 +300,7 @@ impl<D> Client<D> {
+     #[cfg(any(target_os = "linux", target_os = "android"))]
+     pub(crate) fn get_credentials(&self) -> Credentials {
+         let creds =
+-            rustix::net::sockopt::socket_peercred(&self.socket).expect("getsockopt failed!?");
++            rustix::net::sockopt::get_socket_peercred(&self.socket).expect("getsockopt failed!?");
+         let pid = rustix::process::Pid::as_raw(Some(creds.pid));
+         Credentials { pid, uid: creds.uid.as_raw(), gid: creds.gid.as_raw() }
+     }
+diff --git a/src/rs/server_impl/common_poll.rs b/src/rs/server_impl/common_poll.rs
+index 1ca3714..2cfa2c9 100644
+--- a/src/rs/server_impl/common_poll.rs
++++ b/src/rs/server_impl/common_poll.rs
+@@ -15,7 +15,7 @@ use crate::{
+ };
+ 
+ #[cfg(any(target_os = "linux", target_os = "android"))]
+-use rustix::event::{epoll, Timespec};
++use rustix::event::epoll;
+ 
+ #[cfg(any(
+     target_os = "dragonfly",
+@@ -83,16 +83,15 @@ impl<D> InnerBackend<D> {
+ 
+         let poll_fd = self.poll_fd();
+         let mut dispatched = 0;
+-        let mut events = Vec::<epoll::Event>::with_capacity(32);
+         loop {
+-            let buffer = rustix::buffer::spare_capacity(&mut events);
+-            epoll::wait(poll_fd.as_fd(), buffer, Some(&Timespec::default()))?;
++            let mut events = epoll::EventVec::with_capacity(32);
++            epoll::wait(poll_fd.as_fd(), &mut events, 0)?;
+ 
+             if events.is_empty() {
+                 break;
+             }
+ 
+-            for event in events.drain(..) {
++            for event in events.iter() {
+                 let id = InnerClientId::from_u64(event.data.u64());
+                 // remove the cb while we call it, to gracefully handle reentrancy
+                 if let Ok(count) = self.dispatch_events_for(data, id) {
+@@ -118,16 +117,15 @@ impl<D> InnerBackend<D> {
+ 
+         let poll_fd = self.poll_fd();
+         let mut dispatched = 0;
+-        let mut events = Vec::<Event>::with_capacity(32);
+         loop {
+-            let buffer = rustix::buffer::spare_capacity(&mut events);
+-            let nevents = unsafe { kevent(&poll_fd, &[], buffer, Some(Duration::ZERO))? };
++            let mut events = Vec::with_capacity(32);
++            let nevents = unsafe { kevent(&poll_fd, &[], &mut events, Some(Duration::ZERO))? };
+ 
+             if nevents == 0 {
+                 break;
+             }
+ 
+-            for event in events.drain(..) {
++            for event in events.iter().take(nevents) {
+                 let id = InnerClientId::from_u64(event.udata() as u64);
+                 // remove the cb while we call it, to gracefully handle reentrancy
+                 if let Ok(count) = self.dispatch_events_for(data, id) {
+@@ -182,12 +180,13 @@ impl<D> InnerBackend<D> {
+                                 let evt = Event::new(
+                                     EventFilter::Read(client.as_fd().as_raw_fd()),
+                                     EventFlags::DELETE,
+-                                    client_id.as_u64() as *mut _,
++                                    client_id.as_u64() as isize,
+                                 );
+ 
+-                                let events: &mut [Event] = &mut [];
++                                let mut events = Vec::new();
+                                 unsafe {
+-                                    kevent(&state.poll_fd, &[evt], events, None).map(|_| ())?;
++                                    kevent(&state.poll_fd, &[evt], &mut events, None)
++                                        .map(|_| ())?;
+                                 }
+                             }
+                             return Err(e);
+diff --git a/src/rs/server_impl/handle.rs b/src/rs/server_impl/handle.rs
+index d48ed18..ec33f03 100644
+--- a/src/rs/server_impl/handle.rs
++++ b/src/rs/server_impl/handle.rs
+@@ -343,11 +343,11 @@ impl<D> ErasedState for State<D> {
+             let evt = Event::new(
+                 EventFilter::Read(client.as_fd().as_raw_fd()),
+                 EventFlags::ADD | EventFlags::RECEIPT,
+-                id.as_u64() as *mut _,
++                id.as_u64() as isize,
+             );
+ 
+-            let events: &mut [Event] = &mut [];
+-            unsafe { kevent(&self.poll_fd, &[evt], events, None).map(|_| ()) }
++            let mut events = Vec::new();
++            unsafe { kevent(&self.poll_fd, &[evt], &mut events, None).map(|_| ()) }
+         };
+ 
+         match ret {
+diff --git a/src/rs/socket.rs b/src/rs/socket.rs
+index 60cff5d..e7862f4 100644
+--- a/src/rs/socket.rs
++++ b/src/rs/socket.rs
+@@ -2,7 +2,6 @@
+ 
+ use std::collections::VecDeque;
+ use std::io::{ErrorKind, IoSlice, IoSliceMut, Result as IoResult};
+-use std::mem::MaybeUninit;
+ use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, OwnedFd, RawFd};
+ use std::os::unix::net::UnixStream;
+ use std::slice;
+@@ -48,8 +47,7 @@ impl Socket {
+ 
+         if !fds.is_empty() {
+             let iov = [IoSlice::new(bytes)];
+-            let mut cmsg_space =
+-                vec![MaybeUninit::uninit(); rustix::cmsg_space!(ScmRights(fds.len()))];
++            let mut cmsg_space = vec![0; rustix::cmsg_space!(ScmRights(fds.len()))];
+             let mut cmsg_buffer = SendAncillaryBuffer::new(&mut cmsg_space);
+             let fds =
+                 unsafe { slice::from_raw_parts(fds.as_ptr() as *const BorrowedFd, fds.len()) };
+@@ -77,7 +75,7 @@ impl Socket {
+         #[cfg(target_os = "macos")]
+         let flags = RecvFlags::DONTWAIT;
+ 
+-        let mut cmsg_space = [MaybeUninit::uninit(); rustix::cmsg_space!(ScmRights(MAX_FDS_OUT))];
++        let mut cmsg_space = [0; rustix::cmsg_space!(ScmRights(MAX_FDS_OUT))];
+         let mut cmsg_buffer = RecvAncillaryBuffer::new(&mut cmsg_space);
+         let mut iov = [IoSliceMut::new(buffer)];
+         let msg = retry_on_intr(|| recvmsg(&self.stream, &mut iov[..], &mut cmsg_buffer, flags))?;

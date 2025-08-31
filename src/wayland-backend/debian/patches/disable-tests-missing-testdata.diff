@@ -1,7 +1,5 @@
-Index: wayland-backend/src/test/destructors.rs
-===================================================================
---- wayland-backend.orig/src/test/destructors.rs
-+++ wayland-backend/src/test/destructors.rs
+--- a/src/test/destructors.rs
++++ b/src/test/destructors.rs
 @@ -74,7 +74,7 @@ macro_rules! impl_client_objectdata {
  impl_client_objectdata!(client_rs);
  impl_client_objectdata!(client_sys);
@@ -20,10 +18,8 @@ Index: wayland-backend/src/test/destructors.rs
  
  struct ServerClientData(AtomicBool);
  
-Index: wayland-backend/src/test/many_args.rs
-===================================================================
---- wayland-backend.orig/src/test/many_args.rs
-+++ wayland-backend/src/test/many_args.rs
+--- a/src/test/many_args.rs
++++ b/src/test/many_args.rs
 @@ -122,7 +122,7 @@ macro_rules! clientdata_impls {
  clientdata_impls!(client_rs);
  clientdata_impls!(client_sys);
@@ -39,10 +35,8 @@ Index: wayland-backend/src/test/many_args.rs
      assert!(server_data.0.load(Ordering::SeqCst));
 -});
 +});*/
-Index: wayland-backend/src/test/mod.rs
-===================================================================
---- wayland-backend.orig/src/test/mod.rs
-+++ wayland-backend/src/test/mod.rs
+--- a/src/test/mod.rs
++++ b/src/test/mod.rs
 @@ -48,12 +48,12 @@ macro_rules! expand_test {
      };
  }
@@ -58,10 +52,8 @@ Index: wayland-backend/src/test/mod.rs
  
  mod destructors;
  mod many_args;
-Index: wayland-backend/src/test/object_args.rs
-===================================================================
---- wayland-backend.orig/src/test/object_args.rs
-+++ wayland-backend/src/test/object_args.rs
+--- a/src/test/object_args.rs
++++ b/src/test/object_args.rs
 @@ -9,7 +9,7 @@ use super::*;
  
  struct ServerData(AtomicBool);
@@ -95,11 +87,9 @@ Index: wayland-backend/src/test/object_args.rs
      assert!(server_data.0.load(Ordering::SeqCst));
 -});
 +}); */
-Index: wayland-backend/src/test/protocol_error.rs
-===================================================================
---- wayland-backend.orig/src/test/protocol_error.rs
-+++ wayland-backend/src/test/protocol_error.rs
-@@ -37,7 +37,7 @@ impl server_sys::GlobalHandler<()> for S
+--- a/src/test/protocol_error.rs
++++ b/src/test/protocol_error.rs
+@@ -37,7 +37,7 @@ impl server_sys::GlobalHandler<()> for ServerData<server_sys::ObjectId> {
      }
  }
  
@@ -110,14 +100,14 @@ Index: wayland-backend/src/test/protocol_error.rs
      let _client_id = server.handle().insert_client(rx, Arc::new(())).unwrap();
 @@ -107,7 +107,7 @@ expand_test!(protocol_error, {
          }
-         _ => panic!("Bad ret: {:?}", ret),
+         _ => panic!("Bad ret: {ret:?}"),
      }
 -});
 +}); */
  
  expand_test!(client_wrong_id, {
      let (tx, rx) = std::os::unix::net::UnixStream::pair().unwrap();
-@@ -255,7 +255,7 @@ impl<D> server_sys::ObjectData<D> for Pr
+@@ -255,7 +255,7 @@ impl<D> server_sys::ObjectData<D> for ProtocolErrorServerData {
      }
  }
  
@@ -126,16 +116,14 @@ Index: wayland-backend/src/test/protocol_error.rs
      let (tx, rx) = std::os::unix::net::UnixStream::pair().unwrap();
      let mut server = server_backend::Backend::new().unwrap();
      let _client_id = server.handle().insert_client(rx, Arc::new(())).unwrap();
-@@ -316,4 +316,4 @@ expand_test!(protocol_error_in_request_w
+@@ -316,4 +316,4 @@ expand_test!(protocol_error_in_request_without_object_init, {
  
      // the server should not panic, and gracefull accept that the user did not provide any object data for
      // the already destroyed object
 -});
 +}); */
-Index: wayland-backend/src/test/server_created_objects.rs
-===================================================================
---- wayland-backend.orig/src/test/server_created_objects.rs
-+++ wayland-backend/src/test/server_created_objects.rs
+--- a/src/test/server_created_objects.rs
++++ b/src/test/server_created_objects.rs
 @@ -9,7 +9,7 @@ use super::*;
  
  struct ServerData;
@@ -169,11 +157,9 @@ Index: wayland-backend/src/test/server_created_objects.rs
      assert_eq!(client_data.0.load(Ordering::SeqCst), 2);
 -});
 +}); */
-Index: wayland-backend/src/test/sync.rs
-===================================================================
---- wayland-backend.orig/src/test/sync.rs
-+++ wayland-backend/src/test/sync.rs
-@@ -33,7 +33,7 @@ impl client_sys::ObjectData for SyncData
+--- a/src/test/sync.rs
++++ b/src/test/sync.rs
+@@ -33,7 +33,7 @@ impl client_sys::ObjectData for SyncData {
      fn destroyed(&self, _: client_sys::ObjectId) {}
  }
  
@@ -182,7 +168,7 @@ Index: wayland-backend/src/test/sync.rs
  expand_test!(sync, {
      let (tx, rx) = std::os::unix::net::UnixStream::pair().unwrap();
      let mut server = server_backend::Backend::new().unwrap();
-@@ -98,7 +98,7 @@ expand_test!(panic test_bad_placeholder,
+@@ -98,7 +98,7 @@ expand_test!(panic test_bad_placeholder, {
      assert!(sync_data.0.load(Ordering::SeqCst));
      // and the sync object should be dead
      assert!(client.get_data(sync_id).is_err());
