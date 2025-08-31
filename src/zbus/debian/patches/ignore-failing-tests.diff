@@ -1,26 +1,6 @@
---- a/tests/e2e.rs
-+++ b/tests/e2e.rs
-@@ -872,7 +872,7 @@
-     proxy.quit().await?;
-     Ok(val)
- }
--
-+/*
- #[test]
- #[timeout(15000)]
- fn iface_and_proxy() {
-@@ -885,7 +885,7 @@
- #[timeout(15000)]
- fn iface_and_proxy_unix_p2p() {
-     block_on(iface_and_proxy_(true));
--}
-+}*/
- 
- #[instrument]
- async fn iface_and_proxy_(#[allow(unused)] p2p: bool) {
 --- a/src/blocking/proxy/mod.rs
 +++ b/src/blocking/proxy/mod.rs
-@@ -525,6 +525,7 @@
+@@ -520,6 +520,7 @@
  
      #[test]
      #[timeout(15000)]
@@ -30,7 +10,7 @@
          // signals called for that.
 --- a/src/connection/mod.rs
 +++ b/src/connection/mod.rs
-@@ -1400,6 +1400,7 @@
+@@ -1393,6 +1393,7 @@
      }
  
      #[test]
@@ -38,7 +18,7 @@
      #[timeout(15000)]
      fn disconnect_on_drop() {
          // Reproducer for https://github.com/dbus2/zbus/issues/308 where setting up the
-@@ -1444,6 +1445,7 @@
+@@ -1437,6 +1438,7 @@
      }
  
      #[tokio::test(start_paused = true)]
@@ -46,34 +26,6 @@
      #[timeout(15000)]
      async fn test_graceful_shutdown() {
          // If we have a second reference, it should wait until we drop it.
---- a/src/proxy/builder.rs
-+++ b/src/proxy/builder.rs
-@@ -167,6 +167,7 @@
-     use test_log::test;
- 
-     #[test]
-+    #[ignore]
-     #[ntest::timeout(15000)]
-     fn builder() {
-         crate::utils::block_on(builder_async());
---- a/src/proxy/mod.rs
-+++ b/src/proxy/mod.rs
-@@ -1366,6 +1366,7 @@
-     use test_log::test;
- 
-     #[test]
-+    #[ignore]
-     #[timeout(15000)]
-     fn signal() {
-         block_on(test_signal()).unwrap();
-@@ -1434,6 +1435,7 @@
-     }
- 
-     #[test]
-+    #[ignore]
-     #[timeout(15000)]
-     fn signal_stream_deadlock() {
-         block_on(test_signal_stream_deadlock()).unwrap();
 --- a/src/fdo/mod.rs
 +++ b/src/fdo/mod.rs
 @@ -63,6 +63,7 @@
@@ -92,6 +44,34 @@
      #[timeout(15000)]
      fn no_object_manager_signals_before_hello() {
          crate::block_on(no_object_manager_signals_before_hello_async());
+--- a/src/proxy/builder.rs
++++ b/src/proxy/builder.rs
+@@ -164,6 +164,7 @@
+     use test_log::test;
+ 
+     #[test]
++    #[ignore]
+     #[ntest::timeout(15000)]
+     fn builder() {
+         crate::utils::block_on(builder_async());
+--- a/src/proxy/mod.rs
++++ b/src/proxy/mod.rs
+@@ -1378,6 +1378,7 @@
+     use test_log::test;
+ 
+     #[test]
++    #[ignore]
+     #[timeout(15000)]
+     fn signal() {
+         block_on(test_signal()).unwrap();
+@@ -1446,6 +1447,7 @@
+     }
+ 
+     #[test]
++    #[ignore]
+     #[timeout(15000)]
+     fn signal_stream_deadlock() {
+         block_on(test_signal_stream_deadlock()).unwrap();
 --- a/tests/basic.rs
 +++ b/tests/basic.rs
 @@ -32,6 +32,7 @@
@@ -118,7 +98,7 @@
  #[timeout(15000)]
  fn fdpass_systemd() {
      zbus::block_on(fdpass_systemd_async());
-@@ -118,6 +121,7 @@
+@@ -119,6 +122,7 @@
  }
  
  #[test]
@@ -126,7 +106,7 @@
  #[instrument]
  #[timeout(15000)]
  #[cfg(feature = "blocking-api")]
-@@ -219,6 +223,7 @@
+@@ -220,6 +224,7 @@
  }
  
  #[test]
@@ -134,6 +114,26 @@
  #[timeout(15000)]
  fn freedesktop_api_async() {
      block_on(test_freedesktop_api()).unwrap();
+--- a/tests/e2e.rs
++++ b/tests/e2e.rs
+@@ -897,7 +897,7 @@
+     proxy.quit().await?;
+     Ok(val)
+ }
+-
++/*
+ #[test]
+ #[timeout(15000)]
+ fn iface_and_proxy() {
+@@ -910,7 +910,7 @@
+ #[timeout(15000)]
+ fn iface_and_proxy_unix_p2p() {
+     block_on(iface_and_proxy_(true));
+-}
++}*/
+ 
+ #[instrument]
+ async fn iface_and_proxy_(#[allow(unused)] p2p: bool) {
 --- a/tests/issue/issue_1015.rs
 +++ b/tests/issue/issue_1015.rs
 @@ -25,6 +25,7 @@
@@ -154,6 +154,16 @@
  #[timeout(15000)]
  fn issue104() {
      // Tests the fix for https://github.com/dbus2/zbus/issues/104
+--- a/tests/issue/issue_122.rs
++++ b/tests/issue/issue_122.rs
+@@ -10,6 +10,7 @@
+ };
+ 
+ #[test]
++#[ignore]
+ #[timeout(15000)]
+ fn issue_122() {
+     let conn = blocking::Connection::session().unwrap();
 --- a/tests/issue/issue_173.rs
 +++ b/tests/issue/issue_173.rs
 @@ -8,6 +8,7 @@
@@ -174,6 +184,16 @@
  #[timeout(15000)]
  fn issue_260() {
      // Low-level server example in the book doesn't work. The reason was that
+--- a/tests/issue/issue_310.rs
++++ b/tests/issue/issue_310.rs
+@@ -6,6 +6,7 @@
+ use zvariant::OwnedObjectPath;
+ 
+ #[test(tokio::test(flavor = "multi_thread"))]
++#[ignore]
+ #[instrument]
+ async fn issue_310() {
+     // The issue was we were deadlocking on fetching the new property value after invalidation.
 --- a/tests/issue/issue_68.rs
 +++ b/tests/issue/issue_68.rs
 @@ -5,6 +5,7 @@
@@ -194,26 +214,6 @@
  fn concurrent_interface_methods() {
      // This is  test case for ensuring the regression of #799 doesn't come back.
      block_on(async {
---- a/tests/issue/issue_122.rs
-+++ b/tests/issue/issue_122.rs
-@@ -10,6 +10,7 @@
- };
- 
- #[test]
-+#[ignore]
- #[timeout(15000)]
- fn issue_122() {
-     let conn = blocking::Connection::session().unwrap();
---- a/tests/issue/issue_310.rs
-+++ b/tests/issue/issue_310.rs
-@@ -6,6 +6,7 @@
- use zvariant::OwnedObjectPath;
- 
- #[test(tokio::test(flavor = "multi_thread"))]
-+#[ignore]
- #[instrument]
- async fn issue_310() {
-     // The issue was we were deadlocking on fetching the new property value after invalidation.
 --- a/tests/uncached_propert.rs
 +++ b/tests/uncached_propert.rs
 @@ -5,6 +5,7 @@
