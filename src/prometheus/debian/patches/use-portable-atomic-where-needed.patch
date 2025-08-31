@@ -1,0 +1,64 @@
+Index: rust-prometheus-0.13.4/Cargo.toml
+===================================================================
+--- rust-prometheus-0.13.4.orig/Cargo.toml
++++ rust-prometheus-0.13.4/Cargo.toml
+@@ -116,6 +116,9 @@ features = [
+     "rt-multi-thread",
+ ]
+ 
++[target.'cfg(not(target_has_atomic = "64"))'.dependencies.portable-atomic]
++version = "1.4"
++
+ [features]
+ default = ["protobuf"]
+ nightly = ["libc"]
+Index: rust-prometheus-0.13.4/src/atomic64.rs
+===================================================================
+--- rust-prometheus-0.13.4.orig/src/atomic64.rs
++++ rust-prometheus-0.13.4/src/atomic64.rs
+@@ -4,7 +4,11 @@
+ use std::cmp::*;
+ use std::f64;
+ use std::ops::*;
+-use std::sync::atomic::{AtomicI64 as StdAtomicI64, AtomicU64 as StdAtomicU64, Ordering};
++use std::sync::atomic::Ordering;
++#[cfg(target_has_atomic = "64")]
++use std::sync::atomic::{AtomicI64 as StdAtomicI64, AtomicU64 as StdAtomicU64};
++#[cfg(not(target_has_atomic = "64"))]
++use portable_atomic::{AtomicI64 as StdAtomicI64, AtomicU64 as StdAtomicU64};
+ 
+ /// An interface for numbers. Used to generically model float metrics and integer metrics, i.e.
+ /// [`Counter`](crate::Counter) and [`IntCounter`](crate::Counter).
+Index: rust-prometheus-0.13.4/src/histogram.rs
+===================================================================
+--- rust-prometheus-0.13.4.orig/src/histogram.rs
++++ rust-prometheus-0.13.4/src/histogram.rs
+@@ -5,9 +5,13 @@ use std::cell::RefCell;
+ use std::collections::HashMap;
+ use std::convert::From;
+ use std::sync::{
+-    atomic::{AtomicU64 as StdAtomicU64, Ordering},
++    atomic::Ordering,
+     Arc, Mutex,
+ };
++#[cfg(target_has_atomic = "64")]
++use std::sync::atomic::AtomicU64 as StdAtomicU64;
++#[cfg(not(target_has_atomic = "64"))]
++use portable_atomic::AtomicU64 as StdAtomicU64;
+ use std::time::{Duration, Instant as StdInstant};
+ 
+ use crate::atomic64::{Atomic, AtomicF64, AtomicU64};
+Index: rust-prometheus-0.13.4/src/timer.rs
+===================================================================
+--- rust-prometheus-0.13.4.orig/src/timer.rs
++++ rust-prometheus-0.13.4/src/timer.rs
+@@ -1,4 +1,8 @@
+-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
++use std::sync::atomic::{AtomicBool, Ordering};
++#[cfg(target_has_atomic = "64")]
++use std::sync::atomic::AtomicU64;
++#[cfg(not(target_has_atomic = "64"))]
++use portable_atomic::AtomicU64;
+ use std::thread;
+ use std::time::{Duration, Instant};
+ 

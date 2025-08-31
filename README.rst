@@ -2,7 +2,7 @@
 Debcargo-conf
 =============
 
-This repository contains debcargo config files for all Rust packages in Debian.
+This repository contains debcargo config files for Rust packages in Debian.
 
 See the `Debian Rust Team book`_ for a guide to Rust packaging in Debian.
 

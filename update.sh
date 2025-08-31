@@ -6,27 +6,13 @@
 # Envvars:
 # See also ./vars.sh.frag for its envvars, which we pass through.
 
-
-# Run this before sourcing vars.sh.frag so the user reads it first
-exec_basename="$(basename "$0")"
-case "$exec_basename" in
-new-package.sh|package.sh)
-	echo >&2
-	echo >&2 "WARNING! $exec_basename is deprecated. Please use update.sh instead."
-	echo >&2
-	# Add 1 second sleep so users read the deprecation notice,
-	# get annoyed by the wait and start using update.sh
-	sleep 1
-	;;
-esac
-
 . ./vars.sh.frag
 
 case "$(git rev-parse --abbrev-ref HEAD)" in
 pending-*)	abort 1 "You are on a pending-release branch, $0 can only be run on another branch, like master";;
 esac
 
-timeout --foreground 15 git fetch origin --prune || abort 1 "Failed to fetch upstream to check pending branches, please check network"
+git fetch origin --prune || abort 1 "Failed to fetch upstream to check pending branches, please check network"
 pending_branches=$(git branch --all --list "*pending-$PKGNAME")
 if [ -n "$pending_branches" ]
 then

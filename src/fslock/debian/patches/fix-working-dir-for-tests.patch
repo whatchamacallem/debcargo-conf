@@ -1,0 +1,65 @@
+Index: fslock/src/test.rs
+===================================================================
+--- fslock.orig/src/test.rs
++++ fslock/src/test.rs
+@@ -2,11 +2,23 @@ use crate::{Error, LockFile};
+ use core::str;
+ 
+ #[cfg(feature = "std")]
++fn make_testpath(filename: &str) -> String {
++     match option_env!("CARGO_TARGET_DIR") {
++         Some(target_dir) => {
++            let result = std::path::Path::new(target_dir).join(filename);
++            std::fs::create_dir_all(result.parent().unwrap()).unwrap();
++            result.into_os_string().into_string().unwrap()
++         }
++         None => filename.to_string()
++     }
++}
++
++#[cfg(feature = "std")]
+ #[test]
+ fn read_pid() -> Result<(), Error> {
+     use std::fs::read_to_string;
+ 
+-    let path = "testfiles/read_pid.lock";
++    let path = &make_testpath("testfiles/read_pid.lock");
+     let mut file = LockFile::open(path)?;
+     file.lock_with_pid()?;
+ 
+@@ -25,7 +37,7 @@ fn read_pid() -> Result<(), Error> {
+ fn try_read_pid() -> Result<(), Error> {
+     use std::fs::read_to_string;
+ 
+-    let path = "testfiles/try_read_pid.lock";
++    let path = &make_testpath("testfiles/try_read_pid.lock");
+     let mut file = LockFile::open(path)?;
+     assert!(file.try_lock_with_pid()?);
+ 
+@@ -109,7 +121,7 @@ fn check_try_lock_with_pid_example(
+ #[cfg(feature = "std")]
+ #[test]
+ fn other_process() -> Result<(), Error> {
+-    let path = "testfiles/other_process.lock";
++    let path = &make_testpath("testfiles/other_process.lock");
+     let mut file = LockFile::open(path)?;
+     file.lock()?;
+     check_try_lock_example(path, b"FAILURE\n")?;
+@@ -123,7 +135,7 @@ fn other_process() -> Result<(), Error>
+ fn other_process_pid() -> Result<(), Error> {
+     use std::fs::read_to_string;
+ 
+-    let path = "testfiles/other_process_pid.lock";
++    let path = &make_testpath("testfiles/other_process_pid.lock");
+     let mut file = LockFile::open(path)?;
+     assert!(file.try_lock_with_pid()?);
+ 
+@@ -167,7 +179,7 @@ fn other_process_pid() -> Result<(), Err
+ fn other_process_but_curr_reads() -> Result<(), Error> {
+     use std::fs::read_to_string;
+ 
+-    let path = "testfiles/other_process_but_curr_reads.lock";
++    let path = &make_testpath("testfiles/other_process_but_curr_reads.lock");
+     let mut file = LockFile::open(path)?;
+     file.lock()?;
+ 

@@ -1,0 +1,520 @@
+--- rust-subversion-0.0.8.orig/src/client.rs
++++ rust-subversion-0.0.8/src/client.rs
+@@ -13,6 +13,7 @@ use crate::{Depth, Error, LogEntry, Revi
+ use apr::pool::PooledPtr;
+ use apr::Pool;
+ use std::collections::HashMap;
++use core::ffi::c_char;
+ 
+ pub fn version() -> Version {
+     unsafe { Version(svn_client_version()) }
+@@ -21,7 +22,7 @@ pub fn version() -> Version {
+ extern "C" fn wrap_filter_callback(
+     baton: *mut std::ffi::c_void,
+     filtered: *mut crate::generated::svn_boolean_t,
+-    local_abspath: *const i8,
++    local_abspath: *const c_char,
+     dirent: *const crate::generated::svn_io_dirent2_t,
+     _pool: *mut apr::apr_pool_t,
+ ) -> *mut svn_error_t {
+@@ -45,7 +46,7 @@ extern "C" fn wrap_filter_callback(
+ 
+ extern "C" fn wrap_status_func(
+     baton: *mut std::ffi::c_void,
+-    path: *const i8,
++    path: *const c_char,
+     status: *const crate::generated::svn_client_status_t,
+     _pool: *mut apr::apr_pool_t,
+ ) -> *mut crate::generated::svn_error_t {
+@@ -64,7 +65,7 @@ extern "C" fn wrap_status_func(
+ 
+ extern "C" fn wrap_proplist_receiver2(
+     baton: *mut std::ffi::c_void,
+-    path: *const i8,
++    path: *const c_char,
+     props: *mut apr::hash::apr_hash_t,
+     inherited_props: *mut apr::tables::apr_array_header_t,
+     scratch_pool: *mut apr::apr_pool_t,
+@@ -165,7 +166,7 @@ impl Info {
+ 
+ extern "C" fn wrap_info_receiver2(
+     baton: *mut std::ffi::c_void,
+-    abspath_or_url: *const i8,
++    abspath_or_url: *const c_char,
+     info: *const crate::generated::svn_client_info2_t,
+     _scatch_pool: *mut apr::apr_pool_t,
+ ) -> *mut crate::generated::svn_error_t {
+@@ -561,14 +562,14 @@ impl Context {
+         });
+         let changelists = changelists.as_ref().map(|cl| {
+             cl.iter()
+-                .map(|cl| cl.as_ptr() as *const i8)
++                .map(|cl| cl.as_ptr() as *const c_char)
+                 .collect::<apr::tables::ArrayHeader<_>>()
+         });
+ 
+         unsafe {
+             let receiver = Box::into_raw(Box::new(receiver));
+             let err = svn_client_proplist4(
+-                target.as_ptr() as *const i8,
++                target.as_ptr() as *const c_char,
+                 &options.peg_revision.into(),
+                 &options.revision.into(),
+                 options.depth.into(),
+@@ -610,7 +611,7 @@ impl Context {
+             let commit_callback = Box::into_raw(Box::new(commit_callback));
+             let err = svn_client_import5(
+                 path.as_ptr(),
+-                url.as_ptr() as *const i8,
++                url.as_ptr() as *const c_char,
+                 depth.into(),
+                 no_ignore.into(),
+                 no_autoprops.into(),
+@@ -642,7 +643,7 @@ impl Context {
+         unsafe {
+             let err = svn_client_export5(
+                 &mut revnum,
+-                from_path_or_url.as_ptr() as *const i8,
++                from_path_or_url.as_ptr() as *const c_char,
+                 to_path.as_ptr(),
+                 &options.peg_revision.into(),
+                 &options.revision.into(),
+@@ -727,7 +728,7 @@ impl Context {
+             let err = svn_client_status6(
+                 &mut revnum,
+                 &mut *self.0,
+-                path.as_ptr() as *const i8,
++                path.as_ptr() as *const c_char,
+                 &options.revision.into(),
+                 options.depth.into(),
+                 options.get_all.into(),
+@@ -868,7 +869,7 @@ impl Context {
+                 known_targets
+                     .into_iter()
+                     .map(|s| s.as_ptr())
+-                    .collect::<apr::tables::ArrayHeader<*const i8>>()
++                    .collect::<apr::tables::ArrayHeader<*const c_char>>()
+                     .as_ptr(),
+                 &mut *self.0,
+                 keep_last_origpath_on_truepath_collision.into(),
+@@ -877,11 +878,11 @@ impl Context {
+         };
+         Error::from_raw(err)?;
+         let targets = unsafe {
+-            apr::tables::ArrayHeader::<*const i8>::from_raw_parts(&std::rc::Rc::new(pool), targets)
++            apr::tables::ArrayHeader::<*const c_char>::from_raw_parts(&std::rc::Rc::new(pool), targets)
+         };
+         Ok(targets
+             .iter()
+-            .map(|s| unsafe { std::ffi::CStr::from_ptr(*s as *const i8) })
++            .map(|s| unsafe { std::ffi::CStr::from_ptr(*s as *const c_char) })
+             .map(|s| s.to_str().unwrap().to_owned())
+             .collect::<Vec<_>>())
+     }
+@@ -1054,7 +1055,7 @@ impl Context {
+     ) -> Result<std::path::PathBuf, Error> {
+         let mut pool = std::rc::Rc::new(Pool::default());
+         let path = path.as_canonical_dirent(std::rc::Rc::get_mut(&mut pool).unwrap());
+-        let mut wc_root: *const i8 = std::ptr::null();
++        let mut wc_root: *const c_char = std::ptr::null();
+         unsafe {
+             let err = crate::generated::svn_client_get_wc_root(
+                 &mut wc_root,
+@@ -1097,7 +1098,7 @@ impl Context {
+     pub fn url_from_path<'a>(&mut self, path: impl AsCanonicalUri<'a>) -> Result<String, Error> {
+         let mut pool = Pool::default();
+         let path = path.as_canonical_uri(&mut pool);
+-        let mut url: *const i8 = std::ptr::null();
++        let mut url: *const c_char = std::ptr::null();
+         unsafe {
+             let err = crate::generated::svn_client_url_from_path2(
+                 &mut url,
+@@ -1114,8 +1115,8 @@ impl Context {
+     pub fn get_repos_root(&mut self, path_or_url: &str) -> Result<(String, String), Error> {
+         let pool = Pool::default();
+         let path_or_url = std::ffi::CString::new(path_or_url).unwrap();
+-        let mut repos_root: *const i8 = std::ptr::null();
+-        let mut repos_uuid: *const i8 = std::ptr::null();
++        let mut repos_root: *const c_char = std::ptr::null();
++        let mut repos_uuid: *const c_char = std::ptr::null();
+         unsafe {
+             let err = crate::generated::svn_client_get_repos_root(
+                 &mut repos_root,
+@@ -1410,7 +1411,7 @@ pub struct Conflict(pub(crate) apr::pool
+ impl Conflict {
+     pub fn prop_get_description(&mut self) -> Result<String, Error> {
+         let pool = apr::pool::Pool::new();
+-        let mut description: *const i8 = std::ptr::null_mut();
++        let mut description: *const c_char = std::ptr::null_mut();
+         let err = unsafe {
+             crate::generated::svn_client_conflict_prop_get_description(
+                 &mut description,
+--- rust-subversion-0.0.8.orig/src/delta.rs
++++ rust-subversion-0.0.8/src/delta.rs
+@@ -1,5 +1,6 @@
+ use crate::Revnum;
+ use apr::pool::Pool;
++use core::ffi::c_char;
+ 
+ pub fn version() -> crate::Version {
+     crate::Version(unsafe { crate::generated::svn_delta_version() })
+@@ -72,7 +73,7 @@ impl<'a> DirectoryEditor for WrapDirecto
+         let scratch_pool = self.1.pool().subpool();
+         let err = unsafe {
+             ((*(*self.0)).delete_entry.unwrap())(
+-                path.as_ptr() as *const i8,
++                path.as_ptr() as *const c_char,
+                 revision.map_or(-1, |r| r.0),
+                 self.1.as_mut_ptr(),
+                 scratch_pool.as_mut_ptr(),
+@@ -92,10 +93,10 @@ impl<'a> DirectoryEditor for WrapDirecto
+             let copyfrom_rev = copyfrom.map(|(_, r)| r.0).unwrap_or(-1);
+             let mut baton = std::ptr::null_mut();
+             let err = ((*(*self.0)).add_directory.unwrap())(
+-                path.as_ptr() as *const i8,
++                path.as_ptr() as *const c_char,
+                 self.1.as_mut_ptr(),
+                 if let Some(copyfrom_path) = copyfrom_path {
+-                    copyfrom_path.as_ptr() as *const i8
++                    copyfrom_path.as_ptr() as *const c_char
+                 } else {
+                     std::ptr::null()
+                 },
+@@ -117,7 +118,7 @@ impl<'a> DirectoryEditor for WrapDirecto
+         let editor = apr::pool::PooledPtr::initialize(|p| unsafe {
+             let mut baton = std::ptr::null_mut();
+             let err = ((*(*self.0)).open_directory.unwrap())(
+-                path.as_ptr() as *const i8,
++                path.as_ptr() as *const c_char,
+                 self.1.as_mut_ptr(),
+                 base_revision.map_or(-1, |r| r.0),
+                 p.as_mut_ptr(),
+@@ -135,7 +136,7 @@ impl<'a> DirectoryEditor for WrapDirecto
+         let err = unsafe {
+             ((*(*self.0)).change_dir_prop.unwrap())(
+                 self.1.as_mut_ptr(),
+-                name.as_ptr() as *const i8,
++                name.as_ptr() as *const c_char,
+                 value.as_ptr(),
+                 scratch_pool.as_mut_ptr(),
+             )
+@@ -157,7 +158,7 @@ impl<'a> DirectoryEditor for WrapDirecto
+         let scratch_pool = self.1.pool().subpool();
+         let err = unsafe {
+             ((*(*self.0)).absent_directory.unwrap())(
+-                path.as_ptr() as *const i8,
++                path.as_ptr() as *const c_char,
+                 self.1.as_mut_ptr(),
+                 scratch_pool.as_mut_ptr(),
+             )
+@@ -176,10 +177,10 @@ impl<'a> DirectoryEditor for WrapDirecto
+             let copyfrom_rev = copyfrom.map(|(_, r)| r.0).unwrap_or(-1);
+             let mut baton = std::ptr::null_mut();
+             let err = ((*(*self.0)).add_file.unwrap())(
+-                path.as_ptr() as *const i8,
++                path.as_ptr() as *const c_char,
+                 self.1.as_mut_ptr(),
+                 if let Some(copyfrom_path) = copyfrom_path {
+-                    copyfrom_path.as_ptr() as *const i8
++                    copyfrom_path.as_ptr() as *const c_char
+                 } else {
+                     std::ptr::null()
+                 },
+@@ -201,7 +202,7 @@ impl<'a> DirectoryEditor for WrapDirecto
+         let editor = apr::pool::PooledPtr::initialize(|p| unsafe {
+             let mut baton = std::ptr::null_mut();
+             let err = ((*(*self.0)).open_file.unwrap())(
+-                path.as_ptr() as *const i8,
++                path.as_ptr() as *const c_char,
+                 self.1.as_mut_ptr(),
+                 base_revision.map(|r| r.into()).unwrap_or(0),
+                 p.as_mut_ptr(),
+@@ -217,7 +218,7 @@ impl<'a> DirectoryEditor for WrapDirecto
+         let scratch_pool = self.1.pool().subpool();
+         let err = unsafe {
+             ((*(*self.0)).absent_file.unwrap())(
+-                path.as_ptr() as *const i8,
++                path.as_ptr() as *const c_char,
+                 self.1.as_mut_ptr(),
+                 scratch_pool.as_mut_ptr(),
+             )
+@@ -251,7 +252,7 @@ impl<'a> FileEditor for WrapFileEditor<'
+             ((*(*self.0)).apply_textdelta.unwrap())(
+                 self.1.as_mut_ptr(),
+                 if let Some(base_checksum) = base_checksum {
+-                    base_checksum.as_ptr() as *const i8
++                    base_checksum.as_ptr() as *const c_char
+                 } else {
+                     std::ptr::null()
+                 },
+@@ -275,7 +276,7 @@ impl<'a> FileEditor for WrapFileEditor<'
+         let err = unsafe {
+             ((*(*self.0)).change_file_prop.unwrap())(
+                 self.1.as_mut_ptr(),
+-                name.as_ptr() as *const i8,
++                name.as_ptr() as *const c_char,
+                 value.as_ptr(),
+                 scratch_pool.as_mut_ptr(),
+             )
+@@ -290,7 +291,7 @@ impl<'a> FileEditor for WrapFileEditor<'
+             ((*(*self.0)).close_file.unwrap())(
+                 self.1.as_mut_ptr(),
+                 if let Some(text_checksum) = text_checksum {
+-                    text_checksum.as_ptr() as *const i8
++                    text_checksum.as_ptr() as *const c_char
+                 } else {
+                     std::ptr::null()
+                 },
+@@ -423,8 +424,8 @@ impl TxDeltaWindow {
+             let mut tlen = target.len() as apr::apr_size_t;
+             crate::generated::svn_txdelta_apply_instructions(
+                 self.0.as_mut_ptr(),
+-                source.as_ptr() as *mut i8,
+-                target.as_mut_ptr() as *mut i8,
++                source.as_ptr() as *mut c_char,
++                target.as_mut_ptr() as *mut c_char,
+                 &mut tlen,
+             );
+         }
+--- rust-subversion-0.0.8.orig/src/dirent.rs
++++ rust-subversion-0.0.8/src/dirent.rs
+@@ -2,8 +2,9 @@ use crate::uri::Uri;
+ use crate::Canonical;
+ use crate::Error;
+ use apr::pool::Pooled;
++use core::ffi::c_char;
+ 
+-pub struct Dirent<'a>(*const i8, std::marker::PhantomData<&'a ()>);
++pub struct Dirent<'a>(*const c_char, std::marker::PhantomData<&'a ()>);
+ 
+ impl ToString for Dirent<'_> {
+     fn to_string(&self) -> String {
+@@ -29,14 +30,14 @@ impl<'a> Dirent<'a> {
+     pub fn pooled(s: &str) -> Pooled<Self> {
+         Pooled::initialize(|pool| {
+             Ok::<_, crate::Error>(Self(
+-                apr::strings::pstrdup(s, pool).as_ptr() as *const i8,
++                apr::strings::pstrdup(s, pool).as_ptr() as *const c_char,
+                 std::marker::PhantomData,
+             ))
+         })
+         .unwrap()
+     }
+ 
+-    pub fn from_raw(raw: *const i8) -> Self {
++    pub fn from_raw(raw: *const c_char) -> Self {
+         Self(raw, std::marker::PhantomData)
+     }
+ 
+@@ -97,7 +98,7 @@ impl<'a> Dirent<'a> {
+         }
+     }
+ 
+-    pub fn as_ptr(&self) -> *const i8 {
++    pub fn as_ptr(&self) -> *const c_char {
+         self.0
+     }
+ 
+@@ -129,7 +130,7 @@ impl<'a> Dirent<'a> {
+     pub fn dirname(&self) -> Pooled<Self> {
+         Pooled::initialize(|pool| unsafe {
+             Ok::<_, crate::Error>(Self(
+-                crate::generated::svn_dirent_dirname(self.as_ptr(), pool.as_mut_ptr()) as *const i8,
++                crate::generated::svn_dirent_dirname(self.as_ptr(), pool.as_mut_ptr()) as *const c_char,
+                 std::marker::PhantomData,
+             ))
+         })
+@@ -264,7 +265,7 @@ impl From<Dirent<'_>> for &str {
+ 
+ impl<'a> From<&'a std::ffi::CStr> for Dirent<'a> {
+     fn from(s: &'a std::ffi::CStr) -> Self {
+-        Self(s.as_ptr() as *const i8, std::marker::PhantomData)
++        Self(s.as_ptr() as *const c_char, std::marker::PhantomData)
+     }
+ }
+ 
+--- rust-subversion-0.0.8.orig/src/io.rs
++++ rust-subversion-0.0.8/src/io.rs
+@@ -1,6 +1,7 @@
+ use crate::generated::svn_io_dirent2_t;
+ use crate::Error;
+ use std::ffi::OsStr;
++use core::ffi::c_char;
+ 
+ #[allow(dead_code)]
+ pub struct Dirent(*const svn_io_dirent2_t);
+@@ -243,7 +244,7 @@ impl Stream {
+         let err = unsafe {
+             crate::generated::svn_stream_read_full(
+                 self.0.as_mut_ptr(),
+-                buf.as_mut_ptr() as *mut i8,
++                buf.as_mut_ptr() as *mut c_char,
+                 &mut len,
+             )
+         };
+@@ -266,7 +267,7 @@ impl Stream {
+         let err = unsafe {
+             crate::generated::svn_stream_read2(
+                 self.0.as_mut_ptr(),
+-                buf.as_mut_ptr() as *mut i8,
++                buf.as_mut_ptr() as *mut c_char,
+                 &mut len,
+             )
+         };
+@@ -279,7 +280,7 @@ impl Stream {
+         let err = unsafe {
+             crate::generated::svn_stream_write(
+                 self.0.as_mut_ptr(),
+-                buf.as_ptr() as *const i8,
++                buf.as_ptr() as *const c_char,
+                 &mut len,
+             )
+         };
+@@ -357,7 +358,7 @@ impl Stream {
+             )
+         };
+         Error::from_raw(err)?;
+-        let data = (unsafe { (*line).data }) as *const i8;
++        let data = (unsafe { (*line).data }) as *const c_char;
+         let len = unsafe { (*line).len };
+         Ok(unsafe {
+             std::str::from_utf8(std::slice::from_raw_parts(data as *const u8, len))
+@@ -373,7 +374,7 @@ impl std::io::Write for Stream {
+         let err = unsafe {
+             crate::generated::svn_stream_write(
+                 self.0.as_mut_ptr(),
+-                buf.as_ptr() as *const i8,
++                buf.as_ptr() as *const c_char,
+                 &mut len,
+             )
+         };
+@@ -392,7 +393,7 @@ impl std::io::Read for Stream {
+         let err = unsafe {
+             crate::generated::svn_stream_read(
+                 self.0.as_mut_ptr(),
+-                buf.as_mut_ptr() as *mut i8,
++                buf.as_mut_ptr() as *mut c_char,
+                 &mut len,
+             )
+         };
+@@ -419,7 +420,7 @@ impl From<&[u8]> for Stream {
+         Self(
+             apr::pool::PooledPtr::initialize(|pool| {
+                 let buf = crate::generated::svn_string_t {
+-                    data: bytes.as_ptr() as *mut i8,
++                    data: bytes.as_ptr() as *mut c_char,
+                     len: bytes.len(),
+                 };
+                 let stream =
+@@ -455,7 +456,7 @@ pub fn wrap_write(write: &mut dyn std::i
+ 
+     extern "C" fn write_fn(
+         baton: *mut std::ffi::c_void,
+-        buffer: *const i8,
++        buffer: *const c_char,
+         len: *mut usize,
+     ) -> *mut crate::generated::svn_error_t {
+         let write = unsafe { Box::from_raw(baton as *mut &mut dyn std::io::Write) };
+@@ -987,7 +988,7 @@ pub fn string_from_stream(stream: &mut S
+         )
+     };
+     Error::from_raw(err)?;
+-    let data = (unsafe { (*str).data }) as *const i8;
++    let data = (unsafe { (*str).data }) as *const c_char;
+     let len = unsafe { (*str).len };
+     Ok(unsafe {
+         std::str::from_utf8(std::slice::from_raw_parts(data as *const u8, len))
+--- rust-subversion-0.0.8.orig/src/repos.rs
++++ rust-subversion-0.0.8/src/repos.rs
+@@ -1,6 +1,7 @@
+ use crate::generated::{svn_repos_create, svn_repos_find_root_path, svn_repos_t};
+ use crate::{Error, Revnum};
+ use apr::pool::PooledPtr;
++use core::ffi::c_char;
+ 
+ #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+ pub enum LoadUUID {
+@@ -252,7 +253,7 @@ impl Repos {
+                 start_rev.0,
+                 end_rev.0,
+                 uuid_action.into(),
+-                parent_dir.to_str().unwrap().as_ptr() as *const i8,
++                parent_dir.to_str().unwrap().as_ptr() as *const c_char,
+                 use_pre_commit_hook.into(),
+                 use_post_commit_hook.into(),
+                 validate_props.into(),
+--- rust-subversion-0.0.8.orig/src/string.rs
++++ rust-subversion-0.0.8/src/string.rs
+@@ -1,5 +1,6 @@
+ use crate::generated::svn_string_t;
+ use apr::pool::PooledPtr;
++use core::ffi::c_char;
+ 
+ pub struct String(PooledPtr<svn_string_t>);
+ 
+@@ -37,7 +38,7 @@ impl From<&str> for String {
+             let cstr = s.as_ptr();
+             let len = s.len();
+             let ptr = unsafe {
+-                crate::generated::svn_string_ncreate(cstr as *const i8, len, pool.as_mut_ptr())
++                crate::generated::svn_string_ncreate(cstr as *const c_char, len, pool.as_mut_ptr())
+             };
+             Ok::<_, crate::Error>(ptr)
+         })
+@@ -58,7 +59,7 @@ impl From<&[u8]> for String {
+             let cstr = s.as_ptr();
+             let len = s.len();
+             let ptr = unsafe {
+-                crate::generated::svn_string_ncreate(cstr as *const i8, len, pool.as_mut_ptr())
++                crate::generated::svn_string_ncreate(cstr as *const c_char, len, pool.as_mut_ptr())
+             };
+             Ok::<_, crate::Error>(ptr)
+         })
+--- rust-subversion-0.0.8.orig/src/uri.rs
++++ rust-subversion-0.0.8/src/uri.rs
+@@ -2,8 +2,9 @@ use crate::dirent::Dirent;
+ use crate::Canonical;
+ use crate::Error;
+ use apr::pool::Pooled;
++use core::ffi::c_char;
+ 
+-pub struct Uri<'a>(*const i8, std::marker::PhantomData<&'a ()>);
++pub struct Uri<'a>(*const c_char, std::marker::PhantomData<&'a ()>);
+ 
+ impl ToString for Uri<'_> {
+     fn to_string(&self) -> String {
+@@ -27,7 +28,7 @@ impl PartialEq for Uri<'_> {
+ impl Eq for Uri<'_> {}
+ 
+ impl<'a> Uri<'a> {
+-    pub fn from_raw(raw: *const i8) -> Self {
++    pub fn from_raw(raw: *const c_char) -> Self {
+         Self(raw, std::marker::PhantomData)
+     }
+ 
+@@ -38,7 +39,7 @@ impl<'a> Uri<'a> {
+     pub fn pooled(s: &str) -> Pooled<Self> {
+         Pooled::initialize(|pool| {
+             Ok::<_, crate::Error>(Self(
+-                apr::strings::pstrdup(s, pool).as_ptr() as *const i8,
++                apr::strings::pstrdup(s, pool).as_ptr() as *const c_char,
+                 std::marker::PhantomData,
+             ))
+         })
+@@ -49,14 +50,14 @@ impl<'a> Uri<'a> {
+         unsafe { crate::generated::svn_uri_is_root(self.as_ptr(), length) != 0 }
+     }
+ 
+-    pub fn as_ptr(&self) -> *const i8 {
++    pub fn as_ptr(&self) -> *const c_char {
+         self.0
+     }
+ 
+     pub fn dirname(&self) -> Pooled<Self> {
+         Pooled::initialize(|pool| unsafe {
+             Ok::<_, crate::Error>(Self(
+-                crate::generated::svn_uri_dirname(self.as_ptr(), pool.as_mut_ptr()) as *const i8,
++                crate::generated::svn_uri_dirname(self.as_ptr(), pool.as_mut_ptr()) as *const c_char,
+                 std::marker::PhantomData,
+             ))
+         })

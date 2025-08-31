@@ -1,0 +1,85 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 139550b4919786fd0ae474bff1ad9c840edf6f55
+Author: Dirkjan Ochtman <dirkjan@ochtman.nl>
+Date:   Fri Aug 30 11:02:23 2024 +0200
+
+    Upgrade to rustls-native-certs 0.8
+
+Index: hyper-rustls-0.24/src/config.rs
+===================================================================
+--- hyper-rustls-0.24.orig/src/config.rs
++++ hyper-rustls-0.24/src/config.rs
+@@ -1,5 +1,7 @@
+ use rustls::client::WantsTransparencyPolicyOrClientCert;
+ use rustls::{ClientConfig, ConfigBuilder, WantsVerifier};
++#[cfg(feature = "rustls-native-certs")]
++use rustls_native_certs::CertificateResult;
+ 
+ /// Methods for configuring roots
+ ///
+@@ -28,8 +30,16 @@ impl ConfigBuilderExt for ConfigBuilder<
+         let mut valid_count = 0;
+         let mut invalid_count = 0;
+ 
+-        for cert in rustls_native_certs::load_native_certs().expect("could not load platform certs")
+-        {
++        let CertificateResult { certs, errors, .. } = rustls_native_certs::load_native_certs();
++        if !errors.is_empty() {
++            crate::log::warn!("native root CA certificate loading errors: {errors:?}");
++        }
++
++        if certs.is_empty() {
++            panic!("no native root CA certificates found (errors: {errors:?})");
++        }
++
++        for cert in certs {
+             let cert = rustls::Certificate(cert.as_ref().to_owned());
+             match roots.add(&cert) {
+                 Ok(_) => valid_count += 1,
+@@ -40,6 +50,7 @@ impl ConfigBuilderExt for ConfigBuilder<
+                 }
+             }
+         }
++
+         crate::log::debug!(
+             "with_native_roots processed {} valid and {} invalid certs",
+             valid_count,
+Index: hyper-rustls-0.24/src/lib.rs
+===================================================================
+--- hyper-rustls-0.24.orig/src/lib.rs
++++ hyper-rustls-0.24/src/lib.rs
+@@ -89,6 +89,8 @@ mod stream;
+ #[cfg(feature = "logging")]
+ mod log {
+     pub(crate) use log::{debug, trace};
++    #[cfg(feature = "rustls-native-certs")]
++    pub(crate) use log::warn;
+ }
+ 
+ #[cfg(not(feature = "logging"))]
+@@ -96,6 +98,10 @@ mod log {
+     macro_rules! trace    ( ($($tt:tt)*) => {{}} );
+     macro_rules! debug    ( ($($tt:tt)*) => {{}} );
+     pub(crate) use {debug, trace};
++    #[cfg(feature = "rustls-native-certs")]
++    macro_rules! warn_    ( ($($tt:tt)*) => {{}} );
++    #[cfg(feature = "rustls-native-certs")]
++    pub(crate) use warn_ as warn;
+ }
+ 
+ #[cfg(feature = "acceptor")]
+Index: hyper-rustls-0.24/Cargo.toml
+===================================================================
+--- hyper-rustls-0.24.orig/Cargo.toml
++++ hyper-rustls-0.24/Cargo.toml
+@@ -65,7 +65,7 @@ version = "0.21.6"
+ default-features = false
+ 
+ [dependencies.rustls-native-certs]
+-version = "0.7"
++version = "0.8"
+ optional = true
+ 
+ [dependencies.tokio]

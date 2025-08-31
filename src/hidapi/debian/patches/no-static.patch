@@ -1,0 +1,32 @@
+Description: Disable backends which statically link to libraries
+Last-Update: 2025-08-08
+Author: Blair Noctis <ncts@debian.org>
+Forwarded: not-needed
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -88,3 +88,3 @@
+ default = [
+-    "linux-static-hidraw",
++    "linux-shared-hidraw", # Debian: was "linux-static-hidraw"
+     "illumos-static-libusb",
+@@ -99,4 +99,4 @@
+ linux-shared-libusb = []
+-linux-static-hidraw = []
+-linux-static-libusb = []
++#linux-static-hidraw = []
++#linux-static-libusb = []
+ macos-shared-device = []
+--- a/build.rs
++++ b/build.rs
+@@ -51,4 +51,4 @@
+ 
+-    let avail_backends: [(&'static str, Box<dyn Fn()>); 5] = [
+-        (
++    let avail_backends: &[(&'static str, Box<dyn Fn()>)] = &[
++        #[cfg(feature = "linux-static-hidraw")] (
+             "LINUX_STATIC_HIDRAW",
+@@ -65,3 +65,3 @@
+         ),
+-        (
++        #[cfg(feature = "linux-static-libusb")] (
+             "LINUX_STATIC_LIBUSB",

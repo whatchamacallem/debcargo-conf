@@ -7,21 +7,10 @@ Last-Update: 2023-09-07
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -56,28 +56,8 @@ doctest = false
- [dependencies.libc]
- version = "0.2.129"
+@@ -59,18 +59,6 @@
+ [badges.maintenance]
+ status = "actively-developed"
  
--[build-dependencies.cc]
--version = "1.0.73"
--optional = true
--
--[build-dependencies.dunce]
--version = "1.0.2"
--
- [build-dependencies.pkg-config]
- version = "0.3.25"
--optional = true
--
 -[features]
 -default = [
 -    "dynamic",
@@ -33,10 +22,24 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -parallel = ["cc?/parallel"]
 -static = ["dep:cc"]
 -static-fallback = ["dep:cc"]
+-
+ [lib]
+ name = "lcms2_sys"
+ path = "src/lib.rs"
+@@ -79,13 +67,5 @@
+ [dependencies.libc]
+ version = "0.2.129"
  
- [badges.maintenance]
- status = "actively-developed"
-
+-[build-dependencies.cc]
+-version = "1.1"
+-optional = true
+-
+-[build-dependencies.dunce]
+-version = "1.0.2"
+-
+ [build-dependencies.pkg-config]
+ version = "0.3.25"
+-optional = true
 --- a/src/build.rs
 +++ b/src/build.rs
 @@ -1,103 +1,7 @@
@@ -147,4 +150,3 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 +  pkg_config::probe_library("lcms2").unwrap();
 +  
  }
-

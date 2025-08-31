@@ -1,0 +1,30 @@
+This patch is based on the upstream commit described below, minus a hunk
+that was later reverted by upstream.
+
+commit d8d6a7d096d3aaafd963b356a8f1bbd8d26fd967
+Author: A. Molzer <5550310+197g@users.noreply.github.com>
+Date:   Fri Jul 11 00:23:18 2025 +0200
+
+    Fix uninitialized Cell at unsync::Bump::new
+
+diff --git a/static-alloc/src/unsync/bump.rs b/static-alloc/src/unsync/bump.rs
+index 0bd0def7b8..23171e73d8 100644
+--- static-alloc/src/unsync/bump.rs
++++ static-alloc/src/unsync/bump.rs
+@@ -129,6 +129,7 @@ impl MemBump {
+         let ptr = NonNull::new(unsafe { alloc::alloc::alloc(layout) })
+             .unwrap_or_else(|| alloc::alloc::handle_alloc_error(layout));
+         let ptr = ptr::slice_from_raw_parts_mut(ptr.as_ptr(), capacity);
++        unsafe { ptr::write(ptr as *mut Cell<usize>, Cell::new(0)) };
+         unsafe { alloc::boxed::Box::from_raw(ptr as *mut MemBump) }
+     }
+ }
+@@ -502,7 +500,7 @@ impl MemBump {
+         let requested = layout.size();
+ 
+         // Ensure no overflows when calculating offets within.
+-        assert!(expect_consumed <= length);
++        assert!(expect_consumed <= length, "{}/{}", expect_consumed, length);
+ 
+         let available = length.checked_sub(expect_consumed).unwrap();
+         let ptr_to = base_ptr.wrapping_add(expect_consumed);

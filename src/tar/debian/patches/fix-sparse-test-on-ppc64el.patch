@@ -1,24 +1,6 @@
-Index: tar/src/builder.rs
-===================================================================
---- tar.orig/src/builder.rs
-+++ tar/src/builder.rs
-@@ -1114,8 +1114,9 @@ impl<W: Write> Drop for Builder<W> {
- mod tests {
-     use super::*;
- 
--    /// Should be multiple of 4KiB on ext4, multiple of 32KiB on FreeBSD/UFS.
--    const SPARSE_BLOCK_SIZE: u64 = 32768;
-+    /// Should be multiple of 4KiB on ext4, multiple of 32KiB on FreeBSD/UFS, multiple of 64KiB on
-+    /// ppc64el
-+    const SPARSE_BLOCK_SIZE: u64 = 64*1024;
- 
-     #[test]
-     fn test_find_sparse_entries() {
-Index: tar/tests/all.rs
-===================================================================
---- tar.orig/tests/all.rs
-+++ tar/tests/all.rs
-@@ -1301,7 +1301,8 @@ fn writing_sparse() {
+--- a/tests/all.rs
++++ b/tests/all.rs
+@@ -1330,7 +1330,8 @@
      let data = t!(ar.into_inner());
  
      // Without sparse support, the size of the tarball exceed 1MiB.

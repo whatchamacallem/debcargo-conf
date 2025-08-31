@@ -1,0 +1,32 @@
+Index: minreq/Cargo.toml
+===================================================================
+--- minreq.orig/Cargo.toml
++++ minreq/Cargo.toml
+@@ -120,7 +120,7 @@ version = "0.21.1"
+ optional = true
+ 
+ [dependencies.rustls-native-certs]
+-version = "0.6.1"
++version = "0.8"
+ optional = true
+ 
+ [dependencies.serde]
+Index: minreq/src/connection.rs
+===================================================================
+--- minreq.orig/src/connection.rs
++++ minreq/src/connection.rs
+@@ -22,11 +22,12 @@ static CONFIG: std::sync::LazyLock<Arc<C
+ 
+     // Try to load native certs
+     #[cfg(feature = "https-rustls-probe")]
+-    if let Ok(os_roots) = rustls_native_certs::load_native_certs() {
++    {
++        let os_roots = rustls_native_certs::load_native_certs().certs;
+         for root_cert in os_roots {
+             // Ignore erroneous OS certificates, there's nothing
+             // to do differently in that situation anyways.
+-            let _ = root_certificates.add(&rustls::Certificate(root_cert.0));
++            let _ = root_certificates.add(&rustls::Certificate(root_cert.to_vec()));
+         }
+     }
+ 

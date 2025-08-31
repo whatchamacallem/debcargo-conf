@@ -1,0 +1,62 @@
+Description: Support platforms without 64-bit atomic types
+ As explained in https://doc.rust-lang.org/std/sync/atomic/#portability,
+ some platforms don't have 64-bit atomic types.  As a result of
+ `smallvec` being used by `pydantic-core`, this crate is involved in some
+ dependency chains in Debian where we currently support the armel and
+ powerpc architectures, neither of which have these types.
+ .
+ Since the `malloc_size_of_is_0!` macro just implements a trait on the
+ types it's called with, it should be fine to skip types that don't exist
+ on the target platform.
+ .
+ Bumps MSRV to 1.60 for `#[cfg(target_has_atomic = "...")]`.
+Author: Colin Watson <cjwatson@debian.org>
+Forwarded: https://github.com/servo/malloc_size_of/pull/12
+Last-Update: 2025-08-22
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+
+Index: b/Cargo.toml
+===================================================================
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -11,7 +11,7 @@
+ 
+ [package]
+ edition = "2021"
+-rust-version = "1.56"
++rust-version = "1.60"
+ name = "malloc_size_of"
+ version = "0.1.1"
+ authors = ["The Servo Project Developers"]
+Index: b/src/impls.rs
+===================================================================
+--- a/src/impls.rs
++++ b/src/impls.rs
+@@ -18,8 +18,10 @@
+ use core::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize};
+ use core::ops::{Range, RangeFrom, RangeInclusive, RangeTo};
+ use core::sync::atomic::AtomicBool;
+-use core::sync::atomic::{AtomicI16, AtomicI32, AtomicI64, AtomicI8, AtomicIsize};
+-use core::sync::atomic::{AtomicU16, AtomicU32, AtomicU64, AtomicU8, AtomicUsize};
++use core::sync::atomic::{AtomicI16, AtomicI32, AtomicI8, AtomicIsize};
++#[cfg(target_has_atomic = "64")]
++use core::sync::atomic::{AtomicI64, AtomicU64};
++use core::sync::atomic::{AtomicU16, AtomicU32, AtomicU8, AtomicUsize};
+ 
+ use alloc::borrow::{Cow, ToOwned};
+ use alloc::boxed::Box;
+@@ -75,8 +77,11 @@
+ malloc_size_of_is_0!(f32, f64);
+ 
+ malloc_size_of_is_0!(AtomicBool);
+-malloc_size_of_is_0!(AtomicU8, AtomicU16, AtomicU32, AtomicU64, AtomicUsize);
+-malloc_size_of_is_0!(AtomicI8, AtomicI16, AtomicI32, AtomicI64, AtomicIsize);
++malloc_size_of_is_0!(AtomicU8, AtomicU16, AtomicU32, AtomicUsize);
++malloc_size_of_is_0!(AtomicI8, AtomicI16, AtomicI32, AtomicIsize);
++#[cfg(target_has_atomic = "64")]
++malloc_size_of_is_0!(AtomicU64, AtomicI64);
++
+ malloc_size_of_is_0!(
+     NonZeroU8,
+     NonZeroU16,

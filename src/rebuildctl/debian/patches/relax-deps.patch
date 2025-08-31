@@ -2,7 +2,7 @@
 +++ b/Cargo.toml
 @@ -56,3 +56,3 @@
  [dependencies.bzip2]
--version = "0.5"
+-version = "0.6"
 +version = "0.4"
  
 @@ -70,3 +70,3 @@
@@ -10,8 +10,90 @@
 -version = "3"
 +version = "2"
  
+@@ -85,3 +85,3 @@
+ [dependencies.nom]
+-version = "8"
++version = "7"
+ 
 @@ -98,3 +98,3 @@
  [dependencies.serde-xml-rs]
--version = "0.6.0"
-+version = "0.5.0"
+-version = "0.8"
++version = "0.5"
  
+@@ -116,3 +116,3 @@
+ [dependencies.toml]
+-version = "0.9"
++version = "0.8"
+
+--- b/src/schedule/fedora.rs
++++ a/src/schedule/fedora.rs
+@@ -64,25 +64,24 @@ pub async fn sync(http: &http::Client, sync: &PkgsSync) -> Result<Vec<PkgGroup>>
+
+ #[derive(Debug, Serialize, Deserialize)]
+ pub struct RepomdXml {
+-    #[serde(rename = "#content")]
++    #[serde(rename = "$value")]
+     pub data: Vec<RepomdXmlItem>,
+ }
+
+ #[derive(Debug, Serialize, Deserialize)]
+ pub struct RepomdXmlItem {
+-    #[serde(rename = "@type")]
++    #[serde(rename = "type")]
+     pub item_type: Option<String>,
+     pub location: Option<RepomdXmlLocation>,
+ }
+
+ #[derive(Debug, Serialize, Deserialize)]
+ pub struct RepomdXmlLocation {
+-    #[serde(rename = "@href")]
+     pub href: String,
+ }
+
+ fn get_primary_location_from_xml(bytes: &[u8]) -> Result<String> {
+-    let list = serde_xml_rs::from_reader::<RepomdXml, _>(bytes)?;
++    let list = serde_xml_rs::from_reader::<_, RepomdXml>(bytes)?;
+     let primary = list
+         .data
+         .into_iter()
+@@ -95,13 +94,13 @@ fn get_primary_location_from_xml(bytes: &[u8]) -> Result<String> {
+ }
+
+ fn parse_package_index<R: Read>(r: R) -> Result<Vec<PackagesXmlItem>> {
+-    let list = serde_xml_rs::from_reader::<PackagesXml, _>(r)?;
++    let list = serde_xml_rs::from_reader::<_, PackagesXml>(r)?;
+     Ok(list.packages)
+ }
+
+ #[derive(Debug, Serialize, Deserialize)]
+ pub struct PackagesXml {
+-    #[serde(rename = "#content")]
++    #[serde(rename = "$value")]
+     pub packages: Vec<PackagesXmlItem>,
+ }
+
+@@ -127,23 +126,19 @@ impl Pkg for PackagesXmlItem {
+
+ #[derive(Debug, PartialEq, Serialize, Deserialize)]
+ pub struct PackagesXmlItemVersion {
+-    #[serde(rename = "@epoch")]
+     pub epoch: String,
+-    #[serde(rename = "@ver")]
+     pub ver: String,
+-    #[serde(rename = "@rel")]
+     pub rel: String,
+ }
+
+ #[derive(Debug, PartialEq, Serialize, Deserialize)]
+ pub struct PackagesXmlItemLocation {
+-    #[serde(rename = "@href")]
+     pub href: String,
+ }
+
+ #[derive(Debug, PartialEq, Serialize, Deserialize)]
+ pub struct PackagesXmlItemMetadata {
+-    #[serde(rename = "rpm:sourcerpm")]
++    #[serde(rename = "sourcerpm")]
+     pub sourcerpm: String,
+ }
+

@@ -1,0 +1,28 @@
+From: Marc Schoolderman <marc@tweedegolf.com>
+Date: Thu, 17 Apr 2025 11:26:30 +0200
+Subject: fix unit test on 32-bit systems
+
+Origin: upstream, after 0.2.5
+---
+ src/system/time.rs | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/src/system/time.rs b/src/system/time.rs
+index 28ce5bfe3..3415c4074 100644
+--- a/src/system/time.rs
++++ b/src/system/time.rs
+@@ -162,7 +162,13 @@ impl ProcessCreateTime {
+         // SAFETY: The `libc::clock_gettime` will correctly initialize `spec`,
+         // otherwise it will return early with the `?` operator.
+         let spec = unsafe { spec.assume_init() };
+-        Ok(ProcessCreateTime::new(spec.tv_sec, spec.tv_nsec))
++
++        // the below conversion is not as useless as clippy thinks, on 32bit systems
++        #[allow(clippy::useless_conversion)]
++        Ok(ProcessCreateTime::new(
++            spec.tv_sec.into(),
++            spec.tv_nsec.into(),
++        ))
+     }
+ 
+     #[cfg(test)]

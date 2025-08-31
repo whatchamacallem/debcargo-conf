@@ -1,0 +1,32 @@
+--- rust-apt-swarm-0.5.1.orig/Cargo.toml
++++ rust-apt-swarm-0.5.1/Cargo.toml
+@@ -146,7 +146,7 @@ version = "0.23"
+ default-features = false
+ 
+ [dependencies.sequoia-openpgp]
+-version = "1.21"
++version = ">= 1.21.1, < 3"
+ 
+ [dependencies.serde]
+ version = "1.0.152"
+--- rust-apt-swarm-0.5.1.orig/src/pgp.rs
++++ rust-apt-swarm-0.5.1/src/pgp.rs
+@@ -54,15 +54,15 @@ pub fn load(keyring: &[u8]) -> Result<Ve
+             subkeys: Vec::new(),
+         };
+ 
+-        let p = &NullPolicy::new();
++        let p = &unsafe{NullPolicy::new()};
+         for key in cert.keys().with_policy(p, None) {
+             // TODO: we should probably also track and display encryption-only keys, for transparency
+             if key.for_signing() {
+-                signing_key.register_keyhandles(key.fingerprint());
++                signing_key.register_keyhandles(key.key().fingerprint());
+             }
+ 
+             signing_key.subkeys.push(Subkey {
+-                fingerprint: key.fingerprint(),
++                fingerprint: key.key().fingerprint(),
+                 is_primary: key.primary(),
+                 for_authentication: key.for_authentication(),
+                 for_certification: key.for_certification(),

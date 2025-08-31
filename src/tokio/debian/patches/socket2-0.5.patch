@@ -1,0 +1,88 @@
+This patch is based on a revert of upstream commit 
+71cc9ab4c27db1ec2412d7f0bc86bcae7ebf1d74 adapted for use in the debian package
+by Peter Michael Green.
+
+Index: tokio/src/net/tcp/socket.rs
+===================================================================
+--- tokio.orig/src/net/tcp/socket.rs
++++ tokio/src/net/tcp/socket.rs
+@@ -450,7 +450,7 @@ impl TcpSocket {
+     /// # }
+     /// ```
+     pub fn set_nodelay(&self, nodelay: bool) -> io::Result<()> {
+-        self.inner.set_tcp_nodelay(nodelay)
++        self.inner.set_nodelay(nodelay)
+     }
+ 
+     /// Gets the value of the `TCP_NODELAY` option on this socket.
+@@ -472,7 +472,7 @@ impl TcpSocket {
+     /// # }
+     /// ```
+     pub fn nodelay(&self) -> io::Result<bool> {
+-        self.inner.tcp_nodelay()
++        self.inner.nodelay()
+     }
+ 
+     /// Gets the value of the `IP_TOS` option for this socket.
+@@ -502,7 +502,7 @@ impl TcpSocket {
+         ))))
+     )]
+     pub fn tos(&self) -> io::Result<u32> {
+-        self.inner.tos_v4()
++        self.inner.tos()
+     }
+ 
+     /// Sets the value for the `IP_TOS` option on this socket.
+@@ -531,7 +531,7 @@ impl TcpSocket {
+         ))))
+     )]
+     pub fn set_tos(&self, tos: u32) -> io::Result<()> {
+-        self.inner.set_tos_v4(tos)
++        self.inner.set_tos(tos)
+     }
+ 
+     /// Gets the value for the `SO_BINDTODEVICE` option on this socket
+Index: tokio/src/net/udp.rs
+===================================================================
+--- tokio.orig/src/net/udp.rs
++++ tokio/src/net/udp.rs
+@@ -2028,7 +2028,7 @@ impl UdpSocket {
+         ))))
+     )]
+     pub fn tos(&self) -> io::Result<u32> {
+-        self.as_socket().tos_v4()
++        self.as_socket().tos()
+     }
+ 
+     /// Sets the value for the `IP_TOS` option on this socket.
+@@ -2057,7 +2057,7 @@ impl UdpSocket {
+         ))))
+     )]
+     pub fn set_tos(&self, tos: u32) -> io::Result<()> {
+-        self.as_socket().set_tos_v4(tos)
++        self.as_socket().set_tos(tos)
+     }
+ 
+     /// Gets the value for the `SO_BINDTODEVICE` option on this socket
+Index: tokio/Cargo.toml
+===================================================================
+--- tokio.orig/Cargo.toml
++++ tokio/Cargo.toml
+@@ -796,7 +796,7 @@ version = "0.4.9"
+ version = "0.9"
+ 
+ [target.'cfg(not(target_family = "wasm"))'.dependencies.socket2]
+-version = "0.6.0"
++version = "0.5.5"
+ features = ["all"]
+ optional = true
+ 
+@@ -804,7 +804,7 @@ optional = true
+ version = "1"
+ 
+ [target.'cfg(not(target_family = "wasm"))'.dev-dependencies.socket2]
+-version = "0.6.0"
++version = "0.5.5"
+ 
+ [target.'cfg(not(target_family = "wasm"))'.dev-dependencies.tempfile]
+ version = "3.1.0"

@@ -1,11 +1,29 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -35,25 +35,14 @@
+@@ -27,16 +27,10 @@
+ repository = "https://github.com/rust-av/v_frame"
+ 
+ [features]
+-profiling = ["dep:profiling"]
+ serialize = [
+     "serde",
+     "aligned-vec/serde",
+ ]
+-tracing = [
+-    "profiling",
+-    "dep:tracing",
+-    "profiling/profile-with-tracing",
+-]
+ 
+ [lib]
+ name = "v_frame"
+@@ -53,18 +47,10 @@
  [dependencies.num-traits]
  version = "0.2"
  
 -[dependencies.profiling]
 -version = "1"
+-optional = true
 -
  [dependencies.serde]
  version = "1.0"
@@ -13,26 +31,18 @@
  optional = true
  
 -[dependencies.tracing]
--version = "0.1.37"
+-version = "0.1.40"
 -optional = true
 -
  [dev-dependencies.criterion]
  version = "0.5"
- features = ["html_reports"]
- 
- [features]
- serialize = ["serde"]
--tracing = [
--    "profiling/profile-with-tracing",
--    "dep:tracing",
--]
 --- a/src/plane.rs
 +++ b/src/plane.rs
-@@ -621,7 +621,6 @@
+@@ -511,7 +511,6 @@
      /// # Panics
      ///
      /// - If the current plane's width and height are not at least `SCALE` times the `in_plane`'s
--    #[profiling::function(downscale_in_place)]
+-    #[cfg_attr(feature = "profiling", profiling::function(downscale_in_place))]
      pub fn downscale_in_place<const SCALE: usize>(&self, in_plane: &mut Plane<T>) {
          let stride = in_plane.cfg.stride;
          let width = in_plane.cfg.width;

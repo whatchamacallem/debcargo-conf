@@ -75,7 +75,7 @@ BUILDDIR="$PWD/build/$PKGNAME"
 PKGCFG="$PKGDIR/debian/debcargo.toml"
 UPLOADER="${DEBFULLNAME:-$NAME} <${DEBEMAIL:-$EMAIL}>"
 
-mkdir -p "$(dirname $BUILDDIR)"
+mkdir -p "$(dirname "$BUILDDIR")"
 ln -srf "$PWD/build.sh" "$PWD/build/build.sh"
 chmod +x "$PWD/build/build.sh"
 
@@ -109,5 +109,5 @@ shouldbuild() {
 }
 
 get_existing_version() {
-	dpkg-parsechangelog -SVersion -l $1/debian/changelog | sed -e "s/-[^-]*$//" -e "s/~/-/"
+	dpkg-parsechangelog -SVersion -l "$1/debian/changelog" | sed -e "s/-[^-]*$//" -e "s/~/-/"
 }

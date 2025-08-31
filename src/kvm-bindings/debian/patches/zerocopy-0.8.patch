@@ -1,0 +1,581 @@
+commit 52f9cf078ac839d15f63feaca81102fc3bfc5bbd
+Author: Ruoqing He <heruoqing@iscas.ac.cn>
+Date:   Mon May 5 14:18:36 2025 +0000
+
+    build: Bump zerocopy to 0.8.23
+    
+    Signed-off-by: Ruoqing He <heruoqing@iscas.ac.cn>
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -45,7 +45,7 @@
+ optional = true
+ 
+ [dependencies.zerocopy]
+-version = "0.7.32"
++version = "0.8"
+ features = ["derive"]
+ optional = true
+ 
+--- a/src/arm64/bindings.rs
++++ b/src/arm64/bindings.rs
+@@ -902,7 +902,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct user_pt_regs {
+     pub regs: [__u64; 31usize],
+@@ -970,7 +970,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct user_fpsimd_state {
+     pub vregs: [__uint128_t; 32usize],
+@@ -1454,7 +1454,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_regs {
+     pub regs: user_pt_regs,
+@@ -1533,7 +1533,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_vcpu_init {
+     pub target: __u32,
+@@ -6404,7 +6404,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_mp_state {
+     pub mp_state: __u32,
+@@ -7570,7 +7570,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_one_reg {
+     pub id: __u64,
+--- a/src/arm64/serialize.rs
++++ b/src/arm64/serialize.rs
+@@ -2,7 +2,7 @@
+     kvm_mp_state, kvm_one_reg, kvm_regs, kvm_vcpu_init, user_fpsimd_state, user_pt_regs,
+ };
+ use serde::{Deserialize, Deserializer, Serialize, Serializer};
+-use zerocopy::{transmute, AsBytes};
++use zerocopy::{transmute, IntoBytes};
+ 
+ serde_impls! {
+     user_pt_regs,
+@@ -36,12 +36,12 @@
+         //
+         // #[cfg_attr(
+         //     feature = "serde",
+-        //     derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++        //     derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+         // )]
+         //
+         // to all structures causing compilation errors (we need the zerocopy traits, as the
+         // `Serialize` and `Deserialize` implementations are provided by the `serde_impls!` macro
+-        // above, which implements serialization based on zerocopy's `FromBytes` and `AsBytes`
++        // above, which implements serialization based on zerocopy's `FromBytes` and `IntoBytes`
+         // traits that it expects to be derived).
+         //
+         // NOTE: This only include "top-level" items, and does not list out bindgen-anonymous types
+--- a/src/riscv64/bindings.rs
++++ b/src/riscv64/bindings.rs
+@@ -632,7 +632,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct user_regs_struct {
+     pub pc: ::std::os::raw::c_ulong,
+@@ -1598,7 +1598,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_riscv_config {
+     pub isa: ::std::os::raw::c_ulong,
+@@ -1698,7 +1698,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_riscv_core {
+     pub regs: user_regs_struct,
+@@ -1743,7 +1743,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_riscv_csr {
+     pub sstatus: ::std::os::raw::c_ulong,
+@@ -1887,7 +1887,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_riscv_aia_csr {
+     pub siselect: ::std::os::raw::c_ulong,
+@@ -1987,7 +1987,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_riscv_smstateen_csr {
+     pub sstateen0: ::std::os::raw::c_ulong,
+@@ -2022,7 +2022,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_riscv_timer {
+     pub frequency: __u64,
+@@ -2158,7 +2158,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_riscv_sbi_sta {
+     pub shmem_lo: ::std::os::raw::c_ulong,
+@@ -6421,7 +6421,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_mp_state {
+     pub mp_state: __u32,
+@@ -7587,7 +7587,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_one_reg {
+     pub id: __u64,
+--- a/src/riscv64/serialize.rs
++++ b/src/riscv64/serialize.rs
+@@ -7,7 +7,7 @@
+     kvm_riscv_sbi_sta, kvm_riscv_smstateen_csr, kvm_riscv_timer, user_regs_struct,
+ };
+ use serde::{Deserialize, Deserializer, Serialize, Serializer};
+-use zerocopy::{transmute, AsBytes};
++use zerocopy::{transmute, IntoBytes};
+ 
+ serde_impls! {
+     kvm_mp_state,
+@@ -45,12 +45,12 @@
+         //
+         // #[cfg_attr(
+         //     feature = "serde",
+-        //     derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++        //     derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+         // )]
+         //
+         // to all structures causing compilation errors (we need the zerocopy traits, as the
+         // `Serialize` and `Deserialize` implementations are provided by the `serde_impls!` macro
+-        // above, which implements serialization based on zerocopy's `FromBytes` and `AsBytes`
++        // above, which implements serialization based on zerocopy's `FromBytes` and `IntoBytes`
+         // traits that it expects to be derived).
+         //
+         // NOTE: This only include "top-level" items, and does not list out bindgen-anonymous types
+--- a/src/serialize.rs
++++ b/src/serialize.rs
+@@ -3,7 +3,7 @@
+ //! Module containing serialization utilities
+ 
+ /// Macro that generates serde::Serialize and serde::Deserialize implementations for the given types.
+-/// This macro assumes that the types implement zerocopy::FromBytes and zerocopy::AsBytes, and uses
++/// This macro assumes that the types implement zerocopy::FromBytes and zerocopy::IntoBytes, and uses
+ /// these implementations to serialize as opaque byte arrays. During deserialization, it will
+ /// try to deserialize as a `Vec`. If this deserialized `Vec` has a length that equals `size_of::<T>`,
+ /// it will transmute to `T` (using zerocopy), otherwise the `Vec` will either be zero-padded, or truncated.
+--- a/src/x86_64/bindings.rs
++++ b/src/x86_64/bindings.rs
+@@ -4,7 +4,7 @@
+ #[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct __BindgenBitfieldUnit<Storage> {
+     storage: Storage,
+@@ -88,7 +88,7 @@
+ #[derive(Default)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct __IncompleteArrayField<T>(::std::marker::PhantomData<T>, [T; 0]);
+ impl<T> __IncompleteArrayField<T> {
+@@ -825,7 +825,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_pic_state {
+     pub last_irr: __u8,
+@@ -1024,7 +1024,7 @@
+ #[derive(Copy, Clone)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_ioapic_state {
+     pub base_address: __u64,
+@@ -1036,10 +1036,7 @@
+ }
+ #[repr(C)]
+ #[derive(Copy, Clone)]
+-#[cfg_attr(
+-    feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
+-)]
++#[cfg_attr(feature = "serde", derive(zerocopy::Immutable, zerocopy::FromBytes))]
+ pub union kvm_ioapic_state__bindgen_ty_1 {
+     pub bits: __u64,
+     pub fields: kvm_ioapic_state__bindgen_ty_1__bindgen_ty_1,
+@@ -1048,7 +1045,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_ioapic_state__bindgen_ty_1__bindgen_ty_1 {
+     pub vector: __u8,
+@@ -1388,7 +1385,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_regs {
+     pub rax: __u64,
+@@ -1609,7 +1606,7 @@
+ #[derive(Debug, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_lapic_state {
+     pub regs: [::std::os::raw::c_char; 1024usize],
+@@ -1652,7 +1649,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_segment {
+     pub base: __u64,
+@@ -1818,7 +1815,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_dtable {
+     pub base: __u64,
+@@ -1874,7 +1871,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_sregs {
+     pub cs: kvm_segment,
+@@ -2463,7 +2460,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_msr_entry {
+     pub index: __u32,
+@@ -2519,7 +2516,7 @@
+ #[derive(Debug, Default)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_msrs {
+     pub nmsrs: __u32,
+@@ -2875,7 +2872,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_cpuid_entry2 {
+     pub function: __u32,
+@@ -2986,7 +2983,7 @@
+ #[derive(Debug, Default)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_cpuid2 {
+     pub nent: __u32,
+@@ -3042,7 +3039,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_pit_channel_state {
+     pub count: __u32,
+@@ -3343,7 +3340,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_pit_state2 {
+     pub channels: [kvm_pit_channel_state; 3usize],
+@@ -3440,7 +3437,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_vcpu_events {
+     pub exception: kvm_vcpu_events__bindgen_ty_1,
+@@ -3458,7 +3455,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_vcpu_events__bindgen_ty_1 {
+     pub injected: __u8,
+@@ -3537,7 +3534,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_vcpu_events__bindgen_ty_2 {
+     pub injected: __u8,
+@@ -3605,7 +3602,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_vcpu_events__bindgen_ty_3 {
+     pub injected: __u8,
+@@ -3673,7 +3670,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_vcpu_events__bindgen_ty_4 {
+     pub smm: __u8,
+@@ -3741,7 +3738,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_vcpu_events__bindgen_ty_5 {
+     pub pending: __u8,
+@@ -3891,7 +3888,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_debugregs {
+     pub db: [__u64; 4usize],
+@@ -3969,7 +3966,7 @@
+ #[derive(Debug)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_xsave {
+     pub region: [__u32; 1024usize],
+@@ -4023,7 +4020,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_xcr {
+     pub xcr: __u32,
+@@ -4079,7 +4076,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_xcrs {
+     pub nr_xcrs: __u32,
+@@ -7415,7 +7412,7 @@
+ #[derive(Copy, Clone)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_irqchip {
+     pub chip_id: __u32,
+@@ -7424,6 +7421,7 @@
+ }
+ #[repr(C)]
+ #[derive(Copy, Clone)]
++#[cfg_attr(feature = "serde", derive(zerocopy::TryFromBytes))]
+ pub union kvm_irqchip__bindgen_ty_1 {
+     pub dummy: [::std::os::raw::c_char; 512usize],
+     pub pic: kvm_pic_state,
+@@ -11360,7 +11358,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_mp_state {
+     pub mp_state: __u32,
+@@ -12296,7 +12294,7 @@
+ #[derive(Debug, Default, Copy, Clone, PartialEq)]
+ #[cfg_attr(
+     feature = "serde",
+-    derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++    derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+ )]
+ pub struct kvm_clock_data {
+     pub clock: __u64,
+--- a/src/x86_64/serialize.rs
++++ b/src/x86_64/serialize.rs
+@@ -8,7 +8,7 @@
+     kvm_xcr, kvm_xcrs, kvm_xsave,
+ };
+ use serde::{Deserialize, Deserializer, Serialize, Serializer};
+-use zerocopy::{transmute, AsBytes, FromBytes, FromZeroes};
++use zerocopy::{transmute, IntoBytes, FromBytes, FromZeroes, Immutable};
+ 
+ serde_impls!(
+     kvm_regs,
+@@ -36,7 +36,19 @@
+ // the fields have different sizes, due to the smaller fields having padding.
+ // Miri however does not complain about these implementations (e.g. about
+ // reading the "padding" for one union field as valid data for a bigger one)
+-unsafe impl FromZeroes for kvm_irqchip__bindgen_ty_1 {
++unsafe impl IntoBytes for kvm_ioapic_state__bindgen_ty_1 {
++    fn only_derive_is_allowed_to_implement_this_trait()
++    where
++        Self: Sized,
++    {
++    }
++}
++
++// SAFETY: zerocopy's derives explicitly disallow deriving for unions where
++// the fields have different sizes, due to the smaller fields having padding.
++// Miri however does not complain about these implementations (e.g. about
++// reading the "padding" for one union field as valid data for a bigger one)
++unsafe impl FromZeros for kvm_irqchip__bindgen_ty_1 {
+     fn only_derive_is_allowed_to_implement_this_trait()
+     where
+         Self: Sized,
+@@ -60,7 +72,19 @@
+ // the fields have different sizes, due to the smaller fields having padding.
+ // Miri however does not complain about these implementations (e.g. about
+ // reading the "padding" for one union field as valid data for a bigger one)
+-unsafe impl AsBytes for kvm_irqchip__bindgen_ty_1 {
++unsafe impl IntoBytes for kvm_irqchip__bindgen_ty_1 {
++    fn only_derive_is_allowed_to_implement_this_trait()
++    where
++        Self: Sized,
++    {
++    }
++}
++
++// SAFETY: zerocopy's derives explicitly disallow deriving for unions where
++// the fields have different sizes, due to the smaller fields having padding.
++// Miri however does not complain about these implementations (e.g. about
++// reading the "padding" for one union field as valid data for a bigger one)
++unsafe impl Immutable for kvm_irqchip__bindgen_ty_1 {
+     fn only_derive_is_allowed_to_implement_this_trait()
+     where
+         Self: Sized,
+@@ -91,12 +115,12 @@
+         //
+         // #[cfg_attr(
+         //     feature = "serde",
+-        //     derive(zerocopy::AsBytes, zerocopy::FromBytes, zerocopy::FromZeroes)
++        //     derive(zerocopy::IntoBytes, zerocopy::Immutable, zerocopy::FromBytes)
+         // )]
+         //
+         // to all structures causing compilation errors (we need the zerocopy traits, as the
+         // `Serialize` and `Deserialize` implementations are provided by the `serde_impls!` macro
+-        // above, which implements serialization based on zerocopy's `FromBytes` and `AsBytes`
++        // above, which implements serialization based on zerocopy's `FromBytes` and `IntoBytes`
+         // traits that it expects to be derived).
+         //
+         // NOTE: This only include "top-level" items, and does not list out bindgen-anonymous types

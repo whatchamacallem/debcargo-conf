@@ -2,7 +2,7 @@ Index: ring/tests/ed25519_tests.rs
 ===================================================================
 --- ring.orig/tests/ed25519_tests.rs
 +++ ring/tests/ed25519_tests.rs
-@@ -24,7 +24,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
+@@ -27,7 +27,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
  #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
  wasm_bindgen_test_configure!(run_in_browser);
  
@@ -11,7 +11,7 @@ Index: ring/tests/ed25519_tests.rs
  #[test]
  fn test_signature_ed25519() {
      test::run(test_file!("ed25519_tests.txt"), |section, test_case| {
-@@ -65,10 +65,10 @@ fn test_signature_ed25519() {
+@@ -69,10 +69,10 @@ fn test_signature_ed25519() {
  
          Ok(())
      });
@@ -24,7 +24,7 @@ Index: ring/tests/ed25519_tests.rs
  fn test_signature_ed25519_verify() {
      test::run(
          test_file!("ed25519_verify_tests.txt"),
-@@ -87,7 +87,7 @@ fn test_signature_ed25519_verify() {
+@@ -91,7 +91,7 @@ fn test_signature_ed25519_verify() {
              Ok(())
          },
      );
@@ -33,7 +33,7 @@ Index: ring/tests/ed25519_tests.rs
  
  fn test_signature_verification(
      public_key: &[u8],
-@@ -123,7 +123,7 @@ enum FromPkcs8Variant {
+@@ -127,7 +127,7 @@ enum FromPkcs8Variant {
      MaybeUnchecked,
  }
  
@@ -42,7 +42,7 @@ Index: ring/tests/ed25519_tests.rs
  fn test_ed25519_from_pkcs8_unchecked() {
      test_ed25519_from_pkcs8_(
          FromPkcs8Variant::MaybeUnchecked,
-@@ -185,7 +185,7 @@ fn test_ed25519_from_pkcs8_(
+@@ -189,7 +189,7 @@ fn test_ed25519_from_pkcs8_(
              Ok(())
          },
      );
@@ -55,16 +55,16 @@ Index: ring/src/aead/aes.rs
 ===================================================================
 --- ring.orig/src/aead/aes.rs
 +++ ring/src/aead/aes.rs
-@@ -429,7 +429,7 @@ mod tests {
+@@ -209,7 +209,7 @@ mod tests {
      use super::*;
-     use crate::test;
+     use crate::testutil as test;
  
 -    #[test]
 +    /* #[test]
      pub fn test_aes() {
-         let cpu_features = cpu::features();
-         test::run(test_file!("aes_tests.txt"), |section, test_case| {
-@@ -445,7 +445,7 @@ mod tests {
+         test::run(test_vector_file!("aes_tests.txt"), |section, test_case| {
+             assert_eq!(section, "");
+@@ -223,7 +223,7 @@ mod tests {
  
              Ok(())
          })
@@ -86,12 +86,30 @@ Index: ring/src/aead/chacha.rs
      fn chacha20_test_default() {
          // Always use `MAX_OFFSET` if we hav assembly code.
          let max_offset = if cfg!(any(
-@@ -280,7 +280,7 @@ mod tests {
- 
-             Ok(())
+@@ -235,7 +235,7 @@ mod tests {
+         chacha20_test(MAX_ALIGNMENT_AND_OFFSET_SUBSET, |key, ctr, in_out, _cpu| {
+             fallback::ChaCha20_ctr32(key, ctr, in_out)
          });
 -    }
 +    } */
+ 
+     // Verifies the encryption is successful when done on overlapping buffers.
+     //
+@@ -244,7 +244,7 @@ mod tests {
+     // not exactly overlapping. Such failures are dependent not only on the
+     // degree of overlapping but also the length of the data. `encrypt_within`
+     // works around that.
+-    fn chacha20_test(
++    /*fn chacha20_test(
+         max_alignment_and_offset: (usize, usize),
+         f: impl for<'k, 'o> Fn(&'k Key, Counter, Overlapping<'o>, cpu::Features),
+     ) {
+@@ -288,7 +288,7 @@ mod tests {
+                 Ok(())
+             },
+         );
+-    }
++    }*/
  
      fn chacha20_test_case_inner(
          key: &Key,
@@ -99,7 +117,7 @@ Index: ring/src/arithmetic/bigint.rs
 ===================================================================
 --- ring.orig/src/arithmetic/bigint.rs
 +++ ring/src/arithmetic/bigint.rs
-@@ -711,7 +711,7 @@ mod tests {
+@@ -841,7 +841,7 @@ mod tests {
  
      impl PublicModulus for M {}
  
@@ -108,7 +126,7 @@ Index: ring/src/arithmetic/bigint.rs
      fn test_elem_exp_consttime() {
          let cpu_features = cpu::features();
          test::run(
-@@ -764,9 +764,9 @@ mod tests {
+@@ -947,9 +947,9 @@ mod tests {
                  Ok(())
              },
          )
@@ -120,7 +138,7 @@ Index: ring/src/arithmetic/bigint.rs
      fn test_elem_squared() {
          let cpu_features = cpu::features();
          test::run(
-@@ -787,9 +787,9 @@ mod tests {
+@@ -970,9 +970,9 @@ mod tests {
                  Ok(())
              },
          )
@@ -132,7 +150,7 @@ Index: ring/src/arithmetic/bigint.rs
      fn test_elem_reduced() {
          let cpu_features = cpu::features();
          test::run(
-@@ -838,7 +838,7 @@ mod tests {
+@@ -1022,7 +1022,7 @@ mod tests {
                  Ok(())
              },
          )
@@ -145,7 +163,7 @@ Index: ring/src/ec/suite_b/ops.rs
 ===================================================================
 --- ring.orig/src/ec/suite_b/ops.rs
 +++ ring/src/ec/suite_b/ops.rs
-@@ -500,7 +500,7 @@ mod tests {
+@@ -656,7 +656,7 @@ mod tests {
          q_minus_n_plus_n_equals_0_test(&p384::PUBLIC_SCALAR_OPS);
      }
  
@@ -154,16 +172,16 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_elem_add_test() {
          elem_add_test(
              &p256::PUBLIC_SCALAR_OPS,
-@@ -514,7 +514,7 @@ mod tests {
+@@ -670,7 +670,7 @@ mod tests {
              &p384::PUBLIC_SCALAR_OPS,
-             test_file!("ops/p384_elem_sum_tests.txt"),
+             test_vector_file!("ops/p384_elem_sum_tests.txt"),
          );
 -    }
 +    } */
  
      fn elem_add_test(ops: &PublicScalarOps, test_file: test::File) {
-         test::run(test_file, |section, test_case| {
-@@ -540,7 +540,7 @@ mod tests {
+         let cops = ops.public_key_ops.common;
+@@ -697,7 +697,7 @@ mod tests {
      // XXX: There's no `p256_sub` in *ring*; it's logic is inlined into
      // the point arithmetic functions. Thus, we can't test it.
  
@@ -172,16 +190,16 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p384_elem_sub_test() {
          prefixed_extern! {
              fn p384_elem_sub(r: *mut Limb, a: *const Limb, b: *const Limb);
-@@ -550,7 +550,7 @@ mod tests {
+@@ -707,7 +707,7 @@ mod tests {
              p384_elem_sub,
-             test_file!("ops/p384_elem_sum_tests.txt"),
+             test_vector_file!("ops/p384_elem_sum_tests.txt"),
          );
 -    }
 +    } */
  
      fn elem_sub_test(
-         ops: &CommonOps,
-@@ -591,7 +591,7 @@ mod tests {
+         ops: &'static CommonOps,
+@@ -749,7 +749,7 @@ mod tests {
      // XXX: There's no `p256_div_by_2` in *ring*; it's logic is inlined
      // into the point arithmetic functions. Thus, we can't test it.
  
@@ -190,16 +208,16 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p384_elem_div_by_2_test() {
          prefixed_extern! {
              fn p384_elem_div_by_2(r: *mut Limb, a: *const Limb);
-@@ -601,7 +601,7 @@ mod tests {
+@@ -759,7 +759,7 @@ mod tests {
              p384_elem_div_by_2,
-             test_file!("ops/p384_elem_div_by_2_tests.txt"),
+             test_vector_file!("ops/p384_elem_div_by_2_tests.txt"),
          );
 -    }
 +    } */
  
      fn elem_div_by_2_test(
-         ops: &CommonOps,
-@@ -625,7 +625,7 @@ mod tests {
+         ops: &'static CommonOps,
+@@ -784,7 +784,7 @@ mod tests {
      }
  
      // There is no `ecp_nistz256_neg` on other targets.
@@ -208,34 +226,34 @@ Index: ring/src/ec/suite_b/ops.rs
      #[test]
      fn p256_elem_neg_test() {
          prefixed_extern! {
-@@ -648,7 +648,7 @@ mod tests {
+@@ -807,7 +807,7 @@ mod tests {
              p384_elem_neg,
-             test_file!("ops/p384_elem_neg_tests.txt"),
+             test_vector_file!("ops/p384_elem_neg_tests.txt"),
          );
 -    }
 +    } */
  
      fn elem_neg_test(
-         ops: &CommonOps,
-@@ -683,7 +683,7 @@ mod tests {
+         ops: &'static CommonOps,
+@@ -843,7 +843,7 @@ mod tests {
          })
      }
  
 -    #[test]
 +    /* #[test]
      fn p256_elem_mul_test() {
-         elem_mul_test(&p256::COMMON_OPS, test_file!("ops/p256_elem_mul_tests.txt"));
-     }
-@@ -691,7 +691,7 @@ mod tests {
-     #[test]
-     fn p384_elem_mul_test() {
-         elem_mul_test(&p384::COMMON_OPS, test_file!("ops/p384_elem_mul_tests.txt"));
+         elem_mul_test(
+             &p256::COMMON_OPS,
+@@ -857,7 +857,7 @@ mod tests {
+             &p384::COMMON_OPS,
+             test_vector_file!("ops/p384_elem_mul_tests.txt"),
+         );
 -    }
-+    } */
++    }*/
  
-     fn elem_mul_test(ops: &CommonOps, test_file: test::File) {
-         test::run(test_file, |section, test_case| {
-@@ -707,7 +707,7 @@ mod tests {
+     fn elem_mul_test(ops: &'static CommonOps, test_file: test::File) {
+         let q = &ops.elem_modulus(cpu::features());
+@@ -874,7 +874,7 @@ mod tests {
          })
      }
  
@@ -244,16 +262,16 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_scalar_mul_test() {
          scalar_mul_test(
              &p256::SCALAR_OPS,
-@@ -721,7 +721,7 @@ mod tests {
+@@ -888,7 +888,7 @@ mod tests {
              &p384::SCALAR_OPS,
-             test_file!("ops/p384_scalar_mul_tests.txt"),
+             test_vector_file!("ops/p384_scalar_mul_tests.txt"),
          );
 -    }
 +    } */
  
      fn scalar_mul_test(ops: &ScalarOps, test_file: test::File) {
-         test::run(test_file, |section, test_case| {
-@@ -737,7 +737,7 @@ mod tests {
+         let cpu = cpu::features();
+@@ -906,7 +906,7 @@ mod tests {
          })
      }
  
@@ -261,18 +279,18 @@ Index: ring/src/ec/suite_b/ops.rs
 +    /* #[test]
      fn p256_scalar_square_test() {
          prefixed_extern! {
-             fn p256_scalar_sqr_rep_mont(r: *mut Limb, a: *const Limb, rep: Limb);
-@@ -747,7 +747,7 @@ mod tests {
+             fn p256_scalar_sqr_rep_mont(r: *mut Limb, a: *const Limb, rep: LeakyWord);
+@@ -916,7 +916,7 @@ mod tests {
              p256_scalar_sqr_rep_mont,
-             test_file!("ops/p256_scalar_square_tests.txt"),
+             test_vector_file!("ops/p256_scalar_square_tests.txt"),
          );
 -    }
 +    } */
  
      // XXX: There's no `p384_scalar_square_test()` because there's no dedicated
      // `p384_scalar_sqr_rep_mont()`.
-@@ -796,7 +796,7 @@ mod tests {
-         let _ = p384::PRIVATE_SCALAR_OPS.scalar_inv_to_mont(&ZERO_SCALAR);
+@@ -968,7 +968,7 @@ mod tests {
+         let _ = p384::PRIVATE_SCALAR_OPS.scalar_inv_to_mont(&ZERO_SCALAR, cpu::features());
      }
  
 -    #[test]
@@ -280,16 +298,16 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_point_sum_test() {
          point_sum_test(
              &p256::PRIVATE_KEY_OPS,
-@@ -810,7 +810,7 @@ mod tests {
+@@ -982,7 +982,7 @@ mod tests {
              &p384::PRIVATE_KEY_OPS,
-             test_file!("ops/p384_point_sum_tests.txt"),
+             test_vector_file!("ops/p384_point_sum_tests.txt"),
          );
 -    }
 +    } */
  
      fn point_sum_test(ops: &PrivateKeyOps, test_file: test::File) {
-         test::run(test_file, |section, test_case| {
-@@ -827,7 +827,7 @@ mod tests {
+         let cpu = cpu::features();
+@@ -1001,7 +1001,7 @@ mod tests {
          });
      }
  
@@ -298,16 +316,16 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_point_sum_mixed_test() {
          prefixed_extern! {
              fn p256_point_add_affine(
-@@ -841,7 +841,7 @@ mod tests {
+@@ -1015,7 +1015,7 @@ mod tests {
              p256_point_add_affine,
-             test_file!("ops/p256_point_sum_mixed_tests.txt"),
+             test_vector_file!("ops/p256_point_sum_mixed_tests.txt"),
          );
 -    }
 +    } */
  
      // XXX: There is no `nistz384_point_add_affine()`.
  
-@@ -872,7 +872,7 @@ mod tests {
+@@ -1046,7 +1046,7 @@ mod tests {
          });
      }
  
@@ -316,45 +334,46 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_point_double_test() {
          prefixed_extern! {
              fn p256_point_double(
-@@ -900,7 +900,7 @@ mod tests {
+@@ -1074,7 +1074,7 @@ mod tests {
              p384_point_double,
-             test_file!("ops/p384_point_double_tests.txt"),
+             test_vector_file!("ops/p384_point_double_tests.txt"),
          );
 -    }
 +    } */
  
      fn point_double_test(
          ops: &PrivateKeyOps,
-@@ -928,7 +928,7 @@ mod tests {
+@@ -1102,7 +1102,7 @@ mod tests {
      }
  
      /// TODO: We should be testing `point_mul` with points other than the generator.
 -    #[test]
 +    /* #[test]
      fn p256_point_mul_test() {
-         point_mul_base_tests(
-             &p256::PRIVATE_KEY_OPS,
-@@ -945,16 +945,16 @@ mod tests {
-             |s| p384::PRIVATE_KEY_OPS.point_mul(s, &p384::GENERATOR),
-             test_file!("ops/p384_point_mul_base_tests.txt"),
+         let generator = (
+             Elem::from(&p256::GENERATOR.0),
+@@ -1113,9 +1113,9 @@ mod tests {
+             |s, cpu| p256::PRIVATE_KEY_OPS.point_mul(s, &generator, cpu),
+             test_vector_file!("ops/p256_point_mul_base_tests.txt"),
          );
 -    }
 +    } */
  
--    #[test]
-+    /* #[test]
-     fn p256_point_mul_serialized_test() {
-         point_mul_serialized_test(
-             &p256::PRIVATE_KEY_OPS,
+-    /// TODO: We should be testing `point_mul` with points other than the generator.
++    /* /// TODO: We should be testing `point_mul` with points other than the generator.
+     #[test]
+     fn p384_point_mul_test() {
+         let generator = (
+@@ -1137,7 +1137,7 @@ mod tests {
              &p256::PUBLIC_KEY_OPS,
-             test_file!("ops/p256_point_mul_serialized_tests.txt"),
+             test_vector_file!("ops/p256_point_mul_serialized_tests.txt"),
          );
 -    }
-+    } */
++    }*/
  
      fn point_mul_serialized_test(
          priv_ops: &PrivateKeyOps,
-@@ -996,7 +996,7 @@ mod tests {
+@@ -1183,7 +1183,7 @@ mod tests {
          })
      }
  
@@ -363,9 +382,9 @@ Index: ring/src/ec/suite_b/ops.rs
      fn p256_point_mul_base_test() {
          point_mul_base_tests(
              &p256::PRIVATE_KEY_OPS,
-@@ -1012,7 +1012,7 @@ mod tests {
-             |s| p384::PRIVATE_KEY_OPS.point_mul_base(s),
-             test_file!("ops/p384_point_mul_base_tests.txt"),
+@@ -1199,7 +1199,7 @@ mod tests {
+             |s, cpu| p384::PRIVATE_KEY_OPS.point_mul_base(s, cpu),
+             test_vector_file!("ops/p384_point_mul_base_tests.txt"),
          );
 -    }
 +    }*/
@@ -376,16 +395,16 @@ Index: ring/src/ec/suite_b/public_key.rs
 ===================================================================
 --- ring.orig/src/ec/suite_b/public_key.rs
 +++ ring/src/ec/suite_b/public_key.rs
-@@ -69,7 +69,7 @@ mod tests {
-     use super::{super::ops, *};
-     use crate::test;
+@@ -71,7 +71,7 @@ mod tests {
+     use crate::cpu;
+     use crate::testutil as test;
  
 -    #[test]
 +    /* #[test]
      fn parse_uncompressed_point_test() {
+         let cpu = cpu::features();
          test::run(
-             test_file!("suite_b_public_key_tests.txt"),
-@@ -93,7 +93,7 @@ mod tests {
+@@ -97,7 +97,7 @@ mod tests {
                  Ok(())
              },
          );
@@ -398,16 +417,16 @@ Index: ring/src/rsa/padding.rs
 ===================================================================
 --- ring.orig/src/rsa/padding.rs
 +++ ring/src/rsa/padding.rs
-@@ -85,7 +85,7 @@ mod test {
-     use crate::{digest, error, test};
+@@ -97,7 +97,7 @@ mod test {
+     use crate::{digest, error};
      use alloc::vec;
  
 -    #[test]
 +    /* #[test]
      fn test_pss_padding_verify() {
          test::run(
-             test_file!("rsa_pss_padding_tests.txt"),
-@@ -120,10 +120,10 @@ mod test {
+             test_vector_file!("rsa_pss_padding_tests.txt"),
+@@ -132,10 +132,10 @@ mod test {
                  Ok(())
              },
          );
@@ -420,25 +439,25 @@ Index: ring/src/rsa/padding.rs
      #[test]
      fn test_pss_padding_encode() {
          test::run(
-@@ -160,5 +160,5 @@ mod test {
+@@ -173,5 +173,5 @@ mod test {
                  Ok(())
              },
          );
 -    }
 +    }*/
  }
-Index: ring/src/test.rs
+Index: ring/src/testutil.rs
 ===================================================================
---- ring.orig/src/test.rs
-+++ ring/src/test.rs
-@@ -541,7 +541,7 @@ pub mod rand {
- mod tests {
-     use crate::{error, test};
+--- ring.orig/src/testutil.rs
++++ ring/src/testutil.rs
+@@ -541,7 +541,7 @@ mod tests {
+     use crate::error;
+     use crate::testutil as test;
  
 -    #[test]
 +    /* #[test]
      fn one_ok() {
-         test::run(test_file!("test_1_tests.txt"), |_, test_case| {
+         test::run(test_vector_file!("test_1_tests.txt"), |_, test_case| {
              let _ = test_case.consume_string("Key");
 @@ -565,9 +565,9 @@ mod tests {
              let _ = test_case.consume_string("Key");
@@ -452,10 +471,10 @@ Index: ring/src/test.rs
      #[should_panic(expected = "Test failed.")]
      fn first_err() {
          err_one(0)
-@@ -633,5 +633,5 @@ mod tests {
-     #[should_panic(expected = "Syntax error: Expected Key = Value.")]
-     fn syntax_error() {
-         test::run(test_file!("test_1_syntax_error_tests.txt"), |_, _| Ok(()));
+@@ -636,5 +636,5 @@ mod tests {
+             test_vector_file!("test_1_syntax_error_tests.txt"),
+             |_, _| Ok(()),
+         );
 -    }
 +    } */
  }
@@ -463,7 +482,7 @@ Index: ring/tests/aead_tests.rs
 ===================================================================
 --- ring.orig/tests/aead_tests.rs
 +++ ring/tests/aead_tests.rs
-@@ -78,11 +78,11 @@ macro_rules! test_aead {
+@@ -82,11 +82,11 @@ macro_rules! test_aead {
      }
  }
  
@@ -477,7 +496,7 @@ Index: ring/tests/aead_tests.rs
  
  struct KnownAnswerTestCase<'a> {
      key: &'a [u8],
-@@ -441,7 +441,7 @@ fn test_aead_nonce_sizes() {
+@@ -445,7 +445,7 @@ fn test_aead_nonce_sizes() {
      assert!(aead::Nonce::try_assume_unique_for_key(&nonce[..16]).is_err()); // 128 bits.
  }
  
@@ -486,7 +505,7 @@ Index: ring/tests/aead_tests.rs
  #[test]
  fn aead_chacha20_poly1305_openssh() {
      // TODO: test_aead_key_sizes(...);
-@@ -487,7 +487,7 @@ fn aead_chacha20_poly1305_openssh() {
+@@ -492,7 +492,7 @@ fn aead_chacha20_poly1305_openssh() {
              Ok(())
          },
      );
@@ -499,7 +518,7 @@ Index: ring/tests/agreement_tests.rs
 ===================================================================
 --- ring.orig/tests/agreement_tests.rs
 +++ ring/tests/agreement_tests.rs
-@@ -68,7 +68,7 @@ fn agreement_traits() {
+@@ -72,7 +72,7 @@ fn agreement_traits() {
      assert_eq!(unparsed_public_key.as_ref(), &[0x01, 0x02, 0x03]);
  }
  
@@ -508,7 +527,7 @@ Index: ring/tests/agreement_tests.rs
  fn agreement_agree_ephemeral() {
      let rng = rand::SystemRandom::new();
  
-@@ -123,7 +123,7 @@ fn agreement_agree_ephemeral() {
+@@ -128,7 +128,7 @@ fn agreement_agree_ephemeral() {
  
          Ok(())
      });
@@ -521,7 +540,7 @@ Index: ring/tests/digest_tests.rs
 ===================================================================
 --- ring.orig/tests/digest_tests.rs
 +++ ring/tests/digest_tests.rs
-@@ -21,7 +21,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
+@@ -25,7 +25,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
  wasm_bindgen_test_configure!(run_in_browser);
  
  /// Test vectors from BoringSSL, Go, and other sources.
@@ -530,20 +549,20 @@ Index: ring/tests/digest_tests.rs
  fn digest_misc() {
      test::run(test_file!("digest_tests.txt"), |section, test_case| {
          assert_eq!(section, "");
-@@ -44,7 +44,7 @@ fn digest_misc() {
+@@ -48,7 +48,7 @@ fn digest_misc() {
  
          Ok(())
      });
 -}
 +} */
  
- mod digest_shavs {
-     use ring::{digest, test};
+ /// Test some ways in which `Context::update` and/or `Context::finish`
+ /// could go wrong by testing every combination of updating three inputs
 Index: ring/tests/ecdsa_tests.rs
 ===================================================================
 --- ring.orig/tests/ecdsa_tests.rs
 +++ ring/tests/ecdsa_tests.rs
-@@ -20,7 +20,7 @@ use ring::{
+@@ -23,7 +23,7 @@ use ring::{test, test_file};
  
  // ECDSA *signing* tests are in src/ec/ecdsa/signing.rs.
  
@@ -552,7 +571,7 @@ Index: ring/tests/ecdsa_tests.rs
  fn ecdsa_from_pkcs8_test() {
      let rng = rand::SystemRandom::new();
  
-@@ -84,7 +84,7 @@ fn ecdsa_from_pkcs8_test() {
+@@ -87,7 +87,7 @@ fn ecdsa_from_pkcs8_test() {
              Ok(())
          },
      );
@@ -561,7 +580,7 @@ Index: ring/tests/ecdsa_tests.rs
  
  // Verify that, at least, we generate PKCS#8 documents that we can read.
  #[test]
-@@ -110,7 +110,7 @@ fn ecdsa_generate_pkcs8_test() {
+@@ -113,7 +113,7 @@ fn ecdsa_generate_pkcs8_test() {
      }
  }
  
@@ -570,7 +589,7 @@ Index: ring/tests/ecdsa_tests.rs
  fn signature_ecdsa_verify_asn1_test() {
      test::run(
          test_file!("ecdsa_verify_asn1_tests.txt"),
-@@ -141,7 +141,7 @@ fn signature_ecdsa_verify_asn1_test() {
+@@ -144,7 +144,7 @@ fn signature_ecdsa_verify_asn1_test() {
              Ok(())
          },
      );
@@ -579,7 +598,7 @@ Index: ring/tests/ecdsa_tests.rs
  
  #[test]
  fn signature_ecdsa_verify_fixed_test() {
-@@ -175,7 +175,7 @@ fn signature_ecdsa_verify_fixed_test() {
+@@ -178,7 +178,7 @@ fn signature_ecdsa_verify_fixed_test() {
              Ok(())
          },
      );
@@ -588,7 +607,7 @@ Index: ring/tests/ecdsa_tests.rs
  
  #[test]
  fn ecdsa_test_public_key_coverage() {
-@@ -214,7 +214,7 @@ fn ecdsa_test_public_key_coverage() {
+@@ -217,7 +217,7 @@ fn ecdsa_test_public_key_coverage() {
  // different each time. Because of that, here we simply verify that the
  // signature verifies correctly. The known-answer tests themselves are in
  // ecsda/signing.rs.
@@ -597,7 +616,7 @@ Index: ring/tests/ecdsa_tests.rs
  fn signature_ecdsa_sign_fixed_sign_and_verify_test() {
      let rng = rand::SystemRandom::new();
  
-@@ -261,9 +261,9 @@ fn signature_ecdsa_sign_fixed_sign_and_v
+@@ -264,9 +264,9 @@ fn signature_ecdsa_sign_fixed_sign_and_v
              Ok(())
          },
      );
@@ -609,7 +628,7 @@ Index: ring/tests/ecdsa_tests.rs
  // test vectors. Because the nonce is randomized, the signature will be
  // different each time. Because of that, here we simply verify that the
  // signature verifies correctly. The known-answer tests themselves are in
-@@ -315,4 +315,4 @@ fn signature_ecdsa_sign_asn1_test() {
+@@ -318,4 +318,4 @@ fn signature_ecdsa_sign_asn1_test() {
              Ok(())
          },
      );
@@ -619,7 +638,7 @@ Index: ring/tests/hkdf_tests.rs
 ===================================================================
 --- ring.orig/tests/hkdf_tests.rs
 +++ ring/tests/hkdf_tests.rs
-@@ -20,7 +20,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
+@@ -24,7 +24,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
  #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
  wasm_bindgen_test_configure!(run_in_browser);
  
@@ -628,7 +647,7 @@ Index: ring/tests/hkdf_tests.rs
  fn hkdf_tests() {
      test::run(test_file!("hkdf_tests.txt"), |section, test_case| {
          assert_eq!(section, "");
-@@ -53,7 +53,7 @@ fn hkdf_tests() {
+@@ -57,7 +57,7 @@ fn hkdf_tests() {
  
          Ok(())
      });
@@ -641,7 +660,7 @@ Index: ring/tests/hmac_tests.rs
 ===================================================================
 --- ring.orig/tests/hmac_tests.rs
 +++ ring/tests/hmac_tests.rs
-@@ -20,7 +20,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
+@@ -24,7 +24,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
  #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
  wasm_bindgen_test_configure!(run_in_browser);
  
@@ -650,7 +669,7 @@ Index: ring/tests/hmac_tests.rs
  fn hmac_tests() {
      test::run(test_file!("hmac_tests.txt"), |section, test_case| {
          assert_eq!(section, "");
-@@ -62,7 +62,7 @@ fn hmac_tests() {
+@@ -66,7 +66,7 @@ fn hmac_tests() {
  
          Ok(())
      });
@@ -663,7 +682,7 @@ Index: ring/tests/pbkdf2_tests.rs
 ===================================================================
 --- ring.orig/tests/pbkdf2_tests.rs
 +++ ring/tests/pbkdf2_tests.rs
-@@ -21,7 +21,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
+@@ -25,7 +25,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
  #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
  wasm_bindgen_test_configure!(run_in_browser);
  
@@ -672,7 +691,7 @@ Index: ring/tests/pbkdf2_tests.rs
  #[test]
  pub fn pbkdf2_tests() {
      test::run(test_file!("pbkdf2_tests.txt"), |section, test_case| {
-@@ -65,4 +65,4 @@ pub fn pbkdf2_tests() {
+@@ -69,4 +69,4 @@ pub fn pbkdf2_tests() {
  
          Ok(())
      });
@@ -682,16 +701,16 @@ Index: ring/tests/quic_tests.rs
 ===================================================================
 --- ring.orig/tests/quic_tests.rs
 +++ ring/tests/quic_tests.rs
-@@ -14,7 +14,7 @@
- 
- use ring::{aead::quic, test, test_file};
+@@ -18,7 +18,7 @@ use ring::aead::quic;
+ #[allow(deprecated)]
+ use ring::{test, test_file};
  
 -#[test]
 +/* #[test]
  fn quic_aes_128() {
      test_quic(&quic::AES_128, test_file!("quic_aes_128_tests.txt"));
  }
-@@ -27,7 +27,7 @@ fn quic_aes_256() {
+@@ -31,7 +31,7 @@ fn quic_aes_256() {
  #[test]
  fn quic_chacha20() {
      test_quic(&quic::CHACHA20, test_file!("quic_chacha20_tests.txt"));
@@ -699,12 +718,12 @@ Index: ring/tests/quic_tests.rs
 +}*/
  
  fn test_quic(alg: &'static quic::Algorithm, test_file: test::File) {
-     test_sample_len(alg);
+     test_key_len(alg);
 Index: ring/tests/rsa_tests.rs
 ===================================================================
 --- ring.orig/tests/rsa_tests.rs
 +++ ring/tests/rsa_tests.rs
-@@ -28,7 +28,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
+@@ -30,7 +30,7 @@ use wasm_bindgen_test::{wasm_bindgen_tes
  #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
  wasm_bindgen_test_configure!(run_in_browser);
  
@@ -713,7 +732,7 @@ Index: ring/tests/rsa_tests.rs
  fn rsa_from_pkcs8_test() {
      test::run(
          test_file!("rsa_from_pkcs8_tests.txt"),
-@@ -48,9 +48,9 @@ fn rsa_from_pkcs8_test() {
+@@ -50,9 +50,9 @@ fn rsa_from_pkcs8_test() {
              Ok(())
          },
      );
@@ -725,7 +744,7 @@ Index: ring/tests/rsa_tests.rs
  #[test]
  fn test_signature_rsa_pkcs1_sign() {
      let rng = rand::SystemRandom::new();
-@@ -89,9 +89,9 @@ fn test_signature_rsa_pkcs1_sign() {
+@@ -91,9 +91,9 @@ fn test_signature_rsa_pkcs1_sign() {
              Ok(())
          },
      );
@@ -737,7 +756,7 @@ Index: ring/tests/rsa_tests.rs
  #[test]
  fn test_signature_rsa_pss_sign() {
      test::run(
-@@ -126,7 +126,7 @@ fn test_signature_rsa_pss_sign() {
+@@ -129,7 +129,7 @@ fn test_signature_rsa_pss_sign() {
              Ok(())
          },
      );
@@ -746,7 +765,7 @@ Index: ring/tests/rsa_tests.rs
  
  // `KeyPair::sign` requires that the output buffer is the same length as
  // the public key modulus. Test what happens when it isn't the same length.
-@@ -156,7 +156,7 @@ fn test_signature_rsa_pkcs1_sign_output_
+@@ -159,7 +159,7 @@ fn test_signature_rsa_pkcs1_sign_output_
      }
  }
  
@@ -755,7 +774,7 @@ Index: ring/tests/rsa_tests.rs
  #[test]
  fn test_signature_rsa_pkcs1_verify() {
      let sha1_params = &[
-@@ -235,9 +235,9 @@ fn test_signature_rsa_pkcs1_verify() {
+@@ -238,9 +238,9 @@ fn test_signature_rsa_pkcs1_verify() {
              Ok(())
          },
      );
@@ -767,7 +786,7 @@ Index: ring/tests/rsa_tests.rs
  #[test]
  fn test_signature_rsa_pss_verify() {
      test::run(
-@@ -282,11 +282,11 @@ fn test_signature_rsa_pss_verify() {
+@@ -285,11 +285,11 @@ fn test_signature_rsa_pss_verify() {
              Ok(())
          },
      );
@@ -781,7 +800,7 @@ Index: ring/tests/rsa_tests.rs
  #[test]
  fn test_signature_rsa_primitive_verification() {
      test::run(
-@@ -304,7 +304,7 @@ fn test_signature_rsa_primitive_verifica
+@@ -307,7 +307,7 @@ fn test_signature_rsa_primitive_verifica
              Ok(())
          },
      )
@@ -794,16 +813,16 @@ Index: ring/src/ec/suite_b/ecdsa/digest_scalar.rs
 ===================================================================
 --- ring.orig/src/ec/suite_b/ecdsa/digest_scalar.rs
 +++ ring/src/ec/suite_b/ecdsa/digest_scalar.rs
-@@ -73,7 +73,7 @@ mod tests {
-     use super::digest_bytes_scalar;
-     use crate::{digest, ec::suite_b::ops::*, limb, test};
+@@ -71,7 +71,7 @@ mod tests {
+     use crate::testutil as test;
+     use crate::{cpu, digest, ec::suite_b::ops::*, limb};
  
 -    #[test]
 +    /*#[test]
      fn test() {
+         let cpu = cpu::features();
          test::run(
-             test_file!("ecdsa_digest_scalar_tests.txt"),
-@@ -114,5 +114,5 @@ mod tests {
+@@ -115,5 +115,5 @@ mod tests {
                  Ok(())
              },
          );
@@ -814,16 +833,16 @@ Index: ring/src/ec/suite_b/ecdsa/signing.rs
 ===================================================================
 --- ring.orig/src/ec/suite_b/ecdsa/signing.rs
 +++ ring/src/ec/suite_b/ecdsa/signing.rs
-@@ -515,7 +515,7 @@ static EC_PUBLIC_KEY_P384_PKCS8_V1_TEMPL
- mod tests {
-     use crate::{rand, signature, test};
+@@ -529,7 +529,7 @@ mod tests {
+     use crate::testutil as test;
+     use crate::{rand, signature};
  
 -    #[test]
 +    /*#[test]
      fn signature_ecdsa_sign_fixed_test() {
          let rng = rand::SystemRandom::new();
  
-@@ -597,5 +597,5 @@ mod tests {
+@@ -611,5 +611,5 @@ mod tests {
                  Ok(())
              },
          );
@@ -834,17 +853,17 @@ Index: ring/src/ec/suite_b/ops/p256.rs
 ===================================================================
 --- ring.orig/src/ec/suite_b/ops/p256.rs
 +++ ring/src/ec/suite_b/ops/p256.rs
-@@ -314,7 +314,7 @@ prefixed_extern! {
+@@ -316,7 +316,7 @@ prefixed_extern! {
      );
  }
  
 -#[cfg(test)]
 +/*#[cfg(test)]
  mod tests {
-     #[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
-     #[test]
-@@ -326,4 +326,4 @@ mod tests {
-             test_file!("p256_point_mul_base_tests.txt"),
+     #[cfg(any(
+         all(target_arch = "aarch64", target_endian = "little"),
+@@ -331,4 +331,4 @@ mod tests {
+             test_vector_file!("p256_point_mul_base_tests.txt"),
          );
      }
 -}
@@ -853,8 +872,8 @@ Index: ring/src/rsa/keypair.rs
 ===================================================================
 --- ring.orig/src/rsa/keypair.rs
 +++ ring/src/rsa/keypair.rs
-@@ -632,7 +632,7 @@ mod tests {
-     use crate::test;
+@@ -651,7 +651,7 @@ mod tests {
+     use crate::testutil as test;
      use alloc::vec;
  
 -    #[test]
@@ -862,7 +881,7 @@ Index: ring/src/rsa/keypair.rs
      fn test_rsakeypair_private_exponentiate() {
          let cpu = cpu::features();
          test::run(
-@@ -662,5 +662,5 @@ mod tests {
+@@ -681,5 +681,5 @@ mod tests {
                  Ok(())
              },
          );

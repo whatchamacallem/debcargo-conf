@@ -1,0 +1,26 @@
+Index: nitrocli/Cargo.toml
+===================================================================
+--- nitrocli.orig/Cargo.toml
++++ nitrocli/Cargo.toml
+@@ -32,7 +32,7 @@
+ version = "0.2.2"
+ 
+ [dependencies.base32]
+-version = "0.4.0"
++version = "0.5.0"
+ 
+ [dependencies.libc]
+ version = "0.2"
+Index: nitrocli/src/commands.rs
+===================================================================
+--- nitrocli.orig/src/commands.rs
++++ nitrocli/src/commands.rs
+@@ -574,7 +574,7 @@
+ 
+ /// Prepare a base32 secret string for libnitrokey.
+ fn prepare_base32_secret(secret: &str) -> Result<String> {
+-  base32::decode(base32::Alphabet::RFC4648 { padding: false }, secret)
++  base32::decode(base32::Alphabet::Rfc4648 { padding: false }, secret)
+     .map(|vec| format_bytes(&vec))
+     .ok_or_else(|| Error::from("Could not parse base32 secret"))
+ }

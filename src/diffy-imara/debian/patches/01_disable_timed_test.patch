@@ -1,0 +1,20 @@
+Description: disable timing assertion in a test
+ as it does not pass reliably
+Author: Antonin Delpeuch <antonin@delpeuch.eu>
+Bug: https://codeberg.org/mergiraf/diffy-imara/issues/19
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: diffy-imara/src/diff/tests.rs
+===================================================================
+--- diffy-imara.orig/src/diff/tests.rs
++++ diffy-imara/src/diff/tests.rs
+@@ -761,7 +761,8 @@ Second:
+     let elapsed = now.elapsed();
+ 
+     println!("{:?}", elapsed);
+-    assert!(elapsed < std::time::Duration::from_micros(200));
++    // disabling assertion about the timing as it is too tight to pass reliably
++    // assert!(elapsed < std::time::Duration::from_micros(200));
+ 
+     assert_eq!(result, expected);
+ }

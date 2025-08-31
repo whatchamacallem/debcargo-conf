@@ -1,0 +1,15 @@
+Index: salsa/src/accumulator/accumulated_map.rs
+===================================================================
+--- salsa.orig/src/accumulator/accumulated_map.rs
++++ salsa/src/accumulator/accumulated_map.rs
+@@ -52,7 +52,9 @@ impl AccumulatedMap {
+     }
+ 
+     pub fn allocation_size(&self) -> usize {
+-        self.map.allocation_size()
++        // allocation_size() is not available in older hashbrown versions
++        // Return an approximation based on capacity
++        self.map.capacity() * std::mem::size_of::<(IngredientIndex, Box<dyn AnyAccumulated>)>()
+     }
+ }
+ 

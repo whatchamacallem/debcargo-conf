@@ -1,17 +1,42 @@
-Index: librsvg/Cargo.toml
-===================================================================
---- librsvg.orig/Cargo.toml
-+++ librsvg/Cargo.toml
-@@ -269,7 +269,7 @@ version = "0.3.0"
- version = "1.7.1"
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -191,7 +191,7 @@
+ harness = false
  
- [dependencies.rgb]
--version = "0.8"
-+version = "0.8.43"
- features = ["argb"]
+ [dependencies.cairo-rs]
+-version = "0.20"
++version = "0.21"
+ features = [
+     "v1_16",
+     "png",
+@@ -216,10 +216,10 @@
+ version = "0.9.0"
  
- [dependencies.selectors]
-@@ -306,7 +306,7 @@ default-features = false
+ [dependencies.gio]
+-version = "0.20"
++version = "0.21"
+ 
+ [dependencies.glib]
+-version = "0.20"
++version = "0.21"
+ 
+ [dependencies.image]
+ version = "0.25.0"
+@@ -253,11 +253,11 @@
+ version = "0.2"
+ 
+ [dependencies.pango]
+-version = "0.20"
++version = "0.21"
+ features = ["v1_46"]
+ 
+ [dependencies.pangocairo]
+-version = "0.20"
++version = "0.21"
+
+ [dependencies.rayon]
+ version = "1"
+@@ -306,7 +306,7 @@
  version = "0.5"
  
  [dev-dependencies.lopdf]
@@ -20,7 +45,7 @@ Index: librsvg/Cargo.toml
  
  [dev-dependencies.matches]
  version = "0.1"
-@@ -337,7 +337,6 @@ version = "3"
+@@ -337,7 +337,6 @@
  version = "7.0.0"
  
  [features]
@@ -28,3 +53,14 @@ Index: librsvg/Cargo.toml
  test-utils = ["yeslogic-fontconfig-sys"]
  
  [target.'cfg(all(not(target_os = "macos"), not(target_os = "windows")))'.dependencies.yeslogic-fontconfig-sys]
+--- a/src/io.rs
++++ b/src/io.rs
+@@ -107,7 +107,7 @@ pub fn acquire_data(
+         let file = GFile::for_uri(uri);
+         let (contents, _etag) = file.load_contents(cancellable)?;
+ 
+-        let (content_type, _uncertain) = gio::content_type_guess(Some(uri), &contents);
++        let (content_type, _uncertain) = gio::content_type_guess(Some(uri), &*contents);
+ 
+         let mime_type = if let Some(mime_type_str) = gio::content_type_get_mime_type(&content_type)
+         {

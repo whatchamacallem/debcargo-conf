@@ -1,8 +1,8 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index 8cb5f06..0af6cb7 100644
+index 27e2f4b..4a466f3 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -91,54 +91,67 @@
+@@ -94,102 +94,127 @@ path = "src/lib.rs"
  [[test]]
  name = "regression"
  path = "tests/regression.rs"
@@ -70,7 +70,9 @@ index 8cb5f06..0af6cb7 100644
  
  [[test]]
  name = "test_parse_quote"
-@@ -147,46 +160,57 @@
+ path = "tests/test_parse_quote.rs"
++required-features = ["parsing"]
+ 
  [[test]]
  name = "test_parse_stream"
  path = "tests/test_parse_stream.rs"
@@ -128,30 +130,157 @@ index 8cb5f06..0af6cb7 100644
  
  [[test]]
  name = "zzz_stable"
-diff --git a/tests/macros/mod.rs b/tests/macros/mod.rs
-index 024075c..9e870bf 100644
---- a/tests/macros/mod.rs
-+++ b/tests/macros/mod.rs
+diff --git a/src/custom_keyword.rs b/src/custom_keyword.rs
+index cc4f632..e9b76d5 100644
+--- a/src/custom_keyword.rs
++++ b/src/custom_keyword.rs
+@@ -43,7 +43,7 @@
+ /// identifier that is not a keyword, these can be declared as custom keywords
+ /// by crates that need to use them as such.
+ ///
+-/// ```
++/// ```ignore
+ /// use syn::{LitBool, LitStr, Result, Token};
+ /// use syn::parse::{Parse, ParseStream};
+ ///
+diff --git a/src/custom_punctuation.rs b/src/custom_punctuation.rs
+index eef5f54..c0ea04a 100644
+--- a/src/custom_punctuation.rs
++++ b/src/custom_punctuation.rs
+@@ -29,7 +29,7 @@
+ ///
+ /// # Example
+ ///
+-/// ```
++/// ```ignore
+ /// use proc_macro2::{TokenStream, TokenTree};
+ /// use syn::parse::{Parse, ParseStream, Peek, Result};
+ /// use syn::punctuated::Punctuated;
+diff --git a/src/error.rs b/src/error.rs
+index 6331054..0c92a40 100644
+--- a/src/error.rs
++++ b/src/error.rs
+@@ -29,7 +29,7 @@ pub type Result<T> = std::result::Result<T, Error>;
+ ///
+ /// [`parse_macro_input!`]: crate::parse_macro_input!
+ ///
+-/// ```
++/// ```ignore
+ /// # extern crate proc_macro;
+ /// #
+ /// use proc_macro::TokenStream;
+@@ -70,7 +70,7 @@ pub type Result<T> = std::result::Result<T, Error>;
+ /// [`.to_compile_error()`]: Error::to_compile_error
+ /// [`.into_compile_error()`]: Error::into_compile_error
+ ///
+-/// ```
++/// ```ignore
+ /// # extern crate proc_macro;
+ /// #
+ /// # use proc_macro::TokenStream;
+@@ -136,7 +136,7 @@ impl Error {
+     ///
+     /// # Example
+     ///
+-    /// ```
++    /// ```ignore
+     /// use syn::{Error, Ident, LitStr, Result, Token};
+     /// use syn::parse::ParseStream;
+     ///
+@@ -235,7 +235,7 @@ impl Error {
+     ///
+     /// # Example
+     ///
+-    /// ```
++    /// ```ignore
+     /// # extern crate proc_macro;
+     /// #
+     /// use proc_macro::TokenStream;
+diff --git a/src/lib.rs b/src/lib.rs
+index 1d2ccc3..884488d 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -69,7 +69,7 @@
+ //! proc-macro = true
+ //! ```
+ //!
+-//! ```
++//! ```ignore
+ //! # extern crate proc_macro;
+ //! #
+ //! use proc_macro::TokenStream;
+diff --git a/src/lit.rs b/src/lit.rs
+index 45c26d5..0d844a6 100644
+--- a/src/lit.rs
++++ b/src/lit.rs
+@@ -438,7 +438,7 @@ impl LitInt {
+     /// resulting errors will be correctly spanned to point to the literal token
+     /// in the macro input.
+     ///
+-    /// ```
++    /// ```ignore
+     /// use syn::LitInt;
+     /// use syn::parse::{Parse, ParseStream, Result};
+     ///
+diff --git a/src/punctuated.rs b/src/punctuated.rs
+index ebaaa94..b7c037f 100644
+--- a/src/punctuated.rs
++++ b/src/punctuated.rs
+@@ -990,7 +990,7 @@ impl<T, P> Pair<T, P> {
+     ///
+     /// # Example
+     ///
+-    /// ```
++    /// ```ignore
+     /// # use proc_macro2::Span;
+     /// # use syn::punctuated::Punctuated;
+     /// # use syn::{parse_quote, Token, TypeParamBound};
+diff --git a/src/token.rs b/src/token.rs
+index 752c188..9a4216b 100644
+--- a/src/token.rs
++++ b/src/token.rs
+@@ -12,7 +12,7 @@
+ //!
+ //! [`ItemStatic`]: crate::ItemStatic
+ //!
+-//! ```
++//! ```ignore
+ //! # use syn::{Attribute, Expr, Ident, Token, Type, Visibility};
+ //! #
+ //! pub struct ItemStatic {
+@@ -40,7 +40,7 @@
+ //! [`bracketed!`]: crate::bracketed!
+ //! [`braced!`]: crate::braced!
+ //!
+-//! ```
++//! ```ignore
+ //! use syn::{Attribute, Result};
+ //! use syn::parse::{Parse, ParseStream};
+ //! #
+@@ -806,7 +806,7 @@ define_delimiters! {
+ /// As a type, `Token!` is commonly used in the type of struct fields, the type
+ /// of a `let` statement, or in turbofish for a `parse` function.
+ ///
+-/// ```
++/// ```ignore
+ /// use syn::{Ident, Token};
+ /// use syn::parse::{Parse, ParseStream, Result};
+ ///
+@@ -830,7 +830,7 @@ define_delimiters! {
+ /// As an expression, `Token!` is used for peeking tokens or instantiating
+ /// tokens from a span.
+ ///
+-/// ```
++/// ```ignore
+ /// # use syn::{Ident, Token};
+ /// # use syn::parse::{Parse, ParseStream, Result};
+ /// #
+diff --git a/tests/debug/gen.rs b/tests/debug/gen.rs
+index d766a8e..8612e07 100644
+--- a/tests/debug/gen.rs
++++ b/tests/debug/gen.rs
 @@ -1,3 +1,4 @@
-+#![cfg(feature = "parsing")]
- #![allow(unused_macros, unused_macro_rules)]
++#![cfg(any(feature = "full", feature = "derive"))]
+ // This file is @generated by syn-internal-codegen.
+ // It is not intended for manual editing.
  
- #[path = "../debug/mod.rs"]
-diff --git a/tests/test_parse_quote.rs b/tests/test_parse_quote.rs
-index c3a9004..75bf60a 100644
---- a/tests/test_parse_quote.rs
-+++ b/tests/test_parse_quote.rs
-@@ -1,3 +1,4 @@
-+#![cfg(all(feature = "parsing", feature = "printing", feature = "full"))]
- #![allow(clippy::needless_lifetimes, clippy::uninlined_format_args)]
- 
- #[macro_use]
-diff --git a/tests/test_parse_stream.rs b/tests/test_parse_stream.rs
-index a650fc8..7962f00 100644
---- a/tests/test_parse_stream.rs
-+++ b/tests/test_parse_stream.rs
-@@ -1,3 +1,4 @@
-+#![cfg(feature = "printing")] // printing = ["dep:quote"]
- #![allow(clippy::items_after_statements, clippy::let_underscore_untyped)]
- 
- use proc_macro2::{Delimiter, Group, Punct, Spacing, Span, TokenStream, TokenTree};
