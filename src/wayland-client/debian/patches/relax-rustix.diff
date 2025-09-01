@@ -1,0 +1,22 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -66,7 +66,7 @@
+ optional = true
+ 
+ [dependencies.rustix]
+-version = "1.0.2"
++version = "0.38.0"
+ features = ["event"]
+ 
+ [dependencies.wayland-backend]
+--- a/src/conn.rs
++++ b/src/conn.rs
+@@ -224,7 +224,7 @@
+     )];
+ 
+     loop {
+-        match rustix::event::poll(&mut fds, None) {
++        match rustix::event::poll(&mut fds, -1) {
+             Ok(_) => break,
+             Err(rustix::io::Errno::INTR) => continue,
+             Err(e) => return Err(WaylandError::Io(e.into())),
