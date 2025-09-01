@@ -6,31 +6,51 @@ Author: Blair Noctis <ncts@debian.org>
 Last-Update: 2025-04-01
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -69,2 +69,3 @@
+@@ -152,6 +152,7 @@
+ [dependencies.rcore]
+ version = "0.2"
  package = "railway-core"
 +features = ["reqwest-requester"]
  
+ [dependencies.serde]
+ version = "1.0"
 --- a/src/profile/sncf.rs
 +++ b/src/profile/sncf.rs
-@@ -126,3 +126,3 @@
+@@ -124,7 +124,7 @@
+ mod test {
+     use crate::{
          api::journeys::JourneysOptions, client::HafasClient,
 -        requester::hyper::HyperRustlsRequester, Place, Stop,
 +        requester::reqwest::ReqwestRequester, Place, Stop,
      };
-@@ -134,3 +134,3 @@
+     use std::error::Error;
+ 
+@@ -132,7 +132,7 @@
+ 
+     #[tokio::test]
      async fn test_path_available() -> Result<(), Box<dyn Error>> {
 -        let client = HafasClient::new(SncfProfile {}, HyperRustlsRequester::new());
 +        let client = HafasClient::new(SncfProfile {}, Reqwest::new());
          let journeys = client
+             .journeys(
+                 Place::Stop(Stop {
 --- a/src/profile/tpg.rs
 +++ b/src/profile/tpg.rs
-@@ -128,3 +128,3 @@
+@@ -126,7 +126,7 @@
+ mod test {
+     use crate::{
          api::journeys::JourneysOptions, client::HafasClient,
 -        requester::hyper::HyperRustlsRequester, Place, Stop,
 +        requester::reqwest::ReqwestRequester, Place, Stop,
      };
-@@ -136,3 +136,3 @@
+     use std::error::Error;
+ 
+@@ -134,7 +134,7 @@
+ 
+     #[tokio::test]
      async fn test_path_available() -> Result<(), Box<dyn Error>> {
 -        let client = HafasClient::new(TpgProfile {}, HyperRustlsRequester::new());
 +        let client = HafasClient::new(TpgProfile {}, ReqwestRequester::new());
          let journeys = client
+             .journeys(
+                 Place::Stop(Stop {
