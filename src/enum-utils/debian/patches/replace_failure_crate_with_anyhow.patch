@@ -1,0 +1,140 @@
+From 628af8d1cec18eac117fc976d5b2483a2f30f7c4 Mon Sep 17 00:00:00 2001
+From: Chris Coulter <c.coulter@gmail.com>
+Date: Thu, 17 Nov 2022 09:12:02 +1100
+Subject: [PATCH] Replace failure with anyhow.
+Origin: https://github.com/ecstatic-morse/enum-utils/pull/6
+
+- failure is deprecated and has security flaws.
+- anyhow is a drop in replacement.
+---
+ Cargo.toml      |  6 +-----
+ src/attr.rs     | 18 +++++++++---------
+ src/conv.rs     |  2 +-
+ src/from_str.rs |  2 +-
+ src/iter.rs     |  2 +-
+ 5 files changed, 13 insertions(+), 17 deletions(-)
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -26,10 +26,8 @@
+ [dependencies.enum-utils-from-str]
+ version = "0.1.2"
+ 
+-[dependencies.failure]
+-version = "0.1"
+-features = ["std"]
+-default-features = false
++[dependencies.anyhow]
++version = "1.0"
+ 
+ [dependencies.proc-macro2]
+ version = "1.0"
+--- a/src/attr.rs
++++ b/src/attr.rs
+@@ -2,7 +2,7 @@
+ use std::convert::{TryFrom, TryInto};
+ use std::fmt;
+ 
+-use failure::{bail, format_err, Fallible};
++use anyhow::{bail, format_err, Result};
+ 
+ #[derive(Debug, Clone, Copy)]
+ pub enum Primitive {
+@@ -68,7 +68,7 @@
+ }
+ 
+ pub fn parse_primitive_repr<'a>(attrs: impl 'a + Iterator<Item = &'a syn::Attribute>)
+-    -> Fallible<Option<(Primitive, syn::Path)>>
++    -> Result<Option<(Primitive, syn::Path)>>
+ {
+     let mut repr = None;
+     for attr in attrs {
+@@ -117,13 +117,13 @@
+     }
+ }
+ 
+-pub type ErrorList = LinkedList<failure::Error>;
++pub type ErrorList = LinkedList<anyhow::Error>;
+ 
+ macro_rules! bail_list {
+     ($msg:literal $( , $args:expr )* $(,)?) => {
+         {
+             let mut list = ErrorList::new();
+-            list.push_back(failure::format_err!($msg, $($args),*));
++            list.push_back(anyhow::format_err!($msg, $($args),*));
+             return Err(list);
+         }
+     }
+@@ -139,7 +139,7 @@
+ }
+ 
+ impl Attr {
+-    pub fn parse_attrs(attr: &syn::Attribute) -> impl Iterator<Item = Fallible<Self>> {
++    pub fn parse_attrs(attr: &syn::Attribute) -> impl Iterator<Item = Result<Self>> {
+         use syn::NestedMeta;
+ 
+         Self::get_args(attr)
+@@ -167,7 +167,7 @@
+ 
+ /// Parse an attr from the `syn::Meta` inside parens after "enumeration".
+ impl TryFrom<&'_ syn::Meta> for Attr {
+-    type Error = failure::Error;
++    type Error = anyhow::Error;
+ 
+     fn try_from(meta: &syn::Meta) -> Result<Self, Self::Error> {
+         use syn::{Lit, Meta, MetaNameValue};
+@@ -217,7 +217,7 @@
+ 
+ impl VariantAttrs {
+     pub fn from_attrs<T>(attrs: T) -> Result<Self, ErrorList>
+-        where T: IntoIterator<Item = Fallible<Attr>>,
++        where T: IntoIterator<Item = Result<Attr>>,
+     {
+         let mut ret = VariantAttrs::default();
+         let mut errors = ErrorList::default();
+@@ -258,7 +258,7 @@
+ 
+ impl EnumAttrs {
+     pub fn from_attrs<T>(attrs: T) -> Result<Self, ErrorList>
+-        where T: IntoIterator<Item = Fallible<Attr>>,
++        where T: IntoIterator<Item = Result<Attr>>,
+     {
+         let mut ret = EnumAttrs::default();
+         let mut errors = ErrorList::default();
+@@ -295,7 +295,7 @@
+ 
+     /// This will be `None` if no `#[repr]` was specified, or an error if parsing failed or
+     /// multiple `#[repr]`s were specified.
+-    pub primitive_repr: Fallible<Option<(Primitive, syn::Path)>>,
++    pub primitive_repr: Result<Option<(Primitive, syn::Path)>>,
+ 
+     pub variants: Vec<(&'a syn::Variant, VariantAttrs)>,
+ 
+--- a/src/conv.rs
++++ b/src/conv.rs
+@@ -1,4 +1,4 @@
+-use failure::format_err;
++use anyhow::format_err;
+ use proc_macro2::{TokenStream, Span};
+ use quote::quote;
+ 
+--- a/src/from_str.rs
++++ b/src/from_str.rs
+@@ -1,6 +1,6 @@
+ use std::collections::BTreeMap;
+ 
+-use failure::format_err;
++use anyhow::format_err;
+ use proc_macro2::TokenStream;
+ use quote::quote;
+ 
+--- a/src/iter.rs
++++ b/src/iter.rs
+@@ -1,6 +1,6 @@
+ use std::ops::{Range, RangeInclusive};
+ 
+-use failure::format_err;
++use anyhow::format_err;
+ use proc_macro2::{Literal, TokenStream};
+ use quote::quote;
+ 
