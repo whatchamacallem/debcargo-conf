@@ -14,3 +14,32 @@
  optional = true
  
  [lints.rust.unexpected_cfgs]
+--- a/src/rng.rs
++++ b/src/rng.rs
+@@ -54,7 +54,7 @@
+         fn u128() -> u128 {
+             let mut bytes = [0u8; 16];
+ 
+-            getrandom::fill(&mut bytes).unwrap_or_else(|err| {
++            getrandom::getrandom(&mut bytes).unwrap_or_else(|err| {
+                 // NB: getrandom::Error has no source; this is adequate display
+                 panic!("could not retrieve random bytes for uuid: {}", err)
+             });
+@@ -65,7 +65,7 @@
+         fn u64() -> u64 {
+             let mut bytes = [0u8; 8];
+ 
+-            getrandom::fill(&mut bytes).unwrap_or_else(|err| {
++            getrandom::getrandom(&mut bytes).unwrap_or_else(|err| {
+                 // NB: getrandom::Error has no source; this is adequate display
+                 panic!("could not retrieve random bytes for uuid: {}", err)
+             });
+@@ -76,7 +76,7 @@
+         fn u16() -> u16 {
+             let mut bytes = [0u8; 2];
+ 
+-            getrandom::fill(&mut bytes).unwrap_or_else(|err| {
++            getrandom::getrandom(&mut bytes).unwrap_or_else(|err| {
+                 // NB: getrandom::Error has no source; this is adequate display
+                 panic!("could not retrieve random bytes for uuid: {}", err)
+             });
