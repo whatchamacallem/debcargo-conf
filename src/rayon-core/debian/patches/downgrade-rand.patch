@@ -1,0 +1,33 @@
+Last-Update: 2025-09-02
+Author: Blair Noctis <ncts@debian.org>
+Forwarded: not-needed
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -83,6 +83,6 @@
+ [dev-dependencies.rand]
+-version = "0.9"
++version = "0.8"
+ 
+ [dev-dependencies.rand_xorshift]
+-version = "0.4"
++version = "0.3"
+ 
+--- a/src/join/test.rs
++++ b/src/join/test.rs
+@@ -4,3 +4,3 @@
+ use crate::ThreadPoolBuilder;
+-use rand::distr::StandardUniform;
++use rand::distributions::Standard as StandardUniform;
+ use rand::{Rng, SeedableRng};
+--- a/src/scope/test.rs
++++ b/src/scope/test.rs
+@@ -121,3 +121,3 @@
+     } else {
+-        (0..rng.random_range(0..4)) // somewhere between 0 and 3 children at each level
++        (0..rng.gen_range(0..4)) // somewhere between 0 and 3 children at each level
+             .map(|_| random_tree1(depth - 1, rng))
+@@ -127,3 +127,3 @@
+     Tree {
+-        value: rng.random_range(0..1_000_000),
++        value: rng.gen_range(0..1_000_000),
+         children,
