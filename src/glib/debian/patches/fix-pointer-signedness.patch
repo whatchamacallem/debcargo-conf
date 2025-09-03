@@ -1,0 +1,15 @@
+From: =?UTF-8?q?Sebastian=20Dr=C3=B6ge?= <sebastian@centricular.com>
+Date: Mon, 25 Aug 2025 11:19:53 +0300
+Subject: [PATCH] glib: Fix pointer signedness
+
+--- a/src/gstring.rs
++++ b/src/gstring.rs
+@@ -151,7 +151,7 @@ impl GStr {
+         if ffi::g_utf8_validate(ptr as *const _, -1, &mut end_ptr) != ffi::GFALSE {
+             Some(Self::from_utf8_with_nul_unchecked(slice::from_raw_parts(
+                 ptr as *const u8,
+-                end_ptr.offset_from(ptr) as usize + 1,
++                end_ptr.offset_from(ptr as *const u8) as usize + 1,
+             )))
+         } else {
+             None
