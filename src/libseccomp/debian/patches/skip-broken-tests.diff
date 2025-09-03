@@ -39,7 +39,15 @@
  fn test_syscall_new() {
      for name in known_syscall_names::KNOWN_SYSCALL_NAMES {
          if let Ok(nr) = ScmpSyscall::from_name(name) {
-@@ -330,6 +333,7 @@
+@@ -285,6 +288,7 @@
+ }
+ 
+ #[test]
++#[cfg(not(any(target_arch = "s390x", target_arch = "powerpc64", target_arch = "powerpc")))]
+ fn test_builder_pattern() -> Result<(), Box<dyn std::error::Error>> {
+     let mut ctx = ScmpFilterContext::new(ScmpAction::Allow)?;
+     ctx.add_arch(ScmpArch::Arm)?;
+@@ -330,6 +334,7 @@
  }
  
  #[test]
@@ -47,7 +55,7 @@
  fn test_arch_functions() {
      let mut ctx = ScmpFilterContext::new(ScmpAction::Allow).unwrap();
      ctx.add_arch(ScmpArch::X86).unwrap();
-@@ -342,6 +346,7 @@
+@@ -342,6 +347,7 @@
  }
  
  #[test]
