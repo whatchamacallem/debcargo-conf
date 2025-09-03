@@ -1,0 +1,42 @@
+Description: disable sixel feature
+ Having this feature enabled requires packaging the sixels-rs crate,
+ which is just a Rust wrapper for libsixel and is a fork. Currently
+ there are no other packages that need this feature to be enabled in
+ the package, so it was decided to disable it
+Author: Nadzeya Hutsko <nadzya.info@gmail.com>
+Forwarded: not-needed
+Last-Update: 2025-09-03
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -38,7 +38,6 @@
+ [features]
+ default = []
+ print-file = ["image/default-formats"]
+-sixel = ["sixel-rs"]
+ 
+ [lib]
+ name = "viuer"
+@@ -66,10 +65,6 @@
+ [dependencies.lazy_static]
+ version = "1.5"
+ 
+-[dependencies.sixel-rs]
+-version = "0.3"
+-optional = true
+-
+ [dependencies.tempfile]
+ version = "3"
+ 
+--- a/src/printer/mod.rs
++++ b/src/printer/mod.rs
+@@ -16,8 +16,6 @@
+ pub use kitty::{get_kitty_support, KittyPrinter, KittySupport};
+ 
+ #[cfg(feature = "sixel")]
+-mod sixel;
+-#[cfg(feature = "sixel")]
+ pub use self::sixel::{is_sixel_supported, SixelPrinter};
+ 
+ mod iterm;

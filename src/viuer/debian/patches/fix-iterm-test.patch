@@ -1,0 +1,24 @@
+Description: fix test_print_e2e in viuer to match PNG output from png 0.17.7
+ Upstream’s test_print_e2e uses a hard-coded PNG base64 string. The PNG encoder output is
+ not stable across versions of the png crate:
+ - With Cargo resolving image = "=0.25.5" and an older png 0.17.x, the test passes
+ - In Debian, image 0.25.5 builds against png 0.17.7, which produces a different
+   compressed PNG stream, so the test fails
+ Both outputs are valid PNGs with the same semantics; only the compressed bytes differ.
+ This patch updates the expected string to the variant produced with png 0.17.7, matching
+ Debian’s packaged dependencies
+Author: Nadzeya Hutsko <nadzya.info@gmail.com>
+Forwarded: not-needed
+Last-Update: 2025-09-03
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/printer/iterm.rs
++++ b/src/printer/iterm.rs
+@@ -131,6 +131,6 @@
+         let mut vec = Vec::new();
+ 
+         assert_eq!(iTermPrinter.print(&mut vec, &img, &config).unwrap(), (2, 2));
+-        assert_eq!(std::str::from_utf8(&vec).unwrap(), "\x1b[4;5H\x1b]1337;File=inline=1;preserveAspectRatio=1;size=95;width=2;height=2:iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAYAAAC56t6BAAAAJklEQVR4AQEbAOT/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACBAYIAEMAFdTlTsEAAAAASUVORK5CYII=\x07\n");
++        assert_eq!(std::str::from_utf8(&vec).unwrap(), "\x1b[4;5H\x1b]1337;File=inline=1;preserveAspectRatio=1;size=71;width=2;height=2:iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAYAAAC56t6BAAAADklEQVR4AWPADphY2DgAAEMAFfOuwskAAAAASUVORK5CYII=\u{7}\n");
+     }
+ }
