@@ -1,0 +1,26 @@
+From 14336e3187253d0122a8f787c7ec195a5585efa1 Mon Sep 17 00:00:00 2001
+From: Philipp Jungkamp <p.jungkamp@gmx.net>
+Date: Sun, 31 Aug 2025 00:02:30 +0200
+Subject: [PATCH] sandbox: Fix compilation on 32-bit architectures
+
+Part-of: <https://gitlab.gnome.org/GNOME/glycin/-/merge_requests/271>
+---
+ src/sandbox.rs | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/sandbox.rs b/src/sandbox.rs
+index 15e5d98..4165250 100644
+--- a/src/sandbox.rs
++++ b/src/sandbox.rs
+@@ -514,7 +514,7 @@ impl Sandbox {
+         // Consider max of 20 GB free RAM for use
+         let mem_considered = resource::rlim_t::min(
+             mem_available,
+-            const { 20 * (1024 as resource::rlim_t).pow(3) },
++            const { (1024 as resource::rlim_t).pow(3).saturating_mul(20) },
+         )
+         // Keep at least 200 MB free
+         .saturating_sub(1024 * 1024 * 200);
+-- 
+GitLab
+
