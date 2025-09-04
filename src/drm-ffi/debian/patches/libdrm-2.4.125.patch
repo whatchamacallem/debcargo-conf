@@ -1,0 +1,45 @@
+Index: drm-ffi/src/syncobj.rs
+===================================================================
+--- drm-ffi.orig/src/syncobj.rs
++++ drm-ffi/src/syncobj.rs
+@@ -45,15 +45,12 @@ pub fn handle_to_fd(
+     handle: u32,
+     export_sync_file: bool,
+ ) -> io::Result<drm_syncobj_handle> {
+-    let mut args = drm_syncobj_handle {
+-        handle,
+-        flags: if export_sync_file {
++    let mut args: drm_syncobj_handle = unsafe { core::mem::zeroed() };
++    args.handle = handle;
++    args.flags = if export_sync_file {
+             DRM_SYNCOBJ_HANDLE_TO_FD_FLAGS_EXPORT_SYNC_FILE
+-        } else {
++    } else {
+             0
+-        },
+-        fd: 0,
+-        pad: 0,
+     };
+ 
+     unsafe {
+@@ -69,16 +66,13 @@ pub fn fd_to_handle(
+     syncobj_fd: BorrowedFd<'_>,
+     import_sync_file: bool,
+ ) -> io::Result<drm_syncobj_handle> {
+-    let mut args = drm_syncobj_handle {
+-        handle: 0,
+-        flags: if import_sync_file {
++    let mut args: drm_syncobj_handle = unsafe { core::mem::zeroed() };
++    args.flags = if import_sync_file {
+             DRM_SYNCOBJ_FD_TO_HANDLE_FLAGS_IMPORT_SYNC_FILE
+-        } else {
++    } else {
+             0
+-        },
+-        fd: syncobj_fd.as_raw_fd(),
+-        pad: 0,
+     };
++    args.fd = syncobj_fd.as_raw_fd();
+ 
+     unsafe {
+         ioctl::syncobj::fd_to_handle(fd, &mut args)?;
