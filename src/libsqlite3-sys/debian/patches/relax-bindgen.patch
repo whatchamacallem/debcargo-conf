@@ -1,0 +1,33 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -32,7 +32,7 @@
+ optional = true
+ 
+ [build-dependencies.bindgen]
+-version = "0.64"
++version = ">= 0.72, < 1.0"
+ features = ["runtime"]
+ optional = true
+ default-features = false
+--- a/build.rs
++++ b/build.rs
+@@ -478,7 +478,7 @@
+ #[cfg(feature = "buildtime_bindgen")]
+ mod bindings {
+     use super::HeaderLocation;
+-    use bindgen::callbacks::{IntKind, ParseCallbacks};
++    use bindgen::callbacks::{IntKind, ItemInfo, ParseCallbacks};
+ 
+     use std::fs::OpenOptions;
+     use std::io::Write;
+@@ -497,8 +497,8 @@
+                 None
+             }
+         }
+-        fn item_name(&self, original_item_name: &str) -> Option<String> {
+-            original_item_name
++        fn item_name(&self, item_info: ItemInfo) -> Option<String> {
++            item_info.name
+                 .strip_prefix("sqlite3_index_info_")
+                 .map(|s| s.to_owned())
+         }
