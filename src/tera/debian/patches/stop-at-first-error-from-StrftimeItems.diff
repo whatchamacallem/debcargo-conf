@@ -1,0 +1,20 @@
+Description: stop at first error from StrftimeItems
+ Since chrono 0.4.41 StrftimeItems can return a never-ending iterator,
+ which causes tera's tests to hang. I've filed a bug about this in chrono,
+ but tera has no reason to go beyond the first error (it doesn't look at
+ any of the error details) so lets stop there.
+Author: Peter Michael Green <plugwash@debian.org>
+
+--- rust-tera-1.20.0.orig/src/builtins/filters/common.rs
++++ rust-tera-1.20.0/src/builtins/filters/common.rs
+@@ -74,9 +74,7 @@ pub fn date(value: &Value, args: &HashMa
+         None => "%Y-%m-%d".to_string(),
+     };
+ 
+-    let items: Vec<Item> =
+-        StrftimeItems::new(&format).filter(|item| matches!(item, Item::Error)).collect();
+-    if !items.is_empty() {
++    if StrftimeItems::new(&format).filter(|item| matches!(item, Item::Error)).next().is_some() {
+         return Err(Error::msg(format!("Invalid date format `{}`", format)));
+     }
+ 
