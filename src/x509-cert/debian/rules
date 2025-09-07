@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_fixperms:
+	# Some test data files wrongly had the execute bit set. Forwarded
+	# upstream, see RustCrypto/formats#2034. Meanwhile fixed here.
+	find debian/librust-x509-cert-dev/ -type f -path "*/tests/examples/*.ta" -exec chmod -x {} +
+	dh_fixperms

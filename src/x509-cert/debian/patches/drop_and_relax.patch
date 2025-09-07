@@ -1,0 +1,44 @@
+Description: Drop and relax dependencies
+ Dropped
+ - tls_codec: Optional dependency. Not in Debian.
+ - sct: Feature, needs tls_codec.
+
+ Relaxed:
+ - rstest: Dev dependency.
+Author: Tobias Deiminger <tobias.deiminger@posteo.de>
+Last-Update: 2025-09-07
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: x509-cert/Cargo.toml
+===================================================================
+--- x509-cert.orig/Cargo.toml
++++ x509-cert/Cargo.toml
+@@ -68,7 +68,7 @@ optional = true
+ version = "0.7.3"
+ features = ["alloc"]
+ 
+-[dependencies.tls_codec]
++[disabled.dependencies.tls_codec]
+ version = "0.4.0"
+ features = ["derive"]
+ optional = true
+@@ -95,7 +95,7 @@ version = "0.9.6"
+ features = ["sha2"]
+ 
+ [dev-dependencies.rstest]
+-version = "0.18"
++version = "0.17"
+ 
+ [dev-dependencies.sha2]
+ version = "0.10"
+@@ -125,10 +125,8 @@ pem = [
+     "der/pem",
+     "spki/pem",
+ ]
+-sct = ["dep:tls_codec"]
+ std = [
+     "const-oid/std",
+     "der/std",
+     "spki/std",
+-    "tls_codec?/std",
+ ]

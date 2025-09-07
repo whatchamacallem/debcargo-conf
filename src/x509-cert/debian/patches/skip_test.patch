@@ -1,0 +1,17 @@
+Description: Skip tests in tests/builder.rs
+ These tests depend on the nested crate x509-cert-test-support, which we
+ neither get from fetching x509-cert with debcargo, nor is it in Debian.
+Author: Tobias Deiminger <tobias.deiminger@posteo.de>
+Last-Update: 2025-09-07
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: x509-cert/tests/builder.rs
+===================================================================
+--- x509-cert.orig/tests/builder.rs
++++ x509-cert/tests/builder.rs
+@@ -1,4 +1,4 @@
+-#![cfg(all(feature = "builder", feature = "pem"))]
++#![cfg(all(feature = "builder", feature = "pem", feature = "x509-cert-test-support"))]
+ 
+ use der::{asn1::PrintableString, pem::LineEnding, Decode, Encode, EncodePem};
+ use p256::{ecdsa::DerSignature, pkcs8::DecodePrivateKey, NistP256};
