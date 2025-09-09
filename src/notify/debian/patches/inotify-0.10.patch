@@ -1,0 +1,88 @@
+This patch is based on the upstream commits described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 6ac5105a493db58584def456605c4c6ada5f9fba
+Author: Fredrik Fornwall <fredrik@fornwall.net>
+Date:   Mon Nov 13 09:43:45 2023 +0100
+
+    Update inotify to 0.10
+    
+    See https://github.com/hannobraun/inotify-rs/blob/main/CHANGELOG.md
+    
+    This requires updating the MSRV from 1.60 to 1.63.
+
+commit 2a06e5f267ab8881d011d88310b927c5d6e55ea6
+Author: Fredrik Fornwall <fredrik@fornwall.net>
+Date:   Wed Nov 29 11:31:11 2023 +0100
+
+    Adopt to inotify not consuming `WouldBlock`
+
+Index: rust-notify-6.1.1/src/inotify.rs
+===================================================================
+--- rust-notify-6.1.1.orig/src/inotify.rs
++++ rust-notify-6.1.1/src/inotify.rs
+@@ -411,7 +411,7 @@ impl EventLoop {
+         if let Some(ref mut inotify) = self.inotify {
+             log::trace!("adding inotify watch: {}", path.display());
+ 
+-            match inotify.add_watch(&path, watchmask) {
++            match inotify.watches().add(&path, watchmask) {
+                 Err(e) => {
+                     Err(if e.raw_os_error() == Some(libc::ENOSPC) {
+                         // do not report inotify limits as "no more space" on linux #266
+@@ -442,7 +442,8 @@ impl EventLoop {
+                     log::trace!("removing inotify watch: {}", path.display());
+ 
+                     inotify
+-                        .rm_watch(w.clone())
++                        .watches()
++                        .remove(w.clone())
+                         .map_err(|e| Error::io(e).add_path(path.clone()))?;
+                     self.paths.remove(&w);
+ 
+@@ -451,7 +452,8 @@ impl EventLoop {
+                         for (w, p) in &self.paths {
+                             if p.starts_with(&path) {
+                                 inotify
+-                                    .rm_watch(w.clone())
++                                    .watches()
++                                    .remove(w.clone())
+                                     .map_err(|e| Error::io(e).add_path(p.into()))?;
+                                 self.watches.remove(p);
+                                 remove_list.push(w.clone());
+@@ -471,7 +473,8 @@ impl EventLoop {
+         if let Some(ref mut inotify) = self.inotify {
+             for (w, p) in &self.paths {
+                 inotify
+-                    .rm_watch(w.clone())
++                    .watches()
++                    .remove(w.clone())
+                     .map_err(|e| Error::io(e).add_path(p.into()))?;
+             }
+             self.watches.clear();
+Index: rust-notify-6.1.1/Cargo.toml
+===================================================================
+--- rust-notify-6.1.1.orig/Cargo.toml
++++ rust-notify-6.1.1/Cargo.toml
+@@ -72,7 +72,7 @@ manual_tests = []
+ timing_tests = []
+ 
+ [target."cfg(any(target_os=\"linux\", target_os=\"android\"))".dependencies.inotify]
+-version = "0.9"
++version = "0.10"
+ default-features = false
+ 
+ [target."cfg(any(target_os=\"linux\", target_os=\"android\"))".dependencies.mio]
+--- notify/src/inotify.rs
++++ notify/src/inotify.rs
+@@ -370,6 +370,10 @@ impl EventLoop {
+                             break;
+                         }
+                     }
++                    Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
++                        // No events read. Break out.
++                        break;
++                    }
+                     Err(e) => {
+                         self.event_handler.handle_event(Err(Error::io(e)));
+                     }
