@@ -1,12 +1,20 @@
---- a/src/build.rs
-+++ b/src/build.rs
-@@ -68,3 +68,3 @@
+--- rust-libbpf-cargo-0.26.0~beta.1.orig/src/build.rs
++++ rust-libbpf-cargo-0.26.0~beta.1/src/build.rs
+@@ -234,7 +234,7 @@ fn check_progs(objs: &[UnprocessedObj])
+ /// Extract vendored libbpf header files to a temporary directory.
+ ///
  /// Directory and enclosed contents will be removed when return object is dropped.
 -#[cfg(feature = "default")]
 +#[cfg(feature = "vendored-libbpf")]
  fn extract_libbpf_headers_to_disk(target_dir: &Path) -> Result<Option<PathBuf>> {
-@@ -90,3 +90,3 @@
+     use libbpf_rs::libbpf_sys;
+     use std::fs::OpenOptions;
+@@ -256,7 +256,7 @@ fn extract_libbpf_headers_to_disk(target
+     Ok(Some(parent_dir))
+ }
  
 -#[cfg(not(feature = "default"))]
 +#[cfg(not(feature = "vendored-libbpf"))]
  fn extract_libbpf_headers_to_disk(_target_dir: &Path) -> Result<Option<PathBuf>> {
+     Ok(None)
+ }
