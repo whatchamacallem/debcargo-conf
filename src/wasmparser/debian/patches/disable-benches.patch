@@ -1,19 +1,8 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index 3935df8..e40ea4e 100644
+index b13b81e..f8c1a23 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -41,18 +41,18 @@ all-features = true
- name = "wasmparser"
- path = "src/lib.rs"
- 
--[[example]]
--name = "simple"
--path = "examples/simple.rs"
-+#[[example]]
-+#name = "simple"
-+#path = "examples/simple.rs"
- 
- [[test]]
+@@ -76,11 +76,6 @@ path = "examples/simple.rs"
  name = "big-module"
  path = "tests/big-module.rs"
  
@@ -21,33 +10,38 @@ index 3935df8..e40ea4e 100644
 -name = "benchmark"
 -path = "benches/benchmark.rs"
 -harness = false
-+#[[bench]]
-+#name = "benchmark"
-+#path = "benches/benchmark.rs"
-+#harness = false
+-
+ [dependencies.bitflags]
+ version = "2.4.1"
  
- [dependencies.ahash]
- version = "0.8.11"
-diff --git a/benches/.gitignore b/benches/.gitignore
-deleted file mode 100644
-index 45d4a47..0000000
---- a/benches/.gitignore
-+++ /dev/null
-@@ -1 +0,0 @@
--!*.wasm
+@@ -125,6 +120,9 @@ version = "1.13.0"
+ [dev-dependencies.rayon]
+ version = "1.3"
+ 
++[dev-dependencies.wat]
++version = "1"
++
+ [lints.clippy]
+ allow_attributes_without_reason = "warn"
+ clone_on_copy = "warn"
 diff --git a/benches/benchmark.rs b/benches/benchmark.rs
 deleted file mode 100644
-index 8ec6e45..0000000
+index 573c1fe..0000000
 --- a/benches/benchmark.rs
 +++ /dev/null
-@@ -1,350 +0,0 @@
+@@ -1,395 +0,0 @@
 -use anyhow::Result;
--use criterion::{criterion_group, criterion_main, Criterion};
+-use criterion::{Criterion, criterion_group, criterion_main};
 -use once_cell::unsync::Lazy;
 -use std::fs;
+-use std::mem;
 -use std::path::Path;
 -use std::path::PathBuf;
--use wasmparser::{DataKind, ElementKind, Parser, Payload, Validator, VisitOperator, WasmFeatures};
+-use wasmparser::VisitSimdOperator;
+-use wasmparser::{
+-    BinaryReader, DataKind, ElementKind, OperatorsReader, Parser, Payload, Validator,
+-    VisitOperator, WasmFeatures,
+-};
 -
 -/// A benchmark input.
 -pub struct BenchmarkInput {
@@ -122,6 +116,17 @@ index 8ec6e45..0000000
 -/// so that we can report better errors in case of failures.
 -fn read_all_wasm(wasm: &[u8]) -> Result<()> {
 -    use Payload::*;
+-    let mut allocs = wasmparser::OperatorsReaderAllocations::default();
+-    let mut read_expr = |reader: BinaryReader<'_>| -> Result<_> {
+-        let mut ops = OperatorsReader::new_with_allocs(reader, mem::take(&mut allocs));
+-
+-        while !ops.eof() {
+-            ops.visit_operator(&mut NopVisit)?;
+-        }
+-        ops.finish()?;
+-        allocs = ops.into_allocations();
+-        Ok(())
+-    };
 -    for item in Parser::new(0).parse_all(wasm) {
 -        match item? {
 -            TypeSection(s) => {
@@ -156,9 +161,7 @@ index 8ec6e45..0000000
 -            }
 -            GlobalSection(s) => {
 -                for item in s {
--                    for op in item?.init_expr.get_operators_reader() {
--                        op?;
--                    }
+-                    read_expr(item?.init_expr.get_binary_reader())?;
 -                }
 -            }
 -            ExportSection(s) => {
@@ -170,9 +173,7 @@ index 8ec6e45..0000000
 -                for item in s {
 -                    let item = item?;
 -                    if let ElementKind::Active { offset_expr, .. } = item.kind {
--                        for op in offset_expr.get_operators_reader() {
--                            op?;
--                        }
+-                        read_expr(offset_expr.get_binary_reader())?;
 -                    }
 -                    match item.items {
 -                        wasmparser::ElementItems::Functions(r) => {
@@ -192,21 +193,16 @@ index 8ec6e45..0000000
 -                for item in s {
 -                    let item = item?;
 -                    if let DataKind::Active { offset_expr, .. } = item.kind {
--                        for op in offset_expr.get_operators_reader() {
--                            op?;
--                        }
+-                        read_expr(offset_expr.get_binary_reader())?;
 -                    }
 -                }
 -            }
 -            CodeSectionEntry(body) => {
--                let mut reader = body.get_binary_reader();
--                for _ in 0..reader.read_var_u32()? {
--                    reader.read_var_u32()?;
--                    reader.read::<wasmparser::ValType>()?;
+-                let mut locals = body.get_locals_reader()?.into_iter();
+-                for item in locals.by_ref() {
+-                    let _ = item?;
 -                }
--                while !reader.eof() {
--                    reader.visit_operator(&mut NopVisit)?;
--                }
+-                read_expr(locals.into_binary_reader_for_operators())?;
 -            }
 -
 -            // Component sections
@@ -261,6 +257,24 @@ index 8ec6e45..0000000
 -            | CustomSection { .. }
 -            | CodeSectionStart { .. }
 -            | End(_) => {}
+-
+-            other => {
+-                // NB: if you hit this panic if you'd be so kind as to grep
+-                // through other locations in the code base that need to be
+-                // updated as well. As of the time of this writing the locations
+-                // might be:
+-                //
+-                //  * src/bin/wasm-tools/objdump.rs
+-                //  * src/bin/wasm-tools/dump.rs
+-                //  * crates/wasm-encoder/src/reencode.rs
+-                //  * crates/wasm-encoder/src/reencode/component.rs
+-                //  * crates/wasmprinter/src/lib.rs
+-                //  * crates/wit-component/src/gc.rs
+-                //
+-                // This is required due to the `#[non_exhaustive]` nature of
+-                // the `Payload` enum.
+-                panic!("a new match statement should be added above for this case: {other:?}")
+-            }
 -        }
 -    }
 -    Ok(())
@@ -296,6 +310,9 @@ index 8ec6e45..0000000
 -
 -    fn validator() -> Validator {
 -        Validator::new_with_features(WasmFeatures::all())
+-    }
+-    fn old_validator() -> Validator {
+-        Validator::new_with_features(WasmFeatures::WASM2)
 -    }
 -
 -    let test_inputs = once_cell::unsync::Lazy::new(collect_benchmark_inputs);
@@ -354,6 +371,14 @@ index 8ec6e45..0000000
 -                validator().validate_all(&wasm).unwrap();
 -            })
 -        });
+-        if old_validator().validate_all(&wasm).is_ok() {
+-            c.bench_function(&format!("validate-old/{name}"), |b| {
+-                Lazy::force(&wasm);
+-                b.iter(|| {
+-                    old_validator().validate_all(&wasm).unwrap();
+-                })
+-            });
+-        }
 -        c.bench_function(&format!("parse/{name}"), |b| {
 -            Lazy::force(&wasm);
 -            b.iter(|| {
@@ -369,7 +394,7 @@ index 8ec6e45..0000000
 -struct NopVisit;
 -
 -macro_rules! define_visit_operator {
--    ($(@$proposal:ident $op:ident $({ $($arg:ident: $argty:ty),* })? => $visit:ident)*) => {
+-    ($(@$proposal:ident $op:ident $({ $($arg:ident: $argty:ty),* })? => $visit:ident ($($ann:tt)*))*) => {
 -        $(
 -            fn $visit(&mut self $($(,$arg: $argty)*)?) {
 -                define_visit_operator!(@visit $op $( $($arg)* )?);
@@ -389,48 +414,14 @@ index 8ec6e45..0000000
 -impl<'a> VisitOperator<'a> for NopVisit {
 -    type Output = ();
 -
--    wasmparser::for_each_operator!(define_visit_operator);
+-    fn simd_visitor(&mut self) -> Option<&mut dyn VisitSimdOperator<'a, Output = Self::Output>> {
+-        Some(self)
+-    }
+-
+-    wasmparser::for_each_visit_operator!(define_visit_operator);
 -}
-diff --git a/examples/simple.rs b/examples/simple.rs
-deleted file mode 100644
-index 2aca2f2..0000000
---- a/examples/simple.rs
-+++ /dev/null
-@@ -1,37 +0,0 @@
--use anyhow::Result;
--use std::env;
--use wasmparser::{Parser, Payload};
 -
--fn main() -> Result<()> {
--    let args = env::args().collect::<Vec<_>>();
--    if args.len() != 2 {
--        println!("Usage: {} in.wasm", args[0]);
--        return Ok(());
--    }
--
--    let buf: Vec<u8> = std::fs::read(&args[1])?;
--    for payload in Parser::new(0).parse_all(&buf) {
--        match payload? {
--            Payload::Version { .. } => {
--                println!("====== Module");
--            }
--            Payload::ExportSection(s) => {
--                for export in s {
--                    let export = export?;
--                    println!("  Export {} {:?}", export.name, export.kind);
--                }
--            }
--            Payload::ImportSection(s) => {
--                for import in s {
--                    let import = import?;
--                    println!("  Import {}::{}", import.module, import.name);
--                }
--            }
--            _other => {
--                // println!("found payload {:?}", _other);
--            }
--        }
--    }
--
--    Ok(())
+-#[allow(unused_variables)]
+-impl<'a> VisitSimdOperator<'a> for NopVisit {
+-    wasmparser::for_each_visit_simd_operator!(define_visit_operator);
 -}
