@@ -1,0 +1,1153 @@
+From bd3d82bdbfe8af8207431ae2c9a44077ac32c543 Mon Sep 17 00:00:00 2001
+From: Matthias Geiger <werdahias@debian.org>
+Date: Fri, 12 Sep 2025 22:08:21 +0200
+Subject: [PATCH] chore: Port to gtk-rs 0.10
+
+Forwarded: https://github.com/GuillaumeGomez/process-viewer/pull/213
+---
+ src/display_disk.rs    |  12 +-
+ src/display_network.rs |  78 ++++---
+ src/display_procs.rs   |  56 +++--
+ src/display_sysinfo.rs |  36 ++--
+ src/graph.rs           |   9 +-
+ src/main.rs            | 454 ++++++++++++++++++++++++++---------------
+ src/network_dialog.rs  |  56 +++--
+ src/process_dialog.rs  |  60 ++++--
+ src/settings.rs        |  62 ++++--
+ 9 files changed, 534 insertions(+), 289 deletions(-)
+
+--- a/src/display_disk.rs
++++ b/src/display_disk.rs
+@@ -89,10 +89,14 @@
+ 
+     let refresh_but = gtk::Button::with_label("Refresh disks");
+ 
+-    refresh_but.connect_clicked(glib::clone!(@weak container, @strong elems => move |_| {
+-        disks.borrow_mut().refresh_list();
+-        refresh_disks(&container, &disks.borrow(), &mut elems.borrow_mut());
+-    }));
++    refresh_but.connect_clicked(glib::clone!(
++        #[weak]
++        container,
++        move |_| {
++            disks.borrow_mut().refresh_list();
++            refresh_disks(&container, &disks.borrow(), &mut elems.borrow_mut());
++        }
++    ));
+ 
+     vertical_layout.append(&scroll);
+     vertical_layout.append(&refresh_but);
+--- a/src/display_network.rs
++++ b/src/display_network.rs
+@@ -97,8 +97,10 @@
+ 
+         // The filter model
+         let filter_model = gtk::TreeModelFilter::new(&list_store, None);
+-        filter_model.set_visible_func(
+-            glib::clone!(@strong filter_entry => @default-return false, move |model, iter| {
++        filter_model.set_visible_func(glib::clone!(
++            #[strong]
++            filter_entry,
++            move |model, iter| {
+                 if !WidgetExt::is_visible(&filter_entry) {
+                     return true;
+                 }
+@@ -108,14 +110,15 @@
+                 }
+                 let text: &str = text.as_ref();
+                 // TODO: Maybe add an option to make searches case sensitive?
+-                let name = model.get_value(iter, 0)
+-                                .get::<String>()
+-                                .map(|s| s.to_lowercase())
+-                                .ok()
+-                                .unwrap_or_default();
++                let name = model
++                    .get_value(iter, 0)
++                    .get::<String>()
++                    .map(|s| s.to_lowercase())
++                    .ok()
++                    .unwrap_or_default();
+                 name.contains(text)
+-            }),
+-        );
++            }
++        ));
+ 
+         // For the filtering to be taken into account, we need to add it directly into the
+         // "global" model.
+@@ -153,8 +156,12 @@
+ 
+         stack.add_titled(&vertical_layout, Some("Networks"), "Networks");
+ 
+-        tree.connect_cursor_changed(
+-            glib::clone!(@weak current_network, @weak info_button => move |tree_view| {
++        tree.connect_cursor_changed(glib::clone!(
++            #[weak]
++            current_network,
++            #[weak]
++            info_button,
++            move |tree_view| {
+                 let selection = tree_view.selection();
+                 let (name, ret) = if let Some((model, iter)) = selection.selected() {
+                     if let Ok(x) = model.get_value(&iter, 0).get::<String>() {
+@@ -167,36 +174,51 @@
+                 };
+                 *current_network.borrow_mut() = name;
+                 info_button.set_sensitive(ret);
+-            }),
+-        );
++            }
++        ));
+ 
+         let dialogs = Rc::new(RefCell::new(Vec::new()));
+ 
+-        info_button.connect_clicked(glib::clone!(@weak dialogs, @weak networks => move |_| {
+-            let current_network = current_network.borrow();
+-            if let Some(ref interface_name) = *current_network {
+-                create_network_dialog(
+-                    &mut dialogs.borrow_mut(),
+-                    interface_name,
+-                    &networks.lock().expect("failed to lock for new network dialog"),
+-                );
++        info_button.connect_clicked(glib::clone!(
++            #[weak]
++            dialogs,
++            #[weak]
++            networks,
++            move |_| {
++                let current_network = current_network.borrow();
++                if let Some(ref interface_name) = *current_network {
++                    create_network_dialog(
++                        &mut dialogs.borrow_mut(),
++                        interface_name,
++                        &networks
++                            .lock()
++                            .expect("failed to lock for new network dialog"),
++                    );
++                }
+             }
+-        }));
++        ));
+ 
+-        tree.connect_row_activated(
+-            glib::clone!(@weak networks, @weak dialogs => move |tree_view, path, _| {
++        tree.connect_row_activated(glib::clone!(
++            #[weak]
++            networks,
++            #[weak]
++            dialogs,
++            move |tree_view, path, _| {
+                 let model = tree_view.model().expect("couldn't get model");
+                 let iter = model.iter(path).expect("couldn't get iter");
+-                let interface_name = model.get_value(&iter, 0)
++                let interface_name = model
++                    .get_value(&iter, 0)
+                     .get::<String>()
+                     .expect("Model::get failed");
+                 create_network_dialog(
+                     &mut dialogs.borrow_mut(),
+                     &interface_name,
+-                    &networks.lock().expect("failed to lock for new network dialog (from tree)"),
++                    &networks
++                        .lock()
++                        .expect("failed to lock for new network dialog (from tree)"),
+                 );
+-            }),
+-        );
++            }
++        ));
+ 
+         Network {
+             list_store,
+--- a/src/display_procs.rs
++++ b/src/display_procs.rs
+@@ -98,8 +98,14 @@
+         let vertical_layout = gtk::Box::new(gtk::Orientation::Vertical, 0);
+         let horizontal_layout = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+ 
+-        left_tree.connect_cursor_changed(
+-            glib::clone!(@strong current_pid, @weak kill_button, @weak info_button => move |tree_view| {
++        left_tree.connect_cursor_changed(glib::clone!(
++            #[strong]
++            current_pid,
++            #[weak]
++            kill_button,
++            #[weak]
++            info_button,
++            move |tree_view| {
+                 let selection = tree_view.selection();
+                 let (pid, ret) = if let Some((model, iter)) = selection.selected() {
+                     if let Ok(x) = model.get_value(&iter, 0).get::<u32>() {
+@@ -113,8 +119,8 @@
+                 current_pid.set(pid);
+                 kill_button.set_sensitive(ret);
+                 info_button.set_sensitive(ret);
+-            }),
+-        );
++            }
++        ));
+         vertical_layout.append(&overlay);
+         horizontal_layout.append(&info_button);
+         horizontal_layout.append(&kill_button);
+@@ -122,8 +128,12 @@
+ 
+         // The filter part.
+         let filter_model = gtk::TreeModelFilter::new(&list_store, None);
+-        filter_model.set_visible_func(
+-            glib::clone!(@weak filter_entry => @default-return false, move |model, iter| {
++        filter_model.set_visible_func(glib::clone!(
++            #[weak]
++            filter_entry,
++            #[upgrade_or]
++            false,
++            move |model, iter| {
+                 if !WidgetExt::is_visible(&filter_entry) {
+                     return true;
+                 }
+@@ -133,22 +143,24 @@
+                 }
+                 let text: &str = text.as_ref();
+                 // TODO: Maybe add an option to make searches case sensitive?
+-                let pid = model.get_value(iter, 0)
+-                               .get::<u32>()
+-                               .map(|p| p.to_string())
+-                               .ok()
+-                               .unwrap_or_default();
+-                let name = model.get_value(iter, 1)
+-                                .get::<String>()
+-                                .map(|s| s.to_lowercase())
+-                                .ok()
+-                                .unwrap_or_default();
+-                pid.contains(text) ||
+-                text.contains(&pid) ||
+-                name.contains(text) ||
+-                text.contains(&name)
+-            }),
+-        );
++                let pid = model
++                    .get_value(iter, 0)
++                    .get::<u32>()
++                    .map(|p| p.to_string())
++                    .ok()
++                    .unwrap_or_default();
++                let name = model
++                    .get_value(iter, 1)
++                    .get::<String>()
++                    .map(|s| s.to_lowercase())
++                    .ok()
++                    .unwrap_or_default();
++                pid.contains(text)
++                    || text.contains(&pid)
++                    || name.contains(text)
++                    || text.contains(&name)
++            }
++        ));
+         // For the filtering to be taken into account, we need to add it directly into the
+         // "global" model.
+         let sort_model = gtk::TreeModelSort::with_model(&filter_model);
+--- a/src/display_sysinfo.rs
++++ b/src/display_sysinfo.rs
+@@ -232,26 +232,38 @@
+         ram_usage_history.borrow().hide();
+         temperature_usage_history.borrow().hide();
+ 
+-        check_box.connect_toggled(
+-            glib::clone!(@weak non_graph_layout, @weak cpu_usage_history => move |c| {
++        check_box.connect_toggled(glib::clone!(
++            #[weak]
++            non_graph_layout,
++            #[weak]
++            cpu_usage_history,
++            move |c| {
+                 show_if_necessary(c, &cpu_usage_history.borrow(), &non_graph_layout);
+-            }),
+-        );
++            }
++        ));
+         // To show the correct view based on the saved settings.
+         show_if_necessary(&check_box, &cpu_usage_history.borrow(), &non_graph_layout);
+-        check_box2.connect_toggled(
+-            glib::clone!(@weak non_graph_layout2, @weak ram_usage_history => move |c| {
++        check_box2.connect_toggled(glib::clone!(
++            #[weak]
++            non_graph_layout2,
++            #[weak]
++            ram_usage_history,
++            move |c| {
+                 show_if_necessary(c, &ram_usage_history.borrow(), &non_graph_layout2);
+-            }),
+-        );
++            }
++        ));
+         // To show the correct view based on the saved settings.
+         show_if_necessary(&check_box2, &ram_usage_history.borrow(), &non_graph_layout2);
+         if let Some(ref check_box3) = check_box3 {
+-            check_box3.connect_toggled(
+-                glib::clone!(@weak non_graph_layout3, @weak temperature_usage_history => move |c| {
++            check_box3.connect_toggled(glib::clone!(
++                #[weak]
++                non_graph_layout3,
++                #[weak]
++                temperature_usage_history,
++                move |c| {
+                     show_if_necessary(c, &temperature_usage_history.borrow(), &non_graph_layout3);
+-                }),
+-            );
++                }
++            ));
+             // To show the correct view based on the saved settings.
+             show_if_necessary(
+                 check_box3,
+--- a/src/graph.rs
++++ b/src/graph.rs
+@@ -14,7 +14,8 @@
+ 
+ glib::wrapper! {
+     pub struct GraphWidget(ObjectSubclass<GraphWidgetImp>)
+-        @extends gtk::Widget;
++         @extends gtk::Widget,
++         @implements gtk::Accessible, gtk::Buildable, gtk::ConstraintTarget;
+ }
+ 
+ impl GraphWidget {
+@@ -131,7 +132,8 @@
+ 
+ glib::wrapper! {
+     pub struct GraphInnerWidget(ObjectSubclass<GraphPainter>)
+-        @extends gtk::Widget;
++        @extends gtk::Widget,
++        @implements gtk::Accessible, gtk::Buildable, gtk::ConstraintTarget;
+ }
+ 
+ impl GraphInnerWidget {
+@@ -434,7 +436,8 @@
+ 
+ glib::wrapper! {
+     pub struct SquareWidget(ObjectSubclass<SquarePainter>)
+-        @extends gtk::Widget;
++        @extends gtk::Widget,
++        @implements gtk::Accessible, gtk::Buildable, gtk::ConstraintTarget;
+ }
+ 
+ impl SquareWidget {
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -237,23 +237,40 @@
+     let list_store = &rfs.list_store;
+     let process_refresh_timeout = &rfs.process_refresh_timeout;
+ 
+-    thread::spawn(
+-        glib::clone!(@weak sys, @weak process_refresh_timeout => move || {
++    thread::spawn(glib::clone!(
++        #[weak]
++        sys,
++        #[weak]
++        process_refresh_timeout,
++        move || {
+             loop {
+                 let sleep_dur = Duration::from_millis(
+-                    *process_refresh_timeout.lock().expect("failed to lock process refresh mutex") as _);
++                    *process_refresh_timeout
++                        .lock()
++                        .expect("failed to lock process refresh mutex") as _,
++                );
+                 thread::sleep(sleep_dur);
+-                sys.lock().expect("failed to lock to refresh processes").refresh_processes();
+-                sender.send_blocking(()).expect("failed to send data through process refresh channel");
++                sys.lock()
++                    .expect("failed to lock to refresh processes")
++                    .refresh_processes();
++                sender
++                    .send_blocking(())
++                    .expect("failed to send data through process refresh channel");
+             }
+-        }),
+-    );
++        }
++    ));
+ 
+-    glib::spawn_future_local(
+-        glib::clone!(@weak sys, @weak list_store, @weak process_dialogs => async move {
++    glib::spawn_future_local(glib::clone!(
++        #[weak]
++        sys,
++        #[weak]
++        list_store,
++        #[weak]
++        process_dialogs,
++        async move {
+             loop {
+                 match receiver.recv().await {
+-                    Ok(_) => {},
++                    Ok(_) => {}
+                     Err(error) => {
+                         eprintln!("Stopping process info update loop: {error:?}");
+                         return;
+@@ -284,8 +301,8 @@
+                     dialogs.retain(|x| !x.need_remove());
+                 }
+             }
+-        }),
+-    );
++        }
++    ));
+ }
+ 
+ fn setup_network_timeout(rfs: &RequiredForSettings, networks: Arc<Mutex<Networks>>) {
+@@ -294,30 +311,48 @@
+     let network_refresh_timeout = &rfs.network_refresh_timeout;
+     let network_tab = &rfs.network_tab;
+ 
+-    thread::spawn(
+-        glib::clone!(@weak networks, @weak network_refresh_timeout => move || {
++    thread::spawn(glib::clone!(
++        #[weak]
++        networks,
++        #[weak]
++        network_refresh_timeout,
++        move || {
+             loop {
+                 let sleep_dur = Duration::from_millis(
+-                    *network_refresh_timeout.lock().expect("failed to lock networks refresh mutex") as _);
++                    *network_refresh_timeout
++                        .lock()
++                        .expect("failed to lock networks refresh mutex") as _,
++                );
+                 thread::sleep(sleep_dur);
+-                networks.lock().expect("failed to lock to refresh networks").refresh_list();
+-                sender.send_blocking(()).expect("failed to send data through networks refresh channel");
++                networks
++                    .lock()
++                    .expect("failed to lock to refresh networks")
++                    .refresh_list();
++                sender
++                    .send_blocking(())
++                    .expect("failed to send data through networks refresh channel");
+             }
+-        }),
+-    );
++        }
++    ));
+ 
+-    glib::spawn_future_local(glib::clone!(@weak network_tab => async move {
+-        loop {
+-            match receiver.recv().await {
+-                Ok(_) => {},
+-                Err(error) => {
+-                    eprintln!("Stopping network info update loop: {error:?}");
+-                    return;
++    glib::spawn_future_local(glib::clone!(
++        #[weak]
++        network_tab,
++        async move {
++            loop {
++                match receiver.recv().await {
++                    Ok(_) => {}
++                    Err(error) => {
++                        eprintln!("Stopping network info update loop: {error:?}");
++                        return;
++                    }
+                 }
++                network_tab
++                    .borrow_mut()
++                    .update_networks(&networks.lock().expect("failed to lock to update networks"));
+             }
+-            network_tab.borrow_mut().update_networks(&networks.lock().expect("failed to lock to update networks"));
+         }
+-    }));
++    ));
+ }
+ 
+ fn setup_system_timeout(
+@@ -332,24 +367,46 @@
+     let display_tab = &rfs.display_tab;
+     let components = Arc::new(Mutex::new(components));
+ 
+-    thread::spawn(
+-        glib::clone!(@weak sys, @weak system_refresh_timeout, @weak components => move || {
++    thread::spawn(glib::clone!(
++        #[weak]
++        sys,
++        #[weak]
++        system_refresh_timeout,
++        #[weak]
++        components,
++        move || {
+             loop {
+                 let sleep_dur = Duration::from_millis(
+-                    *system_refresh_timeout.lock().expect("failed to lock system refresh mutex") as _);
++                    *system_refresh_timeout
++                        .lock()
++                        .expect("failed to lock system refresh mutex") as _,
++                );
+                 thread::sleep(sleep_dur);
+-                sys.lock().expect("failed to lock to refresh system").refresh_all();
+-                components.lock().expect("failed to lock components").refresh_list();
+-                sender.send_blocking(()).expect("failed to send data through system refresh channel");
++                sys.lock()
++                    .expect("failed to lock to refresh system")
++                    .refresh_all();
++                components
++                    .lock()
++                    .expect("failed to lock components")
++                    .refresh_list();
++                sender
++                    .send_blocking(())
++                    .expect("failed to send data through system refresh channel");
+             }
+-        }),
+-    );
++        }
++    ));
+ 
+-    glib::spawn_future_local(
+-        glib::clone!(@weak sys, @weak display_tab, @weak settings => async move {
++    glib::spawn_future_local(glib::clone!(
++        #[weak]
++        sys,
++        #[weak]
++        display_tab,
++        #[weak]
++        settings,
++        async move {
+             loop {
+                 match receiver.recv().await {
+-                    Ok(_) => {},
++                    Ok(_) => {}
+                     Err(error) => {
+                         eprintln!("Stopping system info update loop: {error:?}");
+                         return;
+@@ -363,8 +420,8 @@
+                 info.update_system_info(&sys, &components, display_fahrenheit);
+                 info.update_system_info_display(&sys);
+             }
+-        }),
+-    );
++        }
++    ));
+ }
+ 
+ fn create_header_bar(stack: &gtk::Stack) -> (gtk::HeaderBar, gtk::Button) {
+@@ -423,14 +480,18 @@
+ 
+     sys.refresh_all();
+     let sys = Arc::new(Mutex::new(sys));
+-    procs
+-        .kill_button
+-        .connect_clicked(glib::clone!(@weak current_pid, @weak sys => move |_| {
++    procs.kill_button.connect_clicked(glib::clone!(
++        #[weak]
++        current_pid,
++        #[weak]
++        sys,
++        move |_| {
+             let sys = sys.lock().expect("failed to lock to kill a process");
+             if let Some(process) = current_pid.get().and_then(|pid| sys.process(pid)) {
+                 process.kill();
+             }
+-        }));
++        }
++    ));
+ 
+     let settings = Settings::load();
+     let sys_components = sysinfo::Components::new_with_refreshed_list();
+@@ -465,126 +526,175 @@
+     setup_system_timeout(&rfs, &settings, sys_components);
+ 
+     let settings_action = gio::SimpleAction::new("settings", None);
+-    settings_action.connect_activate(glib::clone!(@weak settings, @strong rfs => move |_, _| {
+-        settings::show_settings_dialog(&settings, &rfs);
+-    }));
++    settings_action.connect_activate(glib::clone!(
++        #[weak]
++        settings,
++        #[strong]
++        rfs,
++        move |_, _| {
++            settings::show_settings_dialog(&settings, &rfs);
++        }
++    ));
+ 
+-    info_button.connect_clicked(
+-        glib::clone!(@weak current_pid, @weak process_dialogs, @weak sys => move |_| {
++    info_button.connect_clicked(glib::clone!(
++        #[weak]
++        current_pid,
++        #[weak]
++        process_dialogs,
++        #[weak]
++        sys,
++        move |_| {
+             if let Some(pid) = current_pid.get() {
+                 create_new_proc_diag(
+                     &process_dialogs,
+                     pid,
+-                    &sys.lock().expect("failed to lock to create new proc dialog"),
++                    &sys.lock()
++                        .expect("failed to lock to create new proc dialog"),
+                 );
+             }
+-        }),
+-    );
++        }
++    ));
+ 
+-    procs
+-        .left_tree
+-        .connect_row_activated(glib::clone!(@weak sys => move |tree_view, path, _| {
+-                let model = tree_view.model().expect("couldn't get model");
+-                let iter = model.iter(path).expect("couldn't get iter");
+-                let pid = model.get_value(&iter, 0)
+-                               .get::<u32>()
+-                               .expect("Model::get failed");
+-                create_new_proc_diag(
+-                    &process_dialogs,
+-                    Pid::from_u32(pid),
+-                    &sys.lock().expect("failed to lock to create new proc dialog (from tree)"),
+-                );
+-            }
+-        ));
++    procs.left_tree.connect_row_activated(glib::clone!(
++        #[weak]
++        sys,
++        move |tree_view, path, _| {
++            let model = tree_view.model().expect("couldn't get model");
++            let iter = model.iter(path).expect("couldn't get iter");
++            let pid = model
++                .get_value(&iter, 0)
++                .get::<u32>()
++                .expect("Model::get failed");
++            create_new_proc_diag(
++                &process_dialogs,
++                Pid::from_u32(pid),
++                &sys.lock()
++                    .expect("failed to lock to create new proc dialog (from tree)"),
++            );
++        }
++    ));
+ 
+     let about = gio::SimpleAction::new("about", None);
+-    about.connect_activate(glib::clone!(@weak window => move |_, _| {
+-        let p = AboutDialog::builder()
+-            .authors(vec!["Guillaume Gomez".to_owned()])
+-            .website_label("my website")
+-            .website("https://guillaume-gomez.fr/")
+-            .comments("A process viewer GUI written with gtk-rs")
+-            .copyright("Licensed under MIT")
+-            .program_name("process-viewer")
+-            .transient_for(&window)
+-            .modal(true);
+-
+-        let bytes = Bytes::from_static(include_bytes!(
+-            concat!(env!("CARGO_MANIFEST_DIR"), "/assets/eye.png")));
+-        let memory_stream = MemoryInputStream::from_bytes(&bytes);
+-        let pixbuf = Pixbuf::from_stream(&memory_stream, gio::Cancellable::NONE);
+-        let p = if let Ok(pixbuf) = pixbuf {
+-            let logo = Texture::for_pixbuf(&pixbuf);
+-            p.logo(&logo)
+-        } else {
+-            p
+-        };
++    about.connect_activate(glib::clone!(
++        #[weak]
++        window,
++        move |_, _| {
++            let p = AboutDialog::builder()
++                .authors(vec!["Guillaume Gomez".to_owned()])
++                .website_label("my website")
++                .website("https://guillaume-gomez.fr/")
++                .comments("A process viewer GUI written with gtk-rs")
++                .copyright("Licensed under MIT")
++                .program_name("process-viewer")
++                .transient_for(&window)
++                .modal(true);
++
++            let bytes = Bytes::from_static(include_bytes!(concat!(
++                env!("CARGO_MANIFEST_DIR"),
++                "/assets/eye.png"
++            )));
++            let memory_stream = MemoryInputStream::from_bytes(&bytes);
++            let pixbuf = Pixbuf::from_stream(&memory_stream, gio::Cancellable::NONE);
++            let p = if let Ok(pixbuf) = pixbuf {
++                let logo = Texture::for_pixbuf(&pixbuf);
++                p.logo(&logo)
++            } else {
++                p
++            };
+ 
+-        p.build().show();
+-    }));
++            p.build().show();
++        }
++    ));
+ 
+     let new_task = gio::SimpleAction::new("new-task", None);
+-    new_task.connect_activate(glib::clone!(@weak window => move |_, _| {
+-        let dialog = gtk::Dialog::with_buttons(
+-            Some("Launch new executable"),
+-            Some(&window),
+-            gtk::DialogFlags::MODAL,
+-            &[("Run", gtk::ResponseType::Other(0)), ("Cancel", gtk::ResponseType::Close)],
+-        );
+-        let input = Entry::builder()
+-            .css_classes(vec!["button-with-margin".to_owned()])
+-            .vexpand(false)
+-            .hexpand(true)
+-            .build();
+-
+-        // To set "run" button disabled by default.
+-        dialog.set_response_sensitive(gtk::ResponseType::Other(0), false);
+-
+-        input.connect_changed(glib::clone!(@weak dialog => move |input| {
+-            if !input.text().is_empty() {
+-                dialog.set_response_sensitive(gtk::ResponseType::Other(0), true);
+-            } else {
+-                dialog.set_response_sensitive(gtk::ResponseType::Other(0), false);
+-            }
+-        }));
+-        input.connect_activate(glib::clone!(@weak window, @weak dialog => move |input| {
+-            run_command(input, &window, &dialog);
+-        }));
+-        dialog.connect_response(glib::clone!(@weak input, @weak window => move |dialog, response| {
+-            match response {
+-                gtk::ResponseType::Close => {
+-                    dialog.close();
++    new_task.connect_activate(glib::clone!(
++        #[weak]
++        window,
++        move |_, _| {
++            let dialog = gtk::Dialog::with_buttons(
++                Some("Launch new executable"),
++                Some(&window),
++                gtk::DialogFlags::MODAL,
++                &[
++                    ("Run", gtk::ResponseType::Other(0)),
++                    ("Cancel", gtk::ResponseType::Close),
++                ],
++            );
++            let input = Entry::builder()
++                .css_classes(vec!["button-with-margin".to_owned()])
++                .vexpand(false)
++                .hexpand(true)
++                .build();
++
++            // To set "run" button disabled by default.
++            dialog.set_response_sensitive(gtk::ResponseType::Other(0), false);
++
++            input.connect_changed(glib::clone!(
++                #[weak]
++                dialog,
++                move |input| {
++                    if !input.text().is_empty() {
++                        dialog.set_response_sensitive(gtk::ResponseType::Other(0), true);
++                    } else {
++                        dialog.set_response_sensitive(gtk::ResponseType::Other(0), false);
++                    }
+                 }
+-                gtk::ResponseType::Other(0) => {
+-                    run_command(&input, &window, dialog);
++            ));
++            input.connect_activate(glib::clone!(
++                #[weak]
++                window,
++                #[weak]
++                dialog,
++                move |input| {
++                    run_command(input, &window, &dialog);
+                 }
+-                _ => {}
+-            }
+-        }));
++            ));
++            dialog.connect_response(glib::clone!(
++                #[weak]
++                input,
++                #[weak]
++                window,
++                move |dialog, response| {
++                    match response {
++                        gtk::ResponseType::Close => {
++                            dialog.close();
++                        }
++                        gtk::ResponseType::Other(0) => {
++                            run_command(&input, &window, dialog);
++                        }
++                        _ => {}
++                    }
++                }
++            ));
+ 
+-        dialog.content_area().append(&input);
+-        dialog.set_size_request(400, 70);
+-        dialog.show();
+-    }));
++            dialog.content_area().append(&input);
++            dialog.set_size_request(400, 70);
++            dialog.show();
++        }
++    ));
+ 
+     let graphs = gio::SimpleAction::new_stateful(
+         "graphs",
+         None,
+         &settings.borrow().display_graph.to_variant(),
+     );
+-    graphs.connect_activate(glib::clone!(@weak settings => move |g, _| {
+-        let mut is_active = false;
+-        if let Some(g) = g.state() {
+-            is_active = g.get().expect("couldn't get bool");
+-            rfs.display_tab.borrow().set_checkboxes_state(!is_active);
++    graphs.connect_activate(glib::clone!(
++        #[weak]
++        settings,
++        move |g, _| {
++            let mut is_active = false;
++            if let Some(g) = g.state() {
++                is_active = g.get().expect("couldn't get bool");
++                rfs.display_tab.borrow().set_checkboxes_state(!is_active);
++            }
++            // We need to change the toggle state ourselves. `gio` dark magic.
++            g.change_state(&(!is_active).to_variant());
++
++            // We update the setting and save it!
++            settings.borrow_mut().display_graph = !is_active;
++            settings.borrow().save();
+         }
+-        // We need to change the toggle state ourselves. `gio` dark magic.
+-        g.change_state(&(!is_active).to_variant());
+-
+-        // We update the setting and save it!
+-        settings.borrow_mut().display_graph = !is_active;
+-        settings.borrow().save();
+-    }));
++    ));
+ 
+     let temperature = gio::SimpleAction::new_stateful(
+         "temperature",
+@@ -604,15 +714,23 @@
+         settings.borrow().save();
+     });
+     let quit = gio::SimpleAction::new("quit", None);
+-    quit.connect_activate(glib::clone!(@weak application => move |_,_| {
+-        application.quit();
+-    }));
++    quit.connect_activate(glib::clone!(
++        #[weak]
++        application,
++        move |_, _| {
++            application.quit();
++        }
++    ));
+     application.set_accels_for_action("app.quit", &["<Primary>Q"]);
+     let finder = gio::SimpleAction::new("finder", None);
+     // Little hack to correctly handle `ctrl+F` shortcut.
+-    finder.connect_activate(glib::clone!(@weak search_filter_button => move |_,_| {
+-        search_filter_button.emit_clicked();
+-    }));
++    finder.connect_activate(glib::clone!(
++        #[weak]
++        search_filter_button,
++        move |_, _| {
++            search_filter_button.emit_clicked();
++        }
++    ));
+     application.set_accels_for_action("app.finder", &["<Primary>F"]);
+ 
+     application.add_action(&about);
+@@ -625,9 +743,13 @@
+ 
+     window.set_widget_name(utils::MAIN_WINDOW_NAME);
+ 
+-    application.connect_activate(glib::clone!(@weak window => move |_| {
+-        window.present();
+-    }));
++    application.connect_activate(glib::clone!(
++        #[weak]
++        window,
++        move |_| {
++            window.present();
++        }
++    ));
+ 
+     procs.search_bar.set_key_capture_widget(Some(&window));
+ 
+@@ -640,18 +762,22 @@
+     }
+ 
+     search_filter_button.connect_clicked(glib::clone!(
+-        @strong stack,
+-        @weak procs.search_bar as procs_search_bar,
+-        @weak network_tab,
+-        => move |_| {
+-        if let Some(name) = stack.visible_child_name() {
+-            match name.as_str() {
+-                "Processes" => revert_display(&procs_search_bar),
+-                "Networks" => revert_display(&network_tab.borrow().search_bar),
+-                _ => {}
+-            };
++        #[strong]
++        stack,
++        #[weak(rename_to = procs_search_bar)]
++        procs.search_bar,
++        #[weak]
++        network_tab,
++        move |_| {
++            if let Some(name) = stack.visible_child_name() {
++                match name.as_str() {
++                    "Processes" => revert_display(&procs_search_bar),
++                    "Networks" => revert_display(&network_tab.borrow().search_bar),
++                    _ => {}
++                };
++            }
+         }
+-    }));
++    ));
+ 
+     stack.connect_visible_child_notify(move |s| {
+         if let Some(name) = s.visible_child_name() {
+--- a/src/network_dialog.rs
++++ b/src/network_dialog.rs
+@@ -245,12 +245,16 @@
+     let packets_errors_history = Rc::new(RefCell::new(packets_errors_history));
+ 
+     scroll.set_child(Some(&vertical_layout));
+-    scroll.connect_show(
+-        glib::clone!(@weak packets_errors_history, @weak in_out_history => move |_| {
++    scroll.connect_show(glib::clone!(
++        #[weak]
++        packets_errors_history,
++        #[weak]
++        in_out_history,
++        move |_| {
+             packets_errors_history.borrow().show();
+             in_out_history.borrow().show();
+-        }),
+-    );
++        }
++    ));
+     notebook.create_tab("Graphics", &scroll);
+ 
+     //
+@@ -413,23 +417,41 @@
+     popup.set_size_request(700, 540);
+ 
+     let to_be_removed = Rc::new(Cell::new(false));
+-    popup.connect_destroy(glib::clone!(@weak to_be_removed => move |_| {
+-        to_be_removed.set(true);
+-    }));
+-    close_button.connect_clicked(glib::clone!(@weak popup, @weak to_be_removed => move |_| {
+-        popup.close();
+-    }));
+-    popup.connect_close_request(
+-        glib::clone!(@weak to_be_removed => @default-return glib::Propagation::Proceed, move |_| {
++    popup.connect_destroy(glib::clone!(
++        #[weak]
++        to_be_removed,
++        move |_| {
++            to_be_removed.set(true);
++        }
++    ));
++    close_button.connect_clicked(glib::clone!(
++        #[weak]
++        popup,
++        #[weak]
++        to_be_removed,
++        move |_| {
++            popup.close();
++        }
++    ));
++    popup.connect_close_request(glib::clone!(
++        #[weak]
++        to_be_removed,
++        #[upgrade_or]
++        glib::Propagation::Proceed,
++        move |_| {
+             to_be_removed.set(true);
+             glib::Propagation::Proceed
+-        }),
+-    );
++        }
++    ));
+     let event_controller = EventControllerKey::new();
+     event_controller.connect_key_pressed(glib::clone!(
+-        @weak popup,
+-        @weak to_be_removed
+-        => @default-return glib::Propagation::Proceed, move |_, key, _, _modifier| {
++        #[weak]
++        popup,
++        #[weak]
++        to_be_removed,
++        #[upgrade_or]
++        glib::Propagation::Proceed,
++        move |_, key, _, _modifier| {
+             if key == gtk::gdk::Key::Escape {
+                 popup.close();
+                 to_be_removed.set(true);
+--- a/src/process_dialog.rs
++++ b/src/process_dialog.rs
+@@ -386,41 +386,65 @@
+     let disk_usage_history = Rc::new(RefCell::new(disk_usage_history));
+ 
+     scroll.set_child(Some(&vertical_layout));
+-    scroll.connect_show(
+-        glib::clone!(@weak ram_usage_history, @weak cpu_usage_history, @weak disk_usage_history => move |_| {
++    scroll.connect_show(glib::clone!(
++        #[weak]
++        ram_usage_history,
++        #[weak]
++        cpu_usage_history,
++        #[weak]
++        disk_usage_history,
++        move |_| {
+             ram_usage_history.borrow().show();
+             cpu_usage_history.borrow().show();
+             disk_usage_history.borrow().show();
+-        }),
+-    );
++        }
++    ));
+     notebook.create_tab("Resources usage", &scroll);
+ 
+     popup.set_child(Some(&notebook.notebook));
+     popup.set_size_request(500, 600);
+ 
+-    close_button.connect_clicked(glib::clone!(@weak popup => move |_| {
+-        popup.close();
+-    }));
++    close_button.connect_clicked(glib::clone!(
++        #[weak]
++        popup,
++        move |_| {
++            popup.close();
++        }
++    ));
+     let to_be_removed = Rc::new(Cell::new(false));
+-    popup.connect_destroy(glib::clone!(@weak to_be_removed => move |_| {
+-        to_be_removed.set(true);
+-    }));
+-    popup.connect_close_request(
+-        glib::clone!(@weak to_be_removed => @default-return glib::Propagation::Proceed, move |_| {
++    popup.connect_destroy(glib::clone!(
++        #[weak]
++        to_be_removed,
++        move |_| {
++            to_be_removed.set(true);
++        }
++    ));
++    popup.connect_close_request(glib::clone!(
++        #[weak]
++        to_be_removed,
++        #[upgrade_or]
++        glib::Propagation::Proceed,
++        move |_| {
+             to_be_removed.set(true);
+             glib::Propagation::Proceed
+-        }),
+-    );
++        }
++    ));
+     let event_controller = EventControllerKey::new();
+-    event_controller.connect_key_pressed(
+-        glib::clone!(@weak popup, @weak to_be_removed => @default-return glib::Propagation::Proceed, move |_, key, _, _modifier| {
++    event_controller.connect_key_pressed(glib::clone!(
++        #[weak]
++        popup,
++        #[weak]
++        to_be_removed,
++        #[upgrade_or]
++        glib::Propagation::Proceed,
++        move |_, key, _, _modifier| {
+             if key == gtk::gdk::Key::Escape {
+                 popup.close();
+                 to_be_removed.set(true);
+             }
+             glib::Propagation::Proceed
+-        }),
+-    );
++        }
++    ));
+     popup.add_controller(event_controller);
+     popup.set_resizable(true);
+     popup.show();
+--- a/src/settings.rs
++++ b/src/settings.rs
+@@ -197,27 +197,47 @@
+     // Finally connect to all kinds of change notification signals for the different UI widgets.
+     // Whenever something is changing we directly save the configuration file with the new values.
+     refresh_procs.connect_value_changed(glib::clone!(
+-    @weak settings,
+-    @weak rfs.process_refresh_timeout as process_refresh_timeout
+-    => move |entry| {
+-        let mut settings = settings.borrow_mut();
+-        settings.refresh_processes_rate = (entry.value() * 1_000.) as _;
+-        *process_refresh_timeout.lock().expect("failed to lock process_refresh_timeout") =
+-            settings.refresh_processes_rate;
+-        settings.save();
+-    }));
+-    refresh_network.connect_value_changed(glib::clone!(@weak settings, @weak rfs.network_refresh_timeout as network_refresh_timeout => move |entry| {
+-        let mut settings = settings.borrow_mut();
+-        settings.refresh_network_rate = (entry.value() * 1_000.) as _;
+-        *network_refresh_timeout.lock().expect("failed to lock network_refresh_timeout") = settings.refresh_network_rate;
+-        settings.save();
+-    }));
+-    refresh_sys.connect_value_changed(glib::clone!(@weak settings, @weak rfs.system_refresh_timeout as system_refresh_timeout => move |entry| {
+-        let mut settings = settings.borrow_mut();
+-        settings.refresh_system_rate = (entry.value() * 1_000.) as _;
+-        *system_refresh_timeout.lock().expect("failed to lock system_refresh_timeout") = settings.refresh_system_rate;
+-        settings.save();
+-    }));
++        #[weak]
++        settings,
++        #[weak(rename_to = process_refresh_timeout)]
++        rfs.process_refresh_timeout,
++        move |entry| {
++            let mut settings = settings.borrow_mut();
++            settings.refresh_processes_rate = (entry.value() * 1_000.) as _;
++            *process_refresh_timeout
++                .lock()
++                .expect("failed to lock process_refresh_timeout") = settings.refresh_processes_rate;
++            settings.save();
++        }
++    ));
++    refresh_network.connect_value_changed(glib::clone!(
++        #[weak]
++        settings,
++        #[weak(rename_to = network_refresh_timeout)]
++        rfs.network_refresh_timeout,
++        move |entry| {
++            let mut settings = settings.borrow_mut();
++            settings.refresh_network_rate = (entry.value() * 1_000.) as _;
++            *network_refresh_timeout
++                .lock()
++                .expect("failed to lock network_refresh_timeout") = settings.refresh_network_rate;
++            settings.save();
++        }
++    ));
++    refresh_sys.connect_value_changed(glib::clone!(
++        #[weak]
++        settings,
++        #[weak(rename_to = system_refresh_timeout)]
++        rfs.system_refresh_timeout,
++        move |entry| {
++            let mut settings = settings.borrow_mut();
++            settings.refresh_system_rate = (entry.value() * 1_000.) as _;
++            *system_refresh_timeout
++                .lock()
++                .expect("failed to lock system_refresh_timeout") = settings.refresh_system_rate;
++            settings.save();
++        }
++    ));
+ 
+     dialog.connect_response(move |dialog, _| {
+         dialog.close();
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -30,7 +30,7 @@
+ version = "2.2.1"
+ 
+ [dependencies.gtk]
+-version = "0.8"
++version = "0.10"
+ package = "gtk4"
+ 
+ [dependencies.libc]
