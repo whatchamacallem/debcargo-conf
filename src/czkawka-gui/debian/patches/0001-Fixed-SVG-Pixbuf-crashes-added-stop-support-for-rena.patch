@@ -1,0 +1,137 @@
+From 53f2542e65cc6a2f813331fe3640835d71ffb0de Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Rafa=C5=82=20Mikrut?=
+ <41945903+qarmin@users.noreply.github.com>
+Date: Fri, 18 Jul 2025 12:10:43 +0200
+Subject: [PATCH] Fixed SVG Pixbuf crashes, added stop support for rename,
+ delete, and move operations in krokiet (#1565)
+
+---
+ czkawka_gui/Cargo.toml                        |   12 +-
+ czkawka_gui/src/gui_structs/gui_data.rs       |    3 +-
+ czkawka_gui/src/help_functions.rs             |   33 +-
+ czkawka_gui/src/main.rs                       |    3 +-
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -51,13 +51,13 @@
+ features = ["log"]
+ 
+ [dependencies.gdk4]
+-version = "0.9"
++version = "0.10"
+ 
+ [dependencies.glib]
+-version = "0.20"
++version = "0.21"
+ 
+ [dependencies.gtk4]
+-version = "0.9"
++version = "0.10"
+ features = ["v4_6"]
+ default-features = false
+ 
+@@ -98,6 +98,10 @@
+ [dependencies.regex]
+ version = "1.11"
+ 
++[dependencies.resvg]
++version = "0.45.1"
++default_features = false
++
+ [dependencies.rust-embed]
+ version = "8.5"
+ features = ["debug-embed"]
+--- a/src/gui_structs/gui_data.rs
++++ b/src/gui_structs/gui_data.rs
+@@ -118,7 +118,8 @@
+         window_main.set_title(Some(&flg!("window_main_title")));
+         window_main.show();
+ 
+-        let pixbuf = Pixbuf::from_read(BufReader::new(ICON_ABOUT)).expect("Couldn't load icon");
++        let pixbuf = Pixbuf::from_read(BufReader::new(ICON_ABOUT))
++            .unwrap_or(Pixbuf::new(gdk4::gdk_pixbuf::Colorspace::Rgb, false, 8, 1, 1).expect("Crash is a lot of less likely than loading png file"));
+ 
+         window_main.set_application(Some(application));
+ 
+--- a/src/help_functions.rs
++++ b/src/help_functions.rs
+@@ -1,7 +1,6 @@
+ use std::cell::RefCell;
+ use std::cmp::Ordering;
+ use std::collections::HashMap;
+-use std::io::BufReader;
+ use std::path::{PathBuf, MAIN_SEPARATOR};
+ use std::rc::Rc;
+ 
+@@ -19,12 +18,15 @@
+ use czkawka_core::similar_videos::SimilarVideos;
+ use czkawka_core::temporary::Temporary;
+ use gdk4::gdk_pixbuf::{InterpType, Pixbuf};
+-use glib::Error;
++use glib::{Bytes, Error};
++use gtk4::gdk_pixbuf::Colorspace;
+ use gtk4::prelude::*;
+ use gtk4::{ListStore, Scale, ScrollType, TextView, TreeView, Widget};
+ use image::codecs::jpeg::JpegEncoder;
+-use image::{DynamicImage, EncodableLayout};
++use image::{DynamicImage, EncodableLayout, GenericImageView, RgbaImage};
+ use once_cell::sync::OnceCell;
++use resvg::tiny_skia;
++use resvg::usvg::{Options, Tree};
+ 
+ use crate::flg;
+ use crate::notebook_enums::{NotebookMainEnum, NotebookUpperEnum};
+@@ -731,10 +733,32 @@
+ const SIZE_OF_ICON: i32 = 18;
+ const TYPE_OF_INTERPOLATION: InterpType = InterpType::Tiles;
+ 
++fn svg_to_dynamic_image(svg_data: &[u8]) -> Option<DynamicImage> {
++    let opt = Options::default();
++    let tree = Tree::from_data(svg_data, &opt).ok()?;
++
++    let mut pixmap = tiny_skia::Pixmap::new(tree.size().width() as u32, tree.size().height() as u32)?;
++    resvg::render(&tree, tiny_skia::Transform::default(), &mut (pixmap.as_mut()));
++
++    let rgba = RgbaImage::from_raw(pixmap.width(), pixmap.height(), pixmap.data().to_vec())?;
++
++    Some(DynamicImage::ImageRgba8(rgba))
++}
++
++fn dynamic_image_to_pixbuf(img: DynamicImage) -> Pixbuf {
++    let (width, height) = img.dimensions();
++    let rgba = img.into_rgba8();
++    let bytes = Bytes::from(&rgba.into_raw());
++
++    let pixbuf = Pixbuf::from_bytes(&bytes, Colorspace::Rgb, true, 8, width as i32, height as i32, (4 * width) as i32);
++    pixbuf.scale_simple(SIZE_OF_ICON, SIZE_OF_ICON, TYPE_OF_INTERPOLATION).expect("Failed to scale pixbuf")
++}
++
++
+ pub fn set_icon_of_button<P: IsA<Widget>>(button: &P, data: &'static [u8]) {
+     let image = get_custom_image_from_widget(&button.clone());
+-    let pixbuf = Pixbuf::from_read(BufReader::new(data)).expect("Failed to create pixbuf from data");
+-    let pixbuf = pixbuf.scale_simple(SIZE_OF_ICON, SIZE_OF_ICON, TYPE_OF_INTERPOLATION).expect("Failed to scale pixbuf");
++    let dynamic_image = svg_to_dynamic_image(data).expect("Failed to convert SVG data to DynamicImage");
++    let pixbuf = dynamic_image_to_pixbuf(dynamic_image);
+     image.set_from_pixbuf(Some(&pixbuf));
+ }
+ 
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -31,6 +31,7 @@
+ use czkawka_core::common::{get_number_of_threads, print_version_mode, set_number_of_threads, setup_logger};
+ use czkawka_core::progress_data::ProgressData;
+ use czkawka_core::*;
++use glib::ExitCode;
+ use gtk4::gio::ApplicationFlags;
+ use gtk4::prelude::*;
+ use gtk4::Application;
+@@ -73,7 +74,7 @@
+         setup_logger(false);
+         print_version_mode();
+         build_ui(app, &cmdline.arguments());
+-        0
++        ExitCode::new(0)
+     });
+     application.run_with_args(&env::args().collect::<Vec<_>>());
+ }
