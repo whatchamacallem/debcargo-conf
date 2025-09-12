@@ -1,0 +1,151 @@
+This patch is based on a revert of upstream commit 67541fe44dd5e21681eb37453a3aaa3274ef3512
+adapted for use in the Debian package by Peter Michael Green.
+
+Index: half/Cargo.toml
+===================================================================
+--- half.orig/Cargo.toml
++++ half/Cargo.toml
+@@ -88,13 +88,11 @@ optional = true
+ default-features = false
+ 
+ [dependencies.rand]
+-version = "0.9.0"
+-features = ["thread_rng"]
++version = "0.8.0"
+ optional = true
+-default-features = false
+ 
+ [dependencies.rand_distr]
+-version = "0.5.0"
++version = "0.4.0"
+ optional = true
+ default-features = false
+ 
+@@ -127,7 +125,7 @@ version = "1.0"
+ version = "1.0"
+ 
+ [dev-dependencies.rand]
+-version = "0.9.0"
++version = "0.8.0"
+ 
+ [target.'cfg(target_arch = "spirv")'.dependencies.crunchy]
+ version = "0.2.2"
+diff --git a/src/rand_distr.rs b/src/rand_distr.rs
+index 8eb0a552a8..decb9743a6 100644
+--- a/src/rand_distr.rs
++++ b/src/rand_distr.rs
+@@ -1,6 +1,6 @@
+ use crate::{bf16, f16};
+ 
+-use rand::{distr::Distribution, Rng};
++use rand::{distributions::Distribution, Rng};
+ use rand_distr::uniform::UniformFloat;
+ 
+ macro_rules! impl_distribution_via_f32 {
+@@ -13,13 +13,13 @@ macro_rules! impl_distribution_via_f32 {
+     };
+ }
+ 
+-impl_distribution_via_f32!(f16, rand_distr::StandardUniform);
++impl_distribution_via_f32!(f16, rand_distr::Standard);
+ impl_distribution_via_f32!(f16, rand_distr::StandardNormal);
+ impl_distribution_via_f32!(f16, rand_distr::Exp1);
+ impl_distribution_via_f32!(f16, rand_distr::Open01);
+ impl_distribution_via_f32!(f16, rand_distr::OpenClosed01);
+ 
+-impl_distribution_via_f32!(bf16, rand_distr::StandardUniform);
++impl_distribution_via_f32!(bf16, rand_distr::Standard);
+ impl_distribution_via_f32!(bf16, rand_distr::StandardNormal);
+ impl_distribution_via_f32!(bf16, rand_distr::Exp1);
+ impl_distribution_via_f32!(bf16, rand_distr::Open01);
+@@ -34,25 +34,25 @@ impl rand_distr::uniform::SampleUniform for f16 {
+ 
+ impl rand_distr::uniform::UniformSampler for Float16Sampler {
+     type X = f16;
+-    fn new<B1, B2>(low: B1, high: B2) -> Result<Self, rand_distr::uniform::Error>
++    fn new<B1, B2>(low: B1, high: B2) -> Self
+     where
+         B1: rand_distr::uniform::SampleBorrow<Self::X> + Sized,
+         B2: rand_distr::uniform::SampleBorrow<Self::X> + Sized,
+     {
+-        Ok(Self(UniformFloat::new(
++        Self(UniformFloat::new(
+             low.borrow().to_f32(),
+             high.borrow().to_f32(),
+-        )?))
++        ))
+     }
+-    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Result<Self, rand_distr::uniform::Error>
++    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
+     where
+         B1: rand_distr::uniform::SampleBorrow<Self::X> + Sized,
+         B2: rand_distr::uniform::SampleBorrow<Self::X> + Sized,
+     {
+-        Ok(Self(UniformFloat::new_inclusive(
++        Self(UniformFloat::new_inclusive(
+             low.borrow().to_f32(),
+             high.borrow().to_f32(),
+-        )?))
++        ))
+     }
+     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+         f16::from_f32(self.0.sample(rng))
+@@ -68,25 +68,25 @@ impl rand_distr::uniform::SampleUniform for bf16 {
+ 
+ impl rand_distr::uniform::UniformSampler for BFloat16Sampler {
+     type X = bf16;
+-    fn new<B1, B2>(low: B1, high: B2) -> Result<Self, rand_distr::uniform::Error>
++    fn new<B1, B2>(low: B1, high: B2) -> Self
+     where
+         B1: rand_distr::uniform::SampleBorrow<Self::X> + Sized,
+         B2: rand_distr::uniform::SampleBorrow<Self::X> + Sized,
+     {
+-        Ok(Self(UniformFloat::new(
++        Self(UniformFloat::new(
+             low.borrow().to_f32(),
+             high.borrow().to_f32(),
+-        )?))
++        ))
+     }
+-    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Result<Self, rand_distr::uniform::Error>
++    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
+     where
+         B1: rand_distr::uniform::SampleBorrow<Self::X> + Sized,
+         B2: rand_distr::uniform::SampleBorrow<Self::X> + Sized,
+     {
+-        Ok(Self(UniformFloat::new_inclusive(
++        Self(UniformFloat::new_inclusive(
+             low.borrow().to_f32(),
+             high.borrow().to_f32(),
+-        )?))
++        ))
+     }
+     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+         bf16::from_f32(self.0.sample(rng))
+@@ -98,2 +98,2 @@
+-    use rand::{rng, Rng};
+-    use rand_distr::{StandardNormal, StandardUniform, Uniform};
++    use rand::{thread_rng, Rng};
++    use rand_distr::{Standard, StandardNormal, Uniform};
+@@ -105,2 +105,2 @@
+-        let mut rng = rng();
+-        let _: f16 = rng.sample(StandardUniform);
++        let mut rng = thread_rng();
++        let _: f16 = rng.sample(Standard);
+@@ -110,1 +110,1 @@
+-        let _: f16 = rng.sample(Uniform::new(f16::from_f32(0.0), f16::from_f32(1.0)).unwrap());
++        let _: f16 = rng.sample(Uniform::new(f16::from_f32(0.0), f16::from_f32(1.0)));
+@@ -114,10 +114,10 @@ mod tests {
+ 
+     #[test]
+     fn test_sample_bf16() {
+-        let mut rng = rng();
+-        let _: bf16 = rng.sample(StandardUniform);
++        let mut rng = thread_rng();
++        let _: bf16 = rng.sample(Standard);
+         let _: bf16 = rng.sample(StandardNormal);
+-        let _: bf16 = rng.sample(Uniform::new(bf16::from_f32(0.0), bf16::from_f32(1.0)).unwrap());
++        let _: bf16 = rng.sample(Uniform::new(bf16::from_f32(0.0), bf16::from_f32(1.0)));
+         #[cfg(feature = "num-traits")]
+         let _: bf16 =
+             rng.sample(rand_distr::Normal::new(bf16::from_f32(0.0), bf16::from_f32(1.0)).unwrap());
