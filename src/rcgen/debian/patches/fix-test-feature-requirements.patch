@@ -1,0 +1,89 @@
+Index: rcgen/src/certificate.rs
+===================================================================
+--- rcgen.orig/src/certificate.rs
++++ rcgen/src/certificate.rs
+@@ -1122,7 +1122,7 @@ mod tests {
+ 	#[cfg(feature = "crypto")]
+ 	use crate::KeyPair;
+ 
+-	#[cfg(feature = "crypto")]
++	#[cfg(all(feature = "crypto", feature = "x509-parser"))]
+ 	#[test]
+ 	fn test_with_key_usages() {
+ 		let params = CertificateParams {
+@@ -1167,7 +1167,7 @@ mod tests {
+ 		assert!(found);
+ 	}
+ 
+-	#[cfg(feature = "crypto")]
++	#[cfg(all(feature = "crypto", feature = "x509-parser"))]
+ 	#[test]
+ 	fn test_with_key_usages_decipheronly_only() {
+ 		let params = CertificateParams {
+@@ -1205,7 +1205,7 @@ mod tests {
+ 		assert!(found);
+ 	}
+ 
+-	#[cfg(feature = "crypto")]
++	#[cfg(all(feature = "crypto", feature = "x509-parser"))]
+ 	#[test]
+ 	fn test_with_extended_key_usages_any() {
+ 		let params = CertificateParams {
+@@ -1226,7 +1226,7 @@ mod tests {
+ 		assert!(extension.value.any);
+ 	}
+ 
+-	#[cfg(feature = "crypto")]
++	#[cfg(all(feature = "crypto", feature = "x509-parser"))]
+ 	#[test]
+ 	fn test_with_extended_key_usages_other() {
+ 		use x509_parser::der_parser::asn1_rs::Oid;
+@@ -1277,7 +1277,7 @@ mod tests {
+ 		}
+ 	}
+ 
+-	#[cfg(feature = "x509-parser")]
++	#[cfg(all(feature = "crypto", feature = "x509-parser"))]
+ 	#[test]
+ 	fn parse_other_name_alt_name() {
+ 		// Create and serialize a certificate with an alternative name containing an "OtherName".
+@@ -1302,7 +1302,7 @@ mod tests {
+ 		assert_eq!(subject_alt_names, expected_alt_names);
+ 	}
+ 
+-	#[cfg(feature = "x509-parser")]
++	#[cfg(all(feature = "crypto", feature = "x509-parser"))]
+ 	#[test]
+ 	fn parse_ia5string_subject() {
+ 		// Create and serialize a certificate with a subject containing an IA5String email address.
+@@ -1332,7 +1332,7 @@ mod tests {
+ 		assert_eq!(names, expected_names);
+ 	}
+ 
+-	#[cfg(feature = "x509-parser")]
++	#[cfg(all(feature = "crypto", feature = "x509-parser"))]
+ 	#[test]
+ 	fn converts_from_ip() {
+ 		let ip = Ipv4Addr::new(2, 4, 6, 8);
+@@ -1354,7 +1354,7 @@ mod tests {
+ 		assert!(actual.subject_alt_names.contains(&ip_san));
+ 	}
+ 
+-	#[cfg(feature = "x509-parser")]
++	#[cfg(all(feature = "crypto", feature = "x509-parser"))]
+ 	mod test_key_identifier_from_ca {
+ 		use super::*;
+ 
+Index: rcgen/src/csr.rs
+===================================================================
+--- rcgen.orig/src/csr.rs
++++ rcgen/src/csr.rs
+@@ -209,7 +209,7 @@ impl CertificateSigningRequestParams {
+ 	}
+ }
+ 
+-#[cfg(all(test, feature = "x509-parser"))]
++#[cfg(all(test, feature = "x509-parser", feature = "crypto"))]
+ mod tests {
+ 	use crate::{CertificateParams, ExtendedKeyUsagePurpose, KeyPair, KeyUsagePurpose};
+ 	use x509_parser::certification_request::X509CertificationRequest;
