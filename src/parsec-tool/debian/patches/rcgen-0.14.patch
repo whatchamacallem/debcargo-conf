@@ -1,0 +1,76 @@
+Index: parsec-tool/Cargo.toml
+===================================================================
+--- parsec-tool.orig/Cargo.toml
++++ parsec-tool/Cargo.toml
+@@ -66,7 +66,7 @@ version = "0.4.0"
+ version = "0.10.0"
+ 
+ [dependencies.rcgen]
+-version = "0.13.1"
++version = "0.14"
+ features = ["pem"]
+ 
+ [dependencies.serde]
+Index: parsec-tool/src/subcommands/create_csr.rs
+===================================================================
+--- parsec-tool.orig/src/subcommands/create_csr.rs
++++ parsec-tool/src/subcommands/create_csr.rs
+@@ -13,7 +13,7 @@ use parsec_client::core::interface::oper
+ use parsec_client::BasicClient;
+ use rcgen::Error as RcgenError;
+ use rcgen::{
+-    CertificateParams, DistinguishedName, DnType, KeyPair, RemoteKeyPair,
++    CertificateParams, DistinguishedName, DnType, PublicKeyData, SigningKey,
+     SignatureAlgorithm, PKCS_ECDSA_P256_SHA256, PKCS_ECDSA_P384_SHA384, PKCS_RSA_SHA256,
+     PKCS_RSA_SHA384, PKCS_RSA_SHA512,
+ };
+@@ -93,7 +93,7 @@ impl CreateCsr {
+             rcgen_algorithm,
+         };
+ 
+-        let remote_key_pair = KeyPair::from_remote(Box::new(parsec_key_pair))?;
++        let remote_key_pair = parsec_key_pair;
+ 
+         let subject_alt_names = match &self.subject_alternative_name {
+             Some(san) => san.to_owned(),
+@@ -143,8 +143,8 @@ impl CreateCsr {
+         let mut params = CertificateParams::new(subject_alt_names)?;
+         params.distinguished_name = dn;
+ 
+-        let cert = params.self_signed(&remote_key_pair)?;
+-        let csr = cert.params().serialize_request(&remote_key_pair)?;
++        let _cert = params.self_signed(&remote_key_pair)?;
++        let csr = params.serialize_request(&remote_key_pair)?;
+ 
+         let pem_string = csr.pem()?;
+         println!("{}", pem_string);
+@@ -246,21 +246,23 @@ impl CreateCsr {
+     }
+ }
+ 
+-impl RemoteKeyPair for ParsecRemoteKeyPair {
+-    fn public_key(&self) -> &[u8] {
++impl PublicKeyData for ParsecRemoteKeyPair {
++    fn der_bytes(&self) -> &[u8] {
+         &self.public_key_der
+     }
+ 
++    fn algorithm(&self) -> &'static SignatureAlgorithm {
++        self.rcgen_algorithm
++    }
++}
++
++impl SigningKey for ParsecRemoteKeyPair {
+     fn sign(&self, msg: &[u8]) -> std::result::Result<Vec<u8>, RcgenError> {
+         let signature =
+             sign_message_with_policy(&self.parsec_client, &self.key_name, msg, Some(Hash::Sha256))
+                 .map_err(RcgenError::from)?;
+         Ok(signature)
+     }
+-
+-    fn algorithm(&self) -> &'static SignatureAlgorithm {
+-        self.rcgen_algorithm
+-    }
+ }
+ 
+ impl From<Error> for RcgenError {
