@@ -1,0 +1,15 @@
+Description: run tests with opt-level = 2
+ Upstream sets the optimisation level for tests at the workspace level,
+ but this is not propagated to crates.io.
+
+ With the default opt level for tests (0 IIRC) they are glacially slow,
+ leading to timeouts on the CI infrastructure.
+--- rust-roaring-0.10.12.orig/Cargo.toml
++++ rust-roaring-0.10.12/Cargo.toml
+@@ -204,3 +204,6 @@ version = "1.6.0"
+ 
+ [dev-dependencies.serde_json]
+ version = "1.0.138"
++
++[profile.test]
++opt-level = 2
