@@ -1,0 +1,95 @@
+Description: skip integration tests that require source tree write access during autopkgtests
+ Some integration tests use the get_built_root() function which walks
+ up the directory tree from the test executable looking for
+ Cargo.toml. During autopkgtests, the executable runs from a temporary
+ directory but uses files from the cargo, so the tests
+ never find the project's Cargo.toml file and fail with a panic. These
+ tests also require write permissions to the lib directory under the
+ cargo registry.
+Author: Nadzeya Hutsko <nadzya.info@gmail.com>
+Forwarded: not-needed
+Last-Update: 2025-09-13
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/tests/testbox_tests.rs
++++ b/tests/testbox_tests.rs
+@@ -236,6 +236,7 @@
+ }
+ 
+ #[test]
++#[ignore = "require access to the source tree structure and write permissions"]
+ fn unused_override() {
+     let mut p = Project::new();
+     p.bootstrap()
+@@ -259,6 +260,7 @@
+ }
+ 
+ #[test]
++#[ignore = "require access to the source tree structure and write permissions"]
+ fn minimal_testbox() {
+     let mut p = Project::new();
+ 
+@@ -355,6 +357,7 @@
+ }
+ 
+ #[test]
++#[ignore = "require access to the source tree structure and write permissions"]
+ fn simple_workspace() {
+     let mut p = Project::new();
+     let built_root = get_built_root();
+@@ -400,6 +403,7 @@
+     feature = "chrono",
+     feature = "semver"
+ ))]
++#[ignore = "require access to the source tree structure and write permissions"]
+ fn full_testbox() {
+     let mut p = Project::new();
+ 
+@@ -514,6 +518,7 @@
+ 
+ #[test]
+ #[cfg(all(feature = "git2", feature = "chrono", feature = "semver"))]
++#[ignore = "require access to the source tree structure and write permissions"]
+ fn overridden_testbox() {
+     let mut p = Project::new();
+ 
+@@ -694,6 +699,7 @@
+ 
+ #[test]
+ #[cfg(feature = "chrono")]
++#[ignore = "require access to the source tree structure and write permissions"]
+ fn source_date_epoch() {
+     let mut p = Project::new();
+     let built_root = get_built_root();
+@@ -744,6 +750,7 @@
+ 
+ #[test]
+ #[cfg(feature = "git2")]
++#[ignore = "require access to the source tree structure and write permissions"]
+ fn git_no_git() {
+     // `root` isn't even a git-repo
+     let mut p = Project::new();
+@@ -766,6 +773,7 @@
+ 
+ #[test]
+ #[cfg(feature = "git2")]
++#[ignore = "require access to the source tree structure and write permissions"]
+ fn clean_then_dirty_git() {
+     let mut p = Project::new();
+     p.bootstrap().add_file(
+@@ -838,6 +846,7 @@
+ 
+ #[test]
+ #[cfg(feature = "git2")]
++#[ignore = "require access to the source tree structure and write permissions"]
+ fn empty_git() {
+     // Issue #7, git can be there and still fail
+     let mut p = Project::new();
+@@ -859,6 +868,7 @@
+ 
+ #[cfg(target_os = "windows")]
+ #[test]
++#[ignore = "require access to the source tree structure and write permissions"]
+ fn absolute_paths() {
+     // Issue #35. Usually binaries we refer to are simply executables names but sometimes they are
+     // absolute paths, containing backslashes, and everything gets sad on this devilish platform.
