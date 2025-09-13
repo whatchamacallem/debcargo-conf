@@ -1,0 +1,225 @@
+This patch is based on a revert of upstream commit 50d02c62894d4579a30043bf3515fbc9c1cb9ee3
+adapted for use in the Debian package by Peter Michael Green.
+
+Index: ammonia/src/lib.rs
+===================================================================
+--- ammonia.orig/src/lib.rs
++++ ammonia/src/lib.rs
+@@ -43,7 +43,6 @@ use maplit::{hashmap, hashset};
+ use std::sync::LazyLock;
+ use rcdom::{Handle, NodeData, RcDom, SerializableHandle};
+ use std::borrow::{Borrow, Cow};
+-use std::cell::Cell;
+ use std::cmp::max;
+ use std::collections::{HashMap, HashSet};
+ use std::fmt::{self, Display};
+@@ -182,37 +181,37 @@ pub fn is_html(input: &str) -> bool {
+     let mut input = BufferQueue::default();
+     input.push_back(chunk.try_reinterpret().unwrap());
+ 
+-    let tok = Tokenizer::new(santok, Default::default());
++    let mut tok = Tokenizer::new(santok, Default::default());
+     let _ = tok.feed(&mut input);
+     tok.end();
+-    tok.sink.was_sanitized.get()
++    tok.sink.was_sanitized
+ }
+ 
+-#[derive(Clone)]
++#[derive(Copy, Clone)]
+ struct SanitizationTokenizer {
+-    was_sanitized: Cell<bool>,
++    was_sanitized: bool,
+ }
+ 
+ impl SanitizationTokenizer {
+     pub fn new() -> SanitizationTokenizer {
+         SanitizationTokenizer {
+-            was_sanitized: false.into(),
++            was_sanitized: false,
+         }
+     }
+ }
+ 
+ impl TokenSink for SanitizationTokenizer {
+     type Handle = ();
+-    fn process_token(&self, token: Token, _line_number: u64) -> TokenSinkResult<()> {
++    fn process_token(&mut self, token: Token, _line_number: u64) -> TokenSinkResult<()> {
+         match token {
+             Token::CharacterTokens(_) | Token::EOFToken | Token::ParseError(_) => {}
+             _ => {
+-                self.was_sanitized.set(true);
++                self.was_sanitized = true;
+             }
+         }
+         TokenSinkResult::Continue
+     }
+-    fn end(&self) {}
++    fn end(&mut self) {}
+ }
+ 
+ /// An HTML sanitizer.
+@@ -1798,7 +1797,7 @@ impl<'a> Builder<'a> {
+     /// This is not a public API because RcDom isn't really stable.
+     /// We want to be able to take breaking changes to html5ever itself
+     /// without having to break Ammonia's API.
+-    fn clean_dom(&self, dom: RcDom) -> Document {
++    fn clean_dom(&self, mut dom: RcDom) -> Document {
+         let mut stack = Vec::new();
+         let mut removed = Vec::new();
+         let link_rel = self
+Index: ammonia/src/rcdom.rs
+===================================================================
+--- ammonia.orig/src/rcdom.rs
++++ ammonia/src/rcdom.rs
+@@ -208,10 +208,10 @@ pub struct RcDom {
+     pub document: Handle,
+ 
+     /// Errors that occurred during parsing.
+-    pub errors: RefCell<Vec<Cow<'static, str>>>,
++    pub errors: Vec<Cow<'static, str>>,
+ 
+     /// The document's quirks mode.
+-    pub quirks_mode: Cell<QuirksMode>,
++    pub quirks_mode: QuirksMode,
+ }
+ 
+ impl TreeSink for RcDom {
+@@ -222,17 +222,15 @@ impl TreeSink for RcDom {
+ 
+     type Handle = Handle;
+ 
+-    type ElemName<'a> = ExpandedName<'a>;
+-
+-    fn parse_error(&self, msg: Cow<'static, str>) {
+-        self.errors.borrow_mut().push(msg);
++    fn parse_error(&mut self, msg: Cow<'static, str>) {
++        self.errors.push(msg);
+     }
+ 
+-    fn get_document(&self) -> Handle {
++    fn get_document(&mut self) -> Handle {
+         self.document.clone()
+     }
+ 
+-    fn get_template_contents(&self, target: &Handle) -> Handle {
++    fn get_template_contents(&mut self, target: &Handle) -> Handle {
+         if let NodeData::Element {
+             ref template_contents,
+             ..
+@@ -248,8 +246,8 @@ impl TreeSink for RcDom {
+         }
+     }
+ 
+-    fn set_quirks_mode(&self, mode: QuirksMode) {
+-        self.quirks_mode.set(mode);
++    fn set_quirks_mode(&mut self, mode: QuirksMode) {
++        self.quirks_mode = mode;
+     }
+ 
+     fn same_node(&self, x: &Handle, y: &Handle) -> bool {
+@@ -264,7 +262,7 @@ impl TreeSink for RcDom {
+     }
+ 
+     fn create_element(
+-        &self,
++        &mut self,
+         name: QualName,
+         attrs: Vec<Attribute>,
+         flags: ElementFlags,
+@@ -281,18 +279,18 @@ impl TreeSink for RcDom {
+         })
+     }
+ 
+-    fn create_comment(&self, text: StrTendril) -> Handle {
++    fn create_comment(&mut self, text: StrTendril) -> Handle {
+         Node::new(NodeData::Comment { contents: text })
+     }
+ 
+-    fn create_pi(&self, target: StrTendril, data: StrTendril) -> Handle {
++    fn create_pi(&mut self, target: StrTendril, data: StrTendril) -> Handle {
+         Node::new(NodeData::ProcessingInstruction {
+             target,
+             contents: data,
+         })
+     }
+ 
+-    fn append(&self, parent: &Handle, child: NodeOrText<Handle>) {
++    fn append(&mut self, parent: &Handle, child: NodeOrText<Handle>) {
+         // Append to an existing Text node if we have one.
+         if let NodeOrText::AppendText(ref text) = child {
+             if let Some(h) = parent.children.borrow().last() {
+@@ -313,7 +311,7 @@ impl TreeSink for RcDom {
+         );
+     }
+ 
+-    fn append_before_sibling(&self, sibling: &Handle, child: NodeOrText<Handle>) {
++    fn append_before_sibling(&mut self, sibling: &Handle, child: NodeOrText<Handle>) {
+         let (parent, i) = get_parent_and_index(sibling)
+             .expect("append_before_sibling called on node without parent");
+ 
+@@ -349,7 +347,7 @@ impl TreeSink for RcDom {
+     }
+ 
+     fn append_based_on_parent_node(
+-        &self,
++        &mut self,
+         element: &Self::Handle,
+         prev_element: &Self::Handle,
+         child: NodeOrText<Self::Handle>,
+@@ -366,7 +364,7 @@ impl TreeSink for RcDom {
+     }
+ 
+     fn append_doctype_to_document(
+-        &self,
++        &mut self,
+         name: StrTendril,
+         _public_id: StrTendril,
+         _system_id: StrTendril,
+@@ -379,7 +377,7 @@ impl TreeSink for RcDom {
+         );
+     }
+ 
+-    fn add_attrs_if_missing(&self, target: &Handle, attrs: Vec<Attribute>) {
++    fn add_attrs_if_missing(&mut self, target: &Handle, attrs: Vec<Attribute>) {
+         let mut existing = if let NodeData::Element { ref attrs, .. } = target.data {
+             attrs.borrow_mut()
+         } else {
+@@ -397,11 +395,11 @@ impl TreeSink for RcDom {
+         );
+     }
+ 
+-    fn remove_from_parent(&self, target: &Handle) {
++    fn remove_from_parent(&mut self, target: &Handle) {
+         remove_from_parent(target);
+     }
+ 
+-    fn reparent_children(&self, node: &Handle, new_parent: &Handle) {
++    fn reparent_children(&mut self, node: &Handle, new_parent: &Handle) {
+         let mut children = node.children.borrow_mut();
+         let mut new_children = new_parent.children.borrow_mut();
+         for child in children.iter() {
+@@ -431,8 +429,8 @@ impl Default for RcDom {
+     fn default() -> RcDom {
+         RcDom {
+             document: Node::new(NodeData::Document),
+-            errors: vec![].into(),
+-            quirks_mode: tree_builder::NoQuirks.into(),
++            errors: vec![],
++            quirks_mode: tree_builder::NoQuirks,
+         }
+     }
+ }
+Index: ammonia/Cargo.toml
+===================================================================
+--- ammonia.orig/Cargo.toml
++++ ammonia/Cargo.toml
+@@ -53,7 +53,7 @@ path = "tests/version-numbers.rs"
+ version = "0.34.0"
+ 
+ [dependencies.html5ever]
+-version = "0.31"
++version = "0.27"
+ 
+ [dependencies.maplit]
+ version = "1.0"

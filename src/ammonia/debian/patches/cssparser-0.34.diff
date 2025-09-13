@@ -1,0 +1,46 @@
+This patch is based on a revert of upstream commit 91b07b553d183a2887e5493ac82022591877d5b1
+adapted for use in the debian package by Peter Michael Green.
+
+Index: ammonia/src/style.rs
+===================================================================
+--- ammonia.orig/src/style.rs
++++ ammonia/src/style.rs
+@@ -32,7 +32,7 @@
+ //! [CSSATTR]: https://w3c.github.io/csswg-drafts/css-style-attr/
+ use std::collections::HashSet;
+ 
+-use cssparser::{BasicParseErrorKind, DeclarationParser, ParseError, ParseErrorKind, Parser, ParserInput, ParserState, ToCss, Token};
++use cssparser::{BasicParseErrorKind, DeclarationParser, Delimiter::CurlyBracketBlock, ParseError, ParseErrorKind, Parser, ParserInput, ToCss, Token};
+ 
+ 
+ 
+@@ -98,7 +98,7 @@ pub fn parse_one_declaration<'i, 't>(
+         return Ok(("".into(), String::new()));
+     }
+     input.expect_colon()?;
+-    Declarations.parse_value(name, input, &input.state())
++    Declarations.parse_value(name, input)
+ }
+ 
+ 
+@@ -111,7 +111,6 @@ impl <'i> DeclarationParser<'i> for Decl
+         &mut self,
+         name: cssparser::CowRcStr<'i>,
+         input: &mut Parser<'i, 't>,
+-        _declaration_start: &ParserState,
+     ) -> Result<Self::Declaration, cssparser::ParseError<'i, Self::Error>> {
+         let mut value = String::new();
+         loop {
+Index: ammonia/Cargo.toml
+===================================================================
+--- ammonia.orig/Cargo.toml
++++ ammonia/Cargo.toml
+@@ -50,7 +50,7 @@ name = "version-numbers"
+ path = "tests/version-numbers.rs"
+ 
+ [dependencies.cssparser]
+-version = "0.35.0"
++version = "0.34.0"
+ 
+ [dependencies.html5ever]
+ version = "0.35"

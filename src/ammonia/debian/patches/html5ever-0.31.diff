@@ -1,0 +1,37 @@
+This patch is based on a revert of upstream commit f5ad1ec948e34d88ea188f887171960e29800fa7
+adapted for use in the Debian package by Peter Michael Green.
+
+Index: ammonia/src/lib.rs
+===================================================================
+--- ammonia.orig/src/lib.rs
++++ ammonia/src/lib.rs
+@@ -38,7 +38,7 @@ mod style;
+ use html5ever::interface::Attribute;
+ use html5ever::serialize::{serialize, SerializeOpts};
+ use html5ever::tree_builder::{NodeOrText, TreeSink};
+-use html5ever::{driver as html, local_name, ns, QualName};
++use html5ever::{driver as html, local_name, namespace_url, ns, QualName};
+ use maplit::{hashmap, hashset};
+ use std::sync::LazyLock;
+ use rcdom::{Handle, NodeData, RcDom, SerializableHandle};
+@@ -2208,7 +2208,6 @@ impl<'a> Builder<'a> {
+             html::ParseOpts::default(),
+             QualName::new(None, ns!(html), local_name!("div")),
+             vec![],
+-            false,
+         )
+     }
+ }
+Index: ammonia/Cargo.toml
+===================================================================
+--- ammonia.orig/Cargo.toml
++++ ammonia/Cargo.toml
+@@ -53,7 +53,7 @@ path = "tests/version-numbers.rs"
+ version = "0.34.0"
+ 
+ [dependencies.html5ever]
+-version = "0.35"
++version = "0.31"
+ 
+ [dependencies.maplit]
+ version = "1.0"
