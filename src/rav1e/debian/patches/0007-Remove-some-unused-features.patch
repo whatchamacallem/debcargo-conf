@@ -10,65 +10,7 @@ desync_finder, dump_ivf and dump_lookahead_data are only useful for internal dev
 
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -63,15 +63,6 @@
- bench = false
- required-features = ["binaries"]
- 
--[[bin]]
--name = "rav1e-ch"
--bench = false
--required-features = [
--    "binaries",
--    "channel-api",
--    "unstable",
--]
--
- [dependencies.aom-sys]
- version = "0.3.3"
- optional = true
-@@ -90,17 +81,9 @@
- [dependencies.av1-grain]
- version = "0.2.2"
- 
--[dependencies.backtrace]
--version = "0.3"
--optional = true
--
- [dependencies.bitstream-io]
- version = "2"
- 
--[dependencies.byteorder]
--version = "1.5.0"
--optional = true
--
- [dependencies.cfg-if]
- version = "1.0"
- 
-@@ -123,10 +106,6 @@
- version = "0.15"
- optional = true
- 
--[dependencies.crossbeam]
--version = "0.8"
--optional = true
--
- [dependencies.dav1d-sys]
- version = "0.6.0"
- optional = true
-@@ -136,12 +115,6 @@
- version = "0.6"
- optional = true
- 
--[dependencies.image]
--version = "0.24.7"
--features = ["png"]
--optional = true
--default-features = false
--
- [dependencies.itertools]
- version = "0.12"
- 
-@@ -284,8 +257,6 @@
+@@ -57,8 +57,6 @@
      "nom",
  ]
  capi = ["scan_fmt"]
@@ -77,7 +19,7 @@ desync_finder, dump_ivf and dump_lookahead_data are only useful for internal dev
  decode_test = ["aom-sys"]
  decode_test_dav1d = ["dav1d-sys"]
  default = [
-@@ -295,14 +266,7 @@
+@@ -68,14 +66,7 @@
      "signal_support",
      "git_version",
  ]
@@ -89,14 +31,73 @@ desync_finder, dump_ivf and dump_lookahead_data are only useful for internal dev
 -]
  git_version = ["built/git2"]
 -quick_test = []
- scenechange = []
  serialize = [
      "serde",
-@@ -319,7 +283,6 @@
+     "toml",
+@@ -91,7 +82,6 @@
      "tracing-chrome",
      "dep:tracing",
  ]
 -unstable = []
  
- [target."cfg(any(decode_test, decode_test_dav1d))".dependencies.system-deps]
- version = "6"
+ [lib]
+ name = "rav1e"
+@@ -104,16 +94,6 @@
+ bench = false
+ required-features = ["binaries"]
+ 
+-[[bin]]
+-name = "rav1e-ch"
+-path = "src/bin/rav1e-ch.rs"
+-bench = false
+-required-features = [
+-    "binaries",
+-    "channel-api",
+-    "unstable",
+-]
+-
+ [dependencies.aligned-vec]
+ version = "0.6.0"
+ 
+@@ -139,17 +119,9 @@
+ [dependencies.av1-grain]
+ version = "0.2.3"
+ 
+-[dependencies.backtrace]
+-version = "0.3"
+-optional = true
+-
+ [dependencies.bitstream-io]
+ version = "4.1.0"
+ 
+-[dependencies.byteorder]
+-version = "1.5.0"
+-optional = true
+-
+ [dependencies.cfg-if]
+ version = "1.0"
+ 
+@@ -172,10 +144,6 @@
+ version = "0.15"
+ optional = true
+ 
+-[dependencies.crossbeam]
+-version = "0.8"
+-optional = true
+-
+ [dependencies.dav1d-sys]
+ version = "0.7.0"
+ optional = true
+@@ -185,12 +153,6 @@
+ version = "0.7"
+ optional = true
+ 
+-[dependencies.image]
+-version = "0.25.0"
+-features = ["png"]
+-optional = true
+-default-features = false
+-
+ [dependencies.itertools]
+ version = "0.14"
+ 

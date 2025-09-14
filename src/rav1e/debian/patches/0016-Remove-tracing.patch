@@ -1,6 +1,19 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -150,9 +150,6 @@
+@@ -74,12 +74,6 @@
+ ]
+ signal_support = ["signal-hook"]
+ threading = []
+-tracing = [
+-    "profiling/profile-with-tracing",
+-    "tracing-subscriber",
+-    "tracing-chrome",
+-    "dep:tracing",
+-]
+ 
+ [lib]
+ name = "rav1e"
+@@ -183,9 +177,6 @@
  [dependencies.paste]
  version = "1.0"
  
@@ -10,7 +23,7 @@
  [dependencies.rayon]
  version = "1"
  
-@@ -180,18 +177,6 @@
+@@ -213,18 +204,6 @@
  version = "0.8"
  optional = true
  
@@ -29,22 +42,9 @@
  [dependencies.v_frame]
  version = "0.3.7"
  
-@@ -269,12 +254,6 @@
- ]
- signal_support = ["signal-hook"]
- threading = []
--tracing = [
--    "profiling/profile-with-tracing",
--    "tracing-subscriber",
--    "tracing-chrome",
--    "dep:tracing",
--]
- 
- [target."cfg(any(decode_test, decode_test_dav1d))".dependencies.system-deps]
- version = "6"
---- rust-rav1e-0.7.1.orig/src/activity.rs
-+++ rust-rav1e-0.7.1/src/activity.rs
-@@ -19,7 +19,6 @@ pub struct ActivityMask {
+--- a/src/activity.rs
++++ b/src/activity.rs
+@@ -19,7 +19,6 @@
  }
  
  impl ActivityMask {
@@ -52,7 +52,7 @@
    pub fn from_plane<T: Pixel>(luma_plane: &Plane<T>) -> ActivityMask {
      let PlaneConfig { width, height, .. } = luma_plane.cfg;
  
-@@ -54,7 +53,6 @@ impl ActivityMask {
+@@ -54,7 +53,6 @@
      ActivityMask { variances: variances.into_boxed_slice() }
    }
  
@@ -60,9 +60,9 @@
    pub fn fill_scales(
      &self, bit_depth: usize, activity_scales: &mut Box<[DistortionScale]>,
    ) {
---- rust-rav1e-0.7.1.orig/src/api/internal.rs
-+++ rust-rav1e-0.7.1/src/api/internal.rs
-@@ -315,7 +315,6 @@ impl<T: Pixel> ContextInner<T> {
+--- a/src/api/internal.rs
++++ b/src/api/internal.rs
+@@ -334,7 +334,6 @@
      }
    }
  
@@ -70,7 +70,7 @@
    pub fn send_frame(
      &mut self, mut frame: Option<Arc<Frame<T>>>,
      params: Option<FrameParameters>,
-@@ -647,7 +646,6 @@ impl<T: Pixel> ContextInner<T> {
+@@ -666,7 +665,6 @@
    /// `rec_buffer` and `lookahead_rec_buffer` on the `FrameInvariants`. This
    /// function must be called after every new `FrameInvariants` is initially
    /// computed.
@@ -78,7 +78,7 @@
    fn compute_lookahead_motion_vectors(&mut self, output_frameno: u64) {
      let frame_data = self.frame_data.get(&output_frameno).unwrap();
  
-@@ -860,7 +858,6 @@ impl<T: Pixel> ContextInner<T> {
+@@ -876,7 +874,6 @@
        });
    }
  
@@ -86,7 +86,7 @@
    pub fn compute_keyframe_placement(
      lookahead_frames: &[&Arc<Frame<T>>], keyframes_forced: &BTreeSet<u64>,
      keyframe_detector: &mut SceneChangeDetector<T>,
-@@ -879,7 +876,6 @@ impl<T: Pixel> ContextInner<T> {
+@@ -895,7 +892,6 @@
      *next_lookahead_frame += 1;
    }
  
@@ -94,7 +94,7 @@
    pub fn compute_frame_invariants(&mut self) {
      while self.set_frame_properties(self.next_lookahead_output_frameno).is_ok()
      {
-@@ -892,7 +888,6 @@ impl<T: Pixel> ContextInner<T> {
+@@ -908,7 +904,6 @@
      }
    }
  
@@ -102,7 +102,7 @@
    fn update_block_importances(
      fi: &FrameInvariants<T>, me_stats: &crate::me::FrameMEStats,
      frame: &Frame<T>, reference_frame: &Frame<T>, bit_depth: usize,
-@@ -1055,7 +1050,6 @@ impl<T: Pixel> ContextInner<T> {
+@@ -1071,7 +1066,6 @@
    }
  
    /// Computes the block importances for the current output frame.
@@ -110,7 +110,7 @@
    fn compute_block_importances(&mut self) {
      // SEF don't need block importances.
      if self.frame_data[&self.output_frameno]
-@@ -1279,7 +1273,6 @@ impl<T: Pixel> ContextInner<T> {
+@@ -1295,7 +1289,6 @@
      }
    }
  
@@ -118,7 +118,7 @@
    pub fn encode_show_existing_packet(
      &mut self, cur_output_frameno: u64,
    ) -> Result<Packet<T>, EncoderStatus> {
-@@ -1315,7 +1308,6 @@ impl<T: Pixel> ContextInner<T> {
+@@ -1331,7 +1324,6 @@
      self.finalize_packet(rec, source, input_frameno, frame_type, qp, enc_stats)
    }
  
@@ -126,7 +126,7 @@
    pub fn encode_normal_packet(
      &mut self, cur_output_frameno: u64,
    ) -> Result<Packet<T>, EncoderStatus> {
-@@ -1478,7 +1470,6 @@ impl<T: Pixel> ContextInner<T> {
+@@ -1494,7 +1486,6 @@
      }
    }
  
@@ -134,7 +134,7 @@
    pub fn receive_packet(&mut self) -> Result<Packet<T>, EncoderStatus> {
      if self.done_processing() {
        return Err(EncoderStatus::LimitReached);
-@@ -1544,7 +1535,6 @@ impl<T: Pixel> ContextInner<T> {
+@@ -1560,7 +1551,6 @@
      })
    }
  
@@ -142,9 +142,9 @@
    fn garbage_collect(&mut self, cur_input_frameno: u64) {
      if cur_input_frameno == 0 {
        return;
---- rust-rav1e-0.7.1.orig/src/api/lookahead.rs
-+++ rust-rav1e-0.7.1/src/api/lookahead.rs
-@@ -26,7 +26,6 @@ pub(crate) const IMP_BLOCK_SIZE_IN_MV_UN
+--- a/src/api/lookahead.rs
++++ b/src/api/lookahead.rs
+@@ -26,7 +26,6 @@
  pub(crate) const IMP_BLOCK_AREA_IN_MV_UNITS: i64 =
    IMP_BLOCK_SIZE_IN_MV_UNITS * IMP_BLOCK_SIZE_IN_MV_UNITS;
  
@@ -152,7 +152,7 @@
  pub(crate) fn estimate_intra_costs<T: Pixel>(
    temp_plane: &mut Plane<T>, frame: &Frame<T>, bit_depth: usize,
    cpu_feature_level: CpuFeatureLevel,
-@@ -122,7 +121,6 @@ pub(crate) fn estimate_intra_costs<T: Pi
+@@ -122,7 +121,6 @@
    intra_costs.into_boxed_slice()
  }
  
@@ -160,7 +160,7 @@
  pub(crate) fn estimate_importance_block_difference<T: Pixel>(
    frame: Arc<Frame<T>>, ref_frame: Arc<Frame<T>>,
  ) -> f64 {
-@@ -178,7 +176,6 @@ pub(crate) fn estimate_importance_block_
+@@ -178,7 +176,6 @@
    imp_block_costs as f64 / (w_in_imp_b * h_in_imp_b) as f64
  }
  
@@ -168,7 +168,7 @@
  pub(crate) fn estimate_inter_costs<T: Pixel>(
    frame: Arc<Frame<T>>, ref_frame: Arc<Frame<T>>, bit_depth: usize,
    mut config: EncoderConfig, sequence: Arc<Sequence>, buffer: RefMEStats,
-@@ -267,7 +264,6 @@ pub(crate) fn estimate_inter_costs<T: Pi
+@@ -267,7 +264,6 @@
    inter_costs as f64 / (w_in_imp_b * h_in_imp_b) as f64
  }
  
@@ -176,9 +176,9 @@
  pub(crate) fn compute_motion_vectors<T: Pixel>(
    fi: &mut FrameInvariants<T>, fs: &mut FrameState<T>, inter_cfg: &InterConfig,
  ) {
---- rust-rav1e-0.7.1.orig/src/bin/muxer/ivf.rs
-+++ rust-rav1e-0.7.1/src/bin/muxer/ivf.rs
-@@ -36,7 +36,6 @@ impl Muxer for IvfMuxer {
+--- a/src/bin/muxer/ivf.rs
++++ b/src/bin/muxer/ivf.rs
+@@ -36,7 +36,6 @@
      );
    }
  
@@ -186,9 +186,9 @@
    fn write_frame(&mut self, pts: u64, data: &[u8], _frame_type: FrameType) {
      write_ivf_frame(&mut self.output, pts, data);
    }
---- rust-rav1e-0.7.1.orig/src/bin/muxer/y4m.rs
-+++ rust-rav1e-0.7.1/src/bin/muxer/y4m.rs
-@@ -12,7 +12,6 @@ use rav1e::prelude::*;
+--- a/src/bin/muxer/y4m.rs
++++ b/src/bin/muxer/y4m.rs
+@@ -12,7 +12,6 @@
  use std::io::Write;
  use std::slice;
  
@@ -196,9 +196,9 @@
  pub fn write_y4m_frame<T: Pixel>(
    y4m_enc: &mut y4m::Encoder<Box<dyn Write + Send>>, rec: &Frame<T>,
    y4m_details: VideoDetails,
---- rust-rav1e-0.7.1.orig/src/bin/rav1e.rs
-+++ rust-rav1e-0.7.1/src/bin/rav1e.rs
-@@ -147,7 +147,6 @@ impl<D: Decoder> Source<D> {
+--- a/src/bin/rav1e.rs
++++ b/src/bin/rav1e.rs
+@@ -73,7 +73,6 @@
      }
    }
  
@@ -206,7 +206,7 @@
    fn read_frame<T: Pixel>(
      &mut self, ctx: &mut Context<T>, video_info: VideoDetails,
    ) -> Result<(), CliError> {
-@@ -183,7 +182,6 @@ impl<D: Decoder> Source<D> {
+@@ -109,7 +108,6 @@
  
  // Encode and write a frame.
  // Returns frame information in a `Result`.
@@ -214,9 +214,9 @@
  fn process_frame<T: Pixel, D: Decoder>(
    ctx: &mut Context<T>, output_file: &mut dyn Muxer, source: &mut Source<D>,
    pass1file: Option<&mut File>, pass2file: Option<&mut File>,
---- rust-rav1e-0.7.1.orig/src/bin/stats.rs
-+++ rust-rav1e-0.7.1/src/bin/stats.rs
-@@ -29,7 +29,6 @@ pub struct FrameSummary {
+--- a/src/bin/stats.rs
++++ b/src/bin/stats.rs
+@@ -27,7 +27,6 @@
    pub enc_stats: EncoderStats,
  }
  
@@ -224,9 +224,9 @@
  pub fn build_frame_summary<T: Pixel>(
    packets: Packet<T>, bit_depth: usize, chroma_sampling: ChromaSampling,
    metrics_cli: MetricsEnabled,
---- rust-rav1e-0.7.1.orig/src/cdef.rs
-+++ rust-rav1e-0.7.1/src/cdef.rs
-@@ -321,7 +321,6 @@ fn adjust_strength(strength: i32, var: i
+--- a/src/cdef.rs
++++ b/src/cdef.rs
+@@ -321,7 +321,6 @@
    }
  }
  
@@ -234,7 +234,7 @@
  pub fn cdef_analyze_superblock_range<T: Pixel>(
    fi: &FrameInvariants<T>, in_frame: &Frame<T>, blocks: &TileBlocks<'_>,
    sb_w: usize, sb_h: usize,
-@@ -336,7 +335,6 @@ pub fn cdef_analyze_superblock_range<T:
+@@ -336,7 +335,6 @@
    ret
  }
  
@@ -242,7 +242,7 @@
  pub fn cdef_analyze_superblock<T: Pixel>(
    fi: &FrameInvariants<T>, in_frame: &Frame<T>, blocks: &TileBlocks<'_>,
    sbo: TileSuperBlockOffset,
-@@ -397,7 +395,6 @@ pub fn cdef_analyze_superblock<T: Pixel>
+@@ -397,7 +395,6 @@
  /// # Panics
  ///
  /// - If called with invalid parameters
@@ -250,7 +250,7 @@
  pub fn cdef_filter_superblock<T: Pixel>(
    fi: &FrameInvariants<T>, input: &Frame<T>, output: &mut TileMut<'_, T>,
    blocks: &TileBlocks<'_>, tile_sbo: TileSuperBlockOffset, cdef_index: u8,
-@@ -593,7 +590,6 @@ pub fn cdef_filter_superblock<T: Pixel>(
+@@ -593,7 +590,6 @@
  //   tile boundary), the filtering process ignores input pixels that
  //   don't exist.
  
@@ -258,9 +258,9 @@
  pub fn cdef_filter_tile<T: Pixel>(
    fi: &FrameInvariants<T>, input: &Frame<T>, tb: &TileBlocks,
    output: &mut TileMut<'_, T>,
---- rust-rav1e-0.7.1.orig/src/context/block_unit.rs
-+++ rust-rav1e-0.7.1/src/context/block_unit.rs
-@@ -1124,7 +1124,6 @@ impl<'a> ContextWriter<'a> {
+--- a/src/context/block_unit.rs
++++ b/src/context/block_unit.rs
+@@ -1123,7 +1123,6 @@
      }
    }
  
@@ -268,9 +268,9 @@
    fn setup_mvref_list<T: Pixel>(
      &self, bo: TileBlockOffset, ref_frames: [RefType; 2],
      mv_stack: &mut ArrayVec<CandidateMV, 9>, bsize: BlockSize,
---- rust-rav1e-0.7.1.orig/src/deblock.rs
-+++ rust-rav1e-0.7.1/src/deblock.rs
-@@ -1290,7 +1290,6 @@ fn sse_h_edge<T: Pixel>(
+--- a/src/deblock.rs
++++ b/src/deblock.rs
+@@ -1290,7 +1290,6 @@
  }
  
  // Deblocks all edges, vertical and horizontal, in a single plane
@@ -278,7 +278,7 @@
  pub fn deblock_plane<T: Pixel>(
    deblock: &DeblockState, p: &mut PlaneRegionMut<T>, pli: usize,
    blocks: &TileBlocks, crop_w: usize, crop_h: usize, bd: usize,
-@@ -1540,7 +1539,6 @@ fn sse_plane<T: Pixel>(
+@@ -1540,7 +1539,6 @@
  }
  
  // Deblocks all edges in all planes of a frame
@@ -286,7 +286,7 @@
  pub fn deblock_filter_frame<T: Pixel>(
    deblock: &DeblockState, tile: &mut TileMut<T>, blocks: &TileBlocks,
    crop_w: usize, crop_h: usize, bd: usize, planes: usize,
-@@ -1616,7 +1614,6 @@ fn sse_optimize<T: Pixel>(
+@@ -1616,7 +1614,6 @@
    level
  }
  
@@ -294,9 +294,9 @@
  pub fn deblock_filter_optimize<T: Pixel, U: Pixel>(
    fi: &FrameInvariants<T>, rec: &Tile<U>, input: &Tile<U>,
    blocks: &TileBlocks, crop_w: usize, crop_h: usize,
---- rust-rav1e-0.7.1.orig/src/encoder.rs
-+++ rust-rav1e-0.7.1/src/encoder.rs
-@@ -563,7 +563,6 @@ pub struct SegmentationState {
+--- a/src/encoder.rs
++++ b/src/encoder.rs
+@@ -562,7 +562,6 @@
  }
  
  impl SegmentationState {
@@ -304,7 +304,7 @@
    pub fn update_threshold(&mut self, base_q_idx: u8, bd: usize) {
      let base_ac_q = ac_q(base_q_idx, 0, bd).get() as u64;
      let real_ac_q = ArrayVec::<_, MAX_SEGMENTS>::from_iter(
-@@ -741,7 +740,6 @@ impl<T: Pixel> CodedFrameData<T> {
+@@ -740,7 +739,6 @@
  
    // Assumes that we have already computed activity scales and distortion scales
    // Returns -0.5 log2(mean(scale))
@@ -312,7 +312,7 @@
    pub fn compute_spatiotemporal_scores(&mut self) -> i64 {
      let mut scores = self
        .distortion_scales
-@@ -767,7 +765,6 @@ impl<T: Pixel> CodedFrameData<T> {
+@@ -766,7 +764,6 @@
  
    // Assumes that we have already computed distortion_scales
    // Returns -0.5 log2(mean(scale))
@@ -320,7 +320,7 @@
    pub fn compute_temporal_scores(&mut self) -> i64 {
      let inv_mean = DistortionScale::inv_mean(&self.distortion_scales);
      for scale in self.distortion_scales.iter_mut() {
-@@ -1664,7 +1661,6 @@ pub fn encode_tx_block<T: Pixel, W: Writ
+@@ -1663,7 +1660,6 @@
  /// # Panics
  ///
  /// - If the block size is invalid for subsampling
@@ -328,7 +328,7 @@
  pub fn motion_compensate<T: Pixel>(
    fi: &FrameInvariants<T>, ts: &mut TileStateMut<'_, T>,
    cw: &mut ContextWriter, luma_mode: PredictionMode, ref_frames: [RefType; 2],
-@@ -1893,7 +1889,6 @@ pub fn save_block_motion<T: Pixel>(
+@@ -1892,7 +1888,6 @@
    }
  }
  
@@ -336,7 +336,7 @@
  pub fn encode_block_pre_cdef<T: Pixel, W: Writer>(
    seq: &Sequence, ts: &TileStateMut<'_, T>, cw: &mut ContextWriter, w: &mut W,
    bsize: BlockSize, tile_bo: TileBlockOffset, skip: bool,
-@@ -1934,7 +1929,6 @@ pub fn encode_block_pre_cdef<T: Pixel, W
+@@ -1933,7 +1928,6 @@
  ///
  /// - If chroma and luma do not match for inter modes
  /// - If an invalid motion vector is found
@@ -344,7 +344,7 @@
  pub fn encode_block_post_cdef<T: Pixel, W: Writer>(
    fi: &FrameInvariants<T>, ts: &mut TileStateMut<'_, T>,
    cw: &mut ContextWriter, w: &mut W, luma_mode: PredictionMode,
-@@ -2564,7 +2558,6 @@ pub fn write_tx_tree<T: Pixel, W: Writer
+@@ -2563,7 +2557,6 @@
    (partition_has_coeff, tx_dist)
  }
  
@@ -352,7 +352,7 @@
  pub fn encode_block_with_modes<T: Pixel, W: Writer>(
    fi: &FrameInvariants<T>, ts: &mut TileStateMut<'_, T>,
    cw: &mut ContextWriter, w_pre_cdef: &mut W, w_post_cdef: &mut W,
-@@ -2631,7 +2624,6 @@ pub fn encode_block_with_modes<T: Pixel,
+@@ -2630,7 +2623,6 @@
    );
  }
  
@@ -360,7 +360,7 @@
  fn encode_partition_bottomup<T: Pixel, W: Writer>(
    fi: &FrameInvariants<T>, ts: &mut TileStateMut<'_, T>,
    cw: &mut ContextWriter, w_pre_cdef: &mut W, w_post_cdef: &mut W,
-@@ -3234,7 +3226,6 @@ fn get_initial_cdfcontext<T: Pixel>(fi:
+@@ -3233,7 +3225,6 @@
    cdf.unwrap_or_else(|| CDFContext::new(fi.base_q_idx))
  }
  
@@ -368,7 +368,7 @@
  fn encode_tile_group<T: Pixel>(
    fi: &FrameInvariants<T>, fs: &mut FrameState<T>, inter_cfg: &InterConfig,
  ) -> Vec<u8> {
-@@ -3373,7 +3364,6 @@ pub struct SBSQueueEntry {
+@@ -3372,7 +3363,6 @@
    pub w_post_cdef: WriterBase<WriterRecorder>,
  }
  
@@ -376,7 +376,7 @@
  fn check_lf_queue<T: Pixel>(
    fi: &FrameInvariants<T>, ts: &mut TileStateMut<'_, T>,
    cw: &mut ContextWriter, w: &mut WriterBase<WriterEncoder>,
-@@ -3465,7 +3455,6 @@ fn check_lf_queue<T: Pixel>(
+@@ -3464,7 +3454,6 @@
    }
  }
  
@@ -384,7 +384,7 @@
  fn encode_tile<'a, T: Pixel>(
    fi: &FrameInvariants<T>, ts: &'a mut TileStateMut<'_, T>,
    fc: &'a mut CDFContext, blocks: &'a mut TileBlocksMut<'a>,
-@@ -3690,7 +3679,6 @@ fn write_tile_group_header(tile_start_an
+@@ -3689,7 +3678,6 @@
  /// # Panics
  ///
  /// - If the frame packets cannot be written
@@ -392,7 +392,7 @@
  pub fn encode_show_existing_frame<T: Pixel>(
    fi: &FrameInvariants<T>, fs: &mut FrameState<T>, inter_cfg: &InterConfig,
  ) -> Vec<u8> {
-@@ -3765,7 +3753,6 @@ fn get_initial_segmentation<T: Pixel>(
+@@ -3764,7 +3752,6 @@
  /// # Panics
  ///
  /// - If the frame packets cannot be written
@@ -400,9 +400,9 @@
  pub fn encode_frame<T: Pixel>(
    fi: &FrameInvariants<T>, fs: &mut FrameState<T>, inter_cfg: &InterConfig,
  ) -> Vec<u8> {
---- rust-rav1e-0.7.1.orig/src/lrf.rs
-+++ rust-rav1e-0.7.1/src/lrf.rs
-@@ -525,7 +525,6 @@ impl<'a, T: Pixel> Iterator for HorzPadd
+--- a/src/lrf.rs
++++ b/src/lrf.rs
+@@ -526,7 +526,6 @@
  impl<T: Pixel> ExactSizeIterator for HorzPaddedIter<'_, T> {}
  impl<T: Pixel> FusedIterator for HorzPaddedIter<'_, T> {}
  
@@ -410,7 +410,7 @@
  pub fn setup_integral_image<T: Pixel>(
    integral_image_buffer: &mut IntegralImageBuffer,
    integral_image_stride: usize, crop_w: usize, crop_h: usize, stripe_w: usize,
-@@ -625,7 +624,6 @@ pub fn setup_integral_image<T: Pixel>(
+@@ -626,7 +625,6 @@
    }
  }
  
@@ -418,7 +418,7 @@
  pub fn sgrproj_stripe_filter<T: Pixel, U: Pixel>(
    set: u8, xqd: [i8; 2], fi: &FrameInvariants<T>,
    integral_image_buffer: &IntegralImageBuffer, integral_image_stride: usize,
-@@ -842,7 +840,6 @@ pub fn sgrproj_stripe_filter<T: Pixel, U
+@@ -843,7 +841,6 @@
  
  // Input params follow the same rules as sgrproj_stripe_filter.
  // Inputs are relative to the colocated slice views.
@@ -426,7 +426,7 @@
  pub fn sgrproj_solve<T: Pixel>(
    set: u8, fi: &FrameInvariants<T>,
    integral_image_buffer: &IntegralImageBuffer, input: &PlaneRegion<'_, T>,
-@@ -1094,7 +1091,6 @@ pub fn sgrproj_solve<T: Pixel>(
+@@ -1095,7 +1092,6 @@
    }
  }
  
@@ -434,7 +434,7 @@
  fn wiener_stripe_filter<T: Pixel>(
    coeffs: [[i8; 3]; 2], fi: &FrameInvariants<T>, crop_w: usize, crop_h: usize,
    stripe_w: usize, stripe_h: usize, stripe_x: usize, stripe_y: isize,
-@@ -1483,7 +1479,6 @@ impl RestorationState {
+@@ -1478,7 +1474,6 @@
      }
    }
  
@@ -442,9 +442,9 @@
    pub fn lrf_filter_frame<T: Pixel>(
      &mut self, out: &mut Frame<T>, pre_cdef: &Frame<T>,
      fi: &FrameInvariants<T>,
---- rust-rav1e-0.7.1.orig/src/me.rs
-+++ rust-rav1e-0.7.1/src/me.rs
-@@ -382,7 +382,6 @@ impl MotionEstimationSubsets {
+--- a/src/me.rs
++++ b/src/me.rs
+@@ -382,7 +382,6 @@
    }
  }
  
@@ -452,7 +452,7 @@
  fn get_subset_predictors(
    tile_bo: TileBlockOffset, tile_me_stats: &TileMEStats<'_>,
    frame_ref_opt: Option<ReadGuardMEStats<'_>>, ref_frame_id: usize,
-@@ -689,7 +688,6 @@ fn refine_subsampled_motion_estimate<T:
+@@ -689,7 +688,6 @@
    }
  }
  
@@ -460,7 +460,7 @@
  fn full_pixel_me<T: Pixel>(
    fi: &FrameInvariants<T>, ts: &TileStateMut<'_, T>,
    org_region: &PlaneRegion<T>, p_ref: &Plane<T>, tile_bo: TileBlockOffset,
-@@ -880,7 +878,6 @@ fn sub_pixel_me<T: Pixel>(
+@@ -880,7 +878,6 @@
    );
  }
  
@@ -468,7 +468,7 @@
  fn get_best_predictor<T: Pixel>(
    fi: &FrameInvariants<T>, po: PlaneOffset, org_region: &PlaneRegion<T>,
    p_ref: &Plane<T>, predictors: &[MotionVector], bit_depth: usize,
-@@ -951,7 +948,6 @@ const DIAMOND_R1_PATTERN: [MotionVector;
+@@ -951,7 +948,6 @@
  /// For each step size, candidate motion vectors are examined for improvement
  /// to the current search location. The search location is moved to the best
  /// candidate (if any). This is repeated until the search location stops moving.
@@ -476,7 +476,7 @@
  fn fullpel_diamond_search<T: Pixel>(
    fi: &FrameInvariants<T>, po: PlaneOffset, org_region: &PlaneRegion<T>,
    p_ref: &Plane<T>, current: &mut MotionSearchResult, bit_depth: usize,
-@@ -1051,7 +1047,6 @@ const SQUARE_REFINE_PATTERN: [MotionVect
+@@ -1051,7 +1047,6 @@
  ///
  /// `current` provides the initial search location and serves as
  /// the output for the final search results.
@@ -484,7 +484,7 @@
  fn hexagon_search<T: Pixel>(
    fi: &FrameInvariants<T>, po: PlaneOffset, org_region: &PlaneRegion<T>,
    p_ref: &Plane<T>, current: &mut MotionSearchResult, bit_depth: usize,
-@@ -1166,7 +1161,6 @@ const UMH_PATTERN: [MotionVector; 16] =
+@@ -1166,7 +1161,6 @@
  /// the output for the final search results.
  ///
  /// `me_range` parameter determines how far these stages can search.
@@ -492,7 +492,7 @@
  fn uneven_multi_hex_search<T: Pixel>(
    fi: &FrameInvariants<T>, po: PlaneOffset, org_region: &PlaneRegion<T>,
    p_ref: &Plane<T>, current: &mut MotionSearchResult, bit_depth: usize,
-@@ -1307,7 +1301,6 @@ fn uneven_multi_hex_search<T: Pixel>(
+@@ -1307,7 +1301,6 @@
  /// For each step size, candidate motion vectors are examined for improvement
  /// to the current search location. The search location is moved to the best
  /// candidate (if any). This is repeated until the search location stops moving.
@@ -500,7 +500,7 @@
  fn subpel_diamond_search<T: Pixel>(
    fi: &FrameInvariants<T>, po: PlaneOffset, org_region: &PlaneRegion<T>,
    _p_ref: &Plane<T>, bit_depth: usize, pmv: [MotionVector; 2], lambda: u32,
-@@ -1460,7 +1453,6 @@ fn compute_mv_rd<T: Pixel>(
+@@ -1460,7 +1453,6 @@
    MVCandidateRD { cost: 256 * sad as u64 + rate as u64 * lambda as u64, sad }
  }
  
@@ -508,9 +508,9 @@
  fn full_search<T: Pixel>(
    fi: &FrameInvariants<T>, x_lo: isize, x_hi: isize, y_lo: isize, y_hi: isize,
    w: usize, h: usize, org_region: &PlaneRegion<T>, p_ref: &Plane<T>,
---- rust-rav1e-0.7.1.orig/src/rate.rs
-+++ rust-rav1e-0.7.1/src/rate.rs
-@@ -719,7 +719,6 @@ impl RCState {
+--- a/src/rate.rs
++++ b/src/rate.rs
+@@ -720,7 +720,6 @@
    }
  
    // TODO: Separate quantizers for Cb and Cr.
@@ -518,7 +518,7 @@
    pub(crate) fn select_qi<T: Pixel>(
      &self, ctx: &ContextInner<T>, output_frameno: u64, fti: usize,
      maybe_prev_log_base_q: Option<i64>, log_isqrt_mean_scale: i64,
-@@ -1068,7 +1067,6 @@ impl RCState {
+@@ -1069,7 +1068,6 @@
      (log_base_q, log_q)
    }
  
@@ -526,9 +526,9 @@
    pub fn update_state(
      &mut self, bits: i64, fti: usize, show_frame: bool, log_target_q: i64,
      trial: bool, droppable: bool,
---- rust-rav1e-0.7.1.orig/src/rdo.rs
-+++ rust-rav1e-0.7.1/src/rdo.rs
-@@ -810,7 +810,6 @@ const fn dmv_in_range(mv: MotionVector,
+--- a/src/rdo.rs
++++ b/src/rdo.rs
+@@ -812,7 +812,6 @@
  }
  
  #[inline]
@@ -536,7 +536,7 @@
  fn luma_chroma_mode_rdo<T: Pixel>(
    luma_mode: PredictionMode, fi: &FrameInvariants<T>, bsize: BlockSize,
    tile_bo: TileBlockOffset, ts: &mut TileStateMut<'_, T>,
-@@ -957,7 +956,6 @@ fn luma_chroma_mode_rdo<T: Pixel>(
+@@ -959,7 +958,6 @@
  ///
  /// - If the best RD found is negative.
  ///   This should never happen and indicates a development error.
@@ -544,7 +544,7 @@
  pub fn rdo_mode_decision<T: Pixel>(
    fi: &FrameInvariants<T>, ts: &mut TileStateMut<'_, T>,
    cw: &mut ContextWriter, bsize: BlockSize, tile_bo: TileBlockOffset,
-@@ -1115,7 +1113,6 @@ pub fn rdo_mode_decision<T: Pixel>(
+@@ -1117,7 +1115,6 @@
    }
  }
  
@@ -552,7 +552,7 @@
  fn inter_frame_rdo_mode_decision<T: Pixel>(
    fi: &FrameInvariants<T>, ts: &mut TileStateMut<'_, T>,
    cw: &mut ContextWriter, bsize: BlockSize, tile_bo: TileBlockOffset,
-@@ -1388,7 +1385,6 @@ fn inter_frame_rdo_mode_decision<T: Pixe
+@@ -1390,7 +1387,6 @@
    best
  }
  
@@ -560,7 +560,7 @@
  fn intra_frame_rdo_mode_decision<T: Pixel>(
    fi: &FrameInvariants<T>, ts: &mut TileStateMut<'_, T>,
    cw: &mut ContextWriter, bsize: BlockSize, tile_bo: TileBlockOffset,
-@@ -1587,7 +1583,6 @@ fn intra_frame_rdo_mode_decision<T: Pixe
+@@ -1589,7 +1585,6 @@
  /// # Panics
  ///
  /// - If the block size is invalid for subsampling.
@@ -568,7 +568,7 @@
  pub fn rdo_cfl_alpha<T: Pixel>(
    ts: &mut TileStateMut<'_, T>, tile_bo: TileBlockOffset, bsize: BlockSize,
    luma_tx_size: TxSize, fi: &FrameInvariants<T>,
-@@ -1943,7 +1938,6 @@ fn rdo_partition_simple<T: Pixel, W: Wri
+@@ -1945,7 +1940,6 @@
  ///
  /// - If the best RD found is negative.
  ///   This should never happen, and indicates a development error.
@@ -576,7 +576,7 @@
  pub fn rdo_partition_decision<T: Pixel, W: Writer>(
    fi: &FrameInvariants<T>, ts: &mut TileStateMut<'_, T>,
    cw: &mut ContextWriter, w_pre_cdef: &mut W, w_post_cdef: &mut W,
-@@ -2021,7 +2015,6 @@ pub fn rdo_partition_decision<T: Pixel,
+@@ -2023,7 +2017,6 @@
    }
  }
  
@@ -584,7 +584,7 @@
  fn rdo_loop_plane_error<T: Pixel>(
    base_sbo: TileSuperBlockOffset, offset_sbo: TileSuperBlockOffset,
    sb_w: usize, sb_h: usize, fi: &FrameInvariants<T>, ts: &TileStateMut<'_, T>,
-@@ -2098,7 +2091,6 @@ fn rdo_loop_plane_error<T: Pixel>(
+@@ -2100,7 +2093,6 @@
  /// # Panics
  ///
  /// - If both CDEF and LRF are disabled.
@@ -592,37 +592,9 @@
  pub fn rdo_loop_decision<T: Pixel, W: Writer>(
    base_sbo: TileSuperBlockOffset, fi: &FrameInvariants<T>,
    ts: &mut TileStateMut<'_, T>, cw: &mut ContextWriter, w: &mut W,
---- rust-rav1e-0.7.1.orig/src/scenechange/fast.rs
-+++ rust-rav1e-0.7.1/src/scenechange/fast.rs
-@@ -18,7 +18,6 @@ pub(super) const FAST_THRESHOLD: f64 = 1
- impl<T: Pixel> SceneChangeDetector<T> {
-   /// The fast algorithm detects fast cuts using a raw difference
-   /// in pixel values between the scaled frames.
--  #[profiling::function]
-   pub(super) fn fast_scenecut(
-     &mut self, frame1: Arc<Frame<T>>, frame2: Arc<Frame<T>>,
-   ) -> ScenecutResult {
-@@ -67,7 +66,6 @@ impl<T: Pixel> SceneChangeDetector<T> {
-   }
- 
-   /// Calculates the average sum of absolute difference (SAD) per pixel between 2 planes
--  #[profiling::function]
-   fn delta_in_planes(&self, plane1: &Plane<T>, plane2: &Plane<T>) -> f64 {
-     let delta = sad_plane::sad_plane(plane1, plane2, self.cpu_feature_level);
- 
---- rust-rav1e-0.7.1.orig/src/scenechange/mod.rs
-+++ rust-rav1e-0.7.1/src/scenechange/mod.rs
-@@ -149,7 +149,6 @@ impl<T: Pixel> SceneChangeDetector<T> {
-   /// to the second frame in `frame_set`.
-   ///
-   /// This will gracefully handle the first frame in the video as well.
--  #[profiling::function]
-   pub fn analyze_next_frame(
-     &mut self, frame_set: &[&Arc<Frame<T>>], input_frameno: u64,
-     previous_keyframe: u64,
---- rust-rav1e-0.7.1.orig/src/segmentation.rs
-+++ rust-rav1e-0.7.1/src/segmentation.rs
-@@ -19,7 +19,6 @@ use crate::FrameState;
+--- a/src/segmentation.rs
++++ b/src/segmentation.rs
+@@ -19,7 +19,6 @@
  
  pub const MAX_SEGMENTS: usize = 8;
  
@@ -630,7 +602,7 @@
  pub fn segmentation_optimize<T: Pixel>(
    fi: &FrameInvariants<T>, fs: &mut FrameState<T>,
  ) {
-@@ -159,7 +158,6 @@ fn segmentation_optimize_inner<T: Pixel>
+@@ -159,7 +158,6 @@
    fs.segmentation.update_threshold(fi.base_q_idx, fi.config.bit_depth);
  }
  

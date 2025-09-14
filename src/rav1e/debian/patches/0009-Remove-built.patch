@@ -1,29 +1,29 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -223,10 +223,6 @@
- [dev-dependencies.semver]
- version = "1.0"
- 
--[build-dependencies.built]
--version = "0.7.1"
--features = []
--
- [build-dependencies.cc]
- version = "1.0"
- features = ["parallel"]
-@@ -262,9 +258,7 @@
+@@ -64,9 +64,7 @@
      "asm",
      "threading",
      "signal_support",
 -    "git_version",
  ]
 -git_version = ["built/git2"]
- scenechange = []
  serialize = [
      "serde",
+     "toml",
+@@ -255,10 +253,6 @@
+ [dev-dependencies.semver]
+ version = "1.0"
+ 
+-[build-dependencies.built]
+-version = "0.8.0"
+-features = []
+-
+ [build-dependencies.cc]
+ version = "1.0"
+ features = ["parallel"]
 --- a/build.rs
 +++ b/build.rs
-@@ -247,8 +247,6 @@
+@@ -246,8 +246,6 @@
  
  #[allow(unused_variables)]
  fn main() {
@@ -34,9 +34,9 @@
    // let env = env::var("CARGO_CFG_TARGET_ENV").unwrap();
 --- a/src/bin/common.rs
 +++ b/src/bin/common.rs
-@@ -23,11 +23,6 @@
- use std::io::prelude::*;
+@@ -24,11 +24,6 @@
  use std::path::PathBuf;
+ use std::sync::OnceLock;
  
 -pub mod built_info {
 -  // The file has been placed there by the build script.
@@ -46,7 +46,7 @@
  #[derive(Clap)]
  #[clap(
    name = "rav1e",
-@@ -280,8 +275,8 @@
+@@ -295,8 +290,8 @@
      format!(
        "{}\n{} {}\nCompiled CPU Features: {}\nRuntime Assembly Support: {}{}\nThreading: {}\nUnstable Features: {}\nCompiler Flags: {}",
        get_version(),
@@ -59,9 +59,9 @@
        if cfg!(feature = "asm") {
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -118,11 +118,6 @@
- #[macro_use]
- extern crate log;
+@@ -49,11 +49,6 @@
+ pub use crate::frame::Frame;
+ pub use crate::util::{CastFromPrimitive, Pixel, PixelType};
  
 -pub(crate) mod built_info {
 -  // The file has been placed there by the build script.
