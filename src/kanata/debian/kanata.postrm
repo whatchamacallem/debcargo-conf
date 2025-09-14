@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+	purge)
+		if [ -x "$(command -v deluser)" ]; then
+			deluser --quiet --system _kanata > /dev/null || true
+		else
+			echo >&2 "not removing _kanata system account because deluser command was not found"
+		fi
+		;;
+
+	remove|upgrade|failed-upgrade|disappear|abort-install|abort-upgrade)
+		;;
+
+	*)
+		echo "postrm called with unknown argument \`${1}'" >&2
+		exit 1
+		;;
+esac
+
+#DEBHELPER#
+
