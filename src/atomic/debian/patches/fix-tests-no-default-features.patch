@@ -1,58 +1,44 @@
-Index: atomic/src/lib.rs
-===================================================================
 --- atomic.orig/src/lib.rs
 +++ atomic/src/lib.rs
-@@ -499,6 +499,10 @@ mod tests {
-         assert_eq!(a.load(SeqCst), 30);
+@@ -500,4 +500,8 @@
      }
  
 +    // on 32-bit x86 64 bit atomics exist, but they can't be used to implement
 +    // atomic<i64> because AtomicI64 has a greater alignment requirement than
 +    // i64.
-+    #[cfg(any(feature = "fallback",all(has_atomic_i64,not(target_arch = "x86"))))]
++    #[cfg(any(feature = "fallback",all(target_has_atomic = "64",not(target_arch = "x86"))))]
      #[test]
      fn atomic_i64() {
-         let a = Atomic::new(0i64);
-@@ -522,6 +526,7 @@ mod tests {
-         assert_eq!(a.load(SeqCst), 30);
+@@ -523,4 +527,5 @@
      }
  
-+    #[cfg(any(feature = "fallback",has_atomic_i128))]
++    #[cfg(any(feature = "fallback",all(feature = "nightly", target_has_atomic = "128")))]
      #[test]
      fn atomic_i128() {
-         let a = Atomic::new(0i128);
-@@ -630,6 +635,10 @@ mod tests {
-         assert_eq!(a.load(SeqCst), 30);
+@@ -631,4 +636,8 @@
      }
  
 +    // on 32-bit x86 64 bit atomics exist, but they can't be used to implement
 +    // atomic<u64> because AtomicU64 has a greater alignment requirement than
 +    // u64.
-+    #[cfg(any(feature = "fallback",all(has_atomic_u64,not(target_arch = "x86"))))]
++    #[cfg(any(feature = "fallback",all(target_has_atomic = "64",not(target_arch = "x86"))))]
      #[test]
      fn atomic_u64() {
-         let a = Atomic::new(0u64);
-@@ -653,6 +662,7 @@ mod tests {
-         assert_eq!(a.load(SeqCst), 30);
+@@ -654,4 +663,5 @@
      }
  
-+    #[cfg(any(feature = "fallback",has_atomic_u128))]
++    #[cfg(any(feature = "fallback",all(feature = "nightly", target_has_atomic = "128")))]
      #[test]
      fn atomic_u128() {
-         let a = Atomic::new(0u128);
-@@ -695,6 +705,7 @@ mod tests {
-         assert_eq!(a.load(SeqCst), 30);
+@@ -696,4 +706,5 @@
      }
  
 +    #[cfg(feature = "fallback")]
      #[test]
      fn atomic_foo() {
-         let a = Atomic::default();
-@@ -714,6 +725,7 @@ mod tests {
-         assert_eq!(a.load(SeqCst), Foo(3, 3));
+@@ -715,4 +726,5 @@
      }
  
 +    #[cfg(feature = "fallback")]
      #[test]
      fn atomic_bar() {
-         let a = Atomic::default();
