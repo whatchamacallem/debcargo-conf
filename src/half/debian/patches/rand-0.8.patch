@@ -1,11 +1,9 @@
 This patch is based on a revert of upstream commit 67541fe44dd5e21681eb37453a3aaa3274ef3512
 adapted for use in the Debian package by Peter Michael Green.
 
-Index: half/Cargo.toml
-===================================================================
---- half.orig/Cargo.toml
-+++ half/Cargo.toml
-@@ -88,13 +88,11 @@ optional = true
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -88,13 +88,11 @@
  default-features = false
  
  [dependencies.rand]
@@ -21,7 +19,7 @@ Index: half/Cargo.toml
  optional = true
  default-features = false
  
-@@ -127,7 +125,7 @@ version = "1.0"
+@@ -127,7 +125,7 @@
  version = "1.0"
  
  [dev-dependencies.rand]
@@ -30,8 +28,6 @@ Index: half/Cargo.toml
  
  [target.'cfg(target_arch = "spirv")'.dependencies.crunchy]
  version = "0.2.2"
-diff --git a/src/rand_distr.rs b/src/rand_distr.rs
-index 8eb0a552a8..decb9743a6 100644
 --- a/src/rand_distr.rs
 +++ b/src/rand_distr.rs
 @@ -1,6 +1,6 @@
@@ -42,7 +38,7 @@ index 8eb0a552a8..decb9743a6 100644
  use rand_distr::uniform::UniformFloat;
  
  macro_rules! impl_distribution_via_f32 {
-@@ -13,13 +13,13 @@ macro_rules! impl_distribution_via_f32 {
+@@ -13,13 +13,13 @@
      };
  }
  
@@ -58,7 +54,7 @@ index 8eb0a552a8..decb9743a6 100644
  impl_distribution_via_f32!(bf16, rand_distr::StandardNormal);
  impl_distribution_via_f32!(bf16, rand_distr::Exp1);
  impl_distribution_via_f32!(bf16, rand_distr::Open01);
-@@ -34,25 +34,25 @@ impl rand_distr::uniform::SampleUniform for f16 {
+@@ -34,25 +34,25 @@
  
  impl rand_distr::uniform::UniformSampler for Float16Sampler {
      type X = f16;
@@ -90,7 +86,7 @@ index 8eb0a552a8..decb9743a6 100644
      }
      fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
          f16::from_f32(self.0.sample(rng))
-@@ -68,25 +68,25 @@ impl rand_distr::uniform::SampleUniform for bf16 {
+@@ -68,25 +68,25 @@
  
  impl rand_distr::uniform::UniformSampler for BFloat16Sampler {
      type X = bf16;
@@ -122,20 +118,28 @@ index 8eb0a552a8..decb9743a6 100644
      }
      fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
          bf16::from_f32(self.0.sample(rng))
-@@ -98,2 +98,2 @@
+@@ -98,15 +98,15 @@
+     use super::*;
+ 
+     #[allow(unused_imports)]
 -    use rand::{rng, Rng};
 -    use rand_distr::{StandardNormal, StandardUniform, Uniform};
 +    use rand::{thread_rng, Rng};
 +    use rand_distr::{Standard, StandardNormal, Uniform};
-@@ -105,2 +105,2 @@
+ 
+     #[test]
+     fn test_sample_f16() {
 -        let mut rng = rng();
 -        let _: f16 = rng.sample(StandardUniform);
 +        let mut rng = thread_rng();
 +        let _: f16 = rng.sample(Standard);
-@@ -110,1 +110,1 @@
+         let _: f16 = rng.sample(StandardNormal);
 -        let _: f16 = rng.sample(Uniform::new(f16::from_f32(0.0), f16::from_f32(1.0)).unwrap());
 +        let _: f16 = rng.sample(Uniform::new(f16::from_f32(0.0), f16::from_f32(1.0)));
-@@ -114,10 +114,10 @@ mod tests {
+         #[cfg(feature = "num-traits")]
+         let _: f16 =
+             rng.sample(rand_distr::Normal::new(f16::from_f32(0.0), f16::from_f32(1.0)).unwrap());
+@@ -114,10 +114,10 @@
  
      #[test]
      fn test_sample_bf16() {
