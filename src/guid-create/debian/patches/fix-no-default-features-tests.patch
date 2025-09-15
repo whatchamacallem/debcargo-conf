@@ -1,0 +1,86 @@
+Description: add feature gates to tests for no-default-features compatibility
+ The crate fails to build when tested with --no-default-features despite
+ advertising no_std support. This patch adds conditional compilation to
+ tests that require std and rand features, allowing minimal feature builds
+ to succeed by skipping incompatible tests rather than failing compilation
+Author: Nadzeya Hutsko <nadzya.info@gmail.com>
+Bug: https://github.com/kurtlawrence/guid-create/issues/25
+Last-Update: 2025-09-15
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -48,6 +48,7 @@
+ [dependencies.bytemuck]
+ version = "1"
+ optional = true
++features = ["derive"]
+ 
+ [dependencies.rand]
+ version = "0.8"
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -372,7 +372,7 @@
+ #[cfg(feature = "serde")]
+ use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+ 
+-#[cfg(feature = "serde")]
++#[cfg(all(feature = "serde", feature = "std"))]
+ impl<'de> Deserialize<'de> for GUID {
+     fn deserialize<D>(deserializer: D) -> Result<GUID, D::Error>
+     where
+@@ -385,7 +385,7 @@
+     }
+ }
+ 
+-#[cfg(feature = "serde")]
++#[cfg(all(feature = "serde", feature = "std"))]
+ impl Serialize for GUID {
+     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+         serializer.serialize_str(&*self.to_string())
+@@ -424,6 +424,7 @@
+     fn travis_test() {}
+ 
+     #[test]
++    #[cfg(all(feature = "std", feature = "rand"))]
+     fn string_lengths() {
+         for _ in 0..10000 {
+             let guid = GUID::rand();
+@@ -449,6 +450,7 @@
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn create_from_components() {
+         let guid = GUID::build_from_components(
+             0x87935CDE,
+@@ -468,6 +470,7 @@
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn create_from_array() {
+         let guid = GUID::build_from_slice(&[
+             0x87, 0x93, 0x5C, 0xDE, 0x70, 0x94, 0x4C, 0x2B, 0xA0, 0xF4, 0xDD, 0x7D, 0x51, 0x2D,
+@@ -487,6 +490,7 @@
+     }
+ 
+     #[test]
++    #[cfg(all(feature = "std", feature = "rand"))]
+     fn parse_strings() {
+         for _ in 0..10000 {
+             let guid = GUID::rand();
+@@ -497,11 +501,13 @@
+     }
+ 
+     #[quickcheck]
++    #[cfg(feature = "std")]
+     fn no_panic_parse(s: String) {
+         GUID::parse(&s).ok();
+     }
+ 
+     #[quickcheck]
++    #[cfg(feature = "std")]
+     fn parse_success(guid: GUID) -> bool {
+         let s = guid.to_string();
+         let g2 = GUID::parse(&s).unwrap();
