@@ -1,0 +1,182 @@
+From 57a213434cc843f7783f12157a9a46ab1a2c1e06 Mon Sep 17 00:00:00 2001
+From: Alexis Mousset <alexis.mousset@rudder.io>
+Date: Wed, 9 Oct 2024 20:43:29 +0200
+Subject: [PATCH 1/2] Fix 32bits support
+
+Forwarded: https://gitlab.com/volian/rust-apt/-/merge_requests/57
+---
+ apt-pkg-c/package.h         | 8 ++++++++
+ src/iterators/dependency.rs | 3 +--
+ src/iterators/files.rs      | 9 +++------
+ src/iterators/package.rs    | 3 +--
+ src/iterators/provider.rs   | 3 +--
+ src/iterators/version.rs    | 3 +--
+ src/records.rs              | 4 ++--
+ 7 files changed, 17 insertions(+), 16 deletions(-)
+
+--- a/apt-pkg-c/package.h
++++ b/apt-pkg-c/package.h
+@@ -17,6 +17,7 @@
+ 	u8 dep_type() const { return (*this)->Type; }
+ 	str comp_type() const { return handle_str(this->CompType()); }
+ 	str target_ver() const { return handle_str(this->TargetVer()); }
++        std::size_t index() const { return this->Index(); }
+ 
+ 	inline bool or_dep() const {
+ 		return ((*this)->CompareOp & pkgCache::Dep::Or) == pkgCache::Dep::Or;
+@@ -35,6 +36,7 @@
+ 
+ 	str name() const { return this->Name(); }
+ 	str version_str() const { return handle_str(this->ProvideVersion()); }
++        std::size_t index() const { return this->Index(); }
+ 
+ 	UniquePtr<PkgIterator> target_pkg() const;
+ 	UniquePtr<VerIterator> target_ver() const;
+@@ -56,6 +58,7 @@
+ 	str component() const { return handle_str(this->Component()); }
+ 	str arch() const { return handle_str(this->Architecture()); }
+ 	str index_type() const { return handle_str(this->IndexType()); }
++        std::size_t index() const { return this->Index(); }
+ 
+ 	bool is_downloadable() const { return !this->Flagged(pkgCache::Flag::NotSource); }
+ 
+@@ -66,6 +69,7 @@
+ 
+ struct VerFileIterator : public pkgCache::VerFileIterator {
+ 	void raw_next() { (*this)++; }
++        std::size_t index() const { return this->Index(); }
+ 
+ 	UniquePtr<VerFileIterator> unique() const { return std::make_unique<VerFileIterator>(*this); }
+ 
+@@ -78,6 +82,7 @@
+ 
+ struct DescIterator : public pkgCache::DescIterator {
+ 	void raw_next() { (*this)++; }
++        std::size_t index() const { return this->Index(); }
+ 
+ 	UniquePtr<DescIterator> unique() const { return std::make_unique<DescIterator>(*this); }
+ 
+@@ -97,6 +102,7 @@
+ 	u64 installed_size() const { return (*this)->InstalledSize; }
+ 	// TODO: Move this into rust?
+ 	bool is_installed() const { return this->ParentPkg().CurrentVer() == *this; }
++        std::size_t index() const { return this->Index(); }
+ 
+ 	UniquePtr<PkgIterator> parent_pkg() const;
+ 
+@@ -124,6 +130,7 @@
+ 	VerIterator(const pkgCache::VerIterator& base) : pkgCache::VerIterator(base){};
+ };
+ 
++
+ struct PkgIterator : public pkgCache::PkgIterator {
+ 	void raw_next() { (*this)++; }
+ 
+@@ -133,6 +140,7 @@
+ 	u8 current_state() const { return (*this)->CurrentState; }
+ 	u8 inst_state() const { return (*this)->InstState; }
+ 	u8 selected_state() const { return (*this)->SelectedState; }
++	std::size_t index() const { return this->Index(); }
+ 
+ 	/// True if the package is essential.
+ 	bool is_essential() const { return ((*this)->Flags & pkgCache::Flag::Essential) != 0; }
+--- a/src/iterators/dependency.rs
++++ b/src/iterators/dependency.rs
+@@ -330,8 +330,7 @@
+ 		/// or group will return False.
+ 		pub fn or_dep(self: &DepIterator) -> bool;
+ 
+-		#[cxx_name = "Index"]
+-		pub fn index(self: &DepIterator) -> u64;
++		pub fn index(self: &DepIterator) -> usize;
+ 		/// Clone the pointer.
+ 		///
+ 		/// # Safety
+--- a/src/iterators/files.rs
++++ b/src/iterators/files.rs
+@@ -120,8 +120,7 @@
+ 		pub fn is_downloadable(self: &PkgFileIterator) -> bool;
+ 
+ 		/// The Index number of the PackageFile
+-		#[cxx_name = "Index"]
+-		pub fn index(self: &PkgFileIterator) -> u64;
++		pub fn index(self: &PkgFileIterator) -> usize;
+ 		/// Clone the pointer.
+ 		///
+ 		/// # Safety
+@@ -148,8 +147,7 @@
+ 		/// The returned UniquePtr cannot outlive the cache.
+ 		unsafe fn package_file(self: &VerFileIterator) -> UniquePtr<PkgFileIterator>;
+ 
+-		#[cxx_name = "Index"]
+-		pub fn index(self: &VerFileIterator) -> u64;
++		pub fn index(self: &VerFileIterator) -> usize;
+ 		/// Clone the pointer.
+ 		///
+ 		/// # Safety
+@@ -164,8 +162,7 @@
+ 		pub fn raw_next(self: Pin<&mut VerFileIterator>);
+ 		pub fn end(self: &VerFileIterator) -> bool;
+ 
+-		#[cxx_name = "Index"]
+-		pub fn index(self: &DescIterator) -> u64;
++		pub fn index(self: &DescIterator) -> usize;
+ 		/// Clone the pointer.
+ 		///
+ 		/// # Safety
+--- a/src/iterators/package.rs
++++ b/src/iterators/package.rs
+@@ -451,8 +451,7 @@
+ 		/// The returned UniquePtr cannot outlive the cache.
+ 		unsafe fn rdepends(self: &PkgIterator) -> UniquePtr<DepIterator>;
+ 
+-		#[cxx_name = "Index"]
+-		pub fn index(self: &PkgIterator) -> u64;
++		pub fn index(self: &PkgIterator) -> usize;
+ 		/// Clone the pointer.
+ 		///
+ 		/// # Safety
+--- a/src/iterators/provider.rs
++++ b/src/iterators/provider.rs
+@@ -91,8 +91,7 @@
+ 		/// The returned UniquePtr cannot outlive the cache.
+ 		unsafe fn target_ver(self: &PrvIterator) -> UniquePtr<VerIterator>;
+ 
+-		#[cxx_name = "Index"]
+-		pub fn index(self: &PrvIterator) -> u64;
++		pub fn index(self: &PrvIterator) -> usize;
+ 		/// Clone the pointer.
+ 		///
+ 		/// # Safety
+--- a/src/iterators/version.rs
++++ b/src/iterators/version.rs
+@@ -329,8 +329,7 @@
+ 		/// The returned UniquePtr cannot outlive the cache.
+ 		unsafe fn translated_desc(self: &VerIterator) -> UniquePtr<DescIterator>;
+ 
+-		#[cxx_name = "Index"]
+-		pub fn index(self: &VerIterator) -> u64;
++		pub fn index(self: &VerIterator) -> usize;
+ 		/// Clone the pointer.
+ 		///
+ 		/// # Safety
+--- a/src/records.rs
++++ b/src/records.rs
+@@ -132,7 +132,7 @@
+ pub struct PackageRecords {
+ 	pub(crate) ptr: UniquePtr<raw::PkgRecords>,
+ 	parser: RefCell<UniquePtr<raw::Parser>>,
+-	index: RefCell<u64>,
++	index: RefCell<usize>,
+ }
+ 
+ impl PackageRecords {
+@@ -144,7 +144,7 @@
+ 		}
+ 	}
+ 
+-	fn replace_index(&self, index: u64) -> bool {
++	fn replace_index(&self, index: usize) -> bool {
+ 		if self.index.borrow().eq(&index) {
+ 			return false;
+ 		}
