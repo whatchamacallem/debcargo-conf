@@ -4,7 +4,7 @@ Description: Don't build the wasm feature
 The js feature of Debian's package of the getrandom crate is not yet available
 --- liblzma.orig/Cargo.toml
 +++ liblzma/Cargo.toml
-@@ -33,7 +33,6 @@
+@@ -35,7 +35,6 @@
      "lzma",
      "xz",
      "encoding",
@@ -12,14 +12,21 @@ The js feature of Debian's package of the getrandom crate is not yet available
  ]
  categories = [
      "compression",
-@@ -99,11 +98,6 @@
-     "tokio-io",
-     "futures",
- ]
+@@ -58,7 +57,6 @@
+ static = ["liblzma-sys/static"]
+ thin-lto = ["liblzma-sys/thin-lto"]
+ uncheck_liblzma_version = ["liblzma-sys/uncheck_liblzma_version"]
 -wasm = ["liblzma-sys/wasm"]
  
- [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies.tokio-core]
- version = "0.1.17"
+ [lib]
+ name = "liblzma"
+@@ -85,10 +83,3 @@
+ 
+ [dev-dependencies.rand]
+ version = "0.8.0"
+-
+-[target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dev-dependencies.wasm-bindgen-test]
+-version = "0.3"
 -
 -[target.'cfg(target_arch = "wasm32")'.dev-dependencies.getrandom]
 -version = "0.2"
