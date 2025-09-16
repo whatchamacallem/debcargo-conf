@@ -1,115 +1,304 @@
 Forwarde: not-needed
---- a/src/read.rs
-+++ b/src/read.rs
-@@ -1988,2 +1988,3 @@
+Index: zip/src/read.rs
+===================================================================
+--- zip.orig/src/read.rs
++++ zip/src/read.rs
+@@ -2073,6 +2073,7 @@ mod test {
+     use tempfile::TempDir;
+ 
      #[test]
 +    #[cfg(any())]
      fn invalid_offset() {
-@@ -1998,2 +1999,3 @@
+         use super::ZipArchive;
+ 
+@@ -2083,6 +2084,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn invalid_offset2() {
-@@ -2008,2 +2010,3 @@
+         use super::ZipArchive;
+ 
+@@ -2093,6 +2095,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn zip64_with_leading_junk() {
-@@ -2018,2 +2021,3 @@
+         use super::ZipArchive;
+ 
+@@ -2102,6 +2105,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn zip_contents() {
-@@ -2029,2 +2033,3 @@
+         use super::ZipArchive;
+ 
+@@ -2112,6 +2116,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn zip_read_streaming() {
-@@ -2043,2 +2048,3 @@
+         use super::read_zipfile_from_stream;
+ 
+@@ -2124,6 +2129,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn zip_clone() {
-@@ -2084,2 +2090,3 @@
+         use super::ZipArchive;
+         use std::io::Read;
+@@ -2164,6 +2170,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn file_and_dir_predicates() {
-@@ -2103,2 +2110,3 @@
+         use super::ZipArchive;
+ 
+@@ -2184,6 +2191,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn zip64_magic_in_filenames() {
-@@ -2122,2 +2130,3 @@
+         let files = vec![
+             include_bytes!("../tests/data/zip64_magic_in_filename_1.zip").to_vec(),
+@@ -2203,6 +2211,7 @@ mod test {
+     /// declared number of files in the CDE of an invalid zip when the number of
+     /// files declared is more than the alleged offset in the CDE
      #[test]
 +    #[cfg(any())]
      fn invalid_cde_number_of_files_allocation_smaller_offset() {
-@@ -2137,2 +2146,3 @@
+         use super::ZipArchive;
+ 
+@@ -2216,6 +2225,7 @@ mod test {
+     /// declared number of files in the CDE of an invalid zip when the number of
+     /// files declared is less than the alleged offset in the CDE
      #[test]
 +    #[cfg(any())]
      fn invalid_cde_number_of_files_allocation_greater_offset() {
-@@ -2150,2 +2160,3 @@
+         use super::ZipArchive;
+ 
+@@ -2227,6 +2237,7 @@ mod test {
+ 
+     #[cfg(feature = "deflate64")]
      #[test]
 +    #[cfg(any())]
      fn deflate64_index_out_of_bounds() -> std::io::Result<()> {
-@@ -2162,2 +2173,3 @@
+         let mut reader = ZipArchive::new(Cursor::new(include_bytes!(
+             "../tests/data/raw_deflate64_index_out_of_bounds.zip"
+@@ -2237,6 +2248,7 @@ mod test {
+ 
+     #[cfg(feature = "deflate64")]
      #[test]
 +    #[cfg(any())]
      fn deflate64_not_enough_space() {
-@@ -2170,2 +2182,3 @@
+         ZipArchive::new(Cursor::new(include_bytes!(
+             "../tests/data/deflate64_issue_25.zip"
+@@ -2246,6 +2258,7 @@ mod test {
+ 
+     #[cfg(feature = "deflate-flate2")]
      #[test]
 +    #[cfg(any())]
      fn test_read_with_data_descriptor() {
-@@ -2182,2 +2195,3 @@
+         use std::io::Read;
+ 
+@@ -2259,6 +2272,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn test_is_symlink() -> std::io::Result<()> {
-@@ -2195,2 +2209,3 @@
-     #[cfg(feature = "_deflate-any")]
+         let mut reader = ZipArchive::new(Cursor::new(include_bytes!("../tests/data/symlink.zip")))?;
+         assert!(reader.by_index(0)?.is_symlink());
+@@ -2270,6 +2284,7 @@ mod test {
+ 
+     #[test]
+     #[cfg(feature = "deflate-flate2")]
 +    #[cfg(any())]
      fn test_utf8_extra_field() {
-@@ -2203,2 +2218,3 @@
+         let mut reader =
+             ZipArchive::new(Cursor::new(include_bytes!("../tests/data/chinese.zip"))).unwrap();
+@@ -2277,6 +2292,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn test_utf8() {
-@@ -2211,2 +2227,3 @@
+         let mut reader =
+             ZipArchive::new(Cursor::new(include_bytes!("../tests/data/linux-7z.zip"))).unwrap();
+@@ -2284,6 +2300,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn test_utf8_2() {
-@@ -2270,2 +2287,3 @@
+         let mut reader = ZipArchive::new(Cursor::new(include_bytes!(
+             "../tests/data/windows-7zip.zip"
+@@ -2343,6 +2360,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn test_can_create_destination() -> ZipResult<()> {
---- a/src/read/stream.rs
-+++ b/src/read/stream.rs
-@@ -252,2 +252,3 @@
+         let mut reader =
+             ZipArchive::new(Cursor::new(include_bytes!("../tests/data/mimetype.zip")))?;
+@@ -2353,6 +2371,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[cfg(any())]
+     fn test_central_directory_not_at_end() -> ZipResult<()> {
+         let mut reader = ZipArchive::new(Cursor::new(include_bytes!("../tests/data/omni.ja")))?;
+         let mut file = reader.by_name("chrome.manifest")?;
+Index: zip/src/read/stream.rs
+===================================================================
+--- zip.orig/src/read/stream.rs
++++ zip/src/read/stream.rs
+@@ -250,6 +250,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn invalid_offset() {
-@@ -261,2 +262,3 @@
+         ZipStreamReader::new(io::Cursor::new(include_bytes!(
+             "../../tests/data/invalid_offset.zip"
+@@ -259,6 +260,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn invalid_offset2() {
-@@ -270,2 +272,3 @@
+         ZipStreamReader::new(io::Cursor::new(include_bytes!(
+             "../../tests/data/invalid_offset2.zip"
+@@ -268,6 +270,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn zip_read_streaming() {
-@@ -307,2 +310,3 @@
+         let reader = ZipStreamReader::new(io::Cursor::new(include_bytes!(
+             "../../tests/data/mimetype.zip"
+@@ -305,6 +308,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn file_and_dir_predicates() {
-@@ -354,2 +358,3 @@
+         let reader = ZipStreamReader::new(io::Cursor::new(include_bytes!(
+             "../../tests/data/files_and_dirs.zip"
+@@ -352,6 +356,7 @@ mod test {
+     /// declared number of files in the CDE of an invalid zip when the number of
+     /// files declared is more than the alleged offset in the CDE
      #[test]
 +    #[cfg(any())]
      fn invalid_cde_number_of_files_allocation_smaller_offset() {
-@@ -366,2 +371,3 @@
+         ZipStreamReader::new(io::Cursor::new(include_bytes!(
+             "../../tests/data/invalid_cde_number_of_files_allocation_smaller_offset.zip"
+@@ -364,6 +369,7 @@ mod test {
+     /// declared number of files in the CDE of an invalid zip when the number of
+     /// files declared is less than the alleged offset in the CDE
      #[test]
 +    #[cfg(any())]
      fn invalid_cde_number_of_files_allocation_greater_offset() {
-@@ -394,2 +400,3 @@
+         ZipStreamReader::new(io::Cursor::new(include_bytes!(
+             "../../tests/data/invalid_cde_number_of_files_allocation_greater_offset.zip"
+@@ -392,6 +398,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn test_can_create_destination() -> ZipResult<()> {
---- a/src/write.rs
-+++ b/src/write.rs
-@@ -2130,2 +2130,3 @@
+         let mut v = Vec::new();
+         v.extend_from_slice(include_bytes!("../../tests/data/mimetype.zip"));
+Index: zip/src/write.rs
+===================================================================
+--- zip.orig/src/write.rs
++++ zip/src/write.rs
+@@ -2336,6 +2336,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[cfg(any())]
      fn write_mimetype_zip() {
-@@ -2167,2 +2168,3 @@
+         let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
+         let options = FileOptions {
+@@ -2379,6 +2380,7 @@ mod test {
+     const THIRD_FILENAME: &str = "third_name.xyz";
+ 
      #[test]
 +    #[cfg(any())]
      fn write_non_utf8() {
+         let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
+         let options = FileOptions {
+Index: zip/src/extra_fields/extended_timestamp.rs
+===================================================================
+--- zip.orig/src/extra_fields/extended_timestamp.rs
++++ zip/src/extra_fields/extended_timestamp.rs
+@@ -99,6 +99,7 @@ impl ExtendedTimestamp {
+ 
+ #[test]
+ /// Ensure we don't panic or read garbage data if the field body is empty
++#[cfg(any())]
+ pub fn test_bad_extended_timestamp() -> ZipResult<()> {
+     use crate::ZipArchive;
+     use std::io::Cursor;
+Index: zip/src/legacy/implode.rs
+===================================================================
+--- zip.orig/src/legacy/implode.rs
++++ zip/src/legacy/implode.rs
+@@ -236,11 +236,14 @@ impl<R: Read> Read for ImplodeDecoder<R>
+ mod tests {
+     use super::hwexplode;
+ 
++    #[cfg(any())]
+     const HAMLET_256: &[u8; 249] = include_bytes!("../../tests/data/legacy/implode_hamlet_256.bin");
++    #[cfg(any())]
+     const HAMLET_256_OUT: &[u8; 256] =
+         include_bytes!("../../tests/data/legacy/implode_hamlet_256.out");
+ 
+     #[test]
++    #[cfg(any())]
+     fn test_explode_hamlet_256() {
+         let mut dst = Vec::new();
+         hwexplode(HAMLET_256, 256, false, false, false, &mut dst).unwrap();
+Index: zip/src/legacy/reduce.rs
+===================================================================
+--- zip.orig/src/legacy/reduce.rs
++++ zip/src/legacy/reduce.rs
+@@ -231,8 +231,10 @@ impl<R: Read> Read for ReduceDecoder<R>
+ mod tests {
+     use super::hwexpand;
+     use crate::legacy::reduce::{follower_idx_bitlen, lsb, max_dist};
++    #[cfg(any())]
+     const HAMLET_2048: &[u8; 1285] =
+         include_bytes!("../../tests/data/legacy/reduce_hamlet_2048.bin");
++    #[cfg(any())]
+     const HAMLET_2048_OUT: &[u8; 2048] =
+         include_bytes!("../../tests/data/legacy/implode_hamlet_2048.out");
+ 
+@@ -245,6 +247,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(any())]
+     fn test_expand_hamlet2048() {
+         let mut dst = Vec::new();
+         hwexpand(HAMLET_2048, 2048, 4, &mut dst).unwrap();
+@@ -263,10 +266,12 @@ mod tests {
+       $ dosbox -c "mount c ." -c "c:" -c "pkzip -ea4 a.zip a" -c "exit"
+       $ xxd -i -s 31 -l $(expr $(find A.ZIP -printf %s) - 100) A.ZIP
+     */
++    #[cfg(any())]
+     const ZEROS_REDUCED: &[u8; 1297] =
+         include_bytes!("../../tests/data/legacy/reduce_zero_reduced.bin");
+ 
+     #[test]
++    #[cfg(any())]
+     fn test_expand_zeros() {
+         let mut dst = Vec::new();
+         hwexpand(ZEROS_REDUCED, 2048 + 1024, 4, &mut dst).unwrap();

@@ -1,0 +1,313 @@
+This patch is based on a revert of upstream commit
+aaaa26fdfa0593c73552dda6dd7e75c232c0f94b, adapted for use in the Debian package
+by Peter Michael Green.
+
+Index: zip/README.md
+===================================================================
+--- zip.orig/README.md
++++ zip/README.md
+@@ -10,7 +10,7 @@ Info
+ ----
+ 
+ 
+-A zip library for rust which supports reading and writing of simple ZIP files. Formerly hosted at
++A zip library for rust which supports reading and writing of simple ZIP files. Formerly hosted at 
+ https://github.com/zip-rs/zip2.
+ 
+ Supported compression formats:
+@@ -21,7 +21,7 @@ Supported compression formats:
+ * bzip2
+ * zstd
+ * lzma (decompression only)
+-* xz
++* xz (decompression only)
+ * ppmd
+ 
+ Currently unsupported zip extensions:
+@@ -35,8 +35,8 @@ The features available are:
+ 
+ * `aes-crypto`: Enables decryption of files which were encrypted with AES. Supports AE-1 and AE-2 methods.
+ * `deflate`: Enables compressing and decompressing an unspecified implementation (that may change in future versions) of
+-  the deflate compression algorithm, which is the default for zip files. Supports compression quality 1..=264.
+-* `deflate-flate2`: Combine this with any `flate2` feature flag that enables a back-end, to support deflate compression
++ the deflate compression algorithm, which is the default for zip files. Supports compression quality 1..=264.
++* `deflate-flate2`: Combine this with any `flate2` feature flag that enables a back-end, to support deflate compression 
+   at quality 1..=9.
+ * `deflate-zopfli`: Enables deflating files with the `zopfli` library (used when compression quality is 10..=264). This
+   is the most effective `deflate` implementation available, but also among the slowest.
+@@ -48,10 +48,9 @@ The features available are:
+ * `chrono`: Enables converting last-modified `zip::DateTime` to and from `chrono::NaiveDateTime`.
+ * `jiff-02`: Enables converting last-modified `zip::DateTime` to and from `jiff::civil::DateTime`.
+ * `nt-time`: Enables returning timestamps stored in the NTFS extra field as `nt_time::FileTime`.
+-* `xz`: Enables the XZ compression algorithm.
+ * `zstd`: Enables the Zstandard compression algorithm.
+ 
+-By default `aes-crypto`, `bzip2`, `deflate`, `deflate64`, `lzma`, `ppmd`, `time`, `xz` and `zstd` are enabled.
++By default `aes-crypto`, `bzip2`, `deflate`, `deflate64`, `lzma`, `ppmd`, `time` and `zstd` are enabled.
+ 
+ MSRV
+ ----
+@@ -66,13 +65,12 @@ Examples
+ --------
+ 
+ See the [examples directory](examples) for:
+-
+-* How to write a file to a zip.
+-* How to write a directory of files to a zip (using [walkdir](https://github.com/BurntSushi/walkdir)).
+-* How to extract a zip file.
+-* How to extract a single file from a zip.
+-* How to read a zip from the standard input.
+-* How to append a directory to an existing archive
++   * How to write a file to a zip.
++   * How to write a directory of files to a zip (using [walkdir](https://github.com/BurntSushi/walkdir)).
++   * How to extract a zip file.
++   * How to extract a single file from a zip.
++   * How to read a zip from the standard input.
++   * How to append a directory to an existing archive
+ 
+ Fuzzing
+ -------
+Index: zip/src/compression.rs
+===================================================================
+--- zip.orig/src/compression.rs
++++ zip/src/compression.rs
+@@ -271,7 +271,7 @@ pub(crate) enum Decompressor<R: io::BufR
+     #[cfg(feature = "zstd")]
+     Zstd(zstd::Decoder<'static, R>),
+     #[cfg(feature = "lzma")]
+-    Lzma(Lzma<R>),
++    Lzma(liblzma::bufread::XzDecoder<R>),
+     #[cfg(feature = "legacy-zip")]
+     Shrink(crate::legacy::shrink::ShrinkDecoder<R>),
+     #[cfg(feature = "legacy-zip")]
+@@ -279,19 +279,11 @@ pub(crate) enum Decompressor<R: io::BufR
+     #[cfg(feature = "legacy-zip")]
+     Implode(crate::legacy::implode::ImplodeDecoder<R>),
+     #[cfg(feature = "xz")]
+-    Xz(Box<lzma_rust2::XzReader<R>>),
++    Xz(liblzma::bufread::XzDecoder<R>),
+     #[cfg(feature = "ppmd")]
+     Ppmd(Ppmd<R>),
+ }
+ 
+-#[cfg(feature = "lzma")]
+-pub(crate) enum Lzma<R: io::BufRead> {
+-    Uninitialized {
+-        reader: Option<R>,
+-        uncompressed_size: u64,
+-    },
+-    Initialized(Box<lzma_rust2::LzmaReader<R>>),
+-}
+ 
+ #[cfg(feature = "ppmd")]
+ pub(crate) enum Ppmd<R: io::BufRead> {
+@@ -312,50 +304,7 @@ impl<R: io::BufRead> io::Read for Decomp
+             #[cfg(feature = "zstd")]
+             Decompressor::Zstd(r) => r.read(buf),
+             #[cfg(feature = "lzma")]
+-            Decompressor::Lzma(r) => match r {
+-                Lzma::Uninitialized {
+-                    reader,
+-                    uncompressed_size,
+-                } => {
+-                    let mut reader = reader.take().ok_or_else(|| {
+-                        io::Error::other("Reader was not set while reading LZMA data")
+-                    })?;
+-
+-                    // 5.8.8.1 LZMA Version Information & 5.8.8.2 LZMA Properties Size
+-                    let mut header = [0; 4];
+-                    reader.read_exact(&mut header)?;
+-                    let _version_information = u16::from_le_bytes(header[0..2].try_into().unwrap());
+-                    let properties_size = u16::from_le_bytes(header[2..4].try_into().unwrap());
+-                    if properties_size != 5 {
+-                        return Err(io::Error::new(
+-                            io::ErrorKind::InvalidInput,
+-                            format!("unexpected LZMA properties size of {properties_size}"),
+-                        ));
+-                    }
+-
+-                    let mut props_data = [0; 5];
+-                    reader.read_exact(&mut props_data)?;
+-                    let props = props_data[0];
+-                    let dict_size = u32::from_le_bytes(props_data[1..5].try_into().unwrap());
+-
+-                    // We don't need to handle the end-of-stream marker here, since the LZMA reader
+-                    // stops at the end-of-stream marker OR when it has decoded uncompressed_size bytes, whichever comes first.
+-                    let mut decompressor = lzma_rust2::LzmaReader::new_with_props(
+-                        reader,
+-                        *uncompressed_size,
+-                        props,
+-                        dict_size,
+-                        None,
+-                    )?;
+-
+-                    let read = decompressor.read(buf)?;
+-
+-                    *r = Lzma::Initialized(Box::new(decompressor));
+-
+-                    Ok(read)
+-                }
+-                Lzma::Initialized(decompressor) => decompressor.read(buf),
+-            },
++            Decompressor::Lzma(r) => r.read(buf),
+             #[cfg(feature = "xz")]
+             Decompressor::Xz(r) => r.read(buf),
+             #[cfg(feature = "ppmd")]
+@@ -435,14 +384,15 @@ impl<R: io::BufRead> Decompressor<R> {
+             #[cfg(feature = "zstd")]
+             CompressionMethod::Zstd => Decompressor::Zstd(zstd::Decoder::with_buffer(reader)?),
+             #[cfg(feature = "lzma")]
+-            CompressionMethod::Lzma => Decompressor::Lzma(Lzma::Uninitialized {
+-                reader: Some(reader),
+-                uncompressed_size,
+-            }),
++            CompressionMethod::Lzma => Decompressor::Lzma(liblzma::bufread::XzDecoder::new_stream(
++                reader,
++                // Use u64::MAX for unlimited memory usage, matching the previous behavior
++                // from lzma-rs. Using 0 would set the smallest memory limit, which is
++                // problematic in ancient liblzma versions (5.2.3 and earlier).
++                liblzma::stream::Stream::new_lzma_decoder(u64::MAX).unwrap(),
++            )),
+             #[cfg(feature = "xz")]
+-            CompressionMethod::Xz => {
+-                Decompressor::Xz(Box::new(lzma_rust2::XzReader::new(reader, false)))
+-            }
++            CompressionMethod::Xz => Decompressor::Xz(liblzma::bufread::XzDecoder::new(reader)),
+             #[cfg(feature = "ppmd")]
+             CompressionMethod::Ppmd => Decompressor::Ppmd(Ppmd::Uninitialized(Some(reader))),
+             #[cfg(feature = "legacy-zip")]
+@@ -479,12 +429,7 @@ impl<R: io::BufRead> Decompressor<R> {
+             #[cfg(feature = "zstd")]
+             Decompressor::Zstd(r) => r.finish(),
+             #[cfg(feature = "lzma")]
+-            Decompressor::Lzma(r) => match r {
+-                Lzma::Uninitialized { mut reader, .. } => reader
+-                    .take()
+-                    .ok_or_else(|| io::Error::other("Reader was not set"))?,
+-                Lzma::Initialized(decoder) => decoder.into_inner(),
+-            },
++            Decompressor::Lzma(r) => r.into_inner(),
+             #[cfg(feature = "legacy-zip")]
+             Decompressor::Shrink(r) => r.into_inner(),
+             #[cfg(feature = "legacy-zip")]
+Index: zip/src/lib.rs
+===================================================================
+--- zip.orig/src/lib.rs
++++ zip/src/lib.rs
+@@ -23,7 +23,7 @@
+ //! | Bzip2 | ✅ | ✅ |
+ //! | ZStandard | ✅ | ✅ |
+ //! | LZMA | ✅ | |
+-//! | XZ | ✅ | ✅ |
++//! | XZ | ✅ | |
+ //! | PPMd | ✅ | ✅ |
+ //! | AES encryption | ✅ | ✅ |
+ //! | ZipCrypto deprecated encryption | ✅ | ✅ |
+Index: zip/src/write.rs
+===================================================================
+--- zip.orig/src/write.rs
++++ zip/src/write.rs
+@@ -98,7 +98,7 @@ enum GenericZipWriter<W: Write + Seek> {
+     #[cfg(feature = "zstd")]
+     Zstd(ZstdEncoder<'static, MaybeEncrypted<W>>),
+     #[cfg(feature = "xz")]
+-    Xz(Box<lzma_rust2::XzWriter<MaybeEncrypted<W>>>),
++    Xz(liblzma::write::XzEncoder<MaybeEncrypted<W>>),
+     #[cfg(feature = "ppmd")]
+     Ppmd(Box<ppmd_rust::Ppmd8Encoder<MaybeEncrypted<W>>>),
+ }
+@@ -121,7 +121,7 @@ impl<W: Write + Seek> Debug for GenericZ
+             #[cfg(feature = "zstd")]
+             GenericZipWriter::Zstd(w) => f.write_fmt(format_args!("Zstd({:?})", w.get_ref())),
+             #[cfg(feature = "xz")]
+-            GenericZipWriter::Xz(w) => f.write_fmt(format_args!("Xz({:?})", w.inner())),
++            GenericZipWriter::Xz(w) => f.write_fmt(format_args!("Xz({:?})", w.get_ref())),
+             #[cfg(feature = "ppmd")]
+             GenericZipWriter::Ppmd(_) => f.write_fmt(format_args!("Ppmd8Encoder")),
+         }
+@@ -1833,12 +1833,8 @@ impl<W: Write + Seek> GenericZipWriter<W
+                         .ok_or(UnsupportedArchive("Unsupported compression level"))?
+                         as u32;
+                     Ok(Box::new(move |bare| {
+-                        Ok(GenericZipWriter::Xz(Box::new(
+-                            lzma_rust2::XzWriter::new(
+-                                bare,
+-                                lzma_rust2::XzOptions::with_preset(level),
+-                            )
+-                            .map_err(ZipError::Io)?,
++                        Ok(GenericZipWriter::Xz(liblzma::write::XzEncoder::new(
++                            bare, level,
+                         )))
+                     }))
+                 }
+Index: zip/tests/bug398.rs
+===================================================================
+--- /dev/null
++++ zip/tests/bug398.rs
+@@ -0,0 +1,28 @@
++#!/usr/bin/env rust-script
++
++//! Simple test to verify the LZMA memory limit fix
++//! This script tests that LZMA decompression works with the new unlimited memory setting
++
++#[cfg(feature = "lzma")]
++fn main() -> Result<(), Box<dyn std::error::Error>> {
++    println!("Testing LZMA memory limit fix...");
++
++    // Test that we can create an LZMA decoder with u64::MAX memory limit
++    // This would fail in ancient liblzma versions if we used 0
++    let _stream = liblzma::stream::Stream::new_lzma_decoder(u64::MAX)?;
++    println!("✓ Successfully created LZMA decoder with unlimited memory (u64::MAX)");
++
++    // Test that the old problematic value would work too (for comparison)
++    // Note: This might fail in ancient versions, but should work in modern ones
++    let _stream_old = liblzma::stream::Stream::new_lzma_decoder(0);
++    match _stream_old {
++        Ok(_) => println!("✓ Old parameter (0) also works in this liblzma version"),
++        Err(e) => println!(
++            "⚠ Old parameter (0) fails as expected in ancient versions: {}",
++            e
++        ),
++    }
++
++    println!("Test completed successfully!");
++    Ok(())
++}
+Index: zip/Cargo.toml
+===================================================================
+--- zip.orig/Cargo.toml
++++ zip/Cargo.toml
+@@ -94,12 +94,12 @@ deflate-zopfli = [
+ ]
+ #jiff-02 = ["dep:jiff"]
+ legacy-zip = ["bitstream-io"]
+-lzma = ["dep:lzma-rust2"]
++lzma = ["dep:liblzma"]
+ lzma-static = ["lzma"]
+ #nt-time = ["dep:nt-time"]
+ ppmd = ["dep:ppmd-rust"]
+ unreserved = []
+-xz = ["dep:lzma-rust2"]
++xz = ["dep:liblzma"]
+ xz-static = ["lzma"]
+ 
+ [lib]
+@@ -170,16 +170,9 @@ version = "2"
+ version = "0.2.4"
+ optional = true
+ 
+-[dependencies.lzma-rust2]
+-version = "0.13"
+-features = [
+-    "std",
+-    "encoder",
+-    "optimization",
+-    "xz",
+-]
++[dependencies.liblzma]
++version = "0.4.1"
+ optional = true
+-default-features = false
+ 
+ [dependencies.memchr]
+ version = "2.7"

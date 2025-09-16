@@ -1,41 +1,66 @@
 Forwarde: not-needed
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -129,3 +129,3 @@
- [dependencies.bzip2]
--version = "0.5.0"
-+version = "0.4"
+Index: zip/Cargo.toml
+===================================================================
+--- zip.orig/Cargo.toml
++++ zip/Cargo.toml
+@@ -130,7 +130,7 @@ version = "4.5.0"
  optional = true
-@@ -144,3 +144,3 @@
+ 
+ [dependencies.bzip2]
+-version = "0.6.0"
++version = ">= 0.4.4, < 0.7"
+ optional = true
+ 
+ [dependencies.chrono]
+@@ -145,7 +145,7 @@ optional = true
+ version = "1.4"
+ 
  [dependencies.deflate64]
 -version = "0.1.9"
 +version = "0.1"
  optional = true
-@@ -153,5 +153,5 @@
+ 
+ [dependencies.flate2]
+@@ -154,7 +154,7 @@ optional = true
+ default-features = false
+ 
  [dependencies.getrandom]
 -version = "0.3.1"
-+version = "0.2"
- features = [
--    "wasm_js",
-+    #"wasm_js",
-     "std",
-@@ -232,5 +232,5 @@
- [dev-dependencies.getrandom]
--version = "0.3.1"
-+version = "0.2.1"
- features = [
--    "wasm_js",
-+    #"wasm_js",
-     "std",
-@@ -253,3 +253,3 @@
- [target.'cfg(any(all(target_arch = "arm", target_pointer_width = "32"), target_arch = "mips", target_arch = "powerpc"))'.dependencies.crossbeam-utils]
--version = "0.8.21"
-+version = "0.8"
++version = "0.2.15"
+ features = ["std"]
+ optional = true
  
---- a/src/aes.rs
-+++ b/src/aes.rs
-@@ -238,3 +238,3 @@
+@@ -171,7 +171,7 @@ version = "0.2.4"
+ optional = true
+ 
+ [dependencies.liblzma]
+-version = "0.4.1"
++version = ">= 0.3.4, < 5.0"
+ optional = true
+ 
+ [dependencies.memchr]
+@@ -225,9 +225,9 @@ version = "=4.4.18"
+ features = ["derive"]
+ 
+ [disabled.dev-dependencies.getrandom]
+-version = "0.3.1"
++version = "0.2.15"
+ features = [
+-    "wasm_js",
++    #"wasm_js",
+     "std",
+ ]
+ 
+Index: zip/src/aes.rs
+===================================================================
+--- zip.orig/src/aes.rs
++++ zip/src/aes.rs
+@@ -236,7 +236,7 @@ impl<W: Write> AesWriter<W> {
+         let mut encrypted_file_header = Vec::with_capacity(salt_length + 2);
+ 
          let mut salt = vec![0; salt_length];
 -        getrandom::fill(&mut salt)?;
 +        getrandom::getrandom(&mut salt)?;
          encrypted_file_header.write_all(&salt)?;
+ 
+         // Derive a key from the password and salt.  The length depends on the aes key length
