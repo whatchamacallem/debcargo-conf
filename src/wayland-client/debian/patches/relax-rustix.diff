@@ -1,22 +1,49 @@
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -66,7 +66,7 @@
+Index: wayland-client/Cargo.toml
+===================================================================
+--- wayland-client.orig/Cargo.toml
++++ wayland-client/Cargo.toml
+@@ -54,7 +54,7 @@ version = "0.4"
  optional = true
  
  [dependencies.rustix]
 -version = "1.0.2"
-+version = "0.38.0"
++version = ">= 0.38.37, < 2.0"
  features = ["event"]
  
  [dependencies.wayland-backend]
---- a/src/conn.rs
-+++ b/src/conn.rs
-@@ -224,7 +224,7 @@
+Index: wayland-client/src/conn.rs
+===================================================================
+--- wayland-client.orig/src/conn.rs
++++ wayland-client/src/conn.rs
+@@ -216,6 +216,22 @@ impl Connection {
+     }
+ }
+ 
++trait PollTimeout {
++    fn never() -> Self;
++}
++
++impl PollTimeout for i32 {
++    fn never() -> Self {
++        -1
++    }
++}
++
++impl<T> PollTimeout for Option<T> {
++    fn never() -> Self {
++        None
++    }
++}
++
+ pub(crate) fn blocking_read(guard: ReadEventsGuard) -> Result<usize, WaylandError> {
+     let fd = guard.connection_fd();
+     let mut fds = [rustix::event::PollFd::new(
+@@ -224,7 +240,7 @@ pub(crate) fn blocking_read(guard: ReadE
      )];
  
      loop {
 -        match rustix::event::poll(&mut fds, None) {
-+        match rustix::event::poll(&mut fds, -1) {
++        match rustix::event::poll(&mut fds, PollTimeout::never()) {
              Ok(_) => break,
              Err(rustix::io::Errno::INTR) => continue,
              Err(e) => return Err(WaylandError::Io(e.into())),
