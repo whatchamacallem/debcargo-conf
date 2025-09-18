@@ -1,0 +1,29 @@
+Description: Disable hardware-dependent tests
+ Some upstream tests require access to real SMBIOS tables or /dev/mem,
+ which are not available in typical build environments. Disable
+ these tests to make the autopkgtets pass in the test environments
+Author: Nadzeya Hutsko <nadzya.info@gmail.com>
+Forwarded: not-needed
+Last-Update: 2025-09-17
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/unix/platform.rs
++++ b/src/unix/platform.rs
+@@ -213,6 +213,7 @@
+     use std::io;
+ 
+     #[test]
++    #[ignore = "/dev/mem is not available in the test environment"]
+     fn test_dev_mem_scan() -> io::Result<()> {
+         const RANGE_START: u64 = 0x000F0000u64;
+         const RANGE_END: u64 = 0x000FFFFFu64;
+--- a/src/file_io.rs
++++ b/src/file_io.rs
+@@ -61,6 +61,7 @@
+     use std::path::PathBuf;
+ 
+     #[test]
++    #[ignore = "real SMBIOS data is not available in the test environment"]
+     fn test_load_smbios_table_data() {
+         let mut path = PathBuf::new();
+         path.push(".");
