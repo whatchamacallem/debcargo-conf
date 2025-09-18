@@ -1,0 +1,92 @@
+Description: Disable tests relying on missing data files
+Forwarded: not-needed
+Author: Antonin Delpeuch <antonin@delpeuch.eu>
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/gtest.rs
++++ b/src/gtest.rs
+@@ -231,6 +231,8 @@ mod gtest {
+             qcms_profile_release(other);
+         }
+     }
++
++    #[ignore]
+     #[test]
+     fn samples() {
+         use libc::c_void;
+@@ -261,6 +263,7 @@ mod gtest {
+         }
+     }
+ 
++    #[ignore]
+     #[test]
+     fn v4() {
+         use libc::c_void;
+@@ -780,6 +783,7 @@ mod gtest {
+         profile
+     }
+ 
++    #[ignore]
+     #[test]
+     fn sRGB_to_ThinkpadW540() {
+         unsafe {
+@@ -792,6 +796,7 @@ mod gtest {
+         }
+     }
+ 
++    #[ignore]
+     #[test]
+     fn sRGB_to_SamsungSyncmaster() {
+         unsafe {
+@@ -804,6 +809,7 @@ mod gtest {
+         }
+     }
+ 
++    #[ignore]
+     #[test]
+     fn v4_output() {
+         qcms_enable_iccv4();
+@@ -920,6 +926,7 @@ mod test {
+         Profile::new_from_slice(&data, false).unwrap()
+     }
+ 
++    #[ignore]
+     #[test]
+     fn parametric_threshold() {
+         let src = profile_from_path("parametric-thresh.icc");
+@@ -931,6 +938,7 @@ mod test {
+         assert_eq!(data, [188, 188, 189]);
+     }
+ 
++    #[ignore]
+     #[test]
+     fn cmyk() {
+         let input = profile_from_path("ps_cmyk_min.icc");
+--- a/src/iccread.rs
++++ b/src/iccread.rs
+@@ -1426,21 +1426,24 @@ fn check_transfer_characteristics(cicp:
+     eprintln!("{} / {} off by one", off_by_one, cicp_out.len());
+ }
+ 
++#[ignore]
+ #[test]
+ fn srgb_transfer_characteristics() {
+     check_transfer_characteristics(TransferCharacteristics::Srgb, "sRGB_lcms.icc");
+ }
+ 
++#[ignore]
+ #[test]
+ fn bt709_transfer_characteristics() {
+     check_transfer_characteristics(TransferCharacteristics::Bt709, "ITU-709.icc");
+ }
+ 
++#[ignore]
+ #[test]
+ fn bt2020_10bit_transfer_characteristics() {
+     check_transfer_characteristics(TransferCharacteristics::Bt2020_10bit, "ITU-2020.icc");
+ }
+-
++#[ignore]
+ #[test]
+ fn bt2020_12bit_transfer_characteristics() {
+     check_transfer_characteristics(TransferCharacteristics::Bt2020_12bit, "ITU-2020.icc");
