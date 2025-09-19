@@ -5,8 +5,17 @@ uploaders = [
     "Holger Levsen <holger@debian.org>"
 ]
 bin_name = "sq"
-summary = "OpenPGP command-line tool from Sequoia"
+[source]
+section = "utils"
+build_depends = ["bash-completion"]
 
+[packages.bin]
+multi_arch = "foreign"
+# Final cleanup for #909085, and can be dropped for the release after
+# bullseye:
+extra_lines = ["Breaks: ispell (<< 3.4.00-6.1~)", "Replaces: ispell (<< 3.4.00-6.1~)"]
+
+summary = "OpenPGP command-line tool from Sequoia"
 description = """
 sq is a command-line interface for OpenPGP, structured using
 subcommands and implemented in Rust.
@@ -23,12 +32,3 @@ generation, certificate maintenance, and certification), and is
 interoperable with other major OpenPGP implementations like GnuPG
 (gpg).
 """
-
-[source]
-section = "utils"
-build_depends = ["bash-completion"]
-
-[packages.bin]
-# Final cleanup for #909085, and can be dropped for the release after
-# bullseye:
-extra_lines = ["Breaks: ispell (<< 3.4.00-6.1~)", "Replaces: ispell (<< 3.4.00-6.1~)"]
