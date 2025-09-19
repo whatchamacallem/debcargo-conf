@@ -1,0 +1,54 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -139,11 +139,11 @@
+ default-features = false
+ 
+ [dependencies.opt-ops]
+-version = "0.6"
++version = "0.5"
+ package = "option-operations"
+ 
+-[dependencies.pastey]
+-version = "0.1"
++[dependencies.paste]
++version = "1.0"
+ 
+ [dependencies.pin-project-lite]
+ version = "0.2"
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -9,9 +9,7 @@
+ // Re-exported for the subclass gst_plugin_define! macro
+ pub use glib;
+ pub use gstreamer_sys as ffi;
+-#[deprecated = "Use `gst::pastey` instead"]
+-pub use pastey as paste;
+-pub use pastey;
++pub use paste;
+ 
+ #[doc(hidden)]
+ pub static INITIALIZED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+--- a/src/subclass/plugin.rs
++++ b/src/subclass/plugin.rs
+@@ -42,12 +42,10 @@
+                     // NB: if this looks a lot like `Option`, it is not a coincidence. Alas,
+                     // Option::or is not `const` and neither is `unwrap_or` so we have to roll our
+                     // own oli-obk-ified enum instead.
+-                    #[allow(unused)]
+                     enum OptionalPtr<T>{
+                         Null,
+                         Some(*const T),
+                     }
+-                    #[allow(unused)]
+                     impl<T: Sized> OptionalPtr<T> {
+                         const fn with(self, value: *const T) -> Self {
+                             Self::Some(value)
+@@ -84,7 +86,7 @@
+                 }
+             }
+ 
+-            $crate::pastey::item! {
++            $crate::paste::item! {
+                 #[no_mangle]
+                 #[allow(clippy::missing_safety_doc)]
+                 pub unsafe extern "C" fn [<gst_plugin_ $name _register>] () {
