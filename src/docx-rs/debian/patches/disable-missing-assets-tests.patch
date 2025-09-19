@@ -1,0 +1,368 @@
+Description: disable examples and tests requiring missing external files
+ The upstream crate ships examples that expect image files and tests
+ that expect docx documents. These assets are not distributed with the
+ crate and shouldn't be distributed in the package, because they are
+ not needed for normal use. This patch disables the examples and such
+ tests so that the package can build successfully
+Author: Nadzeya Hutsko <nadzya.info@gmail.com>
+Forwarded: not-needed
+Last-Update: 2025-09-19
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/tests/reader.rs
++++ b/tests/reader.rs
+@@ -1,4 +1,4 @@
+-use insta::assert_json_snapshot;
++/* use insta::assert_json_snapshot;
+ 
+ use docx_rs::*;
+ use std::fs::*;
+@@ -305,4 +305,4 @@
+     let mut file = std::fs::File::create(path).unwrap();
+     file.write_all(json.as_bytes()).unwrap();
+     file.flush().unwrap();
+-}
++} */
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -33,173 +33,173 @@
+ name = "docx_rs"
+ path = "src/lib.rs"
+ 
+-[[example]]
+-name = "alignment"
+-path = "examples/alignment.rs"
+-
+-[[example]]
+-name = "bookmark"
+-path = "examples/bookmark.rs"
+-
+-[[example]]
+-name = "comment"
+-path = "examples/comment.rs"
+-
+-[[example]]
+-name = "custom_property"
+-path = "examples/custom_property.rs"
+-
+-[[example]]
+-name = "custom_xml"
+-path = "examples/custom_xml.rs"
+-
+-[[example]]
+-name = "data_binding"
+-path = "examples/data_binding.rs"
+-
+-[[example]]
+-name = "dirty_toc"
+-path = "examples/dirty_toc.rs"
+-
+-[[example]]
+-name = "doc_id"
+-path = "examples/doc_id.rs"
+-
+-[[example]]
+-name = "even_header"
+-path = "examples/even_header.rs"
+-
+-[[example]]
+-name = "first_header"
+-path = "examples/first_header.rs"
+-
+-[[example]]
+-name = "font"
+-path = "examples/font.rs"
+-
+-[[example]]
+-name = "font_size"
+-path = "examples/font_size.rs"
+-
+-[[example]]
+-name = "footer"
+-path = "examples/footer.rs"
+-
+-[[example]]
+-name = "footnotes"
+-path = "examples/footnotes.rs"
+-
+-[[example]]
+-name = "header"
+-path = "examples/header.rs"
+-
+-[[example]]
+-name = "header_with_page_num"
+-path = "examples/header_with_page_num.rs"
+-
+-[[example]]
+-name = "hello"
+-path = "examples/hello.rs"
+-
+-[[example]]
+-name = "history"
+-path = "examples/history.rs"
+-
+-[[example]]
+-name = "hyperlink"
+-path = "examples/hyperlink.rs"
+-
+-[[example]]
+-name = "image_floating"
+-path = "examples/image_floating.rs"
+-
+-[[example]]
+-name = "image_in_header"
+-path = "examples/image_in_header.rs"
+-
+-[[example]]
+-name = "image_inline"
+-path = "examples/image_inline.rs"
+-
+-[[example]]
+-name = "image_inline_rotate"
+-path = "examples/image_inline_rotate.rs"
+-
+-[[example]]
+-name = "image_reader"
+-path = "examples/image_reader.rs"
+-
+-[[example]]
+-name = "indent"
+-path = "examples/indent.rs"
+-
+-[[example]]
+-name = "nested_comment"
+-path = "examples/nested_comment.rs"
+-
+-[[example]]
+-name = "numbering"
+-path = "examples/numbering.rs"
+-
+-[[example]]
+-name = "outline_lvl"
+-path = "examples/outline_lvl.rs"
+-
+-[[example]]
+-name = "page_margin"
+-path = "examples/page_margin.rs"
+-
+-[[example]]
+-name = "page_size"
+-path = "examples/page_size.rs"
+-
+-[[example]]
+-name = "reader"
+-path = "examples/reader.rs"
+-
+-[[example]]
+-name = "sdt"
+-path = "examples/sdt.rs"
+-
+-[[example]]
+-name = "style"
+-path = "examples/style.rs"
+-
+-[[example]]
+-name = "table"
+-path = "examples/table.rs"
+-
+-[[example]]
+-name = "table_border"
+-path = "examples/table_border.rs"
+-
+-[[example]]
+-name = "toc_simple"
+-path = "examples/toc_simple.rs"
+-
+-[[example]]
+-name = "toc_with_comment"
+-path = "examples/toc_with_comment.rs"
+-
+-[[example]]
+-name = "toc_with_hyperlink"
+-path = "examples/toc_with_hyperlink.rs"
+-
+-[[example]]
+-name = "toc_with_item"
+-path = "examples/toc_with_item.rs"
+-
+-[[example]]
+-name = "toc_with_style_level"
+-path = "examples/toc_with_style_level.rs"
+-
+-[[example]]
+-name = "toc_with_tc"
+-path = "examples/toc_with_tc.rs"
+-
+-[[example]]
+-name = "web_ext"
+-path = "examples/web_ext.rs"
++# [[example]]
++# name = "alignment"
++# path = "examples/alignment.rs"
++
++# [[example]]
++# name = "bookmark"
++# path = "examples/bookmark.rs"
++
++# [[example]]
++# name = "comment"
++# path = "examples/comment.rs"
++
++# [[example]]
++# name = "custom_property"
++# path = "examples/custom_property.rs"
++
++# [[example]]
++# name = "custom_xml"
++# path = "examples/custom_xml.rs"
++
++# [[example]]
++# name = "data_binding"
++# path = "examples/data_binding.rs"
++
++# [[example]]
++# name = "dirty_toc"
++# path = "examples/dirty_toc.rs"
++
++# [[example]]
++# name = "doc_id"
++# path = "examples/doc_id.rs"
++
++# [[example]]
++# name = "even_header"
++# path = "examples/even_header.rs"
++
++# [[example]]
++# name = "first_header"
++# path = "examples/first_header.rs"
++
++# [[example]]
++# name = "font"
++# path = "examples/font.rs"
++
++# [[example]]
++# name = "font_size"
++# path = "examples/font_size.rs"
++
++# [[example]]
++# name = "footer"
++# path = "examples/footer.rs"
++
++# [[example]]
++# name = "footnotes"
++# path = "examples/footnotes.rs"
++
++# [[example]]
++# name = "header"
++# path = "examples/header.rs"
++
++# [[example]]
++# name = "header_with_page_num"
++# path = "examples/header_with_page_num.rs"
++
++# [[example]]
++# name = "hello"
++# path = "examples/hello.rs"
++
++# [[example]]
++# name = "history"
++# path = "examples/history.rs"
++
++# [[example]]
++# name = "hyperlink"
++# path = "examples/hyperlink.rs"
++
++# [[example]]
++# name = "image_floating"
++# path = "examples/image_floating.rs"
++
++# [[example]]
++# name = "image_in_header"
++# path = "examples/image_in_header.rs"
++
++# [[example]]
++# name = "image_inline"
++# path = "examples/image_inline.rs"
++
++# [[example]]
++# name = "image_inline_rotate"
++# path = "examples/image_inline_rotate.rs"
++
++# [[example]]
++# name = "image_reader"
++# path = "examples/image_reader.rs"
++
++# [[example]]
++# name = "indent"
++# path = "examples/indent.rs"
++
++# [[example]]
++# name = "nested_comment"
++# path = "examples/nested_comment.rs"
++
++# [[example]]
++# name = "numbering"
++# path = "examples/numbering.rs"
++
++# [[example]]
++# name = "outline_lvl"
++# path = "examples/outline_lvl.rs"
++
++# [[example]]
++# name = "page_margin"
++# path = "examples/page_margin.rs"
++
++# [[example]]
++# name = "page_size"
++# path = "examples/page_size.rs"
++
++# [[example]]
++# name = "reader"
++# path = "examples/reader.rs"
++
++# [[example]]
++# name = "sdt"
++# path = "examples/sdt.rs"
++
++# [[example]]
++# name = "style"
++# path = "examples/style.rs"
++
++# [[example]]
++# name = "table"
++# path = "examples/table.rs"
++
++# [[example]]
++# name = "table_border"
++# path = "examples/table_border.rs"
++
++# [[example]]
++# name = "toc_simple"
++# path = "examples/toc_simple.rs"
++
++# [[example]]
++# name = "toc_with_comment"
++# path = "examples/toc_with_comment.rs"
++
++# [[example]]
++# name = "toc_with_hyperlink"
++# path = "examples/toc_with_hyperlink.rs"
++
++# [[example]]
++# name = "toc_with_item"
++# path = "examples/toc_with_item.rs"
++
++# [[example]]
++# name = "toc_with_style_level"
++# path = "examples/toc_with_style_level.rs"
++
++# [[example]]
++# name = "toc_with_tc"
++# path = "examples/toc_with_tc.rs"
++
++# [[example]]
++# name = "web_ext"
++# path = "examples/web_ext.rs"
+ 
+ [[test]]
+ name = "lib"

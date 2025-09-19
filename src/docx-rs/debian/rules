@@ -1,0 +1,8 @@
+#!/usr/bin/make -f
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_fixperms:
+	dh_fixperms
+	# Upstream bug: https://github.com/bokuweb/docx-rs/issues/858
+	find debian/ -type f \( -name '*xml' -o -name '*.rels' \) -exec chmod -x '{}' \;

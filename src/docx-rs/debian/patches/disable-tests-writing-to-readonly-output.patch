@@ -1,0 +1,25 @@
+Description: disable tests writing generated files into registry path
+ Some upstream tests try to create DOCX/XML files under ./tests/output
+ relative to the crate source. Since the registry is read-only for
+ normal user, this causes PermissionDenied errors when running the
+ autopkgtests. These output-writing tests are not needed for normal
+ use of the library, so they are disabled here
+Author: Nadzeya Hutsko <nadzya.info@gmail.com>
+Forwarded: not-needed
+Last-Update: 2025-09-19
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/tests/lib.rs
++++ b/tests/lib.rs
+@@ -1,4 +1,4 @@
+-extern crate docx_rs;
++/* extern crate docx_rs;
+ 
+ mod reader;
+ 
+@@ -454,4 +454,4 @@
+         .build()
+         .pack(file)?;
+     Ok(())
+-}
++} */
