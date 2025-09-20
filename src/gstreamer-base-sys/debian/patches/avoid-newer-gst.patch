@@ -1,0 +1,28 @@
+From: =?UTF-8?q?Jeremy=20B=C3=ADcha?= <jbicha@ubuntu.com>
+Date: Sat, 20 Sep 2025 10:48:10 -0400
+Subject: Revert symbol additition from gst-plugins-base1.0 1.27
+
+which isn't in Debian Unstable yet
+to allow the cross_validate_constants_with_c test
+to keep passing
+--- a/tests/abi.rs
++++ b/tests/abi.rs
+@@ -416,7 +416,6 @@
+ 
+ const RUST_CONSTANTS: &[(&str, &str)] = &[
+     ("(gint) GST_AGGREGATOR_START_TIME_SELECTION_FIRST", "1"),
+-    ("(gint) GST_AGGREGATOR_START_TIME_SELECTION_NOW", "3"),
+     ("(gint) GST_AGGREGATOR_START_TIME_SELECTION_SET", "2"),
+     ("(gint) GST_AGGREGATOR_START_TIME_SELECTION_ZERO", "0"),
+     ("GST_BASE_PARSE_FLAG_DRAINING", "2"),
+
+--- a/tests/constant.c
++++ b/tests/constant.c
+@@ -30,7 +30,6 @@
+ 
+ int main() {
+     PRINT_CONSTANT((gint) GST_AGGREGATOR_START_TIME_SELECTION_FIRST);
+-    PRINT_CONSTANT((gint) GST_AGGREGATOR_START_TIME_SELECTION_NOW);
+     PRINT_CONSTANT((gint) GST_AGGREGATOR_START_TIME_SELECTION_SET);
+     PRINT_CONSTANT((gint) GST_AGGREGATOR_START_TIME_SELECTION_ZERO);
+     PRINT_CONSTANT(GST_BASE_PARSE_FLAG_DRAINING);
