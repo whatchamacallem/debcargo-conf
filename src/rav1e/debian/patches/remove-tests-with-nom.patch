@@ -1,0 +1,62 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -54,7 +54,6 @@
+     "fern",
+     "console",
+     "av-metrics",
+-    "nom",
+ ]
+ capi = ["scan_fmt"]
+ decode_test = ["aom-sys"]
+@@ -160,10 +159,6 @@
+ [dependencies.new_debug_unreachable]
+ version = "1.0.4"
+ 
+-[dependencies.nom]
+-version = "8.0.0"
+-optional = true
+-
+ [dependencies.noop_proc_macro]
+ version = "0.3.0"
+ 
+--- a/src/header.rs
++++ b/src/header.rs
+@@ -1207,38 +1207,3 @@
+     Ok(())
+   }
+ }
+-
+-#[cfg(test)]
+-mod tests {
+-  use super::ULEB128Writer;
+-  use bitstream_io::{BigEndian, BitWriter};
+-  use nom::error::Error;
+-  use nom::IResult;
+-  use quickcheck::quickcheck;
+-
+-  fn leb128(mut input: &[u8]) -> IResult<&[u8], u64, Error<&[u8]>> {
+-    use nom::bytes::complete::take;
+-
+-    let mut value = 0u64;
+-    for i in 0..8u8 {
+-      let result = take(1usize)(input)?;
+-      input = result.0;
+-      let leb128_byte = result.1[0];
+-      value |= u64::from(leb128_byte & 0x7f) << (i * 7);
+-      if (leb128_byte & 0x80) == 0 {
+-        break;
+-      }
+-    }
+-    Ok((input, value))
+-  }
+-
+-  quickcheck! {
+-    fn validate_leb128_write(val: u32) -> bool {
+-      let mut buf1 = Vec::new();
+-      let mut bw1 = BitWriter::endian(&mut buf1, BigEndian);
+-      bw1.write_uleb128(val as u64).unwrap();
+-      let result = leb128(&buf1).unwrap();
+-      u64::from(val) == result.1 && result.0.is_empty()
+-    }
+-  }
+-}
