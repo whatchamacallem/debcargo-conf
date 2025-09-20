@@ -1,0 +1,237 @@
+From 6f1ea1d27579bc9aa4abd574056e4cd45a77a3e7 Mon Sep 17 00:00:00 2001
+From: Sebastian Ramacher <sebastian@ramacher.at>
+Date: Sat, 20 Sep 2025 11:13:53 +0200
+Subject: [PATCH] Revert "Update to rand 0.9"
+
+This reverts commit cc665a580c56c05dae040091b50cbf9c54875e91.
+---
+ Cargo.toml                          |  4 ++--
+ benches/dist.rs                     |  7 +++----
+ benches/mc.rs                       |  2 +-
+ benches/plane.rs                    |  6 +++---
+ benches/predict.rs                  |  2 +-
+ benches/rdo.rs                      |  2 +-
+ benches/transform.rs                |  6 +++---
+ src/activity.rs                     |  6 +++---
+ src/api/test.rs                     |  2 +-
+ src/asm/shared/dist/cdef_dist.rs    |  8 ++++----
+ src/asm/shared/dist/sse.rs          | 15 +++++++--------
+ src/asm/shared/transform/forward.rs |  4 ++--
+ src/asm/shared/transform/inverse.rs |  4 ++--
+ src/asm/x86/quantize.rs             | 10 +++++-----
+ src/test_encode_decode/mod.rs       |  2 +-
+ tests/binary.rs                     |  6 +++---
+ 16 files changed, 42 insertions(+), 44 deletions(-)
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -215,10 +215,10 @@
+ version = "1.0"
+ 
+ [dev-dependencies.rand]
+-version = "0.9"
++version = "0.8"
+ 
+ [dev-dependencies.rand_chacha]
+-version = "0.9"
++version = "0.3"
+ 
+ [dev-dependencies.semver]
+ version = "1.0"
+--- a/src/activity.rs
++++ b/src/activity.rs
+@@ -218,7 +218,7 @@
+   /// Test that `ssim_boost` has sufficient accuracy.
+   #[test]
+   fn accuracy_test() {
+-    let mut rng = rand::rng();
++    let mut rng = rand::thread_rng();
+ 
+     let mut max_relative_error = 0f64;
+     let bd = 12;
+@@ -227,8 +227,8 @@
+     // Each scale is tested multiple times with randomized variances.
+     for scale in 0..(bd + 3 * 2 - 2) {
+       for _ in 0..40 {
+-        let svar = rng.random_range(0..(1 << scale));
+-        let dvar = rng.random_range(0..(1 << scale));
++        let svar = rng.gen_range(0..(1 << scale));
++        let dvar = rng.gen_range(0..(1 << scale));
+ 
+         let float = reference_ssim_boost(svar, dvar, 12);
+         let fixed =
+--- a/src/api/test.rs
++++ b/src/api/test.rs
+@@ -75,7 +75,7 @@
+     let stride = plane.cfg.stride;
+     for row in plane.data.chunks_mut(stride) {
+       for pixel in row {
+-        let v: u8 = ra.random();
++        let v: u8 = ra.gen();
+         *pixel = T::cast_from(v);
+       }
+     }
+--- a/src/asm/shared/dist/cdef_dist.rs
++++ b/src/asm/shared/dist/cdef_dist.rs
+@@ -14,10 +14,10 @@
+   use crate::frame::*;
+   use crate::tiling::Area;
+   use crate::util::Pixel;
+-  use rand::{rng, Rng};
++  use rand::{thread_rng, Rng};
+ 
+   fn random_planes<T: Pixel>(bd: usize) -> (Plane<T>, Plane<T>) {
+-    let mut rng = rng();
++    let mut rng = thread_rng();
+ 
+     // Two planes with different strides
+     let mut input_plane = Plane::new(640, 480, 0, 0, 128 + 8, 128 + 8);
+@@ -25,13 +25,13 @@
+ 
+     for rows in input_plane.as_region_mut().rows_iter_mut() {
+       for c in rows {
+-        *c = T::cast_from(rng.random_range(0u16..(1 << bd)));
++        *c = T::cast_from(rng.gen_range(0u16..(1 << bd)));
+       }
+     }
+ 
+     for rows in rec_plane.as_region_mut().rows_iter_mut() {
+       for c in rows {
+-        *c = T::cast_from(rng.random_range(0u16..(1 << bd)));
++        *c = T::cast_from(rng.gen_range(0u16..(1 << bd)));
+       }
+     }
+ 
+--- a/src/asm/shared/dist/sse.rs
++++ b/src/asm/shared/dist/sse.rs
+@@ -16,10 +16,10 @@
+   use crate::rdo::DistortionScale;
+   use crate::tiling::Area;
+   use crate::util::*;
+-  use rand::{rng, Rng};
++  use rand::{thread_rng, Rng};
+ 
+   fn random_planes<T: Pixel>(bd: usize) -> (Plane<T>, Plane<T>) {
+-    let mut rng = rng();
++    let mut rng = thread_rng();
+ 
+     // Two planes with different strides
+     let mut input_plane = Plane::new(640, 480, 0, 0, 128 + 8, 128 + 8);
+@@ -27,13 +27,13 @@
+ 
+     for rows in input_plane.as_region_mut().rows_iter_mut() {
+       for c in rows {
+-        *c = T::cast_from(rng.random_range(0u16..(1 << bd)));
++        *c = T::cast_from(rng.gen_range(0u16..(1 << bd)));
+       }
+     }
+ 
+     for rows in rec_plane.as_region_mut().rows_iter_mut() {
+       for c in rows {
+-        *c = T::cast_from(rng.random_range(0u16..(1 << bd)));
++        *c = T::cast_from(rng.gen_range(0u16..(1 << bd)));
+       }
+     }
+ 
+@@ -70,11 +70,10 @@
+ 
+   /// Fill data for scaling of one
+   fn scaling_random(scales: &mut [u32]) {
+-    let mut rng = rng();
++    let mut rng = thread_rng();
+     for a in scales.iter_mut() {
+-      *a = rng.random_range(
+-        DistortionScale::from(0.5).0..DistortionScale::from(1.5).0,
+-      );
++      *a = rng
++        .gen_range(DistortionScale::from(0.5).0..DistortionScale::from(1.5).0);
+     }
+   }
+ 
+--- a/src/asm/shared/transform/forward.rs
++++ b/src/asm/shared/transform/forward.rs
+@@ -61,7 +61,7 @@
+   }
+ 
+   fn test_forward_transform_simd(cpu: CpuFeatureLevel) {
+-    let mut rng = rand::rng();
++    let mut rng = rand::thread_rng();
+ 
+     let tx_sizes = {
+       use TxSize::*;
+@@ -76,7 +76,7 @@
+       let area = tx_size.area();
+ 
+       let input: Vec<i16> =
+-        (0..area).map(|_| rng.random_range(-255..256)).collect();
++        (0..area).map(|_| rng.gen_range(-255..256)).collect();
+ 
+       for &tx_type in get_valid_txfm_types(tx_size) {
+         let mut output_ref = vec![MaybeUninit::new(0i16); area];
+--- a/src/asm/shared/transform/inverse.rs
++++ b/src/asm/shared/transform/inverse.rs
+@@ -85,7 +85,7 @@
+   use crate::scan_order::av1_scan_orders;
+   use crate::transform::TxSize::*;
+   use crate::transform::*;
+-  use rand::{random, rng, Rng};
++  use rand::{random, thread_rng, Rng};
+ 
+   pub fn pick_eob<T: Coefficient>(
+     coeffs: &mut [T], tx_size: TxSize, tx_type: TxType, sub_h: usize,
+@@ -120,7 +120,7 @@
+     }
+ 
+     if eob != 0 {
+-      eob += rng().random_range(0..(exit - eob).min(1));
++      eob += thread_rng().gen_range(0..(exit - eob).min(1));
+     }
+     for &pos in scan.iter().skip(usize::from(eob)) {
+       coeffs[pos as usize] = T::cast_from(0);
+--- a/src/asm/x86/quantize.rs
++++ b/src/asm/x86/quantize.rs
+@@ -158,12 +158,12 @@
+ #[cfg(test)]
+ mod test {
+   use super::*;
+-  use rand::distr::{Distribution, Uniform};
+-  use rand::{rng, Rng};
++  use rand::distributions::{Distribution, Uniform};
++  use rand::{thread_rng, Rng};
+ 
+   #[test]
+   fn dequantize_test() {
+-    let mut rng = rng();
++    let mut rng = thread_rng();
+ 
+     use TxSize::*;
+     let tx_sizes = [
+@@ -175,7 +175,7 @@
+     let bd: usize = 8;
+ 
+     for &tx_size in &tx_sizes {
+-      let qindex: u8 = rng.random_range((MINQ as u8)..(MAXQ as u8));
++      let qindex: u8 = rng.gen_range((MINQ as u8)..(MAXQ as u8));
+       let dc_quant = dc_q(qindex, 0, bd).get() as i16;
+       let ac_quant = ac_q(qindex, 0, bd).get() as i16;
+ 
+@@ -186,7 +186,7 @@
+         out[0] = 0;
+         out[1] = area as u16;
+         for eob in out.iter_mut().skip(2) {
+-          *eob = rng.random_range(0..area as u16);
++          *eob = rng.gen_range(0..area as u16);
+         }
+         out
+       };
+--- a/src/test_encode_decode/mod.rs
++++ b/src/test_encode_decode/mod.rs
+@@ -38,7 +38,7 @@
+     let stride = plane.cfg.stride;
+     for row in plane.data.chunks_mut(stride) {
+       for pixel in row {
+-        let v: u8 = ra.random();
++        let v: u8 = ra.gen();
+         *pixel = T::cast_from(v);
+       }
+     }
