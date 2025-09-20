@@ -1,0 +1,956 @@
+Description: Fix tests on 32-bit architectures
+ Bindgen has a nasty tendency of generating portable bindings, but unportable
+ tests, fixup the tests so they pass on more architectures.
+Author: Peter Michael Green <plugwash@debian.org>
+
+--- rust-liblzma-sys-0.4.4.orig/src/bindgen.rs
++++ rust-liblzma-sys-0.4.4/src/bindgen.rs
+@@ -93,12 +93,12 @@ fn bindgen_test_layout_lzma_allocator()
+     let ptr = UNINIT.as_ptr();
+     assert_eq!(
+         ::std::mem::size_of::<lzma_allocator>(),
+-        24usize,
++        ::std::mem::size_of::<usize>() * 3,
+         "Size of lzma_allocator"
+     );
+     assert_eq!(
+         ::std::mem::align_of::<lzma_allocator>(),
+-        8usize,
++        ::std::mem::align_of::<usize>(),
+         "Alignment of lzma_allocator"
+     );
+     assert_eq!(
+@@ -108,12 +108,12 @@ fn bindgen_test_layout_lzma_allocator()
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).free) as usize - ptr as usize },
+-        8usize,
++        ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_allocator::free"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).opaque) as usize - ptr as usize },
+-        16usize,
++        ::std::mem::size_of::<usize>() * 2,
+         "Offset of field: lzma_allocator::opaque"
+     );
+ }
+@@ -151,12 +151,12 @@ fn bindgen_test_layout_lzma_stream() {
+     let ptr = UNINIT.as_ptr();
+     assert_eq!(
+         ::std::mem::size_of::<lzma_stream>(),
+-        136usize,
++        12 * ::std::mem::size_of::<usize>() + 40,
+         "Size of lzma_stream"
+     );
+     assert_eq!(
+         ::std::mem::align_of::<lzma_stream>(),
+-        8usize,
++        ::std::mem::align_of::<u64>(),
+         "Alignment of lzma_stream"
+     );
+     assert_eq!(
+@@ -166,87 +166,87 @@ fn bindgen_test_layout_lzma_stream() {
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).avail_in) as usize - ptr as usize },
+-        8usize,
++        ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_stream::avail_in"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).total_in) as usize - ptr as usize },
+-        16usize,
++        2 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_stream::total_in"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).next_out) as usize - ptr as usize },
+-        24usize,
++        2 * ::std::mem::size_of::<usize>() + 8,
+         "Offset of field: lzma_stream::next_out"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).avail_out) as usize - ptr as usize },
+-        32usize,
++        3 * ::std::mem::size_of::<usize>() + 8,
+         "Offset of field: lzma_stream::avail_out"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).total_out) as usize - ptr as usize },
+-        40usize,
++        4 * ::std::mem::size_of::<usize>() + 8,
+         "Offset of field: lzma_stream::total_out"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).allocator) as usize - ptr as usize },
+-        48usize,
++        4 * ::std::mem::size_of::<usize>() + 16,
+         "Offset of field: lzma_stream::allocator"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).internal) as usize - ptr as usize },
+-        56usize,
++        5 * ::std::mem::size_of::<usize>() + 16,
+         "Offset of field: lzma_stream::internal"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr1) as usize - ptr as usize },
+-        64usize,
++        6 * ::std::mem::size_of::<usize>() + 16,
+         "Offset of field: lzma_stream::reserved_ptr1"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr2) as usize - ptr as usize },
+-        72usize,
++        7 * ::std::mem::size_of::<usize>() + 16,
+         "Offset of field: lzma_stream::reserved_ptr2"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr3) as usize - ptr as usize },
+-        80usize,
++        8 * ::std::mem::size_of::<usize>() + 16,
+         "Offset of field: lzma_stream::reserved_ptr3"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr4) as usize - ptr as usize },
+-        88usize,
++        9 * ::std::mem::size_of::<usize>() + 16,
+         "Offset of field: lzma_stream::reserved_ptr4"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).seek_pos) as usize - ptr as usize },
+-        96usize,
++        10 * ::std::mem::size_of::<usize>() + 16,
+         "Offset of field: lzma_stream::seek_pos"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int2) as usize - ptr as usize },
+-        104usize,
++        10 * ::std::mem::size_of::<usize>() + 24,
+         "Offset of field: lzma_stream::reserved_int2"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int3) as usize - ptr as usize },
+-        112usize,
++        10 * ::std::mem::size_of::<usize>() + 32,
+         "Offset of field: lzma_stream::reserved_int3"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int4) as usize - ptr as usize },
+-        120usize,
++        11 * ::std::mem::size_of::<usize>() + 32,
+         "Offset of field: lzma_stream::reserved_int4"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum1) as usize - ptr as usize },
+-        128usize,
++        12 * ::std::mem::size_of::<usize>() + 32,
+         "Offset of field: lzma_stream::reserved_enum1"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum2) as usize - ptr as usize },
+-        132usize,
++        12 * ::std::mem::size_of::<usize>() + 36,
+         "Offset of field: lzma_stream::reserved_enum2"
+     );
+ }
+@@ -322,12 +322,12 @@ fn bindgen_test_layout_lzma_filter() {
+     let ptr = UNINIT.as_ptr();
+     assert_eq!(
+         ::std::mem::size_of::<lzma_filter>(),
+-        16usize,
++        ::std::mem::size_of::<u64>() + ::std::mem::align_of::<u64>(),
+         "Size of lzma_filter"
+     );
+     assert_eq!(
+         ::std::mem::align_of::<lzma_filter>(),
+-        8usize,
++        ::std::mem::align_of::<u64>(),
+         "Alignment of lzma_filter"
+     );
+     assert_eq!(
+@@ -337,7 +337,7 @@ fn bindgen_test_layout_lzma_filter() {
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).options) as usize - ptr as usize },
+-        8usize,
++        ::std::mem::size_of::<u64>(),
+         "Offset of field: lzma_filter::options"
+     );
+ }
+@@ -517,12 +517,12 @@ fn bindgen_test_layout_lzma_options_delt
+     let ptr = UNINIT.as_ptr();
+     assert_eq!(
+         ::std::mem::size_of::<lzma_options_delta>(),
+-        40usize,
++        24 + 2 * ::std::mem::size_of::<usize>(),
+         "Size of lzma_options_delta"
+     );
+     assert_eq!(
+         ::std::mem::align_of::<lzma_options_delta>(),
+-        8usize,
++        ::std::mem::align_of::<usize>(),
+         "Alignment of lzma_options_delta"
+     );
+     assert_eq!(
+@@ -562,7 +562,7 @@ fn bindgen_test_layout_lzma_options_delt
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr2) as usize - ptr as usize },
+-        32usize,
++        24 + ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_options_delta::reserved_ptr2"
+     );
+ }
+@@ -615,12 +615,12 @@ fn bindgen_test_layout_lzma_options_lzma
+     let ptr = UNINIT.as_ptr();
+     assert_eq!(
+         ::std::mem::size_of::<lzma_options_lzma>(),
+-        112usize,
++        ::std::mem::align_of::<usize>() + 3 * ::std::mem::size_of::<usize>() + 80,
+         "Size of lzma_options_lzma"
+     );
+     assert_eq!(
+         ::std::mem::align_of::<lzma_options_lzma>(),
+-        8usize,
++        ::std::mem::align_of::<usize>(),
+         "Alignment of lzma_options_lzma"
+     );
+     assert_eq!(
+@@ -630,117 +630,118 @@ fn bindgen_test_layout_lzma_options_lzma
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).preset_dict) as usize - ptr as usize },
+-        8usize,
++        // on 64-bit architectures there is 4 bytes of padding before this field
++        ::std::mem::align_of::<usize>(),
+         "Offset of field: lzma_options_lzma::preset_dict"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).preset_dict_size) as usize - ptr as usize },
+-        16usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_options_lzma::preset_dict_size"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).lc) as usize - ptr as usize },
+-        20usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 4,
+         "Offset of field: lzma_options_lzma::lc"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).lp) as usize - ptr as usize },
+-        24usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 8,
+         "Offset of field: lzma_options_lzma::lp"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).pb) as usize - ptr as usize },
+-        28usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 12,
+         "Offset of field: lzma_options_lzma::pb"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).mode) as usize - ptr as usize },
+-        32usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 16,
+         "Offset of field: lzma_options_lzma::mode"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).nice_len) as usize - ptr as usize },
+-        36usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 20,
+         "Offset of field: lzma_options_lzma::nice_len"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).mf) as usize - ptr as usize },
+-        40usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 24,
+         "Offset of field: lzma_options_lzma::mf"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).depth) as usize - ptr as usize },
+-        44usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 28,
+         "Offset of field: lzma_options_lzma::depth"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).ext_flags) as usize - ptr as usize },
+-        48usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 32,
+         "Offset of field: lzma_options_lzma::ext_flags"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).ext_size_low) as usize - ptr as usize },
+-        52usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 36,
+         "Offset of field: lzma_options_lzma::ext_size_low"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).ext_size_high) as usize - ptr as usize },
+-        56usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 40,
+         "Offset of field: lzma_options_lzma::ext_size_high"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int4) as usize - ptr as usize },
+-        60usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 44,
+         "Offset of field: lzma_options_lzma::reserved_int4"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int5) as usize - ptr as usize },
+-        64usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 48,
+         "Offset of field: lzma_options_lzma::reserved_int5"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int6) as usize - ptr as usize },
+-        68usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 52,
+         "Offset of field: lzma_options_lzma::reserved_int6"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int7) as usize - ptr as usize },
+-        72usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 56,
+         "Offset of field: lzma_options_lzma::reserved_int7"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int8) as usize - ptr as usize },
+-        76usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 60,
+         "Offset of field: lzma_options_lzma::reserved_int8"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum1) as usize - ptr as usize },
+-        80usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 64,
+         "Offset of field: lzma_options_lzma::reserved_enum1"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum2) as usize - ptr as usize },
+-        84usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 68,
+         "Offset of field: lzma_options_lzma::reserved_enum2"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum3) as usize - ptr as usize },
+-        88usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 72,
+         "Offset of field: lzma_options_lzma::reserved_enum3"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum4) as usize - ptr as usize },
+-        92usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 76,
+         "Offset of field: lzma_options_lzma::reserved_enum4"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr1) as usize - ptr as usize },
+-        96usize,
++        ::std::mem::align_of::<usize>() + ::std::mem::size_of::<usize>() + 80,
+         "Offset of field: lzma_options_lzma::reserved_ptr1"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr2) as usize - ptr as usize },
+-        104usize,
++        ::std::mem::align_of::<usize>() + 2 * ::std::mem::size_of::<usize>() + 80,
+         "Offset of field: lzma_options_lzma::reserved_ptr2"
+     );
+ }
+@@ -779,12 +780,12 @@ fn bindgen_test_layout_lzma_mt() {
+     let ptr = UNINIT.as_ptr();
+     assert_eq!(
+         ::std::mem::size_of::<lzma_mt>(),
+-        128usize,
++        88 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Size of lzma_mt"
+     );
+     assert_eq!(
+         ::std::mem::align_of::<lzma_mt>(),
+-        8usize,
++        ::std::mem::align_of::<u64>(),
+         "Alignment of lzma_mt"
+     );
+     assert_eq!(
+@@ -819,82 +820,84 @@ fn bindgen_test_layout_lzma_mt() {
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).check) as usize - ptr as usize },
+-        32usize,
++        24 + std::mem::size_of::<usize>(),
+         "Offset of field: lzma_mt::check"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum1) as usize - ptr as usize },
+-        36usize,
++        28 + std::mem::size_of::<usize>(),
+         "Offset of field: lzma_mt::reserved_enum1"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum2) as usize - ptr as usize },
+-        40usize,
++        32 + std::mem::size_of::<usize>(),
+         "Offset of field: lzma_mt::reserved_enum2"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum3) as usize - ptr as usize },
+-        44usize,
++        36 + std::mem::size_of::<usize>(),
+         "Offset of field: lzma_mt::reserved_enum3"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int1) as usize - ptr as usize },
+-        48usize,
++        40 + std::mem::size_of::<usize>(),
+         "Offset of field: lzma_mt::reserved_int1"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int2) as usize - ptr as usize },
+-        52usize,
++        44 + std::mem::size_of::<usize>(),
+         "Offset of field: lzma_mt::reserved_int2"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int3) as usize - ptr as usize },
+-        56usize,
++        48 + std::mem::size_of::<usize>(),
+         "Offset of field: lzma_mt::reserved_int3"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int4) as usize - ptr as usize },
+-        60usize,
++        52 + std::mem::size_of::<usize>(),
+         "Offset of field: lzma_mt::reserved_int4"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).memlimit_threading) as usize - ptr as usize },
+-        64usize,
++        // 4 bytes padding before this field on 32-bit architectures
++        // with 8 byte max alignment.
++        56 + std::mem::align_of::<u64>(),
+         "Offset of field: lzma_mt::memlimit_threading"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).memlimit_stop) as usize - ptr as usize },
+-        72usize,
++        64 + std::mem::align_of::<u64>(),
+         "Offset of field: lzma_mt::memlimit_stop"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int7) as usize - ptr as usize },
+-        80usize,
++        72 + std::mem::align_of::<u64>(),
+         "Offset of field: lzma_mt::reserved_int7"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int8) as usize - ptr as usize },
+-        88usize,
++        80 + std::mem::align_of::<u64>(),
+         "Offset of field: lzma_mt::reserved_int8"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr1) as usize - ptr as usize },
+-        96usize,
++        88 + std::mem::align_of::<u64>(),
+         "Offset of field: lzma_mt::reserved_ptr1"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr2) as usize - ptr as usize },
+-        104usize,
++        88 + std::mem::align_of::<u64>() + std::mem::size_of::<usize>(),
+         "Offset of field: lzma_mt::reserved_ptr2"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr3) as usize - ptr as usize },
+-        112usize,
++        88 + std::mem::align_of::<u64>() + 2 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_mt::reserved_ptr3"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr4) as usize - ptr as usize },
+-        120usize,
++        88 + std::mem::align_of::<u64>() + 3 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_mt::reserved_ptr4"
+     );
+ }
+@@ -1026,12 +1029,12 @@ fn bindgen_test_layout_lzma_stream_flags
+     let ptr = UNINIT.as_ptr();
+     assert_eq!(
+         ::std::mem::size_of::<lzma_stream_flags>(),
+-        56usize,
++        2 * ::std::mem::align_of::<u64>() + 40,
+         "Size of lzma_stream_flags"
+     );
+     assert_eq!(
+         ::std::mem::align_of::<lzma_stream_flags>(),
+-        8usize,
++        ::std::mem::align_of::<u64>(),
+         "Alignment of lzma_stream_flags"
+     );
+     assert_eq!(
+@@ -1041,82 +1044,83 @@ fn bindgen_test_layout_lzma_stream_flags
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).backward_size) as usize - ptr as usize },
+-        8usize,
++        // 4 bytes of padding before this field on architectures with a max alignment of 8
++        ::std::mem::align_of::<u64>(),
+         "Offset of field: lzma_stream_flags::backward_size"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).check) as usize - ptr as usize },
+-        16usize,
++        ::std::mem::align_of::<u64>() + 8,
+         "Offset of field: lzma_stream_flags::check"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum1) as usize - ptr as usize },
+-        20usize,
++        ::std::mem::align_of::<u64>() + 12,
+         "Offset of field: lzma_stream_flags::reserved_enum1"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum2) as usize - ptr as usize },
+-        24usize,
++        ::std::mem::align_of::<u64>() + 16,
+         "Offset of field: lzma_stream_flags::reserved_enum2"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum3) as usize - ptr as usize },
+-        28usize,
++        ::std::mem::align_of::<u64>() + 20,
+         "Offset of field: lzma_stream_flags::reserved_enum3"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum4) as usize - ptr as usize },
+-        32usize,
++        ::std::mem::align_of::<u64>() + 24,
+         "Offset of field: lzma_stream_flags::reserved_enum4"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_bool1) as usize - ptr as usize },
+-        36usize,
++        ::std::mem::align_of::<u64>() + 28,
+         "Offset of field: lzma_stream_flags::reserved_bool1"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_bool2) as usize - ptr as usize },
+-        37usize,
++        ::std::mem::align_of::<u64>() + 29,
+         "Offset of field: lzma_stream_flags::reserved_bool2"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_bool3) as usize - ptr as usize },
+-        38usize,
++        ::std::mem::align_of::<u64>() + 30,
+         "Offset of field: lzma_stream_flags::reserved_bool3"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_bool4) as usize - ptr as usize },
+-        39usize,
++        ::std::mem::align_of::<u64>() + 31,
+         "Offset of field: lzma_stream_flags::reserved_bool4"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_bool5) as usize - ptr as usize },
+-        40usize,
++        ::std::mem::align_of::<u64>() + 32,
+         "Offset of field: lzma_stream_flags::reserved_bool5"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_bool6) as usize - ptr as usize },
+-        41usize,
++        ::std::mem::align_of::<u64>() + 33,
+         "Offset of field: lzma_stream_flags::reserved_bool6"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_bool7) as usize - ptr as usize },
+-        42usize,
++        ::std::mem::align_of::<u64>() + 34,
+         "Offset of field: lzma_stream_flags::reserved_bool7"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_bool8) as usize - ptr as usize },
+-        43usize,
++        ::std::mem::align_of::<u64>() + 35,
+         "Offset of field: lzma_stream_flags::reserved_bool8"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int1) as usize - ptr as usize },
+-        44usize,
++        ::std::mem::align_of::<u64>() + 36,
+         "Offset of field: lzma_stream_flags::reserved_int1"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int2) as usize - ptr as usize },
+-        48usize,
++        ::std::mem::align_of::<u64>() + 40,
+         "Offset of field: lzma_stream_flags::reserved_int2"
+     );
+ }
+@@ -1178,12 +1182,12 @@ fn bindgen_test_layout_lzma_block() {
+     let ptr = UNINIT.as_ptr();
+     assert_eq!(
+         ::std::mem::size_of::<lzma_block>(),
+-        208usize,
++        168 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Size of lzma_block"
+     );
+     assert_eq!(
+         ::std::mem::align_of::<lzma_block>(),
+-        8usize,
++        ::std::mem::align_of::<u64>(),
+         "Alignment of lzma_block"
+     );
+     assert_eq!(
+@@ -1203,137 +1207,137 @@ fn bindgen_test_layout_lzma_block() {
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).compressed_size) as usize - ptr as usize },
+-        16usize,
++        8 + std::mem::align_of::<u64>(),
+         "Offset of field: lzma_block::compressed_size"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).uncompressed_size) as usize - ptr as usize },
+-        24usize,
++        16 + std::mem::align_of::<u64>(),
+         "Offset of field: lzma_block::uncompressed_size"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).filters) as usize - ptr as usize },
+-        32usize,
++        24 + std::mem::align_of::<u64>(),
+         "Offset of field: lzma_block::filters"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).raw_check) as usize - ptr as usize },
+-        40usize,
++        24 + std::mem::align_of::<u64>() + std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::raw_check"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr1) as usize - ptr as usize },
+-        104usize,
++        88 + std::mem::align_of::<u64>() + std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_ptr1"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr2) as usize - ptr as usize },
+-        112usize,
++        88 + std::mem::align_of::<u64>() + 2 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_ptr2"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr3) as usize - ptr as usize },
+-        120usize,
++        88 + std::mem::align_of::<u64>() + 3 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_ptr3"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int1) as usize - ptr as usize },
+-        128usize,
++        88 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_int1"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int2) as usize - ptr as usize },
+-        132usize,
++        92 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_int2"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int3) as usize - ptr as usize },
+-        136usize,
++        96 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_int3"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int4) as usize - ptr as usize },
+-        144usize,
++        104 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_int4"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int5) as usize - ptr as usize },
+-        152usize,
++        112 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_int5"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int6) as usize - ptr as usize },
+-        160usize,
++        120 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_int6"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int7) as usize - ptr as usize },
+-        168usize,
++        128 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_int7"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_int8) as usize - ptr as usize },
+-        176usize,
++        136 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_int8"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum1) as usize - ptr as usize },
+-        184usize,
++        144 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_enum1"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum2) as usize - ptr as usize },
+-        188usize,
++        148 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_enum2"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum3) as usize - ptr as usize },
+-        192usize,
++        152 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_enum3"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_enum4) as usize - ptr as usize },
+-        196usize,
++        156 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_enum4"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).ignore_check) as usize - ptr as usize },
+-        200usize,
++        160 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::ignore_check"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_bool2) as usize - ptr as usize },
+-        201usize,
++        161 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_bool2"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_bool3) as usize - ptr as usize },
+-        202usize,
++        162 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_bool3"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_bool4) as usize - ptr as usize },
+-        203usize,
++        163 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_bool4"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_bool5) as usize - ptr as usize },
+-        204usize,
++        164 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_bool5"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_bool6) as usize - ptr as usize },
+-        205usize,
++        165 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_bool6"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_bool7) as usize - ptr as usize },
+-        206usize,
++        166 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_bool7"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_bool8) as usize - ptr as usize },
+-        207usize,
++        167 + std::mem::align_of::<u64>() + 4 * std::mem::size_of::<usize>(),
+         "Offset of field: lzma_block::reserved_bool8"
+     );
+ }
+@@ -1440,12 +1444,12 @@ fn bindgen_test_layout_lzma_index_iter__
+     let ptr = UNINIT.as_ptr();
+     assert_eq!(
+         ::std::mem::size_of::<lzma_index_iter__bindgen_ty_1>(),
+-        120usize,
++        11 * 8 + 4 * ::std::mem::size_of::<usize>(),
+         "Size of lzma_index_iter__bindgen_ty_1"
+     );
+     assert_eq!(
+         ::std::mem::align_of::<lzma_index_iter__bindgen_ty_1>(),
+-        8usize,
++        ::std::mem::align_of::<u64>(),
+         "Alignment of lzma_index_iter__bindgen_ty_1"
+     );
+     assert_eq!(
+@@ -1455,72 +1459,72 @@ fn bindgen_test_layout_lzma_index_iter__
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr1) as usize - ptr as usize },
+-        8usize,
++        ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_1::reserved_ptr1"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr2) as usize - ptr as usize },
+-        16usize,
++        2 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_1::reserved_ptr2"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr3) as usize - ptr as usize },
+-        24usize,
++        3 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_1::reserved_ptr3"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).number) as usize - ptr as usize },
+-        32usize,
++        4 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_1::number"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).block_count) as usize - ptr as usize },
+-        40usize,
++        8 + 4 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_1::block_count"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).compressed_offset) as usize - ptr as usize },
+-        48usize,
++        2 * 8 + 4 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_1::compressed_offset"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).uncompressed_offset) as usize - ptr as usize },
+-        56usize,
++        3 * 8 + 4 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_1::uncompressed_offset"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).compressed_size) as usize - ptr as usize },
+-        64usize,
++        4 * 8 + 4 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_1::compressed_size"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).uncompressed_size) as usize - ptr as usize },
+-        72usize,
++        5 * 8 + 4 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_1::uncompressed_size"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).padding) as usize - ptr as usize },
+-        80usize,
++        6 * 8 + 4 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_1::padding"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_vli1) as usize - ptr as usize },
+-        88usize,
++        7 * 8 + 4 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_1::reserved_vli1"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_vli2) as usize - ptr as usize },
+-        96usize,
++        8 * 8 + 4 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_1::reserved_vli2"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_vli3) as usize - ptr as usize },
+-        104usize,
++        9 * 8 + 4 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_1::reserved_vli3"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_vli4) as usize - ptr as usize },
+-        112usize,
++        10 * 8 + 4 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_1::reserved_vli4"
+     );
+ }
+@@ -1552,12 +1556,12 @@ fn bindgen_test_layout_lzma_index_iter__
+     let ptr = UNINIT.as_ptr();
+     assert_eq!(
+         ::std::mem::size_of::<lzma_index_iter__bindgen_ty_2>(),
+-        136usize,
++        104 + 4 * ::std::mem::size_of::<usize>(),
+         "Size of lzma_index_iter__bindgen_ty_2"
+     );
+     assert_eq!(
+         ::std::mem::align_of::<lzma_index_iter__bindgen_ty_2>(),
+-        8usize,
++        ::std::mem::align_of::<u64>(),
+         "Alignment of lzma_index_iter__bindgen_ty_2"
+     );
+     assert_eq!(
+@@ -1632,17 +1636,17 @@ fn bindgen_test_layout_lzma_index_iter__
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr2) as usize - ptr as usize },
+-        112usize,
++        104 + ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_2::reserved_ptr2"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr3) as usize - ptr as usize },
+-        120usize,
++        104 + 2 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_2::reserved_ptr3"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).reserved_ptr4) as usize - ptr as usize },
+-        128usize,
++        104 + 3 * ::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter__bindgen_ty_2::reserved_ptr4"
+     );
+ }
+@@ -1660,12 +1664,12 @@ fn bindgen_test_layout_lzma_index_iter__
+     let ptr = UNINIT.as_ptr();
+     assert_eq!(
+         ::std::mem::size_of::<lzma_index_iter__bindgen_ty_3>(),
+-        8usize,
++        ::std::mem::size_of::<u64>(),
+         "Size of lzma_index_iter__bindgen_ty_3"
+     );
+     assert_eq!(
+         ::std::mem::align_of::<lzma_index_iter__bindgen_ty_3>(),
+-        8usize,
++        ::std::mem::align_of::<u64>(),
+         "Alignment of lzma_index_iter__bindgen_ty_3"
+     );
+     assert_eq!(
+@@ -1690,12 +1694,12 @@ fn bindgen_test_layout_lzma_index_iter()
+     let ptr = UNINIT.as_ptr();
+     assert_eq!(
+         ::std::mem::size_of::<lzma_index_iter>(),
+-        304usize,
++        240+ 8*::std::mem::size_of::<usize>(),
+         "Size of lzma_index_iter"
+     );
+     assert_eq!(
+         ::std::mem::align_of::<lzma_index_iter>(),
+-        8usize,
++        ::std::mem::align_of::<u64>(),
+         "Alignment of lzma_index_iter"
+     );
+     assert_eq!(
+@@ -1705,12 +1709,12 @@ fn bindgen_test_layout_lzma_index_iter()
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).block) as usize - ptr as usize },
+-        120usize,
++        88 + 4*::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter::block"
+     );
+     assert_eq!(
+         unsafe { ::std::ptr::addr_of!((*ptr).internal) as usize - ptr as usize },
+-        256usize,
++        192 + 8*::std::mem::size_of::<usize>(),
+         "Offset of field: lzma_index_iter::internal"
+     );
+ }
