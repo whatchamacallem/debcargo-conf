@@ -1,0 +1,33 @@
+From: =?UTF-8?q?Jeremy=20B=C3=ADcha?= <jbicha@ubuntu.com>
+Date: Sat, 20 Sep 2025 11:30:25 -0400
+Subject: [PATCH] Avoid testing 1.27 code
+
+to allow the cross_validate* tests to keep passing
+while gstreamer 1.26 is the current version in Debian Unstable
+--- a/tests/abi.rs
++++ b/tests/abi.rs
+@@ -251,13 +251,6 @@ const RUST_LAYOUTS: &[(&str, Layout)] = &[
+             alignment: align_of::<GstPhysMemoryAllocatorInterface>(),
+         },
+     ),
+-    (
+-        "GstShmAllocator",
+-        Layout {
+-            size: size_of::<GstShmAllocator>(),
+-            alignment: align_of::<GstShmAllocator>(),
+-        },
+-    ),
+     (
+         "GstShmAllocatorClass",
+         Layout {
+--- a/tests/layout.c
++++ b/tests/layout.c
+@@ -15,7 +15,6 @@
+     printf("%s;%zu;%zu\n", "GstFdAllocatorClass", sizeof(GstFdAllocatorClass), alignof(GstFdAllocatorClass));
+     printf("%s;%zu;%zu\n", "GstFdMemoryFlags", sizeof(GstFdMemoryFlags), alignof(GstFdMemoryFlags));
+     printf("%s;%zu;%zu\n", "GstPhysMemoryAllocatorInterface", sizeof(GstPhysMemoryAllocatorInterface), alignof(GstPhysMemoryAllocatorInterface));
+-    printf("%s;%zu;%zu\n", "GstShmAllocator", sizeof(GstShmAllocator), alignof(GstShmAllocator));
+     printf("%s;%zu;%zu\n", "GstShmAllocatorClass", sizeof(GstShmAllocatorClass), alignof(GstShmAllocatorClass));
+     return 0;
+ }
+
