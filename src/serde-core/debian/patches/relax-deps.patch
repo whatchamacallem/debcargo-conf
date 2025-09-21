@@ -1,0 +1,232 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index a63f6a1..0a2b256 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -84,4 +84,4 @@ version = "1"
+ version = "1"
+ 
+ [target."cfg(any())".dependencies.serde_derive]
+-version = "=1.0.226"
++version = "1"
+diff --git a/src/de/mod.rs b/src/de/mod.rs
+index b036f47..78590d5 100644
+--- a/src/de/mod.rs
++++ b/src/de/mod.rs
+@@ -2295,7 +2295,7 @@ pub trait VariantAccess<'de>: Sized {
+ ///
+ /// # Example
+ ///
+-/// ```edition2021
++/// ```ignore
+ /// use serde::de::{value, Deserialize, IntoDeserializer};
+ /// use serde_derive::Deserialize;
+ /// use std::str::FromStr;
+diff --git a/src/de/value.rs b/src/de/value.rs
+index 3d5475d..a60801f 100644
+--- a/src/de/value.rs
++++ b/src/de/value.rs
+@@ -1,7 +1,7 @@
+ //! Building blocks for deserializing basic values using the `IntoDeserializer`
+ //! trait.
+ //!
+-//! ```edition2021
++//! ```ignore
+ //! use serde::de::{value, Deserialize, IntoDeserializer};
+ //! use serde_derive::Deserialize;
+ //! use std::str::FromStr;
+diff --git a/src/ser/fmt.rs b/src/ser/fmt.rs
+index 4b1549f..af98da9 100644
+--- a/src/ser/fmt.rs
++++ b/src/ser/fmt.rs
+@@ -17,7 +17,7 @@ macro_rules! fmt_primitives {
+     };
+ }
+ 
+-/// ```edition2021
++/// ```ignore
+ /// use serde::ser::Serialize;
+ /// use serde_derive::Serialize;
+ /// use std::fmt::{self, Display};
+diff --git a/src/ser/impls.rs b/src/ser/impls.rs
+index a7a175d..3a21b93 100644
+--- a/src/ser/impls.rs
++++ b/src/ser/impls.rs
+@@ -788,6 +788,8 @@ fn format_u8(mut n: u8, out: &mut [u8]) -> usize {
+ #[cfg(any(feature = "std", not(no_core_net)))]
+ #[test]
+ fn test_format_u8() {
++    extern crate alloc;
++    use alloc::string::ToString;
+     let mut i = 0u8;
+ 
+     loop {
+diff --git a/src/ser/impossible.rs b/src/ser/impossible.rs
+index fe69ae2..0431f4c 100644
+--- a/src/ser/impossible.rs
++++ b/src/ser/impossible.rs
+@@ -15,7 +15,7 @@ use crate::ser::{
+ /// [`SerializeTuple`], [`SerializeTupleStruct`], [`SerializeTupleVariant`],
+ /// [`SerializeMap`], [`SerializeStruct`], and [`SerializeStructVariant`].
+ ///
+-/// ```edition2021
++/// ```ignore
+ /// # use serde::ser::{Serializer, Impossible};
+ /// # use serde_core::__private::doc::Error;
+ /// #
+diff --git a/src/ser/mod.rs b/src/ser/mod.rs
+index 62e59d9..25e456e 100644
+--- a/src/ser/mod.rs
++++ b/src/ser/mod.rs
+@@ -410,7 +410,7 @@ pub trait Serializer: Sized {
+ 
+     /// Serialize a `bool` value.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
+@@ -432,7 +432,7 @@ pub trait Serializer: Sized {
+     /// reasonable implementation would be to cast the value to `i64` and
+     /// forward to `serialize_i64`.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
+@@ -454,7 +454,7 @@ pub trait Serializer: Sized {
+     /// reasonable implementation would be to cast the value to `i64` and
+     /// forward to `serialize_i64`.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
+@@ -476,7 +476,7 @@ pub trait Serializer: Sized {
+     /// reasonable implementation would be to cast the value to `i64` and
+     /// forward to `serialize_i64`.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
+@@ -494,7 +494,7 @@ pub trait Serializer: Sized {
+ 
+     /// Serialize an `i64` value.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
+@@ -512,7 +512,7 @@ pub trait Serializer: Sized {
+ 
+     /// Serialize an `i128` value.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
+@@ -539,7 +539,7 @@ pub trait Serializer: Sized {
+     /// reasonable implementation would be to cast the value to `u64` and
+     /// forward to `serialize_u64`.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
+@@ -561,7 +561,7 @@ pub trait Serializer: Sized {
+     /// reasonable implementation would be to cast the value to `u64` and
+     /// forward to `serialize_u64`.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
+@@ -583,7 +583,7 @@ pub trait Serializer: Sized {
+     /// reasonable implementation would be to cast the value to `u64` and
+     /// forward to `serialize_u64`.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
+@@ -601,7 +601,7 @@ pub trait Serializer: Sized {
+ 
+     /// Serialize a `u64` value.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
+@@ -619,7 +619,7 @@ pub trait Serializer: Sized {
+ 
+     /// Serialize a `u128` value.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
+@@ -646,7 +646,7 @@ pub trait Serializer: Sized {
+     /// reasonable implementation would be to cast the value to `f64` and
+     /// forward to `serialize_f64`.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
+@@ -664,7 +664,7 @@ pub trait Serializer: Sized {
+ 
+     /// Serialize an `f64` value.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
+@@ -685,7 +685,7 @@ pub trait Serializer: Sized {
+     /// If the format does not support characters, it is reasonable to serialize
+     /// it as a single element `str` or a `u32`.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
+@@ -703,7 +703,7 @@ pub trait Serializer: Sized {
+ 
+     /// Serialize a `&str`.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
+@@ -727,7 +727,7 @@ pub trait Serializer: Sized {
+     /// `serialize_seq`. If forwarded, the implementation looks usually just
+     /// like this:
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::ser::{Serializer, SerializeSeq};
+     /// # use serde_core::__private::doc::Error;
+     /// #
+@@ -824,7 +824,7 @@ pub trait Serializer: Sized {
+ 
+     /// Serialize a `()` value.
+     ///
+-    /// ```edition2021
++    /// ```ignore
+     /// # use serde::Serializer;
+     /// #
+     /// # serde_core::__private_serialize!();
