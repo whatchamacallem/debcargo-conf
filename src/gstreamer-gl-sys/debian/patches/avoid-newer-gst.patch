@@ -1,0 +1,26 @@
+From: =?UTF-8?q?Jeremy=20B=C3=ADcha?= <jbicha@ubuntu.com>
+Date: Sat, 20 Sep 2025 10:48:10 -0400
+Subject: Revert symbol additition from gstreamer 1.27
+
+which isn't in Debian Unstable yet
+to allow the cross_validate tests to keep passing
+--- a/tests/abi.rs
++++ b/tests/abi.rs
+@@ -844,7 +844,6 @@
+     ("(guint) GST_GL_DISPLAY_TYPE_WIN32", "8"),
+     ("(guint) GST_GL_DISPLAY_TYPE_WINRT", "1024"),
+     ("(guint) GST_GL_DISPLAY_TYPE_X11", "1"),
+-    ("(guint) GST_GL_DRM_FORMAT_DIRECT_IMPORT", "8"),
+     ("(guint) GST_GL_DRM_FORMAT_INCLUDE_EMULATED", "4"),
+     ("(guint) GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL", "1"),
+     ("(guint) GST_GL_DRM_FORMAT_LINEAR_ONLY", "2"),
+--- a/tests/constant.c
++++ b/tests/constant.c
+@@ -121,7 +121,6 @@
+     PRINT_CONSTANT((guint) GST_GL_DISPLAY_TYPE_WIN32);
+     PRINT_CONSTANT((guint) GST_GL_DISPLAY_TYPE_WINRT);
+     PRINT_CONSTANT((guint) GST_GL_DISPLAY_TYPE_X11);
+-    PRINT_CONSTANT((guint) GST_GL_DRM_FORMAT_DIRECT_IMPORT);
+     PRINT_CONSTANT((guint) GST_GL_DRM_FORMAT_INCLUDE_EMULATED);
+     PRINT_CONSTANT((guint) GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL);
+     PRINT_CONSTANT((guint) GST_GL_DRM_FORMAT_LINEAR_ONLY);
