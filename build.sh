@@ -72,7 +72,8 @@ if [ -z "$CHROOT" ]; then
 		echo >&2 "Automatically using sbuild chroot unstable-${DEB_HOST_ARCH}-sbuild; however it's"
 		echo >&2 "strongly recommended to create a separate chroot debcargo-unstable-${DEB_HOST_ARCH}-sbuild"
 		echo >&2 "so your builds won't have to re-download & re-install cargo, rustc, and llvm every time."
-		echo >&2 "See README.rst section \"Build environment\" for details."
+		echo >&2 "See the section \"Setting up\" of the Debian Rust Team Book for details:"
+		echo >&2 "https://rust-team.pages.debian.net/book/process-single.html#setting-up"
 		sleep 1
 	elif [ "$SOURCEONLY" != 1 ]; then
 		abort 1 "could not automatically find a suitable chroot; set CHROOT"
