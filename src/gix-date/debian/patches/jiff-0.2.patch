@@ -1,0 +1,38 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 3ae99a42f51cd2d6c55c6abbd1ead86bf8bf2e1f
+Author: tison <wander4096@gmail.com>
+Date:   Tue Feb 11 22:58:55 2025 +0800
+
+    build: upgrade to jiff 0.2
+    
+    Signed-off-by: tison <wander4096@gmail.com>
+
+Index: gix-date/src/parse.rs
+===================================================================
+--- gix-date.orig/src/parse.rs
++++ gix-date/src/parse.rs
+@@ -167,7 +167,8 @@ mod relative {
+ 
+         #[test]
+         fn two_weeks_ago() {
+-            assert_eq!(parse_inner("2 weeks ago").unwrap().unwrap(), Span::new().weeks(2));
++            let actual = parse_inner("2 weeks ago").unwrap().unwrap();
++            assert_eq!(actual.fieldwise(), Span::new().weeks(2));
+         }
+     }
+ }
+Index: gix-date/Cargo.toml
+===================================================================
+--- gix-date.orig/Cargo.toml
++++ gix-date/Cargo.toml
+@@ -52,7 +52,7 @@ optional = true
+ version = "1.0.1"
+ 
+ [dependencies.jiff]
+-version = "0.1.1"
++version = ">= 0.1.28, <0.3"
+ 
+ [dependencies.serde]
+ version = "1.0.114"
