@@ -1,0 +1,42 @@
+diff --git a/src/call.rs b/src/call.rs
+index fd01b07..56280e9 100644
+--- a/src/call.rs
++++ b/src/call.rs
+@@ -67,8 +67,8 @@ impl<'src> Call<'src> {
+             let rbrace = template[index..].find('}').map(|pos| index + pos);
+ 
+             // Left brace
+-            if let Some(lbrace_pos) = lbrace
+-                && (rbrace.is_none() || rbrace.unwrap() > lbrace_pos)
++            if let Some(lbrace_pos) = lbrace {
++                if rbrace.is_none() || rbrace.unwrap() > lbrace_pos
+             {
+                 // Escaped left brace
+                 if template.as_bytes().get(lbrace_pos + 1) == Some(&b'{') {
+@@ -78,9 +78,9 @@ impl<'src> Call<'src> {
+                 }
+ 
+                 // Left brace, number, optional format specifiers, right brace
+-                if let Some(rbrace_pos) = rbrace
+-                    && rbrace_pos > lbrace_pos + 1
+-                    && let Some(arg_index) = Self::read_arg_index(&template, lbrace_pos + 1)
++                if let Some(rbrace_pos) = rbrace {
++                    if rbrace_pos > lbrace_pos + 1 {
++                    if let Some(arg_index) = Self::read_arg_index(&template, lbrace_pos + 1)
+                 {
+                     // Check parameter count
+                     if 1 + arg_index > args.len() - 1 {
+@@ -97,11 +97,11 @@ impl<'src> Call<'src> {
+                     result.push_str(&args[1 + arg_index].sema().to_string());
+                     index = rbrace_pos + 1;
+                     continue;
+-                }
++                }}}
+ 
+                 // Invalid format string
+                 return None;
+-            }
++            }}
+ 
+             // Right brace
+             if let Some(rbrace_pos) = rbrace {
