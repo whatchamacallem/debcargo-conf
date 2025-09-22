@@ -2,7 +2,7 @@ Index: jiff/src/civil/date.rs
 ===================================================================
 --- jiff.orig/src/civil/date.rs
 +++ jiff/src/civil/date.rs
-@@ -4049,6 +4049,7 @@ mod tests {
+@@ -4039,6 +4039,7 @@ mod tests {
      /// - <https://github.com/BurntSushi/jiff/issues/138>
      /// - <https://github.com/BurntSushi/jiff/discussions/148>
      #[test]
@@ -14,7 +14,7 @@ Index: jiff/src/civil/datetime.rs
 ===================================================================
 --- jiff.orig/src/civil/datetime.rs
 +++ jiff/src/civil/datetime.rs
-@@ -4399,6 +4399,7 @@ mod tests {
+@@ -4548,6 +4548,7 @@ mod tests {
      /// - <https://github.com/BurntSushi/jiff/issues/138>
      /// - <https://github.com/BurntSushi/jiff/discussions/148>
      #[test]
@@ -26,7 +26,7 @@ Index: jiff/src/civil/time.rs
 ===================================================================
 --- jiff.orig/src/civil/time.rs
 +++ jiff/src/civil/time.rs
-@@ -3388,6 +3388,7 @@ mod tests {
+@@ -3504,6 +3504,7 @@ mod tests {
      /// - <https://github.com/BurntSushi/jiff/issues/138>
      /// - <https://github.com/BurntSushi/jiff/discussions/148>
      #[test]
@@ -38,7 +38,7 @@ Index: jiff/src/signed_duration.rs
 ===================================================================
 --- jiff.orig/src/signed_duration.rs
 +++ jiff/src/signed_duration.rs
-@@ -2615,6 +2615,7 @@ mod tests {
+@@ -2698,6 +2698,7 @@ mod tests {
      /// - <https://github.com/BurntSushi/jiff/issues/138>
      /// - <https://github.com/BurntSushi/jiff/discussions/148>
      #[test]
@@ -46,7 +46,7 @@ Index: jiff/src/signed_duration.rs
      fn signed_duration_deserialize_yaml() {
          let expected = SignedDuration::from_secs(123456789);
  
-@@ -2636,6 +2637,7 @@ mod tests {
+@@ -2719,6 +2720,7 @@ mod tests {
      }
  
      #[test]
@@ -54,7 +54,7 @@ Index: jiff/src/signed_duration.rs
      fn from_str() {
          let p = |s: &str| -> Result<SignedDuration, Error> { s.parse() };
  
-@@ -2679,6 +2681,7 @@ mod tests {
+@@ -2762,6 +2764,7 @@ mod tests {
      }
  
      #[test]
@@ -66,7 +66,7 @@ Index: jiff/src/span.rs
 ===================================================================
 --- jiff.orig/src/span.rs
 +++ jiff/src/span.rs
-@@ -7030,6 +7030,7 @@ mod tests {
+@@ -7134,6 +7134,7 @@ mod tests {
      /// - <https://github.com/BurntSushi/jiff/issues/138>
      /// - <https://github.com/BurntSushi/jiff/discussions/148>
      #[test]
@@ -74,7 +74,7 @@ Index: jiff/src/span.rs
      fn span_deserialize_yaml() {
          let expected = Span::new()
              .years(1)
-@@ -7134,6 +7135,7 @@ mod tests {
+@@ -7238,6 +7239,7 @@ mod tests {
      }
  
      #[test]
@@ -82,7 +82,7 @@ Index: jiff/src/span.rs
      fn from_str() {
          let p = |s: &str| -> Result<Span, Error> { s.parse() };
  
-@@ -7177,6 +7179,7 @@ mod tests {
+@@ -7281,6 +7283,7 @@ mod tests {
      }
  
      #[test]
@@ -94,7 +94,23 @@ Index: jiff/src/timestamp.rs
 ===================================================================
 --- jiff.orig/src/timestamp.rs
 +++ jiff/src/timestamp.rs
-@@ -3742,6 +3742,7 @@ mod tests {
+@@ -3849,6 +3849,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn timestamp_saturating_add() {
+         insta::assert_snapshot!(
+             Timestamp::MIN.saturating_add(Span::new().days(1)).unwrap_err(),
+@@ -3857,6 +3858,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn timestamp_saturating_sub() {
+         insta::assert_snapshot!(
+             Timestamp::MAX.saturating_sub(Span::new().days(1)).unwrap_err(),
+@@ -3910,6 +3912,7 @@ mod tests {
      /// - <https://github.com/BurntSushi/jiff/issues/138>
      /// - <https://github.com/BurntSushi/jiff/discussions/148>
      #[test]
@@ -106,7 +122,7 @@ Index: jiff/src/zoned.rs
 ===================================================================
 --- jiff.orig/src/zoned.rs
 +++ jiff/src/zoned.rs
-@@ -5396,6 +5396,7 @@ mod tests {
+@@ -5578,6 +5578,7 @@ mod tests {
      /// - <https://github.com/BurntSushi/jiff/issues/138>
      /// - <https://github.com/BurntSushi/jiff/discussions/148>
      #[test]
@@ -114,7 +130,7 @@ Index: jiff/src/zoned.rs
      fn zoned_deserialize_yaml() {
          if crate::tz::db().is_definitively_empty() {
              return;
-@@ -5453,6 +5454,8 @@ mod tests {
+@@ -5635,6 +5636,8 @@ mod tests {
      ///
      /// See: <https://github.com/BurntSushi/jiff/issues/211>
      #[test]
@@ -127,7 +143,7 @@ Index: jiff/Cargo.toml
 ===================================================================
 --- jiff.orig/Cargo.toml
 +++ jiff/Cargo.toml
-@@ -85,7 +85,7 @@ tzdb-bundle-always = [
+@@ -94,7 +94,7 @@ tzdb-bundle-always = [
  tzdb-bundle-platform = [
      "alloc",
  ]
@@ -140,7 +156,7 @@ Index: jiff/src/fmt/offset.rs
 ===================================================================
 --- jiff.orig/src/fmt/offset.rs
 +++ jiff/src/fmt/offset.rs
-@@ -815,6 +815,7 @@ mod tests {
+@@ -932,6 +932,7 @@ mod tests {
      // that if it's called, then the caller expects a numeric UTC offset at
      // that position.
      #[test]
@@ -148,7 +164,7 @@ Index: jiff/src/fmt/offset.rs
      fn err_numeric_empty() {
          insta::assert_snapshot!(
              Parser::new().parse_numeric(b"").unwrap_err(),
-@@ -824,6 +825,7 @@ mod tests {
+@@ -941,6 +942,7 @@ mod tests {
  
      // A numeric offset always has to begin with a '+' or a '-'.
      #[test]
@@ -156,7 +172,7 @@ Index: jiff/src/fmt/offset.rs
      fn err_numeric_notsign() {
          insta::assert_snapshot!(
              Parser::new().parse_numeric(b"*").unwrap_err(),
-@@ -833,6 +835,7 @@ mod tests {
+@@ -950,6 +952,7 @@ mod tests {
  
      // The hours component must be at least two bytes.
      #[test]
@@ -164,7 +180,7 @@ Index: jiff/src/fmt/offset.rs
      fn err_numeric_hours_too_short() {
          insta::assert_snapshot!(
              Parser::new().parse_numeric(b"+a").unwrap_err(),
-@@ -842,6 +845,7 @@ mod tests {
+@@ -959,6 +962,7 @@ mod tests {
  
      // The hours component must be at least two ASCII digits.
      #[test]
@@ -172,7 +188,7 @@ Index: jiff/src/fmt/offset.rs
      fn err_numeric_hours_invalid_digits() {
          insta::assert_snapshot!(
              Parser::new().parse_numeric(b"+ab").unwrap_err(),
-@@ -851,6 +855,7 @@ mod tests {
+@@ -968,6 +972,7 @@ mod tests {
  
      // The hours component must be in range.
      #[test]
@@ -180,7 +196,7 @@ Index: jiff/src/fmt/offset.rs
      fn err_numeric_hours_out_of_range() {
          insta::assert_snapshot!(
              Parser::new().parse_numeric(b"-26").unwrap_err(),
-@@ -860,6 +865,7 @@ mod tests {
+@@ -977,6 +982,7 @@ mod tests {
  
      // The minutes component must be at least two bytes.
      #[test]
@@ -188,7 +204,7 @@ Index: jiff/src/fmt/offset.rs
      fn err_numeric_minutes_too_short() {
          insta::assert_snapshot!(
              Parser::new().parse_numeric(b"+05:a").unwrap_err(),
-@@ -869,6 +875,7 @@ mod tests {
+@@ -986,6 +992,7 @@ mod tests {
  
      // The minutes component must be at least two ASCII digits.
      #[test]
@@ -196,7 +212,7 @@ Index: jiff/src/fmt/offset.rs
      fn err_numeric_minutes_invalid_digits() {
          insta::assert_snapshot!(
              Parser::new().parse_numeric(b"+05:ab").unwrap_err(),
-@@ -878,6 +885,7 @@ mod tests {
+@@ -995,6 +1002,7 @@ mod tests {
  
      // The minutes component must be in range.
      #[test]
@@ -204,7 +220,7 @@ Index: jiff/src/fmt/offset.rs
      fn err_numeric_minutes_out_of_range() {
          insta::assert_snapshot!(
              Parser::new().parse_numeric(b"-05:60").unwrap_err(),
-@@ -887,6 +895,7 @@ mod tests {
+@@ -1004,6 +1012,7 @@ mod tests {
  
      // The seconds component must be at least two bytes.
      #[test]
@@ -212,7 +228,7 @@ Index: jiff/src/fmt/offset.rs
      fn err_numeric_seconds_too_short() {
          insta::assert_snapshot!(
              Parser::new().parse_numeric(b"+05:30:a").unwrap_err(),
-@@ -896,6 +905,7 @@ mod tests {
+@@ -1013,6 +1022,7 @@ mod tests {
  
      // The seconds component must be at least two ASCII digits.
      #[test]
@@ -220,7 +236,7 @@ Index: jiff/src/fmt/offset.rs
      fn err_numeric_seconds_invalid_digits() {
          insta::assert_snapshot!(
              Parser::new().parse_numeric(b"+05:30:ab").unwrap_err(),
-@@ -905,6 +915,7 @@ mod tests {
+@@ -1022,6 +1032,7 @@ mod tests {
  
      // The seconds component must be in range.
      #[test]
@@ -228,7 +244,7 @@ Index: jiff/src/fmt/offset.rs
      fn err_numeric_seconds_out_of_range() {
          insta::assert_snapshot!(
              Parser::new().parse_numeric(b"-05:30:60").unwrap_err(),
-@@ -915,6 +926,7 @@ mod tests {
+@@ -1032,6 +1043,7 @@ mod tests {
      // The fraction component, if present as indicated by a separator, must be
      // non-empty.
      #[test]
@@ -236,7 +252,7 @@ Index: jiff/src/fmt/offset.rs
      fn err_numeric_fraction_non_empty() {
          insta::assert_snapshot!(
              Parser::new().parse_numeric(b"-05:30:44.").unwrap_err(),
-@@ -950,6 +962,7 @@ mod tests {
+@@ -1067,6 +1079,7 @@ mod tests {
      // requested, but that it is has been forcefully disabled. This error is
      // meant to make what is likely a subtle failure mode more explicit.
      #[test]
@@ -244,7 +260,7 @@ Index: jiff/src/fmt/offset.rs
      fn err_numeric_subminute_disabled_but_desired() {
          insta::assert_snapshot!(
              Parser::new().subminute(false).parse_numeric(b"-05:59:32").unwrap_err(),
-@@ -960,6 +973,7 @@ mod tests {
+@@ -1077,6 +1090,7 @@ mod tests {
      // Another special case where Zulu parsing has been explicitly disabled,
      // but a Zulu string was found.
      #[test]
@@ -252,7 +268,7 @@ Index: jiff/src/fmt/offset.rs
      fn err_zulu_disabled_but_desired() {
          insta::assert_snapshot!(
              Parser::new().zulu(false).parse(b"Z").unwrap_err(),
-@@ -976,6 +990,7 @@ mod tests {
+@@ -1093,6 +1107,7 @@ mod tests {
      // isn't true is when there is a fractional nanosecond part along with
      // maximal
      #[test]
@@ -260,7 +276,7 @@ Index: jiff/src/fmt/offset.rs
      fn err_numeric_too_big_for_offset() {
          let numeric = Numeric {
              sign: t::Sign::MAX_SELF,
-@@ -1001,6 +1016,7 @@ mod tests {
+@@ -1118,6 +1133,7 @@ mod tests {
  
      // Same as numeric_too_big_for_offset, but at the minimum boundary.
      #[test]
@@ -272,7 +288,7 @@ Index: jiff/src/fmt/rfc2822.rs
 ===================================================================
 --- jiff.orig/src/fmt/rfc2822.rs
 +++ jiff/src/fmt/rfc2822.rs
-@@ -1688,6 +1688,7 @@ mod tests {
+@@ -1736,6 +1736,7 @@ mod tests {
      }
  
      #[test]
@@ -280,7 +296,7 @@ Index: jiff/src/fmt/rfc2822.rs
      fn err_parse_invalid() {
          let p = |input| {
              DateTimeParser::new().parse_zoned(input).unwrap_err().to_string()
-@@ -1716,6 +1717,7 @@ mod tests {
+@@ -1769,6 +1770,7 @@ mod tests {
      }
  
      #[test]
@@ -288,7 +304,7 @@ Index: jiff/src/fmt/rfc2822.rs
      fn err_parse_incomplete() {
          let p = |input| {
              DateTimeParser::new().parse_zoned(input).unwrap_err().to_string()
-@@ -1800,6 +1802,7 @@ mod tests {
+@@ -1865,6 +1867,7 @@ mod tests {
      }
  
      #[test]
@@ -300,7 +316,7 @@ Index: jiff/src/fmt/rfc9557.rs
 ===================================================================
 --- jiff.orig/src/fmt/rfc9557.rs
 +++ jiff/src/fmt/rfc9557.rs
-@@ -900,6 +900,7 @@ mod tests {
+@@ -891,6 +891,7 @@ mod tests {
      }
  
      #[test]
@@ -308,7 +324,7 @@ Index: jiff/src/fmt/rfc9557.rs
      fn err_iana() {
          insta::assert_snapshot!(
              Parser::new().parse(b"[0/Foo]").unwrap_err(),
-@@ -912,6 +913,7 @@ mod tests {
+@@ -903,6 +904,7 @@ mod tests {
      }
  
      #[test]
@@ -316,7 +332,7 @@ Index: jiff/src/fmt/rfc9557.rs
      fn err_offset() {
          insta::assert_snapshot!(
              Parser::new().parse(b"[+").unwrap_err(),
-@@ -936,6 +938,7 @@ mod tests {
+@@ -927,6 +929,7 @@ mod tests {
      }
  
      #[test]
@@ -324,7 +340,7 @@ Index: jiff/src/fmt/rfc9557.rs
      fn err_critical_unsupported() {
          insta::assert_snapshot!(
              Parser::new().parse(b"[!u-ca=chinese]").unwrap_err(),
-@@ -944,6 +947,7 @@ mod tests {
+@@ -935,6 +938,7 @@ mod tests {
      }
  
      #[test]
@@ -332,7 +348,7 @@ Index: jiff/src/fmt/rfc9557.rs
      fn err_key_leading_char() {
          insta::assert_snapshot!(
              Parser::new().parse(b"[").unwrap_err(),
-@@ -964,6 +968,7 @@ mod tests {
+@@ -955,6 +959,7 @@ mod tests {
      }
  
      #[test]
@@ -340,7 +356,7 @@ Index: jiff/src/fmt/rfc9557.rs
      fn err_separator() {
          insta::assert_snapshot!(
              Parser::new().parse(b"[abc").unwrap_err(),
-@@ -992,6 +997,7 @@ mod tests {
+@@ -983,6 +988,7 @@ mod tests {
      }
  
      #[test]
@@ -348,7 +364,7 @@ Index: jiff/src/fmt/rfc9557.rs
      fn err_value() {
          insta::assert_snapshot!(
              Parser::new().parse(b"[abc=").unwrap_err(),
-@@ -1012,6 +1018,7 @@ mod tests {
+@@ -1003,6 +1009,7 @@ mod tests {
      }
  
      #[test]
@@ -360,7 +376,7 @@ Index: jiff/src/fmt/friendly/parser.rs
 ===================================================================
 --- jiff.orig/src/fmt/friendly/parser.rs
 +++ jiff/src/fmt/friendly/parser.rs
-@@ -1065,6 +1065,7 @@ mod tests {
+@@ -1069,6 +1069,7 @@ mod tests {
      }
  
      #[test]
@@ -368,7 +384,7 @@ Index: jiff/src/fmt/friendly/parser.rs
      fn err_span_basic() {
          let p = |s: &str| SpanParser::new().parse_span(s).unwrap_err();
  
-@@ -1103,6 +1104,7 @@ mod tests {
+@@ -1107,6 +1108,7 @@ mod tests {
      }
  
      #[test]
@@ -376,7 +392,7 @@ Index: jiff/src/fmt/friendly/parser.rs
      fn err_span_sign() {
          let p = |s: &str| SpanParser::new().parse_span(s).unwrap_err();
  
-@@ -1125,6 +1127,7 @@ mod tests {
+@@ -1129,6 +1131,7 @@ mod tests {
      }
  
      #[test]
@@ -384,7 +400,7 @@ Index: jiff/src/fmt/friendly/parser.rs
      fn err_span_overflow_fraction() {
          let p = |s: &str| SpanParser::new().parse_span(s).unwrap();
          let pe = |s: &str| SpanParser::new().parse_span(s).unwrap_err();
-@@ -1157,6 +1160,7 @@ mod tests {
+@@ -1161,6 +1164,7 @@ mod tests {
      }
  
      #[test]
@@ -392,7 +408,7 @@ Index: jiff/src/fmt/friendly/parser.rs
      fn err_span_overflow_units() {
          let p = |s: &str| SpanParser::new().parse_span(s).unwrap_err();
  
-@@ -1207,6 +1211,7 @@ mod tests {
+@@ -1211,6 +1215,7 @@ mod tests {
      }
  
      #[test]
@@ -400,7 +416,7 @@ Index: jiff/src/fmt/friendly/parser.rs
      fn err_span_fraction() {
          let p = |s: &str| SpanParser::new().parse_span(s).unwrap_err();
  
-@@ -1221,6 +1226,7 @@ mod tests {
+@@ -1225,6 +1230,7 @@ mod tests {
      }
  
      #[test]
@@ -408,7 +424,7 @@ Index: jiff/src/fmt/friendly/parser.rs
      fn err_span_hms() {
          let p = |s: &str| SpanParser::new().parse_span(s).unwrap_err();
  
-@@ -1252,6 +1258,7 @@ mod tests {
+@@ -1256,6 +1262,7 @@ mod tests {
      }
  
      #[test]
@@ -416,7 +432,7 @@ Index: jiff/src/fmt/friendly/parser.rs
      fn parse_duration_negate() {
          let p = |s: &str| SpanParser::new().parse_duration(s).unwrap();
          let perr = |s: &str| SpanParser::new().parse_duration(s).unwrap_err();
-@@ -1297,6 +1304,7 @@ mod tests {
+@@ -1301,6 +1308,7 @@ mod tests {
      }
  
      #[test]
@@ -424,7 +440,7 @@ Index: jiff/src/fmt/friendly/parser.rs
      fn parse_duration_boundaries() {
          let p = |s: &str| SpanParser::new().parse_duration(s).unwrap();
          let pe = |s: &str| SpanParser::new().parse_duration(s).unwrap_err();
-@@ -1357,6 +1365,7 @@ mod tests {
+@@ -1361,6 +1369,7 @@ mod tests {
      }
  
      #[test]
@@ -432,7 +448,7 @@ Index: jiff/src/fmt/friendly/parser.rs
      fn err_duration_basic() {
          let p = |s: &str| SpanParser::new().parse_duration(s).unwrap_err();
  
-@@ -1399,6 +1408,7 @@ mod tests {
+@@ -1403,6 +1412,7 @@ mod tests {
      }
  
      #[test]
@@ -440,7 +456,7 @@ Index: jiff/src/fmt/friendly/parser.rs
      fn err_duration_sign() {
          let p = |s: &str| SpanParser::new().parse_duration(s).unwrap_err();
  
-@@ -1421,6 +1431,7 @@ mod tests {
+@@ -1425,6 +1435,7 @@ mod tests {
      }
  
      #[test]
@@ -448,7 +464,7 @@ Index: jiff/src/fmt/friendly/parser.rs
      fn err_duration_overflow_fraction() {
          let p = |s: &str| SpanParser::new().parse_duration(s).unwrap();
          let pe = |s: &str| SpanParser::new().parse_duration(s).unwrap_err();
-@@ -1439,6 +1450,7 @@ mod tests {
+@@ -1443,6 +1454,7 @@ mod tests {
      }
  
      #[test]
@@ -456,7 +472,7 @@ Index: jiff/src/fmt/friendly/parser.rs
      fn err_duration_fraction() {
          let p = |s: &str| SpanParser::new().parse_duration(s).unwrap_err();
  
-@@ -1449,6 +1461,7 @@ mod tests {
+@@ -1453,6 +1465,7 @@ mod tests {
      }
  
      #[test]
@@ -468,7 +484,7 @@ Index: jiff/src/fmt/strtime/format.rs
 ===================================================================
 --- jiff.orig/src/fmt/strtime/format.rs
 +++ jiff/src/fmt/strtime/format.rs
-@@ -1171,6 +1171,7 @@ mod tests {
+@@ -1489,6 +1489,7 @@ mod tests {
      }
  
      #[test]
@@ -476,7 +492,7 @@ Index: jiff/src/fmt/strtime/format.rs
      fn err_format_subsec_nanosecond() {
          let f = |fmt: &str, time: Time| format(fmt, time).unwrap_err();
          let mk = |subsec| time(0, 0, 0, subsec);
-@@ -1182,6 +1183,7 @@ mod tests {
+@@ -1500,6 +1501,7 @@ mod tests {
      }
  
      #[test]
@@ -488,7 +504,7 @@ Index: jiff/src/fmt/strtime/parse.rs
 ===================================================================
 --- jiff.orig/src/fmt/strtime/parse.rs
 +++ jiff/src/fmt/strtime/parse.rs
-@@ -1776,6 +1776,7 @@ mod tests {
+@@ -1816,6 +1816,7 @@ mod tests {
      }
  
      #[test]
@@ -496,7 +512,7 @@ Index: jiff/src/fmt/strtime/parse.rs
      fn err_parse() {
          let p = |fmt: &str, input: &str| {
              BrokenDownTime::parse_mono(fmt.as_bytes(), input.as_bytes())
-@@ -1968,6 +1969,7 @@ mod tests {
+@@ -2020,6 +2021,7 @@ mod tests {
      }
  
      #[test]
@@ -504,7 +520,7 @@ Index: jiff/src/fmt/strtime/parse.rs
      fn err_parse_date() {
          let p = |fmt: &str, input: &str| {
              BrokenDownTime::parse_mono(fmt.as_bytes(), input.as_bytes())
-@@ -2030,6 +2032,7 @@ mod tests {
+@@ -2082,6 +2084,7 @@ mod tests {
      }
  
      #[test]
@@ -516,7 +532,7 @@ Index: jiff/src/fmt/temporal/mod.rs
 ===================================================================
 --- jiff.orig/src/fmt/temporal/mod.rs
 +++ jiff/src/fmt/temporal/mod.rs
-@@ -1989,6 +1989,7 @@ mod tests {
+@@ -2330,6 +2330,7 @@ mod tests {
      // This test ensures that strings like `2024-07-15+02` fail to parse.
      // Note though that `2024-07-15[America/New_York]` is okay!
      #[test]
@@ -524,7 +540,7 @@ Index: jiff/src/fmt/temporal/mod.rs
      fn err_temporal_datetime_offset() {
          insta::assert_snapshot!(
              DateTimeParser::new().parse_date(b"2024-07-15+02").unwrap_err(),
-@@ -2001,6 +2002,7 @@ mod tests {
+@@ -2342,6 +2343,7 @@ mod tests {
      }
  
      #[test]
@@ -536,7 +552,7 @@ Index: jiff/src/fmt/temporal/parser.rs
 ===================================================================
 --- jiff.orig/src/fmt/temporal/parser.rs
 +++ jiff/src/fmt/temporal/parser.rs
-@@ -1471,6 +1471,7 @@ mod tests {
+@@ -1671,6 +1671,7 @@ mod tests {
      }
  
      #[test]
@@ -544,7 +560,7 @@ Index: jiff/src/fmt/temporal/parser.rs
      fn err_signed_duration() {
          let p = |input| {
              SpanParser::new().parse_signed_duration(input).unwrap_err()
-@@ -2198,6 +2199,7 @@ mod tests {
+@@ -2398,6 +2399,7 @@ mod tests {
      }
  
      #[test]
@@ -552,7 +568,7 @@ Index: jiff/src/fmt/temporal/parser.rs
      fn err_temporal_time_ambiguous() {
          let p = |input| {
              DateTimeParser::new().parse_temporal_time(input).unwrap_err()
-@@ -2214,6 +2216,7 @@ mod tests {
+@@ -2414,6 +2416,7 @@ mod tests {
      }
  
      #[test]
@@ -560,7 +576,7 @@ Index: jiff/src/fmt/temporal/parser.rs
      fn err_temporal_time_missing_time() {
          let p = |input| {
              DateTimeParser::new().parse_temporal_time(input).unwrap_err()
-@@ -2315,6 +2318,7 @@ mod tests {
+@@ -2515,6 +2518,7 @@ mod tests {
      }
  
      #[test]
@@ -568,7 +584,7 @@ Index: jiff/src/fmt/temporal/parser.rs
      fn err_date_empty() {
          insta::assert_snapshot!(
              DateTimeParser::new().parse_date_spec(b"").unwrap_err(),
-@@ -2323,6 +2327,7 @@ mod tests {
+@@ -2523,6 +2527,7 @@ mod tests {
      }
  
      #[test]
@@ -576,7 +592,7 @@ Index: jiff/src/fmt/temporal/parser.rs
      fn err_date_year() {
          insta::assert_snapshot!(
              DateTimeParser::new().parse_date_spec(b"123").unwrap_err(),
-@@ -2364,6 +2369,7 @@ mod tests {
+@@ -2564,6 +2569,7 @@ mod tests {
      }
  
      #[test]
@@ -584,7 +600,7 @@ Index: jiff/src/fmt/temporal/parser.rs
      fn err_date_month() {
          insta::assert_snapshot!(
              DateTimeParser::new().parse_date_spec(b"2024-").unwrap_err(),
-@@ -2384,6 +2390,7 @@ mod tests {
+@@ -2584,6 +2590,7 @@ mod tests {
      }
  
      #[test]
@@ -592,7 +608,7 @@ Index: jiff/src/fmt/temporal/parser.rs
      fn err_date_day() {
          insta::assert_snapshot!(
              DateTimeParser::new().parse_date_spec(b"2024-12-").unwrap_err(),
-@@ -2412,6 +2419,7 @@ mod tests {
+@@ -2612,6 +2619,7 @@ mod tests {
      }
  
      #[test]
@@ -600,7 +616,7 @@ Index: jiff/src/fmt/temporal/parser.rs
      fn err_date_separator() {
          insta::assert_snapshot!(
              DateTimeParser::new().parse_date_spec(b"2024-1231").unwrap_err(),
-@@ -2545,6 +2553,7 @@ mod tests {
+@@ -2745,6 +2753,7 @@ mod tests {
      }
  
      #[test]
@@ -608,7 +624,7 @@ Index: jiff/src/fmt/temporal/parser.rs
      fn err_time_empty() {
          insta::assert_snapshot!(
              DateTimeParser::new().parse_time_spec(b"").unwrap_err(),
-@@ -2553,6 +2562,7 @@ mod tests {
+@@ -2753,6 +2762,7 @@ mod tests {
      }
  
      #[test]
@@ -616,7 +632,7 @@ Index: jiff/src/fmt/temporal/parser.rs
      fn err_time_hour() {
          insta::assert_snapshot!(
              DateTimeParser::new().parse_time_spec(b"a").unwrap_err(),
-@@ -2569,6 +2579,7 @@ mod tests {
+@@ -2769,6 +2779,7 @@ mod tests {
      }
  
      #[test]
@@ -624,7 +640,7 @@ Index: jiff/src/fmt/temporal/parser.rs
      fn err_time_minute() {
          insta::assert_snapshot!(
              DateTimeParser::new().parse_time_spec(b"01:").unwrap_err(),
-@@ -2589,6 +2600,7 @@ mod tests {
+@@ -2789,6 +2800,7 @@ mod tests {
      }
  
      #[test]
@@ -632,7 +648,7 @@ Index: jiff/src/fmt/temporal/parser.rs
      fn err_time_second() {
          insta::assert_snapshot!(
              DateTimeParser::new().parse_time_spec(b"01:02:").unwrap_err(),
-@@ -2609,6 +2621,7 @@ mod tests {
+@@ -2809,6 +2821,7 @@ mod tests {
      }
  
      #[test]

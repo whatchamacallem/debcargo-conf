@@ -34,7 +34,7 @@ Index: jiff/src/tz/concatenated.rs
      fn time_zone_tzif_to_datetime() {
          let o = |hours| offset(hours);
          let tests: &[(&str, &[_])] = &[
-@@ -1112,9 +1112,9 @@ mod tests {
+@@ -1114,9 +1114,9 @@ mod tests {
                  );
              }
          }
@@ -43,10 +43,10 @@ Index: jiff/src/tz/concatenated.rs
  
 -    #[test]
 +    /*#[test]
+     #[cfg(not(miri))]
      fn read_all_time_zones() {
          let db = ConcatenatedTzif::open(ANDROID_CONCATENATED_TZIF).unwrap();
-         let available = db.available(&mut alloc::vec![]).unwrap();
-@@ -1134,5 +1134,5 @@ mod tests {
+@@ -1137,5 +1137,5 @@ mod tests {
              let (x1, x2) = (&window[0], &window[1]);
              assert!(x1 < x2, "{x1} is not less than {x2}");
          }
@@ -57,29 +57,33 @@ Index: jiff/src/tz/mod.rs
 ===================================================================
 --- jiff.orig/src/tz/mod.rs
 +++ jiff/src/tz/mod.rs
-@@ -108,8 +108,8 @@ mod offset;
- mod posix;
+@@ -143,8 +143,8 @@ mod offset;
+ pub(crate) mod posix;
  #[cfg(feature = "tz-system")]
  mod system;
 -#[cfg(all(test, feature = "alloc"))]
 -mod testdata;
 +//#[cfg(all(test, feature = "alloc"))]
 +//mod testdata;
- #[cfg(feature = "alloc")]
- mod tzif;
+ mod timezone;
+ pub(crate) mod tzif;
  // See module comment for WIP status. :-(
-@@ -3041,8 +3041,8 @@ pub const fn offset(hours: i8) -> Offset
+Index: jiff/src/tz/timezone.rs
+===================================================================
+--- jiff.orig/src/tz/timezone.rs
++++ jiff/src/tz/timezone.rs
+@@ -2471,8 +2471,8 @@ mod repr {
+ 
  #[cfg(test)]
  mod tests {
-     use crate::civil::date;
 -    #[cfg(feature = "alloc")]
 -    use crate::tz::testdata::TzifTestFile;
 +    //#[cfg(feature = "alloc")]
 +    //use crate::tz::testdata::TzifTestFile;
+     use crate::{civil::date, tz::offset};
  
      use super::*;
- 
-@@ -3360,7 +3360,7 @@ mod tests {
+@@ -2791,7 +2791,7 @@ mod tests {
                  ],
              ),
          ];
@@ -88,7 +92,7 @@ Index: jiff/src/tz/mod.rs
              let test_file = TzifTestFile::get(tzname);
              let tz = TimeZone::tzif(test_file.name, test_file.data).unwrap();
              for &(datetime, ambiguous_kind) in datetimes_to_ambiguous {
-@@ -3375,10 +3375,10 @@ mod tests {
+@@ -2806,10 +2806,10 @@ mod tests {
                       {hour:02}:{min:02}:{sec:02}.{nano:09}",
                  );
              }
@@ -101,7 +105,7 @@ Index: jiff/src/tz/mod.rs
      #[test]
      fn time_zone_tzif_to_datetime() {
          let o = |hours| offset(hours);
-@@ -3671,7 +3671,7 @@ mod tests {
+@@ -3104,7 +3104,7 @@ mod tests {
                  );
              }
          }
@@ -110,16 +114,16 @@ Index: jiff/src/tz/mod.rs
  
      #[cfg(feature = "alloc")]
      #[test]
-@@ -4069,7 +4069,7 @@ mod tests {
-                 ],
+@@ -3508,7 +3508,7 @@ mod tests {
+                 &[("2024-03-10 08Z", Some("2019-02-17 02Z"))],
              ),
          ];
 -        for &(tzname, prev_trans) in tests {
 +        /* for &(tzname, prev_trans) in tests {
-             let test_file = TzifTestFile::get(tzname);
-             let tz = TimeZone::tzif(test_file.name, test_file.data).unwrap();
-             for (given, expected) in prev_trans {
-@@ -4079,7 +4079,7 @@ mod tests {
+             if tzname != "America/Sao_Paulo" {
+                 continue;
+             }
+@@ -3521,7 +3521,7 @@ mod tests {
                  let got = tz.previous_transition(given).map(|t| t.timestamp());
                  assert_eq!(got, expected, "\nTZ: {tzname}\ngiven: {given}");
              }
@@ -128,8 +132,8 @@ Index: jiff/src/tz/mod.rs
      }
  
      #[cfg(feature = "alloc")]
-@@ -4150,7 +4150,7 @@ mod tests {
-                 ],
+@@ -3598,7 +3598,7 @@ mod tests {
+                 &[("2024-03-10 08Z", None)],
              ),
          ];
 -        for &(tzname, next_trans) in tests {
@@ -137,7 +141,7 @@ Index: jiff/src/tz/mod.rs
              let test_file = TzifTestFile::get(tzname);
              let tz = TimeZone::tzif(test_file.name, test_file.data).unwrap();
              for (given, expected) in next_trans {
-@@ -4160,7 +4160,7 @@ mod tests {
+@@ -3608,7 +3608,7 @@ mod tests {
                  let got = tz.next_transition(given).map(|t| t.timestamp());
                  assert_eq!(got, expected, "\nTZ: {tzname}\ngiven: {given}");
              }
@@ -146,7 +150,7 @@ Index: jiff/src/tz/mod.rs
      }
  
      #[cfg(feature = "alloc")]
-@@ -4376,9 +4376,9 @@ mod tests {
+@@ -3830,13 +3830,13 @@ mod tests {
              let tz = TimeZone::posix("EST5").unwrap();
              assert!(tz.to_fixed_offset().is_err());
  
@@ -157,30 +161,54 @@ Index: jiff/src/tz/mod.rs
 +            assert!(tz.to_fixed_offset().is_err());*/
          }
      }
+ 
+-    /// This tests that `TimeZone::following` correctly returns a final time
++    /* /// This tests that `TimeZone::following` correctly returns a final time
+     /// zone transition.
+     #[cfg(feature = "alloc")]
+     #[test]
+@@ -3865,5 +3865,5 @@ mod tests {
+         // being found here, despite the fact that it existed and was found
+         // by `preceding`.
+         assert_eq!(transitions, last4);
+-    }
++    }*/
  }
 Index: jiff/src/tz/tzif.rs
 ===================================================================
 --- jiff.orig/src/tz/tzif.rs
 +++ jiff/src/tz/tzif.rs
-@@ -1387,7 +1387,7 @@ fn try_split_at<'b>(
- mod tests {
-     use alloc::string::ToString;
+@@ -594,7 +594,7 @@ mod tests {
+     use alloc::{string::ToString, vec};
  
+     #[cfg(not(miri))]
 -    use crate::tz::testdata::TZIF_TEST_FILES;
 +    //use crate::tz::testdata::TZIF_TEST_FILES;
  
      use super::*;
  
-@@ -1498,7 +1498,7 @@ mod tests {
-         Ok(())
-     }
- 
+@@ -700,7 +700,7 @@ mod tests {
+     /// as a TZif and then dump debug data about the file in a human readable
+     /// plain text format.
+     #[cfg(feature = "std")]
 -    #[test]
 +    /*#[test]
-     fn tzif_parse_v2plus() {
+     fn debug_tzif() -> anyhow::Result<()> {
+         use anyhow::Context;
+ 
+@@ -727,9 +727,9 @@ mod tests {
+                 tzif_to_human_readable(&tzif_test.parse())
+             );
+         }
+-    }
++    }*/
+ 
+-    #[cfg(not(miri))]
++    /*#[cfg(not(miri))]
+     #[test]
+     fn tzif_parse_v1() {
          for tzif_test in TZIF_TEST_FILES {
-             insta::assert_snapshot!(
-@@ -1516,7 +1516,7 @@ mod tests {
+@@ -738,7 +738,7 @@ mod tests {
                  tzif_to_human_readable(&tzif_test.parse_v1())
              );
          }
@@ -193,16 +221,16 @@ Index: jiff/src/tz/zic.rs
 ===================================================================
 --- jiff.orig/src/tz/zic.rs
 +++ jiff/src/tz/zic.rs
-@@ -1592,7 +1592,7 @@ mod tests {
-         assert_eq!(wall, date(2024, 3, 10).at(2, 0, 0, 0));
+@@ -1594,7 +1594,7 @@ mod tests {
      }
  
+     #[cfg(not(miri))]
 -    #[test]
 +    /*#[test]
      fn parse_zic_man1() {
          // An example from `man zic`.
          let data = "
-@@ -1633,7 +1633,7 @@ mod tests {
+@@ -1636,7 +1636,7 @@ mod tests {
          let mut zic = ZicP::default();
          zic.parse(data).unwrap();
          insta::assert_debug_snapshot!(zic);
