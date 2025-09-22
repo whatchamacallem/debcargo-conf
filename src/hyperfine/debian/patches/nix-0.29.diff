@@ -1,0 +1,29 @@
+Index: hyperfine/Cargo.toml
+===================================================================
+--- hyperfine.orig/Cargo.toml
++++ hyperfine/Cargo.toml
+@@ -109,7 +109,7 @@ version = "4.2.1"
+ version = "0.2"
+ 
+ [target."cfg(target_os=\"linux\")".dependencies.nix]
+-version = "0.26.2"
++version = "0.29"
+ features = ["zerocopy"]
+ 
+ #[target."cfg(windows)".dependencies.windows-sys]
+Index: hyperfine/src/timer/mod.rs
+===================================================================
+--- hyperfine.orig/src/timer/mod.rs
++++ hyperfine/src/timer/mod.rs
+@@ -53,9 +53,9 @@ fn discard(output: ChildStdout) {
+     {
+         if let Ok(file) = File::create("/dev/null") {
+             while let Ok(bytes) = splice(
+-                output.as_raw_fd(),
++                &output,
+                 None,
+-                file.as_raw_fd(),
++                &file,
+                 None,
+                 CHUNK_SIZE,
+                 SpliceFFlags::empty(),
