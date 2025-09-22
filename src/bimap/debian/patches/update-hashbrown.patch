@@ -1,0 +1,29 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -43,7 +43,7 @@
+ version = "1.0"
+ 
+ [dev-dependencies.hashbrown]
+-version = "0.11"
++version = ">= 0.15, <1"
+ 
+ [dev-dependencies.serde_json]
+ version = "1.0"
+--- a/src/serde.rs
++++ b/src/serde.rs
+@@ -307,12 +307,12 @@
+ 
+     #[test]
+     fn serde_hash_w_hashbrown_hasher() {
+-        let hasher_builder = hashbrown::hash_map::DefaultHashBuilder::default();
++        let hasher_builder = hashbrown::DefaultHashBuilder::default();
+         let mut bimap = BiHashMap::<
+             char,
+             u8,
+-            hashbrown::hash_map::DefaultHashBuilder,
+-            hashbrown::hash_map::DefaultHashBuilder,
++            hashbrown::DefaultHashBuilder,
++            hashbrown::DefaultHashBuilder,
+         >::with_capacity_and_hashers(
+             4, hasher_builder.clone(), hasher_builder.clone()
+         );
