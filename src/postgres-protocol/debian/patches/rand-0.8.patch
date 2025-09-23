@@ -1,0 +1,43 @@
+Index: postgres-protocol/src/authentication/sasl.rs
+===================================================================
+--- postgres-protocol.orig/src/authentication/sasl.rs
++++ postgres-protocol/src/authentication/sasl.rs
+@@ -136,10 +136,10 @@ impl ScramSha256 {
+     /// Constructs a new instance which will use the provided password for authentication.
+     pub fn new(password: &[u8], channel_binding: ChannelBinding) -> ScramSha256 {
+         // rand 0.5's ThreadRng is cryptographically secure
+-        let mut rng = rand::rng();
++        let mut rng = rand::thread_rng();
+         let nonce = (0..NONCE_LENGTH)
+             .map(|_| {
+-                let mut v = rng.random_range(0x21u8..0x7e);
++                let mut v = rng.gen_range(0x21u8..0x7e);
+                 if v == 0x2c {
+                     v = 0x7e
+                 }
+Index: postgres-protocol/src/password/mod.rs
+===================================================================
+--- postgres-protocol.orig/src/password/mod.rs
++++ postgres-protocol/src/password/mod.rs
+@@ -28,7 +28,7 @@ const SCRAM_DEFAULT_SALT_LEN: usize = 16
+ /// special characters that would require escaping in an SQL command.
+ pub fn scram_sha_256(password: &[u8]) -> String {
+     let mut salt: [u8; SCRAM_DEFAULT_SALT_LEN] = [0; SCRAM_DEFAULT_SALT_LEN];
+-    let mut rng = rand::rng();
++    let mut rng = rand::thread_rng();
+     rng.fill_bytes(&mut salt);
+     scram_sha_256_salt(password, salt)
+ }
+Index: postgres-protocol/Cargo.toml
+===================================================================
+--- postgres-protocol.orig/Cargo.toml
++++ postgres-protocol/Cargo.toml
+@@ -52,7 +52,7 @@ version = "0.10"
+ version = "2.0"
+ 
+ [dependencies.rand]
+-version = "0.9"
++version = ">= 0.8.5, < 0.10"
+ 
+ [dependencies.sha2]
+ version = "0.10"
