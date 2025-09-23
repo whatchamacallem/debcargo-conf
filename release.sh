@@ -258,8 +258,9 @@ eof
 fi
 
 cat <<eof
-This assumes you followed the "Build environment" instructions in README.rst,
-for setting up a build environment for release.
+This assumes you followed the instructions of the section "Setting up" in the
+Debian Rust Team Book for setting up a build environment for release:
+https://rust-team.pages.debian.net/book/process-single.html#setting-up
 
 If the build fails e.g. due to missing Build-Dependencies you should revert
 what I did (see below) and package those missing Build-Dependencies first.

@@ -53,7 +53,8 @@ esac
 if [ $# -ne 1 -a $# -ne 2 ]; then
 	echo >&2 "Usage: $0 <rust-crate-name>"
 	echo >&2 "       $0 <rust-crate-name> <old-version>"
-	echo >&2 "See README.rst for more details on usage."
+	echo >&2 "See the Debian Rust Team Book for more details on usage."
+	echo >&2 "https://rust-team.pages.debian.net/book/"
 	exit 2
 fi
 
