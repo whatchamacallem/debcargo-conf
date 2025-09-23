@@ -1,0 +1,46 @@
+Index: libheif-rs/Cargo.toml
+===================================================================
+--- libheif-rs.orig/Cargo.toml
++++ libheif-rs/Cargo.toml
+@@ -61,19 +61,8 @@ triplet = "x64-windows-static-md"
+ 
+ [features]
+ default = ["latest"]
+-embedded-libheif = ["libheif-sys/embedded-libheif"]
+ latest = ["v1_20"]
+-v1_17 = ["libheif-sys/v1_17"]
+-v1_18 = [
+-    "v1_17",
+-    "libheif-sys/v1_18",
+-]
+-v1_19 = [
+-    "v1_18",
+-    "libheif-sys/v1_19",
+-]
+ v1_20 = [
+-    "v1_19",
+     "libheif-sys/v1_20",
+ ]
+ 
+Index: libheif-rs/src/reader.rs
+===================================================================
+--- libheif-rs.orig/src/reader.rs
++++ libheif-rs/src/reader.rs
+@@ -100,7 +100,7 @@ unsafe extern "C" fn wait_for_file_size(
+     reader.wait_for_file_size(target_size) as _
+ }
+ 
+-#[cfg(not(feature = "v1_19"))]
++#[cfg(not(feature = "v1_20"))]
+ pub(crate) static HEIF_READER: lh::heif_reader = lh::heif_reader {
+     reader_api_version: 1,
+     get_position: Some(get_position),
+@@ -109,7 +109,7 @@ pub(crate) static HEIF_READER: lh::heif_
+     wait_for_file_size: Some(wait_for_file_size),
+ };
+ 
+-#[cfg(feature = "v1_19")]
++#[cfg(feature = "v1_20")]
+ pub(crate) static HEIF_READER: lh::heif_reader = lh::heif_reader {
+     reader_api_version: 1,
+     get_position: Some(get_position),
