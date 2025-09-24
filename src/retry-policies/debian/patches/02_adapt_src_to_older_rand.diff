@@ -1,0 +1,98 @@
+Description: Adapt code for rand 0.7, patch to be dropped when migrating
+Author: Antonin Delpeuch <antonin@delpeuch.eu>
+Forwarded: not-needed
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/policies/exponential_backoff.rs
++++ b/src/policies/exponential_backoff.rs
+@@ -90,7 +90,7 @@ impl RetryPolicy for ExponentialBackoff
+             let jittered_wait_for = self.jitter.apply(
+                 unjittered_wait_for,
+                 self.min_retry_interval,
+-                &mut rand::rng(),
++                &mut rand::thread_rng(),
+             );
+ 
+             let execute_after =
+@@ -333,7 +333,7 @@ impl ExponentialBackoffBuilder {
+ mod tests {
+     use std::convert::TryFrom as _;
+ 
+-    use rand::distr::{Distribution, Uniform};
++    use rand::distributions::{Distribution, Uniform};
+ 
+     use super::*;
+ 
+@@ -353,7 +353,7 @@ mod tests {
+         let policy = get_retry_policy();
+         let n_past_retries = Uniform::try_from(0..policy.max_n_retries.unwrap())
+             .unwrap()
+-            .sample(&mut rand::rng());
++            .sample(&mut rand::thread_rng());
+         assert!(n_past_retries < policy.max_n_retries.unwrap());
+ 
+         // Act
+@@ -369,7 +369,7 @@ mod tests {
+         let policy = get_retry_policy();
+         let n_past_retries = Uniform::try_from(policy.max_n_retries.unwrap()..=u32::MAX)
+             .unwrap()
+-            .sample(&mut rand::rng());
++            .sample(&mut rand::thread_rng());
+         assert!(n_past_retries >= policy.max_n_retries.unwrap());
+ 
+         // Act
+--- a/src/retry_policy.rs
++++ b/src/retry_policy.rs
+@@ -1,7 +1,7 @@
+ use std::time::{Duration, SystemTime};
+ 
+ use rand::{
+-    distr::uniform::{UniformFloat, UniformSampler},
++    distributions::uniform::{UniformFloat, UniformSampler},
+     Rng,
+ };
+ 
+@@ -46,14 +46,12 @@ impl Jitter {
+         match self {
+             Jitter::None => interval,
+             Jitter::Full => {
+-                let jitter_factor = UniformFloat::<f64>::sample_single(0.0, 1.0, rng)
+-                    .expect("Sample range should be valid");
++                let jitter_factor = UniformFloat::<f64>::sample_single(0.0, 1.0, rng);
+ 
+                 interval.mul_f64(jitter_factor)
+             }
+             Jitter::Bounded => {
+-                let jitter_factor = UniformFloat::<f64>::sample_single(0.0, 1.0, rng)
+-                    .expect("Sample range should be valid");
++                let jitter_factor = UniformFloat::<f64>::sample_single(0.0, 1.0, rng);
+ 
+                 let jittered_wait_for = (interval
+                     - min_interval.mul_f64(Self::BOUNDED_MIN_BOUND_FRACTION))
+@@ -80,7 +78,7 @@ mod tests {
+         let min_interval = Duration::from_secs(5);
+         let interval = Duration::from_secs(10);
+         assert_eq!(
+-            jitter.apply(interval, min_interval, &mut rand::rng()),
++            jitter.apply(interval, min_interval, &mut rand::thread_rng()),
+             interval,
+         );
+     }
+@@ -90,7 +88,7 @@ mod tests {
+         let jitter = Jitter::Full;
+         let min_interval = Duration::from_secs(5);
+         let interval = Duration::from_secs(10);
+-        let result = jitter.apply(interval, min_interval, &mut rand::rng());
++        let result = jitter.apply(interval, min_interval, &mut rand::thread_rng());
+         assert!(result >= Duration::ZERO && result <= interval);
+     }
+ 
+@@ -99,7 +97,7 @@ mod tests {
+         let jitter = Jitter::Bounded;
+         let min_interval = Duration::from_secs(5);
+         let interval = Duration::from_secs(10);
+-        let result = jitter.apply(interval, min_interval, &mut rand::rng());
++        let result = jitter.apply(interval, min_interval, &mut rand::thread_rng());
+         assert!(
+             result >= min_interval.mul_f64(Jitter::BOUNDED_MIN_BOUND_FRACTION)
+                 && result <= interval
