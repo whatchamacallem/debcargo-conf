@@ -1,13 +1,19 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -58,3 +58,3 @@
+@@ -65,7 +65,7 @@
+ default-features = false
+ 
  [dev-dependencies.fastrand]
 -version = "1.3.5"
 +version = "2"
- default_features = false
+ default-features = false
+ 
+ [features]
 --- a/src/test_utils.rs
 +++ b/src/test_utils.rs
-@@ -13,5 +13,5 @@
+@@ -11,9 +11,9 @@
+ macro_rules! __declare_rng_ext {
+     () => {
          pub trait RngExt {
 -            fn as_rng(&self) -> &fastrand::Rng;
 +            fn as_rng(&mut self) -> &fastrand::Rng;
@@ -15,8 +21,14 @@
 -            fn pick<'a, T>(&self, slice: &'a [T]) -> &'a T {
 +            fn pick<'a, T>(&mut self, slice: &'a [T]) -> &'a T {
                  &slice[self.as_rng().usize(0..slice.len())]
-@@ -50,3 +50,3 @@
+             }
+ 
+@@ -48,7 +48,7 @@
+         }
+ 
          impl RngExt for fastrand::Rng {
 -            fn as_rng(&self) -> &fastrand::Rng {
 +            fn as_rng(&mut self) -> &mut fastrand::Rng {
                  self
+             }
+         }

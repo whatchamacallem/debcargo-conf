@@ -1,53 +1,69 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -54,3 +54,3 @@
+@@ -61,7 +61,7 @@
+ #default-features = false
+ 
  [dev-dependencies.arrayvec]
 -version = "0.5.1"
 +version = "0.7"
- default_features = false
+ default-features = false
+ 
+ [dev-dependencies.fastrand]
 --- a/src/char_encoding/tests.rs
 +++ b/src/char_encoding/tests.rs
-@@ -73,3 +73,3 @@
+@@ -71,7 +71,7 @@
+ 
+     let other_escapes = [('\'', r#"'\''"#), ('\"', r#"'\"'"#), ('\\', r#"'\\'"#)];
  
 -    let mut buffer = arrayvec::ArrayString::<[u8; 12]>::new();
 +    let mut buffer = arrayvec::ArrayString::<12>::new();
      for c in '\x20'..=core::char::MAX {
+         let utf8_here = char_to_debug(c);
+ 
 --- a/src/wrapper_types/pwrapper/tests.rs
 +++ b/src/wrapper_types/pwrapper/tests.rs
-@@ -10,4 +10,4 @@
+@@ -8,23 +8,23 @@
+ 
+ use core::fmt::{self, Write};
  
 -fn get_digits_display(n: impl fmt::Display) -> ArrayString<[u8; 64]> {
 -    let mut buff = ArrayString::<[u8; 64]>::new();
 +fn get_digits_display(n: impl fmt::Display) -> ArrayString<64> {
 +    let mut buff = ArrayString::<64>::new();
      write!(buff, "{}", n).unwrap();
-@@ -15,4 +15,4 @@
+     buff
  }
 -fn get_hex_digits(n: impl fmt::UpperHex) -> ArrayString<[u8; 64]> {
 -    let mut buff = ArrayString::<[u8; 64]>::new();
 +fn get_hex_digits(n: impl fmt::UpperHex) -> ArrayString<64> {
 +    let mut buff = ArrayString::<64>::new();
      write!(buff, "{:X}", n).unwrap();
-@@ -20,4 +20,4 @@
+     buff
  }
 -fn get_lower_hex_digits(n: impl fmt::LowerHex) -> ArrayString<[u8; 64]> {
 -    let mut buff = ArrayString::<[u8; 64]>::new();
 +fn get_lower_hex_digits(n: impl fmt::LowerHex) -> ArrayString<64> {
 +    let mut buff = ArrayString::<64>::new();
      write!(buff, "{:x}", n).unwrap();
-@@ -25,4 +25,4 @@
+     buff
  }
 -fn get_binary_digits(n: impl fmt::Binary) -> ArrayString<[u8; 192]> {
 -    let mut buff = ArrayString::<[u8; 192]>::new();
 +fn get_binary_digits(n: impl fmt::Binary) -> ArrayString<192> {
 +    let mut buff = ArrayString::<192>::new();
      write!(buff, "{:b}", n).unwrap();
+     buff
+ }
 --- a/src/__ascii_case_conv/word_iterator.rs
 +++ b/src/__ascii_case_conv/word_iterator.rs
-@@ -147,4 +147,4 @@
+@@ -145,8 +145,8 @@
+ 
+     use arrayvec::ArrayVec;
  
 -    fn get_words(text: &str) -> ArrayVec<[&str; 20]> {
 -        let mut list = <ArrayVec<[&str; 20]>>::new();
 +    fn get_words(text: &str) -> ArrayVec<&str, 20> {
 +        let mut list = <ArrayVec<&str, 20>>::new();
          let mut word_iter = WordIterator::new(text.as_bytes());
+ 
+         while let Some((niter, word_range)) = word_iter.next() {
