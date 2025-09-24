@@ -1,0 +1,40 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/architecture.mk
+
+ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+	NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+else
+	NUMJOBS = 1
+endif
+
+CARGO_C_FLAGS = --release \
+	--destdir=debian/tmp \
+	--prefix=/usr \
+	--libdir=/usr/lib/${DEB_HOST_MULTIARCH} \
+	--includedir=/usr/include/libz_rs \
+	--offline \
+	-v \
+	-j $(NUMJOBS)
+
+%:
+	dh $@ --buildsystem cargo
+
+execute_after_dh_auto_build:
+	CARGO_HOME=debian/cargo_home \
+		/usr/share/cargo/bin/cargo cbuild $(CARGO_C_FLAGS)
+
+override_dh_auto_install:
+	# 'cargo install' fails for lack of bin type crate..
+	dh_auto_install || true;
+	# shipped as examples in libz-rs-dev
+	rm -f librust-libz-rs-cdylib-dev/usr/share/cargo/registry/libz-rs-cdylib-*/*.c
+	CARGO_HOME=debian/cargo_home \
+		/usr/share/cargo/bin/cargo cinstall $(CARGO_C_FLAGS)
+
+execute_after_dh_install:
+	find debian -name Cargo.lock -delete
+
+override_dh_strip_nondeterminism:
+	# avoid breaking tests
+	dh_strip_nondeterminism -X test.gz -X example.gz

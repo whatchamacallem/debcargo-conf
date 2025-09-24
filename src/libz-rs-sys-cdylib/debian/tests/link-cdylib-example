@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -ex
+
+cd "$AUTOPKGTEST_TMP"
+LDFLAGS="$(pkgconf --libs libz_rs)"
+cc -o zpipe /usr/share/doc/libz-rs-dev/examples/zpipe.c -I /usr/include/libz_rs $LDFLAGS
+OUTPUT="$(echo "foobar" | ./zpipe | ./zpipe -d)"
+if test "$OUTPUT" = "foobar" ; then
+  echo SUCCESS
+else
+  echo "zpipe test failed!"
+  echo 1
+fi
