@@ -1,24 +1,24 @@
 --- a/src/yaml.rs
 +++ b/src/yaml.rs
-@@ -328,6 +328,7 @@
-     Call(YAMLDecodingTrapFn),
- }
- 
-+#[cfg(feature = "encoding")]
- impl PartialEq for YAMLDecodingTrap {
-     fn eq(&self, other: &YAMLDecodingTrap) -> bool {
-         match (self, other) {
-@@ -339,6 +340,7 @@
+@@ -332,6 +332,7 @@
+         Call(YAMLDecodingTrapFn),
      }
- }
  
-+#[cfg(feature = "encoding")]
- impl Eq for YAMLDecodingTrap {}
++    #[cfg(feature = "encoding")]
+     impl PartialEq for YAMLDecodingTrap {
+         fn eq(&self, other: &YAMLDecodingTrap) -> bool {
+             match (self, other) {
+@@ -343,6 +344,7 @@
+         }
+     }
  
- /// `YamlDecoder` is a `YamlLoader` builder that allows you to supply your own encoding error trap.
-@@ -855,8 +857,11 @@
++    #[cfg(feature = "encoding")]
+     impl Eq for YAMLDecodingTrap {}
  
- #[cfg(test)]
+     /// `YamlDecoder` is a `YamlLoader` builder that allows you to supply your own encoding error trap.
+@@ -865,8 +867,11 @@
+ 
+ #[cfg(all(test, feature = "encoding"))]
  mod test {
 -    use super::{YAMLDecodingTrap, Yaml, YamlDecoder};
 +    #[cfg(feature = "encoding")]
@@ -29,7 +29,7 @@
      #[test]
      fn test_read_bom() {
          let s = b"\xef\xbb\xbf---
-@@ -872,6 +877,7 @@
+@@ -882,6 +887,7 @@
          assert!(doc["d"][0].is_badvalue());
      }
  
@@ -37,7 +37,7 @@
      #[test]
      fn test_read_utf16le() {
          let s = b"\xff\xfe-\x00-\x00-\x00
-@@ -888,6 +894,7 @@
+@@ -898,6 +904,7 @@
          assert!(doc["d"][0].is_badvalue());
      }
  
@@ -45,7 +45,7 @@
      #[test]
      fn test_read_utf16be() {
          let s = b"\xfe\xff\x00-\x00-\x00-\x00
-@@ -904,6 +911,7 @@
+@@ -914,6 +921,7 @@
          assert!(doc["d"][0].is_badvalue());
      }
  
@@ -53,7 +53,7 @@
      #[test]
      fn test_read_utf16le_nobom() {
          let s = b"-\x00-\x00-\x00
-@@ -920,6 +928,7 @@
+@@ -930,6 +938,7 @@
          assert!(doc["d"][0].is_badvalue());
      }
  
