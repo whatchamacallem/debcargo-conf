@@ -201,7 +201,7 @@ fi
 
 if [ "$CHROOT_MODE" = "unshare" ]; then
 	CACHE_DIR=${XDG_CACHE_HOME:-${HOME}/.cache}
-	CHROOT_TARBALL=$(find "${CACHE_DIR}/sbuild" -name "${CHROOT}.t*" -print -quit)
+	CHROOT_TARBALL=$(find "${CACHE_DIR}/sbuild/" -name "${CHROOT}.t*" -print -quit)
 	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=--apt-upgrade -- unshare -t ${CHROOT_TARBALL} ${DISTRO:+-r $DISTRO}")
 else
 	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=-- schroot ${CHROOT}")
