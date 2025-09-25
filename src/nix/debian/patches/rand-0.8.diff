@@ -1,0 +1,106 @@
+Index: nix/test/sys/test_sockopt.rs
+===================================================================
+--- nix.orig/test/sys/test_sockopt.rs
++++ nix/test/sys/test_sockopt.rs
+@@ -5,1 +5,2 @@
+-use rand::{rng, Rng};
++use rand::Rng;
++use rand::thread_rng as rng;
+@@ -125,7 +126,7 @@ fn test_so_buf() {
+         SockProtocol::Udp,
+     )
+     .unwrap();
+-    let bufsize: usize = rng().random_range(4096..131_072);
++    let bufsize: usize = rng().gen_range(4096..131_072);
+     setsockopt(&fd, sockopt::SndBuf, &bufsize).unwrap();
+     let actual = getsockopt(&fd, sockopt::SndBuf).unwrap();
+     assert!(actual >= bufsize);
+Index: nix/test/sys/test_uio.rs
+===================================================================
+--- nix.orig/test/sys/test_uio.rs
++++ nix/test/sys/test_uio.rs
+@@ -1,2 +1,2 @@
+-use rand::distr::Alphanumeric;
+-use rand::{rng, Rng};
++use rand::Rng;
++use rand::thread_rng as rng;
+@@ -14,17 +14,30 @@ use tempfile::tempdir;
+ #[cfg(not(target_os = "redox"))]
+ use tempfile::tempfile;
+ 
++#[cfg(test)]
++fn randomstring(r: impl Rng, len : usize) -> String {
++    let mut result = String::with_capacity(len);
++    for _ in 0..len {
++        let r = rng().gen_range(0..62);
++        let c = if r < 10 {
++            r + b'0'
++        } else if r < 36 {
++            r - 10 + b'a'
++        } else {
++            r - 36 + b'A'
++        };
++        result.push(c as char);
++    }
++    result
++}
++
+ #[test]
+ // On Solaris sometimes wrtitev() returns EINVAL.
+ #[cfg(not(target_os = "solaris"))]
+ fn test_writev() {
+     let mut to_write = Vec::with_capacity(16 * 128);
+     for _ in 0..16 {
+-        let s: String = rng()
+-            .sample_iter(&Alphanumeric)
+-            .map(char::from)
+-            .take(128)
+-            .collect();
++        let s = randomstring(rng(),128);
+         let b = s.as_bytes();
+         to_write.extend(b.iter().cloned());
+     }
+@@ -36,7 +49,7 @@ fn test_writev() {
+         let slice_len = if left <= 64 {
+             left
+         } else {
+-            rng().random_range(64..cmp::min(256, left))
++            rng().gen_range(64..cmp::min(256, left))
+         };
+         let b = &to_write[consumed..consumed + slice_len];
+         iovecs.push(IoSlice::new(b));
+@@ -62,11 +75,7 @@ fn test_writev() {
+ #[test]
+ #[cfg(not(target_os = "redox"))]
+ fn test_readv() {
+-    let s: String = rng()
+-        .sample_iter(&Alphanumeric)
+-        .map(char::from)
+-        .take(128)
+-        .collect();
++    let s: String = randomstring(rng(),128);
+     let to_write = s.as_bytes().to_vec();
+     let mut storage = Vec::new();
+     let mut allocated = 0;
+@@ -75,7 +84,7 @@ fn test_readv() {
+         let vec_len = if left <= 64 {
+             left
+         } else {
+-            rng().random_range(64..cmp::min(256, left))
++            rng().gen_range(64..cmp::min(256, left))
+         };
+         let v: Vec<u8> = iter::repeat(0u8).take(vec_len).collect();
+         storage.push(v);
+Index: nix/Cargo.toml
+===================================================================
+--- nix.orig/Cargo.toml
++++ nix/Cargo.toml
+@@ -140,7 +140,7 @@ version = "0.1"
+ version = "0.12"
+ 
+ [dev-dependencies.rand]
+-version = "0.9"
++version = ">= 0.8.5, < 0.10"
+ 
+ [dev-dependencies.semver]
+ version = "1.0.7"

@@ -18,7 +18,7 @@ Index: nix/test/sys/test_socket.rs
  
      let sbuf = [0u8; 2048];
      let mut rbuf = [0u8; 2048];
-@@ -947,8 +954,14 @@ pub fn test_af_alg_cipher() {
+@@ -954,8 +961,14 @@ pub fn test_af_alg_cipher() {
          SockType::SeqPacket,
          SockFlag::empty(),
          None,
@@ -35,7 +35,7 @@ Index: nix/test/sys/test_socket.rs
  
      let sockaddr = AlgAddr::new(alg_type, alg_name);
      bind(sock.as_raw_fd(), &sockaddr).expect("bind failed");
-@@ -2859,7 +2872,14 @@ fn test_recvmm2() -> nix::Result<()> {
+@@ -3085,7 +3098,14 @@ fn test_recvmm2() -> nix::Result<()> {
  
      bind(rsock.as_raw_fd(), &sock_addr)?;
  
@@ -55,44 +55,36 @@ Index: nix/test/test_fcntl.rs
 ===================================================================
 --- nix.orig/test/test_fcntl.rs
 +++ nix/test/test_fcntl.rs
-@@ -81,8 +81,11 @@ fn test_openat2() {
+@@ -78,8 +78,11 @@ fn test_openat2() {
              .flags(OFlag::O_RDONLY)
              .mode(Mode::empty())
              .resolve(ResolveFlag::RESOLVE_BENEATH),
 -    )
 -    .unwrap();
 +    );
-+    if fd == Err(nix::errno::Errno::ENOSYS) {
++    if fd.as_ref().err() == Some(&nix::errno::Errno::ENOSYS) {
 +        return; //no kernel support.
 +    }
 +    let fd = fd.unwrap();
  
      let mut buf = [0u8; 1024];
-     assert_eq!(4, read(fd, &mut buf).unwrap());
-@@ -115,6 +118,9 @@ fn test_openat2_forbidden() {
+     assert_eq!(4, read(&fd, &mut buf).unwrap());
+@@ -109,6 +112,9 @@ fn test_openat2_forbidden() {
              .flags(OFlag::O_RDONLY)
              .resolve(ResolveFlag::RESOLVE_BENEATH),
      );
-+    if res == Err(Errno::ENOSYS) {
++    if res.as_ref().err() == Some(&Errno::ENOSYS) {
 +        return; // no kernel support
 +    }
-     assert_eq!(Err(Errno::EXDEV), res);
+     assert_eq!(res.unwrap_err(), Errno::EXDEV);
  }
  
-@@ -312,14 +318,17 @@ fn test_copy_file_range() {
+@@ -285,7 +291,11 @@ fn test_copy_file_range() {
      tmp1.flush().unwrap();
  
      let mut from_offset: i64 = 3;
--    copy_file_range(
-+    let result = copy_file_range(
-         tmp1.as_fd(),
-         Some(&mut from_offset),
-         tmp2.as_fd(),
-         None,
-         3,
--    )
--    .unwrap();
-+    );
+-    copy_file_range(&tmp1, Some(&mut from_offset), &tmp2, None, 3).unwrap();
++    let result = copy_file_range(&tmp1, Some(&mut from_offset), &tmp2, None, 3);
 +    if result == Err(nix::errno::Errno::ENOSYS) {
 +        return; //the kernel doesn't support this functionality.
 +    }
@@ -100,13 +92,13 @@ Index: nix/test/test_fcntl.rs
  
      let mut res: String = String::new();
      tmp2.rewind().unwrap();
-@@ -411,8 +420,14 @@ mod linux_android {
+@@ -375,8 +385,14 @@ mod linux_android {
+     fn test_fallocate() {
          let tmp = NamedTempFile::new().unwrap();
  
-         let fd = tmp.as_raw_fd();
--        fallocate(fd, FallocateFlags::empty(), 0, 100).unwrap();
+-        fallocate(&tmp, FallocateFlags::empty(), 0, 100).unwrap();
 -
-+        let result = fallocate(fd, FallocateFlags::empty(), 0, 100);
++        let result = fallocate(&tmp, FallocateFlags::empty(), 0, 100);
 +        // don't fail the tests on systems that don't support this functionality
 +        if let Err(e) = result {
 +           if e == nix::errno::Errno::EOPNOTSUPP {
@@ -116,12 +108,12 @@ Index: nix/test/test_fcntl.rs
 +        result.unwrap();
          // Check if we read exactly 100 bytes
          let mut buf = [0u8; 200];
-         assert_eq!(100, read(fd, &mut buf).unwrap());
+         assert_eq!(100, read(&tmp, &mut buf).unwrap());
 Index: nix/test/sys/test_fanotify.rs
 ===================================================================
 --- nix.orig/test/sys/test_fanotify.rs
 +++ nix/test/sys/test_fanotify.rs
-@@ -151,12 +151,15 @@ fn test_fanotify_responses() {
+@@ -152,12 +152,15 @@ fn test_fanotify_responses() {
  }
  
  fn test_fanotify_overflow() {

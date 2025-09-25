@@ -23,7 +23,7 @@ Index: nix/test/sys/test_aio_drop.rs
 +    feature = "aio",
      not(target_env = "musl"),
      not(target_env = "uclibc"),
-     any(
+     not(target_env = "ohos"),
 Index: nix/test/sys/test_epoll.rs
 ===================================================================
 --- nix.orig/test/sys/test_epoll.rs
@@ -60,6 +60,14 @@ Index: nix/test/sys/test_mman.rs
  #![allow(clippy::redundant_slicing)]
  
  use nix::sys::mman::{mmap_anonymous, MapFlags, ProtFlags};
+@@ -159,6 +160,7 @@ fn test_mremap_dontunmap() {
+ 
+ #[test]
+ #[cfg(target_os = "linux")]
++#[cfg(feature = "signal")]
+ fn test_madv_wipeonfork() {
+     use nix::libc::size_t;
+     use nix::sys::mman::{madvise, MmapAdvise};
 Index: nix/test/sys/test_pthread.rs
 ===================================================================
 --- nix.orig/test/sys/test_pthread.rs
@@ -68,8 +76,8 @@ Index: nix/test/sys/test_pthread.rs
 +#![cfg(feature = "pthread")]
  use nix::sys::pthread::*;
  
- #[cfg(any(target_env = "musl", target_os = "redox"))]
-@@ -16,6 +17,7 @@ fn test_pthread_self() {
+ #[cfg(any(
+@@ -26,6 +27,7 @@ fn test_pthread_self() {
  
  #[test]
  #[cfg(not(target_os = "redox"))]
@@ -100,7 +108,7 @@ Index: nix/test/sys/test_ptrace.rs
  fn test_ptrace_cont() {
      use nix::sys::ptrace;
      use nix::sys::signal::{raise, Signal};
-@@ -188,6 +191,7 @@ fn test_ptrace_interrupt() {
+@@ -193,6 +196,7 @@ fn test_ptrace_interrupt() {
      )
  ))]
  #[test]
@@ -108,7 +116,7 @@ Index: nix/test/sys/test_ptrace.rs
  fn test_ptrace_syscall() {
      use nix::sys::ptrace;
      use nix::sys::signal::kill;
-@@ -301,6 +305,7 @@ fn test_ptrace_syscall() {
+@@ -311,6 +315,7 @@ fn test_ptrace_syscall() {
      )
  ))]
  #[test]
@@ -176,15 +184,7 @@ Index: nix/test/sys/test_socket.rs
  pub fn test_timestamping() {
      use nix::sys::socket::{
          recvmsg, sendmsg, setsockopt, socket, sockopt::Timestamping,
-@@ -208,6 +210,7 @@ pub fn test_path_to_sock_addr() {
-     let expect: &[c_char] =
-         unsafe { slice::from_raw_parts(path.as_ptr().cast(), path.len()) };
-     assert_eq!(unsafe { &(*addr.as_ptr()).sun_path[..8] }, expect);
-+#[cfg(all(feature = "net", feature = "uio"))]
- 
-     assert_eq!(addr.path(), Some(actual));
- }
-@@ -241,6 +244,7 @@ pub fn test_abstract_sun_path_too_long()
+@@ -241,6 +243,7 @@ pub fn test_abstract_sun_path_too_long()
  
  #[cfg(linux_android)]
  #[test]
@@ -192,7 +192,7 @@ Index: nix/test/sys/test_socket.rs
  pub fn test_addr_equality_abstract() {
      let name = String::from("nix\0abstract\0test");
      let addr1 = UnixAddr::new_abstract(name.as_bytes()).unwrap();
-@@ -314,6 +318,7 @@ pub fn test_getsockname() {
+@@ -314,6 +317,7 @@ pub fn test_getsockname() {
      );
  }
  
@@ -200,23 +200,15 @@ Index: nix/test/sys/test_socket.rs
  #[test]
  pub fn test_socketpair() {
      use nix::sys::socket::{socketpair, AddressFamily, SockFlag, SockType};
-@@ -334,6 +339,7 @@ pub fn test_socketpair() {
- }
+@@ -335,6 +339,7 @@ pub fn test_socketpair() {
  
  #[test]
+ #[cfg_attr(target_os = "cygwin", ignore)]
 +#[cfg(all(feature = "net", feature = "uio"))]
  pub fn test_recvmsg_sockaddr_un() {
      use nix::sys::socket::{
          self, bind, socket, AddressFamily, MsgFlags, SockFlag, SockType,
-@@ -343,6 +349,7 @@ pub fn test_recvmsg_sockaddr_un() {
-     let sockname = tempdir.path().join("sock");
-     let sock = socket(
-         AddressFamily::Unix,
-+    #[cfg(feature = "net")]
-         SockType::Datagram,
-         SockFlag::empty(),
-         None,
-@@ -374,6 +381,7 @@ pub fn test_recvmsg_sockaddr_un() {
+@@ -375,6 +380,7 @@ pub fn test_recvmsg_sockaddr_un() {
  }
  
  #[test]
@@ -224,7 +216,7 @@ Index: nix/test/sys/test_socket.rs
  pub fn test_std_conversions() {
      use nix::sys::socket::*;
  
-@@ -440,6 +448,7 @@ mod recvfrom {
+@@ -441,6 +447,7 @@ mod recvfrom {
      }
  
      #[test]
@@ -232,7 +224,7 @@ Index: nix/test/sys/test_socket.rs
      pub fn udp() {
          let std_sa = SocketAddrV4::from_str("127.0.0.1:6795").unwrap();
          let sock_addr = SockaddrIn::from(std_sa);
-@@ -469,6 +478,7 @@ mod recvfrom {
+@@ -470,6 +477,7 @@ mod recvfrom {
      }
  
      #[cfg(target_os = "linux")]
@@ -240,7 +232,7 @@ Index: nix/test/sys/test_socket.rs
      mod udp_offload {
          use super::*;
          use nix::sys::socket::sockopt::{UdpGroSegment, UdpGsoSegment};
-@@ -478,6 +488,7 @@ mod recvfrom {
+@@ -479,6 +487,7 @@ mod recvfrom {
          // Disable the test under emulation because it fails in Cirrus-CI.  Lack
          // of QEMU support is suspected.
          #[cfg_attr(qemu, ignore)]
@@ -248,7 +240,7 @@ Index: nix/test/sys/test_socket.rs
          pub fn gso() {
              require_kernel_version!(udp_offload::gso, ">= 4.18");
  
-@@ -544,6 +555,7 @@ mod recvfrom {
+@@ -545,6 +554,7 @@ mod recvfrom {
          // Disable the test on emulated platforms because it fails in Cirrus-CI.
          // Lack of QEMU support is suspected.
          #[cfg_attr(qemu, ignore)]
@@ -256,7 +248,7 @@ Index: nix/test/sys/test_socket.rs
          pub fn gro() {
              require_kernel_version!(udp_offload::gro, ">= 5.3");
  
-@@ -565,6 +577,7 @@ mod recvfrom {
+@@ -566,6 +576,7 @@ mod recvfrom {
  
      #[cfg(any(linux_android, target_os = "freebsd", target_os = "netbsd"))]
      #[test]
@@ -264,7 +256,7 @@ Index: nix/test/sys/test_socket.rs
      pub fn udp_sendmmsg() {
          use std::io::IoSlice;
  
-@@ -627,6 +640,7 @@ mod recvfrom {
+@@ -628,6 +639,7 @@ mod recvfrom {
  
      #[cfg(any(linux_android, target_os = "freebsd", target_os = "netbsd"))]
      #[test]
@@ -272,7 +264,7 @@ Index: nix/test/sys/test_socket.rs
      pub fn udp_recvmmsg() {
          use nix::sys::socket::{recvmmsg, MsgFlags};
          use std::io::IoSliceMut;
-@@ -703,6 +717,7 @@ mod recvfrom {
+@@ -704,6 +716,7 @@ mod recvfrom {
  
      #[cfg(any(linux_android, target_os = "freebsd", target_os = "netbsd"))]
      #[test]
@@ -280,7 +272,7 @@ Index: nix/test/sys/test_socket.rs
      pub fn udp_recvmmsg_dontwait_short_read() {
          use nix::sys::socket::{recvmmsg, MsgFlags};
          use std::io::IoSliceMut;
-@@ -783,6 +798,7 @@ mod recvfrom {
+@@ -784,6 +797,7 @@ mod recvfrom {
      }
  
      #[test]
@@ -288,7 +280,7 @@ Index: nix/test/sys/test_socket.rs
      pub fn udp_inet6() {
          let addr = std::net::Ipv6Addr::from_str("::1").unwrap();
          let rport = 6796;
-@@ -830,6 +846,7 @@ mod recvfrom {
+@@ -831,6 +845,7 @@ mod recvfrom {
  
  // Test error handling of our recvmsg wrapper
  #[test]
@@ -296,23 +288,23 @@ Index: nix/test/sys/test_socket.rs
  pub fn test_recvmsg_ebadf() {
      use nix::errno::Errno;
      use nix::sys::socket::{recvmsg, MsgFlags};
-@@ -848,6 +865,7 @@ pub fn test_recvmsg_ebadf() {
- // 2.12.0.  https://bugs.launchpad.net/qemu/+bug/1701808
+@@ -850,6 +865,7 @@ pub fn test_recvmsg_ebadf() {
  #[cfg_attr(qemu, ignore)]
  #[test]
+ #[cfg_attr(target_os = "cygwin", ignore)]
 +#[cfg(all(feature = "uio",feature = "fs"))]
  pub fn test_scm_rights() {
      use nix::sys::socket::{
          recvmsg, sendmsg, socketpair, AddressFamily, ControlMessage,
-@@ -924,6 +942,7 @@ pub fn test_scm_rights() {
- #[cfg(linux_android)]
- #[cfg_attr(qemu, ignore)]
+@@ -936,6 +952,7 @@ pub fn test_scm_rights() {
+     ignore
+ )]
  #[test]
-+#[cfg(Feature = "uio")]
++#[cfg(feature = "uio")]
  pub fn test_af_alg_cipher() {
      use nix::sys::socket::sockopt::AlgSetKey;
      use nix::sys::socket::{
-@@ -1023,6 +1042,7 @@ pub fn test_af_alg_cipher() {
+@@ -1038,6 +1055,7 @@ pub fn test_af_alg_cipher() {
  #[cfg(linux_android)]
  #[cfg_attr(qemu, ignore)]
  #[test]
@@ -320,7 +312,7 @@ Index: nix/test/sys/test_socket.rs
  pub fn test_af_alg_aead() {
      use libc::{ALG_OP_DECRYPT, ALG_OP_ENCRYPT};
      use nix::fcntl::{fcntl, FcntlArg, OFlag};
-@@ -1156,6 +1176,7 @@ pub fn test_af_alg_aead() {
+@@ -1181,6 +1199,7 @@ pub fn test_af_alg_aead() {
  // test from).
  #[cfg(any(target_os = "linux", apple_targets, target_os = "netbsd"))]
  #[test]
@@ -328,7 +320,7 @@ Index: nix/test/sys/test_socket.rs
  pub fn test_sendmsg_ipv4packetinfo() {
      use cfg_if::cfg_if;
      use nix::sys::socket::{
-@@ -1213,6 +1234,7 @@ pub fn test_sendmsg_ipv4packetinfo() {
+@@ -1238,6 +1257,7 @@ pub fn test_sendmsg_ipv4packetinfo() {
  //
  // This would be a more interesting test if we could assume that the test host
  // has more than one IP address (since we could select a different address to
@@ -336,7 +328,7 @@ Index: nix/test/sys/test_socket.rs
  // test from).
  #[cfg(any(
      target_os = "linux",
-@@ -1271,6 +1293,7 @@ pub fn test_sendmsg_ipv6packetinfo() {
+@@ -1296,6 +1316,7 @@ pub fn test_sendmsg_ipv6packetinfo() {
  // 127.0.0.1 as the source address through an Ipv4SendSrcAddr
  // (IP_SENDSRCADDR) control message.
  //
@@ -344,15 +336,15 @@ Index: nix/test/sys/test_socket.rs
  // Note that binding to 0.0.0.0 is *required* on FreeBSD; sendmsg
  // returns EINVAL otherwise. (See FreeBSD's ip(4) man page.)
  #[cfg(any(freebsdlike, netbsdlike))]
-@@ -1317,6 +1340,7 @@ pub fn test_sendmsg_ipv4sendsrcaddr() {
- // 2.12.0.  https://bugs.launchpad.net/qemu/+bug/1701808
+@@ -1343,6 +1364,7 @@ pub fn test_sendmsg_ipv4sendsrcaddr() {
  #[cfg_attr(qemu, ignore)]
  #[test]
+ #[cfg_attr(target_os = "cygwin", ignore)]
 +#[cfg(all(feature = "uio",feature = "user",feature = "process"))]
  fn test_scm_rights_single_cmsg_multiple_fds() {
      use nix::sys::socket::{
          recvmsg, sendmsg, ControlMessage, ControlMessageOwned, MsgFlags,
-@@ -1375,6 +1399,7 @@ fn test_scm_rights_single_cmsg_multiple_
+@@ -1401,6 +1423,7 @@ fn test_scm_rights_single_cmsg_multiple_
  // msg_control field and a msg_controllen of 0 when calling into the
  // raw `sendmsg`.
  #[test]
@@ -360,7 +352,7 @@ Index: nix/test/sys/test_socket.rs
  pub fn test_sendmsg_empty_cmsgs() {
      use nix::sys::socket::{
          recvmsg, sendmsg, socketpair, AddressFamily, MsgFlags, SockFlag,
-@@ -1424,6 +1449,7 @@ pub fn test_sendmsg_empty_cmsgs() {
+@@ -1450,6 +1473,7 @@ pub fn test_sendmsg_empty_cmsgs() {
  
  #[cfg(any(linux_android, freebsdlike))]
  #[test]
@@ -368,7 +360,7 @@ Index: nix/test/sys/test_socket.rs
  fn test_scm_credentials() {
      use nix::sys::socket::{
          recvmsg, sendmsg, socketpair, AddressFamily, ControlMessage,
-@@ -1431,7 +1457,9 @@ fn test_scm_credentials() {
+@@ -1457,7 +1481,9 @@ fn test_scm_credentials() {
      };
      #[cfg(linux_android)]
      use nix::sys::socket::{setsockopt, sockopt::PassCred};
@@ -379,7 +371,7 @@ Index: nix/test/sys/test_socket.rs
      use std::io::{IoSlice, IoSliceMut};
  
      let (send, recv) = socketpair(
-@@ -1508,6 +1536,7 @@ fn test_scm_credentials() {
+@@ -1534,6 +1560,7 @@ fn test_scm_credentials() {
  // see https://bugs.launchpad.net/qemu/+bug/1781280
  #[cfg_attr(qemu, ignore)]
  #[test]
@@ -387,7 +379,7 @@ Index: nix/test/sys/test_socket.rs
  fn test_scm_credentials_and_rights() {
      let space = cmsg_space!(libc::ucred, RawFd);
      test_impl_scm_credentials_and_rights(space).unwrap();
-@@ -1520,6 +1549,7 @@ fn test_scm_credentials_and_rights() {
+@@ -1546,6 +1573,7 @@ fn test_scm_credentials_and_rights() {
  // see https://bugs.launchpad.net/qemu/+bug/1781280
  #[cfg_attr(qemu, ignore)]
  #[test]
@@ -395,7 +387,7 @@ Index: nix/test/sys/test_socket.rs
  fn test_too_large_cmsgspace() {
      let space = vec![0u8; 1024];
      test_impl_scm_credentials_and_rights(space).unwrap();
-@@ -1527,6 +1557,7 @@ fn test_too_large_cmsgspace() {
+@@ -1553,6 +1581,7 @@ fn test_too_large_cmsgspace() {
  
  #[cfg(linux_android)]
  #[test]
@@ -403,7 +395,7 @@ Index: nix/test/sys/test_socket.rs
  fn test_too_small_cmsgspace() {
      let space = vec![0u8; 4];
      assert_eq!(
-@@ -1536,6 +1567,7 @@ fn test_too_small_cmsgspace() {
+@@ -1562,6 +1591,7 @@ fn test_too_small_cmsgspace() {
  }
  
  #[cfg(linux_android)]
@@ -411,7 +403,7 @@ Index: nix/test/sys/test_socket.rs
  fn test_impl_scm_credentials_and_rights(
      mut space: Vec<u8>,
  ) -> Result<(), nix::errno::Errno> {
-@@ -1545,7 +1577,11 @@ fn test_impl_scm_credentials_and_rights(
+@@ -1571,7 +1601,11 @@ fn test_impl_scm_credentials_and_rights(
          recvmsg, sendmsg, setsockopt, socketpair, ControlMessage,
          ControlMessageOwned, MsgFlags, SockFlag, SockType,
      };
@@ -424,7 +416,7 @@ Index: nix/test/sys/test_socket.rs
      use std::io::{IoSlice, IoSliceMut};
  
      let (send, recv) = socketpair(
-@@ -1560,6 +1596,7 @@ fn test_impl_scm_credentials_and_rights(
+@@ -1586,6 +1620,7 @@ fn test_impl_scm_credentials_and_rights(
      let (r, w) = pipe().unwrap();
      let mut received_r: Option<RawFd> = None;
  
@@ -432,7 +424,7 @@ Index: nix/test/sys/test_socket.rs
      {
          let iov = [IoSlice::new(b"hello")];
          let cred = ucred {
-@@ -1609,8 +1646,11 @@ fn test_impl_scm_credentials_and_rights(
+@@ -1635,8 +1670,11 @@ fn test_impl_scm_credentials_and_rights(
                  }
                  ControlMessageOwned::ScmCredentials(cred) => {
                      assert!(received_cred.is_none());
@@ -444,7 +436,7 @@ Index: nix/test/sys/test_socket.rs
                      assert_eq!(cred.gid(), getgid().as_raw());
                      received_cred = Some(cred);
                  }
-@@ -1761,6 +1801,7 @@ pub fn test_syscontrol() {
+@@ -1802,6 +1840,7 @@ pub fn test_syscontrol() {
      // requires root privileges
      // connect(fd.as_raw_fd(), &sockaddr).expect("connect failed");
  }
@@ -452,7 +444,7 @@ Index: nix/test/sys/test_socket.rs
  
  #[cfg(any(bsd, linux_android))]
  fn loopback_address(
-@@ -1805,6 +1846,7 @@ fn loopback_address(
+@@ -1846,6 +1885,7 @@ fn loopback_address(
      ignore
  )]
  #[test]
@@ -460,7 +452,7 @@ Index: nix/test/sys/test_socket.rs
  pub fn test_recv_ipv4pktinfo() {
      use nix::net::if_::*;
      use nix::sys::socket::sockopt::Ipv4PacketInfo;
-@@ -1896,6 +1938,7 @@ pub fn test_recv_ipv4pktinfo() {
+@@ -1937,6 +1977,7 @@ pub fn test_recv_ipv4pktinfo() {
      ignore
  )]
  #[test]
@@ -468,7 +460,7 @@ Index: nix/test/sys/test_socket.rs
  pub fn test_recvif() {
      use nix::net::if_::*;
      use nix::sys::socket::sockopt::{Ipv4RecvDstAddr, Ipv4RecvIf};
-@@ -1997,6 +2040,7 @@ pub fn test_recvif() {
+@@ -2038,6 +2079,7 @@ pub fn test_recvif() {
  #[cfg(any(linux_android, target_os = "freebsd"))]
  #[cfg_attr(qemu, ignore)]
  #[test]
@@ -476,7 +468,7 @@ Index: nix/test/sys/test_socket.rs
  pub fn test_recvif_ipv4() {
      use nix::sys::socket::sockopt::Ipv4OrigDstAddr;
      use nix::sys::socket::{bind, SockFlag, SockType, SockaddrIn};
-@@ -2083,6 +2127,7 @@ pub fn test_recvif_ipv4() {
+@@ -2124,6 +2166,7 @@ pub fn test_recvif_ipv4() {
  #[cfg(any(linux_android, target_os = "freebsd"))]
  #[cfg_attr(qemu, ignore)]
  #[test]
@@ -484,7 +476,7 @@ Index: nix/test/sys/test_socket.rs
  pub fn test_recvif_ipv6() {
      use nix::sys::socket::sockopt::Ipv6OrigDstAddr;
      use nix::sys::socket::{bind, SockFlag, SockType, SockaddrIn6};
-@@ -2182,6 +2227,7 @@ pub fn test_recvif_ipv6() {
+@@ -2223,6 +2266,7 @@ pub fn test_recvif_ipv6() {
      ignore
  )]
  #[test]
@@ -492,7 +484,7 @@ Index: nix/test/sys/test_socket.rs
  pub fn test_recv_ipv6pktinfo() {
      use nix::net::if_::*;
      use nix::sys::socket::sockopt::Ipv6RecvPacketInfo;
-@@ -2345,6 +2391,7 @@ pub fn test_vsock() {
+@@ -2386,6 +2430,7 @@ pub fn test_vsock() {
  #[cfg_attr(qemu, ignore)]
  #[cfg(target_os = "linux")]
  #[test]
@@ -500,7 +492,7 @@ Index: nix/test/sys/test_socket.rs
  fn test_recvmsg_timestampns() {
      use nix::sys::socket::*;
      use nix::sys::time::*;
-@@ -2404,6 +2451,7 @@ fn test_recvmsg_timestampns() {
+@@ -2445,6 +2490,7 @@ fn test_recvmsg_timestampns() {
  #[cfg_attr(qemu, ignore)]
  #[cfg(target_os = "linux")]
  #[test]
@@ -508,7 +500,7 @@ Index: nix/test/sys/test_socket.rs
  fn test_recvmmsg_timestampns() {
      use nix::sys::socket::*;
      use nix::sys::time::*;
-@@ -2465,6 +2513,7 @@ fn test_recvmmsg_timestampns() {
+@@ -2506,6 +2552,7 @@ fn test_recvmmsg_timestampns() {
  #[cfg_attr(qemu, ignore)]
  #[cfg(any(linux_android, target_os = "fuchsia"))]
  #[test]
@@ -516,7 +508,25 @@ Index: nix/test/sys/test_socket.rs
  fn test_recvmsg_rxq_ovfl() {
      use nix::sys::socket::sockopt::{RcvBuf, RxqOvfl};
      use nix::sys::socket::*;
-@@ -2564,6 +2613,7 @@ fn test_recvmsg_rxq_ovfl() {
+@@ -2605,7 +2652,7 @@ fn test_recvmsg_rxq_ovfl() {
+ }
+ 
+ #[cfg(any(linux_android, target_os = "freebsd"))]
+-#[cfg(feature = "net")]
++#[cfg(all(feature = "net",feature = "uio"))]
+ // qemu doesn't seem to be emulating this correctly in these architectures
+ #[cfg_attr(
+     all(
+@@ -2699,7 +2746,7 @@ pub fn test_ip_tos_udp() {
+     ),
+     ignore
+ )]
+-#[cfg(feature = "net")]
++#[cfg(all(feature = "net",feature="uio"))]
+ #[test]
+ pub fn test_ipv6_tclass_udp() {
+     use nix::sys::socket::ControlMessageOwned;
+@@ -2790,6 +2837,7 @@ pub fn test_ipv6_tclass_udp() {
  }
  
  #[cfg(linux_android)]
@@ -524,7 +534,7 @@ Index: nix/test/sys/test_socket.rs
  mod linux_errqueue {
      use super::FromStr;
      use nix::sys::socket::*;
-@@ -2744,6 +2794,7 @@ mod linux_errqueue {
+@@ -2970,6 +3018,7 @@ mod linux_errqueue {
  #[cfg_attr(qemu, ignore)]
  #[cfg(target_os = "linux")]
  #[test]
@@ -532,7 +542,7 @@ Index: nix/test/sys/test_socket.rs
  pub fn test_txtime() {
      use nix::sys::socket::{
          bind, recvmsg, sendmsg, setsockopt, socket, sockopt, ControlMessage,
-@@ -2805,6 +2856,7 @@ pub fn test_txtime() {
+@@ -3031,6 +3080,7 @@ pub fn test_txtime() {
  // cfg needed for capability check.
  #[cfg(linux_android)]
  #[test]
@@ -540,7 +550,7 @@ Index: nix/test/sys/test_socket.rs
  fn test_icmp_protocol() {
      use nix::sys::socket::{
          sendto, socket, AddressFamily, MsgFlags, SockFlag, SockProtocol,
-@@ -2841,6 +2893,7 @@ fn test_icmp_protocol() {
+@@ -3067,6 +3117,7 @@ fn test_icmp_protocol() {
  #[cfg(target_os = "linux")]
  #[test]
  #[cfg(not(target_arch = "s390x"))]
@@ -548,7 +558,7 @@ Index: nix/test/sys/test_socket.rs
  fn test_recvmm2() -> nix::Result<()> {
      use nix::sys::{
          socket::{
-@@ -2920,6 +2973,7 @@ fn test_recvmm2() -> nix::Result<()> {
+@@ -3146,6 +3197,7 @@ fn test_recvmm2() -> nix::Result<()> {
          let mut saw_time = false;
          let mut recvd = 0;
          for cmsg in rmsg.cmsgs().unwrap() {
@@ -556,7 +566,7 @@ Index: nix/test/sys/test_socket.rs
              if let ControlMessageOwned::ScmTimestampsns(timestamps) = cmsg {
                  let ts = timestamps.system;
  
-@@ -2953,6 +3007,7 @@ fn test_recvmm2() -> nix::Result<()> {
+@@ -3179,6 +3231,7 @@ fn test_recvmm2() -> nix::Result<()> {
  
  #[cfg(not(target_os = "redox"))]
  #[test]
@@ -573,7 +583,7 @@ Index: nix/test/sys/test_sockopt.rs
  #[cfg(linux_android)]
  use crate::*;
  use nix::sys::socket::{
-@@ -109,6 +110,7 @@ fn test_so_listen_q_limit() {
+@@ -140,6 +141,7 @@ fn test_so_listen_q_limit() {
      use nix::sys::socket::{bind, listen, Backlog, SockaddrIn};
      use std::net::SocketAddrV4;
      use std::str::FromStr;
@@ -581,7 +591,7 @@ Index: nix/test/sys/test_sockopt.rs
  
      let std_sa = SocketAddrV4::from_str("127.0.0.1:4004").unwrap();
      let sock_addr = SockaddrIn::from(std_sa);
-@@ -204,6 +206,7 @@ fn test_so_type() {
+@@ -251,6 +253,7 @@ fn test_so_type() {
  }
  
  /// getsockopt(_, sockopt::SockType) should gracefully handle unknown socket
@@ -589,7 +599,7 @@ Index: nix/test/sys/test_sockopt.rs
  /// types.  Regression test for https://github.com/nix-rust/nix/issues/1819
  #[cfg(linux_android)]
  #[test]
-@@ -248,6 +251,7 @@ fn test_tcp_congestion() {
+@@ -301,6 +304,7 @@ fn test_tcp_congestion() {
      )
      .unwrap_err();
  
@@ -597,7 +607,7 @@ Index: nix/test/sys/test_sockopt.rs
      assert_eq!(getsockopt(&fd, sockopt::TcpCongestion).unwrap(), val);
  }
  
-@@ -283,6 +287,7 @@ fn test_so_tcp_keepalive() {
+@@ -365,6 +369,7 @@ fn test_so_tcp_keepalive() {
      assert!(getsockopt(&fd, sockopt::KeepAlive).unwrap());
  
      #[cfg(any(linux_android, freebsdlike))]
@@ -605,7 +615,7 @@ Index: nix/test/sys/test_sockopt.rs
      {
          let x = getsockopt(&fd, sockopt::TcpKeepIdle).unwrap();
          setsockopt(&fd, sockopt::TcpKeepIdle, &(x + 1)).unwrap();
-@@ -391,6 +396,7 @@ fn test_ipv6_multicast_hops() {
+@@ -473,6 +478,7 @@ fn test_ipv6_multicast_hops() {
  
  #[test]
  #[cfg(apple_targets)]
@@ -613,7 +623,7 @@ Index: nix/test/sys/test_sockopt.rs
  fn test_dontfrag_opts() {
      let fd4 = socket(
          AddressFamily::Inet,
-@@ -424,6 +430,7 @@ fn test_dontfrag_opts() {
+@@ -506,6 +512,7 @@ fn test_dontfrag_opts() {
  // Disable the test under emulation because it fails in Cirrus-CI.  Lack
  // of QEMU support is suspected.
  #[cfg_attr(qemu, ignore)]
@@ -627,7 +637,7 @@ Index: nix/test/sys/test_termios.rs
 +++ nix/test/sys/test_termios.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "term")]
- use std::os::unix::io::{AsFd, AsRawFd};
+ use std::os::unix::io::AsFd;
  use tempfile::tempfile;
  
 @@ -43,6 +44,7 @@ fn test_tcgetattr_enotty() {
@@ -638,10 +648,10 @@ Index: nix/test/sys/test_termios.rs
  fn test_output_flags() {
      // openpty uses ptname(3) internally
      let _m = crate::PTSNAME_MTX.lock();
-@@ -80,6 +82,7 @@ fn test_output_flags() {
- 
+@@ -81,6 +83,7 @@ fn test_output_flags() {
  // Test modifying local flags
  #[test]
+ #[cfg(not(target_os = "solaris"))]
 +#[cfg(feature = "fs")]
  fn test_local_flags() {
      // openpty uses ptname(3) internally
@@ -663,8 +673,8 @@ Index: nix/test/sys/test_uio.rs
 +#![cfg(feature = "uio")]
  use nix::sys::uio::*;
  use nix::unistd::*;
- use rand::distributions::Alphanumeric;
-@@ -223,6 +224,7 @@ fn test_preadv() {
+ use rand::Rng;
+@@ -235,6 +236,7 @@ fn test_preadv() {
  // uclibc doesn't implement process_vm_readv
  // qemu-user doesn't implement process_vm_readv/writev on most arches
  #[cfg_attr(qemu, ignore)]
@@ -717,7 +727,7 @@ Index: nix/test/test.rs
 ===================================================================
 --- nix.orig/test/test.rs
 +++ nix/test/test.rs
-@@ -37,11 +37,15 @@ mod test_stat;
+@@ -51,12 +51,16 @@ mod test_syslog;
  mod test_time;
  mod test_unistd;
  
@@ -727,14 +737,15 @@ Index: nix/test/test.rs
 +#[cfg(any(feature = "fs",feature = "term"))]
 +use nix::unistd::read;
  use parking_lot::{Mutex, RwLock, RwLockWriteGuard};
- use std::os::unix::io::{AsFd, AsRawFd};
+ use std::os::unix::io::AsFd;
  use std::path::PathBuf;
  
-+#[cfg(any(feature = "fs",feature = "term"))]
  /// Helper function analogous to `std::io::Read::read_exact`, but for `Fd`s
++#[cfg(any(feature = "fs",feature = "term"))]
  fn read_exact<Fd: AsFd>(f: Fd, buf: &mut [u8]) {
      let mut len = 0;
-@@ -71,11 +75,13 @@ pub static PTSNAME_MTX: Mutex<()> = Mute
+     while len < buf.len() {
+@@ -86,11 +90,13 @@ pub static PTSNAME_MTX: Mutex<()> = Mute
  pub static SIGNAL_MTX: Mutex<()> = Mutex::new(());
  
  /// RAII object that restores a test's original directory on drop
@@ -745,15 +756,15 @@ Index: nix/test/test.rs
  }
  
 +#[cfg(feature = "fs")]
- impl<'a> DirRestore<'a> {
+ impl DirRestore<'_> {
      fn new() -> Self {
          let guard = crate::CWD_LOCK.write();
-@@ -86,6 +92,7 @@ impl<'a> DirRestore<'a> {
+@@ -101,6 +107,7 @@ impl DirRestore<'_> {
      }
  }
  
 +#[cfg(feature = "fs")]
- impl<'a> Drop for DirRestore<'a> {
+ impl Drop for DirRestore<'_> {
      fn drop(&mut self) {
          let r = chdir(&self.d);
 Index: nix/test/test_clearenv.rs
@@ -783,7 +794,7 @@ Index: nix/test/test_fcntl.rs
  #[cfg(not(target_os = "redox"))]
  use nix::errno::*;
  #[cfg(not(target_os = "redox"))]
-@@ -245,6 +246,7 @@ fn test_renameat2_exchange() {
+@@ -221,6 +222,7 @@ fn test_renameat2_exchange() {
          target_arch = "s390x"
      )
  ))]
@@ -791,23 +802,23 @@ Index: nix/test/test_fcntl.rs
  fn test_renameat2_noreplace() {
      let old_dir = tempfile::tempdir().unwrap();
      let old_dirfd =
-@@ -256,6 +258,7 @@ fn test_renameat2_noreplace() {
+@@ -232,6 +234,7 @@ fn test_renameat2_noreplace() {
          open(new_dir.path(), OFlag::empty(), Mode::empty()).unwrap();
      let new_path = new_dir.path().join("new");
      File::create(new_path).unwrap();
 +    #[cfg(feature = "zerocopy")]
      assert_eq!(
          renameat2(
-             Some(old_dirfd),
-@@ -305,6 +308,7 @@ fn test_readlink() {
+             &old_dirfd,
+@@ -279,6 +282,7 @@ fn test_readlink() {
  #[test]
  // QEMU does not support copy_file_range. Skip under qemu
  #[cfg_attr(qemu, ignore)]
 +#[cfg(feature = "zerocopy")]
  fn test_copy_file_range() {
      use nix::fcntl::copy_file_range;
-     use std::os::unix::io::AsFd;
-@@ -353,6 +357,7 @@ mod linux_android {
+ 
+@@ -319,6 +323,7 @@ mod linux_android {
      use tempfile::NamedTempFile;
  
      use crate::*;
@@ -815,7 +826,7 @@ Index: nix/test/test_fcntl.rs
  
      #[test]
      fn test_splice() {
-@@ -375,6 +380,7 @@ mod linux_android {
+@@ -341,6 +346,7 @@ mod linux_android {
      }
  
      #[test]
@@ -823,7 +834,7 @@ Index: nix/test/test_fcntl.rs
      fn test_tee() {
          let (rd1, wr1) = pipe().unwrap();
          let (rd2, wr2) = pipe().unwrap();
-@@ -397,6 +403,7 @@ mod linux_android {
+@@ -363,6 +369,7 @@ mod linux_android {
      }
  
      #[test]
@@ -985,7 +996,7 @@ Index: nix/test/test_pty.rs
  /// Common setup for testing PTTY pairs
  fn open_ptty_pair() -> (PtyMaster, File) {
      let _m = crate::PTSNAME_MTX.lock();
-@@ -131,6 +139,7 @@ fn open_ptty_pair() -> (PtyMaster, File)
+@@ -134,6 +142,7 @@ fn open_ptty_pair() -> (PtyMaster, File)
  /// This uses a common `open_ptty_pair` because much of these functions aren't useful by
  /// themselves. So for this test we perform the basic act of getting a file handle for a
  /// master/slave PTTY pair.
@@ -993,15 +1004,15 @@ Index: nix/test/test_pty.rs
  #[test]
  fn test_open_ptty_pair() {
      let (_, _) = open_ptty_pair();
-@@ -144,6 +153,7 @@ fn make_raw<Fd: AsFd>(fd: Fd) {
+@@ -147,6 +156,7 @@ fn make_raw<Fd: AsFd>(fd: Fd) {
  }
  
  /// Test `io::Read` on the PTTY master
 +#[cfg(feature = "fs")]
  #[test]
+ #[cfg(not(target_os = "solaris"))]
  fn test_read_ptty_pair() {
-     let (mut master, mut slave) = open_ptty_pair();
-@@ -161,6 +171,7 @@ fn test_read_ptty_pair() {
+@@ -165,6 +175,7 @@ fn test_read_ptty_pair() {
  }
  
  /// Test `io::Write` on the PTTY master
@@ -1009,7 +1020,7 @@ Index: nix/test/test_pty.rs
  #[test]
  fn test_write_ptty_pair() {
      let (mut master, mut slave) = open_ptty_pair();
-@@ -245,6 +256,7 @@ fn test_openpty_with_termios() {
+@@ -249,6 +260,7 @@ fn test_openpty_with_termios() {
      assert_eq!(&buf, echoed_string2.as_bytes());
  }
  
@@ -1041,16 +1052,16 @@ Index: nix/test/test_sendfile.rs
  use std::io::prelude::*;
  
  use libc::off_t;
-Index: nix/test/test_stat.rs
+Index: nix/test/sys/test_stat.rs
 ===================================================================
---- nix.orig/test/test_stat.rs
-+++ nix/test/test_stat.rs
+--- nix.orig/test/sys/test_stat.rs
++++ nix/test/sys/test_stat.rs
 @@ -1,3 +1,4 @@
 +#![cfg(feature = "fs")]
  #[cfg(not(any(target_os = "redox", target_os = "haiku")))]
  use std::fs;
  use std::fs::File;
-@@ -386,6 +387,7 @@ fn test_mknod() {
+@@ -391,6 +392,7 @@ fn test_mknod() {
      target_os = "haiku",
      target_os = "redox"
  )))]
@@ -1155,7 +1166,7 @@ Index: nix/test/test_unistd.rs
  use nix::unistd::ForkResult::*;
  use nix::unistd::*;
  use std::env;
-@@ -39,6 +45,7 @@ use crate::*;
+@@ -38,6 +44,7 @@ use crate::*;
  
  #[test]
  #[cfg(not(any(target_os = "netbsd")))]
@@ -1163,7 +1174,7 @@ Index: nix/test/test_unistd.rs
  fn test_fork_and_waitpid() {
      let _m = crate::FORK_MTX.lock();
  
-@@ -98,6 +105,7 @@ fn test_rfork_and_waitpid() {
+@@ -97,6 +104,7 @@ fn test_rfork_and_waitpid() {
  }
  
  #[test]
@@ -1171,7 +1182,7 @@ Index: nix/test/test_unistd.rs
  fn test_wait() {
      // Grab FORK_MTX so wait doesn't reap a different test's child process
      let _m = crate::FORK_MTX.lock();
-@@ -115,6 +123,7 @@ fn test_wait() {
+@@ -114,6 +122,7 @@ fn test_wait() {
  }
  
  #[test]
@@ -1179,7 +1190,7 @@ Index: nix/test/test_unistd.rs
  fn test_mkstemp() {
      let mut path = env::temp_dir();
      path.push("nix_tempfile.XXXXXX");
-@@ -130,6 +139,7 @@ fn test_mkstemp() {
+@@ -128,6 +137,7 @@ fn test_mkstemp() {
  }
  
  #[test]
@@ -1187,7 +1198,7 @@ Index: nix/test/test_unistd.rs
  fn test_mkstemp_directory() {
      // mkstemp should fail if a directory is given
      mkstemp(&env::temp_dir()).expect_err("assertion failed");
-@@ -137,6 +147,7 @@ fn test_mkstemp_directory() {
+@@ -135,6 +145,7 @@ fn test_mkstemp_directory() {
  
  #[test]
  #[cfg(not(target_os = "redox"))]
@@ -1195,7 +1206,7 @@ Index: nix/test/test_unistd.rs
  fn test_mkfifo() {
      let tempdir = tempdir().unwrap();
      let mkfifo_fifo = tempdir.path().join("mkfifo_fifo");
-@@ -150,6 +161,7 @@ fn test_mkfifo() {
+@@ -148,6 +159,7 @@ fn test_mkfifo() {
  
  #[test]
  #[cfg(not(target_os = "redox"))]
@@ -1203,13 +1214,13 @@ Index: nix/test/test_unistd.rs
  fn test_mkfifo_directory() {
      // mkfifo should fail if a directory is given
      mkfifo(&env::temp_dir(), Mode::S_IRUSR).expect_err("assertion failed");
-@@ -162,6 +174,7 @@ fn test_mkfifo_directory() {
+@@ -160,6 +172,7 @@ fn test_mkfifo_directory() {
      target_os = "redox",
      target_os = "haiku"
  )))]
 +#[cfg(feature = "fs")]
  fn test_mkfifoat_none() {
-     let _m = crate::CWD_LOCK.read();
+     use nix::fcntl::AT_FDCWD;
  
 @@ -182,6 +195,7 @@ fn test_mkfifoat_none() {
      target_os = "redox",
@@ -1219,15 +1230,15 @@ Index: nix/test/test_unistd.rs
  fn test_mkfifoat() {
      use nix::fcntl;
  
-@@ -205,6 +219,7 @@ fn test_mkfifoat() {
+@@ -204,6 +218,7 @@ fn test_mkfifoat() {
      target_os = "redox",
      target_os = "haiku"
  )))]
 +#[cfg(feature = "fs")]
  fn test_mkfifoat_directory_none() {
-     let _m = crate::CWD_LOCK.read();
+     use nix::fcntl::AT_FDCWD;
  
-@@ -220,6 +235,7 @@ fn test_mkfifoat_directory_none() {
+@@ -221,6 +236,7 @@ fn test_mkfifoat_directory_none() {
      target_os = "redox",
      target_os = "haiku"
  )))]
@@ -1235,7 +1246,7 @@ Index: nix/test/test_unistd.rs
  fn test_mkfifoat_directory() {
      // mkfifoat should fail if a directory is given
      let tempdir = tempdir().unwrap();
-@@ -232,6 +248,7 @@ fn test_mkfifoat_directory() {
+@@ -233,6 +249,7 @@ fn test_mkfifoat_directory() {
  }
  
  #[test]
@@ -1243,7 +1254,7 @@ Index: nix/test/test_unistd.rs
  fn test_getpid() {
      let pid: ::libc::pid_t = getpid().into();
      let ppid: ::libc::pid_t = getppid().into();
-@@ -241,6 +258,7 @@ fn test_getpid() {
+@@ -242,6 +259,7 @@ fn test_getpid() {
  
  #[test]
  #[cfg(not(target_os = "redox"))]
@@ -1251,7 +1262,7 @@ Index: nix/test/test_unistd.rs
  fn test_getsid() {
      let none_sid: ::libc::pid_t = getsid(None).unwrap().into();
      let pid_sid: ::libc::pid_t = getsid(Some(getpid())).unwrap().into();
-@@ -249,6 +267,7 @@ fn test_getsid() {
+@@ -250,6 +268,7 @@ fn test_getsid() {
  }
  
  #[cfg(linux_android)]
@@ -1259,7 +1270,7 @@ Index: nix/test/test_unistd.rs
  mod linux_android {
      use nix::unistd::gettid;
  
-@@ -267,6 +286,7 @@ mod linux_android {
+@@ -268,6 +287,7 @@ mod linux_android {
      target_os = "fuchsia",
      target_os = "haiku"
  )))]
@@ -1267,7 +1278,7 @@ Index: nix/test/test_unistd.rs
  fn test_setgroups() {
      // Skip this test when not run as root as `setgroups()` requires root.
      skip_if_not_root!("test_setgroups");
-@@ -296,6 +316,7 @@ fn test_setgroups() {
+@@ -297,6 +317,7 @@ fn test_setgroups() {
      target_os = "haiku",
      solarish
  )))]
@@ -1275,7 +1286,7 @@ Index: nix/test/test_unistd.rs
  fn test_initgroups() {
      // Skip this test when not run as root as `initgroups()` and `setgroups()`
      // require root.
-@@ -367,6 +388,7 @@ macro_rules! execve_test_factory (
+@@ -368,6 +389,7 @@ macro_rules! execve_test_factory (
              $(, $flags)*)
      }
  
@@ -1283,7 +1294,7 @@ Index: nix/test/test_unistd.rs
      fn common_test(syscall: fn() -> Result<std::convert::Infallible, nix::Error>) {
          if "execveat" == stringify!($syscall) {
              // Though undocumented, Docker's default seccomp profile seems to
-@@ -421,6 +443,7 @@ macro_rules! execve_test_factory (
+@@ -422,6 +444,7 @@ macro_rules! execve_test_factory (
          // https://github.com/nix-rust/nix/issues/555
      #[cfg_attr(target_env = "musl", ignore)]
      #[test]
@@ -1291,7 +1302,7 @@ Index: nix/test/test_unistd.rs
      fn test_cstring() {
          common_test(syscall_cstring);
      }
-@@ -429,6 +452,7 @@ macro_rules! execve_test_factory (
+@@ -430,6 +453,7 @@ macro_rules! execve_test_factory (
      )
  );
  
@@ -1299,7 +1310,7 @@ Index: nix/test/test_unistd.rs
  cfg_if! {
      if #[cfg(target_os = "android")] {
          execve_test_factory!(test_execve, execve, CString::new("/system/bin/sh").unwrap().as_c_str());
-@@ -450,8 +474,10 @@ cfg_if! {
+@@ -451,8 +475,10 @@ cfg_if! {
      target_os = "linux",
      target_os = "openbsd"
  ))]
@@ -1310,7 +1321,7 @@ Index: nix/test/test_unistd.rs
  cfg_if! {
      if #[cfg(target_os = "android")] {
          use nix::fcntl::AtFlags;
-@@ -477,6 +503,7 @@ cfg_if! {
+@@ -478,6 +504,7 @@ cfg_if! {
  
  #[test]
  #[cfg(not(target_os = "fuchsia"))]
@@ -1318,7 +1329,7 @@ Index: nix/test/test_unistd.rs
  fn test_fchdir() {
      // fchdir changes the process's cwd
      let _dr = crate::DirRestore::new();
-@@ -492,6 +519,7 @@ fn test_fchdir() {
+@@ -491,6 +518,7 @@ fn test_fchdir() {
  }
  
  #[test]
@@ -1326,7 +1337,7 @@ Index: nix/test/test_unistd.rs
  fn test_getcwd() {
      // chdir changes the process's cwd
      let _dr = crate::DirRestore::new();
-@@ -517,6 +545,7 @@ fn test_getcwd() {
+@@ -516,6 +544,7 @@ fn test_getcwd() {
  }
  
  #[test]
@@ -1334,7 +1345,7 @@ Index: nix/test/test_unistd.rs
  fn test_chown() {
      // Testing for anything other than our own UID/GID is hard.
      let uid = Some(getuid());
-@@ -537,6 +566,7 @@ fn test_chown() {
+@@ -536,6 +565,7 @@ fn test_chown() {
  }
  
  #[test]
@@ -1342,15 +1353,15 @@ Index: nix/test/test_unistd.rs
  fn test_fchown() {
      // Testing for anything other than our own UID/GID is hard.
      let uid = Some(getuid());
-@@ -553,6 +583,7 @@ fn test_fchown() {
+@@ -550,6 +580,7 @@ fn test_fchown() {
  
  #[test]
  #[cfg(not(target_os = "redox"))]
 +#[cfg(all(feature = "fs",feature = "user"))]
  fn test_fchownat() {
      use nix::fcntl::AtFlags;
- 
-@@ -579,6 +610,7 @@ fn test_fchownat() {
+     use nix::fcntl::AT_FDCWD;
+@@ -577,6 +608,7 @@ fn test_fchownat() {
  }
  
  #[test]
@@ -1358,7 +1369,7 @@ Index: nix/test/test_unistd.rs
  fn test_lseek() {
      const CONTENTS: &[u8] = b"abcdef123456";
      let mut tmp = tempfile().unwrap();
-@@ -593,6 +625,7 @@ fn test_lseek() {
+@@ -591,6 +623,7 @@ fn test_lseek() {
  }
  
  #[cfg(linux_android)]
@@ -1366,15 +1377,15 @@ Index: nix/test/test_unistd.rs
  #[test]
  fn test_lseek64() {
      const CONTENTS: &[u8] = b"abcdef123456";
-@@ -635,6 +668,7 @@ cfg_if! {
-     target_os = "fuchsia",
-     target_os = "haiku"
+@@ -634,6 +667,7 @@ cfg_if! {
+     target_os = "haiku",
+     target_os = "cygwin"
  )))]
 +#[cfg(feature = "acct")]
  fn test_acct() {
      use std::process::Command;
      use std::{thread, time};
-@@ -661,6 +695,7 @@ fn test_acct() {
+@@ -660,6 +694,7 @@ fn test_acct() {
  
  #[cfg_attr(target_os = "hurd", ignore)]
  #[test]
@@ -1382,7 +1393,7 @@ Index: nix/test/test_unistd.rs
  fn test_fpathconf_limited() {
      let f = tempfile().unwrap();
      // PATH_MAX is limited on most platforms, so it makes a good test
-@@ -675,6 +710,7 @@ fn test_fpathconf_limited() {
+@@ -674,6 +709,7 @@ fn test_fpathconf_limited() {
  
  #[cfg_attr(target_os = "hurd", ignore)]
  #[test]
@@ -1390,7 +1401,7 @@ Index: nix/test/test_unistd.rs
  fn test_pathconf_limited() {
      // PATH_MAX is limited on most platforms, so it makes a good test
      let path_max = pathconf("/", PathconfVar::PATH_MAX);
-@@ -688,6 +724,7 @@ fn test_pathconf_limited() {
+@@ -687,6 +723,7 @@ fn test_pathconf_limited() {
  
  #[cfg_attr(target_os = "hurd", ignore)]
  #[test]
@@ -1398,7 +1409,7 @@ Index: nix/test/test_unistd.rs
  fn test_sysconf_limited() {
      // OPEN_MAX is limited on most platforms, so it makes a good test
      let open_max = sysconf(SysconfVar::OPEN_MAX);
-@@ -700,6 +737,7 @@ fn test_sysconf_limited() {
+@@ -699,6 +736,7 @@ fn test_sysconf_limited() {
  }
  
  #[cfg(target_os = "freebsd")]
@@ -1406,7 +1417,7 @@ Index: nix/test/test_unistd.rs
  #[test]
  fn test_sysconf_unsupported() {
      // I know of no sysconf variables that are unsupported everywhere, but
-@@ -711,6 +749,7 @@ fn test_sysconf_unsupported() {
+@@ -710,6 +748,7 @@ fn test_sysconf_unsupported() {
  
  #[cfg(any(linux_android, freebsdlike, target_os = "openbsd"))]
  #[test]
@@ -1414,7 +1425,7 @@ Index: nix/test/test_unistd.rs
  fn test_getresuid() {
      let resuids = getresuid().unwrap();
      assert_ne!(resuids.real.as_raw(), libc::uid_t::MAX);
-@@ -720,6 +759,7 @@ fn test_getresuid() {
+@@ -719,6 +758,7 @@ fn test_getresuid() {
  
  #[cfg(any(linux_android, freebsdlike, target_os = "openbsd"))]
  #[test]
@@ -1422,7 +1433,7 @@ Index: nix/test/test_unistd.rs
  fn test_getresgid() {
      let resgids = getresgid().unwrap();
      assert_ne!(resgids.real.as_raw(), libc::gid_t::MAX);
-@@ -730,6 +770,7 @@ fn test_getresgid() {
+@@ -729,6 +769,7 @@ fn test_getresgid() {
  // Test that we can create a pair of pipes.  No need to verify that they pass
  // data; that's the domain of the OS, not nix.
  #[test]
@@ -1430,7 +1441,7 @@ Index: nix/test/test_unistd.rs
  fn test_pipe() {
      let (fd0, fd1) = pipe().unwrap();
      let m0 = stat::SFlag::from_bits_truncate(
-@@ -753,6 +794,7 @@ fn test_pipe() {
+@@ -752,6 +793,7 @@ fn test_pipe() {
      target_os = "emscripten",
      target_os = "redox",
  ))]
@@ -1438,7 +1449,7 @@ Index: nix/test/test_unistd.rs
  #[test]
  fn test_pipe2() {
      use nix::fcntl::{fcntl, FcntlArg, FdFlag};
-@@ -768,8 +810,10 @@ fn test_pipe2() {
+@@ -765,8 +807,10 @@ fn test_pipe2() {
      assert!(f1.contains(FdFlag::FD_CLOEXEC));
  }
  
@@ -1449,7 +1460,7 @@ Index: nix/test/test_unistd.rs
  fn test_truncate() {
      let tempdir = tempdir().unwrap();
      let path = tempdir.path().join("file");
-@@ -787,6 +831,7 @@ fn test_truncate() {
+@@ -784,6 +828,7 @@ fn test_truncate() {
  }
  
  #[test]
@@ -1457,7 +1468,7 @@ Index: nix/test/test_unistd.rs
  fn test_ftruncate() {
      let tempdir = tempdir().unwrap();
      let path = tempdir.path().join("file");
-@@ -815,6 +860,7 @@ pub extern "C" fn alarm_signal_handler(r
+@@ -812,6 +857,7 @@ pub extern "C" fn alarm_signal_handler(r
  
  #[test]
  #[cfg(not(target_os = "redox"))]
@@ -1465,7 +1476,7 @@ Index: nix/test/test_unistd.rs
  fn test_alarm() {
      use std::{
          thread,
-@@ -860,6 +906,7 @@ fn test_alarm() {
+@@ -857,6 +903,7 @@ fn test_alarm() {
  
  #[test]
  #[cfg(not(target_os = "redox"))]
@@ -1473,15 +1484,15 @@ Index: nix/test/test_unistd.rs
  fn test_canceling_alarm() {
      let _m = crate::SIGNAL_MTX.lock();
  
-@@ -871,6 +918,7 @@ fn test_canceling_alarm() {
+@@ -868,6 +915,7 @@ fn test_canceling_alarm() {
  
  #[test]
  #[cfg(not(any(target_os = "redox", target_os = "haiku")))]
 +#[cfg(feature = "fs")]
  fn test_symlinkat() {
-     let _m = crate::CWD_LOCK.read();
+     use nix::fcntl::AT_FDCWD;
  
-@@ -899,6 +947,7 @@ fn test_symlinkat() {
+@@ -898,6 +946,7 @@ fn test_symlinkat() {
  
  #[test]
  #[cfg(not(any(target_os = "redox", target_os = "haiku")))]
@@ -1489,39 +1500,47 @@ Index: nix/test/test_unistd.rs
  fn test_linkat_file() {
      use nix::fcntl::AtFlags;
  
-@@ -931,6 +980,7 @@ fn test_linkat_file() {
+@@ -932,6 +981,7 @@ fn test_linkat_file() {
+ #[cfg(not(any(target_os = "redox", target_os = "haiku")))]
+ /// This test is the same as [test_linkat_file], but ensures that two different types can be used
+ /// as the path arguments.
++#[cfg(all(feature = "fs", feature = "process", feature = "user"))]
+ fn test_linkat_pathtypes() {
+     use nix::fcntl::AtFlags;
+ 
+@@ -964,6 +1014,7 @@ fn test_linkat_pathtypes() {
  
  #[test]
  #[cfg(not(any(target_os = "redox", target_os = "haiku")))]
 +#[cfg(all(feature = "fs", feature = "process", feature = "user"))]
  fn test_linkat_olddirfd_none() {
      use nix::fcntl::AtFlags;
- 
-@@ -970,6 +1020,7 @@ fn test_linkat_olddirfd_none() {
+     use nix::fcntl::AT_FDCWD;
+@@ -1004,6 +1055,7 @@ fn test_linkat_olddirfd_none() {
  
  #[test]
  #[cfg(not(any(target_os = "redox", target_os = "haiku")))]
 +#[cfg(all(feature = "fs", feature = "process", feature = "user"))]
  fn test_linkat_newdirfd_none() {
      use nix::fcntl::AtFlags;
- 
-@@ -1009,6 +1060,7 @@ fn test_linkat_newdirfd_none() {
+     use nix::fcntl::AT_FDCWD;
+@@ -1044,6 +1096,7 @@ fn test_linkat_newdirfd_none() {
  
  #[test]
  #[cfg(not(any(apple_targets, target_os = "redox", target_os = "haiku")))]
 +#[cfg(feature = "fs")]
  fn test_linkat_no_follow_symlink() {
      use nix::fcntl::AtFlags;
- 
-@@ -1054,6 +1106,7 @@ fn test_linkat_no_follow_symlink() {
+     use nix::fcntl::AT_FDCWD;
+@@ -1090,6 +1143,7 @@ fn test_linkat_no_follow_symlink() {
  
  #[test]
  #[cfg(not(any(target_os = "redox", target_os = "haiku")))]
 +#[cfg(feature = "fs")]
  fn test_linkat_follow_symlink() {
      use nix::fcntl::AtFlags;
- 
-@@ -1105,6 +1158,7 @@ fn test_linkat_follow_symlink() {
+     use nix::fcntl::AT_FDCWD;
+@@ -1142,6 +1196,7 @@ fn test_linkat_follow_symlink() {
  
  #[test]
  #[cfg(not(target_os = "redox"))]
@@ -1529,7 +1548,7 @@ Index: nix/test/test_unistd.rs
  fn test_unlinkat_dir_noremovedir() {
      let tempdir = tempdir().unwrap();
      let dirname = "foo_dir";
-@@ -1126,6 +1180,7 @@ fn test_unlinkat_dir_noremovedir() {
+@@ -1163,6 +1218,7 @@ fn test_unlinkat_dir_noremovedir() {
  
  #[test]
  #[cfg(not(target_os = "redox"))]
@@ -1537,7 +1556,7 @@ Index: nix/test/test_unistd.rs
  fn test_unlinkat_dir_removedir() {
      let tempdir = tempdir().unwrap();
      let dirname = "foo_dir";
-@@ -1146,6 +1201,7 @@ fn test_unlinkat_dir_removedir() {
+@@ -1183,6 +1239,7 @@ fn test_unlinkat_dir_removedir() {
  
  #[test]
  #[cfg(not(target_os = "redox"))]
@@ -1545,7 +1564,7 @@ Index: nix/test/test_unistd.rs
  fn test_unlinkat_file() {
      let tempdir = tempdir().unwrap();
      let filename = "foo.txt";
-@@ -1165,6 +1221,7 @@ fn test_unlinkat_file() {
+@@ -1202,6 +1259,7 @@ fn test_unlinkat_file() {
  }
  
  #[test]
@@ -1553,7 +1572,7 @@ Index: nix/test/test_unistd.rs
  fn test_access_not_existing() {
      let tempdir = tempdir().unwrap();
      let dir = tempdir.path().join("does_not_exist.txt");
-@@ -1175,6 +1232,7 @@ fn test_access_not_existing() {
+@@ -1212,6 +1270,7 @@ fn test_access_not_existing() {
  }
  
  #[test]
@@ -1561,15 +1580,15 @@ Index: nix/test/test_unistd.rs
  fn test_access_file_exists() {
      let tempdir = tempdir().unwrap();
      let path = tempdir.path().join("does_exist.txt");
-@@ -1184,6 +1242,7 @@ fn test_access_file_exists() {
+@@ -1221,6 +1280,7 @@ fn test_access_file_exists() {
  }
  
  #[cfg(not(target_os = "redox"))]
 +#[cfg(feature = "user")]
  #[test]
  fn test_user_into_passwd() {
-     // get the UID of the "nobody" user
-@@ -1200,6 +1259,7 @@ fn test_user_into_passwd() {
+     let test_username = if cfg!(target_os = "haiku") {
+@@ -1241,6 +1301,7 @@ fn test_user_into_passwd() {
  
  /// Tests setting the filesystem UID with `setfsuid`.
  #[cfg(linux_android)]
@@ -1577,15 +1596,15 @@ Index: nix/test/test_unistd.rs
  #[test]
  fn test_setfsuid() {
      use std::os::unix::fs::PermissionsExt;
-@@ -1242,6 +1302,7 @@ fn test_setfsuid() {
+@@ -1283,6 +1344,7 @@ fn test_setfsuid() {
      target_os = "fuchsia",
      target_os = "haiku"
  )))]
 +#[cfg(all(feature = "term",feature = "fs"))]
  fn test_ttyname() {
-     let fd = posix_openpt(OFlag::O_RDWR).expect("posix_openpt failed");
-     assert!(fd.as_raw_fd() > 0);
-@@ -1264,6 +1325,7 @@ fn test_ttyname() {
+     use std::os::fd::AsRawFd;
+ 
+@@ -1307,6 +1369,7 @@ fn test_ttyname() {
  
  #[test]
  #[cfg(not(any(target_os = "redox", target_os = "fuchsia")))]
@@ -1593,7 +1612,7 @@ Index: nix/test/test_unistd.rs
  fn test_ttyname_not_pty() {
      let fd = File::open("/dev/zero").unwrap();
      assert_eq!(ttyname(fd), Err(Errno::ENOTTY));
-@@ -1276,6 +1338,7 @@ fn test_getpeereid() {
+@@ -1319,6 +1382,7 @@ fn test_getpeereid() {
      let (sock_a, sock_b) = UnixStream::pair().unwrap();
  
      let (uid_a, gid_a) = getpeereid(sock_a).unwrap();
@@ -1601,7 +1620,7 @@ Index: nix/test/test_unistd.rs
      let (uid_b, gid_b) = getpeereid(sock_b).unwrap();
  
      let uid = geteuid();
-@@ -1288,7 +1351,7 @@ fn test_getpeereid() {
+@@ -1331,7 +1395,7 @@ fn test_getpeereid() {
  }
  
  #[test]
@@ -1609,8 +1628,8 @@ Index: nix/test/test_unistd.rs
 +#[cfg(all(not(target_os = "redox"),feature = "fs"))]
  fn test_faccessat_none_not_existing() {
      use nix::fcntl::AtFlags;
-     let tempdir = tempfile::tempdir().unwrap();
-@@ -1302,7 +1365,8 @@ fn test_faccessat_none_not_existing() {
+     use nix::fcntl::AT_FDCWD;
+@@ -1347,7 +1411,8 @@ fn test_faccessat_none_not_existing() {
  }
  
  #[test]
@@ -1619,8 +1638,8 @@ Index: nix/test/test_unistd.rs
 +#[cfg(all(feature = "socket", feature = "user"))]
  fn test_faccessat_not_existing() {
      use nix::fcntl::AtFlags;
-     let tempdir = tempfile::tempdir().unwrap();
-@@ -1322,8 +1386,9 @@ fn test_faccessat_not_existing() {
+ 
+@@ -1363,8 +1428,9 @@ fn test_faccessat_not_existing() {
  }
  
  #[test]
@@ -1629,9 +1648,9 @@ Index: nix/test/test_unistd.rs
  fn test_faccessat_none_file_exists() {
 +#[cfg(feature = "fs")]
      use nix::fcntl::AtFlags;
-     let tempdir = tempfile::tempdir().unwrap();
-     let path = tempdir.path().join("does_exist.txt");
-@@ -1338,7 +1403,8 @@ fn test_faccessat_none_file_exists() {
+     use nix::fcntl::AT_FDCWD;
+ 
+@@ -1381,7 +1447,8 @@ fn test_faccessat_none_file_exists() {
  }
  
  #[test]
@@ -1640,8 +1659,8 @@ Index: nix/test/test_unistd.rs
 +#[cfg(feature = "fs")]
  fn test_faccessat_file_exists() {
      use nix::fcntl::AtFlags;
-     let tempdir = tempfile::tempdir().unwrap();
-@@ -1357,6 +1423,7 @@ fn test_faccessat_file_exists() {
+ 
+@@ -1401,6 +1468,7 @@ fn test_faccessat_file_exists() {
  
  #[test]
  #[cfg(any(all(target_os = "linux", not(target_env = "uclibc")), freebsdlike))]
@@ -1649,7 +1668,7 @@ Index: nix/test/test_unistd.rs
  fn test_eaccess_not_existing() {
      let tempdir = tempdir().unwrap();
      let dir = tempdir.path().join("does_not_exist.txt");
-@@ -1368,6 +1435,7 @@ fn test_eaccess_not_existing() {
+@@ -1412,6 +1480,7 @@ fn test_eaccess_not_existing() {
  
  #[test]
  #[cfg(any(all(target_os = "linux", not(target_env = "uclibc")), freebsdlike))]
@@ -1670,7 +1689,7 @@ Index: nix/src/sys/socket/addr.rs
 ===================================================================
 --- nix.orig/src/sys/socket/addr.rs
 +++ nix/src/sys/socket/addr.rs
-@@ -2155,6 +2155,7 @@ pub mod vsock {
+@@ -2176,6 +2176,7 @@ pub mod vsock {
  mod tests {
      use super::*;
  
@@ -1678,7 +1697,7 @@ Index: nix/src/sys/socket/addr.rs
      mod types {
          use super::*;
  
-@@ -2208,6 +2209,7 @@ mod tests {
+@@ -2229,6 +2230,7 @@ mod tests {
              target_endian = "little"
          ))]
          #[test]
@@ -1686,7 +1705,7 @@ Index: nix/src/sys/socket/addr.rs
          fn linux_loopback() {
              #[repr(align(2))]
              struct Raw([u8; 20]);
-@@ -2288,6 +2290,7 @@ mod tests {
+@@ -2309,6 +2311,7 @@ mod tests {
          }
  
          #[test]
@@ -1694,7 +1713,7 @@ Index: nix/src/sys/socket/addr.rs
          fn size() {
              #[cfg(any(bsd, target_os = "aix", solarish, target_os = "haiku"))]
              let l = mem::size_of::<libc::sockaddr_dl>();
-@@ -2297,6 +2300,7 @@ mod tests {
+@@ -2318,6 +2321,7 @@ mod tests {
          }
      }
  
@@ -1702,7 +1721,7 @@ Index: nix/src/sys/socket/addr.rs
      mod sockaddr_in {
          use super::*;
          use std::str::FromStr;
-@@ -2324,6 +2328,7 @@ mod tests {
+@@ -2345,6 +2349,7 @@ mod tests {
          }
      }
  
@@ -1710,15 +1729,6 @@ Index: nix/src/sys/socket/addr.rs
      mod sockaddr_in6 {
          use super::*;
          use std::str::FromStr;
-Index: nix/src/sys/socket/mod.rs
-===================================================================
---- nix.orig/src/sys/socket/mod.rs
-+++ nix/src/sys/socket/mod.rs
-@@ -2302,4 +2302,3 @@ pub fn shutdown(df: RawFd, how: Shutdown
-         Errno::result(shutdown(df, how)).map(drop)
-     }
- }
--
 Index: nix/test/common/mod.rs
 ===================================================================
 --- nix.orig/test/common/mod.rs
@@ -1747,7 +1757,7 @@ Index: nix/test/sys/test_fanotify.rs
 +#![cfg(feature = "fanotify")]
  use crate::*;
  use nix::errno::Errno;
- use nix::sys::fanotify::{
+ use nix::fcntl::AT_FDCWD;
 Index: nix/test/sys/test_resource.rs
 ===================================================================
 --- nix.orig/test/sys/test_resource.rs
@@ -1788,11 +1798,45 @@ Index: nix/test/sys/test_prctl.rs
 ===================================================================
 --- nix.orig/test/sys/test_prctl.rs
 +++ nix/test/sys/test_prctl.rs
-@@ -124,6 +124,7 @@ mod test_prctl {
-     }
- 
+@@ -137,6 +137,7 @@ mod test_prctl {
+     // See: https://github.com/nix-rust/nix/issues/2418
      #[test]
+     #[cfg_attr(qemu, ignore)]
 +    #[cfg(feature = "mman")]
      fn test_set_vma_anon_name() {
          use nix::errno::Errno;
          use nix::sys::mman;
+Index: nix/test/test_spawn.rs
+===================================================================
+--- nix.orig/test/test_spawn.rs
++++ nix/test/test_spawn.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "process")]
+ use super::FORK_MTX;
+ use nix::errno::Errno;
+ use nix::spawn::{self, PosixSpawnAttr, PosixSpawnFileActions};
+@@ -51,6 +52,7 @@ fn spawn_true() {
+ }
+ 
+ #[test]
++#[cfg(feature = "signal")]
+ fn spawn_sleep() {
+     let _guard = FORK_MTX.lock();
+ 
+@@ -135,6 +137,7 @@ fn spawnp_true() {
+ }
+ 
+ #[test]
++#[cfg(feature = "signal")]
+ fn spawnp_sleep() {
+     let _guard = FORK_MTX.lock();
+ 
+Index: nix/test/test_syslog.rs
+===================================================================
+--- nix.orig/test/test_syslog.rs
++++ nix/test/test_syslog.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "syslog")]
+ use nix::syslog::{openlog, syslog, Facility, LogFlags, Severity};
+ 
+ #[test]
