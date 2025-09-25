@@ -1,0 +1,26 @@
+Index: pipewire/Cargo.toml
+===================================================================
+--- pipewire.orig/Cargo.toml
++++ pipewire/Cargo.toml
+@@ -45,7 +45,7 @@ version = "2"
+ version = "0.2"
+ 
+ [dependencies.nix]
+-version = "0.29"
++version = "0.30"
+ features = [
+     "signal",
+     "fs",
+Index: pipewire/src/channel.rs
+===================================================================
+--- pipewire.orig/src/channel.rs
++++ pipewire/src/channel.rs
+@@ -97,7 +97,7 @@ impl<T: 'static> Receiver<T> {
+             let mut channel = channel.lock().expect("Channel mutex lock poisoned");
+ 
+             // Read from the pipe to make it block until written to again.
+-            let _ = nix::unistd::read(channel.readfd, &mut [0]);
++            let _ = nix::unistd::read(unsafe { BorrowedFd::borrow_raw(channel.readfd) }, &mut [0]);
+ 
+             channel.queue.drain(..).for_each(&callback);
+         });
