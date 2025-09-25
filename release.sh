@@ -174,7 +174,7 @@ show_build_notice() {
 cat <<eof
 The recommended way to build and upload is to run something like:
 
-  cd build && ./build.sh $CRATE $VER && dput ${DEBSRC}_${DEBVER}_${DEB_HOST_ARCH}.changes && git push origin $RELBRANCH && git checkout - && cd -
+  cd build && DISTRO="$DISTRO" ./build.sh $CRATE $VER && dput ${DEBSRC}_${DEBVER}_${DEB_HOST_ARCH}.changes && git push origin $RELBRANCH && git checkout - && cd -
 
 eof
 }
@@ -217,7 +217,7 @@ new binaries, then you can just go ahead and directly dput the source package.
 
 If you want to build and test it, run:
 
-  cd build && ./build.sh $CRATE && dput ${DEBSRC}_${DEBVER}_source.changes && cd - && git checkout master
+  cd build && DISTRO="$DISTRO" ./build.sh $CRATE && dput ${DEBSRC}_${DEBVER}_source.changes && cd - && git checkout master
 
 For your reference, this source package builds $(echo "$upload_bin_packages" | wc -l) binary package(s):
 $upload_bin_packages
