@@ -2,43 +2,74 @@ Description: Remove partial-io as it's archived upstream
 Last-Update: 2022-09-02
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -60,5 +60,2 @@
+Index: zstd/Cargo.toml
+===================================================================
+--- zstd.orig/Cargo.toml
++++ zstd/Cargo.toml
+@@ -117,8 +117,5 @@ features = ["derive"]
+ [dev-dependencies.humansize]
+ version = "2.0"
  
 -[dev-dependencies.partial-io]
 -version = "0.5"
 -
  [dev-dependencies.walkdir]
---- a/src/stream/write/tests.rs
-+++ b/src/stream/write/tests.rs
-@@ -3,4 +3,2 @@
+ version = "2.2"
+Index: zstd/src/stream/write/tests.rs
+===================================================================
+--- zstd.orig/src/stream/write/tests.rs
++++ zstd/src/stream/write/tests.rs
+@@ -1,8 +1,6 @@
+ use std::io::{Cursor, Write};
+ use std::iter;
  
 -use partial_io::{PartialOp, PartialWrite};
 -
  use crate::stream::decode_all;
-@@ -28,2 +26,3 @@
+ use crate::stream::write::{Decoder, Encoder};
+ 
+@@ -26,6 +24,7 @@ fn test_cycle() {
+     assert_eq!(input, &decoded[..]);
+ }
  
 +/*
  /// Test that flush after a partial write works successfully without
-@@ -71,2 +70,2 @@
+ /// corrupting the frame. This test is in this module because it checks
+ /// internal implementation details.
+@@ -69,4 +68,4 @@ fn setup_partial_write(input_data: &[u8]
+     }
+ 
      z
 -}
 +}*/
---- a/src/stream/tests.rs
-+++ b/src/stream/tests.rs
-@@ -3,4 +3,2 @@
+Index: zstd/src/stream/tests.rs
+===================================================================
+--- zstd.orig/src/stream/tests.rs
++++ zstd/src/stream/tests.rs
+@@ -1,8 +1,6 @@
+ use super::{copy_encode, decode_all, encode_all};
+ use super::{Decoder, Encoder};
  
 -use partial_io::{PartialOp, PartialWrite};
 -
  use std::io;
-@@ -56,3 +54,3 @@
+ use std::iter;
+ 
+@@ -54,7 +52,7 @@ fn test_flush() {
+     assert_eq!(s, b"hello", "Error decoding after flush.");
+ }
  
 -#[test]
 +/*#[test]
  fn test_try_finish() {
-@@ -141,3 +139,3 @@
+     use std::io::Write;
+     let mut z = setup_try_finish();
+@@ -139,7 +137,7 @@ fn test_failing_write() {
+         &input,
+         "WouldBlock errors should not corrupt stream"
      );
 -}
 +}*/
  
+ #[test]
+ fn test_invalid_frame() {
