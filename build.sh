@@ -61,23 +61,28 @@ DEB_HOST_ARCH=$(dpkg-architecture -q DEB_HOST_ARCH)
 SRCNAME="${DEBSRC}_${DEBVER}"
 BUILDNAME="${DEBSRC}_${DEBVER}_${DEB_HOST_ARCH}"
 
-if [ -z "$CHROOT" ]; then
-	if [ "$CHROOT_MODE" = "unshare" ]; then
-		# nothing to do here, mmdebstrap will create a new chroot tarball on demand
+if [ -z "$CHROOT" ] && [ -z "$CHROOT_MODE" ]; then
+	if schroot -i -c "debcargo-unstable-${DEB_HOST_ARCH}-sbuild" >/dev/null 2>&1; then
 		CHROOT="debcargo-unstable-${DEB_HOST_ARCH}-sbuild"
-	elif schroot -i -c "debcargo-unstable-${DEB_HOST_ARCH}-sbuild" >/dev/null 2>&1; then
-		CHROOT="debcargo-unstable-${DEB_HOST_ARCH}-sbuild"
+		CHROOT_MODE=schroot
 	elif schroot -i -c "unstable-${DEB_HOST_ARCH}-sbuild" >/dev/null 2>&1; then
 		CHROOT="unstable-${DEB_HOST_ARCH}-sbuild"
+		CHROOT_MODE=schroot
 		echo >&2 "Automatically using sbuild chroot unstable-${DEB_HOST_ARCH}-sbuild; however it's"
 		echo >&2 "strongly recommended to create a separate chroot debcargo-unstable-${DEB_HOST_ARCH}-sbuild"
 		echo >&2 "so your builds won't have to re-download & re-install cargo, rustc, and llvm every time."
 		echo >&2 "See the section \"Setting up\" of the Debian Rust Team Book for details:"
 		echo >&2 "https://rust-team.pages.debian.net/book/process-single.html#setting-up"
 		sleep 1
-	elif [ "$SOURCEONLY" != 1 ]; then
-		abort 1 "could not automatically find a suitable chroot; set CHROOT"
 	fi
+fi
+
+if [ -z "$CHROOT_MODE" ]; then
+	CHROOT_MODE=unshare
+fi
+
+if [ -z "$CHROOT" ]; then
+	CHROOT="debcargo-unstable-${DEB_HOST_ARCH}-sbuild"
 fi
 
 shouldbuild() {
@@ -201,8 +206,8 @@ fi
 
 if [ "$CHROOT_MODE" = "unshare" ]; then
 	CACHE_DIR=${XDG_CACHE_HOME:-${HOME}/.cache}
-	CHROOT_TARBALL=$(find "${CACHE_DIR}/sbuild" -name "${CHROOT}.t*" -print -quit)
-	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=--apt-upgrade -- unshare -t ${CHROOT_TARBALL} ${DISTRO:+-r $DISTRO}")
+	CHROOT_TARBALL=$(find "${CACHE_DIR}/sbuild/" -name "${CHROOT}.t*" -print -quit || echo "${CACHE_DIR}/sbuild/debcargo-unstable-amd64-sbuild.tar")
+	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=--apt-upgrade -- unshare -t ${CHROOT_TARBALL}")
 else
 	AUTOPKGTEST_OPTS=("--run-autopkgtest" "--autopkgtest-root-arg=" "--autopkgtest-opts=-- schroot ${CHROOT}")
 fi
@@ -220,7 +225,7 @@ fi
 
 SBUILD_CONFIG="$SCRIPTDIR/dev/sbuildrc" sbuild --no-source --arch-any --arch-all \
   ${CHROOT:+-c $CHROOT} \
-  ${CHROOT_MODE:+--chroot-mode "$CHROOT_MODE"} \
+  --chroot-mode "$CHROOT_MODE" \
   ${DISTRO:+-d $DISTRO} \
   "${EXTRA_DEBS_SBUILD[@]}" \
   "${EXTRA_DEBS_AUTOPKGTEST_OPTS[@]}" \

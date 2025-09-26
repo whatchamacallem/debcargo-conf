@@ -1,0 +1,63 @@
+From c11ad73f0aa7f345283698c2637e9674b9b76990 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Fabian=20Gr=C3=BCnbichler?= <f.gruenbichler@proxmox.com>
+Date: Wed, 24 Sep 2025 09:09:44 +0200
+Subject: [PATCH] zlib-rs: properly guard tests by allocator
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+so that both `cargo test --no-default-features --features c-allocator` and
+`cargo test --no-default-features --features rust-allocator` pass.
+
+Signed-off-by: Fabian Grünbichler <f.gruenbichler@proxmox.com>
+
+Forwarded: https://github.com/trifectatechfoundation/zlib-rs/pull/413
+---
+ src/deflate.rs        | 3 +++
+ src/inflate/window.rs | 2 +-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/deflate.rs b/src/deflate.rs
+index 1885e5b..4b96d74 100644
+--- a/src/deflate.rs
++++ b/src/deflate.rs
+@@ -3309,6 +3309,7 @@ mod test {
+         }
+     }
+ 
++    #[cfg(feature = "c-allocator")]
+     unsafe extern "C" fn fail_nth_allocation<const N: usize>(
+         opaque: crate::c_api::voidpf,
+         items: crate::c_api::uInt,
+@@ -3327,6 +3328,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[cfg(feature = "c-allocator")]
+     fn init_invalid_allocator() {
+         {
+             let atomic = AtomicUsize::new(0);
+@@ -3371,6 +3373,7 @@ mod test {
+         }
+     }
+ 
++    #[cfg(feature = "c-allocator")]
+     mod copy_invalid_allocator {
+         use super::*;
+ 
+diff --git a/src/inflate/window.rs b/src/inflate/window.rs
+index 1cf5233..46a791e 100644
+--- a/src/inflate/window.rs
++++ b/src/inflate/window.rs
+@@ -173,7 +173,7 @@ impl<'a> Window<'a> {
+     }
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature = "rust-allocator"))]
+ mod test {
+     use super::*;
+ 
+-- 
+2.47.3
+

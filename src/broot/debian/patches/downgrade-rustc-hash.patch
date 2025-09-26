@@ -1,6 +1,6 @@
 --- a/src/kitty/image_renderer.rs
 +++ b/src/kitty/image_renderer.rs
-@@ -25,7 +25,7 @@
+@@ -40,7 +40,7 @@
          RgbaImage,
      },
      lru::LruCache,
@@ -9,7 +9,7 @@
      serde::Deserialize,
      std::{
          fs::File,
-@@ -46,6 +46,8 @@
+@@ -62,6 +62,8 @@
      },
  };
  
@@ -18,18 +18,18 @@
  /// How to send the image to kitty
  ///
  /// Note that I didn't test yet the named shared memory
-@@ -232,7 +234,7 @@
-         if !is_kitty_graphics_protocol_supported() {
+@@ -475,7 +477,7 @@
+         if options.display == KittyGraphicsDisplay::None {
              return None;
          }
 -        let hasher = FxBuildHasher;
 +        let hasher = FxBuildHasher::default();
          let temp_files = LruCache::with_hasher(options.kept_temp_files, hasher);
-         cell_size_in_pixels()
-             .ok()
+         let options = if is_ssh() {
+             KittyImageRendererOptions {
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -180,7 +180,7 @@
+@@ -182,7 +182,7 @@
  version = "0.45"
  
  [dependencies.rustc-hash]

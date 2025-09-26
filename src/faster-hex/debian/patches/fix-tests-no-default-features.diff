@@ -1,8 +1,8 @@
-Index: faster-hex/src/lib.rs
-===================================================================
---- faster-hex.orig/src/lib.rs
-+++ faster-hex/src/lib.rs
-@@ -129,7 +129,9 @@ unsafe fn avx2_support_no_cache_x86() ->
+diff --git a/src/lib.rs b/src/lib.rs
+index aa54d2e..ef2f92c 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -131,7 +131,10 @@ unsafe fn avx2_support_no_cache_x86() -> bool {
  mod tests {
      use crate::decode::{hex_decode, hex_decode_with_case, CheckCase};
      use crate::encode::{hex_encode, hex_string};
@@ -10,22 +10,23 @@ Index: faster-hex/src/lib.rs
 +    use crate::{hex_encode_upper, vectorization_support, Vectorization};
 +    #[cfg(feature = "alloc")]
 +    use crate::hex_string_upper;
++
      use proptest::proptest;
  
-     #[test]
-@@ -161,6 +163,7 @@ mod tests {
-             assert_eq!(hex_string, hex::encode(s));
+     #[cfg(not(feature = "alloc"))]
+@@ -169,6 +172,7 @@ mod tests {
+             assert_eq!(hex_string.as_str(), hex::encode(s));
          }
  
-+        #[cfg(feature = "alloc")]
++	#[cfg(feature = "alloc")]
          {
              let encode_upper = &*hex_encode_upper(s.as_bytes(), &mut buffer).unwrap();
  
-@@ -192,6 +195,7 @@ mod tests {
+@@ -214,6 +218,7 @@ mod tests {
  
              assert_eq!(&dst[..], s.as_bytes());
          }
-+        #[cfg(feature = "alloc")]
++	#[cfg(feature = "alloc")]
          {
              let mut dst = Vec::with_capacity(len);
              dst.resize(len, 0);

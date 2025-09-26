@@ -1,0 +1,298 @@
+Description: Guard tests that depend on the 'std' feature.
+Author: Antonin Delpeuch <antonin@delpeuch.eu>
+Forwarded: https://github.com/garro95/priority-queue/pull/77
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+diff --git a/src/double_priority_queue/mod.rs b/src/double_priority_queue/mod.rs
+index d15246d..f35ca6b 100644
+--- a/src/double_priority_queue/mod.rs
++++ b/src/double_priority_queue/mod.rs
+@@ -473,6 +473,7 @@ where
+     ///
+     /// # Example
+     /// ```
++    /// # #[cfg(feature = "std")] {
+     /// # use priority_queue::DoublePriorityQueue;
+     /// let mut pq = DoublePriorityQueue::new();
+     ///
+@@ -486,6 +487,7 @@ where
+     ///
+     /// assert_eq!(pq.peek_min(), Some((&"Bananas", &15)));
+     /// assert_eq!(pq.into_vec(), vec!["Bananas"]);
++    /// # }
+     /// ```
+     pub fn extract_if<F>(&mut self, predicate: F) -> ExtractIf<I, P, F, H>
+     where
+@@ -512,6 +514,7 @@ where
+     ///
+     /// # Example
+     /// ```
++    /// # #[cfg(feature = "std")] {
+     /// # use priority_queue::DoublePriorityQueue;
+     /// let mut pq = DoublePriorityQueue::new();
+     ///
+@@ -524,6 +527,7 @@ where
+     /// }), None);
+     ///
+     /// assert_eq!(pq.pop_min(), Some(("Bananas", 10)));
++    /// # }
+     /// ```
+     pub fn pop_min_if<F>(&mut self, f: F) -> Option<(I, P)>
+     where
+@@ -554,6 +558,7 @@ where
+     ///
+     /// # Example
+     /// ```
++    /// # #[cfg(feature = "std")] {
+     /// # use priority_queue::DoublePriorityQueue;
+     /// let mut pq = DoublePriorityQueue::new();
+     /// pq.push("Apples", 5);
+@@ -563,6 +568,7 @@ where
+     ///   false
+     /// }), None);
+     /// assert_eq!(pq.pop_max(), Some(("Apples", 5)));
++    /// # }
+     /// ```
+     pub fn pop_max_if<F>(&mut self, f: F) -> Option<(I, P)>
+     where
+@@ -583,6 +589,7 @@ where
+     ///
+     /// # Example
+     /// ```
++    /// # #[cfg(feature = "std")] {
+     /// # use priority_queue::DoublePriorityQueue;
+     /// let mut pq = DoublePriorityQueue::new();
+     /// assert_eq!(pq.push("Apples", 5), None);
+@@ -591,6 +598,7 @@ where
+     /// assert_eq!(pq.get_priority("Apples"), Some(&6));
+     /// assert_eq!(pq.push("Apples", 4), Some(6));
+     /// assert_eq!(pq.get_priority("Apples"), Some(&4));
++    /// # }
+     /// ```
+     ///
+     /// Computes in **O(log(N))** time.
+@@ -641,6 +649,7 @@ where
+     ///
+     /// # Example
+     /// ```
++    /// # #[cfg(feature = "std")] {
+     /// # use priority_queue::DoublePriorityQueue;
+     /// let mut pq = DoublePriorityQueue::new();
+     /// assert_eq!(pq.push_increase("Apples", 5), None);
+@@ -651,6 +660,7 @@ where
+     /// // priority is returned.
+     /// assert_eq!(pq.push_increase("Apples", 4), Some(4));
+     /// assert_eq!(pq.get_priority("Apples"), Some(&6));
++    /// # }
+     /// ```
+     ///
+     /// Computes in **O(log(N))** time.
+@@ -679,6 +689,7 @@ where
+     ///
+     /// # Example
+     /// ```
++    /// # #[cfg(feature = "std")] {
+     /// # use priority_queue::DoublePriorityQueue;
+     /// let mut pq = DoublePriorityQueue::new();
+     /// assert_eq!(pq.push_decrease("Apples", 5), None);
+@@ -689,6 +700,7 @@ where
+     /// // priority is returned.
+     /// assert_eq!(pq.push_decrease("Apples", 6), Some(6));
+     /// assert_eq!(pq.get_priority("Apples"), Some(&4));
++    /// # }
+     /// ```
+     ///
+     /// Computes in **O(log(N))** time.
+@@ -708,6 +720,7 @@ where
+     ///
+     /// # Example
+     /// ```
++    /// # #[cfg(feature = "std")] {
+     /// # use priority_queue::DoublePriorityQueue;
+     /// let mut pq = DoublePriorityQueue::new();
+     /// assert_eq!(pq.change_priority("Apples", 5), None);
+@@ -716,6 +729,7 @@ where
+     /// assert_eq!(pq.get_priority("Apples"), Some(&6));
+     /// assert_eq!(pq.change_priority("Apples", 4), Some(6));
+     /// assert_eq!(pq.get_priority("Apples"), Some(&4));
++    /// # }
+     /// ```
+     ///
+     /// The item is found in **O(1)** thanks to the hash table.
+diff --git a/src/lib.rs b/src/lib.rs
+index 34ae10d..0664dc8 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -54,6 +54,7 @@
+ //!
+ //! # Examples
+ //! ```rust
++//! # #[cfg(feature = "std")] {
+ //! use priority_queue::PriorityQueue;
+ //!
+ //! let mut pq = PriorityQueue::new();
+@@ -71,10 +72,12 @@
+ //! for (item, _) in pq.into_sorted_iter() {
+ //!     println!("{}", item); // Will print Bananas, Strawberries, Apples
+ //! }
++//! # }
+ //! ```
+ //!
+ //! ## Reverse ordering
+ //! ```rust
++//! # #[cfg(feature = "std")] {
+ //! use priority_queue::PriorityQueue;
+ //! use std::cmp::Reverse;
+ //!
+@@ -90,6 +93,7 @@
+ //! for (item, _) in pq.into_sorted_iter() {
+ //!     println!("{}", item); // Will print Apples, Bananas, Strawberries
+ //! }
++//! # }
+ //! ```
+ //!
+ //! # Crate features
+diff --git a/src/priority_queue/mod.rs b/src/priority_queue/mod.rs
+index 8bc6f91..29cab48 100644
+--- a/src/priority_queue/mod.rs
++++ b/src/priority_queue/mod.rs
+@@ -62,6 +62,7 @@ use std::mem::replace;
+ ///
+ /// # Example
+ /// ```rust
++/// # #[cfg(feature = "std")] {
+ /// use priority_queue::PriorityQueue;
+ ///
+ /// let mut pq = PriorityQueue::new();
+@@ -79,6 +80,7 @@ use std::mem::replace;
+ /// for (item, _) in pq.into_sorted_iter() {
+ ///     println!("{}", item);
+ /// }
++/// # }
+ /// ```
+ #[derive(Clone, Debug)]
+ #[cfg(feature = "std")]
+@@ -383,6 +385,7 @@ where
+     ///
+     /// # Example
+     /// ```
++    /// # #[cfg(feature = "std")] {
+     /// # use priority_queue::PriorityQueue;
+     /// let mut pq = PriorityQueue::new();
+     ///
+@@ -396,6 +399,7 @@ where
+     ///
+     /// assert_eq!(pq.peek(), Some((&"Bananas", &15)));
+     /// assert_eq!(pq.into_vec(), vec!["Bananas"]);
++    /// # }
+     /// ```
+     pub fn extract_if<F>(&mut self, predicate: F) -> ExtractIf<I, P, F, H>
+     where
+@@ -422,6 +426,7 @@ where
+     ///
+     /// # Example
+     /// ```
++    /// # #[cfg(feature = "std")] {
+     /// # use priority_queue::PriorityQueue;
+     /// let mut pq = PriorityQueue::new();
+     ///
+@@ -434,6 +439,7 @@ where
+     /// }), None);
+     ///
+     /// assert_eq!(pq.pop(), Some(("Apples", 5)));
++    /// # }
+     /// ```
+     pub fn pop_if<F>(&mut self, predicate: F) -> Option<(I, P)>
+     where
+@@ -458,6 +464,7 @@ where
+     ///
+     /// # Example
+     /// ```
++    /// # #[cfg(feature = "std")] {
+     /// # use priority_queue::PriorityQueue;
+     /// let mut pq = PriorityQueue::new();
+     /// assert_eq!(pq.push("Apples", 5), None);
+@@ -466,6 +473,7 @@ where
+     /// assert_eq!(pq.get_priority("Apples"), Some(&6));
+     /// assert_eq!(pq.push("Apples", 4), Some(6));
+     /// assert_eq!(pq.get_priority("Apples"), Some(&4));
++    /// # }
+     /// ```
+     ///
+     /// Computes in **O(log(N))** time.
+@@ -515,6 +523,7 @@ where
+     ///
+     /// # Example
+     /// ```
++    /// # #[cfg(feature = "std")] {
+     /// # use priority_queue::PriorityQueue;
+     /// let mut pq = PriorityQueue::new();
+     /// assert_eq!(pq.push_increase("Apples", 5), None);
+@@ -525,6 +534,7 @@ where
+     /// // priority is returned.
+     /// assert_eq!(pq.push_increase("Apples", 4), Some(4));
+     /// assert_eq!(pq.get_priority("Apples"), Some(&6));
++    /// # }
+     /// ```
+     ///
+     /// Computes in **O(log(N))** time.
+@@ -553,6 +563,7 @@ where
+     ///
+     /// # Example
+     /// ```
++    /// # #[cfg(feature = "std")] {
+     /// # use priority_queue::PriorityQueue;
+     /// let mut pq = PriorityQueue::new();
+     /// assert_eq!(pq.push_decrease("Apples", 5), None);
+@@ -563,6 +574,7 @@ where
+     /// // priority is returned.
+     /// assert_eq!(pq.push_decrease("Apples", 6), Some(6));
+     /// assert_eq!(pq.get_priority("Apples"), Some(&4));
++    /// # }
+     /// ```
+     ///
+     /// Computes in **O(log(N))** time.
+@@ -582,6 +594,7 @@ where
+     ///
+     /// # Example
+     /// ```
++    /// # #[cfg(feature = "std")] {
+     /// # use priority_queue::PriorityQueue;
+     /// let mut pq = PriorityQueue::new();
+     /// assert_eq!(pq.change_priority("Apples", 5), None);
+@@ -590,6 +603,7 @@ where
+     /// assert_eq!(pq.get_priority("Apples"), Some(&6));
+     /// assert_eq!(pq.change_priority("Apples", 4), Some(6));
+     /// assert_eq!(pq.get_priority("Apples"), Some(&4));
++    /// # }
+     /// ```
+     ///
+     /// The item is found in **O(1)** thanks to the hash table.
+diff --git a/tests/double_priority_queue.rs b/tests/double_priority_queue.rs
+index 396c982..2ab5d7d 100644
+--- a/tests/double_priority_queue.rs
++++ b/tests/double_priority_queue.rs
+@@ -25,7 +25,7 @@
+  *  obtain one at http://mozilla.org/MPL/2.0/.
+  *
+  */
+-
++#[cfg(feature = "std")]
+ #[cfg(test)]
+ mod doublepq_tests {
+     pub use priority_queue::DoublePriorityQueue;
+diff --git a/tests/priority_queue.rs b/tests/priority_queue.rs
+index 1a7a5b9..1a14281 100644
+--- a/tests/priority_queue.rs
++++ b/tests/priority_queue.rs
+@@ -26,6 +26,7 @@
+  *
+  */
+ 
++#[cfg(feature = "std")]
+ #[cfg(test)]
+ mod pqueue_tests {
+     pub use priority_queue::PriorityQueue;
+-- 
+2.51.0
+
