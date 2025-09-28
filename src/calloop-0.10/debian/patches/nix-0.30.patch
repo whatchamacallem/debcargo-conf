@@ -1,0 +1,53 @@
+--- rust-calloop-0.10-0.10.6.orig/Cargo.toml
++++ rust-calloop-0.10-0.10.6/Cargo.toml
+@@ -56,7 +56,7 @@ default-features = false
+ version = "0.4"
+ 
+ [dependencies.nix]
+-version = "0.29"
++version = "0.30"
+ features = [
+     "event",
+     "fs",
+--- rust-calloop-0.10-0.10.6.orig/src/io.rs
++++ rust-calloop-0.10-0.10.6/src/io.rs
+@@ -8,6 +8,7 @@
+ 
+ use std::cell::RefCell;
+ use std::os::unix::io::{AsRawFd, RawFd};
++use std::os::fd::BorrowedFd;
+ use std::pin::Pin;
+ use std::rc::Rc;
+ use std::task::{Context, Poll as TaskPoll, Waker};
+@@ -49,9 +50,9 @@ impl<'l, F: AsRawFd> Async<'l, F> {
+     pub(crate) fn new<Data>(inner: Rc<LoopInner<'l, Data>>, fd: F) -> crate::Result<Async<'l, F>> {
+         let rawfd = fd.as_raw_fd();
+         // set non-blocking
+-        let old_flags = fcntl(rawfd, FcntlArg::F_GETFL)?;
++        let old_flags = fcntl(unsafe { BorrowedFd::borrow_raw(rawfd) }, FcntlArg::F_GETFL)?;
+         let old_flags = unsafe { OFlag::from_bits_retain(old_flags) };
+-        fcntl(rawfd, FcntlArg::F_SETFL(old_flags | OFlag::O_NONBLOCK))?;
++        fcntl(unsafe { BorrowedFd::borrow_raw(rawfd) }, FcntlArg::F_SETFL(old_flags | OFlag::O_NONBLOCK))?;
+         // register in the loop
+         let dispatcher = Rc::new(RefCell::new(IoDispatcher {
+             fd: rawfd,
+@@ -157,7 +158,7 @@ impl<'l, F: AsRawFd> Drop for Async<'l,
+         self.inner.kill(&self.dispatcher);
+         // restore flags
+         let _ = fcntl(
+-            self.dispatcher.borrow().fd,
++            unsafe { BorrowedFd::borrow_raw(self.dispatcher.borrow().fd) },
+             FcntlArg::F_SETFL(self.old_flags),
+         );
+     }
+--- rust-calloop-0.10-0.10.6.orig/src/sources/ping/eventfd.rs
++++ rust-calloop-0.10-0.10.6/src/sources/ping/eventfd.rs
+@@ -84,7 +84,7 @@ fn drain_ping(fd: RawFd) -> std::io::Res
+     const NBYTES: usize = 8;
+     let mut buf = [0u8; NBYTES];
+ 
+-    match read(fd, &mut buf) {
++    match read(unsafe { BorrowedFd::borrow_raw(fd) }, &mut buf) {
+         // Reading from an eventfd should only ever produce 8 bytes. No looping
+         // is required.
+         Ok(NBYTES) => Ok(u64::from_ne_bytes(buf)),
