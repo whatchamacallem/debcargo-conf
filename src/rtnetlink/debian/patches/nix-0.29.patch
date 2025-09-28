@@ -7,7 +7,28 @@ Index: rtnetlink/Cargo.toml
  
  [dependencies.nix]
 -version = "0.27.1"
-+version = "0.29"
++version = ">= 0.27.1, < 0.31"
  features = [
      "fs",
      "mount",
+Index: rtnetlink/src/ns.rs
+===================================================================
+--- rtnetlink.orig/src/ns.rs
++++ rtnetlink/src/ns.rs
+@@ -11,6 +11,7 @@ use nix::{
+     unistd::{fork, ForkResult},
+ };
+ use std::{option::Option, os::fd::BorrowedFd, path::Path, process::exit};
++use std::os::fd::IntoRawFd;
+ 
+ // if "only" smol or smol+tokio were enabled, we use smol because
+ // it doesn't require an active tokio runtime - just to be sure.
+@@ -304,7 +305,7 @@ impl NetworkNamespace {
+             open_flags,
+             Mode::empty(),
+         ) {
+-            Ok(raw_fd) => raw_fd,
++            Ok(fd) => fd.into_raw_fd(),
+             Err(e) => {
+                 log::error!("open error: {}", e);
+                 let err_msg = format!("open error: {e}");
