@@ -1,0 +1,56 @@
+Index: cargo-auditable/src/auditable_from_metadata.rs
+===================================================================
+--- cargo-auditable.orig/src/auditable_from_metadata.rs
++++ cargo-auditable/src/auditable_from_metadata.rs
+@@ -267,7 +267,7 @@ mod tests {
+         cmd.exec().unwrap()
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn dependency_cycle() {
+         let cargo_toml_path = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap())
+             .join("tests/fixtures/cargo-audit-dep-cycle/Cargo.toml");
+@@ -275,5 +275,5 @@ mod tests {
+         let version_info_struct: VersionInfo = encode_audit_data(&metadata).unwrap();
+         let json = serde_json::to_string(&version_info_struct).unwrap();
+         VersionInfo::from_str(&json).unwrap(); // <- the part we care about succeeding
+-    }
++    }*/
+ }
+Index: cargo-auditable/tests/it.rs
+===================================================================
+--- cargo-auditable.orig/tests/it.rs
++++ cargo-auditable/tests/it.rs
+@@ -161,7 +161,7 @@ fn get_dependency_info(binary: &Utf8Path
+     auditable_info::audit_info_from_file(binary.as_std_path(), Default::default()).unwrap()
+ }
+ 
+-#[test]
++/*#[test]
+ fn test_cargo_auditable_workspaces() {
+     test_cargo_auditable_workspaces_inner(false);
+     test_cargo_auditable_workspaces_inner(true);
+@@ -484,7 +484,7 @@ fn test_custom_rustc_path_inner(sbom: bo
+         .packages
+         .iter()
+         .any(|p| p.name == "build_dep_of_runtime_dep" && p.kind == DependencyKind::Build));
+-}
++}*/
+ 
+ #[test]
+ fn test_workspace_member_version_info() {
+@@ -502,7 +502,7 @@ fn test_workspace_member_version_info()
+     assert!(status.success());
+ }
+ 
+-#[test]
++/*#[test]
+ fn test_wasm() {
+     test_wasm_inner(false);
+     test_wasm_inner(true);
+@@ -585,3 +585,4 @@ fn test_proc_macro_inner(sbom: bool) {
+         .expect("Could not find 'syn' in the embedded dependency list!");
+     assert_eq!(syn_info.kind, DependencyKind::Build);
+ }
++*/

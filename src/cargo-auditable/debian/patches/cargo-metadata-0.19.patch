@@ -1,0 +1,56 @@
+Index: cargo-auditable/Cargo.toml
+===================================================================
+--- cargo-auditable.orig/Cargo.toml
++++ cargo-auditable/Cargo.toml
+@@ -48,7 +48,7 @@ path = "tests/it.rs"
+ version = "0.9.0"
+ 
+ [dependencies.cargo_metadata]
+-version = "0.18"
++version = "0.19"
+ 
+ [dependencies.miniz_oxide]
+ version = ">= 0.7, < 0.9"
+@@ -79,7 +79,7 @@ version = "0.10.0"
+ #features = ["wasm"]
+ 
+ [dev-dependencies.cargo_metadata]
+-version = "0.18"
++version = "0.19"
+ 
+ [dev-dependencies.which]
+ version = "4.3.0"
+Index: cargo-auditable/src/auditable_from_metadata.rs
+===================================================================
+--- cargo-auditable.orig/src/auditable_from_metadata.rs
++++ cargo-auditable/src/auditable_from_metadata.rs
+@@ -240,7 +240,7 @@ fn proc_macro_packages(metadata: &cargo_
+             // Checking that length is 1 is purely to hedge against support for it being added in the future.
+             if pkg.targets.len() == 1
+                 && pkg.targets[0].kind.len() == 1
+-                && pkg.targets[0].kind[0] == "proc-macro"
++                && pkg.targets[0].kind[0] == "proc-macro".into()
+             {
+                 Some(pkg.id.repr.as_str())
+             } else {
+Index: cargo-auditable/tests/it.rs
+===================================================================
+--- cargo-auditable.orig/tests/it.rs
++++ cargo-auditable/tests/it.rs
+@@ -12,6 +12,7 @@ use cargo_metadata::{
+     camino::{Utf8Path, Utf8PathBuf},
+     Artifact,
+ };
++use cargo_metadata::TargetKind;
+ 
+ // Path to cargo-auditable binary under test
+ const EXE: &str = env!("CARGO_BIN_EXE_cargo-auditable");
+@@ -104,7 +105,7 @@ where
+                     .target
+                     .kind
+                     .iter()
+-                    .any(|kind| kind.as_str() == "cdylib")
++                    .any(|kind| *kind == TargetKind::CDyLib)
+                 {
+                     // Detect files with .so (Linux), .dylib (Mac) and .dll (Windows) extensions
+                     artifact
