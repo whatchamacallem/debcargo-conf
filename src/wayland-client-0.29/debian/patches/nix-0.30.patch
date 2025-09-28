@@ -1,0 +1,34 @@
+--- rust-wayland-client-0.29-0.29.5.orig/Cargo.toml
++++ rust-wayland-client-0.29-0.29.5/Cargo.toml
+@@ -39,7 +39,7 @@ version = "1.0"
+ version = "0.2"
+ 
+ [dependencies.nix]
+-version = "0.29"
++version = "0.30"
+ features = [
+     "fs",
+     "poll",
+--- rust-wayland-client-0.29-0.29.5.orig/src/display.rs
++++ rust-wayland-client-0.29-0.29.5/src/display.rs
+@@ -3,6 +3,7 @@ use std::ffi::OsString;
+ use std::io;
+ use std::ops::Deref;
+ use std::os::unix::io::{IntoRawFd, RawFd};
++use std::os::fd::BorrowedFd;
+ use std::os::unix::net::UnixStream;
+ use std::path::PathBuf;
+ use std::sync::Arc;
+@@ -127,10 +128,10 @@ impl Display {
+             // remove the variable so any child processes don't see it
+             env::remove_var("WAYLAND_SOCKET");
+             // set the CLOEXEC flag on this FD
+-            let flags = fcntl::fcntl(fd, fcntl::FcntlArg::F_GETFD);
++            let flags = fcntl::fcntl(unsafe { BorrowedFd::borrow_raw(fd) }, fcntl::FcntlArg::F_GETFD);
+             let result = flags
+                 .map(|f| fcntl::FdFlag::from_bits(f).unwrap() | fcntl::FdFlag::FD_CLOEXEC)
+-                .and_then(|f| fcntl::fcntl(fd, fcntl::FcntlArg::F_SETFD(f)));
++                .and_then(|f| fcntl::fcntl(unsafe { BorrowedFd::borrow_raw(fd) }, fcntl::FcntlArg::F_SETFD(f)));
+             match result {
+                 Ok(_) => {
+                     // setting the O_CLOEXEC worked
