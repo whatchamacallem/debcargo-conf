@@ -1,0 +1,41 @@
+Description: Fix test failure when termcolor feature is disabled
+ Add required-features = ["termcolor"] to examples and tests that depend on
+ termcolor functionality. This prevents compilation errors when testing with
+ the `--no-default-features` flag, as these examples and tests
+ unconditionally import termcolor types that are only available when the
+ termcolor feature is enabled
+Author: Nadzeya Hutsko <nadzya.info@gmail.com>
+Forwarded: https://github.com/brendanzab/codespan/issues/399
+Last-Update: 2025-09-29
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -49,22 +49,27 @@
+ [[example]]
+ name = "custom_files"
+ path = "examples/custom_files.rs"
++required-features = ["termcolor"]
+ 
+ [[example]]
+ name = "readme_preview"
+ path = "examples/readme_preview.rs"
++required-features = ["termcolor"]
+ 
+ [[example]]
+ name = "reusable_diagnostic"
+ path = "examples/reusable_diagnostic.rs"
++required-features = ["termcolor"]
+ 
+ [[example]]
+ name = "term"
+ path = "examples/term.rs"
++required-features = ["termcolor"]
+ 
+ [[test]]
+ name = "term"
+ path = "tests/term.rs"
++required-features = ["termcolor"]
+ 
+ [dependencies.serde]
+ version = "1"
