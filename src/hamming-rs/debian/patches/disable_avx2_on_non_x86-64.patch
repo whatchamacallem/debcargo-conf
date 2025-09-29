@@ -1,14 +1,14 @@
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -66,6 +66,7 @@
- pub fn distance(x: &[u8], y: &[u8]) -> u64 {
+@@ -62,6 +62,7 @@
      assert_eq!(x.len(), y.len());
      unsafe {
+         // from benchmarks, it seems avx2 implementation is slower than naive for very small vectors
 +        #[cfg(target_arch = "x86_64")]
-         if is_x86_feature_detected!("avx2") {
+         if is_x86_feature_detected!("avx2") && x.len() >= 1024 {
              return lib_avx2::distance_vect(x, y);
          }
-@@ -77,6 +78,7 @@
+@@ -74,6 +75,7 @@
  /// Uses highly optimized avx2 version if available
  pub fn weight(x: &[u8]) -> u64 {
      unsafe {
@@ -23,15 +23,15 @@
  use std::arch::x86_64::{
      __m256i, _mm256_add_epi64, _mm256_add_epi8, _mm256_and_si256, _mm256_extract_epi64,
      _mm256_or_si256, _mm256_sad_epu8, _mm256_set1_epi8, _mm256_setr_epi8, _mm256_setzero_si256,
-@@ -6,6 +7,7 @@
+@@ -8,6 +9,7 @@
  
- use crate::distance_faster;
+ use crate::distance_naive;
  
 +#[cfg(target_arch = "x86_64")]
  #[target_feature(enable = "avx2")]
  unsafe fn carry_save_adder(h: *mut __m256i, l: *mut __m256i, a: __m256i, b: __m256i, c: __m256i) {
      let u = _mm256_xor_si256(a, b);
-@@ -13,6 +15,7 @@
+@@ -15,6 +17,7 @@
      *l = _mm256_xor_si256(u, c);
  }
  
@@ -39,7 +39,7 @@
  #[target_feature(enable = "avx2")]
  unsafe fn count(v: __m256i) -> __m256i {
      let lookup = _mm256_setr_epi8(
-@@ -28,6 +31,7 @@
+@@ -30,6 +33,7 @@
      _mm256_sad_epu8(total, _mm256_setzero_si256())
  }
  
@@ -47,7 +47,7 @@
  #[target_feature(enable = "avx2")]
  unsafe fn avx2_harvey_seal_popcnt(x: *const __m256i, size: usize) -> u64 {
      let mut total = _mm256_setzero_si256();
-@@ -74,6 +78,7 @@
+@@ -76,6 +80,7 @@
          + _mm256_extract_epi64(total, 3)) as u64
  }
  
@@ -55,7 +55,7 @@
  #[target_feature(enable = "avx2")]
  unsafe fn avx2_harvey_seal_dist(x: *const __m256i, y: *const __m256i, size: usize) -> u64 {
      let mut total = _mm256_setzero_si256();
-@@ -168,6 +173,7 @@
+@@ -170,6 +175,7 @@
          + _mm256_extract_epi64(total, 3)) as u64
  }
  
@@ -63,7 +63,7 @@
  #[target_feature(enable = "avx2")]
  pub unsafe fn distance_vect(x: &[u8], y: &[u8]) -> u64 {
      assert_eq!(x.len(), y.len());
-@@ -203,6 +209,7 @@
+@@ -209,6 +215,7 @@
      accum
  }
  
