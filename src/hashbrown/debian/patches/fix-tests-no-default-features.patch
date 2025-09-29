@@ -4,7 +4,7 @@ Index: hashbrown/src/map.rs
 ===================================================================
 --- hashbrown.orig/src/map.rs
 +++ hashbrown/src/map.rs
-@@ -4694,6 +4694,7 @@ mod test_map {
+@@ -4759,6 +4759,7 @@ mod test_map {
      use super::Entry::{Occupied, Vacant};
      use super::EntryRef;
      use super::HashMap;
@@ -12,7 +12,7 @@ Index: hashbrown/src/map.rs
      use crate::raw::{AllocError, Allocator, Global};
      use alloc::string::{String, ToString};
      use alloc::sync::Arc;
-@@ -6141,6 +6142,7 @@ mod test_map {
+@@ -6206,6 +6207,7 @@ mod test_map {
          }
      }
  
@@ -20,7 +20,7 @@ Index: hashbrown/src/map.rs
      unsafe impl Allocator for MyAlloc {
          fn allocate(&self, layout: Layout) -> std::result::Result<NonNull<[u8]>, AllocError> {
              let g = Global;
-@@ -6154,6 +6156,7 @@ mod test_map {
+@@ -6219,6 +6221,7 @@ mod test_map {
      }
  
      #[test]
@@ -28,7 +28,7 @@ Index: hashbrown/src/map.rs
      fn test_hashmap_into_iter_bug() {
          let dropped: Arc<AtomicI8> = Arc::new(AtomicI8::new(1));
  
-@@ -6224,6 +6227,7 @@ mod test_map {
+@@ -6289,6 +6292,7 @@ mod test_map {
      ///
      /// This function does not panic, but returns an error as a `String`
      /// to distinguish between a test panic and an error in the input data.
@@ -36,7 +36,7 @@ Index: hashbrown/src/map.rs
      fn get_test_map<I, T, A>(
          iter: I,
          mut fun: impl FnMut(u64) -> T,
-@@ -6319,6 +6323,7 @@ mod test_map {
+@@ -6382,6 +6386,7 @@ mod test_map {
  
      #[test]
      #[should_panic = "panic in clone"]
@@ -44,7 +44,7 @@ Index: hashbrown/src/map.rs
      fn test_clone_memory_leaks_and_double_drop_one() {
          let dropped: Arc<AtomicI8> = Arc::new(AtomicI8::new(2));
  
-@@ -6345,6 +6350,7 @@ mod test_map {
+@@ -6408,6 +6413,7 @@ mod test_map {
  
      #[test]
      #[should_panic = "panic in drop"]
@@ -52,7 +52,7 @@ Index: hashbrown/src/map.rs
      fn test_clone_memory_leaks_and_double_drop_two() {
          let dropped: Arc<AtomicI8> = Arc::new(AtomicI8::new(2));
  
-@@ -6379,6 +6385,7 @@ mod test_map {
+@@ -6442,6 +6448,7 @@ mod test_map {
      /// We check that we have a working table if the clone operation from another
      /// thread ended in a panic (when buckets of maps are equal to each other).
      #[test]
@@ -60,7 +60,7 @@ Index: hashbrown/src/map.rs
      fn test_catch_panic_clone_from_when_len_is_equal() {
          use std::thread;
  
-@@ -6444,6 +6451,7 @@ mod test_map {
+@@ -6507,6 +6514,7 @@ mod test_map {
      /// We check that we have a working table if the clone operation from another
      /// thread ended in a panic (when buckets of maps are not equal to each other).
      #[test]
