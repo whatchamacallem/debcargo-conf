@@ -1,0 +1,46 @@
+Description: Restrict PIO module to x86/x86_64 architectures only
+ This patch restricts the pio module to only be available on x86 and
+ x86_64 arches where it can use native port I/O instructions.
+ The lazy_static dependency is also removed as it was only used by
+ the non-x86 PIO fallback code. This resolves autopkgtest failures
+ on non-x86 architectures
+Author: Nadzeya Hutsko <nadzya.info@gmail.com>
+Origin: upstream, https://gitlab.redox-os.org/redox-os/hwio/-/commit/67864a16dc6b3a78bb95f9c582c35a6da6335a00
+Forwarded: not-needed
+Last-Update: 2025-09-29
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -2,10 +2,12 @@
+ 
+ #![cfg_attr(not(feature = "std"), no_std)]
+ 
+-pub use self::io::*;
+-pub use self::mmio::*;
+-pub use self::pio::*;
+-
+ mod io;
+ mod mmio;
++#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+ mod pio;
++
++pub use self::io::*;
++pub use self::mmio::*;
++#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
++pub use self::pio::*;
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -22,11 +22,7 @@
+ [lib]
+ name = "hwio"
+ 
+-[dependencies.lazy_static]
+-version = "1.4.0"
+-optional = true
+-
+ [features]
+ default = ["std"]
+ stable = []
+-std = ["lazy_static"]
++std = []
