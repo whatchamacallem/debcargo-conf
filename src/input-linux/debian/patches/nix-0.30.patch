@@ -1,0 +1,44 @@
+--- rust-input-linux-0.7.1.orig/Cargo.toml
++++ rust-input-linux-0.7.1/Cargo.toml
+@@ -56,7 +56,7 @@ optional = true
+ version = "0.9.0"
+ 
+ [dependencies.nix]
+-version = "0.29"
++version = "0.30"
+ 
+ [dependencies.serde]
+ version = "1"
+--- rust-input-linux-0.7.1.orig/src/evdev.rs
++++ rust-input-linux-0.7.1/src/evdev.rs
+@@ -85,7 +85,7 @@ impl<F: AsRawFd> EvdevHandle<F> {
+     /// Read events from the input device
+     pub fn read(&self, events: &mut [sys::input_event]) -> io::Result<usize> {
+         let events = unsafe { from_raw_parts_mut(events.as_mut_ptr() as *mut u8, size_of::<sys::input_event>() * events.len()) };
+-        nix::unistd::read(self.fd(), events)
++        nix::unistd::read(self, events)
+             .map(|len| len / size_of::<sys::input_event>())
+             .map_err(convert_error)
+     }
+--- rust-input-linux-0.7.1.orig/src/macros.rs
++++ rust-input-linux-0.7.1/src/macros.rs
+@@ -3,7 +3,7 @@ use crate::sys;
+ 
+ pub(crate) const STRING_BUFFER_LENGTH: usize = 0x200;
+ 
+-pub(crate) fn convert_error(e: sys::Error) -> io::Error {
++pub(crate) fn convert_error(e: impl Into<io::Error>) -> io::Error {
+     e.into()
+ }
+ 
+--- rust-input-linux-0.7.1.orig/src/uinput.rs
++++ rust-input-linux-0.7.1/src/uinput.rs
+@@ -146,7 +146,7 @@ impl<F: AsRawFd> UInputHandle<F> {
+     /// Read events from uinput (see `EV_UINPUT`)
+     pub fn read(&self, events: &mut [sys::input_event]) -> io::Result<usize> {
+         let events = unsafe { from_raw_parts_mut(events.as_mut_ptr() as *mut u8, size_of::<sys::input_event>() * events.len()) };
+-        nix::unistd::read(self.fd(), events)
++        nix::unistd::read(self, events)
+             .map(|len| len / size_of::<sys::input_event>()).map_err(convert_error)
+     }
+ 
