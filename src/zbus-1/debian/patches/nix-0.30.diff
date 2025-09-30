@@ -1,0 +1,26 @@
+Index: zbus-1/Cargo.toml
+===================================================================
+--- zbus-1.orig/Cargo.toml
++++ zbus-1/Cargo.toml
+@@ -53,7 +53,7 @@ version = "0.3.8"
+ version = "1.0.2"
+ 
+ [dependencies.nix]
+-version = "0.29"
++version = ">= 0.29, < 1.0"
+ features = ["poll", "user", "socket", "uio"]
+ 
+ [dependencies.once_cell]
+Index: zbus-1/src/utils.rs
+===================================================================
+--- zbus-1.orig/src/utils.rs
++++ zbus-1/src/utils.rs
+@@ -22,7 +22,7 @@ pub(crate) fn wait_on(fd: RawFd, flags:
+     let fd = unsafe { BorrowedFd::borrow_raw(fd) };
+     let pollfd = PollFd::new(fd , flags);
+     loop {
+-        match poll(&mut [pollfd], PollTimeout::NONE) {
++        match poll(&mut [pollfd.clone()], PollTimeout::NONE) {
+             Ok(_) => break,
+             Err(e) => {
+                 if e == Errno::EAGAIN || e == Errno::EINTR {
