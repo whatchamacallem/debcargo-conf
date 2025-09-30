@@ -1,0 +1,21 @@
+Index: libslirp/src/bin/libslirp-helper/tun.rs
+===================================================================
+--- libslirp.orig/src/bin/libslirp-helper/tun.rs
++++ libslirp/src/bin/libslirp-helper/tun.rs
+@@ -4,6 +4,7 @@ use nix::sys::stat::Mode;
+ use std::error::Error;
+ use std::os::raw::c_short;
+ use std::os::unix::io::FromRawFd;
++use std::os::fd::IntoRawFd;
+ use std::os::unix::net::UnixDatagram;
+ 
+ //pub const IFF_TUN: c_short = 0x0001;
+@@ -64,7 +65,7 @@ ioctl_write_ptr!(tun_set_iff, TUN_MAGIC,
+ 
+ pub fn open(name: &str) -> Result<UnixDatagram, Box<dyn Error>> {
+     let flags = IFF_TAP | IFF_NO_PI;
+-    let fd = nix::fcntl::open("/dev/net/tun", OFlag::O_RDWR, Mode::empty())?;
++    let fd = nix::fcntl::open("/dev/net/tun", OFlag::O_RDWR, Mode::empty())?.into_raw_fd();
+ 
+     let mut ifr = InterfaceRequest::with_interface_name(name)?;
+     ifr.union.flags = flags;
