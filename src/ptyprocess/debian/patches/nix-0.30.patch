@@ -1,0 +1,85 @@
+Index: ptyprocess/Cargo.toml
+===================================================================
+--- ptyprocess.orig/Cargo.toml
++++ ptyprocess/Cargo.toml
+@@ -31,5 +31,5 @@ license = "MIT"
+ repository = "https://github.com/zhiburt/ptyprocess"
+ 
+ [dependencies.nix]
+-version = ">= 0.27, < 0.30"
++version = "0.30"
+ features = ["signal", "fs", "term", "feature", "ioctl"]
+Index: ptyprocess/src/lib.rs
+===================================================================
+--- ptyprocess.orig/src/lib.rs
++++ ptyprocess/src/lib.rs
+@@ -47,7 +47,7 @@ use nix::sys::stat::Mode;
+ use nix::sys::wait::{self, waitpid};
+ use nix::sys::{signal, termios};
+ use nix::unistd::{
+-    self, close, dup, dup2, fork, isatty, pipe, setsid, sysconf, write, ForkResult, Pid, SysconfVar,
++    self, close, dup, dup2, dup2_stdin, dup2_stdout, dup2_stderr, fork, isatty, pipe, setsid, sysconf, write, ForkResult, Pid, SysconfVar,
+ };
+ use nix::{ioctl_write_ptr_bad, Result};
+ use signal::Signal::SIGKILL;
+@@ -157,7 +157,7 @@ impl PtyProcess {
+                     drop(master);
+ 
+                     // close pipe on sucessfull exec
+-                    fcntl(exec_err_pipe_w.as_raw_fd(), FcntlArg::F_SETFD(FdFlag::FD_CLOEXEC))?;
++                    fcntl(&exec_err_pipe_w, FcntlArg::F_SETFD(FdFlag::FD_CLOEXEC))?;
+ 
+                     let _ = command.exec();
+                     Err(Error::last())
+@@ -176,7 +176,7 @@ impl PtyProcess {
+                 close(exec_err_pipe_w.into_raw_fd())?;
+ 
+                 let mut pipe_buf = [0u8; 4];
+-                unistd::read(exec_err_pipe_r.as_raw_fd(), &mut pipe_buf)?;
++                unistd::read(&exec_err_pipe_r, &mut pipe_buf)?;
+                 close(exec_err_pipe_r.into_raw_fd())?;
+                 let code = i32::from_be_bytes(pipe_buf);
+                 if code != 0 {
+@@ -280,7 +280,7 @@ impl PtyProcess {
+ 
+     /// Returns true if a underline `fd` connected with a TTY.
+     pub fn isatty(&self) -> Result<bool> {
+-        isatty(self.master.as_raw_fd())
++        isatty(&self.master)
+     }
+ 
+     /// Set the pty process's terminate approach delay.
+@@ -462,7 +462,7 @@ impl Master {
+             OFlag::O_RDWR | OFlag::O_NOCTTY,
+             Mode::empty(),
+         )?;
+-        Ok(slave_fd)
++        Ok(slave_fd.into_raw_fd())
+     }
+ 
+     #[cfg(target_os = "freebsd")]
+@@ -477,8 +477,8 @@ impl Master {
+     }
+ 
+     fn get_file_handle(&self) -> Result<File> {
+-        let fd = dup(self.as_raw_fd())?;
+-        let file = unsafe { File::from_raw_fd(fd) };
++        let fd = dup(self)?;
++        let file = File::from(fd);
+ 
+         Ok(file)
+     }
+@@ -603,9 +603,10 @@ fn redirect_std_streams(fd: RawFd) -> Re
+     close(STDERR_FILENO)?;
+ 
+     // use slave fd as std[in/out/err]
+-    dup2(fd, STDIN_FILENO)?;
+-    dup2(fd, STDOUT_FILENO)?;
+-    dup2(fd, STDERR_FILENO)?;
++    let fd = unsafe { BorrowedFd::borrow_raw(fd) };
++    dup2_stdin(fd)?;
++    dup2_stdout(fd)?;
++    dup2_stderr(fd)?;
+ 
+     Ok(())
+ }
