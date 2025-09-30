@@ -1,0 +1,51 @@
+Index: expectrl/src/process/unix.rs
+===================================================================
+--- expectrl.orig/src/process/unix.rs
++++ expectrl/src/process/unix.rs
+@@ -18,6 +18,7 @@ use std::{
+     io::{self, Read, Result, Write},
+     ops::{Deref, DerefMut},
+     os::unix::prelude::{AsRawFd, RawFd},
++    os::fd::BorrowedFd,
+     process::Command,
+ };
+ 
+@@ -198,10 +199,10 @@ impl polling::Source for PtyStream {
+ pub(crate) fn make_non_blocking(fd: RawFd, blocking: bool) -> Result<()> {
+     use nix::fcntl::{fcntl, FcntlArg, OFlag};
+ 
+-    let opt = fcntl(fd, FcntlArg::F_GETFL).map_err(nix_error_to_io)?;
++    let opt = fcntl(unsafe { BorrowedFd::borrow_raw(fd) }, FcntlArg::F_GETFL).map_err(nix_error_to_io)?;
+     let mut opt = OFlag::from_bits_truncate(opt);
+     opt.set(OFlag::O_NONBLOCK, blocking);
+-    let _ = fcntl(fd, FcntlArg::F_SETFL(opt)).map_err(nix_error_to_io)?;
++    let _ = fcntl(unsafe { BorrowedFd::borrow_raw(fd) }, FcntlArg::F_SETFL(opt)).map_err(nix_error_to_io)?;
+     Ok(())
+ }
+ 
+Index: expectrl/src/stream/stdin.rs
+===================================================================
+--- expectrl.orig/src/stream/stdin.rs
++++ expectrl/src/stream/stdin.rs
+@@ -149,7 +149,7 @@ mod inner {
+ 
+             // verify: possible controlling fd can be stdout and stderr as well?
+             // https://stackoverflow.com/questions/35873843/when-setting-terminal-attributes-via-tcsetattrfd-can-fd-be-either-stdout
+-            let isatty_terminal = isatty(STDIN_FILENO)
++            let isatty_terminal = isatty(unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) })
+                 .map_err(|e| Error::unknown("failed to call isatty", e.to_string()))?;
+             if isatty_terminal {
+                 // tcgetattr issues error if a provided fd is not a tty,
+Index: expectrl/Cargo.toml
+===================================================================
+--- expectrl.orig/Cargo.toml
++++ expectrl/Cargo.toml
+@@ -43,7 +43,7 @@ version = "1.6.0"
+ [features]
+ 
+ [target."cfg(unix)".dependencies.nix]
+-version = ">= 0.27, < 0.30"
++version = "0.30"
+ features = ["fs", "term"]
+ 
+ [target."cfg(unix)".dependencies.ptyprocess]
