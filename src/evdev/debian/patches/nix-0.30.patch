@@ -1,0 +1,47 @@
+--- rust-evdev-0.13.2.orig/Cargo.toml
++++ rust-evdev-0.13.2/Cargo.toml
+@@ -115,7 +115,7 @@ version = "0.2.121"
+ features = ["extra_traits"]
+ 
+ [dependencies.nix]
+-version = "0.29"
++version = "0.30"
+ features = [
+     "ioctl",
+     "fs",
+--- rust-evdev-0.13.2.orig/src/raw_stream.rs
++++ rust-evdev-0.13.2/src/raw_stream.rs
+@@ -785,7 +785,7 @@ mod tokio_stream {
+     impl EventStream {
+         pub(crate) fn new(device: RawDevice) -> io::Result<Self> {
+             use nix::fcntl;
+-            fcntl::fcntl(device.as_raw_fd(), fcntl::F_SETFL(fcntl::OFlag::O_NONBLOCK))?;
++            fcntl::fcntl(&device, fcntl::F_SETFL(fcntl::OFlag::O_NONBLOCK))?;
+             let device = AsyncFd::new(device)?;
+             Ok(Self { device, index: 0 })
+         }
+--- rust-evdev-0.13.2.orig/src/sync_stream.rs
++++ rust-evdev-0.13.2/src/sync_stream.rs
+@@ -365,9 +365,9 @@ impl Device {
+     /// Set `O_NONBLOCK` on this device handle.
+     pub fn set_nonblocking(&self, nonblocking: bool) -> io::Result<()> {
+         let mut flags =
+-            fcntl::OFlag::from_bits_retain(fcntl::fcntl(self.as_raw_fd(), fcntl::F_GETFL)?);
++            fcntl::OFlag::from_bits_retain(fcntl::fcntl(self, fcntl::F_GETFL)?);
+         flags.set(fcntl::OFlag::O_NONBLOCK, nonblocking);
+-        fcntl::fcntl(self.as_raw_fd(), fcntl::F_SETFL(flags))?;
++        fcntl::fcntl(self, fcntl::F_SETFL(flags))?;
+         Ok(())
+     }
+ 
+--- rust-evdev-0.13.2.orig/src/uinput.rs
++++ rust-evdev-0.13.2/src/uinput.rs
+@@ -585,7 +585,7 @@ mod tokio_stream {
+     impl VirtualEventStream {
+         pub(crate) fn new(device: VirtualDevice) -> io::Result<Self> {
+             use nix::fcntl;
+-            fcntl::fcntl(device.as_raw_fd(), fcntl::F_SETFL(fcntl::OFlag::O_NONBLOCK))?;
++            fcntl::fcntl(&device, fcntl::F_SETFL(fcntl::OFlag::O_NONBLOCK))?;
+             let device = AsyncFd::new(device)?;
+             Ok(Self { device, index: 0 })
+         }
