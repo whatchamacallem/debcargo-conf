@@ -1,0 +1,84 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -72,9 +72,6 @@
+ [dev-dependencies.lzzzz]
+ version = "1.0.4"
+ 
+-[dev-dependencies.more-asserts]
+-version = "0.3.1"
+-
+ [dev-dependencies.proptest]
+ version = "1.0.0"
+ 
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -75,10 +75,6 @@
+ #[cfg_attr(test, macro_use)]
+ extern crate alloc;
+ 
+-#[cfg(test)]
+-#[macro_use]
+-extern crate more_asserts;
+-
+ pub mod block;
+ #[cfg(feature = "frame")]
+ #[cfg_attr(docsrs, doc(cfg(feature = "frame")))]
+--- a/src/block/compress.rs
++++ b/src/block/compress.rs
+@@ -864,7 +864,7 @@
+         ];
+         let dict = input;
+         let compressed = compress_with_dict(input, dict);
+-        assert_lt!(compressed.len(), compress(input).len());
++        assert!(compressed.len() < compress(input).len());
+ 
+         assert!(compressed.len() < compress(input).len());
+         let mut uncompressed = vec![0u8; input.len()];
+@@ -894,7 +894,7 @@
+         ];
+         let dict = input;
+         let compressed = compress_with_dict(input, dict);
+-        assert_lt!(compressed.len(), compress(input).len());
++        assert!(compressed.len() < compress(input).len());
+ 
+         let mut uncompressed = vec![0u8; input.len() * 2];
+         // copy first half of the input into output
+@@ -931,29 +931,29 @@
+ 
+         // uncompressible
+         let out = compress(&aaas[..12]);
+-        assert_gt!(out.len(), 12);
++        assert!(out.len() > 12);
+         // compressible
+         let out = compress(&aaas[..13]);
+-        assert_le!(out.len(), 13);
++        assert!(out.len() <= 13);
+         let out = compress(&aaas[..14]);
+-        assert_le!(out.len(), 14);
++        assert!(out.len() <= 14);
+         let out = compress(&aaas[..15]);
+-        assert_le!(out.len(), 15);
++        assert!(out.len() <= 15);
+ 
+         // dict uncompressible
+         let out = compress_with_dict(&aaas[..11], aaas);
+-        assert_gt!(out.len(), 11);
++        assert!(out.len() > 11);
+         // compressible
+         let out = compress_with_dict(&aaas[..12], aaas);
+         // According to the spec this _could_ compres, but it doesn't in this lib
+         // as it aborts compression for any input len < LZ4_MIN_LENGTH
+-        assert_gt!(out.len(), 12);
++        assert!(out.len() > 12);
+         let out = compress_with_dict(&aaas[..13], aaas);
+-        assert_le!(out.len(), 13);
++        assert!(out.len() <= 13);
+         let out = compress_with_dict(&aaas[..14], aaas);
+-        assert_le!(out.len(), 14);
++        assert!(out.len() <= 14);
+         let out = compress_with_dict(&aaas[..15], aaas);
+-        assert_le!(out.len(), 15);
++        assert!(out.len() <= 15);
+     }
+ 
+     #[test]

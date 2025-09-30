@@ -1,16 +1,28 @@
-Description: Adapt tests' stderr to Debian's rust toolchain
- Tests in this package expect the stderr of compile failures to be produced by
- version nightly-2024-12-15 of the rust toolchain (as per the source
- repository's rust-toolchain.toml). Our current toolchain outputs slightly
- different text, so the expected stderr needs to be adapted. This patch
- introduces no functional differences. It must not be forwarded since upstream
- made an intentional choice of toolchain which is not compatible with this
- patch.
-Author: NoisyCoil <noisycoil@tutanota.com>
+From: NoisyCoil <noisycoil@tutanota.com>
+Date: Sun, 28 Sep 2025 22:59:38 -0400
+Subject: Adapt tests' stderr to Debian's rust toolchain
+
+Tests in this package expect the stderr of compile failures to be produced by
+version 1.86 of the rust toolchain (as per
+https://github.com/gregorygaines/bitfields-rs/blob/main/.github/workflows/ci.yml
+Our current rustc outputs slightly different text, so the expected stderr
+needs to be adapted. This patch introduces no functional differences. It must
+not be forwarded since upstream made an intentional choice of toolchain which
+is not compatible with how Debian manages rustc.
+
 Forwarded: not-needed
-Last-Update: 2025-07-14
 ---
-This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/tests/compile_error_cases/bitfield_bit_ops_disabled.stderr
++++ b/tests/compile_error_cases/bitfield_bit_ops_disabled.stderr
+@@ -9,5 +9,6 @@
+    |
+ help: there is a method `set_bits` with a similar name
+    |
+-14 |     bitfield.set_bits(0);
+-   |              ~~~~~~~~
++14 -     bitfield.get_bit(0);
++14 +     bitfield.set_bits(0);
++   |
 --- a/tests/compile_error_cases/bitfield_field_defined_bits_0.stderr
 +++ b/tests/compile_error_cases/bitfield_field_defined_bits_0.stderr
 @@ -2,4 +2,4 @@
