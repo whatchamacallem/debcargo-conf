@@ -1,0 +1,26 @@
+Index: clearscreen/src/lib.rs
+===================================================================
+--- clearscreen.orig/src/lib.rs
++++ clearscreen/src/lib.rs
+@@ -758,7 +758,7 @@ mod unix {
+ 	}
+ 
+ 	fn write_termios(f: impl Fn(&mut Termios)) -> Result<(), Error> {
+-		if isatty(stdin().as_raw_fd())? {
++		if isatty(stdin())? {
+ 			let mut t = tcgetattr(stdin().as_fd())?;
+ 			reset_termios(&mut t);
+ 			f(&mut t);
+Index: clearscreen/Cargo.toml
+===================================================================
+--- clearscreen.orig/Cargo.toml
++++ clearscreen/Cargo.toml
+@@ -45,7 +45,7 @@ version = "8.0"
+ windows-console = []
+ 
+ [target."cfg(unix)".dependencies.nix]
+-version = "0.29"
++version = "0.30"
+ features = [
+     "fs",
+     "term",
