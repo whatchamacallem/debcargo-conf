@@ -1,0 +1,71 @@
+Index: libsystemd/Cargo.toml
+===================================================================
+--- libsystemd.orig/Cargo.toml
++++ libsystemd/Cargo.toml
+@@ -42,7 +42,7 @@ version = "^0.2"
+ version = "^0.4"
+ 
+ [dependencies.nix]
+-version = ">= 0.24, < 0.30"
++version = "0.30"
+ features = ["fs", "process", "socket", "uio"]
+ 
+ [dependencies.nom]
+Index: libsystemd/src/activation.rs
+===================================================================
+--- libsystemd.orig/src/activation.rs
++++ libsystemd/src/activation.rs
+@@ -5,6 +5,7 @@ use nix::sys::stat::fstat;
+ use std::convert::TryFrom;
+ use std::env;
+ use std::os::unix::io::{IntoRawFd, RawFd};
++use std::os::fd::BorrowedFd;
+ use std::process;
+ 
+ /// Minimum FD number used by systemd for passing sockets.
+@@ -167,13 +168,13 @@ fn socks_from_fds(num_fds: usize) -> Res
+ 
+ impl IsType for RawFd {
+     fn is_fifo(&self) -> bool {
+-        fstat(*self)
++        fstat(unsafe { BorrowedFd::borrow_raw(*self) })
+             .map(|stat| (stat.st_mode & 0o0_170_000) == 0o010_000)
+             .unwrap_or(false)
+     }
+ 
+     fn is_special(&self) -> bool {
+-        fstat(*self)
++        fstat(unsafe { BorrowedFd::borrow_raw(*self) })
+             .map(|stat| (stat.st_mode & 0o0_170_000) == 0o100_000)
+             .unwrap_or(false)
+     }
+Index: libsystemd/src/logging.rs
+===================================================================
+--- libsystemd.orig/src/logging.rs
++++ libsystemd/src/logging.rs
+@@ -8,6 +8,7 @@ use once_cell::sync::OnceCell;
+ use std::collections::HashMap;
+ use std::ffi::{CStr, CString, OsStr};
+ use std::os::unix::prelude::RawFd;
++use std::os::fd::BorrowedFd;
+ use std::fs::File;
+ use std::io::Write;
+ use std::os::unix::io::AsRawFd;
+@@ -223,7 +224,7 @@ fn send_memfd_payload(sock: &UnixDatagra
+     };
+ 
+     // Seal the memfd, so that journald knows it can safely mmap/read it.
+-    fcntl(memfd.as_raw_fd(), FcntlArg::F_ADD_SEALS(SealFlag::all())).map_err(|e| e.to_string())?;
++    fcntl(&memfd, FcntlArg::F_ADD_SEALS(SealFlag::all())).map_err(|e| e.to_string())?;
+ 
+     let fds = &[memfd.as_raw_fd()];
+     let ancillary = [ControlMessage::ScmRights(fds)];
+@@ -310,7 +311,7 @@ impl JournalStream {
+     ///
+     /// Return a journal stream struct containing the device and inode number of the given file descriptor.
+     pub fn from_fd<F: AsRawFd>(fd: F) -> std::io::Result<Self> {
+-        nix::sys::stat::fstat(fd.as_raw_fd())
++        nix::sys::stat::fstat(unsafe { BorrowedFd::borrow_raw(fd.as_raw_fd()) })
+             .map(|stat| JournalStream {
+                 device: stat.st_dev,
+                 inode: stat.st_ino,
