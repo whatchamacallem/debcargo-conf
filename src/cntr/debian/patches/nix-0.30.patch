@@ -1,0 +1,267 @@
+--- rust-cntr-1.6.1.orig/Cargo.toml
++++ rust-cntr-1.6.1/Cargo.toml
+@@ -75,7 +75,7 @@ version = "0.2.169"
+ version = "0.4.25"
+ 
+ [dependencies.nix]
+-version = "0.29.0"
++version = "0.30.0"
+ features = [
+     "fs",
+     "mount",
+--- rust-cntr-1.6.1.orig/src/dotcntr.rs
++++ rust-cntr-1.6.1/src/dotcntr.rs
+@@ -81,7 +81,7 @@ pub fn create(process_status: &ProcStatu
+         "failed to open '{}' directory",
+         dotcntr_dir.path().display()
+     );
+-    let dotcntr_file = unsafe { File::from_raw_fd(dotcntr_fd) };
++    let dotcntr_file = File::from(dotcntr_fd);
+     let d = DotcntrDir {
+         file: dotcntr_file,
+         dir: dotcntr_dir,
+--- rust-cntr-1.6.1.orig/src/fs.rs
++++ rust-cntr-1.6.1/src/fs.rs
+@@ -157,11 +157,20 @@ impl AsRawFd for LookupFile<'_> {
+     }
+ }
+ 
++impl AsFd for LookupFile<'_> {
++    fn as_fd(&self) -> BorrowedFd {
++        match *self {
++            LookupFile::Donate(ref f) => f.as_fd(),
++            LookupFile::Borrow(f) => f.as_fd(),
++        }
++    }
++}
++
+ impl LookupFile<'_> {
+     fn into_raw_fd(self) -> nix::Result<RawFd> {
+         match self {
+             LookupFile::Donate(f) => Ok(f.into_raw_fd()),
+-            LookupFile::Borrow(f) => unistd::dup(f.as_raw_fd()),
++            LookupFile::Borrow(f) => unistd::dup(f).map(IntoRawFd::into_raw_fd),
+         }
+     }
+ }
+@@ -174,7 +183,7 @@ fn open_static_dnode(static_ino: u64, pa
+     );
+ 
+     Ok(Arc::new(Inode {
+-        fd: RwLock::new(Fd::new(fd, FdState::Readable)),
++        fd: RwLock::new(Fd::new(fd.into_raw_fd(), FdState::Readable)),
+         kind: FileType::Directory,
+         ino: static_ino,
+         dev: static_ino,
+@@ -245,12 +254,12 @@ impl CntrFs {
+ 
+         let create_mode = stat::Mode::from_bits_truncate(mode);
+         let fd = fcntl::openat(
+-            Some(parent_fd.raw()),
++            parent_fd.as_fd(),
+             name,
+             oflag | OFlag::O_NOFOLLOW | OFlag::O_CLOEXEC,
+             create_mode,
+         )?;
+-        Ok(fd)
++        Ok(fd.into_raw_fd())
+     }
+ 
+     pub fn spawn_sessions(self) -> Result<Vec<JoinHandle<io::Result<()>>>> {
+@@ -334,7 +343,7 @@ impl CntrFs {
+     ) -> nix::Result<()> {
+         if let Some(bits) = mode {
+             let mode = stat::Mode::from_bits_truncate(bits);
+-            stat::fchmod(fd.raw(), mode)?;
++            stat::fchmod(fd.as_fd(), mode)?;
+         }
+ 
+         if uid.is_some() || gid.is_some() {
+@@ -470,7 +479,7 @@ impl CntrFs {
+     }
+ 
+     fn lookup_from_fd(&mut self, new_file: LookupFile) -> nix::Result<(FileAttr, u64)> {
+-        let _stat = stat::fstat(new_file.as_raw_fd())?;
++        let _stat = stat::fstat(&new_file)?;
+         let mut attr = self.attr_from_stat(_stat);
+ 
+         let key = InodeKey {
+@@ -531,12 +540,12 @@ impl CntrFs {
+         let parent_inode = self.inode(parent)?;
+         let parent_fd = parent_inode.fd.read();
+         let fd = fcntl::openat(
+-            Some(parent_fd.as_fd().as_raw_fd()),
++            parent_fd.as_fd(),
+             name,
+             OFlag::O_PATH | OFlag::O_NOFOLLOW | OFlag::O_CLOEXEC,
+             stat::Mode::empty(),
+         )?;
+-        let file = unsafe { File::from_raw_fd(fd) };
++        let file = File::from(fd);
+ 
+         self.lookup_from_fd(LookupFile::Donate(file))
+     }
+@@ -661,7 +670,7 @@ impl Filesystem for CntrFs {
+         let inode = tryfuse!(self.inode(ino), reply);
+         let fd = inode.fd.read();
+ 
+-        let mut attr = self.attr_from_stat(tryfuse!(stat::fstat(fd.raw()), reply));
++        let mut attr = self.attr_from_stat(tryfuse!(stat::fstat(fd.as_fd()), reply));
+         attr.ino = ino;
+         reply.attr(&TTL, &attr);
+     }
+@@ -772,7 +781,7 @@ impl Filesystem for CntrFs {
+             let perm = stat::Mode::from_bits_truncate(mode);
+             let fd = inode.fd.read();
+             tryfuse!(
+-                stat::mkdirat(Some(fd.as_fd().as_raw_fd()), name, perm),
++                stat::mkdirat(fd.as_fd(), name, perm),
+                 reply
+             );
+         }
+@@ -785,7 +794,7 @@ impl Filesystem for CntrFs {
+         let inode = tryfuse!(self.inode(parent), reply);
+         let fd = inode.fd.read();
+ 
+-        let res = unistd::unlinkat(Some(fd.raw()), name, unistd::UnlinkatFlags::NoRemoveDir);
++        let res = unistd::unlinkat(fd.as_fd(), name, unistd::UnlinkatFlags::NoRemoveDir);
+         tryfuse!(res, reply);
+         reply.ok();
+     }
+@@ -797,7 +806,7 @@ impl Filesystem for CntrFs {
+         let fd = inode.fd.read();
+ 
+         tryfuse!(
+-            unistd::unlinkat(Some(fd.raw()), name, unistd::UnlinkatFlags::RemoveDir),
++            unistd::unlinkat(fd.as_fd(), name, unistd::UnlinkatFlags::RemoveDir),
+             reply
+         );
+         reply.ok();
+@@ -816,7 +825,7 @@ impl Filesystem for CntrFs {
+         {
+             let inode = tryfuse!(self.inode(parent), reply);
+             let fd = inode.fd.read();
+-            let res = unistd::symlinkat(link, Some(fd.raw()), name);
++            let res = unistd::symlinkat(link, fd.as_fd(), name);
+             tryfuse!(res, reply);
+         }
+         self.lookup(req, parent, name, reply);
+@@ -838,7 +847,7 @@ impl Filesystem for CntrFs {
+         let new_inode = tryfuse!(self.inode(newparent), reply);
+         let new_fd = new_inode.fd.read();
+         tryfuse!(
+-            fcntl::renameat(Some(parent_fd.raw()), name, Some(new_fd.raw()), newname),
++            fcntl::renameat(parent_fd.as_fd(), name, new_fd.as_fd(), newname),
+             reply
+         );
+ 
+@@ -917,8 +926,8 @@ impl Filesystem for CntrFs {
+         );
+ 
+         // avoid double caching
+-        tryfuse!(posix_fadvise(res), reply);
+-        let fh = Fh::new(Fd::new(res, FdState::from(oflags)));
++        tryfuse!(posix_fadvise(res.as_raw_fd()), reply);
++        let fh = Fh::new(Fd::new(res.into_raw_fd(), FdState::from(oflags)));
+         reply.opened(
+             Box::into_raw(fh) as u64,
+             cntr_fuse::consts::FOPEN_KEEP_CACHE,
+@@ -969,7 +978,7 @@ impl Filesystem for CntrFs {
+ 
+         let handle = get_filehandle(fh);
+ 
+-        match unistd::dup(handle.fd.raw()) {
++        match unistd::dup(handle.fd.as_fd()) {
+             Ok(fd) => {
+                 tryfuse!(unistd::close(fd), reply);
+                 reply.ok();
+@@ -998,7 +1007,7 @@ impl Filesystem for CntrFs {
+ 
+         let handle = get_filehandle(fh);
+ 
+-        let fd = handle.fd.raw();
++        let fd = handle.fd.as_fd();
+         if datasync {
+             tryfuse!(unistd::fsync(fd), reply);
+         } else {
+@@ -1061,7 +1070,7 @@ impl Filesystem for CntrFs {
+ 
+         let dirp = unsafe { &mut (*(fh as *mut DirP)) };
+         assert!(dirp.magic == DIRP_MAGIC);
+-        let fd = tryfuse!(dirent::dirfd(&mut dirp.dp), reply);
++        let fd = unsafe { BorrowedFd::borrow_raw(tryfuse!(dirent::dirfd(&mut dirp.dp), reply)) };
+         if datasync {
+             tryfuse!(unistd::fsync(fd), reply);
+         } else {
+@@ -1296,7 +1305,7 @@ impl Filesystem for CntrFs {
+         let handle = get_filehandle(fh);
+         let flags = fcntl::FallocateFlags::from_bits_truncate(mode as i32);
+         tryfuse!(
+-            fcntl::fallocate(handle.fd.raw(), flags, offset as off_t, length as off_t),
++            fcntl::fallocate(handle.fd.as_fd(), flags, offset as off_t, length as off_t),
+             reply
+         );
+         reply.ok();
+@@ -1352,7 +1361,7 @@ impl Filesystem for CntrFs {
+     ) {
+         fsuid::set_root();
+ 
+-        let fd = get_filehandle(fh).fd.raw();
++        let fd = get_filehandle(fh).fd.as_fd();
+         let new_offset = tryfuse!(
+             unistd::lseek64(fd, offset, unsafe {
+                 mem::transmute::<i32, nix::unistd::Whence>(whence as i32)
+--- rust-cntr-1.6.1.orig/src/fusefd.rs
++++ rust-cntr-1.6.1/src/fusefd.rs
+@@ -12,7 +12,7 @@ pub fn open() -> Result<File> {
+ 
+     match res {
+         Ok(fd) => {
+-            let file = unsafe { File::from_raw_fd(fd) };
++            let file = File::from(fd);
+             return Ok(file);
+         }
+         Err(errno::Errno::ENOENT) => {}
+@@ -33,7 +33,7 @@ pub fn open() -> Result<File> {
+         File::from_raw_fd(try_with!(
+             fcntl::open("/dev/fuse", OFlag::O_RDWR, stat::Mode::empty()),
+             "failed to open fuse device"
+-        ))
++        ).into_raw_fd())
+     };
+     Ok(file)
+ }
+--- rust-cntr-1.6.1.orig/src/inode.rs
++++ rust-cntr-1.6.1/src/inode.rs
+@@ -5,6 +5,7 @@ use nix::sys::stat;
+ use parking_lot::{RwLock, RwLockUpgradableReadGuard};
+ use std::ffi::OsStr;
+ use std::path::Path;
++use std::os::fd::IntoRawFd;
+ 
+ use crate::files::{fd_path, Fd, FdState};
+ use crate::fs::POSIX_ACL_DEFAULT_XATTR;
+@@ -38,7 +39,7 @@ impl Inode {
+ 
+         let path = fd_path(&fd);
+         let new_fd = Fd::new(
+-            fcntl::open(Path::new(&path), flags, stat::Mode::empty())?,
++            fcntl::open(Path::new(&path), flags, stat::Mode::empty())?.into_raw_fd(),
+             FdState::from(flags),
+         );
+         *fd = new_fd;
+--- rust-cntr-1.6.1.orig/src/pty.rs
++++ rust-cntr-1.6.1/src/pty.rs
+@@ -290,9 +290,9 @@ pub fn attach_pts(pty_master: &PtyMaster
+ 
+     let pty_slave = fcntl::open(pts_name.as_str(), OFlag::O_RDWR, stat::Mode::empty())?;
+ 
+-    unistd::dup2(pty_slave, libc::STDIN_FILENO)?;
+-    unistd::dup2(pty_slave, libc::STDOUT_FILENO)?;
+-    unistd::dup2(pty_slave, libc::STDERR_FILENO)?;
++    unistd::dup2_stdin(&pty_slave)?;
++    unistd::dup2_stdout(&pty_slave)?;
++    unistd::dup2_stderr(&pty_slave)?;
+ 
+     unistd::close(pty_slave)?;
+ 
