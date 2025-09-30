@@ -1,0 +1,350 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 73e447224ca9de92133ef04914030116e2db024f
+Author: Daniel Hofstetter <daniel.hofstetter@42dh.com>
+Date:   Thu May 22 16:41:12 2025 +0200
+
+    Adapt to API changes in nix
+
+Index: rust-coreutils-0.0.30/src/uu/cat/src/cat.rs
+===================================================================
+--- rust-coreutils-0.0.30.orig/src/uu/cat/src/cat.rs
++++ rust-coreutils-0.0.30/src/uu/cat/src/cat.rs
+@@ -10,7 +10,9 @@ use std::io::{self, IsTerminal, Read, Wr
+ #[cfg(unix)]
+ use std::net::Shutdown;
+ #[cfg(unix)]
+-use std::os::fd::{AsFd, AsRawFd};
++use std::os::fd::AsFd;
++#[cfg(unix)]
++use std::os::fd::AsRawFd;
+ #[cfg(unix)]
+ use std::os::unix::fs::FileTypeExt;
+ #[cfg(unix)]
+@@ -327,7 +329,7 @@ fn cat_handle<R: FdReadable>(
+ #[cfg(unix)]
+ fn is_appending() -> bool {
+     let stdout = std::io::stdout();
+-    let flags = match fcntl(stdout.as_raw_fd(), FcntlArg::F_GETFL) {
++    let flags = match fcntl(stdout.as_fd(), FcntlArg::F_GETFL) {
+         Ok(flags) => flags,
+         Err(_) => return false,
+     };
+Index: rust-coreutils-0.0.30/src/uu/cat/src/splice.rs
+===================================================================
+--- rust-coreutils-0.0.30.orig/src/uu/cat/src/splice.rs
++++ rust-coreutils-0.0.30/src/uu/cat/src/splice.rs
+@@ -5,10 +5,7 @@
+ use super::{CatResult, FdReadable, InputHandle};
+ 
+ use nix::unistd;
+-use std::os::{
+-    fd::AsFd,
+-    unix::io::{AsRawFd, RawFd},
+-};
++use std::os::{fd::AsFd, unix::io::AsRawFd};
+ 
+ use uucore::pipes::{pipe, splice, splice_exact};
+ 
+@@ -41,7 +38,7 @@ pub(super) fn write_fast_using_splice<R:
+                     // we can recover by copying the data that we have from the
+                     // intermediate pipe to stdout using normal read/write. Then
+                     // we tell the caller to fall back.
+-                    copy_exact(pipe_rd.as_raw_fd(), write_fd, n)?;
++                    copy_exact(&pipe_rd, write_fd, n)?;
+                     return Ok(true);
+                 }
+             }
+@@ -55,7 +52,7 @@ pub(super) fn write_fast_using_splice<R:
+ /// Move exactly `num_bytes` bytes from `read_fd` to `write_fd`.
+ ///
+ /// Panics if not enough bytes can be read.
+-fn copy_exact(read_fd: RawFd, write_fd: &impl AsFd, num_bytes: usize) -> nix::Result<()> {
++fn copy_exact(read_fd: &impl AsFd, write_fd: &impl AsFd, num_bytes: usize) -> nix::Result<()> {
+     let mut left = num_bytes;
+     let mut buf = [0; BUF_SIZE];
+     while left > 0 {
+Index: rust-coreutils-0.0.30/src/uu/dd/src/dd.rs
+===================================================================
+--- rust-coreutils-0.0.30.orig/src/uu/dd/src/dd.rs
++++ rust-coreutils-0.0.30/src/uu/dd/src/dd.rs
+@@ -31,6 +31,8 @@ use std::ffi::OsString;
+ use std::fs::{File, OpenOptions};
+ use std::io::{self, Read, Seek, SeekFrom, Stdout, Write};
+ #[cfg(any(target_os = "linux", target_os = "android"))]
++use std::os::fd::AsFd;
++#[cfg(any(target_os = "linux", target_os = "android"))]
+ use std::os::unix::fs::OpenOptionsExt;
+ #[cfg(unix)]
+ use std::os::unix::{
+@@ -277,7 +279,7 @@ impl Source {
+         match self {
+             Self::File(f) => {
+                 let advice = PosixFadviseAdvice::POSIX_FADV_DONTNEED;
+-                posix_fadvise(f.as_raw_fd(), offset, len, advice)
++                posix_fadvise(f.as_fd(), offset, len, advice)
+             }
+             _ => Err(Errno::ESPIPE), // "Illegal seek"
+         }
+@@ -650,7 +652,7 @@ impl Dest {
+         match self {
+             Self::File(f, _) => {
+                 let advice = PosixFadviseAdvice::POSIX_FADV_DONTNEED;
+-                posix_fadvise(f.as_raw_fd(), offset, len, advice)
++                posix_fadvise(f.as_fd(), offset, len, advice)
+             }
+             _ => Err(Errno::ESPIPE), // "Illegal seek"
+         }
+@@ -784,7 +786,7 @@ impl<'a> Output<'a> {
+         #[cfg(any(target_os = "linux", target_os = "android"))]
+         if let Some(libc_flags) = make_linux_oflags(&settings.oflags) {
+             nix::fcntl::fcntl(
+-                fx.as_raw().as_raw_fd(),
++                fx.as_raw().as_fd(),
+                 F_SETFL(OFlag::from_bits_retain(libc_flags)),
+             )?;
+         }
+Index: rust-coreutils-0.0.30/src/uu/tee/src/tee.rs
+===================================================================
+--- rust-coreutils-0.0.30.orig/src/uu/tee/src/tee.rs
++++ rust-coreutils-0.0.30/src/uu/tee/src/tee.rs
+@@ -393,12 +393,12 @@ pub fn ensure_stdout_not_broken() -> Res
+         poll::{PollFd, PollFlags, PollTimeout},
+         sys::stat::{fstat, SFlag},
+     };
+-    use std::os::fd::{AsFd, AsRawFd};
++    use std::os::fd::AsFd;
+ 
+     let out = stdout();
+ 
+     // First, check that stdout is a fifo and return true if it's not the case
+-    let stat = fstat(out.as_raw_fd())?;
++    let stat = fstat(out.as_fd())?;
+     if !SFlag::from_bits_truncate(stat.st_mode).contains(SFlag::S_IFIFO) {
+         return Ok(true);
+     }
+Index: rust-coreutils-0.0.30/src/uu/wc/src/count_fast.rs
+===================================================================
+--- rust-coreutils-0.0.30.orig/src/uu/wc/src/count_fast.rs
++++ rust-coreutils-0.0.30/src/uu/wc/src/count_fast.rs
+@@ -18,7 +18,7 @@ use libc::{sysconf, S_IFREG, _SC_PAGESIZ
+ use nix::sys::stat;
+ #[cfg(unix)]
+ use std::io::{Seek, SeekFrom};
+-#[cfg(any(target_os = "linux", target_os = "android"))]
++#[cfg(unix)]
+ use std::os::fd::{AsFd, AsRawFd};
+ #[cfg(windows)]
+ use std::os::windows::fs::MetadataExt;
+@@ -48,7 +48,7 @@ fn count_bytes_using_splice(fd: &impl As
+         .write(true)
+         .open("/dev/null")
+         .map_err(|_| 0_usize)?;
+-    let null_rdev = stat::fstat(null_file.as_raw_fd())
++    let null_rdev = stat::fstat(null_file.as_fd())
+         .map_err(|_| 0_usize)?
+         .st_rdev as libc::dev_t;
+     if unsafe { (libc::major(null_rdev), libc::minor(null_rdev)) } != (1, 3) {
+@@ -92,7 +92,7 @@ pub(crate) fn count_bytes_fast<T: WordCo
+ 
+     #[cfg(unix)]
+     {
+-        let fd = handle.as_raw_fd();
++        let fd = handle.as_fd();
+         if let Ok(stat) = stat::fstat(fd) {
+             // If the file is regular, then the `st_size` should hold
+             // the file's size in bytes.
+@@ -132,7 +132,10 @@ pub(crate) fn count_bytes_fast<T: WordCo
+             // However, the raw file descriptor in this situation would be equal to `0`
+             // for STDIN in both invocations.
+             // Therefore we cannot rely of `st_size` here and should fall back on full read.
+-            if fd > 0 && (stat.st_mode as libc::mode_t & S_IFREG) != 0 && stat.st_size > 0 {
++            if fd.as_raw_fd() > 0
++                && (stat.st_mode as libc::mode_t & S_IFREG) != 0
++                && stat.st_size > 0
++            {
+                 let sys_page_size = unsafe { sysconf(_SC_PAGESIZE) as usize };
+                 if stat.st_size as usize % sys_page_size > 0 {
+                     // regular file or file from /proc, /sys and similar pseudo-filesystems
+Index: rust-coreutils-0.0.30/src/uucore/src/lib/features/buf_copy.rs
+===================================================================
+--- rust-coreutils-0.0.30.orig/src/uucore/src/lib/features/buf_copy.rs
++++ rust-coreutils-0.0.30/src/uucore/src/lib/features/buf_copy.rs
+@@ -37,9 +37,6 @@ mod tests {
+         },
+     };
+ 
+-    #[cfg(any(target_os = "linux", target_os = "android"))]
+-    use std::os::fd::AsRawFd;
+-
+     use std::io::{Read, Write};
+ 
+     #[cfg(unix)]
+@@ -61,7 +58,7 @@ mod tests {
+         let n = pipe_write.write(data).unwrap();
+         assert_eq!(n, data.len());
+         let mut buf = [0; 1024];
+-        let n = copy_exact(pipe_read.as_raw_fd(), &pipe_write, data.len()).unwrap();
++        let n = copy_exact(&pipe_read, &pipe_write, data.len()).unwrap();
+         let n2 = pipe_read.read(&mut buf).unwrap();
+         assert_eq!(n, n2);
+         assert_eq!(&buf[..n], data);
+Index: rust-coreutils-0.0.30/src/uucore/src/lib/features/buf_copy/linux.rs
+===================================================================
+--- rust-coreutils-0.0.30.orig/src/uucore/src/lib/features/buf_copy/linux.rs
++++ rust-coreutils-0.0.30/src/uucore/src/lib/features/buf_copy/linux.rs
+@@ -13,7 +13,7 @@ use crate::{
+ /// Buffer-based copying utilities for unix (excluding Linux).
+ use std::{
+     io::{Read, Write},
+-    os::fd::{AsFd, AsRawFd, RawFd},
++    os::fd::{AsFd, AsRawFd},
+ };
+ 
+ use super::common::Error;
+@@ -105,7 +105,7 @@ where
+                     // we can recover by copying the data that we have from the
+                     // intermediate pipe to stdout using normal read/write. Then
+                     // we tell the caller to fall back.
+-                    copy_exact(pipe_rd.as_raw_fd(), dest, n)?;
++                    copy_exact(&pipe_rd, dest, n)?;
+                     return Ok((bytes, true));
+                 }
+ 
+@@ -122,7 +122,7 @@ where
+ /// and `write` calls.
+ #[cfg(any(target_os = "linux", target_os = "android"))]
+ pub(crate) fn copy_exact(
+-    read_fd: RawFd,
++    read_fd: &impl AsFd,
+     write_fd: &impl AsFd,
+     num_bytes: usize,
+ ) -> std::io::Result<usize> {
+Index: rust-coreutils-0.0.30/src/uucore/src/lib/features/fs.rs
+===================================================================
+--- rust-coreutils-0.0.30.orig/src/uucore/src/lib/features/fs.rs
++++ rust-coreutils-0.0.30/src/uucore/src/lib/features/fs.rs
+@@ -23,7 +23,9 @@ use std::hash::Hash;
+ use std::io::Stdin;
+ use std::io::{Error, ErrorKind, Result as IOResult};
+ #[cfg(unix)]
+-use std::os::unix::{fs::MetadataExt, io::AsRawFd};
++use std::os::fd::AsFd;
++#[cfg(unix)]
++use std::os::unix::fs::MetadataExt;
+ use std::path::{Component, Path, PathBuf, MAIN_SEPARATOR};
+ #[cfg(target_os = "windows")]
+ use winapi_util::AsHandleRef;
+@@ -48,8 +50,8 @@ pub struct FileInformation(
+ impl FileInformation {
+     /// Get information from a currently open file
+     #[cfg(unix)]
+-    pub fn from_file(file: &impl AsRawFd) -> IOResult<Self> {
+-        let stat = nix::sys::stat::fstat(file.as_raw_fd())?;
++    pub fn from_file(file: &impl AsFd) -> IOResult<Self> {
++        let stat = nix::sys::stat::fstat(file)?;
+         Ok(Self(stat))
+     }
+ 
+@@ -727,7 +729,7 @@ pub fn is_stdin_directory(stdin: &Stdin)
+     #[cfg(unix)]
+     {
+         use nix::sys::stat::fstat;
+-        let mode = fstat(stdin.as_raw_fd()).unwrap().st_mode as mode_t;
++        let mode = fstat(stdin.as_fd()).unwrap().st_mode as mode_t;
+         has!(mode, S_IFDIR)
+     }
+ 
+Index: rust-coreutils-0.0.30/tests/by-util/test_ls.rs
+===================================================================
+--- rust-coreutils-0.0.30.orig/tests/by-util/test_ls.rs
++++ rust-coreutils-0.0.30/tests/by-util/test_ls.rs
+@@ -22,8 +22,6 @@ use std::collections::HashMap;
+ use std::ffi::OsStr;
+ #[cfg(target_os = "linux")]
+ use std::os::unix::ffi::OsStrExt;
+-#[cfg(all(unix, feature = "chmod"))]
+-use std::os::unix::io::IntoRawFd;
+ use std::path::Path;
+ #[cfg(not(windows))]
+ use std::path::PathBuf;
+@@ -540,50 +538,53 @@ fn test_ls_io_errors() {
+ 
+     #[cfg(unix)]
+     {
++        use std::os::fd::AsRawFd;
++
+         at.touch("some-dir4/bad-fd.txt");
+-        let fd1 = at.open("some-dir4/bad-fd.txt").into_raw_fd();
+-        let fd2 = dup(dbg!(fd1)).unwrap();
++        let fd1 = at.open("some-dir4/bad-fd.txt");
++        let fd2 = dup(dbg!(&fd1)).unwrap();
+         close(fd1).unwrap();
+ 
+         // on the mac and in certain Linux containers bad fds are typed as dirs,
+         // however sometimes bad fds are typed as links and directory entry on links won't fail
+-        if PathBuf::from(format!("/dev/fd/{fd2}")).is_dir() {
++        if PathBuf::from(format!("/dev/fd/{}", fd2.as_raw_fd())).is_dir() {
+             scene
+                 .ucmd()
+                 .arg("-alR")
+-                .arg(format!("/dev/fd/{fd2}"))
++                .arg(format!("/dev/fd/{}", fd2.as_raw_fd()))
+                 .fails()
+                 .stderr_contains(format!(
+-                    "cannot open directory '/dev/fd/{fd2}': Bad file descriptor"
++                    "cannot open directory '/dev/fd/{}': Bad file descriptor",
++                    fd2.as_raw_fd()
+                 ))
+-                .stdout_does_not_contain(format!("{fd2}:\n"));
++                .stdout_does_not_contain(format!("{}:\n", fd2.as_raw_fd()));
+ 
+             scene
+                 .ucmd()
+                 .arg("-RiL")
+-                .arg(format!("/dev/fd/{fd2}"))
++                .arg(format!("/dev/fd/{}", fd2.as_raw_fd()))
+                 .fails()
+-                .stderr_contains(format!("cannot open directory '/dev/fd/{fd2}': Bad file descriptor"))
++                .stderr_contains(format!("cannot open directory '/dev/fd/{}': Bad file descriptor", fd2.as_raw_fd()))
+                 // don't double print bad fd errors
+-                .stderr_does_not_contain(format!("ls: cannot open directory '/dev/fd/{fd2}': Bad file descriptor\nls: cannot open directory '/dev/fd/{fd2}': Bad file descriptor"));
++                .stderr_does_not_contain(format!("ls: cannot open directory '/dev/fd/{0}': Bad file descriptor\nls: cannot open directory '/dev/fd/{0}': Bad file descriptor", fd2.as_raw_fd()));
+         } else {
+             scene
+                 .ucmd()
+                 .arg("-alR")
+-                .arg(format!("/dev/fd/{fd2}"))
++                .arg(format!("/dev/fd/{}", fd2.as_raw_fd()))
+                 .succeeds();
+ 
+             scene
+                 .ucmd()
+                 .arg("-RiL")
+-                .arg(format!("/dev/fd/{fd2}"))
++                .arg(format!("/dev/fd/{}", fd2.as_raw_fd()))
+                 .succeeds();
+         }
+ 
+         scene
+             .ucmd()
+             .arg("-alL")
+-            .arg(format!("/dev/fd/{fd2}"))
++            .arg(format!("/dev/fd/{}", fd2.as_raw_fd()))
+             .succeeds();
+ 
+         let _ = close(fd2);
+Index: rust-coreutils-0.0.30/src/uu/yes/src/splice.rs
+===================================================================
+--- rust-coreutils-0.0.30.orig/src/uu/yes/src/splice.rs
++++ rust-coreutils-0.0.30/src/uu/yes/src/splice.rs
+@@ -33,7 +33,7 @@ pub(crate) fn splice_data<T>(bytes: &[u8
+ where
+     T: AsRawFd + AsFd,
+ {
+-    let is_pipe = fstat(out.as_raw_fd())?.st_mode as nix::libc::mode_t & S_IFIFO != 0;
++    let is_pipe = fstat(out)?.st_mode as nix::libc::mode_t & S_IFIFO != 0;
+ 
+     if is_pipe {
+         loop {
