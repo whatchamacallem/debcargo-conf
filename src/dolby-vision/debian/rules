@@ -24,7 +24,11 @@ execute_after_dh_auto_build:
 		/usr/share/cargo/bin/cargo cbuild $(CARGO_C_FLAGS)
 
 override_dh_auto_test:
+ifeq (, $(filter nocheck,$(DEB_BUILD_PROFILES)))
+ifeq (, $(filter nocheck,$(DEB_BUILD_OPTIONS)))
 	dh_auto_test -- test --all
+endif
+endif
 
 override_dh_auto_install:
 	# will fail after installing the librust-XX package, since there is no binpkg
