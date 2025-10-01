@@ -6,17 +6,17 @@ Description: Fix build on Debian
  therefore succeed.
 Author: Arnaud Ferraris <aferraris@debian.org>
 Forwarded: not-needed
-Last-Update: 2024-10-01
+Last-Update: 2025-09-30
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -65,8 +65,8 @@
+@@ -69,8 +69,8 @@
  optional = true
  default-features = false
  
 -[build-dependencies.cc]
--version = "1.0.104"
+-version = "1.2.16"
 +[build-dependencies.pkg-config]
 +version = "0.3"
  
@@ -30,7 +30,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  
  #[cfg(feature = "bindgen")]
  extern crate bindgen;
-@@ -7,149 +7,9 @@
+@@ -7,159 +7,11 @@
  #[path = "bindgen.rs"]
  mod generate;
  
@@ -139,6 +139,8 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
      #[cfg(feature = "bindgen")]
      generate::generate();
  
+     println!("cargo::rerun-if-changed=lmdb");
+ 
 -    let mut lmdb = PathBuf::from(&env::var("CARGO_MANIFEST_DIR").unwrap());
 -    lmdb.push("lmdb");
 -    lmdb.push("libraries");
@@ -164,6 +166,10 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -        builder.define("MDB_USE_POSIX_SEM", None);
 -    }
 -
+-    if cfg!(feature = "use-valgrind") {
+-        builder.define("USE_VALGRIND", None);
+-    }
+-
 -    if cfg!(feature = "asan") {
 -        builder.flag("-fsanitize=address");
 -    }
@@ -176,6 +182,10 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -
 -    if cfg!(feature = "longer-keys") {
 -        builder.define("MDB_MAXKEYSIZE", "0");
+-    }
+-
+-    if !cfg!(debug_assertions) {
+-        builder.define("NDEBUG", None);
 -    }
 -
 -    builder.compile("liblmdb.a")
