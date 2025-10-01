@@ -3,5 +3,9 @@
 	dh $@ --buildsystem cargo
 
 override_dh_auto_test:
+ifeq (, $(filter nocheck,$(DEB_BUILD_PROFILES)))
+ifeq (, $(filter nocheck,$(DEB_BUILD_OPTIONS)))
 	xvfb-run --server-args="-screen 0 1280x800x24" \
 	dh_auto_test -- test --all
+endif
+endif
