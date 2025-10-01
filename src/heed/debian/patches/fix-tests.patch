@@ -1,12 +1,12 @@
 Description: Fix examples build with not all features enabled
 Author: Arnaud Ferraris <aferraris@debian.org>
 Forwarded: not-needed
-Last-Update: 2023-12-12
+Last-Update: 2025-10-01
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/examples/all-types.rs
 +++ b/examples/all-types.rs
-@@ -5,8 +5,10 @@
+@@ -3,8 +3,10 @@
  use heed::byteorder::BE;
  use heed::types::*;
  use heed::{Database, EnvOpenOptions};
@@ -15,9 +15,9 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  
 +#[cfg(all(feature = "serde-bincode", feature = "serde-json", feature = "serde"))]
  fn main() -> Result<(), Box<dyn Error>> {
-     let path = Path::new("target").join("heed.mdb");
+     let path = tempfile::tempdir()?;
  
-@@ -109,3 +111,7 @@
+@@ -105,3 +107,7 @@
  
      Ok(())
  }
@@ -27,7 +27,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 +}
 --- a/examples/rmp-serde.rs
 +++ b/examples/rmp-serde.rs
-@@ -4,8 +4,10 @@
+@@ -2,8 +2,10 @@
  
  use heed::types::{SerdeRmp, Str};
  use heed::{Database, EnvOpenOptions};
@@ -36,9 +36,9 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  
 +#[cfg(all(feature = "serde-rmp", feature = "serde"))]
  fn main() -> Result<(), Box<dyn Error>> {
-     let path = Path::new("target").join("heed.mdb");
+     let path = tempfile::tempdir()?;
  
-@@ -38,3 +40,7 @@
+@@ -34,3 +36,7 @@
  
      Ok(())
  }

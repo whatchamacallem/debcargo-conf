@@ -5,12 +5,12 @@ Description: Fix tests on 32-bit architectures
  architectures. Fix this by using a smaller value (which actually
  matches the corresponding code comment).
 Author: Arnaud Ferraris <aferraris@debian.org>
-Last-Update: 2024-10-11
+Last-Update: 2025-10-01
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
---- a/src/env.rs
-+++ b/src/env.rs
-@@ -1183,7 +1183,7 @@
+--- a/src/envs/env.rs
++++ b/src/envs/env.rs
+@@ -865,7 +865,7 @@
              // We really need this env to be dropped before the read-only access.
              let env = unsafe {
                  EnvOpenOptions::new()
@@ -19,7 +19,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
                      .max_dbs(32)
                      .open(dir.path())
                      .unwrap()
-@@ -1203,7 +1203,7 @@
+@@ -885,7 +885,7 @@
              // Open now we do a read-only opening
              let env = unsafe {
                  EnvOpenOptions::new()
@@ -28,7 +28,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
                      .max_dbs(32)
                      .open(dir.path())
                      .unwrap()
-@@ -1233,7 +1233,7 @@
+@@ -915,7 +915,7 @@
              // Open now we do a read-only opening
              let env = unsafe {
                  EnvOpenOptions::new()
