@@ -1,7 +1,38 @@
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -49,3 +49,3 @@
- [dependencies.socket2]
--version = "^0.6.0"
-+version = "0.5"
+This commit is based on the upstream commit described below (whose commit
+message doesn't seem to make much sense) adapted for use int the Debian package
+by Peter Michael Green
+
+commit 25b797c2dd4951729db6d9124412e1cffad4cf46
+Author: Dilawar Singh <dilawar@subcom.tech>
+Date:   Tue Sep 6 10:30:46 2022 +0530
+
+    fix: #4
+    
+    But using master branch from socket2
+
+Index: dns-lookup/Cargo.toml
+===================================================================
+--- dns-lookup.orig/Cargo.toml
++++ dns-lookup/Cargo.toml
+@@ -25,7 +25,7 @@ repository = "https://github.com/keepero
+ version = "^1.0"
  
+ [dependencies.socket2]
+-version = "^0.4"
++version = "^0.5"
+ [target."cfg(unix)".dependencies.libc]
+ version = "^0.2"
+ [target."cfg(windows)".dependencies.winapi]
+Index: dns-lookup/src/addrinfo.rs
+===================================================================
+--- dns-lookup.orig/src/addrinfo.rs
++++ dns-lookup/src/addrinfo.rs
+@@ -101,7 +101,7 @@ impl AddrInfo {
+     }
+ 
+     let addrinfo = *a;
+-    let ((), sockaddr) = SockAddr::init(|storage, len| {
++    let ((), sockaddr) = SockAddr::try_init(|storage, len| {
+       *len = addrinfo.ai_addrlen as _;
+       std::ptr::copy_nonoverlapping(
+         addrinfo.ai_addr as *const u8,
