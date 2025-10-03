@@ -1,0 +1,69 @@
+Origin: https://github.com/mrkline/piz-rs/commit/b3d65a6de
+diff --git a/Cargo.toml b/Cargo.toml
+index 22bf614..9a66f89 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -71,4 +71,4 @@
+ 
+-[dev-dependencies.memmap]
+-version = "0.7"
++[dev-dependencies.memmap2]
++version = ">=0.7, <1"
+ 
+diff --git a/examples/unzip.rs b/examples/unzip.rs
+index fa37d94..30c2ec0 100644
+--- a/examples/unzip.rs
++++ b/examples/unzip.rs
+@@ -4,7 +4,7 @@ use std::path::PathBuf;
+ 
+ use anyhow::*;
+ use log::*;
+-use memmap::Mmap;
++use memmap2::Mmap;
+ use rayon::prelude::*;
+ use structopt::*;
+ 
+diff --git a/src/lib.rs b/src/lib.rs
+index 5571e72..c801ef4 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -13,11 +13,8 @@
+ //! ```no_run
+ //! # use std::fs::{self, File};
+ //! # use std::io;
+-//! # extern crate anyhow;
+-//! # extern crate rayon;
+ //! # use rayon::prelude::*;
+-//! # extern crate memmap;
+-//! # use memmap::Mmap;
++//! # use memmap2::Mmap;
+ //! # use piz::*;
+ //! # use piz::read::*;
+ //! #
+diff --git a/src/read.rs b/src/read.rs
+index 54a4360..c0d5c36 100644
+--- a/src/read.rs
++++ b/src/read.rs
+@@ -121,8 +121,7 @@ impl<'a> ZipArchive<'a> {
+     /// For larger ones, memory map!
+     /// ```no_run
+     /// # use std::fs::{self, File};
+-    /// # extern crate memmap;
+-    /// # use memmap::Mmap;
++    /// # use memmap2::Mmap;
+     /// # use piz::*;
+     /// let zip_file = File::open("foo.zip")?;
+     /// let mapping = unsafe { Mmap::map(&zip_file)? };
+diff --git a/tests/smoke.rs b/tests/smoke.rs
+index 64e443f..f930052 100644
+--- a/tests/smoke.rs
++++ b/tests/smoke.rs
+@@ -6,7 +6,7 @@ use std::process::Command;
+ use anyhow::{Context, Result};
+ use camino::Utf8Path;
+ use log::*;
+-use memmap::Mmap;
++use memmap2::Mmap;
+ use rayon::prelude::*;
+ 
+ use piz::read::*;
