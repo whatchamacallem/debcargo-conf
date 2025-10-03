@@ -8,7 +8,7 @@ BIN_DESCRIPTION = "command-line hex viewer"
 %:
 	dh $@ --buildsystem cargo
 
-override_dh_installman:
+execute_before_dh_installman:
 	help2man \
 		--name $(BIN_DESCRIPTION) \
 		--no-info \
@@ -16,7 +16,3 @@ override_dh_installman:
 		--version-string $(DEB_VERSION_UPSTREAM) \
 		--output debian/$(BIN_NAME).1 \
 		debian/$(BIN_NAME)/usr/bin/$(BIN_NAME)
-	dh_installman -O--buildsystem=cargo
-
-override_dh_auto_test:
-	dh_auto_test -- test --all
