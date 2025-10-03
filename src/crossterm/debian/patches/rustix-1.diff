@@ -1,0 +1,35 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit eb3be0fe1c178cd57d461cb1f868f43c086fa61e
+Author: Wind <WindSoilder@outlook.com>
+Date:   Thu Apr 3 12:34:41 2025 +0800
+
+    update rustix to 1.0 (#982)
+
+Index: crossterm/src/event/source/unix/tty.rs
+===================================================================
+--- crossterm.orig/src/event/source/unix/tty.rs
++++ crossterm/src/event/source/unix/tty.rs
+@@ -71,7 +71,7 @@ impl UnixInternalEventSource {
+                 #[cfg(feature = "libc")]
+                 pipe::register(libc::SIGWINCH, sender)?;
+                 #[cfg(not(feature = "libc"))]
+-                pipe::register(rustix::process::Signal::Winch as i32, sender)?;
++                pipe::register(rustix::process::Signal::WINCH.as_raw(), sender)?;
+                 receiver
+             },
+             #[cfg(feature = "event-stream")]
+Index: crossterm/Cargo.toml
+===================================================================
+--- crossterm.orig/Cargo.toml
++++ crossterm/Cargo.toml
+@@ -167,7 +167,7 @@ features = ["os-poll"]
+ optional = true
+ 
+ [target."cfg(unix)".dependencies.rustix]
+-version = "0.38.34"
++version = "1"
+ features = [
+     "std",
+     "stdio",
