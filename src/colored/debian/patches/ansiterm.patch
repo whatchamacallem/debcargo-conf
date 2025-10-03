@@ -1,0 +1,126 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -69,3 +69,3 @@
+ 
+-[dev-dependencies.ansi_term]
++[dev-dependencies.ansiterm]
+ version = "0.12"
+diff --git a/tests/ansi_term_compat.rs b/tests/ansi_term_compat.rs
+index f9f007b..32f76c9 100644
+--- a/tests/ansi_term_compat.rs
++++ b/tests/ansi_term_compat.rs
+@@ -1,28 +1,28 @@
+ #![cfg(not(feature = "no-color"))]
+ #![allow(unused_imports)]
+ 
+-extern crate ansi_term;
++extern crate ansiterm;
+ extern crate colored;
+ 
+-use ansi_term::*;
++use ansiterm::*;
+ use colored::*;
+ 
+ macro_rules! test_simple_color {
+-    ($string:expr, $colored_name:ident, $ansi_term_name:ident) => {
++    ($string:expr, $colored_name:ident, $ansiterm_name:ident) => {
+         #[test]
+         fn $colored_name() {
+             set_override(true);
+             let s = format!("{} {}", $string, stringify!($colored_name));
+             assert_eq!(
+                 s.$colored_name().to_string(),
+-                Colour::$ansi_term_name.paint(s).to_string()
++                Colour::$ansiterm_name.paint(s).to_string()
+             )
+         }
+     };
+ }
+ 
+ mod compat_colors {
+-    use super::ansi_term::*;
++    use super::ansiterm::*;
+     use super::colored::*;
+     use colored::control::set_override;
+ 
+@@ -37,14 +37,14 @@ mod compat_colors {
+ }
+ 
+ macro_rules! test_simple_style {
+-    ($string:expr, $colored_style:ident, $ansi_term_style:ident) => {
++    ($string:expr, $colored_style:ident, $ansiterm_style:ident) => {
+         #[test]
+         fn $colored_style() {
+             let s = format!("{} {}", $string, stringify!($colored_style));
+             assert_eq!(
+                 s.$colored_style().to_string(),
+-                ansi_term::Style::new()
+-                    .$ansi_term_style()
++                ansiterm::Style::new()
++                    .$ansiterm_style()
+                     .paint(s)
+                     .to_string()
+             )
+@@ -53,8 +53,8 @@ macro_rules! test_simple_style {
+ }
+ 
+ mod compat_styles {
+-    use super::ansi_term;
+-    use super::ansi_term::*;
++    use super::ansiterm;
++    use super::ansiterm::*;
+     use super::colored;
+     use super::colored::*;
+     use colored::control::set_override;
+@@ -69,15 +69,15 @@ mod compat_styles {
+ }
+ 
+ macro_rules! test_simple_bgcolor {
+-    ($string:expr, $colored_name:ident, $ansi_term_name:ident) => {
++    ($string:expr, $colored_name:ident, $ansiterm_name:ident) => {
+         #[test]
+         fn $colored_name() {
+             set_override(true);
+             let s = format!("{} {}", $string, stringify!($colored_name));
+             assert_eq!(
+                 s.$colored_name().to_string(),
+-                ansi_term::Style::default()
+-                    .on(ansi_term::Colour::$ansi_term_name)
++                ansiterm::Style::default()
++                    .on(ansiterm::Colour::$ansiterm_name)
+                     .paint(s)
+                     .to_string()
+             )
+@@ -86,8 +86,8 @@ macro_rules! test_simple_bgcolor {
+ }
+ 
+ mod compat_bgcolors {
+-    use super::ansi_term;
+-    use super::ansi_term::*;
++    use super::ansiterm;
++    use super::ansiterm::*;
+     use super::colored;
+     use super::colored::*;
+     use colored::control::set_override;
+@@ -103,8 +103,8 @@ mod compat_bgcolors {
+ }
+ 
+ mod compat_complex {
+-    use super::ansi_term;
+-    use super::ansi_term::*;
++    use super::ansiterm;
++    use super::ansiterm::*;
+     use super::colored;
+     use super::colored::*;
+     use colored::control::set_override;
+@@ -133,8 +133,8 @@ mod compat_complex {
+ }
+ 
+ mod compat_overrides {
+-    use super::ansi_term;
+-    use super::ansi_term::*;
++    use super::ansiterm;
++    use super::ansiterm::*;
+     use super::colored;
+     use super::colored::*;
+     use colored::control::set_override;
