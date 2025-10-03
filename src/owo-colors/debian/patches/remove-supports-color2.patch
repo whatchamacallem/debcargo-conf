@@ -1,0 +1,60 @@
+Subject: Debian only has one rust-supports-color
+
+so revert
+https://github.com/owo-colors/owo-colors/commit/c06d445
+
+Forwarded: not-needed
+diff --git a/Cargo.toml b/Cargo.toml
+index 6993cf9..30b25e6 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -48,7 +48,6 @@ rustdoc-args = [
+ [features]
+ alloc = []
+ supports-colors = [
+-    "dep:supports-color-2",
+     "supports-color",
+ ]
+ 
+@@ -97,8 +96,3 @@ required-features = ["supports-colors"]
+ [dependencies.supports-color]
+ version = "3.0.0"
+ optional = true
+-
+-[dependencies.supports-color-2]
+-version = "2.0"
+-optional = true
+-package = "supports-color"
+diff --git a/src/supports_colors.rs b/src/supports_colors.rs
+index 4a36331..25f52fc 100644
+--- a/src/supports_colors.rs
++++ b/src/supports_colors.rs
+@@ -33,15 +33,6 @@ impl From<supports_color::Stream> for Stream {
+     }
+ }
+ 
+-impl From<supports_color_2::Stream> for Stream {
+-    fn from(stream: supports_color_2::Stream) -> Self {
+-        match stream {
+-            supports_color_2::Stream::Stdout => Self::Stdout,
+-            supports_color_2::Stream::Stderr => Self::Stderr,
+-        }
+-    }
+-}
+-
+ macro_rules! impl_fmt_for {
+     ($($trait:path),* $(,)?) => {
+         $(
+@@ -92,12 +83,6 @@ mod test {
+ 
+     #[test]
+     fn test_supports_color_versions() {
+-        println!(
+-            "{}",
+-            "This might be green"
+-                .if_supports_color(supports_color_2::Stream::Stdout, |x| x.green())
+-        );
+-
+         println!(
+             "{}",
+             "This might be red".if_supports_color(supports_color::Stream::Stdout, |x| x.red())
