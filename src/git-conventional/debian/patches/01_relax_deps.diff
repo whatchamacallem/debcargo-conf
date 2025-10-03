@@ -1,0 +1,39 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -99,21 +99,21 @@ name = "git_conventional"
+ path = "src/lib.rs"
+ 
+ [dependencies.serde]
+-version = "1.0.163"
++version = "1"
+ features = ["derive"]
+ optional = true
+ 
+ [dependencies.unicase]
+-version = "2.5"
++version = "2"
+ 
+ [dependencies.winnow]
+-version = "0.7.0"
++version = ">=0.6"
+ 
+ [dev-dependencies.indoc]
+-version = "2.0"
++version = "2"
+ 
+ [dev-dependencies.serde_test]
+-version = "1.0"
++version = "1"
+ 
+ [lints.clippy]
+ bool_assert_comparison = "allow"
+--- a/src/parser.rs
++++ b/src/parser.rs
+@@ -10,6 +10,7 @@ use winnow::combinator::{cut_err, eof, f
+ use winnow::combinator::{delimited, preceded, terminated};
+ use winnow::error::{AddContext, ErrMode, ParserError, StrContext};
+ use winnow::prelude::*;
++use winnow::stream::Stream as _;
+ use winnow::token::{take, take_till, take_while};
+ 
+ type CommitDetails<'a> = (
