@@ -1,0 +1,152 @@
+Origin: https://github.com/rust-vmm/vm-virtio/commit/57ad18a53400
+Comment: simplified to exclude the file renames.
+Yes, this is known to break ppc64 but it fixes ppc64el
+diff --git a/src/bindings/powerpc/virtio_ring.rs b/src/bindings/powerpc/virtio_ring.rs
+index 6588696..6576ab5 100644
+--- a/src/bindings/powerpc/virtio_ring.rs
++++ b/src/bindings/powerpc/virtio_ring.rs
+@@ -132,12 +132,12 @@ pub struct vring {
+ }
+ #[allow(clippy::unnecessary_operation, clippy::identity_op)]
+ const _: () = {
+-    ["Size of vring"][::std::mem::size_of::<vring>() - 16usize];
+-    ["Alignment of vring"][::std::mem::align_of::<vring>() - 4usize];
++    ["Size of vring"][::std::mem::size_of::<vring>() - 32usize];
++    ["Alignment of vring"][::std::mem::align_of::<vring>() - 8usize];
+     ["Offset of field: vring::num"][::std::mem::offset_of!(vring, num) - 0usize];
+-    ["Offset of field: vring::desc"][::std::mem::offset_of!(vring, desc) - 4usize];
+-    ["Offset of field: vring::avail"][::std::mem::offset_of!(vring, avail) - 8usize];
+-    ["Offset of field: vring::used"][::std::mem::offset_of!(vring, used) - 12usize];
++    ["Offset of field: vring::desc"][::std::mem::offset_of!(vring, desc) - 8usize];
++    ["Offset of field: vring::avail"][::std::mem::offset_of!(vring, avail) - 16usize];
++    ["Offset of field: vring::used"][::std::mem::offset_of!(vring, used) - 24usize];
+ };
+ impl Default for vring {
+     fn default() -> Self {
+diff --git a/src/lib.rs b/src/lib.rs
+index a98d8d5..df1221f 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -15,7 +15,14 @@
+ )]
+ #[cfg_attr(target_arch = "m68k", path = "bindings/m68k/virtio_blk.rs")]
+ #[cfg_attr(target_arch = "mips", path = "bindings/mipsel/virtio_blk.rs")]
+-#[cfg_attr(target_arch = "powerpc64", path = "bindings/powerpc64le/virtio_blk.rs")]
++#[cfg_attr(
++    all(target_arch = "powerpc64", target_endian = "big"),
++    path = "bindings/powerpc64/virtio_blk.rs"
++)]
++#[cfg_attr(
++    all(target_arch = "powerpc64", target_endian = "little"),
++    path = "bindings/powerpc64/virtio_blk.rs"
++)]
+ #[cfg_attr(target_arch = "riscv64", path = "bindings/riscv64/virtio_blk.rs")]
+ #[cfg_attr(target_arch = "s390x", path = "bindings/s390x/virtio_blk.rs")]
+ #[cfg_attr(target_arch = "sparc64", path = "bindings/sparc64/virtio_blk.rs")]
+@@ -32,8 +39,12 @@ pub mod virtio_blk;
+ #[cfg_attr(target_arch = "m68k", path = "bindings/m68k/virtio_config.rs")]
+ #[cfg_attr(target_arch = "mips", path = "bindings/mipsel/virtio_config.rs")]
+ #[cfg_attr(
+-    target_arch = "powerpc64",
+-    path = "bindings/powerpc64le/virtio_config.rs"
++    all(target_arch = "powerpc64", target_endian = "big"),
++    path = "bindings/powerpc64/virtio_config.rs"
++)]
++#[cfg_attr(
++    all(target_arch = "powerpc64", target_endian = "little"),
++    path = "bindings/powerpc64/virtio_config.rs"
+ )]
+ #[cfg_attr(target_arch = "riscv64", path = "bindings/riscv64/virtio_config.rs")]
+ #[cfg_attr(target_arch = "s390x", path = "bindings/s390x/virtio_config.rs")]
+@@ -50,7 +61,14 @@ pub mod virtio_config;
+ )]
+ #[cfg_attr(target_arch = "m68k", path = "bindings/m68k/virtio_gpu.rs")]
+ #[cfg_attr(target_arch = "mips", path = "bindings/mipsel/virtio_gpu.rs")]
+-#[cfg_attr(target_arch = "powerpc64", path = "bindings/powerpc64le/virtio_gpu.rs")]
++#[cfg_attr(
++    all(target_arch = "powerpc64", target_endian = "big"),
++    path = "bindings/powerpc64/virtio_gpu.rs"
++)]
++#[cfg_attr(
++    all(target_arch = "powerpc64", target_endian = "little"),
++    path = "bindings/powerpc64/virtio_gpu.rs"
++)]
+ #[cfg_attr(target_arch = "riscv64", path = "bindings/riscv64/virtio_gpu.rs")]
+ #[cfg_attr(target_arch = "s390x", path = "bindings/s390x/virtio_gpu.rs")]
+ #[cfg_attr(target_arch = "sparc64", path = "bindings/sparc64/virtio_gpu.rs")]
+@@ -66,7 +84,14 @@ pub mod virtio_gpu;
+ )]
+ #[cfg_attr(target_arch = "m68k", path = "bindings/m68k/virtio_ids.rs")]
+ #[cfg_attr(target_arch = "mips", path = "bindings/mipsel/virtio_ids.rs")]
+-#[cfg_attr(target_arch = "powerpc64", path = "bindings/powerpc64le/virtio_ids.rs")]
++#[cfg_attr(
++    all(target_arch = "powerpc64", target_endian = "big"),
++    path = "bindings/powerpc64/virtio_ids.rs"
++)]
++#[cfg_attr(
++    all(target_arch = "powerpc64", target_endian = "little"),
++    path = "bindings/powerpc64/virtio_ids.rs"
++)]
+ #[cfg_attr(target_arch = "riscv64", path = "bindings/riscv64/virtio_ids.rs")]
+ #[cfg_attr(target_arch = "s390x", path = "bindings/s390x/virtio_ids.rs")]
+ #[cfg_attr(target_arch = "sparc64", path = "bindings/sparc64/virtio_ids.rs")]
+@@ -83,8 +108,12 @@ pub mod virtio_ids;
+ #[cfg_attr(target_arch = "m68k", path = "bindings/m68k/virtio_input.rs")]
+ #[cfg_attr(target_arch = "mips", path = "bindings/mipsel/virtio_input.rs")]
+ #[cfg_attr(
+-    target_arch = "powerpc64",
+-    path = "bindings/powerpc64le/virtio_input.rs"
++    all(target_arch = "powerpc64", target_endian = "big"),
++    path = "bindings/powerpc64/virtio_input.rs"
++)]
++#[cfg_attr(
++    all(target_arch = "powerpc64", target_endian = "little"),
++    path = "bindings/powerpc64/virtio_input.rs"
+ )]
+ #[cfg_attr(target_arch = "riscv64", path = "bindings/riscv64/virtio_input.rs")]
+ #[cfg_attr(target_arch = "s390x", path = "bindings/s390x/virtio_input.rs")]
+@@ -102,8 +131,12 @@ pub mod virtio_input;
+ #[cfg_attr(target_arch = "m68k", path = "bindings/m68k/virtio_mmio.rs")]
+ #[cfg_attr(target_arch = "mips", path = "bindings/mipsel/virtio_mmio.rs")]
+ #[cfg_attr(
+-    target_arch = "powerpc64",
+-    path = "bindings/powerpc64le/virtio_mmio.rs"
++    all(target_arch = "powerpc64", target_endian = "big"),
++    path = "bindings/powerpc64/virtio_mmio.rs"
++)]
++#[cfg_attr(
++    all(target_arch = "powerpc64", target_endian = "little"),
++    path = "bindings/powerpc64/virtio_mmio.rs"
+ )]
+ #[cfg_attr(target_arch = "riscv64", path = "bindings/riscv64/virtio_mmio.rs")]
+ #[cfg_attr(target_arch = "s390x", path = "bindings/s390x/virtio_mmio.rs")]
+@@ -123,8 +156,12 @@ pub mod virtio_net;
+ #[cfg_attr(target_arch = "m68k", path = "bindings/m68k/virtio_ring.rs")]
+ #[cfg_attr(target_arch = "mips", path = "bindings/mipsel/virtio_ring.rs")]
+ #[cfg_attr(
+-    target_arch = "powerpc64",
+-    path = "bindings/powerpc64le/virtio_ring.rs"
++    all(target_arch = "powerpc64", target_endian = "big"),
++    path = "bindings/powerpc64/virtio_ring.rs"
++)]
++#[cfg_attr(
++    all(target_arch = "powerpc64", target_endian = "little"),
++    path = "bindings/powerpc64/virtio_ring.rs"
+ )]
+ #[cfg_attr(target_arch = "riscv64", path = "bindings/riscv64/virtio_ring.rs")]
+ #[cfg_attr(target_arch = "s390x", path = "bindings/s390x/virtio_ring.rs")]
+@@ -142,8 +179,12 @@ pub mod virtio_ring;
+ #[cfg_attr(target_arch = "m68k", path = "bindings/m68k/virtio_scsi.rs")]
+ #[cfg_attr(target_arch = "mips", path = "bindings/mipsel/virtio_scsi.rs")]
+ #[cfg_attr(
+-    target_arch = "powerpc64",
+-    path = "bindings/powerpc64le/virtio_scsi.rs"
++    all(target_arch = "powerpc64", target_endian = "big"),
++    path = "bindings/powerpc64/virtio_scsi.rs"
++)]
++#[cfg_attr(
++    all(target_arch = "powerpc64", target_endian = "little"),
++    path = "bindings/powerpc64/virtio_scsi.rs"
+ )]
+ #[cfg_attr(target_arch = "riscv64", path = "bindings/riscv64/virtio_scsi.rs")]
+ #[cfg_attr(target_arch = "s390x", path = "bindings/s390x/virtio_scsi.rs")]
