@@ -1,0 +1,79 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 05bc2b2..2106429 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -28,8 +28,8 @@ repository = "https://github.com/Byron/tui-crates"
+ [package.metadata.docs.rs]
+ all-features = true
+ 
+-[dependencies.ansiterm]
+-version = "0.12.2"
++[dependencies.nu-ansi-term]
++version = "0.50"
+ optional = true
+ default-features = false
+ 
+@@ -73,7 +73,7 @@ optional = true
+ default-features = false
+ 
+ [features]
+-color = ["ansiterm"]
++color = ["nu-ansi-term"]
+ default = []
+ input-async = [
+     "futures-channel",
+diff --git a/src/color.rs b/src/color.rs
+index 1749f40..3e3df62 100644
+--- a/src/color.rs
++++ b/src/color.rs
+@@ -1,9 +1,9 @@
+ use std::borrow::Cow;
+ use std::ffi::OsStr;
+ 
+-#[cfg(feature = "ansiterm")]
++#[cfg(feature = "nu-ansi-term")]
+ mod _impl {
+-    use ansiterm::{ANSIGenericString, Style};
++    use nu_ansi_term::{AnsiGenericString, Style};
+ 
+     pub struct Brush {
+         may_paint: bool,
+@@ -27,20 +27,20 @@ mod _impl {
+         pub fn paint<'a, I, S: 'a + ToOwned + ?Sized>(
+             &mut self,
+             input: I,
+-        ) -> ANSIGenericString<'a, S>
++        ) -> AnsiGenericString<'a, S>
+         where
+             I: Into<std::borrow::Cow<'a, S>>,
+             <S as ToOwned>::Owned: std::fmt::Debug,
+         {
+             match (self.may_paint, self.style.as_ref().take()) {
+                 (true, Some(style)) => style.paint(input),
+-                (_, Some(_)) | (_, None) => ANSIGenericString::from(input),
++                (_, Some(_)) | (_, None) => AnsiGenericString::from(input),
+             }
+         }
+     }
+ }
+ 
+-#[cfg(feature = "ansiterm")]
++#[cfg(feature = "nu-ansi-term")]
+ pub use _impl::*;
+ 
+ /// Return true if we should colorize the output, based on [clicolors spec](https://bixense.com/clicolors/) and [no-color spec](https://no-color.org)
+diff --git a/src/lib.rs b/src/lib.rs
+index 3e6ae7b..61f7173 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -11,8 +11,8 @@ pub mod cursor;
+ pub mod color;
+ 
+ // Reexports
+-#[cfg(feature = "ansiterm")]
+-pub use ansiterm as ansi_term;
++#[cfg(feature = "nu-ansi-term")]
++pub use nu_ansi_term;
+ #[cfg(feature = "crossterm")]
+ pub use crossterm;
+ #[cfg(feature = "tui")]
