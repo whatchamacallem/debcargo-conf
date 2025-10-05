@@ -1,65 +1,22 @@
 Forwarded: not-needed
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -78,7 +78,7 @@
- version = "0.4.38"
- 
- [dependencies.clap]
--version = "4.0.0"
-+version = "4.5"
- features = [
-     "derive",
-     "env",
-@@ -86,7 +86,7 @@
- ]
- 
+@@ -88,3 +88,3 @@
  [dependencies.clap_complete]
 -version = "=4.5.48"
 +version = "4" # Debian: was =4.5.48 upstream to avoid a problem in >= 4.5.50; we will ask upstream to use a different way to generate completions.
  
- [dependencies.clap_mangen]
- version = "0.2.20"
-@@ -99,7 +99,7 @@
- version = "1.2.7"
- 
+@@ -101,3 +101,3 @@
  [dependencies.dirs]
 -version = "6.0.0"
 +version = "5"
  
- [dependencies.dotenvy]
- version = "0.15"
-@@ -108,10 +108,10 @@
- version = "2.0.0"
- 
- [dependencies.heck]
--version = "0.5.0"
-+version = "0.5"
- 
- [dependencies.is_executable]
--version = "1.0.4"
-+version = "1.0"
- 
- [dependencies.lexiclean]
- version = "0.0.1"
-@@ -129,13 +129,13 @@
- version = "2.3.1"
- 
+@@ -131,3 +131,3 @@
  [dependencies.rand]
 -version = "0.9.0"
 +version = "0.8"
  
- [dependencies.regex]
- version = "1.10.4"
- 
- [dependencies.rustversion]
--version = "1.0.18"
-+version = "1"
- 
- [dependencies.semver]
- version = "1.0.20"
-@@ -161,10 +161,10 @@
- features = ["unicode"]
- 
+@@ -163,6 +163,6 @@
  [dependencies.snafu]
 -version = "0.8.0"
 +version = "0.7.1"
@@ -68,36 +25,22 @@ Forwarded: not-needed
 -version = "0.27.1"
 +version = "0.26"
  features = ["derive"]
- 
- [dependencies.target]
-@@ -196,7 +196,7 @@
- version = "8.0.0"
- 
+@@ -198,3 +198,3 @@
  [target."cfg(unix)".dependencies.nix]
 -version = "0.30.1"
 +version = ">= 0.29, < 1.0"
  features = ["user"]
- 
- [target."cfg(windows)".dependencies.ctrlc]
 --- a/src/function.rs
 +++ b/src/function.rs
-@@ -214,7 +214,7 @@
-     .parse::<usize>()
-     .map_err(|err| format!("failed to parse `{n}` as positive integer: {err}"))?;
+@@ -216,3 +216,3 @@
  
 -  let mut rng = rand::rng();
 +  let mut rng = rand::thread_rng();
  
-   (0..n)
-     .map(|_| {
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -105,7 +105,7 @@
-   lexiclean::Lexiclean,
-   libc::EXIT_FAILURE,
+@@ -107,3 +107,3 @@
    once_cell::sync::Lazy,
 -  rand::seq::IndexedRandom,
 +  rand::seq::SliceRandom,
    regex::Regex,
-   serde::{
-     ser::{SerializeMap, SerializeSeq},
