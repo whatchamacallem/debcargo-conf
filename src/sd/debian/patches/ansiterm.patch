@@ -1,0 +1,93 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 0ec3d17..c2f37f2 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -37,8 +37,8 @@ opt-level = 3
+ lto = true
+ strip = true
+ 
+-[dependencies.ansi_term]
+-version = "0.12.1"
++[dependencies.nu-ansi-term]
++version = "0.50"
+ 
+ [dependencies.clap]
+ version = "4.4.6"
+diff --git a/src/main.rs b/src/main.rs
+index 07c48b8..f79a34f 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -8,7 +8,7 @@ pub(crate) mod utils;
+ use std::process;
+ 
+ pub(crate) use self::input::{App, Source};
+-use ansi_term::{Color, Style};
++use nu_ansi_term::{Color, Style};
+ pub(crate) use error::{Error, Result};
+ use replacer::Replacer;
+ 
+diff --git a/src/replacer/mod.rs b/src/replacer/mod.rs
+index d871323..063b42f 100644
+--- a/src/replacer/mod.rs
++++ b/src/replacer/mod.rs
+@@ -131,13 +131,13 @@ impl Replacer {
+             new.extend_from_slice(&haystack[last_match..m.start()]);
+             if use_color {
+                 new.extend_from_slice(
+-                    ansi_term::Color::Blue.prefix().to_string().as_bytes(),
++                    nu_ansi_term::Color::Blue.prefix().to_string().as_bytes(),
+                 );
+             }
+             rep.replace_append(&cap, &mut new);
+             if use_color {
+                 new.extend_from_slice(
+-                    ansi_term::Color::Blue.suffix().to_string().as_bytes(),
++                    nu_ansi_term::Color::Blue.suffix().to_string().as_bytes(),
+                 );
+             }
+             last_match = m.end();
+diff --git a/src/replacer/validate.rs b/src/replacer/validate.rs
+index da5cc71..97a2601 100644
+--- a/src/replacer/validate.rs
++++ b/src/replacer/validate.rs
+@@ -1,6 +1,6 @@
+ use std::{error::Error, fmt, str::CharIndices};
+ 
+-use ansi_term::{Color, Style};
++use nu_ansi_term::{Color, Style};
+ 
+ #[derive(Debug)]
+ pub struct InvalidReplaceCapture {
+diff --git a/tests/cli.rs b/tests/cli.rs
+index 6bf78cc..a4a5b80 100644
+--- a/tests/cli.rs
++++ b/tests/cli.rs
+@@ -83,8 +83,8 @@ mod cli {
+             .success()
+             .stdout(format!(
+                 "{}{}def\n",
+-                ansi_term::Color::Blue.prefix(),
+-                ansi_term::Color::Blue.suffix()
++                nu_ansi_term::Color::Blue.prefix(),
++                nu_ansi_term::Color::Blue.suffix()
+             ));
+ 
+         assert_file(file.path(), "abc123def");
+@@ -115,7 +115,7 @@ mod cli {
+         let stderr = bad_replace_helper_styled(replace);
+ 
+         // TODO: no easy way to toggle off styling yet. Add a `--color <when>`
+-        // flag, and respect things like `$NO_COLOR`. `ansi_term` is
++        // flag, and respect things like `$NO_COLOR`. `nu_ansi_term` is
+         // unmaintained, so we should migrate off of it anyways
+         console::AnsiCodeIterator::new(&stderr)
+             .filter_map(|(s, is_ansi)| (!is_ansi).then_some(s))
+@@ -227,7 +227,7 @@ mod cli {
+         .success()
+         .stdout(format!(
+             "{}\nfoo\nfoo\n",
+-            ansi_term::Color::Blue.paint("bar")
++            nu_ansi_term::Color::Blue.paint("bar")
+         ));
+ 
+         Ok(())
