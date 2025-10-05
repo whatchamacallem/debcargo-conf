@@ -1,0 +1,38 @@
+commit a979659d327459cfe6c5c39e59ed7f0aeffecdeb
+Author: Augie Fackler <raf@durin42.com>
+Date:   Fri Feb 28 12:19:39 2025 -0500
+
+    test_is_multiple_of: call is_multiple_of from trait
+    
+    is_multiple_of was just stabilized for unsigned integer types[0], so this
+    fails to compile on recent nightlies without this fix.
+    
+    0: https://github.com/rust-lang/rust/pull/137383
+
+diff --git a/src/lib.rs b/src/lib.rs
+index 30fce2512a..5d84a3cbbf 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1018,14 +1018,14 @@ macro_rules! impl_integer_for_usize {
+ 
+             #[test]
+             fn test_is_multiple_of() {
+-                assert!((0 as $T).is_multiple_of(&(0 as $T)));
+-                assert!((6 as $T).is_multiple_of(&(6 as $T)));
+-                assert!((6 as $T).is_multiple_of(&(3 as $T)));
+-                assert!((6 as $T).is_multiple_of(&(1 as $T)));
+-
+-                assert!(!(42 as $T).is_multiple_of(&(5 as $T)));
+-                assert!(!(5 as $T).is_multiple_of(&(3 as $T)));
+-                assert!(!(42 as $T).is_multiple_of(&(0 as $T)));
++                assert!(<$T as Integer>::is_multiple_of(&(0 as $T), &(0 as $T)));
++                assert!(<$T as Integer>::is_multiple_of(&(6 as $T), &(6 as $T)));
++                assert!(<$T as Integer>::is_multiple_of(&(6 as $T), &(3 as $T)));
++                assert!(<$T as Integer>::is_multiple_of(&(6 as $T), &(1 as $T)));
++
++                assert!(!<$T as Integer>::is_multiple_of(&(42 as $T), &(5 as $T)));
++                assert!(!<$T as Integer>::is_multiple_of(&(5 as $T), &(3 as $T)));
++                assert!(!<$T as Integer>::is_multiple_of(&(42 as $T), &(0 as $T)));
+             }
+ 
+             #[test]
