@@ -1,0 +1,35 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -102,2 +102,2 @@
+-[dependencies.ansi_term]
+-version = "0.12"
++[dependencies.nu-ansi-term]
++version = "0.50"
+@@ -121,3 +121,4 @@
+ [dependencies.lscolors]
+-version = "0.13"
++version = "0.20"
++features = ["nu-ansi-term"]
+ 
+diff --git a/src/display.rs b/src/display.rs
+index d24af1d..7df1a6b 100644
+--- a/src/display.rs
++++ b/src/display.rs
+@@ -1,7 +1,7 @@
+ use crate::display_node::DisplayNode;
+ use crate::node::FileTime;
+ 
+-use ansi_term::Colour::Red;
++use nu_ansi_term::Color::Red;
+ use lscolors::{LsColors, Style};
+ 
+ use unicode_width::UnicodeWidthStr;
+@@ -403,7 +403,7 @@ fn get_pretty_name(
+             .ls_colors
+             .style_for_path_with_metadata(&node.name, meta_result.as_ref().ok());
+         let ansi_style = directory_color
+-            .map(Style::to_ansi_term_style)
++            .map(Style::to_nu_ansi_term_style)
+             .unwrap_or_default();
+         let out = ansi_style.paint(name_and_padding);
+         format!("{out}")
