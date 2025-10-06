@@ -1,24 +1,16 @@
-Index: webbrowser/Cargo.toml
-===================================================================
---- webbrowser.orig/Cargo.toml
-+++ webbrowser/Cargo.toml
-@@ -31,12 +31,6 @@ version = "0.4"
- [dependencies.url]
- version = "2"
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -76,6 +76,6 @@
  
 -[dev-dependencies.actix-files]
--version = "0.6"
--
--[dev-dependencies.actix-web]
--version = "4"
--
- [dev-dependencies.crossbeam-channel]
- version = "0.5"
++[disabled.dev-dependencies.actix-files]
+ version = "0.6"
  
-Index: webbrowser/tests/common.rs
-===================================================================
---- webbrowser.orig/tests/common.rs
-+++ webbrowser/tests/common.rs
+-[dev-dependencies.actix-web]
++[disabled.dev-dependencies.actix-web]
+ version = "4"
+--- a/tests/common.rs
++++ b/tests/common.rs
 @@ -1,5 +1,5 @@
 -use actix_files as fs;
 -use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
@@ -48,9 +40,9 @@ Index: webbrowser/tests/common.rs
      let qs = req.query_string();
      let ms: u64 = qs
          .replace("ms=", "")
-@@ -40,9 +40,9 @@
-             "<html><body><p>Delayed by {}ms</p></body></html>",
-             qs
+@@ -39,9 +39,9 @@
+         .body(format!(
+             "<html><body><p>Delayed by {qs}ms</p></body></html>"
          ))
 -}
 +}*/
@@ -60,7 +52,7 @@ Index: webbrowser/tests/common.rs
  where
      F: FnOnce(&str, u16),
  {
-@@ -89,17 +89,17 @@
+@@ -90,17 +90,17 @@
  
      // stop the server
      server_handle.stop(true).await;
@@ -82,7 +74,7 @@ Index: webbrowser/tests/common.rs
  pub async fn check_local_file<F>(browser: Browser, html_dir: Option<PathBuf>, url_op: F)
  where
      F: FnOnce(&PathBuf) -> String,
-@@ -126,13 +126,13 @@
+@@ -127,13 +127,13 @@
      })
      .await;
      let _ = std::fs::remove_file(&pb);
@@ -92,8 +84,8 @@ Index: webbrowser/tests/common.rs
 -#[allow(dead_code)]
 +/*#[allow(dead_code)]
  pub async fn check_browser(browser: Browser, platform: &str) {
-     check_request_received(browser, format!("/{}", platform)).await;
-     check_request_received(browser, format!("/{}/😀😀😀", platform)).await;
+     check_request_received(browser, format!("/{platform}")).await;
+     check_request_received(browser, format!("/{platform}/😀😀😀")).await;
 -}
 +}*/
  
@@ -135,10 +127,8 @@ Index: webbrowser/tests/test_unix.rs
  
      #[cfg(feature = "hardened")]
      #[test]
-Index: webbrowser/tests/test_wasm.rs
-===================================================================
---- webbrowser.orig/tests/test_wasm.rs
-+++ webbrowser/tests/test_wasm.rs
+--- a/tests/test_wasm.rs
++++ b/tests/test_wasm.rs
 @@ -5,14 +5,14 @@ mod common;
  mod tests {
      const TEST_PLATFORM: &str = "wasm32";
@@ -155,7 +145,7 @@ Index: webbrowser/tests/test_wasm.rs
 +    /*#[ignore]
      #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
      async fn test_wasm32() {
-         let uri = &format!("/{}", TEST_PLATFORM);
+         let uri = &format!("/{TEST_PLATFORM}");
 @@ -43,5 +43,5 @@ mod tests {
              status.expect("browser open failed");
          })
