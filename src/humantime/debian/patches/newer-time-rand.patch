@@ -1,108 +1,49 @@
-From 6f261c71f98bfcb2d79e6fbf824f73e631b33f6d Mon Sep 17 00:00:00 2001
-From: pinkforest <36498018+pinkforest@users.noreply.github.com>
-Date: Fri, 5 Aug 2022 02:07:50 +1000
-Subject: [PATCH 1/3] chore: bump time + rand
-
----
- Cargo.toml | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/Cargo.toml b/Cargo.toml
-index 07134c4..d8ef352 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -23,6 +23,7 @@
- categories = ["date-and-time"]
- license = "MIT/Apache-2.0"
- repository = "https://github.com/tailhook/humantime"
-+autobenches = false
- 
- [lib]
- name = "humantime"
-@@ -31,7 +32,8 @@
- version = "0.4"
- 
+@@ -60,3 +60,3 @@
  [dev-dependencies.rand]
--version = "0.6"
+-version = "0.9"
 +version = "0.8"
  
- [dev-dependencies.time]
--version = "0.1"
-+version = "0.3"
-+features = ["formatting"]
-
-From beda9b166adeb9718d6cb4dc82c84cccfcc1cd5b Mon Sep 17 00:00:00 2001
-From: pinkforest <36498018+pinkforest@users.noreply.github.com>
-Date: Fri, 5 Aug 2022 02:52:52 +1000
-Subject: [PATCH 2/3] rand 0.8 and time 0.3 changes for dev deps
-
----
- src/date.rs     | 8 ++++----
- src/duration.rs | 6 +++---
- 3 files changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/src/date.rs b/src/date.rs
-index ea8c40b..6a56f0b 100644
 --- a/src/date.rs
 +++ b/src/date.rs
-@@ -372,6 +372,7 @@ impl fmt::Display for Rfc3339Timestamp {
- mod test {
-     use std::str::from_utf8;
-     use std::time::{UNIX_EPOCH, SystemTime, Duration};
-+    use time::{format_description::well_known::Rfc3339, OffsetDateTime};
- 
-     use rand::Rng;
- 
-@@ -381,8 +382,7 @@ mod test {
-     use super::max;
- 
-     fn from_sec(sec: u64) -> (String, SystemTime) {
--        let s = time::at_utc(time::Timespec { sec: sec as i64, nsec: 0 })
--                  .rfc3339().to_string();
-+        let s = OffsetDateTime::from_unix_timestamp(sec as i64).unwrap().format(&Rfc3339).unwrap();
-         let time = UNIX_EPOCH + Duration::new(sec, 0);
-         (s, time)
-     }
-@@ -517,7 +517,7 @@ mod test {
-         let upper = SystemTime::now().duration_since(UNIX_EPOCH).unwrap()
+@@ -567,7 +567,7 @@ mod test {
+             .unwrap()
              .as_secs();
          for _ in 0..10000 {
--            let sec = rand::thread_rng().gen_range(0, upper);
+-            let sec = rand::rng().random_range(0..upper);
 +            let sec = rand::thread_rng().gen_range(0..upper);
              let (s, time) = from_sec(sec);
              assert_eq!(parse_rfc3339(&s).unwrap(), time);
              assert_eq!(format_rfc3339(time).to_string(), s);
-@@ -527,7 +527,7 @@ mod test {
+@@ -577,7 +577,7 @@ mod test {
      #[test]
      fn random_wide_range() {
          for _ in 0..100_000 {
--            let sec = rand::thread_rng().gen_range(0, max::SECONDS);
+-            let sec = rand::rng().random_range(0..max::SECONDS);
 +            let sec = rand::thread_rng().gen_range(0..max::SECONDS);
              let (s, time) = from_sec(sec);
              assert_eq!(parse_rfc3339(&s).unwrap(), time);
              assert_eq!(format_rfc3339(time).to_string(), s);
-diff --git a/src/duration.rs b/src/duration.rs
-index 4724d03..b5ada8d 100644
 --- a/src/duration.rs
 +++ b/src/duration.rs
-@@ -397,7 +397,7 @@ mod test {
+@@ -724,7 +724,7 @@ mod test {
      #[test]
      fn random_second() {
          for _ in 0..10000 {
--            let sec = rand::thread_rng().gen_range(0, 253_370_764_800);
+-            let sec = rand::rng().random_range(0..253_370_764_800);
 +            let sec = rand::thread_rng().gen_range(0..253_370_764_800);
              let d = Duration::new(sec, 0);
-             assert_eq!(d,
-                 parse_duration(&format_duration(d).to_string()).unwrap());
-@@ -407,8 +407,8 @@ mod test {
+             assert_eq!(d, parse_duration(&format_duration(d).to_string()).unwrap());
+         }
+@@ -733,8 +733,8 @@ mod test {
      #[test]
      fn random_any() {
          for _ in 0..10000 {
--            let sec = rand::thread_rng().gen_range(0, 253_370_764_800);
--            let nanos = rand::thread_rng().gen_range(0, 1_000_000_000);
+-            let sec = rand::rng().random_range(0..253_370_764_800);
+-            let nanos = rand::rng().random_range(0..1_000_000_000);
 +            let sec = rand::thread_rng().gen_range(0..253_370_764_800);
 +            let nanos = rand::thread_rng().gen_range(0..1_000_000_000);
              let d = Duration::new(sec, nanos);
-             assert_eq!(d,
-                 parse_duration(&format_duration(d).to_string()).unwrap());
-
+             assert_eq!(d, parse_duration(&format_duration(d).to_string()).unwrap());
+         }
