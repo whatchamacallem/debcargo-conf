@@ -1,8 +1,6 @@
-Index: image/Cargo.toml
-===================================================================
---- image.orig/Cargo.toml
-+++ image/Cargo.toml
-@@ -132,8 +132,8 @@ harness = false
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -86,8 +86,8 @@
  version = "1.8.0"
  features = ["extern_crate_alloc"]
  
@@ -13,12 +11,10 @@ Index: image/Cargo.toml
  
  [dependencies.color_quant]
  version = "1.1"
-Index: image/src/codecs/bmp/decoder.rs
-===================================================================
---- image.orig/src/codecs/bmp/decoder.rs
-+++ image/src/codecs/bmp/decoder.rs
-@@ -5,7 +5,7 @@ use std::iter::{repeat, Rev};
- use std::slice::ChunksExactMut;
+--- a/src/codecs/bmp/decoder.rs
++++ b/src/codecs/bmp/decoder.rs
+@@ -4,7 +4,7 @@
+ use std::slice::ChunksMut;
  use std::{error, fmt};
  
 -use byteorder_lite::{LittleEndian, ReadBytesExt};
@@ -26,20 +22,16 @@ Index: image/src/codecs/bmp/decoder.rs
  
  use crate::color::ColorType;
  use crate::error::{
-Index: image/src/codecs/bmp/encoder.rs
-===================================================================
---- image.orig/src/codecs/bmp/encoder.rs
-+++ image/src/codecs/bmp/encoder.rs
+--- a/src/codecs/bmp/encoder.rs
++++ b/src/codecs/bmp/encoder.rs
 @@ -1,4 +1,4 @@
 -use byteorder_lite::{LittleEndian, WriteBytesExt};
 +use byteorder::{LittleEndian, WriteBytesExt};
  use std::io::{self, Write};
  
  use crate::error::{
-Index: image/src/codecs/dds.rs
-===================================================================
---- image.orig/src/codecs/dds.rs
-+++ image/src/codecs/dds.rs
+--- a/src/codecs/dds.rs
++++ b/src/codecs/dds.rs
 @@ -8,7 +8,7 @@
  use std::io::Read;
  use std::{error, fmt};
@@ -49,11 +41,9 @@ Index: image/src/codecs/dds.rs
  
  #[allow(deprecated)]
  use crate::codecs::dxt::{DxtDecoder, DxtVariant};
-Index: image/src/codecs/farbfeld.rs
-===================================================================
---- image.orig/src/codecs/farbfeld.rs
-+++ image/src/codecs/farbfeld.rs
-@@ -315,7 +315,7 @@ impl<W: Write> ImageEncoder for Farbfeld
+--- a/src/codecs/farbfeld.rs
++++ b/src/codecs/farbfeld.rs
+@@ -315,7 +315,7 @@
  mod tests {
      use crate::codecs::farbfeld::FarbfeldDecoder;
      use crate::ImageDecoderRect;
@@ -62,31 +52,25 @@ Index: image/src/codecs/farbfeld.rs
      use std::io::{Cursor, Seek, SeekFrom};
  
      static RECTANGLE_IN: &[u8] =     b"farbfeld\
-Index: image/src/codecs/ico/decoder.rs
-===================================================================
---- image.orig/src/codecs/ico/decoder.rs
-+++ image/src/codecs/ico/decoder.rs
+--- a/src/codecs/ico/decoder.rs
++++ b/src/codecs/ico/decoder.rs
 @@ -1,4 +1,4 @@
 -use byteorder_lite::{LittleEndian, ReadBytesExt};
 +use byteorder::{LittleEndian, ReadBytesExt};
  use std::io::{BufRead, Read, Seek, SeekFrom};
  use std::{error, fmt};
  
-Index: image/src/codecs/ico/encoder.rs
-===================================================================
---- image.orig/src/codecs/ico/encoder.rs
-+++ image/src/codecs/ico/encoder.rs
+--- a/src/codecs/ico/encoder.rs
++++ b/src/codecs/ico/encoder.rs
 @@ -1,4 +1,4 @@
 -use byteorder_lite::{LittleEndian, WriteBytesExt};
 +use byteorder::{LittleEndian, WriteBytesExt};
  use std::borrow::Cow;
  use std::io::{self, Write};
  
-Index: image/src/codecs/png.rs
-===================================================================
---- image.orig/src/codecs/png.rs
-+++ image/src/codecs/png.rs
-@@ -187,7 +187,7 @@ impl<R: BufRead + Seek> ImageDecoder for
+--- a/src/codecs/png.rs
++++ b/src/codecs/png.rs
+@@ -178,7 +178,7 @@
      }
  
      fn read_image(mut self, buf: &mut [u8]) -> ImageResult<()> {
@@ -95,62 +79,61 @@ Index: image/src/codecs/png.rs
  
          assert_eq!(u64::try_from(buf.len()), Ok(self.total_bytes()));
          self.reader.next_frame(buf).map_err(ImageError::from_png)?;
-Index: image/src/codecs/pnm/decoder.rs
-===================================================================
---- image.orig/src/codecs/pnm/decoder.rs
-+++ image/src/codecs/pnm/decoder.rs
-@@ -14,7 +14,7 @@ use crate::error::{
- use crate::io::ReadExt;
- use crate::{utils, ImageDecoder, ImageFormat};
+@@ -633,7 +633,7 @@
+         height: u32,
+         color_type: ExtendedColorType,
+     ) -> ImageResult<()> {
+-        use byteorder_lite::{BigEndian, ByteOrder, NativeEndian};
++        use byteorder::{BigEndian, ByteOrder, NativeEndian};
+         use ExtendedColorType::*;
+ 
+         let expected_buffer_len = color_type.buffer_size(width, height);
+--- a/src/codecs/pnm/decoder.rs
++++ b/src/codecs/pnm/decoder.rs
+@@ -14,7 +14,7 @@
+ use crate::image::{ImageDecoder, ImageFormat};
+ use crate::utils;
  
 -use byteorder_lite::{BigEndian, ByteOrder, NativeEndian};
 +use byteorder::{BigEndian, ByteOrder, NativeEndian};
  
  /// All errors that can occur when attempting to parse a PNM
  #[derive(Debug, Clone)]
-Index: image/src/codecs/pnm/encoder.rs
-===================================================================
---- image.orig/src/codecs/pnm/encoder.rs
-+++ image/src/codecs/pnm/encoder.rs
-@@ -15,7 +15,7 @@ use crate::error::{
+--- a/src/codecs/pnm/encoder.rs
++++ b/src/codecs/pnm/encoder.rs
+@@ -14,7 +14,7 @@
  };
- use crate::{ImageEncoder, ImageFormat};
+ use crate::image::{ImageEncoder, ImageFormat};
  
 -use byteorder_lite::{BigEndian, WriteBytesExt};
 +use byteorder::{BigEndian, WriteBytesExt};
  
  enum HeaderStrategy {
      Dynamic,
-Index: image/src/codecs/pnm/mod.rs
-===================================================================
---- image.orig/src/codecs/pnm/mod.rs
-+++ image/src/codecs/pnm/mod.rs
-@@ -23,7 +23,7 @@ mod tests {
+--- a/src/codecs/pnm/mod.rs
++++ b/src/codecs/pnm/mod.rs
+@@ -22,7 +22,7 @@
      use super::*;
+     use crate::image::ImageDecoder;
      use crate::ExtendedColorType;
-     use crate::ImageDecoder as _;
 -    use byteorder_lite::{ByteOrder, NativeEndian};
 +    use byteorder::{ByteOrder, NativeEndian};
  
      fn execute_roundtrip_default(buffer: &[u8], width: u32, height: u32, color: ExtendedColorType) {
          let mut encoded_buffer = Vec::new();
-Index: image/src/codecs/tga/decoder.rs
-===================================================================
---- image.orig/src/codecs/tga/decoder.rs
-+++ image/src/codecs/tga/decoder.rs
-@@ -7,7 +7,7 @@ use crate::{
-     error::{ImageError, ImageResult, UnsupportedError, UnsupportedErrorKind},
-     ImageDecoder, ImageFormat,
+--- a/src/codecs/tga/decoder.rs
++++ b/src/codecs/tga/decoder.rs
+@@ -6,7 +6,7 @@
+     },
+     image::{ImageDecoder, ImageFormat},
  };
 -use byteorder_lite::ReadBytesExt;
 +use byteorder::ReadBytesExt;
  use std::io::{self, Read};
  
  struct ColorMap {
-Index: image/src/codecs/tga/header.rs
-===================================================================
---- image.orig/src/codecs/tga/header.rs
-+++ image/src/codecs/tga/header.rs
+--- a/src/codecs/tga/header.rs
++++ b/src/codecs/tga/header.rs
 @@ -1,6 +1,6 @@
  use crate::error::{UnsupportedError, UnsupportedErrorKind};
  use crate::{ExtendedColorType, ImageError, ImageFormat, ImageResult};
@@ -159,25 +142,14 @@ Index: image/src/codecs/tga/header.rs
  use std::io::{Read, Write};
  
  pub(crate) const ALPHA_BIT_MASK: u8 = 0b1111;
-Index: image/src/metadata.rs
-===================================================================
---- image.orig/src/metadata.rs
-+++ image/src/metadata.rs
-@@ -3,7 +3,7 @@ pub(crate) mod cicp;
+--- a/src/metadata.rs
++++ b/src/metadata.rs
+@@ -2,7 +2,7 @@
  
  use std::io::{Cursor, Read};
  
--use byteorder_lite::{BigEndian, LittleEndian, ReadBytesExt, WriteBytesExt};
-+use byteorder::{BigEndian, LittleEndian, ReadBytesExt, WriteBytesExt};
+-use byteorder_lite::{BigEndian, LittleEndian, ReadBytesExt};
++use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
  
- pub use self::cicp::{
-     Cicp, CicpColorPrimaries, CicpMatrixCoefficients, CicpTransferCharacteristics, CicpTransform,
-@@ -130,7 +130,7 @@ impl Orientation {
-     /// Extracted into a helper function to be generic over endianness
-     fn locate_orientation_entry<B>(reader: &mut Cursor<&[u8]>) -> Option<(Self, u64)>
-     where
--        B: byteorder_lite::ByteOrder,
-+        B: byteorder::ByteOrder,
-     {
-         let ifd_offset = reader.read_u32::<B>().ok()?;
-         reader.set_position(u64::from(ifd_offset));
+ /// Describes the transformations to be applied to the image.
+ /// Compatible with [Exif orientation](https://web.archive.org/web/20200412005226/https://www.impulseadventure.com/photo/exif-orientation.html).
