@@ -1,0 +1,721 @@
+From 9add305219659bbddd313de16659bd4ffba23d0c Mon Sep 17 00:00:00 2001
+From: NoisyCoil <noisycoil@disroot.org>
+Date: Wed, 8 Oct 2025 00:52:22 +0200
+Subject: [PATCH] Patch
+
+---
+ Cargo.toml                  |   6 -
+ src/errors.rs               |   3 +-
+ src/image/double_line.rs    |   2 +-
+ src/image/image_view.rs     |   5 +-
+ src/image/mod.rs            |   1 -
+ src/image/source_image.rs   |  12 +-
+ src/image/svg.rs            |  18 +-
+ src/image/zune_compat.rs    | 396 ------------------------------------
+ src/kitty/image_renderer.rs |  53 ++---
+ src/preview/preview.rs      |   2 +-
+ 10 files changed, 52 insertions(+), 446 deletions(-)
+ delete mode 100644 src/image/zune_compat.rs
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 128d11a..a1fc04c 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -245,12 +245,6 @@ version = "4.4.0"
+ version = "0.5"
+ optional = true
+ 
+-[dependencies.zune-core]
+-version = "0.4"
+-
+-[dependencies.zune-image]
+-version = "0.4"
+-
+ [dev-dependencies.glassbench]
+ version = "0.4.4"
+ 
+diff --git a/src/errors.rs b/src/errors.rs
+index 4578013..c407676 100644
+--- a/src/errors.rs
++++ b/src/errors.rs
+@@ -2,6 +2,7 @@
+ 
+ use {
+     custom_error::custom_error,
++    image::error::ImageError,
+     lazy_regex::regex,
+     std::io,
+ };
+@@ -11,7 +12,7 @@ custom_error! {pub ProgramError
+     ArgParse {bad: String, valid: String} = "{bad:?} can't be parsed (valid values: {valid:?})",
+     ConfFile {path:String, details: ConfError} = "Bad configuration file {path:?} : {details}",
+     Conf {source: ConfError} = "Bad configuration: {source}",
+-    ImageError {details: String} = "Image error: {details}",
++    ImageError {source: ImageError } = "{source}",
+     InternalError {details: String} = "Internal error: {details}", // should not happen
+     Io {source: io::Error} = "IO Error : {source}",
+     LaunchError {program: String, source: io::Error} = "Unable to launch {program}: {source}",
+diff --git a/src/image/double_line.rs b/src/image/double_line.rs
+index fb88c6b..f4d41d3 100644
+--- a/src/image/double_line.rs
++++ b/src/image/double_line.rs
+@@ -1,5 +1,4 @@
+ use {
+-    super::zune_compat::Rgba,
+     crate::{
+         display::W,
+         errors::ProgramError,
+@@ -14,6 +13,7 @@ use {
+             SetColors,
+         },
+     },
++    image::Rgba,
+     termimad::fill_bg,
+ };
+ 
+diff --git a/src/image/image_view.rs b/src/image/image_view.rs
+index 7408687..c204976 100644
+--- a/src/image/image_view.rs
++++ b/src/image/image_view.rs
+@@ -2,7 +2,6 @@ use {
+     super::{
+         SourceImage,
+         double_line::DoubleLine,
+-        zune_compat::DynamicImage,
+     },
+     crate::{
+         app::*,
+@@ -25,6 +24,10 @@ use {
+             SetBackgroundColor,
+         },
+     },
++    image::{
++        DynamicImage,
++        GenericImageView,
++    },
+     std::path::{
+         Path,
+         PathBuf,
+diff --git a/src/image/mod.rs b/src/image/mod.rs
+index 2291c38..7f8690e 100644
+--- a/src/image/mod.rs
++++ b/src/image/mod.rs
+@@ -2,7 +2,6 @@ mod double_line;
+ mod image_view;
+ mod source_image;
+ mod svg;
+-pub mod zune_compat;
+ 
+ pub use {
+     image_view::ImageView,
+diff --git a/src/image/source_image.rs b/src/image/source_image.rs
+index 5723acc..3912519 100644
+--- a/src/image/source_image.rs
++++ b/src/image/source_image.rs
+@@ -1,9 +1,9 @@
+ use {
+-    super::{
+-        svg,
+-        zune_compat::DynamicImage,
+-    },
++    super::svg,
+     crate::errors::ProgramError,
++    image::{
++        imageops::FilterType, DynamicImage, GenericImageView, ImageReader
++    },
+     std::path::Path,
+     termimad::{
+         coolor,
+@@ -23,7 +23,7 @@ impl SourceImage {
+         let img = if is_svg {
+             Self::Svg(svg::load(path)?)
+         } else {
+-            Self::Bitmap(DynamicImage::from_path(path)?)
++            Self::Bitmap(ImageReader::open(path)?.decode()?)
+         };
+         Ok(img)
+     }
+@@ -50,7 +50,7 @@ impl SourceImage {
+                 } else {
+                     max_width = max_width.min(dim.0);
+                     max_height = max_height.min(dim.1);
+-                    img.resize(max_width, max_height)?
++                    img.resize(max_width, max_height, FilterType::Triangle)
+                 }
+             }
+             Self::Svg(tree) => {
+diff --git a/src/image/svg.rs b/src/image/svg.rs
+index c7508f1..9ca439f 100644
+--- a/src/image/svg.rs
++++ b/src/image/svg.rs
+@@ -1,6 +1,9 @@
+ use {
+-    super::zune_compat::DynamicImage,
+     crate::errors::SvgError,
++    image::{
++        DynamicImage,
++        RgbaImage,
++    },
+     resvg::{
+         tiny_skia,
+         usvg,
+@@ -70,13 +73,12 @@ pub fn render_tree(
+         tiny_skia::Transform::from_scale(zoom, zoom),
+         &mut pixmap.as_mut(),
+     );
+-    let width = pixmap.width();
+-    let height = pixmap.height();
+-    let data = pixmap.take();
+-    DynamicImage::from_rgba8(width, height, data)
+-        .map_err(|_| SvgError::Internal {
+-            message: "failed to create image from RGBA data",
+-        })
++    let image_buffer = RgbaImage::from_vec(pixmap.width(), pixmap.height(), pixmap.take()).ok_or(
++        SvgError::Internal {
++            message: "wrong image buffer size",
++        },
++    )?;
++    Ok(DynamicImage::ImageRgba8(image_buffer))
+ }
+ 
+ /// Generate a bitmap at the natural dimensions of the SVG unless it's too big
+diff --git a/src/image/zune_compat.rs b/src/image/zune_compat.rs
+deleted file mode 100644
+index 0ebeff4..0000000
+--- a/src/image/zune_compat.rs
++++ /dev/null
+@@ -1,396 +0,0 @@
+-/// Compatibility layer supporting both zune-image (fast) and image crate (fallback)
+-use {
+-    crate::errors::ProgramError,
+-    image::GenericImageView,
+-    std::path::Path,
+-    zune_core::colorspace::ColorSpace,
+-};
+-
+-impl From<zune_image::errors::ImageErrors> for ProgramError {
+-    fn from(err: zune_image::errors::ImageErrors) -> Self {
+-        ProgramError::ImageError {
+-            details: err.to_string(),
+-        }
+-    }
+-}
+-
+-impl From<image::ImageError> for ProgramError {
+-    fn from(err: image::ImageError) -> Self {
+-        ProgramError::ImageError {
+-            details: err.to_string(),
+-        }
+-    }
+-}
+-
+-/// Image type that uses either zune-image (fast) or image crate (fallback)
+-#[derive(Clone)]
+-pub enum DynamicImage {
+-    /// Fast decoder (zune-image) - used for JPEG, PNG, BMP, etc.
+-    Zune(zune_image::image::Image),
+-    /// Fallback decoder (image crate) - used for WebP, GIF, TIFF, etc.
+-    Image(image::DynamicImage),
+-}
+-
+-impl DynamicImage {
+-    pub fn from_path(path: &Path) -> Result<Self, ProgramError> {
+-        // Try zune-image first (fast path)
+-        match zune_image::image::Image::open(path) {
+-            Ok(img) => {
+-                debug!("Loaded with zune-image: {:?}", path);
+-                Ok(Self::Zune(img))
+-            }
+-            Err(_) => {
+-                // Fall back to image crate for unsupported formats
+-                debug!("Falling back to image crate for: {:?}", path);
+-                let img = image::ImageReader::open(path)?.decode()?;
+-                Ok(Self::Image(img))
+-            }
+-        }
+-    }
+-
+-    pub fn from_rgba8(width: u32, height: u32, data: Vec<u8>) -> Result<Self, ProgramError> {
+-        let expected_len = (width as usize) * (height as usize) * 4;
+-        if data.len() != expected_len {
+-            return Err(ProgramError::InternalError {
+-                details: format!(
+-                    "Invalid RGBA data length: expected {}, got {}",
+-                    expected_len,
+-                    data.len()
+-                )
+-            });
+-        }
+-
+-        let img = zune_image::image::Image::from_u8(&data, width as usize, height as usize, ColorSpace::RGBA);
+-        Ok(Self::Zune(img))
+-    }
+-
+-    pub fn dimensions(&self) -> (u32, u32) {
+-        match self {
+-            Self::Zune(img) => {
+-                let dims = img.dimensions();
+-                (dims.0 as u32, dims.1 as u32)
+-            }
+-            Self::Image(img) => img.dimensions(),
+-        }
+-    }
+-
+-    pub fn resize(&self, max_width: u32, max_height: u32) -> Result<Self, ProgramError> {
+-        match self {
+-            Self::Zune(img) => {
+-                let (width, height) = self.dimensions();
+-
+-                if width <= max_width && height <= max_height {
+-                    return Ok(self.clone());
+-                }
+-
+-                // Calculate new dimensions maintaining aspect ratio
+-                let ratio = (max_width as f32 / width as f32).min(max_height as f32 / height as f32);
+-                let new_width = (width as f32 * ratio) as usize;
+-                let new_height = (height as f32 * ratio) as usize;
+-
+-                // Use bilinear resize
+-                let colorspace = img.colorspace();
+-                let frames = img.frames_ref();
+-                if let Some(frame) = frames.first() {
+-                    let src_data: Vec<u8> = frame.flatten(colorspace);
+-                    let dst_data = resize_bilinear(
+-                        &src_data,
+-                        width as usize,
+-                        height as usize,
+-                        new_width,
+-                        new_height,
+-                        colorspace.num_components(),
+-                    );
+-
+-                    let img = zune_image::image::Image::from_u8(&dst_data, new_width, new_height, colorspace);
+-                    Ok(Self::Zune(img))
+-                } else {
+-                    Ok(self.clone())
+-                }
+-            }
+-            Self::Image(img) => {
+-                let (width, height) = img.dimensions();
+-                if width <= max_width && height <= max_height {
+-                    Ok(self.clone())
+-                } else {
+-                    let new_img = img.resize(max_width, max_height, image::imageops::FilterType::Triangle);
+-                    Ok(Self::Image(new_img))
+-                }
+-            }
+-        }
+-    }
+-
+-    pub fn as_rgb8(&self) -> Option<RgbImage> {
+-        match self {
+-            Self::Zune(img) => {
+-                if img.colorspace() == ColorSpace::RGB {
+-                    Some(RgbImage::Zune(img.clone()))
+-                } else {
+-                    None
+-                }
+-            }
+-            Self::Image(img) => img.as_rgb8().map(|rgb| RgbImage::Image(rgb.clone())),
+-        }
+-    }
+-
+-    pub fn as_rgba8(&self) -> Option<RgbaImage> {
+-        match self {
+-            Self::Zune(img) => {
+-                if img.colorspace() == ColorSpace::RGBA {
+-                    Some(RgbaImage::Zune(img.clone()))
+-                } else {
+-                    None
+-                }
+-            }
+-            Self::Image(img) => img.as_rgba8().map(|rgba| RgbaImage::Image(rgba.clone())),
+-        }
+-    }
+-
+-    pub fn to_rgb8(&self) -> RgbImage {
+-        match self {
+-            Self::Zune(img) => {
+-                let mut img = img.clone();
+-
+-                // Convert to RGB if needed
+-                if img.colorspace() != ColorSpace::RGB {
+-                    let frames = img.frames_ref();
+-                    if let Some(frame) = frames.first() {
+-                        let data: Vec<u8> = frame.flatten(ColorSpace::RGB);
+-                        let (w, h) = img.dimensions();
+-                        img = zune_image::image::Image::from_u8(&data, w, h, ColorSpace::RGB);
+-                    }
+-                }
+-
+-                RgbImage::Zune(img)
+-            }
+-            Self::Image(img) => RgbImage::Image(img.to_rgb8()),
+-        }
+-    }
+-
+-    pub fn pixels(&self) -> PixelIterator {
+-        match self {
+-            Self::Zune(img) => {
+-                let (width, height) = self.dimensions();
+-                let colorspace = img.colorspace();
+-                let frames = img.frames_ref();
+-                let data = if let Some(frame) = frames.first() {
+-                    frame.flatten::<u8>(colorspace)
+-                } else {
+-                    Vec::new()
+-                };
+-
+-                let components = colorspace.num_components();
+-
+-                PixelIterator::Zune {
+-                    data,
+-                    width: width as usize,
+-                    height: height as usize,
+-                    components,
+-                    index: 0,
+-                }
+-            }
+-            Self::Image(img) => {
+-                let pixels: Vec<_> = img.pixels().collect();
+-                PixelIterator::Image {
+-                    pixels,
+-                    index: 0,
+-                }
+-            }
+-        }
+-    }
+-}
+-
+-fn resize_bilinear(
+-    src: &[u8],
+-    src_width: usize,
+-    src_height: usize,
+-    dst_width: usize,
+-    dst_height: usize,
+-    channels: usize,
+-) -> Vec<u8> {
+-    let mut dst = vec![0u8; dst_width * dst_height * channels];
+-
+-    let x_ratio = (src_width - 1) as f32 / dst_width.max(1) as f32;
+-    let y_ratio = (src_height - 1) as f32 / dst_height.max(1) as f32;
+-
+-    for dst_y in 0..dst_height {
+-        for dst_x in 0..dst_width {
+-            // Calculate the source coordinates (floating point)
+-            let src_x_f = dst_x as f32 * x_ratio;
+-            let src_y_f = dst_y as f32 * y_ratio;
+-
+-            // Get the four surrounding pixels
+-            let x0 = src_x_f.floor() as usize;
+-            let y0 = src_y_f.floor() as usize;
+-            let x1 = (x0 + 1).min(src_width - 1);
+-            let y1 = (y0 + 1).min(src_height - 1);
+-
+-            // Calculate the fractional parts (weights)
+-            let x_frac = src_x_f - x0 as f32;
+-            let y_frac = src_y_f - y0 as f32;
+-
+-            // Bilinear interpolation weights
+-            let w00 = (1.0 - x_frac) * (1.0 - y_frac);
+-            let w10 = x_frac * (1.0 - y_frac);
+-            let w01 = (1.0 - x_frac) * y_frac;
+-            let w11 = x_frac * y_frac;
+-
+-            // Calculate pixel indices
+-            let idx00 = (y0 * src_width + x0) * channels;
+-            let idx10 = (y0 * src_width + x1) * channels;
+-            let idx01 = (y1 * src_width + x0) * channels;
+-            let idx11 = (y1 * src_width + x1) * channels;
+-
+-            let dst_idx = (dst_y * dst_width + dst_x) * channels;
+-
+-            // Interpolate each channel
+-            for c in 0..channels {
+-                let p00 = src[idx00 + c] as f32;
+-                let p10 = src[idx10 + c] as f32;
+-                let p01 = src[idx01 + c] as f32;
+-                let p11 = src[idx11 + c] as f32;
+-
+-                let value = p00 * w00 + p10 * w10 + p01 * w01 + p11 * w11;
+-                dst[dst_idx + c] = value.round().clamp(0.0, 255.0) as u8;
+-            }
+-        }
+-    }
+-
+-    dst
+-}
+-
+-pub enum RgbImage {
+-    Zune(zune_image::image::Image),
+-    Image(image::RgbImage),
+-}
+-
+-impl RgbImage {
+-    pub fn as_raw(&self) -> Vec<u8> {
+-        match self {
+-            Self::Zune(img) => {
+-                let frames = img.frames_ref();
+-                if let Some(frame) = frames.first() {
+-                    frame.flatten(ColorSpace::RGB)
+-                } else {
+-                    Vec::new()
+-                }
+-            }
+-            Self::Image(img) => img.as_raw().clone(),
+-        }
+-    }
+-}
+-
+-pub enum RgbaImage {
+-    Zune(zune_image::image::Image),
+-    Image(image::RgbaImage),
+-}
+-
+-impl RgbaImage {
+-    pub fn as_raw(&self) -> Vec<u8> {
+-        match self {
+-            Self::Zune(img) => {
+-                let frames = img.frames_ref();
+-                if let Some(frame) = frames.first() {
+-                    frame.flatten(ColorSpace::RGBA)
+-                } else {
+-                    Vec::new()
+-                }
+-            }
+-            Self::Image(img) => img.as_raw().clone(),
+-        }
+-    }
+-
+-    pub fn from_vec(width: u32, height: u32, data: Vec<u8>) -> Option<Self> {
+-        let expected_len = (width as usize) * (height as usize) * 4;
+-        if data.len() != expected_len {
+-            return None;
+-        }
+-
+-        let img = zune_image::image::Image::from_u8(&data, width as usize, height as usize, ColorSpace::RGBA);
+-        Some(Self::Zune(img))
+-    }
+-}
+-
+-#[derive(Clone, Copy)]
+-pub struct Rgba<T>(pub [T; 4]);
+-
+-impl<T> std::ops::Index<usize> for Rgba<T> {
+-    type Output = T;
+-    fn index(&self, index: usize) -> &Self::Output {
+-        &self.0[index]
+-    }
+-}
+-
+-pub enum PixelIterator {
+-    Zune {
+-        data: Vec<u8>,
+-        width: usize,
+-        height: usize,
+-        components: usize,
+-        index: usize,
+-    },
+-    Image {
+-        pixels: Vec<(u32, u32, image::Rgba<u8>)>,
+-        index: usize,
+-    },
+-}
+-
+-impl Iterator for PixelIterator {
+-    type Item = (u32, u32, Rgba<u8>);
+-
+-    fn next(&mut self) -> Option<Self::Item> {
+-        match self {
+-            PixelIterator::Zune {
+-                data,
+-                width,
+-                height,
+-                components,
+-                index,
+-            } => {
+-                let total_pixels = *width * *height;
+-                if *index >= total_pixels {
+-                    return None;
+-                }
+-
+-                let x = (*index % *width) as u32;
+-                let y = (*index / *width) as u32;
+-
+-                let byte_index = *index * *components;
+-                let rgba = if *components == 4 {
+-                    Rgba([
+-                        data[byte_index],
+-                        data[byte_index + 1],
+-                        data[byte_index + 2],
+-                        data[byte_index + 3],
+-                    ])
+-                } else if *components == 3 {
+-                    Rgba([
+-                        data[byte_index],
+-                        data[byte_index + 1],
+-                        data[byte_index + 2],
+-                        255,
+-                    ])
+-                } else if *components == 1 {
+-                    let gray = data[byte_index];
+-                    Rgba([gray, gray, gray, 255])
+-                } else {
+-                    Rgba([0, 0, 0, 255])
+-                };
+-
+-                *index += 1;
+-                Some((x, y, rgba))
+-            }
+-            PixelIterator::Image { pixels, index } => {
+-                if *index >= pixels.len() {
+-                    return None;
+-                }
+-
+-                let (x, y, p) = pixels[*index];
+-                let rgba = Rgba([p[0], p[1], p[2], p[3]]);
+-
+-                *index += 1;
+-                Some((x, y, rgba))
+-            }
+-        }
+-    }
+-}
+diff --git a/src/kitty/image_renderer.rs b/src/kitty/image_renderer.rs
+index 2937ccf..b85a876 100644
+--- a/src/kitty/image_renderer.rs
++++ b/src/kitty/image_renderer.rs
+@@ -33,8 +33,9 @@ use {
+         Compression,
+         write::ZlibEncoder,
+     },
+-    crate::image::zune_compat::{
++    image::{
+         DynamicImage,
++        GenericImageView,
+         RgbImage,
+         RgbaImage,
+     },
+@@ -107,35 +108,37 @@ pub struct KittyImageRendererOptions {
+     pub is_tmux: bool,
+ }
+ 
+-enum ImageData {
++enum ImageData<'i> {
++    RgbRef(&'i RgbImage),
++    RgbaRef(&'i RgbaImage),
+     Rgb(RgbImage),
+-    Rgba(RgbaImage),
+ }
+-impl From<&DynamicImage> for ImageData {
+-    fn from(img: &DynamicImage) -> Self {
+-        if let Some(rgba) = img.as_rgba8() {
+-            debug!("using rgba");
+-            Self::Rgba(rgba)
+-        } else if let Some(rgb) = img.as_rgb8() {
++impl<'i> From<&'i DynamicImage> for ImageData<'i> {
++    fn from(img: &'i DynamicImage) -> Self {
++        if let Some(rgb) = img.as_rgb8() {
+             debug!("using rgb");
+-            Self::Rgb(rgb)
++            Self::RgbRef(rgb)
++        } else if let Some(rgba) = img.as_rgba8() {
++            debug!("using rgba");
++            Self::RgbaRef(rgba)
+         } else {
+             debug!("converting to rgb8");
+             Self::Rgb(img.to_rgb8())
+         }
+     }
+ }
+-impl ImageData {
++impl ImageData<'_> {
+     fn kitty_format(&self) -> &'static str {
+         match self {
+-            Self::Rgba(_) => "32",
+-            Self::Rgb(_) => "24",
++            Self::RgbaRef(_) => "32",
++            _ => "24",
+         }
+     }
+-    fn bytes(&self) -> Vec<u8> {
++    fn bytes(&self) -> &[u8] {
+         match self {
++            Self::RgbRef(img) => img.as_raw(),
++            Self::RgbaRef(img) => img.as_raw(),
+             Self::Rgb(img) => img.as_raw(),
+-            Self::Rgba(img) => img.as_raw(),
+         }
+     }
+ }
+@@ -209,15 +212,15 @@ pub struct KittyImageRenderer {
+     temp_files: LruCache<String, PathBuf, FxBuildHasher>,
+ }
+ 
+-enum KittyImageData {
++enum KittyImageData<'i> {
+     Png { path: PathBuf },
+-    Image { data: ImageData },
++    Image { data: ImageData<'i> },
+ }
+ 
+ /// An image prepared for a precise area on screen
+-struct KittyImage {
++struct KittyImage<'i> {
+     id: usize,
+-    data: KittyImageData,
++    data: KittyImageData<'i>,
+     img_width: u32,
+     img_height: u32,
+     area: Area,
+@@ -225,12 +228,12 @@ struct KittyImage {
+     is_tmux: bool,
+     tmux_nest_count: u32,
+ }
+-impl KittyImage {
+-    fn new(
+-        src: &DynamicImage,
++impl<'i> KittyImage<'i> {
++    fn new<'r>(
++        src: &'i DynamicImage,
+         png_path: Option<PathBuf>,
+         available_area: &Area,
+-        renderer: &mut KittyImageRenderer,
++        renderer: &'r mut KittyImageRenderer,
+     ) -> Self {
+         let (img_width, img_height) = src.dimensions();
+         let area = renderer.rendering_area(img_width, img_height, available_area);
+@@ -318,7 +321,7 @@ impl KittyImage {
+                 (png_buf, "", "100")
+             }
+             KittyImageData::Image { data } => (
+-                KittyImage::compress(&data.bytes())?,
++                KittyImage::compress(data.bytes())?,
+                 "o=z,",
+                 data.kitty_format(),
+             ),
+@@ -453,7 +456,7 @@ impl KittyImage {
+         // Compression slows things down
+         if let KittyImageData::Image { data } = &self.data {
+             if let Some(mut temp_file) = temp_file {
+-                temp_file.write_all(&data.bytes())?;
++                temp_file.write_all(data.bytes())?;
+                 temp_file.flush()?;
+                 debug!("file len: {}", temp_file.metadata().unwrap().len());
+             }
+diff --git a/src/preview/preview.rs b/src/preview/preview.rs
+index 46542a3..bb48004 100644
+--- a/src/preview/preview.rs
++++ b/src/preview/preview.rs
+@@ -368,7 +368,7 @@ impl Preview {
+         let con = &disc.con;
+         match self {
+             Self::Dir(dv) => dv.display(w, disc, area),
+-            Self::Image(iv) => time!(iv.display(w, disc, area)),
++            Self::Image(iv) => iv.display(w, disc, area),
+             Self::Text(sv) => sv.display(w, screen, panel_skin, area, con),
+             Self::ZeroLen(zlv) => zlv.display(w, screen, panel_skin, area),
+             Self::Hex(hv) => hv.display(w, screen, panel_skin, area),
+-- 
+2.51.0
+
