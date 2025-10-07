@@ -1,0 +1,57 @@
+This patch is based on a revert of upstream commit 1176e088736949723d9fea52d9487f388208f592
+adapted for use in the Debian package by Peter Michael Green.
+
+Index: image/src/codecs/tiff.rs
+===================================================================
+--- image.orig/src/codecs/tiff.rs
++++ image/src/codecs/tiff.rs
+@@ -92,15 +92,6 @@ where
+             tiff::ColorType::RGBA(n) | tiff::ColorType::CMYK(n) => {
+                 return Err(err_unknown_color_type(n.saturating_mul(4)))
+             }
+-            tiff::ColorType::Multiband {
+-                bit_depth,
+-                num_samples,
+-            } => {
+-                return Err(err_unknown_color_type(
+-                    bit_depth.saturating_mul(num_samples.min(255) as u8),
+-                ))
+-            }
+-            _ => return Err(err_unknown_color_type(0)),
+         };
+ 
+         let original_color_type = match tiff_color_type {
+@@ -352,7 +343,6 @@ impl<R: BufRead + Seek> ImageDecoder for
+             DecodingResult::F64(v) => {
+                 buf.copy_from_slice(bytemuck::cast_slice(&v));
+             }
+-            DecodingResult::F16(_) => unreachable!(),
+         }
+         Ok(())
+     }
+Index: image/src/color.rs
+===================================================================
+--- image.orig/src/color.rs
++++ image/src/color.rs
+@@ -275,7 +275,7 @@ impl ExtendedColorType {
+     /// Returns the number of bytes required to hold a width x height image of this color type.
+     pub(crate) fn buffer_size(self, width: u32, height: u32) -> u64 {
+         let bpp = self.bits_per_pixel() as u64;
+-        let row_pitch = (width as u64 * bpp).div_ceil(8);
++        let row_pitch = (width as u64 * bpp + 7) / 8;
+         row_pitch.saturating_mul(height as u64)
+     }
+ }
+Index: image/Cargo.toml
+===================================================================
+--- image.orig/Cargo.toml
++++ image/Cargo.toml
+@@ -181,7 +181,7 @@ features = ["derive"]
+ optional = true
+ 
+ [dependencies.tiff]
+-version = "0.10.3"
++version = "0.9.0"
+ optional = true
+ 
+ [dependencies.zune-core]

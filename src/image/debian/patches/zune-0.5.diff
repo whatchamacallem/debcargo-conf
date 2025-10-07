@@ -1,0 +1,248 @@
+--- rust-image-0.25.8.orig/Cargo.toml
++++ rust-image-0.25.8/Cargo.toml
+@@ -185,12 +185,14 @@ version = "0.10.3"
+ optional = true
+ 
+ [dependencies.zune-core]
+-version = "0.4.12"
++#version = "0.4.12"
++version = "0.5"
+ optional = true
+ default-features = false
+ 
+ [dependencies.zune-jpeg]
+-version = "0.4.13"
++#version = "0.4.13"
++version = "0.5"
+ optional = true
+ 
+ [dev-dependencies.crc32fast]
+--- rust-image-0.25.8.orig/src/codecs/jpeg/decoder.rs
++++ rust-image-0.25.8/src/codecs/jpeg/decoder.rs
+@@ -9,6 +9,7 @@ use crate::metadata::Orientation;
+ use crate::{ImageDecoder, ImageFormat, Limits};
+ 
+ type ZuneColorSpace = zune_core::colorspace::ColorSpace;
++use zune_core::bytestream::ZCursor;
+ 
+ /// JPEG decoder
+ pub struct JpegDecoder<R> {
+@@ -33,7 +34,7 @@ impl<R: BufRead + Seek> JpegDecoder<R> {
+             .set_strict_mode(false)
+             .set_max_width(usize::MAX)
+             .set_max_height(usize::MAX);
+-        let mut decoder = zune_jpeg::JpegDecoder::new_with_options(input.as_slice(), options);
++        let mut decoder = zune_jpeg::JpegDecoder::new_with_options(ZCursor::new(input.as_slice()), options);
+         decoder.decode_headers().map_err(ImageError::from_jpeg)?;
+         // now that we've decoded the headers we can `.unwrap()`
+         // all these functions that only fail if called before decoding the headers
+@@ -41,7 +42,7 @@ impl<R: BufRead + Seek> JpegDecoder<R> {
+         // JPEG can only express dimensions up to 65535x65535, so this conversion cannot fail
+         let width: u16 = width.try_into().unwrap();
+         let height: u16 = height.try_into().unwrap();
+-        let orig_color_space = decoder.get_output_colorspace().unwrap();
++        let orig_color_space = decoder.output_colorspace().unwrap();
+         // Limits are disabled by default in the constructor for all decoders
+         let limits = Limits::no_limits();
+         Ok(JpegDecoder {
+@@ -70,7 +71,7 @@ impl<R: BufRead + Seek> ImageDecoder for
+             .set_strict_mode(false)
+             .set_max_width(usize::MAX)
+             .set_max_height(usize::MAX);
+-        let mut decoder = zune_jpeg::JpegDecoder::new_with_options(&self.input, options);
++        let mut decoder = zune_jpeg::JpegDecoder::new_with_options(ZCursor::new(&self.input), options);
+         decoder.decode_headers().map_err(ImageError::from_jpeg)?;
+         Ok(decoder.icc_profile())
+     }
+@@ -80,7 +81,7 @@ impl<R: BufRead + Seek> ImageDecoder for
+             .set_strict_mode(false)
+             .set_max_width(usize::MAX)
+             .set_max_height(usize::MAX);
+-        let mut decoder = zune_jpeg::JpegDecoder::new_with_options(&self.input, options);
++        let mut decoder = zune_jpeg::JpegDecoder::new_with_options(ZCursor::new(&self.input), options);
+         decoder.decode_headers().map_err(ImageError::from_jpeg)?;
+         let exif = decoder.exif().cloned();
+ 
+@@ -164,7 +165,7 @@ fn new_zune_decoder(
+     input: &[u8],
+     orig_color_space: ZuneColorSpace,
+     limits: Limits,
+-) -> zune_jpeg::JpegDecoder<&[u8]> {
++) -> zune_jpeg::JpegDecoder<ZCursor<&[u8]>> {
+     let target_color_space = to_supported_color_space(orig_color_space);
+     let mut options = zune_core::options::DecoderOptions::default()
+         .jpeg_set_out_colorspace(target_color_space)
+@@ -177,7 +178,7 @@ fn new_zune_decoder(
+         Some(max_height) => max_height as usize, // u32 to usize never truncates
+         None => usize::MAX,
+     });
+-    zune_jpeg::JpegDecoder::new_with_options(input, options)
++    zune_jpeg::JpegDecoder::new_with_options(ZCursor::new(input), options)
+ }
+ 
+ impl ImageError {
+--- /dev/null
++++ rust-image-0.25.8/temp.txt
+@@ -0,0 +1,162 @@
++image v0.25.8 (/debcargo-conf/build/image)
++├── bytemuck v1.18.0
++├── byteorder v1.5.0
++├── color_quant v1.1.0
++├── exr v1.5.2
++│   ├── bit_field v0.10.1
++│   ├── flume v0.10.14
++│   │   ├── futures-core v0.3.24
++│   │   ├── futures-sink v0.3.24
++│   │   ├── nanorand v0.7.0
++│   │   │   └── getrandom v0.2.7
++│   │   │       ├── cfg-if v1.0.0
++│   │   │       └── libc v0.2.135
++│   │   ├── pin-project v1.0.12
++│   │   │   └── pin-project-internal v1.0.12 (proc-macro)
++│   │   │       ├── proc-macro2 v1.0.101
++│   │   │       │   └── unicode-ident v1.0.5
++│   │   │       ├── quote v1.0.36
++│   │   │       │   └── proc-macro2 v1.0.101 (*)
++│   │   │       └── syn v1.0.102
++│   │   │           ├── proc-macro2 v1.0.101 (*)
++│   │   │           ├── quote v1.0.36 (*)
++│   │   │           └── unicode-ident v1.0.5
++│   │   └── spin v0.9.4
++│   │       └── lock_api v0.4.9
++│   │           └── scopeguard v1.1.0
++│   │           [build-dependencies]
++│   │           └── autocfg v1.1.0
++│   ├── half v2.4.1
++│   │   └── cfg-if v1.0.0
++│   ├── lebe v0.5.2
++│   ├── miniz_oxide v0.6.2
++│   │   └── adler v1.0.2
++│   ├── smallvec v1.15.1
++│   └── threadpool v1.8.1
++│       └── num_cpus v1.13.1
++│           └── libc v0.2.135
++├── gif v0.13.1
++│   ├── color_quant v1.1.0
++│   └── weezl v0.1.10
++├── image-webp v0.2.4
++│   ├── byteorder-lite v0.1.0
++│   └── quick-error v2.0.1
++├── moxcms v0.7.5
++│   ├── num-traits v0.2.19
++│   │   [build-dependencies]
++│   │   └── autocfg v1.1.0
++│   └── pxfm v0.1.19
++│       └── num-traits v0.2.19 (*)
++├── num-traits v0.2.19 (*)
++├── png v0.18.0
++│   ├── bitflags v2.5.0
++│   ├── crc32fast v1.3.2
++│   │   └── cfg-if v1.0.0
++│   ├── fdeflate v0.3.7
++│   │   └── simd-adler32 v0.3.7
++│   ├── flate2 v1.1.2
++│   │   ├── crc32fast v1.3.2 (*)
++│   │   └── miniz_oxide v0.8.9
++│   │       ├── adler2 v2.0.1
++│   │       └── simd-adler32 v0.3.7
++│   └── miniz_oxide v0.8.9 (*)
++├── qoi v0.4.1
++│   └── bytemuck v1.18.0
++├── rayon v1.10.0
++│   ├── either v1.8.0
++│   └── rayon-core v1.12.1
++│       ├── crossbeam-deque v0.8.2
++│       │   ├── cfg-if v1.0.0
++│       │   ├── crossbeam-epoch v0.9.11
++│       │   │   ├── cfg-if v1.0.0
++│       │   │   ├── crossbeam-utils v0.8.12
++│       │   │   │   └── cfg-if v1.0.0
++│       │   │   ├── memoffset v0.6.5
++│       │   │   │   [build-dependencies]
++│       │   │   │   └── autocfg v1.1.0
++│       │   │   └── scopeguard v1.1.0
++│       │   │   [build-dependencies]
++│       │   │   └── autocfg v1.1.0
++│       │   └── crossbeam-utils v0.8.12 (*)
++│       └── crossbeam-utils v0.8.12 (*)
++├── tiff v0.10.3
++│   ├── fax v0.2.6
++│   │   └── fax_derive v0.2.0 (proc-macro)
++│   │       ├── proc-macro2 v1.0.101 (*)
++│   │       ├── quote v1.0.36 (*)
++│   │       └── syn v2.0.106
++│   │           ├── proc-macro2 v1.0.101 (*)
++│   │           ├── quote v1.0.36 (*)
++│   │           └── unicode-ident v1.0.5
++│   ├── flate2 v1.1.2 (*)
++│   ├── half v2.4.1 (*)
++│   ├── quick-error v2.0.1
++│   ├── weezl v0.1.10
++│   └── zune-jpeg v0.4.20
++│       └── zune-core v0.4.12
++├── zune-core v0.5.0
++└── zune-jpeg v0.5.0
++    └── zune-core v0.5.0
++[dev-dependencies]
++├── crc32fast v1.3.2 (*)
++├── criterion v0.5.1
++│   ├── anes v0.1.6
++│   ├── cast v0.3.0
++│   ├── ciborium v0.2.2
++│   │   ├── ciborium-io v0.2.2
++│   │   ├── ciborium-ll v0.2.2
++│   │   │   ├── ciborium-io v0.2.2
++│   │   │   └── half v2.4.1 (*)
++│   │   └── serde v1.0.219
++│   │       └── serde_derive v1.0.219 (proc-macro)
++│   │           ├── proc-macro2 v1.0.101 (*)
++│   │           ├── quote v1.0.36 (*)
++│   │           └── syn v2.0.106 (*)
++│   ├── clap v4.1.4
++│   │   ├── bitflags v1.3.2
++│   │   └── clap_lex v0.3.1
++│   │       └── os_str_bytes v6.4.1
++│   ├── criterion-plot v0.5.0
++│   │   ├── cast v0.3.0
++│   │   └── itertools v0.10.5
++│   │       └── either v1.8.0
++│   ├── is-terminal v0.4.12
++│   │   └── libc v0.2.135
++│   ├── itertools v0.10.5 (*)
++│   ├── num-traits v0.2.19 (*)
++│   ├── once_cell v1.19.0
++│   ├── oorandom v11.1.3
++│   ├── plotters v0.3.4
++│   │   ├── num-traits v0.2.19 (*)
++│   │   ├── plotters-backend v0.3.4
++│   │   └── plotters-svg v0.3.3
++│   │       └── plotters-backend v0.3.4
++│   ├── rayon v1.10.0 (*)
++│   ├── regex v1.6.0
++│   │   ├── aho-corasick v0.7.19
++│   │   │   └── memchr v2.5.0
++│   │   ├── memchr v2.5.0
++│   │   └── regex-syntax v0.6.27
++│   ├── serde v1.0.219 (*)
++│   ├── serde_derive v1.0.219 (proc-macro) (*)
++│   ├── serde_json v1.0.86
++│   │   ├── itoa v1.0.4
++│   │   ├── ryu v1.0.11
++│   │   └── serde v1.0.219 (*)
++│   ├── tinytemplate v1.2.1
++│   │   ├── serde v1.0.219 (*)
++│   │   └── serde_json v1.0.86 (*)
++│   └── walkdir v2.3.2
++│       └── same-file v1.0.6
++├── glob v0.3.0
++├── num-complex v0.4.2
++│   └── num-traits v0.2.19 (*)
++└── quickcheck v1.0.3
++    ├── env_logger v0.8.4
++    │   ├── log v0.4.17
++    │   │   └── cfg-if v1.0.0
++    │   └── regex v1.6.0 (*)
++    ├── log v0.4.17 (*)
++    └── rand v0.8.5
++        └── rand_core v0.6.4
++            └── getrandom v0.2.7 (*)
