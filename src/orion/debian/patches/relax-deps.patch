@@ -1,0 +1,38 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -79,3 +79,3 @@
+ [dependencies.fiat-crypto]
+-version = "0.2.1"
++version = "0.3.0"
+ default-features = false
+@@ -83,3 +83,3 @@
+ [dependencies.getrandom]
+-version = "0.3.0"
++version = "0.2.0"
+ optional = true
+--- a/src/errors.rs
++++ b/src/errors.rs
+@@ -81,9 +81,10 @@ fn test_unknown_crypto_error_debug_display() {
+ #[cfg(feature = "safe_api")]
+ // format! is only available with std
+ fn test_unknown_crypto_from_getrandom() {
++    use core::num::NonZeroU32;
+     // Choose some random error code.
+-    let err_code: u16 = 12;
+-    let err_foreign: getrandom::Error = getrandom::Error::new_custom(err_code);
++    let err_code = NonZeroU32::new(12).unwrap();
++    let err_foreign: getrandom::Error = getrandom::Error::from(err_code);
+ 
+     // Tests Debug impl through "{:?}"
+     let err = format!("{:?}", UnknownCryptoError::from(err_foreign));
+--- a/src/util/mod.rs
++++ b/src/util/mod.rs
+@@ -78,7 +78,7 @@ pub fn secure_rand_bytes(dst: &mut [u8]) -> Result<(), errors::UnknownCryptoErro
+         return Err(errors::UnknownCryptoError);
+     }
+ 
+-    getrandom::fill(dst).unwrap();
++    getrandom::getrandom(dst).unwrap();
+ 
+     Ok(())
+ }
