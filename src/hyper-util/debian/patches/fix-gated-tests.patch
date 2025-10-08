@@ -1,6 +1,30 @@
+diff --git a/src/server/conn/auto/mod.rs b/src/server/conn/auto/mod.rs
+index 7b887ce..1c43643 100644
+--- a/src/server/conn/auto/mod.rs
++++ b/src/server/conn/auto/mod.rs
+@@ -80,7 +80,7 @@ impl<E> Builder<E> {
+     ///
+     /// # Example
+     ///
+-    /// ```
++    /// ```ignore
+     /// use hyper_util::{
+     ///     rt::TokioExecutor,
+     ///     server::conn::auto,
+@@ -1125,7 +1125,7 @@ impl<E> Http2Builder<'_, E> {
+     }
+ }
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature = "tokio"))]
+ mod tests {
+     use crate::{
+         rt::{TokioExecutor, TokioIo},
+diff --git a/tests/legacy_client.rs b/tests/legacy_client.rs
+index f0ff90c..e153e23 100644
 --- a/tests/legacy_client.rs
 +++ b/tests/legacy_client.rs
-@@ -1 +1,7 @@
+@@ -1,3 +1,9 @@
 +#![cfg(all(
 +    // eponymous of this test module
 +    feature = "client-legacy",
@@ -8,36 +32,71 @@
 +    any(feature = "http1", feature = "http2"),
 +))]
  mod test_utils;
-@@ -22,4 +28,4 @@
+ 
+ use std::io::{Read, Write};
+@@ -20,8 +26,8 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
+ use hyper::body::Bytes;
+ use hyper::body::Frame;
  use hyper::Request;
 -use hyper_util::client::legacy::connect::{capture_connection, HttpConnector};
 -use hyper_util::client::legacy::Client;
 +use hyper_util::client::legacy::{connect::{capture_connection, HttpConnector}, Client };
 +#[cfg(feature = "tokio")]
  use hyper_util::rt::{TokioExecutor, TokioIo};
-@@ -41,2 +47,3 @@
+ 
+ use test_utils::{DebugConnector, DebugStream};
+@@ -39,6 +45,7 @@ fn s(buf: &[u8]) -> &str {
+ 
+ #[cfg(not(miri))]
  #[test]
 +#[cfg(feature = "tokio")]
  fn drop_body_before_eof_closes_connection() {
-@@ -89,2 +96,3 @@
+     // https://github.com/hyperium/hyper/issues/1353
+     let _ = pretty_env_logger::try_init();
+@@ -87,6 +94,7 @@ fn drop_body_before_eof_closes_connection() {
+ 
+ #[cfg(not(miri))]
  #[tokio::test]
 +#[cfg(feature = "tokio")]
  async fn drop_client_closes_idle_connections() {
-@@ -811,2 +819,3 @@
+     let _ = pretty_env_logger::try_init();
+ 
+@@ -883,6 +891,7 @@ fn client_http2_upgrade() {
+ 
+ #[cfg(not(miri))]
  #[test]
 +#[cfg(feature = "tokio")]
  fn alpn_h2() {
+     use http::Response;
+     use hyper::service::service_fn;
+diff --git a/tests/proxy.rs b/tests/proxy.rs
+index 95f4bc2..5135d47 100644
+--- a/tests/proxy.rs
++++ b/tests/proxy.rs
+@@ -1,3 +1,4 @@
++#![cfg(all(feature = "client-legacy",))]
+ use tokio::io::{AsyncReadExt, AsyncWriteExt};
+ use tokio::net::{TcpListener, TcpStream};
+ use tower_service::Service;
+diff --git a/tests/test_utils/mod.rs b/tests/test_utils/mod.rs
+index df3a65d..0f434f6 100644
 --- a/tests/test_utils/mod.rs
 +++ b/tests/test_utils/mod.rs
-@@ -4,2 +4,3 @@
+@@ -2,20 +2,26 @@ use std::pin::Pin;
+ use std::sync::atomic::{AtomicUsize, Ordering};
+ use std::sync::Arc;
  
 +#[cfg(feature = "client")]
  use futures_channel::mpsc;
-@@ -10,2 +11,3 @@
+ use futures_util::task::{Context, Poll};
+ use futures_util::Future;
+ use futures_util::TryFutureExt;
+ use hyper::Uri;
  use tokio::io::{self, AsyncRead, AsyncWrite, ReadBuf};
 +#[cfg(feature = "tokio")]
  use tokio::net::TcpStream;
-@@ -14,6 +16,10 @@
+ 
+ use hyper::rt::ReadBufCursor;
  
 -use hyper_util::client::legacy::connect::HttpConnector;
 -use hyper_util::client::legacy::connect::{Connected, Connection};
@@ -50,7 +109,11 @@
 +mod debug_connector {
 +use super::*;
  #[derive(Clone)]
-@@ -73,8 +79,14 @@
+ pub struct DebugConnector {
+     pub http: HttpConnector,
+@@ -71,12 +77,18 @@ impl tower_service::Service<Uri> for DebugConnector {
+         }))
+     }
  }
 +}
 +#[cfg(feature = "client-legacy")]
@@ -69,21 +132,13 @@
 +    pub(super) is_alpn_h2: bool,
 +    pub(super) is_proxy: bool,
  }
-@@ -175 +187,5 @@
+ 
+ impl Drop for DebugStream {
+@@ -173,3 +185,7 @@ impl AsyncRead for DebugStream {
+         Pin::new(self.tcp.inner_mut()).poll_read(cx, buf)
+     }
  }
 +}
 +#[cfg(all(feature = "client", feature = "tokio"))]
 +pub use debug_stream::*;
 +
---- a/src/server/conn/auto/mod.rs
-+++ b/src/server/conn/auto/mod.rs
-@@ -76,3 +76,3 @@
-     ///
--    /// ```
-+    /// ```ignore
-     /// use hyper_util::{
-@@ -987,3 +987,3 @@
- 
--#[cfg(test)]
-+#[cfg(all(test, feature = "tokio"))]
- mod tests {
