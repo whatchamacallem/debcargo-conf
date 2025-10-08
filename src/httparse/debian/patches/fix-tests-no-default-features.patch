@@ -1,11 +1,12 @@
---- rust-httparse-1.8.0.orig/src/lib.rs
-+++ rust-httparse-1.8.0/src/lib.rs
-@@ -1854,7 +1854,7 @@ mod tests {
-         assert_eq!(parse_chunk_size(b"567f8a\rfoo"), Err(crate::InvalidChunkSize));
-         assert_eq!(parse_chunk_size(b"567f8a\rfoo"), Err(crate::InvalidChunkSize));
-         assert_eq!(parse_chunk_size(b"567xf8a\r\n"), Err(crate::InvalidChunkSize));
--        assert_eq!(parse_chunk_size(b"ffffffffffffffff\r\n"), Ok(Status::Complete((18, std::u64::MAX))));
-+        assert_eq!(parse_chunk_size(b"ffffffffffffffff\r\n"), Ok(Status::Complete((18, core::u64::MAX))));
-         assert_eq!(parse_chunk_size(b"1ffffffffffffffff\r\n"), Err(crate::InvalidChunkSize));
-         assert_eq!(parse_chunk_size(b"Affffffffffffffff\r\n"), Err(crate::InvalidChunkSize));
-         assert_eq!(parse_chunk_size(b"fffffffffffffffff\r\n"), Err(crate::InvalidChunkSize));
+diff --git a/src/lib.rs b/src/lib.rs
+index 06bc4df..eed40f8 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -2146,6 +2146,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     #[cfg_attr(miri, ignore)] // Miri is too slow for this test
+     fn test_all_utf8_char_in_paths() {
+         // two code points
