@@ -1,11 +1,17 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -228,3 +228,3 @@
+@@ -226,7 +226,7 @@
+ default-features = false
+ 
  [dependencies.miniz_oxide]
 -version = "0.8.5"
 +version = "0.7"
- features = ["with-alloc"]
-@@ -238,6 +238,6 @@
+ features = [
+     "with-alloc",
+     "simd",
+@@ -239,10 +239,10 @@
+ default-features = false
+ 
  [dev-dependencies.rand]
 -version = "0.9"
 +version = ">= 0.8, < 0.10"
@@ -13,57 +19,93 @@
  [target.'cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))'.dependencies.miniz_oxide]
 -version = "0.8.5"
 +version = "0.7"
- features = ["with-alloc"]
+ features = [
+     "with-alloc",
+     "simd",
 --- a/src/deflate/mod.rs
 +++ b/src/deflate/mod.rs
-@@ -8,3 +8,3 @@
+@@ -6,7 +6,7 @@
+ mod tests {
+     use std::io::prelude::*;
  
 -    use rand::{rng, Rng};
 +    use rand::{thread_rng as rng, Rng};
  
-@@ -19,3 +19,3 @@
+     use super::{read, write};
+     use crate::Compression;
+@@ -17,7 +17,7 @@
+         let mut w = write::DeflateEncoder::new(Vec::new(), Compression::default());
+         let v = crate::random_bytes().take(1024).collect::<Vec<_>>();
          for _ in 0..200 {
 -            let to_write = &v[..rng().random_range(0..v.len())];
 +            let to_write = &v[..rng().gen_range(0..v.len())];
              real.extend(to_write.iter().copied());
-@@ -48,3 +48,3 @@
+             w.write_all(to_write).unwrap();
+         }
+@@ -46,7 +46,7 @@
+         let mut w = write::DeflateEncoder::new(Vec::new(), Compression::default());
+         let v = crate::random_bytes().take(1024).collect::<Vec<_>>();
          for _ in 0..200 {
 -            let to_write = &v[..rng().random_range(0..v.len())];
 +            let to_write = &v[..rng().gen_range(0..v.len())];
              real.extend(to_write.iter().copied());
+             w.write_all(to_write).unwrap();
+         }
 --- a/src/gz/mod.rs
 +++ b/src/gz/mod.rs
-@@ -447,3 +447,3 @@
+@@ -444,7 +444,7 @@
+ 
+     use super::{read, write, GzBuilder, GzHeaderParser};
      use crate::{Compression, GzHeader};
 -    use rand::{rng, Rng};
 +    use rand::{thread_rng as rng, Rng};
  
-@@ -476,3 +476,3 @@
+     #[test]
+     fn roundtrip() {
+@@ -473,7 +473,7 @@
+         let mut w = write::GzEncoder::new(Vec::new(), Compression::default());
+         let v = crate::random_bytes().take(1024).collect::<Vec<_>>();
          for _ in 0..200 {
 -            let to_write = &v[..rng().random_range(0..v.len())];
 +            let to_write = &v[..rng().gen_range(0..v.len())];
              real.extend(to_write.iter().copied());
+             w.write_all(to_write).unwrap();
+         }
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -244,3 +244,3 @@
+@@ -228,5 +228,5 @@
+     use rand::Rng;
+     use std::iter;
  
 -    iter::repeat(()).map(|_| rand::rng().random())
 +    iter::repeat(()).map(|_| rand::random())
  }
 --- a/src/zlib/mod.rs
 +++ b/src/zlib/mod.rs
-@@ -9,3 +9,3 @@
+@@ -7,7 +7,7 @@
+     use std::io;
+     use std::io::prelude::*;
  
 -    use rand::{rng, Rng};
 +    use rand::{thread_rng as rng, Rng};
  
-@@ -20,3 +20,3 @@
+     use crate::zlib::{read, write};
+     use crate::Compression;
+@@ -18,7 +18,7 @@
+         let mut w = write::ZlibEncoder::new(Vec::new(), Compression::default());
+         let v = crate::random_bytes().take(1024).collect::<Vec<_>>();
          for _ in 0..200 {
 -            let to_write = &v[..rng().random_range(0..v.len())];
 +            let to_write = &v[..rng().gen_range(0..v.len())];
              real.extend(to_write.iter().copied());
-@@ -49,3 +49,3 @@
+             w.write_all(to_write).unwrap();
+         }
+@@ -47,7 +47,7 @@
+         let mut w = write::ZlibEncoder::new(Vec::new(), Compression::default());
+         let v = crate::random_bytes().take(1024).collect::<Vec<_>>();
          for _ in 0..200 {
 -            let to_write = &v[..rng().random_range(0..v.len())];
 +            let to_write = &v[..rng().gen_range(0..v.len())];
              real.extend(to_write.iter().copied());
+             w.write_all(to_write).unwrap();
+         }
