@@ -1,0 +1,57 @@
+Index: serialport/Cargo.toml
+===================================================================
+--- serialport.orig/Cargo.toml
++++ serialport/Cargo.toml
+@@ -123,9 +123,6 @@ version = "1.0"
+ features = ["derive"]
+ optional = true
+ 
+-[dev-dependencies.assert_hex]
+-version = "0.4.1"
+-
+ [dev-dependencies.clap]
+ version = "3.1.6"
+ features = ["derive"]
+Index: serialport/examples/hardware_check.rs
+===================================================================
+--- serialport.orig/examples/hardware_check.rs
++++ serialport/examples/hardware_check.rs
+@@ -19,7 +19,7 @@ use std::io::Write;
+ use std::str;
+ use std::time::Duration;
+ 
+-use assert_hex::assert_eq_hex;
++//use assert_hex::assert_eq_hex;
+ use clap::{Arg, Command};
+ 
+ use serialport::{ClearBuffer, DataBits, FlowControl, Parity, SerialPort, StopBits};
+@@ -281,7 +281,7 @@ fn check_test_message(sender: &mut dyn S
+ 
+     match receiver.read_exact(&mut recv_buf) {
+         Ok(()) => {
+-            assert_eq_hex!(recv_buf, send_buf, "Received message does not match sent",);
++            assert_eq!(recv_buf, send_buf, "Received message does not match sent",);
+             println!("        success");
+         }
+         Err(e) => println!("FAILED: {:?}", e),
+Index: serialport/tests/test_baudrate.rs
+===================================================================
+--- serialport.orig/tests/test_baudrate.rs
++++ serialport/tests/test_baudrate.rs
+@@ -1,6 +1,6 @@
+ mod config;
+ 
+-use assert_hex::assert_eq_hex;
++//use assert_hex::assert_eq_hex;
+ use config::{hw_config, HardwareConfig};
+ use rstest::rstest;
+ use rstest_reuse::{self, apply, template};
+@@ -39,7 +39,7 @@ fn check_test_message(sender: &mut dyn S
+     sender.flush().unwrap();
+ 
+     receiver.read_exact(&mut recv_buf).unwrap();
+-    assert_eq_hex!(recv_buf, send_buf, "Received message does not match sent");
++    assert_eq!(recv_buf, send_buf, "Received message does not match sent");
+ }
+ 
+ #[template]

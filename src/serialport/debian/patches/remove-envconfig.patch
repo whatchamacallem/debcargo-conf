@@ -1,0 +1,184 @@
+Index: serialport/Cargo.toml
+===================================================================
+--- serialport.orig/Cargo.toml
++++ serialport/Cargo.toml
+@@ -130,3 +130,0 @@
+-[dev-dependencies.envconfig]
+-version = "0.10.0"
+-
+Index: serialport/tests/config.rs
+===================================================================
+--- serialport.orig/tests/config.rs
++++ serialport/tests/config.rs
+@@ -1,25 +1,25 @@
+ // Configuration for integration tests. This crate is about interacting with real serial ports and
+ // so some tests need actual hardware.
+ 
+-use envconfig::Envconfig;
++//use envconfig::Envconfig;
+ use rstest::fixture;
+ 
+ // Configuration for tests requiring acutual hardware.
+ //
+ // For conveniently pulling this configuration into a test case as a parameter, you might want to
+ // use the test fixture [`hw_config`].
+-#[derive(Clone, Debug, Envconfig, Eq, PartialEq)]
++/*#[derive(Clone, Debug, Envconfig, Eq, PartialEq)]
+ pub struct HardwareConfig {
+     #[envconfig(from = "SERIALPORT_TEST_PORT_1")]
+     pub port_1: String,
+     #[envconfig(from = "SERIALPORT_TEST_PORT_2")]
+     pub port_2: String,
+-}
++}*/
+ 
+-// Test fixture for conveniently pulling the actual hardware configuration into test cases.
++/* // Test fixture for conveniently pulling the actual hardware configuration into test cases.
+ //
+ // See [`fixture`](rstest::fixture) for details.
+ #[fixture]
+ pub fn hw_config() -> HardwareConfig {
+     HardwareConfig::init_from_env().unwrap()
+-}
++} */
+Index: serialport/tests/test_baudrate.rs
+===================================================================
+--- serialport.orig/tests/test_baudrate.rs
++++ serialport/tests/test_baudrate.rs
+@@ -1,7 +1,7 @@
+ mod config;
+ 
+ //use assert_hex::assert_eq_hex;
+-use config::{hw_config, HardwareConfig};
++//use config::{hw_config, HardwareConfig};
+ use rstest::rstest;
+ use rstest_reuse::{self, apply, template};
+ use serialport::{ClearBuffer, SerialPort};
+@@ -60,7 +60,7 @@ fn non_standard_baud_rates(#[case] baud:
+ mod builder {
+     use super::*;
+ 
+-    #[apply(standard_baud_rates)]
++    /*#[apply(standard_baud_rates)]
+     #[cfg_attr(not(feature = "hardware-tests"), ignore)]
+     fn test_standard_baud_rate(hw_config: HardwareConfig, #[case] baud: u32) {
+         let port = serialport::new(hw_config.port_1, RESET_BAUD_RATE)
+@@ -124,10 +124,10 @@ mod builder {
+ 
+         check_test_message(&mut *port1, &mut *port2);
+         check_test_message(&mut *port2, &mut *port1);
+-    }
++    }*/
+ }
+ 
+-/// Test cases for setting the baud rate via [`serialport::new`].
++/* /// Test cases for setting the baud rate via [`serialport::new`].
+ mod new {
+     use super::*;
+ 
+@@ -264,4 +264,4 @@ mod set_baud {
+         check_test_message(&mut *port1, &mut *port2);
+         check_test_message(&mut *port2, &mut *port1);
+     }
+-}
++}*/
+Index: serialport/tests/test_file_locking.rs
+===================================================================
+--- serialport.orig/tests/test_file_locking.rs
++++ serialport/tests/test_file_locking.rs
+@@ -1,7 +1,7 @@
+ mod config;
+ 
+ use cfg_if::cfg_if;
+-use config::{hw_config, HardwareConfig};
++//use config::{hw_config, HardwareConfig};
+ use rstest::rstest;
+ 
+ cfg_if! {
+@@ -17,7 +17,7 @@ cfg_if! {
+     }
+ }
+ 
+-#[rstest]
++/* #[rstest]
+ #[cfg_attr(not(feature = "hardware-tests"), ignore)]
+ fn opening_multiple_times(hw_config: HardwareConfig) {
+     // Try to open (and close) the same port multiple times in a row to check that acquiring and
+@@ -64,7 +64,7 @@ fn second_open_fails_flock(hw_config: Ha
+     let second = serialport::new(&hw_config.port_1, 115200).open();
+     assert!(second.is_err());
+     assert_eq!(second.unwrap_err().kind(), ErrorKind::NoDevice);
+-}
++}*/
+ 
+ /*#[rstest]
+ #[cfg(unix)]
+@@ -90,7 +90,7 @@ fn second_open_fails_lock(hw_config: Har
+     assert_eq!(second.unwrap_err().kind(), ErrorKind::NoDevice);
+ }*/
+ 
+-#[rstest]
++/*#[rstest]
+ #[cfg(unix)]
+ #[cfg_attr(not(feature = "hardware-tests"), ignore)]
+ fn second_open_fails_tiocexcl(hw_config: HardwareConfig) {
+@@ -113,4 +113,4 @@ fn second_open_fails_tiocexcl(hw_config:
+     let second = serialport::new(&hw_config.port_1, 115200).open();
+     assert!(second.is_err());
+     assert_eq!(second.unwrap_err().kind(), ErrorKind::NoDevice);
+-}
++}*/
+Index: serialport/tests/test_serialport.rs
+===================================================================
+--- serialport.orig/tests/test_serialport.rs
++++ serialport/tests/test_serialport.rs
+@@ -1,7 +1,7 @@
+ //! Tests for the `SerialPort` trait.
+ mod config;
+ 
+-use config::{hw_config, HardwareConfig};
++//use config::{hw_config, HardwareConfig};
+ use rstest::rstest;
+ use serialport::*;
+ use std::time::Duration;
+@@ -15,7 +15,7 @@ fn test_listing_ports() {
+     }
+ }
+ 
+-#[rstest]
++/* #[rstest]
+ #[cfg_attr(not(feature = "hardware-tests"), ignore)]
+ fn test_opening_found_ports(hw_config: HardwareConfig) {
+     // There is no guarantee that we even might open the ports returned by `available_ports`. But
+@@ -69,4 +69,4 @@ fn test_duplicating_port_config(hw_confi
+ 
+     let _port1 = port1_config.open().unwrap();
+     let _port1 = port2_config.open().unwrap();
+-}
++}*/
+Index: serialport/tests/test_timeout.rs
+===================================================================
+--- serialport.orig/tests/test_timeout.rs
++++ serialport/tests/test_timeout.rs
+@@ -1,13 +1,13 @@
+ mod config;
+ 
+-use config::{hw_config, HardwareConfig};
++//use config::{hw_config, HardwareConfig};
+ use rstest::rstest;
+ use serialport::*;
+ use std::io::Read;
+ use std::thread;
+ use std::time::{Duration, Instant};
+ 
+-#[rstest]
++/* #[rstest]
+ #[case(1, Vec::from(b"abcdef"))]
+ #[case(
+     20,
+@@ -224,4 +224,4 @@ fn test_timeout_max(hw_config: HardwareC
+     assert_eq!(buffer[..read], message[..read]);
+ 
+     sender_thread.join().unwrap();
+-}
++}*/
