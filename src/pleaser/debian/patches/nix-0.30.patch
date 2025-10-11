@@ -1,0 +1,164 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 06870ae395386a7ca6b7932ff082f4e0068a81cd
+Author: ed neville <ed@s5h.net>
+Date:   Fri Jun 6 21:18:50 2025 +0100
+
+    Bumping nix
+
+Index: pleaser/man/please.ini.5
+===================================================================
+--- pleaser.orig/man/please.ini.5
++++ pleaser/man/please.ini.5
+@@ -14,7 +14,7 @@
+ . ftr VB CB
+ . ftr VBI CBI
+ .\}
+-.TH "please.ini" "5" "06 September 2024" "please 0.5.6" "User Manual"
++.TH "please.ini" "5" "06 June 2025" "please 0.5.6" "User Manual"
+ .hy
+ .SH NAME
+ .PP
+Index: pleaser/please.ini.md
+===================================================================
+--- pleaser.orig/please.ini.md
++++ pleaser/please.ini.md
+@@ -4,7 +4,7 @@ section: 5
+ header: User Manual
+ footer: please 0.5.6
+ author: Ed Neville (ed-please@s5h.net)
+-date: 06 September 2024
++date: 06 June 2025
+ ---
+ 
+ # NAME
+Index: pleaser/please.md
+===================================================================
+--- pleaser.orig/please.md
++++ pleaser/please.md
+@@ -4,7 +4,7 @@ section: 1
+ header: User Manual
+ footer: please 0.5.6
+ author: Ed Neville (ed-please@s5h.net)
+-date: 06 September 2024
++date: 06 June 2025
+ ---
+ 
+ # NAME
+Index: pleaser/src/bin/please.rs
+===================================================================
+--- pleaser.orig/src/bin/please.rs
++++ pleaser/src/bin/please.rs
+@@ -345,11 +345,11 @@ fn main() {
+     nix::sys::stat::umask(ro.old_umask.unwrap());
+ 
+     if ro.cloned_args.as_ref().unwrap().len() > 1 {
+-        Command::new(&ro.cloned_args.as_ref().unwrap()[0])
++        let _ = Command::new(&ro.cloned_args.as_ref().unwrap()[0])
+             .args(ro.cloned_args.as_ref().unwrap().clone().split_off(1))
+             .exec();
+     } else {
+-        Command::new(&ro.cloned_args.as_ref().unwrap()[0]).exec();
++        let _ = Command::new(&ro.cloned_args.as_ref().unwrap()[0]).exec();
+     }
+     println!("Error executing");
+     std::process::exit(1);
+Index: pleaser/src/bin/pleaseedit.rs
+===================================================================
+--- pleaser.orig/src/bin/pleaseedit.rs
++++ pleaser/src/bin/pleaseedit.rs
+@@ -24,7 +24,6 @@ use std::fs::OpenOptions;
+ use std::os::unix::fs::OpenOptionsExt;
+ 
+ use std::io::{self, Write};
+-use std::os::unix::io::AsRawFd;
+ use std::os::unix::process::CommandExt;
+ use std::path::Path;
+ use std::process::{Command, Stdio};
+@@ -129,7 +128,7 @@ fn setup_temp_edit_file(
+     }
+ 
+     if fchown(
+-        file.as_ref().unwrap().as_raw_fd(),
++        file.as_ref().unwrap(),
+         Some(ro.original_uid),
+         Some(ro.original_gid),
+     )
+@@ -139,7 +138,7 @@ fn setup_temp_edit_file(
+     }
+ 
+     if fchmod(
+-        file.as_ref().unwrap().as_raw_fd(),
++        file.as_ref().unwrap(),
+         nix::sys::stat::Mode::S_IRUSR | nix::sys::stat::Mode::S_IWUSR,
+     )
+     .is_err()
+@@ -314,17 +313,13 @@ fn rename_to_source(
+     }
+ 
+     fchown(
+-        dir_parent_tmp_file.as_raw_fd(),
++        dir_parent_tmp_file,
+         Some(nix::unistd::Uid::from_raw(lookup_name.uid())),
+         Some(target_uid_gid.target_gid),
+     )
+     .unwrap();
+ 
+-    fchmod(
+-        dir_parent_tmp_file.as_raw_fd(),
+-        edit_mode(entry, source_file),
+-    )
+-    .unwrap();
++    fchmod(dir_parent_tmp_file, edit_mode(entry, source_file)).unwrap();
+ 
+     if entry.exitcmd.is_some() {
+         let mut cmd = build_exitcmd(entry, source_file.to_str().unwrap(), dir_parent_tmp);
+@@ -435,11 +430,11 @@ fn child_editor(ro: &RunOptions, edit_fi
+ 
+     let args: Vec<&str> = editor.as_str().split(' ').collect();
+     if args.len() == 1 {
+-        Command::new(editor.as_str())
++        let _ = Command::new(editor.as_str())
+             .arg(edit_file.as_ref().unwrap())
+             .exec();
+     } else {
+-        Command::new(args[0])
++        let _ = Command::new(args[0])
+             .args(&args[1..])
+             .arg(edit_file.as_ref().unwrap())
+             .exec();
+Index: pleaser/src/lib.rs
+===================================================================
+--- pleaser.orig/src/lib.rs
++++ pleaser/src/lib.rs
+@@ -31,7 +31,6 @@ use std::fs;
+ use std::fs::File;
+ use std::io::prelude::*;
+ use std::io::BufReader;
+-use std::os::unix::io::AsRawFd;
+ use std::time::SystemTime;
+ use uzers::os::unix::UserExt;
+ use uzers::*;
+@@ -798,7 +797,7 @@ pub fn read_ini_config_file(
+         Ok(file) => file,
+     };
+ 
+-    match nix::sys::stat::fstat(file.as_raw_fd()) {
++    match nix::sys::stat::fstat(&file) {
+         Err(why) => {
+             println!("Could not stat {}: {}", display, why);
+             return true;
+Index: pleaser/Cargo.toml
+===================================================================
+--- pleaser.orig/Cargo.toml
++++ pleaser/Cargo.toml
+@@ -40,7 +40,7 @@ version = "0.2"
+ version = "0.2"
+ 
+ [dependencies.nix]
+-version = ">= 0.27"
++version = ">= 0.30"
+ features = [
+     "signal",
+     "user",
