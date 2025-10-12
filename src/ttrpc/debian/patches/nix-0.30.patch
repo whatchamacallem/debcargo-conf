@@ -1,0 +1,57 @@
+Index: ttrpc/Cargo.toml
+===================================================================
+--- ttrpc.orig/Cargo.toml
++++ ttrpc/Cargo.toml
+@@ -56,7 +56,7 @@ features = ["extra_traits"]
+ version = "0.4"
+ 
+ [dependencies.nix]
+-version = "0.29"
++version = "0.30"
+ features = ["fs", "socket"]
+ 
+ [dependencies.protobuf]
+Index: ttrpc/src/asynchronous/server.rs
+===================================================================
+--- ttrpc.orig/src/asynchronous/server.rs
++++ ttrpc/src/asynchronous/server.rs
+@@ -10,6 +10,8 @@ use std::marker::Unpin;
+ use std::os::unix::io::RawFd;
+ use std::os::unix::io::{AsRawFd, FromRawFd};
+ use std::os::unix::net::UnixListener as SysUnixListener;
++use std::os::fd::IntoRawFd;
++use std::os::fd::BorrowedFd;
+ use std::result::Result as StdResult;
+ use std::sync::{Arc, Mutex};
+ use std::time::Duration;
+@@ -214,7 +216,7 @@ impl Server {
+                         if let Some(fd_tx) = fd_tx {
+                             // dup fd to keep the listener open
+                             // or the listener will be closed when the incoming was dropped.
+-                            let dup_fd = unistd::dup(incoming.as_raw_fd()).unwrap();
++                            let dup_fd = unistd::dup(unsafe { BorrowedFd::borrow_raw(incoming.as_raw_fd()) }).unwrap().into_raw_fd();
+                             common::set_fd_close_exec(dup_fd).unwrap();
+                             drop(incoming);
+ 
+Index: ttrpc/src/common.rs
+===================================================================
+--- ttrpc.orig/src/common.rs
++++ ttrpc/src/common.rs
+@@ -27,7 +27,7 @@ pub(crate) enum Domain {
+ }
+ 
+ pub(crate) fn do_listen(listener: RawFd) -> Result<()> {
+-    if let Err(e) = fcntl(listener, FcntlArg::F_SETFL(OFlag::O_NONBLOCK)) {
++    if let Err(e) = fcntl(unsafe { BorrowedFd::borrow_raw(listener) }, FcntlArg::F_SETFL(OFlag::O_NONBLOCK)) {
+         return Err(Error::Others(format!(
+             "failed to set listener fd: {listener} as non block: {e}"
+         )));
+@@ -69,7 +69,7 @@ fn parse_sockaddr(addr: &str) -> Result<
+     not(any(target_os = "linux", target_os = "android"))
+ ))]
+ pub(crate) fn set_fd_close_exec(fd: RawFd) -> Result<RawFd> {
+-    if let Err(e) = fcntl(fd, FcntlArg::F_SETFD(FdFlag::FD_CLOEXEC)) {
++    if let Err(e) = fcntl(unsafe { BorrowedFd::borrow_raw(fd) }, FcntlArg::F_SETFD(FdFlag::FD_CLOEXEC)) {
+         return Err(Error::Others(format!(
+             "failed to set fd: {fd} as close-on-exec: {e}"
+         )));
