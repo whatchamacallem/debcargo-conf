@@ -1,22 +1,17 @@
 Forwarded: not-needed
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -88,3 +88,3 @@
- [dependencies.clap_complete]
--version = "=4.5.48"
-+version = "4" # Debian: was =4.5.48 upstream to avoid a problem in >= 4.5.50; we will ask upstream to use a different way to generate completions.
- 
-@@ -101,3 +101,3 @@
+@@ -94,3 +94,3 @@ version = "1.2.7"
  [dependencies.dirs]
 -version = "6.0.0"
 +version = "5"
  
-@@ -131,3 +131,3 @@
+@@ -121,3 +121,3 @@ version = "2.3.1"
  [dependencies.rand]
 -version = "0.9.0"
 +version = "0.8"
  
-@@ -163,6 +163,6 @@
+@@ -153,6 +153,6 @@ features = ["unicode"]
  [dependencies.snafu]
 -version = "0.8.0"
 +version = "0.7.1"
@@ -25,22 +20,27 @@ Forwarded: not-needed
 -version = "0.27.1"
 +version = "0.26"
  features = ["derive"]
-@@ -198,3 +198,3 @@
+@@ -176,3 +176,3 @@ features = ["v4"]
+ [dev-dependencies.clap_complete]
+-version = "=4.5.48"
++version = "4" # Debian: was =4.5.48 upstream to avoid a problem in >= 4.5.50; we will ask upstream to use a different way to generate completions.
+ 
+@@ -191,3 +191,3 @@ version = "8.0.0"
  [target."cfg(unix)".dependencies.nix]
 -version = "0.30.1"
 +version = ">= 0.29, < 1.0"
- features = ["user"]
+ features = [
 --- a/src/function.rs
 +++ b/src/function.rs
-@@ -216,3 +216,3 @@
+@@ -216,3 +216,3 @@ fn choose(_context: Context, n: &str, al
  
 -  let mut rng = rand::rng();
 +  let mut rng = rand::thread_rng();
  
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -107,3 +107,3 @@
-   once_cell::sync::Lazy,
+@@ -106,3 +106,3 @@ pub(crate) use {
+   libc::EXIT_FAILURE,
 -  rand::seq::IndexedRandom,
 +  rand::seq::SliceRandom,
    regex::Regex,
