@@ -4,25 +4,25 @@ Date:   Wed Jan 29 14:59:47 2025 +0100
 
     shred: adapt to API changes of rand
 
-diff --git b/src/uu/shred/src/shred.rs a/src/uu/shred/src/shred.rs
-index 9107bcde5..763d6cfd4 100644
---- b/src/uu/shred/src/shred.rs
-+++ a/src/uu/shred/src/shred.rs
-@@ -176,7 +176,7 @@ impl BytesWriter {
-     fn from_pass_type(pass: &PassType) -> Self {
+Index: coreutils/src/uu/shred/src/shred.rs
+===================================================================
+--- coreutils.orig/src/uu/shred/src/shred.rs
++++ coreutils/src/uu/shred/src/shred.rs
+@@ -189,7 +189,7 @@ impl<'a> BytesWriter<'a> {
          match pass {
-             PassType::Random => Self::Random {
--                rng: StdRng::from_os_rng(),
-+                rng: StdRng::from_entropy(),
-                 buffer: [0; BLOCK_SIZE],
-             },
-             PassType::Pattern(pattern) => {
-@@ -452,7 +452,7 @@ fn wipe_file(
-             for pattern in PATTERNS.into_iter().take(remainder) {
-                 pass_sequence.push(PassType::Pattern(pattern));
+             PassType::Random => match random_source {
+                 RandomSource::System => Self::Random {
+-                    rng: StdRng::from_os_rng(),
++                    rng: StdRng::from_entropy(),
+                     buffer: [0; BLOCK_SIZE],
+                 },
+                 RandomSource::Read(file) => Self::RandomFile {
+@@ -507,7 +507,7 @@ fn wipe_file(
+                 pass_sequence.push(PassType::Random);
              }
+ 
 -            let mut rng = rand::rng();
 +            let mut rng = rand::thread_rng();
-             pass_sequence.shuffle(&mut rng); // randomize the order of application
- 
-             let n_random = 3 + n_passes / 10; // Minimum 3 random passes; ratio of 10 after
+             pass_sequence[1..].shuffle(&mut rng); // randomize the order of application
+             pass_sequence.push(PassType::Random); // add the last random pass
+         }
