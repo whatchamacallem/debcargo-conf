@@ -1,0 +1,92 @@
+Index: advisory-lock/src/lib.rs
+===================================================================
+--- advisory-lock.orig/src/lib.rs
++++ advisory-lock/src/lib.rs
+@@ -16,30 +16,30 @@
+ //! #
+ //! // Create the file and obtain its exclusive advisory lock
+ //! let exclusive_file = File::create("foo.txt").unwrap();
+-//! exclusive_file.lock(FileLockMode::Exclusive)?;
++//! AdvisoryFileLock::lock(&exclusive_file, FileLockMode::Exclusive)?;
+ //!
+ //! let shared_file = File::open("foo.txt")?;
+ //!
+ //! // Try to acquire the lock in non-blocking way
+-//! assert!(matches!(shared_file.try_lock(FileLockMode::Shared), Err(FileLockError::AlreadyLocked)));
++//! assert!(matches!(AdvisoryFileLock::try_lock(&shared_file, FileLockMode::Shared), Err(FileLockError::AlreadyLocked)));
+ //!
+-//! exclusive_file.unlock()?;
++//! AdvisoryFileLock::unlock(&exclusive_file)?;
+ //!
+-//! shared_file.try_lock(FileLockMode::Shared).expect("Works, because the exclusive lock was released");
++//! AdvisoryFileLock::try_lock(&shared_file, FileLockMode::Shared).expect("Works, because the exclusive lock was released");
+ //!
+ //! let shared_file_2 = File::open("foo.txt")?;
+ //!
+-//! shared_file_2.lock(FileLockMode::Shared).expect("Should be fine to have multiple shared locks");
++//! AdvisoryFileLock::lock(&shared_file_2, FileLockMode::Shared).expect("Should be fine to have multiple shared locks");
+ //!
+ //! // Nope, now we have to wait until all shared locks are released...
+-//! assert!(matches!(exclusive_file.try_lock(FileLockMode::Exclusive), Err(FileLockError::AlreadyLocked)));
++//! assert!(matches!(AdvisoryFileLock::try_lock(&exclusive_file, FileLockMode::Exclusive), Err(FileLockError::AlreadyLocked)));
+ //!
+ //! // We can unlock them explicitly and handle the potential error
+-//! shared_file.unlock()?;
++//! AdvisoryFileLock::unlock(&shared_file)?;
+ //! // Or drop the lock, such that we `log::error!()` if it happens and discard it
+ //! drop(shared_file_2);
+ //!
+-//! exclusive_file.lock(FileLockMode::Exclusive).expect("All other locks should have been released");
++//! AdvisoryFileLock::lock(&exclusive_file, FileLockMode::Exclusive).expect("All other locks should have been released");
+ //! #
+ //! # std::fs::remove_file("foo.txt")?;
+ //! # Ok::<(), Box<dyn std::error::Error>>(())
+@@ -125,9 +125,9 @@ mod tests {
+         File::create(&test_file).unwrap();
+         {
+             let f1 = File::open(&test_file).unwrap();
+-            f1.lock(FileLockMode::Shared).unwrap();
++            AdvisoryFileLock::lock(&f1, FileLockMode::Shared).unwrap();
+             let f2 = File::open(&test_file).unwrap();
+-            f2.lock(FileLockMode::Shared).unwrap();
++            AdvisoryFileLock::lock(&f2, FileLockMode::Shared).unwrap();
+         }
+         std::fs::remove_file(&test_file).unwrap();
+     }
+@@ -139,9 +139,9 @@ mod tests {
+         File::create(&test_file).unwrap();
+         {
+             let f1 = File::open(&test_file).unwrap();
+-            f1.lock(FileLockMode::Exclusive).unwrap();
++            AdvisoryFileLock::lock(&f1, FileLockMode::Exclusive).unwrap();
+             let f2 = File::open(&test_file).unwrap();
+-            assert!(f2.try_lock(FileLockMode::Exclusive).is_err());
++            assert!(AdvisoryFileLock::try_lock(&f2, FileLockMode::Exclusive).is_err());
+         }
+         std::fs::remove_file(&test_file).unwrap();
+     }
+@@ -153,10 +153,10 @@ mod tests {
+         File::create(&test_file).unwrap();
+         {
+             let f1 = File::open(&test_file).unwrap();
+-            f1.lock(FileLockMode::Shared).unwrap();
++            AdvisoryFileLock::lock(&f1, FileLockMode::Shared).unwrap();
+             let f2 = File::open(&test_file).unwrap();
+             assert!(matches!(
+-                f2.try_lock(FileLockMode::Exclusive),
++                AdvisoryFileLock::try_lock(&f2, FileLockMode::Exclusive),
+                 Err(FileLockError::AlreadyLocked)
+             ));
+         }
+@@ -170,9 +170,9 @@ mod tests {
+         File::create(&test_file).unwrap();
+         {
+             let f1 = File::open(&test_file).unwrap();
+-            f1.lock(FileLockMode::Exclusive).unwrap();
++            AdvisoryFileLock::lock(&f1, FileLockMode::Exclusive).unwrap();
+             let f2 = File::open(&test_file).unwrap();
+-            assert!(f2.try_lock(FileLockMode::Shared).is_err());
++            assert!(AdvisoryFileLock::try_lock(&f2, FileLockMode::Shared).is_err());
+         }
+         std::fs::remove_file(&test_file).unwrap();
+     }
