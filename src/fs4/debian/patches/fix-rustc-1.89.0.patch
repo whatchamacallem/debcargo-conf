@@ -1,0 +1,88 @@
+Index: fs4/src/file_ext/sync_impl.rs
+===================================================================
+--- fs4.orig/src/file_ext/sync_impl.rs
++++ fs4/src/file_ext/sync_impl.rs
+@@ -133,21 +133,21 @@ macro_rules! test_mod {
+                     .unwrap();
+ 
+                 // Concurrent shared access is OK, but not shared and exclusive.
+-                file1.lock_shared().unwrap();
+-                file2.lock_shared().unwrap();
++                FileExt::lock_shared(&file1).unwrap();
++                FileExt::lock_shared(&file2).unwrap();
+                 assert_eq!(
+-                    file3.try_lock_exclusive().unwrap(),
++                    FileExt::try_lock_exclusive(&file3).unwrap(),
+                     false,
+                 );
+-                file1.unlock().unwrap();
++                FileExt::unlock(&file1).unwrap();
+                 assert_eq!(
+-                    file3.try_lock_exclusive().unwrap(),
++                    FileExt::try_lock_exclusive(&file3).unwrap(),
+                     false,
+                 );
+ 
+                 // Once all shared file locks are dropped, an exclusive lock may be created;
+-                file2.unlock().unwrap();
+-                file3.lock_exclusive().unwrap();
++                FileExt::unlock(&file2).unwrap();
++                FileExt::lock_exclusive(&file3).unwrap();
+             }
+ 
+             /// Tests exclusive file lock operations.
+@@ -171,19 +171,19 @@ macro_rules! test_mod {
+                     .unwrap();
+ 
+                 // No other access is possible once an exclusive lock is created.
+-                file1.lock_exclusive().unwrap();
++                FileExt::lock_exclusive(&file1).unwrap();
+                 assert_eq!(
+-                    file2.try_lock_exclusive().unwrap(),
++                    FileExt::try_lock_exclusive(&file2).unwrap(),
+                     false,
+                 );
+                 assert_eq!(
+-                    file2.try_lock_shared().unwrap(),
++                    FileExt::try_lock_shared(&file2).unwrap(),
+                     false,
+                 );
+ 
+                 // Once the exclusive lock is dropped, the second file is able to create a lock.
+-                file1.unlock().unwrap();
+-                file2.lock_exclusive().unwrap();
++                FileExt::unlock(&file1).unwrap();
++                FileExt::lock_exclusive(&file2).unwrap();
+             }
+ 
+             /// Tests that a lock is released after the file that owns it is dropped.
+@@ -206,15 +206,15 @@ macro_rules! test_mod {
+                     .open(&path)
+                     .unwrap();
+ 
+-                file1.lock_exclusive().unwrap();
++                FileExt::lock_exclusive(&file1).unwrap();
+                 assert_eq!(
+-                    file2.try_lock_shared().unwrap(),
++                    FileExt::try_lock_shared(&file2).unwrap(),
+                     false,
+                 );
+ 
+                 // Drop file1; the lock should be released.
+                 drop(file1);
+-                file2.lock_shared().unwrap();
++                FileExt::lock_shared(&file2).unwrap();
+             }
+ 
+             /// Tests file allocation.
+@@ -358,8 +358,8 @@ macro_rules! test_mod {
+                     .unwrap();
+ 
+                 b.iter(|| {
+-                    file.lock_exclusive().unwrap();
+-                    file.unlock().unwrap();
++                    FileExt::lock_exclusive(&file).unwrap();
++                    FileExt::unlock(&file).unwrap();
+                 });
+             }
+ 
