@@ -1,0 +1,111 @@
+Index: fs2/src/lib.rs
+===================================================================
+--- fs2.orig/src/lib.rs
++++ fs2/src/lib.rs
+@@ -241,17 +241,17 @@ mod test {
+         let file3 = fs::OpenOptions::new().read(true).write(true).create(true).open(&path).unwrap();
+ 
+         // Concurrent shared access is OK, but not shared and exclusive.
+-        file1.lock_shared().unwrap();
+-        file2.lock_shared().unwrap();
+-        assert_eq!(file3.try_lock_exclusive().unwrap_err().kind(),
++        FileExt::lock_shared(&file1).unwrap();
++        FileExt::lock_shared(&file2).unwrap();
++        assert_eq!(FileExt::try_lock_exclusive(&file3).unwrap_err().kind(),
+                    lock_contended_error().kind());
+-        file1.unlock().unwrap();
+-        assert_eq!(file3.try_lock_exclusive().unwrap_err().kind(),
++        FileExt::unlock(&file1).unwrap();
++        assert_eq!(FileExt::try_lock_exclusive(&file3).unwrap_err().kind(),
+                    lock_contended_error().kind());
+ 
+         // Once all shared file locks are dropped, an exclusive lock may be created;
+-        file2.unlock().unwrap();
+-        file3.lock_exclusive().unwrap();
++        FileExt::unlock(&file2).unwrap();
++        FileExt::lock_exclusive(&file3).unwrap();
+     }
+ 
+     /// Tests exclusive file lock operations.
+@@ -263,15 +263,15 @@ mod test {
+         let file2 = fs::OpenOptions::new().read(true).write(true).create(true).open(&path).unwrap();
+ 
+         // No other access is possible once an exclusive lock is created.
+-        file1.lock_exclusive().unwrap();
+-        assert_eq!(file2.try_lock_exclusive().unwrap_err().kind(),
++        FileExt::lock_exclusive(&file1).unwrap();
++        assert_eq!(FileExt::try_lock_exclusive(&file2).unwrap_err().kind(),
+                    lock_contended_error().kind());
+-        assert_eq!(file2.try_lock_shared().unwrap_err().kind(),
++        assert_eq!(FileExt::try_lock_shared(&file2).unwrap_err().kind(),
+                    lock_contended_error().kind());
+ 
+         // Once the exclusive lock is dropped, the second file is able to create a lock.
+-        file1.unlock().unwrap();
+-        file2.lock_exclusive().unwrap();
++        FileExt::unlock(&file1).unwrap();
++        FileExt::lock_exclusive(&file2).unwrap();
+     }
+ 
+     /// Tests that a lock is released after the file that owns it is dropped.
+@@ -282,13 +282,13 @@ mod test {
+         let file1 = fs::OpenOptions::new().read(true).write(true).create(true).open(&path).unwrap();
+         let file2 = fs::OpenOptions::new().read(true).write(true).create(true).open(&path).unwrap();
+ 
+-        file1.lock_exclusive().unwrap();
+-        assert_eq!(file2.try_lock_shared().unwrap_err().kind(),
++        FileExt::lock_exclusive(&file1).unwrap();
++        assert_eq!(FileExt::try_lock_shared(&file2).unwrap_err().kind(),
+                    lock_contended_error().kind());
+ 
+         // Drop file1; the lock should be released.
+         drop(file1);
+-        file2.lock_shared().unwrap();
++        FileExt::lock_shared(&file2).unwrap();
+     }
+ 
+     /// Tests file allocation.
+Index: fs2/src/unix.rs
+===================================================================
+--- fs2.orig/src/unix.rs
++++ fs2/src/unix.rs
+@@ -217,15 +217,15 @@ mod test {
+         let file2 = fs::OpenOptions::new().write(true).create(true).open(&path).unwrap();
+ 
+         // Creating a shared lock will drop an exclusive lock.
+-        file1.lock_exclusive().unwrap();
+-        file1.lock_shared().unwrap();
+-        file2.lock_shared().unwrap();
++        FileExt::lock_exclusive(&file1).unwrap();
++        FileExt::lock_shared(&file1).unwrap();
++        FileExt::lock_shared(&file2).unwrap();
+ 
+         // Attempting to replace a shared lock with an exclusive lock will fail
+         // with multiple lock holders, and remove the original shared lock.
+-        assert_eq!(file2.try_lock_exclusive().unwrap_err().raw_os_error(),
++        assert_eq!(FileExt::try_lock_exclusive(&file2).unwrap_err().raw_os_error(),
+                    lock_contended_error().raw_os_error());
+-        file1.lock_shared().unwrap();
++        FileExt::lock_shared(&file1).unwrap();
+     }
+ 
+     /// Tests that locks are shared among duplicated file descriptors.
+@@ -238,13 +238,13 @@ mod test {
+         let file3 = fs::OpenOptions::new().write(true).create(true).open(&path).unwrap();
+ 
+         // Create a lock through fd1, then replace it through fd2.
+-        file1.lock_shared().unwrap();
+-        file2.lock_exclusive().unwrap();
+-        assert_eq!(file3.try_lock_shared().unwrap_err().raw_os_error(),
++        FileExt::lock_shared(&file1).unwrap();
++        FileExt::lock_exclusive(&file2).unwrap();
++        assert_eq!(FileExt::try_lock_shared(&file3).unwrap_err().raw_os_error(),
+                    lock_contended_error().raw_os_error());
+ 
+         // Either of the file descriptors should be able to unlock.
+-        file1.unlock().unwrap();
+-        file3.lock_shared().unwrap();
++        FileExt::unlock(&file1).unwrap();
++        FileExt::lock_shared(&file3).unwrap();
+     }
+ }
