@@ -1,0 +1,85 @@
+From 9f55730b9dff3a3a62ad98531ed7098e146fc03e Mon Sep 17 00:00:00 2001
+From: peppidesu <bakker.pepijn@gmail.com>
+Date: Thu, 1 May 2025 23:21:35 +0200
+Subject: [PATCH] enhance: Drop `from_variants` crate in favor of custom
+ implementation (#88)
+
+---
+ Cargo.toml            |  1 -
+ src/metadata/value.rs | 31 ++++++++++++++++++++++++++++---
+ 2 files changed, 28 insertions(+), 4 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 227be4f..51abac3 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -35,9 +35,6 @@
+ [dependencies.enum-kinds]
+ version = "0.5.1"
+ 
+-[dependencies.from_variants]
+-version = "1.0.0"
+-
+ [dependencies.thiserror]
+ version = "1.0.37"
+ 
+
+diff --git a/src/metadata/value.rs b/src/metadata/value.rs
+index b682f0c..db261cb 100644
+--- a/src/metadata/value.rs
++++ b/src/metadata/value.rs
+@@ -1,12 +1,11 @@
+ use dbus::arg::ArgType;
+ use enum_kinds::EnumKind;
+-use from_variants::FromVariants;
+ use std::collections::HashMap;
+ 
+ /// Holds a dynamically-typed metadata value.
+ ///
+ /// You will need to type-check this at runtime in order to use the value.
+-#[derive(Debug, PartialEq, Clone, EnumKind, FromVariants)]
++#[derive(Debug, PartialEq, Clone, EnumKind)]
+ #[enum_kind(ValueKind)]
+ pub enum Value {
+     /// Value is a string.
+@@ -46,10 +45,38 @@
+     Map(HashMap<String, Value>),
+ 
+     /// Unsupported value type.
+-    #[from_variants(skip)]
+     Unsupported,
+ }
+ 
++
++macro_rules! mk_value_from_impls {
++    ($($t:ty => $var:ident),* $(,)?) => {
++        $(
++            impl From<$t> for Value {
++                fn from(value: $t) -> Value {
++                    Value::$var(value)
++                }
++            }
++        )*
++    };
++}
++
++mk_value_from_impls! {
++    String => String,
++    i16 => I16,
++    i32 => I32,
++    i64 => I64,
++    u8 => U8,
++    u16 => U16,
++    u32 => U32,
++    u64 => U64,
++    f64 => F64,
++    bool => Bool,
++    Vec<Value> => Array,
++    HashMap<String, Value> => Map,
++}
++
++
+ impl Value {
+     /// Returns a simple enum representing the type of value that this value holds.
+     ///
+
