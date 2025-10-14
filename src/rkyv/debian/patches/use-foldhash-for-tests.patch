@@ -2,7 +2,7 @@ Index: rkyv/Cargo.toml
 ===================================================================
 --- rkyv.orig/Cargo.toml
 +++ rkyv/Cargo.toml
-@@ -193,8 +193,8 @@ optional = true
+@@ -241,8 +241,8 @@ optional = true
  default-features = false
  package = "uuid"
  
@@ -26,3 +26,33 @@ Index: rkyv/src/impls/std/collections/hash_map.rs
  
      use crate::{
          api::test::{roundtrip, roundtrip_with, to_archived},
+Index: rkyv/src/collections/btree/map/mod.rs
+===================================================================
+--- rkyv.orig/src/collections/btree/map/mod.rs
++++ rkyv/src/collections/btree/map/mod.rs
+@@ -1096,9 +1096,9 @@ mod verify {
+ 
+ #[cfg(all(test, feature = "alloc"))]
+ mod tests {
+-    use core::hash::{Hash, Hasher};
++    use core::hash::{Hash, Hasher, BuildHasher};
+ 
+-    use ahash::AHasher;
++    use foldhash::quality::RandomState;
+ 
+     use crate::{
+         alloc::{collections::BTreeMap, string::ToString},
+@@ -1113,11 +1113,11 @@ mod tests {
+         map.insert("b".to_string(), 2);
+ 
+         to_archived(&map, |archived_map| {
+-            let mut hasher = AHasher::default();
++            let mut hasher = RandomState::default().build_hasher();
++            let mut expected_hasher = hasher.clone();
+             archived_map.hash(&mut hasher);
+             let hash_value = hasher.finish();
+ 
+-            let mut expected_hasher = AHasher::default();
+             for (k, v) in &map {
+                 k.hash(&mut expected_hasher);
+                 v.hash(&mut expected_hasher);
