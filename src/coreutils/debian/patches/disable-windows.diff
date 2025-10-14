@@ -2,7 +2,7 @@ Index: coreutils/src/uu/date/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/date/Cargo.toml
 +++ coreutils/src/uu/date/Cargo.toml
-@@ -33,12 +33,6 @@ fluent = { workspace = true }
+@@ -26,12 +26,6 @@ parse_datetime = { workspace = true }
  [target.'cfg(unix)'.dependencies]
  libc = { workspace = true }
  
@@ -19,9 +19,9 @@ Index: coreutils/src/uu/du/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/du/Cargo.toml
 +++ coreutils/src/uu/du/Cargo.toml
-@@ -25,12 +25,6 @@ uucore = { workspace = true, features =
+@@ -24,12 +24,6 @@ clap = { workspace = true }
+ uucore = { workspace = true, features = ["format"] }
  thiserror = { workspace = true }
- fluent = { workspace = true }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
 -windows-sys = { workspace = true, features = [
@@ -36,7 +36,7 @@ Index: coreutils/src/uu/hostname/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/hostname/Cargo.toml
 +++ coreutils/src/uu/hostname/Cargo.toml
-@@ -26,12 +26,6 @@ fluent = { workspace = true }
+@@ -24,12 +24,6 @@ uucore = { workspace = true, features =
  [target.'cfg(any(target_os = "freebsd", target_os = "openbsd"))'.dependencies]
  dns-lookup = { workspace = true }
  
@@ -53,7 +53,7 @@ Index: coreutils/src/uu/rm/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/rm/Cargo.toml
 +++ coreutils/src/uu/rm/Cargo.toml
-@@ -26,9 +26,6 @@ fluent = { workspace = true }
+@@ -23,9 +23,6 @@ uucore = { workspace = true, features =
  [target.'cfg(unix)'.dependencies]
  libc = { workspace = true }
  
@@ -67,8 +67,8 @@ Index: coreutils/src/uu/sync/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/sync/Cargo.toml
 +++ coreutils/src/uu/sync/Cargo.toml
-@@ -25,13 +25,6 @@ fluent = { workspace = true }
- [target.'cfg(unix)'.dependencies]
+@@ -24,13 +24,6 @@ uucore = { workspace = true, features =
+ [target.'cfg(any(target_os = "linux", target_os = "android"))'.dependencies]
  nix = { workspace = true }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
@@ -85,9 +85,9 @@ Index: coreutils/src/uu/tail/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/tail/Cargo.toml
 +++ coreutils/src/uu/tail/Cargo.toml
-@@ -27,12 +27,12 @@ uucore = { workspace = true, features =
+@@ -26,12 +26,12 @@ uucore = { workspace = true }
  same-file = { workspace = true }
- fluent = { workspace = true }
+ fundu = { workspace = true }
  
 -[target.'cfg(windows)'.dependencies]
 -windows-sys = { workspace = true, features = [
@@ -108,9 +108,9 @@ Index: coreutils/src/uu/touch/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/touch/Cargo.toml
 +++ coreutils/src/uu/touch/Cargo.toml
-@@ -27,12 +27,6 @@ thiserror = { workspace = true }
- uucore = { workspace = true, features = ["libc", "parser"] }
- fluent = { workspace = true }
+@@ -25,12 +25,6 @@ parse_datetime = { workspace = true }
+ thiserror = { workspace = true }
+ uucore = { workspace = true, features = ["libc"] }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
 -windows-sys = { workspace = true, features = [
@@ -125,9 +125,9 @@ Index: coreutils/src/uu/whoami/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uu/whoami/Cargo.toml
 +++ coreutils/src/uu/whoami/Cargo.toml
-@@ -22,12 +22,12 @@ clap = { workspace = true }
+@@ -20,13 +20,6 @@ path = "src/whoami.rs"
+ clap = { workspace = true }
  uucore = { workspace = true, features = ["entries", "process"] }
- fluent = { workspace = true }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
 -windows-sys = { workspace = true, features = [
@@ -135,21 +135,16 @@ Index: coreutils/src/uu/whoami/Cargo.toml
 -  "Win32_System_WindowsProgramming",
 -  "Win32_Foundation",
 -] }
-+#[target.'cfg(target_os = "windows")'.dependencies]
-+#windows-sys = { workspace = true, features = [
-+#  "Win32_NetworkManagement_NetManagement",
-+#  "Win32_System_WindowsProgramming",
-+#  "Win32_Foundation",
-+#] }
+-
+ [target.'cfg(unix)'.dependencies]
+ libc = { workspace = true }
  
- [[bin]]
- name = "whoami"
 Index: coreutils/src/uucore/Cargo.toml
 ===================================================================
 --- coreutils.orig/src/uucore/Cargo.toml
 +++ coreutils/src/uucore/Cargo.toml
-@@ -86,19 +86,19 @@ xattr = { workspace = true, optional = t
- [dev-dependencies]
+@@ -68,19 +68,19 @@ xattr = { workspace = true, optional = t
+ clap = { workspace = true }
  tempfile = { workspace = true }
  
 -[target.'cfg(target_os = "windows")'.dependencies]
@@ -159,9 +154,11 @@ Index: coreutils/src/uucore/Cargo.toml
 -  "Win32_Storage_FileSystem",
 -  "Win32_Foundation",
 -  "Win32_System_RemoteDesktop",
--  "Win32_System_SystemInformation",
 -  "Win32_System_WindowsProgramming",
 -] }
+-
+-[target.'cfg(target_os = "openbsd")'.dependencies]
+-utmp-classic = { workspace = true, optional = true }
 +#[target.'cfg(target_os = "windows")'.dependencies]
 +#winapi-util = { workspace = true, optional = true }
 +#windows-sys = { workspace = true, optional = true, default-features = false, features = [
@@ -169,40 +166,38 @@ Index: coreutils/src/uucore/Cargo.toml
 +#  "Win32_Storage_FileSystem",
 +#  "Win32_Foundation",
 +#  "Win32_System_RemoteDesktop",
-+#  "Win32_System_SystemInformation",
 +#  "Win32_System_WindowsProgramming",
 +#] }
  
--[target.'cfg(target_os = "openbsd")'.dependencies]
--utmp-classic = { workspace = true, optional = true }
 +#[target.'cfg(target_os = "openbsd")'.dependencies]
 +#utmp-classic = { workspace = true, optional = true }
- 
++#
  [features]
  default = []
-@@ -110,8 +110,8 @@ encoding = ["data-encoding", "data-encod
+ # * non-default features
+@@ -89,8 +89,8 @@ colors = []
+ checksum = ["data-encoding", "thiserror", "regex", "sum"]
+ encoding = ["data-encoding", "data-encoding-macro", "z85"]
  entries = ["libc"]
- extendedbigdecimal = ["bigdecimal", "num-traits"]
- fast-inc = []
 -fs = ["dunce", "libc", "winapi-util", "windows-sys"]
 -fsext = ["libc", "windows-sys"]
-+fs = ["dunce", "libc"]
-+fsext = ["libc"]
++fs = ["dunce", "libc"]#, "winapi-util", "windows-sys"]
++fsext = ["libc"]#, "windows-sys"]
  fsxattr = ["xattr"]
  lines = []
- feat_systemd_logind = ["utmpx", "libc"]
+ format = ["itertools", "quoting-style"]
 Index: coreutils/Cargo.toml
 ===================================================================
 --- coreutils.orig/Cargo.toml
 +++ coreutils/Cargo.toml
-@@ -380,8 +380,8 @@ unicode-width = "0.2.0"
+@@ -345,8 +345,8 @@ utf-8 = "0.7.6"
  utmp-classic = "0.1.6"
- uutils_term_grid = "0.7"
+ uutils_term_grid = "0.6"
  walkdir = "2.5"
 -winapi-util = "0.1.8"
--windows-sys = { version = "0.61.0", default-features = false }
+-windows-sys = { version = "0.59.0", default-features = false }
 +#winapi-util = "0.1.8"
-+#windows-sys = { version = "0.61.0", default-features = false }
++#windows-sys = { version = "0.59.0", default-features = false }
  xattr = "1.3.1"
- zip = { version = "5.0.0", default-features = false, features = ["deflate"] }
+ zip = { version = "2.2.2", default-features = false, features = ["deflate"] }
  

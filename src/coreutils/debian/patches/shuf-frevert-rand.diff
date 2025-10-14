@@ -4,20 +4,20 @@ Date:   Thu Jan 30 09:09:12 2025 +0100
 
     shuf: adapt to API changes of rand
 
-Index: coreutils/src/uu/shuf/src/rand_read_adapter.rs
-===================================================================
---- coreutils.orig/src/uu/shuf/src/rand_read_adapter.rs
-+++ coreutils/src/uu/shuf/src/rand_read_adapter.rs
+diff --git b/src/uu/shuf/src/rand_read_adapter.rs a/src/uu/shuf/src/rand_read_adapter.rs
+index 589f05106..728bc0cfb 100644
+--- b/src/uu/shuf/src/rand_read_adapter.rs
++++ a/src/uu/shuf/src/rand_read_adapter.rs
 @@ -16,7 +16,7 @@
  use std::fmt;
  use std::io::Read;
  
--use rand_core::{RngCore, impls};
-++use rand_core::{impls, Error, RngCore};
+-use rand_core::{impls, RngCore};
++use rand_core::{impls, Error, RngCore};
  
  /// An RNG that reads random bytes straight from any type supporting
  /// [`std::io::Read`], for example files.
-@@ -30,10 +30,11 @@ use rand_core::{RngCore, impls};
+@@ -30,10 +30,11 @@ use rand_core::{impls, RngCore};
  ///
  /// `ReadRng` uses [`std::io::Read::read_exact`], which retries on interrupts.
  /// All other errors from the underlying reader, including when it does not
@@ -62,29 +62,29 @@ Index: coreutils/src/uu/shuf/src/rand_read_adapter.rs
  }
  
  /// `ReadRng` error type
-Index: coreutils/src/uu/shuf/src/shuf.rs
-===================================================================
---- coreutils.orig/src/uu/shuf/src/shuf.rs
-+++ coreutils/src/uu/shuf/src/shuf.rs
-@@ -120,7 +120,7 @@ pub fn uumain(args: impl uucore::Args) -
-             )?;
-             WrappedRng::RngFile(rand_read_adapter::ReadRng::new(file))
-         }
--        None => WrappedRng::RngDefault(rand::rng()),
-+        None => WrappedRng::RngDefault(rand::thread_rng()),
-     };
+diff --git b/src/uu/shuf/src/shuf.rs a/src/uu/shuf/src/shuf.rs
+index cb0b91d2a..2d8023448 100644
+--- b/src/uu/shuf/src/shuf.rs
++++ a/src/uu/shuf/src/shuf.rs
+@@ -7,7 +7,7 @@
  
-     match mode {
-@@ -303,7 +303,7 @@ impl Shufable for RangeInclusive<usize>
+ use clap::{crate_version, Arg, ArgAction, Command};
+ use memchr::memchr_iter;
+-use rand::prelude::{IndexedRandom, SliceRandom};
++use rand::prelude::SliceRandom;
+ use rand::{Rng, RngCore};
+ use std::collections::HashSet;
+ use std::fs::File;
+@@ -299,7 +299,7 @@ impl Shufable for RangeInclusive<usize> {
+         self.is_empty()
      }
- 
      fn choose(&self, rng: &mut WrappedRng) -> usize {
 -        rng.random_range(self.clone())
 +        rng.gen_range(self.clone())
      }
- 
-     fn partial_shuffle<'b>(
-@@ -349,7 +349,7 @@ impl<'a> NonrepeatingIterator<'a> {
+     type PartialShuffleIterator<'b>
+         = NonrepeatingIterator<'b>
+@@ -348,7 +348,7 @@ impl<'a> NonrepeatingIterator<'a> {
          match &mut self.buf {
              NumberSet::AlreadyListed(already_listed) => {
                  let chosen = loop {
@@ -93,7 +93,16 @@ Index: coreutils/src/uu/shuf/src/shuf.rs
                      let newly_inserted = already_listed.insert(guess);
                      if newly_inserted {
                          break guess;
-@@ -498,6 +498,13 @@ impl RngCore for WrappedRng {
+@@ -435,7 +435,7 @@ fn shuf_exec(input: &mut impl Shufable, opts: Options) -> UResult<()> {
+                 .map_err_context(|| format!("failed to open random source {}", r.quote()))?;
+             WrappedRng::RngFile(rand_read_adapter::ReadRng::new(file))
+         }
+-        None => WrappedRng::RngDefault(rand::rng()),
++        None => WrappedRng::RngDefault(rand::thread_rng()),
+     };
+ 
+     if opts.repeat {
+@@ -520,6 +520,13 @@ impl RngCore for WrappedRng {
              Self::RngDefault(r) => r.fill_bytes(dest),
          }
      }

@@ -6,25 +6,25 @@ Index: coreutils/Cargo.toml
 ===================================================================
 --- coreutils.orig/Cargo.toml
 +++ coreutils/Cargo.toml
-@@ -366,7 +366,7 @@ rand_core = "0.9.0"
+@@ -327,7 +327,7 @@ rand_core = "0.9.0"
  rayon = "1"
  regex = "1"
- rstest = "0.26.0"
+ rstest = "0.25.0"
 -rust-ini = "0.21.0"
 +rust-ini = ">= 0.18.0"
  same-file = "1.0.6"
  self_cell = "1"
- # FIXME we use the exact version because the new 0.5.3 requires an MSRV of 1.88
+ # Remove the "=" once we moved to Rust edition 2024
 Index: coreutils/src/uu/env/src/env.rs
 ===================================================================
 --- coreutils.orig/src/uu/env/src/env.rs
 +++ coreutils/src/uu/env/src/env.rs
-@@ -211,7 +211,7 @@ fn load_config_file(opts: &mut Options)
+@@ -162,7 +162,7 @@ fn load_config_file(opts: &mut Options)
  
          for (_, prop) in &conf {
              // ignore all INI section lines (treat them as comments)
 -            for (key, value) in prop {
 +            for (key, value) in prop.iter() {
-                 unsafe {
-                     env::set_var(key, value);
-                 }
+                 env::set_var(key, value);
+             }
+         }

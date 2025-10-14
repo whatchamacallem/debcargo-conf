@@ -2,18 +2,17 @@ Index: coreutils/src/uu/date/src/date.rs
 ===================================================================
 --- coreutils.orig/src/uu/date/src/date.rs
 +++ coreutils/src/uu/date/src/date.rs
-@@ -442,10 +442,10 @@ fn set_system_datetime(_date: Zoned) ->
+@@ -443,10 +443,9 @@ fn set_system_datetime(_date: DateTime<U
+ /// `<https://linux.die.net/man/3/clock_settime>`
  /// `<https://www.gnu.org/software/libc/manual/html_node/Time-Types.html>`
- fn set_system_datetime(date: Zoned) -> UResult<()> {
-     let ts = date.timestamp();
+ fn set_system_datetime(date: DateTime<Utc>) -> UResult<()> {
 -    let timespec = timespec {
--        tv_sec: ts.as_second() as _,
--        tv_nsec: ts.subsec_nanosecond() as _,
+-        tv_sec: date.timestamp() as _,
+-        tv_nsec: date.timestamp_subsec_nanos() as _,
 -    };
-+
 +    let mut timespec: timespec = unsafe { std::mem::zeroed() };
 +    timespec.tv_sec = date.timestamp() as _;
 +    timespec.tv_nsec = date.timestamp_subsec_nanos() as _;
  
-     let result = unsafe { clock_settime(CLOCK_REALTIME, &raw const timespec) };
+     let result = unsafe { clock_settime(CLOCK_REALTIME, &timespec) };
  
