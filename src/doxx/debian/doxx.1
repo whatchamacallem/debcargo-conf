@@ -1,0 +1,207 @@
+.Dd October 14, 2025
+.Dt DOXX 1
+.Os
+.Sh NAME
+.Nm doxx
+.Nd terminal document viewer for .docx files
+.Sh SYNOPSIS
+.Nm
+.Op Fl o | Fl -outline
+.Op Fl p | Fl -page Ar page
+.Op Fl s | Fl -search Ar term
+.Op Fl -export Ar format
+.Op Fl -images
+.Op Fl -extract-images Ar directory
+.Op Ar options
+.Ar file
+.Nm
+.Fl -debug-terminal
+.Sh DESCRIPTION
+.Nm
+is a terminal-based document viewer for Microsoft Word .docx files.
+It provides an interactive interface for viewing, searching, and navigating
+Word documents directly in the terminal, with support for outline view,
+image display, and multiple export formats.
+.Pp
+The viewer supports terminal image protocols (including Kitty, iTerm2, and Sixel)
+for inline image display, and provides various export options for converting
+documents to plain text, Markdown, CSV, or JSON formats.
+.Pp
+When invoked with a
+.Ar file
+argument,
+.Nm
+opens the document in interactive mode if a TTY is detected.
+In non-interactive environments,
+.Nm
+automatically provides formatted text output with document metadata,
+showing the first 20 elements of the document.
+Use
+.Fl -force-ui
+to override TTY detection and force interactive mode.
+.Sh OPTIONS
+The following options are available when viewing documents:
+.Ss Viewing Options
+.Bl -tag -width Ds
+.It Fl o , Fl -outline
+Start with outline view.
+Display document structure and headings instead of full content.
+.It Fl p , Fl -page Ar page
+Jump to specific page number on startup.
+.It Fl s , Fl -search Ar term
+Search and highlight the specified term in the document.
+.It Fl -force-ui
+Force interactive UI mode, bypassing TTY detection.
+.It Fl -color
+Enable color support for text rendering.
+.El
+.Ss Image Options
+.Bl -tag -width Ds
+.It Fl -images
+Display images inline in terminal.
+Automatically detects terminal capabilities and uses appropriate protocol.
+.It Fl -no-images
+Force text-only mode for images.
+No inline image display.
+.It Fl -extract-images Ar directory
+Extract all images from the document to the specified directory.
+.It Fl -image-width Ar cols
+Maximum image width in terminal columns.
+Default: auto-detect from terminal size.
+.It Fl -image-height Ar rows
+Maximum image height in terminal rows.
+Default: auto-detect from terminal size.
+.It Fl -image-scale Ar scale
+Image scaling factor.
+Value must be between 0.1 and 2.0.
+Default: 1.0.
+.It Fl -debug-terminal
+Test and display terminal image capabilities.
+.El
+.Ss Export Options
+.Bl -tag -width Ds
+.It Fl -export Ar format
+Export document to specified format and print to stdout.
+Possible values:
+.Bl -tag -width "markdown" -compact
+.It Cm markdown
+Convert document to Markdown format
+.It Cm text
+Convert to plain text
+.It Cm csv
+Export as comma-separated values
+.It Cm json
+Export document structure as JSON
+.El
+.El
+.Ss General Options
+.Bl -tag -width Ds
+.It Fl h , Fl -help
+Print help information.
+.It Fl V , Fl -version
+Print version information.
+.El
+.Sh EXIT STATUS
+.Ex -std
+.Sh EXAMPLES
+View a document in interactive mode:
+.Dl $ doxx document.docx
+.Pp
+Start viewing from page 5:
+.Dl $ doxx --page 5 document.docx
+.Pp
+Open document with outline view:
+.Dl $ doxx --outline document.docx
+.Pp
+Search for a term and highlight it:
+.Dl $ doxx --search \(dqimportant\(dq document.docx
+.Pp
+Export document to Markdown:
+.Dl $ doxx --export markdown document.docx > output.md
+.Pp
+Export to plain text:
+.Dl $ doxx --export text document.docx > output.txt
+.Pp
+View document with inline images:
+.Dl $ doxx --images document.docx
+.Pp
+Extract all images to a directory:
+.Dl $ doxx --extract-images ./images document.docx
+.Pp
+View with custom image scaling:
+.Dl $ doxx --images --image-scale 0.8 document.docx
+.Pp
+Test terminal image capabilities:
+.Dl $ doxx --debug-terminal
+.Sh NOTES
+.Ss Interactive Controls
+When running in interactive mode, the following keyboard controls are available:
+.Pp
+.Em Document View:
+.Bl -tag -width "PageDown" -compact
+.It Ic q
+Quit application
+.It Ic o
+Switch to outline view
+.It Ic s
+Enter search mode
+.It Ic h , F1
+Toggle help overlay
+.It Ic c
+Copy document content to clipboard (as plain text)
+.It Ic k , Up
+Scroll up one line
+.It Ic j , Down
+Scroll down one line
+.It Ic PageUp
+Scroll up one page (10 lines)
+.It Ic PageDown
+Scroll down one page (10 lines)
+.It Ic Home
+Jump to beginning of document
+.It Ic End
+Jump to end of document
+.It Ic n
+Next search result (when search results exist)
+.It Ic p
+Previous search result (when search results exist)
+.It Ic Mouse wheel
+Scroll up/down (3 lines per scroll)
+.El
+.Pp
+.Em Outline View:
+.Bl -tag -width "Backspace" -compact
+.It Ic q , Esc
+Return to document view
+.It Ic k , Up
+Move selection up
+.It Ic j , Down
+Move selection down
+.It Ic Enter
+Jump to selected heading and return to document view
+.It Ic c
+Copy document outline to clipboard (with indentation)
+.It Ic Mouse wheel
+Scroll through outline items
+.El
+.Pp
+.Em Search Mode:
+.Bl -tag -width "Backspace" -compact
+.It Ic q , Esc
+Return to document view
+.It Ar characters
+Type to build search query
+.It Ic Backspace
+Delete last character from query
+.It Ic Enter , Down
+Next search result
+.It Ic Up
+Previous search result
+.It Ic F2
+Copy search results to clipboard (formatted list)
+.It Ic Mouse wheel
+Navigate through search results
+.El
+.Sh SEE ALSO
+.Xr pandoc 1 ,
+.Xr less 1
