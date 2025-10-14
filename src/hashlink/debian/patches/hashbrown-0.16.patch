@@ -1,0 +1,26 @@
+Index: hashlink/Cargo.toml
+===================================================================
+--- hashlink.orig/Cargo.toml
++++ hashlink/Cargo.toml
+@@ -26,7 +26,7 @@ license = "MIT OR Apache-2.0"
+ repository = "https://github.com/kyren/hashlink"
+ 
+ [dependencies.hashbrown]
+-version = "0.15"
++version = ">= 0.15, < 0.17"
+ features = [
+     "default-hasher",
+     "inline-more",
+Index: hashlink/src/lib.rs
+===================================================================
+--- hashlink.orig/src/lib.rs
++++ hashlink/src/lib.rs
+@@ -16,7 +16,7 @@ pub use lru_cache::LruCache;
+ /// Default hash builder, matches hashbrown's default hasher.
+ ///
+ /// See [`DefaultHasher`] for more details.
+-#[derive(Clone, Copy, Default, Debug)]
++#[derive(Clone, Default, Debug)]
+ pub struct DefaultHashBuilder(hashbrown::DefaultHashBuilder);
+ 
+ impl BuildHasher for DefaultHashBuilder {
