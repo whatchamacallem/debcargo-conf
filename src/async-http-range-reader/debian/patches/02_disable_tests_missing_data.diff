@@ -1,0 +1,34 @@
+Description: Disable tests which require downloading an external file.
+  The license of such external binary files is unclear.
+Author: Antonin Delpeuch <antonin@delpeuch.eu>
+Forwarded: not-needed
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -664,11 +664,7 @@ mod test {
+     use std::path::Path;
+     use tokio::io::AsyncReadExt as _;
+ 
+-    #[rstest]
+-    #[case(CheckSupportMethod::Head)]
+-    #[case(CheckSupportMethod::NegativeRangeRequest(8192))]
+-    #[tokio::test]
+-    async fn async_range_reader_zip(#[case] check_method: CheckSupportMethod) {
++    async fn async_range_reader_zip(check_method: CheckSupportMethod) {
+         // Spawn a static file server
+         let path = Path::new(&std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("test-data");
+         let server = StaticDirectoryServer::new(&path)
+@@ -785,11 +781,7 @@ mod test {
+         );
+     }
+ 
+-    #[rstest]
+-    #[case(CheckSupportMethod::Head)]
+-    #[case(CheckSupportMethod::NegativeRangeRequest(8192))]
+-    #[tokio::test]
+-    async fn async_range_reader(#[case] check_method: CheckSupportMethod) {
++    async fn async_range_reader(check_method: CheckSupportMethod) {
+         // Spawn a static file server
+         let path = Path::new(&std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("test-data");
+         let server = StaticDirectoryServer::new(&path)
