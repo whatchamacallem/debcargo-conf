@@ -1,0 +1,14 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/pkg-info.mk
+
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_installman:
+	help2man \
+		--name "terminal document viewer for .docx files" \
+		--no-info \
+		--version-string $(DEB_VERSION_UPSTREAM) \
+		debian/doxx/usr/bin/doxx > debian/doxx.1
+	dh_installman -O--buildsystem=cargo
