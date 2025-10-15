@@ -18,7 +18,7 @@ Index: nix/test/sys/test_socket.rs
  
      let sbuf = [0u8; 2048];
      let mut rbuf = [0u8; 2048];
-@@ -954,8 +961,14 @@ pub fn test_af_alg_cipher() {
+@@ -954,11 +961,22 @@ pub fn test_af_alg_cipher() {
          SockType::SeqPacket,
          SockFlag::empty(),
          None,
@@ -34,8 +34,17 @@ Index: nix/test/sys/test_socket.rs
 +    let sock = sock.expect("socket failed");
  
      let sockaddr = AlgAddr::new(alg_type, alg_name);
-     bind(sock.as_raw_fd(), &sockaddr).expect("bind failed");
-@@ -3085,7 +3098,14 @@ fn test_recvmm2() -> nix::Result<()> {
+-    bind(sock.as_raw_fd(), &sockaddr).expect("bind failed");
++
++    let res = bind(sock.as_raw_fd(), &sockaddr);
++    // bind failing with enoent seems to indicate the kernel doesn't support
++    // the algorithm we requested.
++    if res == Err(nix::errno::Errno::ENOENT) { return }
++    res.expect("bind failed");
+ 
+     assert_eq!(sockaddr.alg_name().to_string_lossy(), alg_name);
+     assert_eq!(sockaddr.alg_type().to_string_lossy(), alg_type);
+@@ -3085,7 +3103,14 @@ fn test_recvmm2() -> nix::Result<()> {
  
      bind(rsock.as_raw_fd(), &sock_addr)?;
  
