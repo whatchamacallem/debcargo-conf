@@ -1,0 +1,37 @@
+#!/usr/bin/make -f
+include /usr/share/dpkg/architecture.mk
+include /usr/share/dpkg/default.mk
+
+export DEB_HOST_RUST_TYPE = $(subst -linux-gnu,-unknown-linux-gnu,$(DEB_HOST_GNU_TYPE))
+export CARGO_BUILD_TARGET = $(DEB_HOST_RUST_TYPE)
+
+export DEB_CARGO_EXTRA_ARGS = --no-check-cfg
+export CFLAGS CXXFLAGS CPPFLAGS LDFLAGS
+export DEB_BUILD_MAINT_OPTIONS=hardening=+bindnow
+export PATH := /usr/share/cargo/bin:$(PATH)
+export CARGO=/usr/share/cargo/bin/cargo
+export CARGO_HOME=$(CURDIR)/debian/cargo_home
+export CARGO_REGISTRY=$(CURDIR)/debian/cargo_registry
+export DEB_CARGO_CRATE=$(DEB_SOURCE)_$(DEB_VERSION_UPSTREAM)
+
+%:
+	dh $@ --buildsystem cargo
+
+override_dh_auto_configure:
+	$(CARGO) prepare-debian $(CARGO_REGISTRY) --link-from-system
+	rm -f Cargo.lock
+	touch debian/cargo-checksum.json
+	dh_auto_configure
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf debian/cargo_registry
+	rm -f debian/cargo-checksum.js
+
+override_dh_auto_test:
+	dh_auto_test -- test --all
+
+override_dh_auto_install:
+	$(CARGO) build --release --target $(CARGO_BUILD_TARGET)
+	install -d debian/tiny/usr/bin/
+	install -m 755 target/$(CARGO_BUILD_TARGET)/release/tiny debian/tiny/usr/bin/

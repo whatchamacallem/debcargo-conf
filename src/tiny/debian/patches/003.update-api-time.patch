@@ -1,0 +1,1176 @@
+Description: Crate time API update from v0.1 to v0.3
+Author: Josenilson Ferreira da Silva <nilsonfsilva@hotmail.com>
+Forwarded: not-needed
+Last-Update: 2025-10-10
+Index: rust-tiny-0.13.0/crates/libtiny_logger/src/lib.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_logger/src/lib.rs
++++ rust-tiny-0.13.0/crates/libtiny_logger/src/lib.rs
+@@ -6,7 +6,7 @@ use std::io;
+ use std::io::Write;
+ use std::path::{Path, PathBuf};
+ use std::rc::Rc;
+-//use time::Tm;
++use time::OffsetDateTime;
+ 
+ use libtiny_common::{ChanName, ChanNameRef, MsgTarget};
+ use libtiny_wire::formatting::remove_irc_control_chars;
+@@ -50,26 +50,26 @@ impl Logger {
+     delegate!(close_chan_tab(serv: &str, chan: &ChanNameRef,));
+     delegate!(close_user_tab(serv: &str, nick: &str,));
+     delegate!(add_client_msg(msg: &str, target: &MsgTarget,));
+-    delegate!(add_msg(msg: &str, ts: Tm, target: &MsgTarget,));
++    delegate!(add_msg(msg: &str, ts: OffsetDateTime, target: &MsgTarget,));
+     delegate!(add_privmsg(
+         sender: &str,
+         msg: &str,
+-        ts: Tm,
++        ts: OffsetDateTime,
+         target: &MsgTarget,
+         highlight: bool,
+         is_action: bool,
+     ));
+-    delegate!(add_nick(nick: &str, ts: Option<Tm>, target: &MsgTarget,));
+-    delegate!(remove_nick(nick: &str, ts: Option<Tm>, target: &MsgTarget,));
++    delegate!(add_nick(nick: &str, ts: Option<OffsetDateTime>, target: &MsgTarget,));
++    delegate!(remove_nick(nick: &str, ts: Option<OffsetDateTime>, target: &MsgTarget,));
+     delegate!(rename_nick(
+         old_nick: &str,
+         new_nick: &str,
+-        ts: Tm,
++        ts: OffsetDateTime,
+         target: &MsgTarget,
+     ));
+     delegate!(set_topic(
+         topic: &str,
+-        ts: Tm,
++        ts: OffsetDateTime,
+         serv: &str,
+         chan: &ChanNameRef,
+     ));
+@@ -292,7 +292,7 @@ impl LoggerInner {
+         });
+     }
+ 
+-    fn add_msg(&mut self, msg: &str, ts: Tm, target: &MsgTarget) {
++    fn add_msg(&mut self, msg: &str, ts: OffsetDateTime, target: &MsgTarget) {
+         self.apply_to_target(target, |fd: &mut File, report_err: &dyn Fn(String)| {
+             report_io_err!(report_err, writeln!(fd, "[{}] {}", strf(&ts), msg));
+         });
+@@ -302,7 +302,7 @@ impl LoggerInner {
+         &mut self,
+         sender: &str,
+         msg: &str,
+-        ts: Tm,
++        ts: OffsetDateTime,
+         target: &MsgTarget,
+         _highlight: bool,
+         is_action: bool,
+@@ -318,7 +318,7 @@ impl LoggerInner {
+         });
+     }
+ 
+-    fn add_nick(&mut self, nick: &str, ts: Option<Tm>, target: &MsgTarget) {
++    fn add_nick(&mut self, nick: &str, ts: Option<OffsetDateTime>, target: &MsgTarget) {
+         if let Some(_ts) = ts {
+             // This method is only called when a user joins a chan
+             self.apply_to_target(target, |fd: &mut File, report_err: &dyn Fn(String)| {
+@@ -330,7 +330,7 @@ impl LoggerInner {
+         }
+     }
+ 
+-    fn remove_nick(&mut self, nick: &str, ts: Option<Tm>, target: &MsgTarget) {
++    fn remove_nick(&mut self, nick: &str, ts: Option<OffsetDateTime>, target: &MsgTarget) {
+         if let Some(_ts) = ts {
+             // TODO: Did the user leave a channel or the server? Currently we can't tell.
+             self.apply_to_target(target, |fd: &mut File, report_err: &dyn Fn(String)| {
+@@ -339,7 +339,7 @@ impl LoggerInner {
+         }
+     }
+ 
+-    fn rename_nick(&mut self, old_nick: &str, new_nick: &str, ts: Tm, target: &MsgTarget) {
++    fn rename_nick(&mut self, old_nick: &str, new_nick: &str, ts: OffsetDateTime, target: &MsgTarget) {
+         self.apply_to_target(target, |fd: &mut File, report_err: &dyn Fn(String)| {
+             report_io_err!(
+                 report_err,
+@@ -354,7 +354,7 @@ impl LoggerInner {
+         });
+     }
+ 
+-    fn set_topic(&mut self, topic: &str, ts: Tm, serv: &str, chan: &ChanNameRef) {
++    fn set_topic(&mut self, topic: &str, ts: OffsetDateTime, serv: &str, chan: &ChanNameRef) {
+         let target = MsgTarget::Chan { serv, chan };
+         self.apply_to_target(&target, |fd: &mut File, report_err: &dyn Fn(String)| {
+             report_io_err!(
+@@ -455,6 +455,6 @@ fn now() -> String {
+     time::OffsetDateTime::now_utc().format(&time::format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap()).unwrap()
+ }
+ 
+-fn strf(tm: &Tm) -> String {
+-    time::strftime("%H:%M:%S", tm).unwrap()
++fn strf(tm: &OffsetDateTime) -> String {
++        tm.format(&time::format_description::parse("[hour]:[minute]:[second]").unwrap()).unwrap()
+ }
+Index: rust-tiny-0.13.0/crates/libtiny_tui/src/config.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_tui/src/config.rs
++++ rust-tiny-0.13.0/crates/libtiny_tui/src/config.rs
+@@ -493,7 +493,7 @@ pub(crate) fn parse_config(config_path:
+     // tiny creates a config file with the defaults when it can't find one, but the config file can
+     // be deleted before a `/reload`.
+     let contents = std::fs::read_to_string(config_path).map_err(|err| {
+-        de::Error::custom(format!(
++        <serde_yaml::Error as de::Error>::custom(format!(
+             "Can't read config file '{}': {}",
+             config_path.to_string_lossy(),
+             err
+Index: rust-tiny-0.13.0/crates/libtiny_tui/src/tests/layout.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_tui/src/tests/layout.rs
++++ rust-tiny-0.13.0/crates/libtiny_tui/src/tests/layout.rs
+@@ -18,7 +18,7 @@ fn test_join_part_overflow() {
+     tui.next_tab(); // server -> channel
+ 
+     let target = MsgTarget::Chan { serv, chan };
+-    let ts = time::at_utc(time::Timespec::new(0, 0));
++    let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+     tui.add_nick("123456", Some(ts), &target);
+     tui.add_nick("abcdef", Some(ts), &target);
+     tui.add_nick("hijklm", Some(ts), &target);
+@@ -47,7 +47,7 @@ fn test_alignment_long_string() {
+     tui.next_tab(); // server -> channel
+ 
+     let target = MsgTarget::Chan { serv, chan };
+-    let ts = time::at_utc(time::Timespec::new(0, 0));
++    let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+     tui.add_privmsg(
+         "osa1",
+         "123456789012345678901234567890",
+@@ -135,7 +135,7 @@ fn test_aligned_layout_activity_timestam
+     // 1.1 - 2.1
+     {
+         let (mut tui, target) = setup_aligned_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_privmsg(
+             "osa1", "hi", ts, &target, false, // highlight
+             false, // is_action
+@@ -157,12 +157,12 @@ fn test_aligned_layout_activity_timestam
+     // 1.1 - 2.2
+     {
+         let (mut tui, target) = setup_aligned_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_privmsg(
+             "osa1", "hi", ts, &target, false, // highlight
+             false, // is_action
+         );
+-        let ts = time::at_utc(time::Timespec::new(60, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(60).unwrap();
+         tui.add_nick("test", Some(ts), &target);
+         tui.draw();
+ 
+@@ -180,7 +180,7 @@ fn test_aligned_layout_activity_timestam
+     // 1.2 - 2.1
+     {
+         let (mut tui, target) = setup_aligned_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_privmsg(
+             "osa1", "hi", ts, &target, false, // highlight
+             false, // is_action
+@@ -202,12 +202,12 @@ fn test_aligned_layout_activity_timestam
+     // 1.2 - 2.2
+     {
+         let (mut tui, target) = setup_aligned_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_privmsg(
+             "osa1", "hi", ts, &target, false, // highlight
+             false, // is_action
+         );
+-        let ts = time::at_utc(time::Timespec::new(60, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(60).unwrap();
+         tui.add_privmsg("osa1", "test", ts, &target, false, false);
+         tui.draw();
+ 
+@@ -225,7 +225,7 @@ fn test_aligned_layout_activity_timestam
+     // 1.3 - 2.1
+     {
+         let (mut tui, target) = setup_aligned_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_nick("test", Some(ts), &target);
+         tui.add_privmsg(
+             "osa1", "hi", ts, &target, false, // highlight
+@@ -247,9 +247,9 @@ fn test_aligned_layout_activity_timestam
+     // 1.3 - 2.2
+     {
+         let (mut tui, target) = setup_aligned_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_nick("test", Some(ts), &target);
+-        let ts = time::at_utc(time::Timespec::new(60, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(60).unwrap();
+         tui.add_privmsg(
+             "osa1", "hi", ts, &target, false, // highlight
+             false, // is_action
+@@ -270,7 +270,7 @@ fn test_aligned_layout_activity_timestam
+     // 1.4 - 2.1
+     {
+         let (mut tui, target) = setup_aligned_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_nick("test1", Some(ts), &target);
+         tui.add_nick("test2", Some(ts), &target);
+         tui.draw();
+@@ -289,9 +289,9 @@ fn test_aligned_layout_activity_timestam
+     // 1.4 - 2.2
+     {
+         let (mut tui, target) = setup_aligned_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_nick("test1", Some(ts), &target);
+-        let ts = time::at_utc(time::Timespec::new(60, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(60).unwrap();
+         tui.add_nick("test2", Some(ts), &target);
+         tui.draw();
+ 
+@@ -313,7 +313,7 @@ fn test_compact_layout_activity_timestam
+     // 1.1 - 2.1
+     {
+         let (mut tui, target) = setup_compact_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_privmsg(
+             "osa1", "hi", ts, &target, false, // highlight
+             false, // is_action
+@@ -335,12 +335,12 @@ fn test_compact_layout_activity_timestam
+     // 1.1 - 2.2
+     {
+         let (mut tui, target) = setup_compact_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_privmsg(
+             "osa1", "hi", ts, &target, false, // highlight
+             false, // is_action
+         );
+-        let ts = time::at_utc(time::Timespec::new(60, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(60).unwrap();
+         tui.add_nick("test", Some(ts), &target);
+         tui.draw();
+ 
+@@ -358,7 +358,7 @@ fn test_compact_layout_activity_timestam
+     // 1.2 - 2.1
+     {
+         let (mut tui, target) = setup_compact_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_privmsg(
+             "osa1", "hi", ts, &target, false, // highlight
+             false, // is_action
+@@ -380,12 +380,12 @@ fn test_compact_layout_activity_timestam
+     // 1.2 - 2.2
+     {
+         let (mut tui, target) = setup_compact_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_privmsg(
+             "osa1", "hi", ts, &target, false, // highlight
+             false, // is_action
+         );
+-        let ts = time::at_utc(time::Timespec::new(60, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(60).unwrap();
+         tui.add_privmsg("osa1", "test", ts, &target, false, false);
+         tui.draw();
+ 
+@@ -403,7 +403,7 @@ fn test_compact_layout_activity_timestam
+     // 1.3 - 2.1
+     {
+         let (mut tui, target) = setup_compact_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_nick("test", Some(ts), &target);
+         tui.add_privmsg(
+             "osa1", "hi", ts, &target, false, // highlight
+@@ -425,9 +425,9 @@ fn test_compact_layout_activity_timestam
+     // 1.3 - 2.2
+     {
+         let (mut tui, target) = setup_compact_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_nick("test", Some(ts), &target);
+-        let ts = time::at_utc(time::Timespec::new(60, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(60).unwrap();
+         tui.add_privmsg(
+             "osa1", "hi", ts, &target, false, // highlight
+             false, // is_action
+@@ -448,7 +448,7 @@ fn test_compact_layout_activity_timestam
+     // 1.4 - 2.1
+     {
+         let (mut tui, target) = setup_compact_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_nick("test1", Some(ts), &target);
+         tui.add_nick("test2", Some(ts), &target);
+         tui.draw();
+@@ -467,9 +467,9 @@ fn test_compact_layout_activity_timestam
+     // 1.4 - 2.2
+     {
+         let (mut tui, target) = setup_compact_tui();
+-        let ts = time::at_utc(time::Timespec::new(0, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+         tui.add_nick("test1", Some(ts), &target);
+-        let ts = time::at_utc(time::Timespec::new(60, 0));
++        let ts = time::OffsetDateTime::from_unix_timestamp(60).unwrap();
+         tui.add_nick("test2", Some(ts), &target);
+         tui.draw();
+ 
+@@ -490,7 +490,7 @@ fn test_compact_layout_activity_timestam
+ fn test_clear_timestamp_aligned() {
+     let (mut tui, target) = setup_aligned_tui();
+ 
+-    let ts = time::at_utc(time::Timespec::new(0, 0));
++    let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+     tui.add_nick("test1", Some(ts), &target);
+     tui.clear(&target);
+     tui.add_nick("test2", Some(ts), &target);
+@@ -512,7 +512,7 @@ fn test_clear_timestamp_aligned() {
+ fn test_clear_timestamp_compact() {
+     let (mut tui, target) = setup_compact_tui();
+ 
+-    let ts = time::at_utc(time::Timespec::new(0, 0));
++    let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+     tui.add_nick("test1", Some(ts), &target);
+     tui.clear(&target);
+     tui.add_nick("test2", Some(ts), &target);
+Index: rust-tiny-0.13.0/crates/libtiny_tui/src/tests/mod.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_tui/src/tests/mod.rs
++++ rust-tiny-0.13.0/crates/libtiny_tui/src/tests/mod.rs
+@@ -87,7 +87,7 @@ fn small_screen_1() {
+     tui.next_tab();
+ 
+     let target = MsgTarget::Chan { serv, chan };
+-    let ts = time::at_utc(time::Timespec::new(0, 0));
++    let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+     tui.add_nick("123456", Some(ts), &target);
+     tui.add_nick("abcdef", Some(ts), &target);
+ 
+@@ -136,7 +136,7 @@ fn small_screen_2() {
+     tui.next_tab();
+ 
+     let target = MsgTarget::Chan { serv, chan };
+-    let ts = time::at_utc(time::Timespec::new(0, 0));
++    let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+     tui.set_topic("Blah blah blah-", ts, serv, chan);
+ 
+     tui.draw();
+@@ -243,7 +243,7 @@ fn test_text_field_wrap() {
+ 
+     // Write some stuff
+     let target = MsgTarget::CurrentTab;
+-    let ts = time::empty_tm();
++    let ts = time::OffsetDateTime::UNIX_EPOCH;
+     tui.add_msg("test test test", ts, &target);
+ 
+     for _ in 0..37 {
+Index: rust-tiny-0.13.0/crates/libtiny_tui/src/tests/resize.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_tui/src/tests/resize.rs
++++ rust-tiny-0.13.0/crates/libtiny_tui/src/tests/resize.rs
+@@ -20,7 +20,8 @@ fn test_resize_recalc_scroll() {
+     tui.next_tab();
+ 
+     let target = MsgTarget::Chan { serv, chan };
+-    let ts = time::at_utc(time::Timespec::new(0, 0));
++
++    let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+     tui.add_privmsg(
+         "osa1",
+         "s 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 e",
+@@ -93,7 +94,7 @@ fn test_resize_scroll_stick_to_top() {
+     tui.next_tab();
+ 
+     let target = MsgTarget::Chan { serv, chan };
+-    let ts = time::at_utc(time::Timespec::new(0, 0));
++    let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+ 
+     for i in 0..15 {
+         tui.add_privmsg("osa1", &format!("line{}", i), ts, &target, false, false);
+@@ -155,7 +156,7 @@ fn test_resize_no_scroll_stay_on_bottom(
+     tui.next_tab();
+ 
+     let target = MsgTarget::Chan { serv, chan };
+-    let ts = time::at_utc(time::Timespec::new(0, 0));
++    let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+ 
+     for i in 0..15 {
+         tui.add_privmsg("osa1", &format!("line{}", i), ts, &target, false, false);
+@@ -230,7 +231,8 @@ fn test_resize() {
+     let server = "<server>";
+     tui.new_server_tab(server, None);
+ 
+-    let ts = time::empty_tm();
++
++    let ts = time::OffsetDateTime::UNIX_EPOCH;
+     let target = MsgTarget::CurrentTab;
+ 
+     let f = File::open("test/lipsum.txt").unwrap();
+@@ -259,7 +261,7 @@ fn test_resize_scroll_resize() {
+     tui.next_tab();
+ 
+     let target = MsgTarget::Chan { serv, chan };
+-    let ts = time::at_utc(time::Timespec::new(0, 0));
++    let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+ 
+     for i in 0..15 {
+         tui.add_privmsg(
+@@ -329,7 +331,7 @@ fn test_clear_resize_recalc_scroll() {
+     tui.next_tab();
+ 
+     let target = MsgTarget::Chan { serv, chan };
+-    let ts = time::at_utc(time::Timespec::new(0, 0));
++    let ts = time::OffsetDateTime::from_unix_timestamp(0).unwrap();
+     for _ in 0..6 {
+         tui.add_privmsg("osa1", &"1111 ".repeat(3), ts, &target, false, false);
+     }
+Index: rust-tiny-0.13.0/crates/libtiny_tui/src/messaging.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_tui/src/messaging.rs
++++ rust-tiny-0.13.0/crates/libtiny_tui/src/messaging.rs
+@@ -2,7 +2,7 @@ use termbox_simple::Termbox;
+ 
+ use std::convert::From;
+ 
+-use time::{self, Tm};
++use time;
+ 
+ use crate::config::Colors;
+ use crate::exit_dialogue::ExitDialogue;
+@@ -68,11 +68,11 @@ impl Timestamp {
+     }
+ }
+ 
+-impl From<Tm> for Timestamp {
+-    fn from(tm: Tm) -> Timestamp {
++impl From<time::OffsetDateTime> for Timestamp {
++    fn from(tm: time::OffsetDateTime) -> Timestamp {
+         Timestamp {
+-            hour: tm.tm_hour,
+-            min: tm.tm_min,
++            hour: tm.hour() as i32,
++            min: tm.minute() as i32,
+         }
+     }
+ }
+Index: rust-tiny-0.13.0/crates/term_input/src/lib.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/term_input/src/lib.rs
++++ rust-tiny-0.13.0/crates/term_input/src/lib.rs
+@@ -22,6 +22,8 @@ use tokio::io::unix::AsyncFd;
+ use tokio::io::Interest;
+ use tokio_stream::Stream;
+ 
++use std::os::fd::AsRawFd;
++
+ #[macro_use]
+ extern crate log;
+ 
+@@ -229,7 +231,9 @@ pub struct Input {
+ impl Drop for Input {
+     fn drop(&mut self) {
+         if let Some(old_flags) = self.old_stdin_flags.take() {
+-            if let Err(err) = fcntl(libc::STDIN_FILENO, FcntlArg::F_SETFL(old_flags)) {
++            // Criar um descritor que implementa AsFd
++            let stdin_fd = unsafe { std::os::fd::BorrowedFd::borrow_raw(libc::STDIN_FILENO) };
++            if let Err(err) = fcntl(stdin_fd.as_raw_fd(), FcntlArg::F_SETFL(old_flags)) {
+                 error!("Unable to restore stdin flags: {:?}", err);
+             }
+         }
+@@ -507,7 +511,9 @@ pub fn read_stdin(buf: &mut Vec<u8>) ->
+ /// Set `stdin` to non-blocking mode. Returns old `stdin` if we were able to change the flags. Does
+ /// not panic; errors are logged.
+ fn set_stdin_nonblocking() -> Option<OFlag> {
+-    let current_stdin_flags: OFlag = match fcntl(libc::STDIN_FILENO, FcntlArg::F_GETFL) {
++
++    let stdin_fd = unsafe { std::os::fd::BorrowedFd::borrow_raw(libc::STDIN_FILENO) };
++    let current_stdin_flags: OFlag = match fcntl(stdin_fd.as_raw_fd(), FcntlArg::F_GETFL) {
+         Err(err) => {
+             error!("Unable to read stdin flags: {:?}", err);
+             return None;
+@@ -524,7 +530,8 @@ fn set_stdin_nonblocking() -> Option<OFl
+     let mut new_stdin_flags = current_stdin_flags;
+     new_stdin_flags.set(OFlag::O_NONBLOCK, true);
+ 
+-    match fcntl(libc::STDIN_FILENO, FcntlArg::F_SETFL(new_stdin_flags)) {
++    let stdin_fd = unsafe { std::os::fd::BorrowedFd::borrow_raw(libc::STDIN_FILENO) };
++    match fcntl(stdin_fd.as_raw_fd(), FcntlArg::F_SETFL(new_stdin_flags)) {
+         Err(err) => {
+             // On Linux we don't really need to enable non-blocking mode so things should still
+             // work. On WSL things may or may not work.. see #269.
+Index: rust-tiny-0.13.0/crates/libtiny_tui/src/lib.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_tui/src/lib.rs
++++ rust-tiny-0.13.0/crates/libtiny_tui/src/lib.rs
+@@ -33,7 +33,6 @@ use std::cell::RefCell;
+ use std::path::PathBuf;
+ use std::rc::{Rc, Weak};
+ 
+-use time::Tm;
+ use tokio::select;
+ use tokio::signal::unix::{signal, SignalKind};
+ use tokio::sync::mpsc;
+@@ -240,30 +239,30 @@ impl TUI {
+     delegate!(close_chan_tab(serv_name: &str, chan: &ChanNameRef,));
+     delegate!(close_user_tab(serv_name: &str, nick: &str,));
+     delegate!(add_client_msg(msg: &str, target: &MsgTarget,));
+-    delegate!(add_msg(msg: &str, ts: Tm, target: &MsgTarget,));
+-    delegate!(add_err_msg(msg: &str, ts: Tm, target: &MsgTarget,));
++    delegate!(add_msg(msg: &str, ts: time::OffsetDateTime, target: &MsgTarget,));
++    delegate!(add_err_msg(msg: &str, ts: time::OffsetDateTime, target: &MsgTarget,));
+     delegate!(add_client_err_msg(msg: &str, target: &MsgTarget,));
+     delegate!(clear_nicks(serv_name: &str,));
+     delegate!(set_nick(serv_name: &str, new_nick: &str,));
+     delegate!(add_privmsg(
+         sender: &str,
+         msg: &str,
+-        ts: Tm,
++        ts: time::OffsetDateTime,
+         target: &MsgTarget,
+         highlight: bool,
+         is_action: bool,
+     ));
+-    delegate!(add_nick(nick: &str, ts: Option<Tm>, target: &MsgTarget,));
+-    delegate!(remove_nick(nick: &str, ts: Option<Tm>, target: &MsgTarget,));
++    delegate!(add_nick(nick: &str, ts: Option<time::OffsetDateTime>, target: &MsgTarget,));
++    delegate!(remove_nick(nick: &str, ts: Option<time::OffsetDateTime>, target: &MsgTarget,));
+     delegate!(rename_nick(
+         old_nick: &str,
+         new_nick: &str,
+-        ts: Tm,
++        ts: time::OffsetDateTime,
+         target: &MsgTarget,
+     ));
+     delegate!(set_topic(
+         topic: &str,
+-        ts: Tm,
++        ts: time::OffsetDateTime,
+         serv_name: &str,
+         chan_name: &ChanNameRef,
+     ));
+Index: rust-tiny-0.13.0/crates/libtiny_tui/src/tui.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_tui/src/tui.rs
++++ rust-tiny-0.13.0/crates/libtiny_tui/src/tui.rs
+@@ -11,7 +11,6 @@ use std::cmp::Ordering;
+ use std::collections::HashMap;
+ use std::path::PathBuf;
+ use std::str::{self, SplitWhitespace};
+-use time::Tm;
+ 
+ use crate::config::{parse_config, Colors, Config, Style, TabConfig, TabConfigs};
+ use crate::editor;
+@@ -1321,7 +1320,7 @@ impl TUI {
+         &mut self,
+         sender: &str,
+         msg: &str,
+-        ts: Tm,
++        ts: time::OffsetDateTime,
+         target: &MsgTarget,
+         highlight: bool,
+         is_action: bool,
+@@ -1345,7 +1344,7 @@ impl TUI {
+ 
+     /// A message without any explicit sender info. Useful for e.g. in server
+     /// and debug log tabs. Timestamped and logged.
+-    pub fn add_msg(&mut self, msg: &str, ts: Tm, target: &MsgTarget) {
++    pub fn add_msg(&mut self, msg: &str, ts: time::OffsetDateTime, target: &MsgTarget) {
+         self.apply_to_target(target, true, &mut |tab: &mut Tab, _| {
+             tab.widget.add_msg(msg, Timestamp::from(ts));
+         });
+@@ -1353,13 +1352,13 @@ impl TUI {
+ 
+     /// Error messages related with the protocol - e.g. can't join a channel,
+     /// nickname is in use etc. Timestamped and logged.
+-    pub(crate) fn add_err_msg(&mut self, msg: &str, ts: Tm, target: &MsgTarget) {
++    pub(crate) fn add_err_msg(&mut self, msg: &str, ts: time::OffsetDateTime, target: &MsgTarget) {
+         self.apply_to_target(target, true, &mut |tab: &mut Tab, _| {
+             tab.widget.add_err_msg(msg, Timestamp::from(ts));
+         });
+     }
+ 
+-    pub(crate) fn set_topic(&mut self, title: &str, ts: Tm, serv: &str, chan: &ChanNameRef) {
++    pub(crate) fn set_topic(&mut self, title: &str, ts: time::OffsetDateTime, serv: &str, chan: &ChanNameRef) {
+         let target = MsgTarget::Chan { serv, chan };
+         self.apply_to_target(&target, false, &mut |tab: &mut Tab, _| {
+             tab.widget.show_topic(title, Timestamp::from(ts));
+@@ -1373,7 +1372,7 @@ impl TUI {
+         });
+     }
+ 
+-    pub(crate) fn add_nick(&mut self, nick: &str, ts: Option<Tm>, target: &MsgTarget) {
++    pub(crate) fn add_nick(&mut self, nick: &str, ts: Option<time::OffsetDateTime>, target: &MsgTarget) {
+         let ignore = self
+             .get_tab_config(
+                 target.serv_name().unwrap_or_default(),
+@@ -1387,7 +1386,7 @@ impl TUI {
+         });
+     }
+ 
+-    pub(crate) fn remove_nick(&mut self, nick: &str, ts: Option<Tm>, target: &MsgTarget) {
++    pub(crate) fn remove_nick(&mut self, nick: &str, ts: Option<time::OffsetDateTime>, target: &MsgTarget) {
+         let ignore = self
+             .get_tab_config(
+                 target.serv_name().unwrap_or_default(),
+@@ -1405,7 +1404,7 @@ impl TUI {
+         &mut self,
+         old_nick: &str,
+         new_nick: &str,
+-        ts: Tm,
++        ts: time::OffsetDateTime,
+         target: &MsgTarget,
+     ) {
+         self.apply_to_target(target, false, &mut |tab: &mut Tab, _| {
+Index: rust-tiny-0.13.0/crates/libtiny_tui/benches/bench.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_tui/benches/bench.rs
++++ rust-tiny-0.13.0/crates/libtiny_tui/benches/bench.rs
+@@ -129,7 +129,7 @@ fn tui_resize(b: &mut Bencher) {
+     let server = "<server>";
+     tui.new_server_tab(server, None);
+ 
+-    let ts: Tm = time::empty_tm();
++    let ts: time::OffsetDateTime = time::empty_tm();
+     let target = MsgTarget::CurrentTab;
+ 
+     let f = File::open("test/lipsum.txt").unwrap();
+Index: rust-tiny-0.13.0/crates/tiny/src/ui.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/tiny/src/ui.rs
++++ rust-tiny-0.13.0/crates/tiny/src/ui.rs
+@@ -8,7 +8,6 @@ use libtiny_logger::Logger;
+ use libtiny_tui::TUI;
+ 
+ use libtiny_tui::config::TabConfig;
+-use time::Tm;
+ use tokio::sync::mpsc;
+ use tokio_stream::wrappers::ReceiverStream;
+ use tokio_stream::StreamExt;
+@@ -55,32 +54,32 @@ impl UI {
+     delegate!(close_chan_tab(serv: &str, chan: &ChanNameRef,));
+     delegate!(close_user_tab(serv: &str, nick: &str,));
+     delegate!(add_client_msg(msg: &str, target: &MsgTarget,));
+-    delegate!(add_msg(msg: &str, ts: Tm, target: &MsgTarget,));
++    delegate!(add_msg(msg: &str, ts: time::OffsetDateTime, target: &MsgTarget,));
+     delegate!(add_privmsg(
+         sender: &str,
+         msg: &str,
+-        ts: Tm,
++        ts: time::OffsetDateTime,
+         target: &MsgTarget,
+         highlight: bool,
+         is_action: bool,
+     ));
+-    delegate!(add_nick(nick: &str, ts: Option<Tm>, target: &MsgTarget,));
+-    delegate!(remove_nick(nick: &str, ts: Option<Tm>, target: &MsgTarget,));
++    delegate!(add_nick(nick: &str, ts: Option<time::OffsetDateTime>, target: &MsgTarget,));
++    delegate!(remove_nick(nick: &str, ts: Option<time::OffsetDateTime>, target: &MsgTarget,));
+     delegate!(rename_nick(
+         old_nick: &str,
+         new_nick: &str,
+-        ts: Tm,
++        ts: time::OffsetDateTime,
+         target: &MsgTarget,
+     ));
+     delegate!(set_topic(
+         topic: &str,
+-        ts: Tm,
++        ts: time::OffsetDateTime,
+         serv: &str,
+         chan: &ChanNameRef,
+     ));
+ 
+     delegate_ui!(draw());
+-    delegate_ui!(add_err_msg(msg: &str, ts: Tm, target: &MsgTarget,));
++    delegate_ui!(add_err_msg(msg: &str, ts: time::OffsetDateTime, target: &MsgTarget,));
+     delegate_ui!(add_client_err_msg(msg: &str, target: &MsgTarget,));
+     delegate_ui!(clear_nicks(serv: &str,));
+     delegate_ui!(set_nick(serv: &str, nick: &str,));
+@@ -197,7 +196,7 @@ pub(crate) fn send_msg(
+         }
+     };
+ 
+-    let ts = time::now();
++    let ts = time::OffsetDateTime::now_utc();
+     let extra_len = msg_target.len()
+         + if is_action {
+             9 // "\0x1ACTION \0x1".len()
+Index: rust-tiny-0.13.0/crates/libtiny_tui/examples/chat.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_tui/examples/chat.rs
++++ rust-tiny-0.13.0/crates/libtiny_tui/examples/chat.rs
+@@ -34,7 +34,7 @@ fn main() {
+         tui.new_chan_tab("debug", ChanNameRef::new("chan"));
+         tui.set_topic(
+             "This is channel topic",
+-            time::now(),
++            time::OffsetDateTime::now_utc(),
+             SERV,
+             ChanNameRef::new(CHAN),
+         );
+@@ -46,7 +46,7 @@ fn main() {
+             file.read_to_string(&mut text).unwrap();
+ 
+             for (line_idx, line) in text.lines().enumerate() {
+-                let now = time::now();
++                let now = time::OffsetDateTime::now_utc();
+                 let nick = format!("nick_{}", line_idx);
+                 tui.add_nick(&nick, Some(now), &chan_target);
+                 tui.add_privmsg(&nick, line, now, &chan_target, false, false);
+Index: rust-tiny-0.13.0/crates/libtiny_tui/examples/completion.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_tui/examples/completion.rs
++++ rust-tiny-0.13.0/crates/libtiny_tui/examples/completion.rs
+@@ -20,7 +20,7 @@ fn main() {
+ 
+         tui.add_msg(
+             "Loading word list for auto-completion ...",
+-            time::now(),
++            time::OffsetDateTime::now_utc(),
+             &debug_tab,
+         );
+         tui.draw();
+@@ -34,7 +34,7 @@ fn main() {
+             }
+         }
+ 
+-        tui.add_msg("Done.", time::now(), &debug_tab);
++        tui.add_msg("Done.", time::OffsetDateTime::now_utc(), &debug_tab);
+         tui.draw();
+     });
+ 
+Index: rust-tiny-0.13.0/crates/libtiny_tui/examples/bench.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_tui/examples/bench.rs
++++ rust-tiny-0.13.0/crates/libtiny_tui/examples/bench.rs
+@@ -49,7 +49,7 @@ fn run_bench() {
+ 
+ async fn bench_task(tui: TUI, lines: Vec<String>) {
+     let msg_target = MsgTarget::Server { serv: "mentions" };
+-    let time = time::now();
++    let time = time::OffsetDateTime::now_utc();
+ 
+     for line in &lines {
+         tui.add_privmsg("server", line, time, &msg_target, false, false);
+Index: rust-tiny-0.13.0/crates/tiny/src/debug_logging.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/tiny/src/debug_logging.rs
++++ rust-tiny-0.13.0/crates/tiny/src/debug_logging.rs
+@@ -9,78 +9,87 @@
+ //! - Filter syntax is unchanged (same as `env_logger` syntax).
+ //! - Log file is created when logging for the first time.
+ 
+-use env_logger::filter::{self, Filter};
+-use log::{Log, Record};
+-
+ use std::fs::{File, OpenOptions};
+ use std::io::Write;
+ use std::mem::replace;
+ use std::path::PathBuf;
+ use std::sync::Mutex;
+-
+ pub(crate) fn init(path: PathBuf) {
+-    let filter = filter::Builder::from_env("TINY_LOG").build();
++
++//    let filter = env_logger::Builder::from_env("TINY_LOG").build();
+     let sink = Mutex::new(LazyFile::new(path));
+ 
+-    log::set_max_level(filter.filter());
+-    log::set_boxed_logger(Box::new(Logger { sink, filter })).unwrap();
++    log::set_max_level(log::LevelFilter::max());
++    log::set_boxed_logger(Box::new(Logger { sink })).unwrap();
+ }
+ 
+ struct Logger {
+-    sink: Mutex<LazyFile>,
+-    filter: Filter,
++    sink: std::sync::Mutex<LazyFile>,
+ }
+ 
+-impl Log for Logger {
++impl log::Log for Logger {
+     fn enabled(&self, metadata: &log::Metadata) -> bool {
+-        self.filter.enabled(metadata)
++        // Aceitar todos os logs
++        metadata.level() <= log::max_level()
+     }
+ 
+-    fn log(&self, record: &Record) {
+-        if !self.filter.matches(record) {
++    fn log(&self, record: &log::Record) {
++        // Verificar nível do log
++        if !self.enabled(record.metadata()) {
+             return;
+         }
+ 
+-        self.sink.lock().unwrap().with_file(|file| {
+-            let _ = writeln!(
+-                file,
+-                "[{}] {} [{}:{}] {}",
+-                time::strftime("%F %T", &time::now()).unwrap(),
+-                record.level(),
+-                record.file().unwrap_or_default(),
+-                record.line().unwrap_or_default(),
+-                record.args()
+-            );
+-        });
++        if let Ok(mut file_guard) = self.sink.lock() {
++            if let LazyFile::Open(ref mut file) = *file_guard {
++                use std::io::Write;
++                let _ = writeln!(
++                    file,
++                    "[{}] {} [{}:{}] {}",
++
++                    time::OffsetDateTime::now_utc().format(&time::format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap()).unwrap(),
++                    record.level(),
++                    record.file().unwrap_or_default(),
++                    record.line().unwrap_or_default(),
++                    record.args()
++                );
++            }
++        }
+     }
+ 
+-    fn flush(&self) {}
++    fn flush(&self) {
++        if let Ok(mut guard) = self.sink.lock() {
++            if let LazyFile::Open(ref mut file) = *guard {
++                let _ = file.sync_all();
++            }
++        }
++    }
+ }
+ 
++#[allow(dead_code)]
+ enum LazyFile {
+-    NotOpen(PathBuf),
++    NotOpen(()),
+     Open(File),
+     Error,
+ }
+ 
+ impl LazyFile {
+-    fn new(path: PathBuf) -> Self {
+-        LazyFile::NotOpen(path)
++    fn new(_path: PathBuf) -> Self {
++        LazyFile::NotOpen(())
+     }
+-
++#[allow(dead_code)]
+     fn with_file<F>(&mut self, f: F)
+     where
+         F: Fn(&mut File),
+     {
+         let mut file = match replace(self, LazyFile::Error) {
+-            LazyFile::NotOpen(path) => {
+-                match OpenOptions::new().create(true).append(true).open(path) {
++            LazyFile::NotOpen(()) => {
++                match OpenOptions::new().create(true).append(true).open("/tmp/tiny.log") {
+                     Ok(mut file) => {
+                         // Same format used in libtiny_logger
+                         let _ = writeln!(
+                             file,
+                             "\n*** Logging started at {}\n",
+-                            time::strftime("%Y-%m-%d %H:%M:%S", &time::now()).unwrap()
++                            time::OffsetDateTime::now_utc().format(&time::format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap()).unwrap()
+                         );
+                         file
+                     }
+Index: rust-tiny-0.13.0/crates/libtiny_client/src/stream.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_client/src/stream.rs
++++ rust-tiny-0.13.0/crates/libtiny_client/src/stream.rs
+@@ -1,3 +1,4 @@
++use tokio_rustls::rustls::pki_types::{CertificateDer, PrivatePkcs8KeyDer};
+ use lazy_static::lazy_static;
+ use std::{
+     net::SocketAddr,
+@@ -39,34 +40,38 @@ lazy_static! {
+ #[cfg(feature = "tls-rustls")]
+ fn tls_connector(sasl: Option<&Vec<u8>>) -> tokio_rustls::TlsConnector {
+     use std::io::{Cursor, Seek, SeekFrom};
+-    use tokio_rustls::rustls::{Certificate, ClientConfig, PrivateKey, RootCertStore};
++    use tokio_rustls::rustls::{ClientConfig, RootCertStore};
+ 
+     let mut roots = RootCertStore::empty();
+     for cert in rustls_native_certs::load_native_certs().expect("could not load platform certs") {
+-        roots.add(&Certificate(cert.0)).unwrap();
++        roots.add(cert).unwrap();
++//        roots.add(CertificateDer::from(cert.0)).unwrap();
+     }
+ 
+     let builder = ClientConfig::builder()
+-        .with_safe_defaults()
+         .with_root_certificates(roots);
+ 
+     let config = if let Some(pem) = sasl {
+         let mut buf = Cursor::new(pem);
+         // extract certificate
+-        let cert = rustls_pemfile::certs(&mut buf)
+-            .expect("Could not parse PKCS8 PEM")
+-            .pop()
++        let certs = rustls_pemfile::certs(&mut buf).collect::<Result<Vec<_>, _>>()
++//        let certs = rustls_pemfile::certs(&mut buf)
++            .expect("Could not parse PKCS8 PEM");
++        let cert = certs.into_iter()
++            .next()
+             .expect("Cert PEM must have at least one cert");
+ 
+         // extract private key
+         buf.seek(SeekFrom::Start(0)).unwrap();
+-        let key = rustls_pemfile::pkcs8_private_keys(&mut buf)
+-            .expect("Could not parse PKCS8 PEM")
+-            .pop()
++        let keys = rustls_pemfile::pkcs8_private_keys(&mut buf).collect::<Result<Vec<_>, _>>()
++ //       let keys = rustls_pemfile::pkcs8_private_keys(&mut buf)
++            .expect("Could not parse PKCS8 PEM");
++        let key = keys.into_iter()
++            .next()
+             .expect("Cert PEM must have at least one private key");
+ 
+         builder
+-            .with_client_auth_cert(vec![Certificate(cert)], PrivateKey(key))
++            .with_client_auth_cert(vec![CertificateDer::from(cert)], PrivatePkcs8KeyDer::from(key).into())
+             .expect("Client auth cert")
+     } else {
+         builder.with_no_client_auth()
+@@ -131,15 +136,18 @@ impl Stream {
+         host_name: &str,
+         sasl: Option<&Vec<u8>>,
+     ) -> Result<Stream, StreamError> {
+-        use tokio_rustls::rustls::ServerName;
+-
++        use tokio_rustls::rustls::pki_types::ServerName;
+         let tcp_stream = TcpStream::connect(addr).await?;
+-        let name = ServerName::try_from(host_name).unwrap();
++        let name = ServerName::try_from(host_name.to_owned())
++            .map_err(|e| std::io::Error::new(
++                std::io::ErrorKind::InvalidInput,
++                format!("invalid server name: {}: {}", host_name, e)
++            ))?;
+         // If SASL EXTERNAL is enabled create a new TLS connector with client auth cert
+         let tls_stream = if sasl.is_some() {
+-            tls_connector(sasl).connect(name, tcp_stream).await?
++            tls_connector(sasl).connect(name.clone(), tcp_stream).await?
+         } else {
+-            TLS_CONNECTOR.connect(name, tcp_stream).await?
++            TLS_CONNECTOR.connect(name.clone(), tcp_stream).await?
+         };
+         Ok(Stream::TlsStream(tls_stream.into()))
+     }
+Index: rust-tiny-0.13.0/crates/tiny/src/conn.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/tiny/src/conn.rs
++++ rust-tiny-0.13.0/crates/tiny/src/conn.rs
+@@ -79,7 +79,7 @@ fn handle_conn_ev(ui: &UI, client: &dyn
+                     "Disconnected. Will try to reconnect in {} seconds.",
+                     libtiny_client::RECONNECT_SECS
+                 ),
+-                time::now(),
++                time::OffsetDateTime::now_utc(),
+                 &MsgTarget::AllServTabs { serv },
+             );
+             ui.clear_nicks(serv);
+@@ -87,7 +87,7 @@ fn handle_conn_ev(ui: &UI, client: &dyn
+         IoErr(err) => {
+             ui.add_err_msg(
+                 &format!("Connection error: {}", err),
+-                time::now(),
++                time::OffsetDateTime::now_utc(),
+                 &MsgTarget::AllServTabs {
+                     serv: client.get_serv_name(),
+                 },
+@@ -96,7 +96,7 @@ fn handle_conn_ev(ui: &UI, client: &dyn
+         ConnectionClosed => {
+             ui.add_err_msg(
+                 "Connection closed on the remote end",
+-                time::now(),
++                time::OffsetDateTime::now_utc(),
+                 &MsgTarget::AllServTabs {
+                     serv: client.get_serv_name(),
+                 },
+@@ -105,7 +105,7 @@ fn handle_conn_ev(ui: &UI, client: &dyn
+         TlsErr(err) => {
+             ui.add_err_msg(
+                 &format!("TLS error: {}", err),
+-                time::now(),
++                time::OffsetDateTime::now_utc(),
+                 &MsgTarget::AllServTabs {
+                     serv: client.get_serv_name(),
+                 },
+@@ -114,7 +114,7 @@ fn handle_conn_ev(ui: &UI, client: &dyn
+         CantResolveAddr => {
+             ui.add_err_msg(
+                 "Can't resolve address",
+-                time::now(),
++                time::OffsetDateTime::now_utc(),
+                 &MsgTarget::AllServTabs {
+                     serv: client.get_serv_name(),
+                 },
+@@ -129,7 +129,7 @@ fn handle_conn_ev(ui: &UI, client: &dyn
+         WireError(err) => {
+             ui.add_err_msg(
+                 &format!("Wire protocol error: {}", err),
+-                time::now(),
++                time::OffsetDateTime::now_utc(),
+                 &MsgTarget::Server {
+                     serv: client.get_serv_name(),
+                 },
+@@ -150,7 +150,7 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+     use wire::Pfx::*;
+ 
+     let wire::Msg { pfx, cmd } = msg;
+-    let ts = time::now();
++    let ts = time::OffsetDateTime::now_utc();
+     let serv = client.get_serv_name();
+     match cmd {
+         PRIVMSG {
+@@ -331,7 +331,7 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+                 ui.new_chan_tab(serv, &chan);
+             } else {
+                 let nick = wire::drop_nick_prefix(&nick);
+-                let ts = Some(time::now());
++                let ts = Some(time::OffsetDateTime::now_utc());
+                 ui.add_nick(nick, ts, &MsgTarget::Chan { serv, chan: &chan });
+                 // Also update the private message tab if it exists
+                 // Nothing will be shown if the user already known to be online by the tab
+@@ -357,7 +357,7 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+             if nick != client.get_nick() {
+                 ui.remove_nick(
+                     &nick,
+-                    Some(time::now()),
++                    Some(time::OffsetDateTime::now_utc()),
+                     &MsgTarget::Chan { serv, chan: &chan },
+                 );
+                 ui.set_tab_style(TabStyle::JoinOrPart, &MsgTarget::Chan { serv, chan: &chan })
+@@ -378,10 +378,10 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+             };
+ 
+             for chan in &chans {
+-                ui.remove_nick(nick, Some(time::now()), &MsgTarget::Chan { serv, chan });
++                ui.remove_nick(nick, Some(time::OffsetDateTime::now_utc()), &MsgTarget::Chan { serv, chan });
+             }
+             if ui.user_tab_exists(serv, nick) {
+-                ui.remove_nick(nick, Some(time::now()), &MsgTarget::User { serv, nick });
++                ui.remove_nick(nick, Some(time::OffsetDateTime::now_utc()), &MsgTarget::User { serv, nick });
+             }
+         }
+ 
+@@ -402,7 +402,7 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+                 ui.rename_nick(
+                     &old_nick,
+                     &nick,
+-                    time::now(),
++                    time::OffsetDateTime::now_utc(),
+                     &MsgTarget::Chan { serv, chan },
+                 );
+             }
+@@ -410,7 +410,7 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+                 ui.rename_nick(
+                     &old_nick,
+                     &nick,
+-                    time::now(),
++                    time::OffsetDateTime::now_utc(),
+                     &MsgTarget::User {
+                         serv,
+                         nick: &old_nick,
+@@ -426,7 +426,7 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+             if client.is_nick_accepted() {
+                 ui.add_err_msg(
+                     "Nickname is already in use",
+-                    time::now(),
++                    time::OffsetDateTime::now_utc(),
+                     &MsgTarget::AllServTabs { serv },
+                 );
+             }
+@@ -437,11 +437,11 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+         }
+ 
+         ERROR { msg } => {
+-            ui.add_err_msg(&msg, time::now(), &MsgTarget::AllServTabs { serv });
++            ui.add_err_msg(&msg, time::OffsetDateTime::now_utc(), &MsgTarget::AllServTabs { serv });
+         }
+ 
+         TOPIC { chan, topic } => {
+-            ui.set_topic(&topic, time::now(), serv, &chan);
++            ui.set_topic(&topic, time::OffsetDateTime::now_utc(), serv, &chan);
+         }
+ 
+         CAP {
+@@ -454,7 +454,7 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+                     let msg_target = MsgTarget::Server { serv };
+                     ui.add_err_msg(
+                         "Server rejected using SASL authenication capability",
+-                        time::now(),
++                        time::OffsetDateTime::now_utc(),
+                         &msg_target,
+                     );
+                 }
+@@ -464,7 +464,7 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+                     let msg_target = MsgTarget::Server { serv };
+                     ui.add_err_msg(
+                         "Server does not support SASL authenication",
+-                        time::now(),
++                        time::OffsetDateTime::now_utc(),
+                         &msg_target,
+                     );
+                 }
+@@ -492,17 +492,17 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+             ) && n_params == 2
+             {
+                 let msg = &params[1];
+-                ui.add_msg(msg, time::now(), &MsgTarget::Server { serv });
++                ui.add_msg(msg, time::OffsetDateTime::now_utc(), &MsgTarget::Server { serv });
+             } else if n == 4 // RPL_MYINFO
+                     || n == 5 // RPL_BOUNCE
+                     || (252..=254).contains(&n)
+             // RPL_LUSEROP, RPL_LUSERUNKNOWN, RPL_LUSERCHANNELS
+             {
+                 let msg = params.into_iter().collect::<Vec<String>>().join(" ");
+-                ui.add_msg(&msg, time::now(), &MsgTarget::Server { serv });
++                ui.add_msg(&msg, time::OffsetDateTime::now_utc(), &MsgTarget::Server { serv });
+             } else if (n == 265 || n == 266 || n == 250) && n_params > 0 {
+                 let msg = &params[n_params - 1];
+-                ui.add_msg(msg, time::now(), &MsgTarget::Server { serv });
++                ui.add_msg(msg, time::OffsetDateTime::now_utc(), &MsgTarget::Server { serv });
+             }
+             // RPL_TOPIC
+             else if n == 332 && (n_params == 3 || n_params == 2) {
+@@ -510,7 +510,7 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+                 // one being our nick).
+                 let chan = &params[n_params - 2];
+                 let topic = &params[n_params - 1];
+-                ui.set_topic(topic, time::now(), serv, ChanNameRef::new(chan));
++                ui.set_topic(topic, time::OffsetDateTime::now_utc(), serv, ChanNameRef::new(chan));
+             }
+             // RPL_NAMREPLY: List of users in a channel
+             else if n == 353 && n_params > 3 {
+@@ -552,7 +552,7 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+                         ui.add_privmsg(
+                             &msg_serv,
+                             &params.join(" "),
+-                            time::now(),
++                            time::OffsetDateTime::now_utc(),
+                             &msg_target,
+                             false,
+                             false,
+@@ -575,7 +575,7 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+                 ui.add_privmsg(
+                     &msg_serv,
+                     &params.join(" "),
+-                    time::now(),
++                    time::OffsetDateTime::now_utc(),
+                     &msg_target,
+                     false,
+                     false,
