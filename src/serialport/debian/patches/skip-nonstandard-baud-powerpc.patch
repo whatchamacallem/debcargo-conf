@@ -1,0 +1,15 @@
+The crate does not support nonstandard baud rates on powerpc, but the upstream
+tests don't take account of this.
+Index: rust-serialport-4.8.1/tests/test_tty.rs
+===================================================================
+--- rust-serialport-4.8.1.orig/tests/test_tty.rs
++++ rust-serialport-4.8.1/tests/test_tty.rs
+@@ -139,6 +139,8 @@ fn test_ttyport_set_standard_baud() {
+     any(
+         target_os = "ios",
+         all(target_os = "linux", target_env = "musl"),
++        target_arch="powerpc",
++        target_arch="powerpc64",
+         target_os = "macos"
+     ),
+     ignore
