@@ -1,0 +1,48 @@
+Description: Fixed spelling error
+Author: Josenilson Ferreira da Silva <nilsonfsilva@hotmail.com>
+Forwarded: https://github.com/osa1/tiny/pull/449
+Last-Update: 2025-10-10
+Index: rust-tiny-0.13.0/crates/tiny/src/config.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/tiny/src/config.rs
++++ rust-tiny-0.13.0/crates/tiny/src/config.rs
+@@ -154,7 +154,7 @@ impl<'de> Deserialize<'de> for PassOrCmd
+                     ))),
+                 },
+                 _ => Err(D::Error::custom(
+-                    "Expeted a 'cmd' key in password map with string value",
++                    "Expected a 'cmd' key in password map with string value",
+                 )),
+             },
+             _ => Err(D::Error::custom("Password field must be a string or map")),
+@@ -227,7 +227,7 @@ impl Config<PassOrCmd> {
+ 
+         if self.defaults.nicks.is_empty() {
+             errors.push(
+-                "Default nick list can't be empty, please add at least one defaut nick".to_owned(),
++                "Default nick list can't be empty, please add at least one default nick".to_owned(),
+             );
+         }
+ 
+Index: rust-tiny-0.13.0/crates/tiny/src/conn.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/tiny/src/conn.rs
++++ rust-tiny-0.13.0/crates/tiny/src/conn.rs
+@@ -453,7 +453,7 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+                 if params.iter().any(|cap| cap.as_str() == "sasl") {
+                     let msg_target = MsgTarget::Server { serv };
+                     ui.add_err_msg(
+-                        "Server rejected using SASL authenication capability",
++                        "Server rejected using SASL authentication capability",
+                         time::OffsetDateTime::now_utc(),
+                         &msg_target,
+                     );
+@@ -463,7 +463,7 @@ fn handle_irc_msg(ui: &UI, client: &dyn
+                 if !params.iter().any(|cap| cap.as_str() == "sasl") {
+                     let msg_target = MsgTarget::Server { serv };
+                     ui.add_err_msg(
+-                        "Server does not support SASL authenication",
++                        "Server does not support SASL authentication",
+                         time::OffsetDateTime::now_utc(),
+                         &msg_target,
+                     );

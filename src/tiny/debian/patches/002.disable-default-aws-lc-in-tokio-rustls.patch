@@ -1,0 +1,16 @@
+Description: Disables the default AWS-LC backend and
+ forces the use of the Ring backend in the tokio-rustls crate
+Author: Josenilson Ferreira da Silva <nilsonfsilva@hotmail.com>
+Forwarded: not-needed
+Last-Update: 2025-10-10
+Index: rust-tiny-0.13.0/crates/libtiny_client/Cargo.toml
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_client/Cargo.toml
++++ rust-tiny-0.13.0/crates/libtiny_client/Cargo.toml
+@@ -22,5 +22,5 @@ rustls-native-certs = { version = ">=0.6
+ rustls-pemfile = { version = ">=1.0.3", optional = true }
+ tokio = { version = "1.17", default-features = false, features = ["net", "rt", "io-util", "macros"] }
+ tokio-native-tls = { version = "0.3", optional = true }
+-tokio-rustls = { version = "0.24", optional = true }
++tokio-rustls = { version = ">=0.24", optional = true, default-features = false, features = ["ring", "logging", "tls12"] }
+ tokio-stream = { version = "0.1" }

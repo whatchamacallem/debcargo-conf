@@ -1,0 +1,38 @@
+Description: Removed dependency not yet present in Debian
+Author: Josenilson Ferreira da Silva <nilsonfsilva@hotmail.com>
+Forwarded: not-needed
+Last-Update: 2025-10-10
+Index: rust-tiny-0.13.0/crates/tiny/build.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/tiny/build.rs
++++ rust-tiny-0.13.0/crates/tiny/build.rs
+@@ -1,4 +1 @@
+-fn main() {
+-    let hash = rustc_tools_util::get_commit_hash().unwrap_or_default();
+-    println!("cargo:rustc-env=GIT_HASH={}", hash);
+-}
++fn main() {}
+Index: rust-tiny-0.13.0/crates/tiny/src/cli.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/tiny/src/cli.rs
++++ rust-tiny-0.13.0/crates/tiny/src/cli.rs
+@@ -64,7 +64,7 @@ pub(crate) fn parse() -> Args {
+ 
+ fn print_version() {
+     let crate_version = env!("CARGO_PKG_VERSION");
+-    let commit_hash = env!("GIT_HASH");
++    let commit_hash = option_env!("GIT_HASH").unwrap_or("unknown");
+     println!("tiny {crate_version} ({commit_hash})");
+ }
+ 
+Index: rust-tiny-0.13.0/crates/tiny/Cargo.toml
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/tiny/Cargo.toml
++++ rust-tiny-0.13.0/crates/tiny/Cargo.toml
+@@ -38,6 +38,3 @@ rustls-native-certs = ">=0.7"
+ [dev-dependencies]
+ term_input = { path = "../term_input" }
+ termbox_simple = { path = "../termbox" }
+-
+-[build-dependencies]
+-rustc_tools_util = ">=0.2"

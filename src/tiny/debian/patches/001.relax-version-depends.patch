@@ -1,0 +1,172 @@
+Description: Relaxation of dependencies for biuil package
+Author: Josenilson Ferreira da Silva <nilsonfsilva@hotmail.com>
+Forwarded: not-needed
+Last-Update: 2025-10-10
+Index: rust-tiny-0.13.0/crates/libtiny_client/Cargo.toml
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_client/Cargo.toml
++++ rust-tiny-0.13.0/crates/libtiny_client/Cargo.toml
+@@ -11,15 +11,15 @@ tls-native = ["native-tls", "tokio-nativ
+ tls-rustls = ["rustls-native-certs", "tokio-rustls", "rustls-pemfile"]
+ 
+ [dependencies]
+-base64 = "0.21"
++base64 = ">=0.21"
+ futures-util = { version = "0.3", default-features = false }
+ lazy_static = "1.4"
+ libtiny_common = { path = "../libtiny_common" }
+ libtiny_wire = { path = "../libtiny_wire" }
+ log = "0.4"
+ native-tls = { version = "0.2", optional = true }
+-rustls-native-certs = { version = "0.6", optional = true }
+-rustls-pemfile = { version = "1.0.3", optional = true }
++rustls-native-certs = { version = ">=0.6", optional = true }
++rustls-pemfile = { version = ">=1.0.3", optional = true }
+ tokio = { version = "1.17", default-features = false, features = ["net", "rt", "io-util", "macros"] }
+ tokio-native-tls = { version = "0.3", optional = true }
+ tokio-rustls = { version = "0.24", optional = true }
+Index: rust-tiny-0.13.0/crates/libtiny_logger/Cargo.toml
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_logger/Cargo.toml
++++ rust-tiny-0.13.0/crates/libtiny_logger/Cargo.toml
+@@ -9,4 +9,4 @@ edition = "2021"
+ libtiny_common = { path = "../libtiny_common" }
+ libtiny_wire = { path = "../libtiny_wire" }
+ log = "0.4"
+-time = "0.1"
++time = { version = "0.3", features = ["macros", "formatting", "parsing"] }
+Index: rust-tiny-0.13.0/crates/libtiny_tui/Cargo.toml
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_tui/Cargo.toml
++++ rust-tiny-0.13.0/crates/libtiny_tui/Cargo.toml
+@@ -19,16 +19,16 @@ libtiny_wire = { path = "../libtiny_wire
+ log = "0.4"
+ notify-rust = { version = "4.11", optional = true, default-features = false, features = ["d"] }
+ serde = { version = "1.0", features = ["derive"] }
+-serde_yaml = "0.8"
++serde_yaml = ">=0.8"
+ tempfile = "3.1"
+ term_input = { path = "../term_input" }
+ termbox_simple = { path = "../termbox" }
+-time = "0.1"
++time = ">=0.1"
+ tokio = { version = "1.17", default-features = false, features = ["signal", "macros"] }
+ tokio-stream = { version = "0.1", features = ["signal"] }
+-unicode-width = "0.1"
++unicode-width = "0.2"
+ 
+ [dev-dependencies]
+ bencher = "0.1"
+ libc = "0.2"
+-mio = "0.8"
++mio = ">=0.8"
+Index: rust-tiny-0.13.0/crates/term_input/Cargo.toml
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/term_input/Cargo.toml
++++ rust-tiny-0.13.0/crates/term_input/Cargo.toml
+@@ -10,8 +10,8 @@ edition = "2021"
+ [dependencies]
+ libc = "0.2"
+ log = "0.4"
+-mio = "0.8"
+-nix = "0.26"
++mio = ">=0.8"
++nix = { version = "0.29", features = ["fs"] }
+ term_input_macros = { path = "../term_input_macros" }
+ tokio = { version = "1.17", default-features = false, features = ["net", "rt"] }
+ tokio-stream = "0.1"
+Index: rust-tiny-0.13.0/crates/termbox/Cargo.toml
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/termbox/Cargo.toml
++++ rust-tiny-0.13.0/crates/termbox/Cargo.toml
+@@ -10,10 +10,10 @@ edition = "2021"
+ [dependencies]
+ libc = "0.2"
+ termion = "1.5"
+-unicode-width = "0.1"
++unicode-width = "0.2"
+ 
+ [dev-dependencies]
+-mio = "0.8"
++mio = ">=0.8"
+ term_input = { path = "../term_input" }
+ tokio = { version = "1.17", default-features = false, features = [] }
+ tokio-stream = "0.1"
+Index: rust-tiny-0.13.0/crates/tiny/Cargo.toml
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/tiny/Cargo.toml
++++ rust-tiny-0.13.0/crates/tiny/Cargo.toml
+@@ -16,8 +16,8 @@ desktop-notifications = ["libtiny_tui/de
+ desktop-notifications-static-linking = ["libtiny_tui/desktop-notifications", "libtiny_tui/desktop-notifications-static-linking"]
+ 
+ [dependencies]
+-dirs = "4.0"
+-env_logger = { version = "0.9", default-features = false }
++dirs = ">=4.0"
++env_logger = { version = ">=0.9", default-features = false }
+ libtiny_client = { path = "../libtiny_client", default-features = false }
+ libtiny_common = { path = "../libtiny_common" }
+ libtiny_logger = { path = "../libtiny_logger" }
+@@ -25,15 +25,19 @@ libtiny_tui = { path = "../libtiny_tui",
+ libtiny_wire = { path = "../libtiny_wire" }
+ log = "0.4"
+ serde = { version = "1.0.196", features = ["derive"] }
+-serde_yaml = "0.8"
++serde_yaml = ">=0.8"
+ shell-words = "1.1.0"
+-time = "0.1"
++time = ">=0.1"
+ tokio = { version = "1.36", default-features = false, features = [] }
+ tokio-stream = { version = "0.1", features = [] }
+ 
++rustls = ">=0.23"
++tokio-rustls = ">=0.26"
++rustls-native-certs = ">=0.7"
++
+ [dev-dependencies]
+ term_input = { path = "../term_input" }
+ termbox_simple = { path = "../termbox" }
+ 
+ [build-dependencies]
+-rustc_tools_util = "0.2"
++rustc_tools_util = ">=0.2"
+Index: rust-tiny-0.13.0/crates/libtiny_logger/src/lib.rs
+===================================================================
+--- rust-tiny-0.13.0.orig/crates/libtiny_logger/src/lib.rs
++++ rust-tiny-0.13.0/crates/libtiny_logger/src/lib.rs
+@@ -6,7 +6,7 @@ use std::io;
+ use std::io::Write;
+ use std::path::{Path, PathBuf};
+ use std::rc::Rc;
+-use time::Tm;
++//use time::Tm;
+ 
+ use libtiny_common::{ChanName, ChanNameRef, MsgTarget};
+ use libtiny_wire::formatting::remove_irc_control_chars;
+@@ -105,7 +105,7 @@ fn print_header(fd: &mut File) -> io::Re
+     writeln!(
+         fd,
+         "*** Logging started at {}",
+-        time::strftime("%Y-%m-%d %H:%M:%S", &time::now()).unwrap()
++        time::OffsetDateTime::now_utc().format(&time::format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap()).unwrap()
+     )?;
+     writeln!(fd)
+ }
+@@ -115,7 +115,7 @@ fn print_footer(fd: &mut File) -> io::Re
+     writeln!(
+         fd,
+         "*** Logging ended at {}",
+-        time::strftime("%Y-%m-%d %H:%M:%S", &time::now()).unwrap()
++        time::OffsetDateTime::now_utc().format(&time::format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap()).unwrap()
+     )?;
+     writeln!(fd)
+ }
+@@ -452,7 +452,7 @@ impl LoggerInner {
+ }
+ 
+ fn now() -> String {
+-    time::strftime("%H:%M:%S", &time::now()).unwrap()
++    time::OffsetDateTime::now_utc().format(&time::format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap()).unwrap()
+ }
+ 
+ fn strf(tm: &Tm) -> String {
