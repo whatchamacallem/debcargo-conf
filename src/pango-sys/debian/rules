@@ -6,14 +6,11 @@
 # regenerating the source code
 # the xmlstarlet fixes are taken from upstream here: https://github.com/gtk-rs/gir-files/blob/master/fix.sh
 execute_before_dh_auto_build:
-	cp /usr/share/gir-1.0/GLib-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GModule-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GObject-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Pango-1.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Gio-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/HarfBuzz-0.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/freetype2-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/cairo-1.0.gir $(CURDIR)
+	deb-gir-tool find \
+		--target-directory=$(CURDIR) \
+		--verbose \
+		--with-dependencies \
+		Pango-1.0
 	xmlstarlet ed -L \
 	-d '///_:alias[@name="Int32"]' \
 	freetype2-2.0.gir
