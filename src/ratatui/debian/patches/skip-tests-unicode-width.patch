@@ -1,17 +1,15 @@
-Index: ratatui/src/backend/test.rs
-===================================================================
---- ratatui.orig/src/backend/test.rs
-+++ ratatui/src/backend/test.rs
-@@ -384,7 +384,7 @@ mod tests {
+--- a/src/backend/test.rs
++++ b/src/backend/test.rs
+@@ -477,7 +477,7 @@
          assert_eq!(buffer_view(&buffer), "\"aaaa\"\n\"aaaa\"\n");
      }
  
 -    #[test]
 +    /*#[test]
      fn buffer_view_with_overwrites() {
-         let multi_byte_char = "👨‍👩‍👧‍👦"; // renders 8 wide
+         let multi_byte_char = "👨‍👩‍👧‍👦"; // renders 2 wide
          let buffer = Buffer::with_lines([multi_byte_char]);
-@@ -395,7 +395,7 @@ mod tests {
+@@ -488,7 +488,7 @@
  "#,
              )
          );
@@ -20,28 +18,25 @@ Index: ratatui/src/backend/test.rs
  
      #[test]
      fn buffer() {
-Index: ratatui/src/buffer/buffer.rs
-===================================================================
---- ratatui.orig/src/buffer/buffer.rs
-+++ ratatui/src/buffer/buffer.rs
-@@ -1215,10 +1215,10 @@ mod tests {
+--- a/src/buffer/buffer.rs
++++ b/src/buffer/buffer.rs
+@@ -1244,11 +1244,11 @@
      // Technically this is a (brown) bear, a zero-width joiner and a snowflake
      // As it is joined its a single emoji and should therefore have a width of 2.
-     // It's correctly detected as a single grapheme but it's width is 4 for some reason
--    #[case::polarbear("🐻‍❄️", "🐻‍❄️xxx")]
-+    //#[case::polarbear("🐻‍❄️", "🐻‍❄️xxx")]
+     // Prior to unicode-width 0.2, this was incorrectly detected as width 4 for some reason
+-    #[case::polarbear("🐻‍❄️", "🐻‍❄️xxxxx")]
++    //#[case::polarbear("🐻‍❄️", "🐻‍❄️xxxxx")]
      // Technically this is an eye, a zero-width joiner and a speech bubble
      // Both eye and speech bubble include a 'display as emoji' variation selector
--    #[case::eye_speechbubble("👁️‍🗨️", "👁️‍🗨️xxx")]
-+    //#[case::eye_speechbubble("👁️‍🗨️", "👁️‍🗨️xxx")]
+     // Prior to unicode-width 0.2, this was incorrectly detected as width 4 for some reason
+-    #[case::eye_speechbubble("👁️‍🗨️", "👁️‍🗨️xxxxx")]
++    //#[case::eye_speechbubble("👁️‍🗨️", "👁️‍🗨️xxxxx")]
      fn renders_emoji(#[case] input: &str, #[case] expected: &str) {
          use unicode_width::UnicodeWidthChar;
  
-Index: ratatui/src/text/span.rs
-===================================================================
---- ratatui.orig/src/text/span.rs
-+++ ratatui/src/text/span.rs
-@@ -570,7 +570,7 @@ mod tests {
+--- a/src/text/span.rs
++++ b/src/text/span.rs
+@@ -625,7 +625,7 @@
          assert_eq!(Span::raw("test").width(), 4);
          assert_eq!(Span::raw("test content").width(), 12);
          // Needs reconsideration: https://github.com/ratatui/ratatui/issues/1271
