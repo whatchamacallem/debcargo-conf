@@ -1,16 +1,16 @@
 Description: Crate time API update from v0.1 to v0.3
 Author: Josenilson Ferreira da Silva <nilsonfsilva@hotmail.com>
-Forwarded: not-needed
+Forwarded: https://github.com/osa1/tiny/pull/452
 Last-Update: 2025-10-10
-Index: rust-tiny-0.13.0/crates/libtiny_logger/src/lib.rs
+Index: rust-tiny/crates/libtiny_logger/src/lib.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/libtiny_logger/src/lib.rs
-+++ rust-tiny-0.13.0/crates/libtiny_logger/src/lib.rs
+--- rust-tiny.orig/crates/libtiny_logger/src/lib.rs
++++ rust-tiny/crates/libtiny_logger/src/lib.rs
 @@ -6,7 +6,7 @@ use std::io;
  use std::io::Write;
  use std::path::{Path, PathBuf};
  use std::rc::Rc;
--//use time::Tm;
+-use time::Tm;
 +use time::OffsetDateTime;
  
  use libtiny_common::{ChanName, ChanNameRef, MsgTarget};
@@ -48,6 +48,24 @@ Index: rust-tiny-0.13.0/crates/libtiny_logger/src/lib.rs
          serv: &str,
          chan: &ChanNameRef,
      ));
+@@ -105,7 +105,7 @@ fn print_header(fd: &mut File) -> io::Re
+     writeln!(
+         fd,
+         "*** Logging started at {}",
+-        time::strftime("%Y-%m-%d %H:%M:%S", &time::now()).unwrap()
++        time::OffsetDateTime::now_utc().format(&time::format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap()).unwrap()
+     )?;
+     writeln!(fd)
+ }
+@@ -115,7 +115,7 @@ fn print_footer(fd: &mut File) -> io::Re
+     writeln!(
+         fd,
+         "*** Logging ended at {}",
+-        time::strftime("%Y-%m-%d %H:%M:%S", &time::now()).unwrap()
++        time::OffsetDateTime::now_utc().format(&time::format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap()).unwrap()
+     )?;
+     writeln!(fd)
+ }
 @@ -292,7 +292,7 @@ impl LoggerInner {
          });
      }
@@ -102,8 +120,12 @@ Index: rust-tiny-0.13.0/crates/libtiny_logger/src/lib.rs
          let target = MsgTarget::Chan { serv, chan };
          self.apply_to_target(&target, |fd: &mut File, report_err: &dyn Fn(String)| {
              report_io_err!(
-@@ -455,6 +455,6 @@ fn now() -> String {
-     time::OffsetDateTime::now_utc().format(&time::format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap()).unwrap()
+@@ -452,9 +452,9 @@ impl LoggerInner {
+ }
+ 
+ fn now() -> String {
+-    time::strftime("%H:%M:%S", &time::now()).unwrap()
++    time::OffsetDateTime::now_utc().format(&time::format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap()).unwrap()
  }
  
 -fn strf(tm: &Tm) -> String {
@@ -111,10 +133,10 @@ Index: rust-tiny-0.13.0/crates/libtiny_logger/src/lib.rs
 +fn strf(tm: &OffsetDateTime) -> String {
 +        tm.format(&time::format_description::parse("[hour]:[minute]:[second]").unwrap()).unwrap()
  }
-Index: rust-tiny-0.13.0/crates/libtiny_tui/src/config.rs
+Index: rust-tiny/crates/libtiny_tui/src/config.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/libtiny_tui/src/config.rs
-+++ rust-tiny-0.13.0/crates/libtiny_tui/src/config.rs
+--- rust-tiny.orig/crates/libtiny_tui/src/config.rs
++++ rust-tiny/crates/libtiny_tui/src/config.rs
 @@ -493,7 +493,7 @@ pub(crate) fn parse_config(config_path:
      // tiny creates a config file with the defaults when it can't find one, but the config file can
      // be deleted before a `/reload`.
@@ -124,10 +146,10 @@ Index: rust-tiny-0.13.0/crates/libtiny_tui/src/config.rs
              "Can't read config file '{}': {}",
              config_path.to_string_lossy(),
              err
-Index: rust-tiny-0.13.0/crates/libtiny_tui/src/tests/layout.rs
+Index: rust-tiny/crates/libtiny_tui/src/tests/layout.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/libtiny_tui/src/tests/layout.rs
-+++ rust-tiny-0.13.0/crates/libtiny_tui/src/tests/layout.rs
+--- rust-tiny.orig/crates/libtiny_tui/src/tests/layout.rs
++++ rust-tiny/crates/libtiny_tui/src/tests/layout.rs
 @@ -18,7 +18,7 @@ fn test_join_part_overflow() {
      tui.next_tab(); // server -> channel
  
@@ -344,10 +366,10 @@ Index: rust-tiny-0.13.0/crates/libtiny_tui/src/tests/layout.rs
      tui.add_nick("test1", Some(ts), &target);
      tui.clear(&target);
      tui.add_nick("test2", Some(ts), &target);
-Index: rust-tiny-0.13.0/crates/libtiny_tui/src/tests/mod.rs
+Index: rust-tiny/crates/libtiny_tui/src/tests/mod.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/libtiny_tui/src/tests/mod.rs
-+++ rust-tiny-0.13.0/crates/libtiny_tui/src/tests/mod.rs
+--- rust-tiny.orig/crates/libtiny_tui/src/tests/mod.rs
++++ rust-tiny/crates/libtiny_tui/src/tests/mod.rs
 @@ -87,7 +87,7 @@ fn small_screen_1() {
      tui.next_tab();
  
@@ -375,10 +397,10 @@ Index: rust-tiny-0.13.0/crates/libtiny_tui/src/tests/mod.rs
      tui.add_msg("test test test", ts, &target);
  
      for _ in 0..37 {
-Index: rust-tiny-0.13.0/crates/libtiny_tui/src/tests/resize.rs
+Index: rust-tiny/crates/libtiny_tui/src/tests/resize.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/libtiny_tui/src/tests/resize.rs
-+++ rust-tiny-0.13.0/crates/libtiny_tui/src/tests/resize.rs
+--- rust-tiny.orig/crates/libtiny_tui/src/tests/resize.rs
++++ rust-tiny/crates/libtiny_tui/src/tests/resize.rs
 @@ -20,7 +20,8 @@ fn test_resize_recalc_scroll() {
      tui.next_tab();
  
@@ -435,10 +457,10 @@ Index: rust-tiny-0.13.0/crates/libtiny_tui/src/tests/resize.rs
      for _ in 0..6 {
          tui.add_privmsg("osa1", &"1111 ".repeat(3), ts, &target, false, false);
      }
-Index: rust-tiny-0.13.0/crates/libtiny_tui/src/messaging.rs
+Index: rust-tiny/crates/libtiny_tui/src/messaging.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/libtiny_tui/src/messaging.rs
-+++ rust-tiny-0.13.0/crates/libtiny_tui/src/messaging.rs
+--- rust-tiny.orig/crates/libtiny_tui/src/messaging.rs
++++ rust-tiny/crates/libtiny_tui/src/messaging.rs
 @@ -2,7 +2,7 @@ use termbox_simple::Termbox;
  
  use std::convert::From;
@@ -464,10 +486,10 @@ Index: rust-tiny-0.13.0/crates/libtiny_tui/src/messaging.rs
          }
      }
  }
-Index: rust-tiny-0.13.0/crates/term_input/src/lib.rs
+Index: rust-tiny/crates/term_input/src/lib.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/term_input/src/lib.rs
-+++ rust-tiny-0.13.0/crates/term_input/src/lib.rs
+--- rust-tiny.orig/crates/term_input/src/lib.rs
++++ rust-tiny/crates/term_input/src/lib.rs
 @@ -22,6 +22,8 @@ use tokio::io::unix::AsyncFd;
  use tokio::io::Interest;
  use tokio_stream::Stream;
@@ -509,10 +531,10 @@ Index: rust-tiny-0.13.0/crates/term_input/src/lib.rs
          Err(err) => {
              // On Linux we don't really need to enable non-blocking mode so things should still
              // work. On WSL things may or may not work.. see #269.
-Index: rust-tiny-0.13.0/crates/libtiny_tui/src/lib.rs
+Index: rust-tiny/crates/libtiny_tui/src/lib.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/libtiny_tui/src/lib.rs
-+++ rust-tiny-0.13.0/crates/libtiny_tui/src/lib.rs
+--- rust-tiny.orig/crates/libtiny_tui/src/lib.rs
++++ rust-tiny/crates/libtiny_tui/src/lib.rs
 @@ -33,7 +33,6 @@ use std::cell::RefCell;
  use std::path::PathBuf;
  use std::rc::{Rc, Weak};
@@ -559,10 +581,10 @@ Index: rust-tiny-0.13.0/crates/libtiny_tui/src/lib.rs
          serv_name: &str,
          chan_name: &ChanNameRef,
      ));
-Index: rust-tiny-0.13.0/crates/libtiny_tui/src/tui.rs
+Index: rust-tiny/crates/libtiny_tui/src/tui.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/libtiny_tui/src/tui.rs
-+++ rust-tiny-0.13.0/crates/libtiny_tui/src/tui.rs
+--- rust-tiny.orig/crates/libtiny_tui/src/tui.rs
++++ rust-tiny/crates/libtiny_tui/src/tui.rs
 @@ -11,7 +11,6 @@ use std::cmp::Ordering;
  use std::collections::HashMap;
  use std::path::PathBuf;
@@ -632,10 +654,10 @@ Index: rust-tiny-0.13.0/crates/libtiny_tui/src/tui.rs
          target: &MsgTarget,
      ) {
          self.apply_to_target(target, false, &mut |tab: &mut Tab, _| {
-Index: rust-tiny-0.13.0/crates/libtiny_tui/benches/bench.rs
+Index: rust-tiny/crates/libtiny_tui/benches/bench.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/libtiny_tui/benches/bench.rs
-+++ rust-tiny-0.13.0/crates/libtiny_tui/benches/bench.rs
+--- rust-tiny.orig/crates/libtiny_tui/benches/bench.rs
++++ rust-tiny/crates/libtiny_tui/benches/bench.rs
 @@ -129,7 +129,7 @@ fn tui_resize(b: &mut Bencher) {
      let server = "<server>";
      tui.new_server_tab(server, None);
@@ -645,10 +667,10 @@ Index: rust-tiny-0.13.0/crates/libtiny_tui/benches/bench.rs
      let target = MsgTarget::CurrentTab;
  
      let f = File::open("test/lipsum.txt").unwrap();
-Index: rust-tiny-0.13.0/crates/tiny/src/ui.rs
+Index: rust-tiny/crates/tiny/src/ui.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/tiny/src/ui.rs
-+++ rust-tiny-0.13.0/crates/tiny/src/ui.rs
+--- rust-tiny.orig/crates/tiny/src/ui.rs
++++ rust-tiny/crates/tiny/src/ui.rs
 @@ -8,7 +8,6 @@ use libtiny_logger::Logger;
  use libtiny_tui::TUI;
  
@@ -706,10 +728,10 @@ Index: rust-tiny-0.13.0/crates/tiny/src/ui.rs
      let extra_len = msg_target.len()
          + if is_action {
              9 // "\0x1ACTION \0x1".len()
-Index: rust-tiny-0.13.0/crates/libtiny_tui/examples/chat.rs
+Index: rust-tiny/crates/libtiny_tui/examples/chat.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/libtiny_tui/examples/chat.rs
-+++ rust-tiny-0.13.0/crates/libtiny_tui/examples/chat.rs
+--- rust-tiny.orig/crates/libtiny_tui/examples/chat.rs
++++ rust-tiny/crates/libtiny_tui/examples/chat.rs
 @@ -34,7 +34,7 @@ fn main() {
          tui.new_chan_tab("debug", ChanNameRef::new("chan"));
          tui.set_topic(
@@ -728,10 +750,10 @@ Index: rust-tiny-0.13.0/crates/libtiny_tui/examples/chat.rs
                  let nick = format!("nick_{}", line_idx);
                  tui.add_nick(&nick, Some(now), &chan_target);
                  tui.add_privmsg(&nick, line, now, &chan_target, false, false);
-Index: rust-tiny-0.13.0/crates/libtiny_tui/examples/completion.rs
+Index: rust-tiny/crates/libtiny_tui/examples/completion.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/libtiny_tui/examples/completion.rs
-+++ rust-tiny-0.13.0/crates/libtiny_tui/examples/completion.rs
+--- rust-tiny.orig/crates/libtiny_tui/examples/completion.rs
++++ rust-tiny/crates/libtiny_tui/examples/completion.rs
 @@ -20,7 +20,7 @@ fn main() {
  
          tui.add_msg(
@@ -750,10 +772,10 @@ Index: rust-tiny-0.13.0/crates/libtiny_tui/examples/completion.rs
          tui.draw();
      });
  
-Index: rust-tiny-0.13.0/crates/libtiny_tui/examples/bench.rs
+Index: rust-tiny/crates/libtiny_tui/examples/bench.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/libtiny_tui/examples/bench.rs
-+++ rust-tiny-0.13.0/crates/libtiny_tui/examples/bench.rs
+--- rust-tiny.orig/crates/libtiny_tui/examples/bench.rs
++++ rust-tiny/crates/libtiny_tui/examples/bench.rs
 @@ -49,7 +49,7 @@ fn run_bench() {
  
  async fn bench_task(tui: TUI, lines: Vec<String>) {
@@ -763,10 +785,10 @@ Index: rust-tiny-0.13.0/crates/libtiny_tui/examples/bench.rs
  
      for line in &lines {
          tui.add_privmsg("server", line, time, &msg_target, false, false);
-Index: rust-tiny-0.13.0/crates/tiny/src/debug_logging.rs
+Index: rust-tiny/crates/tiny/src/debug_logging.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/tiny/src/debug_logging.rs
-+++ rust-tiny-0.13.0/crates/tiny/src/debug_logging.rs
+--- rust-tiny.orig/crates/tiny/src/debug_logging.rs
++++ rust-tiny/crates/tiny/src/debug_logging.rs
 @@ -9,78 +9,87 @@
  //! - Filter syntax is unchanged (same as `env_logger` syntax).
  //! - Log file is created when logging for the first time.
@@ -887,10 +909,10 @@ Index: rust-tiny-0.13.0/crates/tiny/src/debug_logging.rs
                          );
                          file
                      }
-Index: rust-tiny-0.13.0/crates/libtiny_client/src/stream.rs
+Index: rust-tiny/crates/libtiny_client/src/stream.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/libtiny_client/src/stream.rs
-+++ rust-tiny-0.13.0/crates/libtiny_client/src/stream.rs
+--- rust-tiny.orig/crates/libtiny_client/src/stream.rs
++++ rust-tiny/crates/libtiny_client/src/stream.rs
 @@ -1,3 +1,4 @@
 +use tokio_rustls::rustls::pki_types::{CertificateDer, PrivatePkcs8KeyDer};
  use lazy_static::lazy_static;
@@ -969,10 +991,10 @@ Index: rust-tiny-0.13.0/crates/libtiny_client/src/stream.rs
          };
          Ok(Stream::TlsStream(tls_stream.into()))
      }
-Index: rust-tiny-0.13.0/crates/tiny/src/conn.rs
+Index: rust-tiny/crates/tiny/src/conn.rs
 ===================================================================
---- rust-tiny-0.13.0.orig/crates/tiny/src/conn.rs
-+++ rust-tiny-0.13.0/crates/tiny/src/conn.rs
+--- rust-tiny.orig/crates/tiny/src/conn.rs
++++ rust-tiny/crates/tiny/src/conn.rs
 @@ -79,7 +79,7 @@ fn handle_conn_ev(ui: &UI, client: &dyn
                      "Disconnected. Will try to reconnect in {} seconds.",
                      libtiny_client::RECONNECT_SECS
