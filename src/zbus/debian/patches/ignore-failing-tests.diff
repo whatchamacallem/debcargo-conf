@@ -17,7 +17,7 @@
 +    #[ignore]
      #[timeout(15000)]
      fn disconnect_on_drop() {
-         // Reproducer for https://github.com/dbus2/zbus/issues/308 where setting up the
+         // Reproducer for https://github.com/z-galaxy/zbus/issues/308 where setting up the
 @@ -1441,6 +1442,7 @@
      }
  
@@ -124,43 +124,34 @@
  async fn test_freedesktop_credentials() -> Result<()> {
 --- a/tests/e2e.rs
 +++ b/tests/e2e.rs
-@@ -507,7 +507,7 @@
-     assert_eq!(**address.get("address").unwrap(), Value::from("127.0.0.1"));
-     assert_eq!(**address.get("prefix").unwrap(), Value::from(1234u32));
- }
--
-+/*
- #[instrument]
- async fn my_iface_test(conn: Connection, event: Event) -> zbus::Result<u32> {
-     debug!("client side starting..");
-@@ -873,8 +873,8 @@
- 
-     proxy.quit().await?;
-     Ok(val)
--}
--
-+}*/
-+/*
- #[test]
- #[timeout(15000)]
- fn iface_and_proxy() {
-@@ -887,8 +887,9 @@
- #[timeout(15000)]
- fn iface_and_proxy_unix_p2p() {
-     block_on(iface_and_proxy_(true));
--}
-+}*/
+@@ -14,6 +14,7 @@ use tokio::sync::mpsc::channel;
+ use tracing::{debug, instrument};
+ use zbus::{block_on, connection, fdo::ObjectManager, object_server::InterfaceRef};
  
 +/*
- #[instrument]
- async fn iface_and_proxy_(#[allow(unused)] p2p: bool) {
-     let event = event_listener::Event::new();
-@@ -1094,4 +1095,4 @@
-         Ok(false)
+ use iface_and_proxy::{
+     client::my_iface_test,
+     iface::{MyIface, MyIfaceSignals},
+@@ -244,3 +245,4 @@ async fn iface_and_proxy_(#[allow(unused)] p2p: bool) {
      );
      debug!("Bus confirmed that all names were definitely released.");
--}
-+}*/
+ }
++*/
+--- a/tests/iface_and_proxy/client.rs
++++ b/tests/iface_and_proxy/client.rs
+@@ -16,6 +16,7 @@ use super::{
+     types::{ArgStructTest, IP4Adress, MyIfaceError},
+ };
+ 
++/*
+ #[instrument]
+ pub async fn my_iface_test(conn: Connection, event: Event) -> zbus::Result<u32> {
+     debug!("client side starting..");
+@@ -412,3 +413,4 @@ pub async fn my_iface_test(conn: Connection, event: Event) -> zbus::Result<u32>
+ 
+     Ok(val)
+ }
++*/
 --- a/tests/issue/issue_1015.rs
 +++ b/tests/issue/issue_1015.rs
 @@ -25,6 +25,7 @@
@@ -180,7 +171,7 @@
 +#[ignore]
  #[timeout(15000)]
  fn issue104() {
-     // Tests the fix for https://github.com/dbus2/zbus/issues/104
+     // Tests the fix for https://github.com/z-galaxy/zbus/issues/104
 --- a/tests/issue/issue_122.rs
 +++ b/tests/issue/issue_122.rs
 @@ -10,6 +10,7 @@
@@ -200,7 +191,7 @@
 +#[ignore]
  #[timeout(15000)]
  fn issue_173() {
-     // Tests the fix for https://github.com/dbus2/zbus/issues/173
+     // Tests the fix for https://github.com/z-galaxy/zbus/issues/173
 --- a/tests/issue/issue_260.rs
 +++ b/tests/issue/issue_260.rs
 @@ -4,6 +4,7 @@
@@ -230,7 +221,7 @@
 +#[ignore]
  #[timeout(15000)]
  fn issue_68() {
-     // Tests the fix for https://github.com/dbus2/zbus/issues/68
+     // Tests the fix for https://github.com/z-galaxy/zbus/issues/68
 --- a/tests/issue/issue_799.rs
 +++ b/tests/issue/issue_799.rs
 @@ -7,6 +7,7 @@
