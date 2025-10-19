@@ -1,0 +1,119 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit 7e4e9e1370a5b22318cc324ecc310f0d21fc995b
+Author: Andrey Kutejko <andy128k@gmail.com>
+Date:   Sun Sep 14 13:01:02 2025 +0200
+
+    Update quick-xml to 0.38
+
+Index: atom-syndication/src/extension/util.rs
+===================================================================
+--- atom-syndication.orig/src/extension/util.rs
++++ atom-syndication/src/extension/util.rs
+@@ -1,9 +1,11 @@
+ use std::collections::BTreeMap;
+ use std::io::BufRead;
+ 
+-use quick_xml::events::attributes::Attributes;
+-use quick_xml::events::Event;
+-use quick_xml::Reader;
++use quick_xml::{
++    escape::resolve_predefined_entity,
++    events::{attributes::Attributes, Event},
++    Reader,
++};
+ 
+ use crate::error::{Error, XmlError};
+ use crate::extension::{Extension, ExtensionMap};
+@@ -87,7 +89,19 @@ fn parse_extension_element<R: BufRead>(
+                 text.push_str(decode(&element, reader)?.as_ref());
+             }
+             Event::Text(element) => {
+-                text.push_str(element.unescape().map_err(XmlError::new)?.as_ref());
++                text.push_str(element.decode().map_err(XmlError::new)?.as_ref());
++            }
++            Event::GeneralRef(gref) => {
++                let entity = gref.decode().map_err(XmlError::new)?;
++                if let Some(resolved_entity) = resolve_predefined_entity(&entity) {
++                    text.push_str(resolved_entity);
++                } else if let Some(ch) = gref.resolve_char_ref().map_err(XmlError::new)? {
++                    text.push(ch);
++                } else {
++                    text.push('&');
++                    text.push_str(&entity);
++                    text.push(';');
++                }
+             }
+             Event::End(element) => {
+                 extension.name = decode(element.name().as_ref(), reader)?.into();
+Index: atom-syndication/src/util.rs
+===================================================================
+--- atom-syndication.orig/src/util.rs
++++ atom-syndication/src/util.rs
+@@ -1,5 +1,5 @@
+ use quick_xml::{
+-    escape::escape,
++    escape::{escape, resolve_predefined_entity},
+     events::{attributes::Attribute, Event},
+     name::QName,
+     Reader,
+@@ -86,11 +86,23 @@ pub fn atom_text<B: BufRead>(reader: &mu
+                 result.push_str(decode(&text, reader)?.as_ref());
+             }
+             Event::Text(text) => {
+-                let decoded = text.unescape().map_err(XmlError::new)?;
++                let decoded = text.decode().map_err(XmlError::new)?;
+                 result.push_str(&decoded);
+             }
++            Event::GeneralRef(gref) => {
++                let entity = gref.decode().map_err(XmlError::new)?;
++                if let Some(resolved_entity) = resolve_predefined_entity(&entity) {
++                    result.push_str(resolved_entity);
++                } else if let Some(ch) = gref.resolve_char_ref().map_err(XmlError::new)? {
++                    result.push(ch);
++                } else {
++                    result.push('&');
++                    result.push_str(&entity);
++                    result.push(';');
++                }
++            }
+             Event::Comment(text) => {
+-                let decoded = text.unescape().map_err(XmlError::new)?;
++                let decoded = text.decode().map_err(XmlError::new)?;
+                 result.push_str("<!--");
+                 result.push_str(&decoded);
+                 result.push_str("-->");
+@@ -145,11 +157,17 @@ pub fn atom_xhtml<B: BufRead>(reader: &m
+                 result.push_str(escape(decode(&text, reader)?.as_ref()).as_ref());
+             }
+             Event::Text(text) => {
+-                let decoded = text.unescape().map_err(XmlError::new)?;
++                let decoded = text.decode().map_err(XmlError::new)?;
+                 result.push_str(escape(decoded.as_ref()).as_ref());
+             }
++            Event::GeneralRef(gref) => {
++                let entity = gref.decode().map_err(XmlError::new)?;
++                result.push('&');
++                result.push_str(&entity);
++                result.push(';');
++            }
+             Event::Comment(text) => {
+-                let decoded = text.unescape().map_err(XmlError::new)?;
++                let decoded = text.decode().map_err(XmlError::new)?;
+                 result.push_str("<!--");
+                 result.push_str(&decoded);
+                 result.push_str("-->");
+Index: atom-syndication/Cargo.toml
+===================================================================
+--- atom-syndication.orig/Cargo.toml
++++ atom-syndication/Cargo.toml
+@@ -74,7 +74,7 @@ version = "0.1"
+ optional = true
+ 
+ [dependencies.quick-xml]
+-version = "0.37"
++version = "0.38"
+ features = ["encoding"]
+ 
+ [dependencies.serde]
