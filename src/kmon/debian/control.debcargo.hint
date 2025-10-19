@@ -1,9 +1,9 @@
 Source: rust-kmon
 Section: admin
 Priority: optional
-Build-Depends: debhelper (>= 12),
- dh-cargo (>= 25),
- cargo:native,
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native,
  rustc:native,
  libstd-rust-dev,
  librust-arboard-3+default-dev (>= 3.4.0-~~),
@@ -14,18 +14,17 @@ Build-Depends: debhelper (>= 12),
  librust-clap-mangen-0.2+default-dev (>= 0.2.20-~~),
  librust-colorsys-0.6+default-dev (>= 0.6.5-~~),
  librust-enum-iterator-2+default-dev,
- librust-ratatui-0.28+termion-dev,
+ librust-ratatui-0.29+termion-dev,
  librust-termion-1+default-dev,
  librust-unicode-width-0.1+default-dev (>= 0.1.11-~~)
 Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
 Uploaders:
  Stephan Lachnit <stephanlachnit@debian.org>
-Standards-Version: 4.6.2
+Standards-Version: 4.7.2
 Vcs-Git: https://salsa.debian.org/rust-team/debcargo-conf.git [src/kmon]
 Vcs-Browser: https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/kmon
 Homepage: https://kmon.cli.rs
 X-Cargo-Crate: kmon
-Rules-Requires-Root: no
 
 Package: librust-kmon-dev
 Architecture: any
@@ -40,7 +39,7 @@ Depends:
  librust-clap-mangen-0.2+default-dev (>= 0.2.20-~~),
  librust-colorsys-0.6+default-dev (>= 0.6.5-~~),
  librust-enum-iterator-2+default-dev,
- librust-ratatui-0.28+termion-dev,
+ librust-ratatui-0.29+termion-dev,
  librust-termion-1+default-dev,
  librust-unicode-width-0.1+default-dev (>= 0.1.11-~~)
 Provides:
@@ -56,7 +55,6 @@ Description: Linux kernel manager and activity monitor - Rust source code
 
 Package: kmon
 Architecture: any
-Multi-Arch: allowed
 Section: admin
 Depends:
  ${misc:Depends},
@@ -69,7 +67,7 @@ Suggests:
 Provides:
  ${cargo:Provides}
 Built-Using: ${cargo:Built-Using}
-XB-X-Cargo-Built-Using: ${cargo:X-Cargo-Built-Using}
+Static-Built-Using: ${cargo:Static-Built-Using}
 Description: Interactive kernel monitor that combines dmesg and kmod
  kmon is an interactive kernel monitor for the terminal. It can insepct and load
  kernel modules, and it can monitor kernel activity. It basically combines dmesg
