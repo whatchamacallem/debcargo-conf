@@ -1,358 +1,236 @@
-Index: quick-xml/src/se/key.rs
-===================================================================
 --- quick-xml.orig/src/se/key.rs
 +++ quick-xml/src/se/key.rs
-@@ -234,13 +234,15 @@ mod tests {
-     serialize_as!(i16_:   -4200i16             => "-4200");
-     serialize_as!(i32_:   -42000000i32         => "-42000000");
+@@ -236,3 +236,4 @@
      serialize_as!(i64_:   -42000000000000i64   => "-42000000000000");
 -    serialize_as!(isize_: -42000000000000isize => "-42000000000000");
 +    #[cfg(not(target_pointer_width = "32"))]serialize_as!(isize_: -42000000000000isize => "-42000000000000");
 +    #[cfg(target_pointer_width = "32")]serialize_as!(isize_: -42000000isize => "-42000000");
  
-     serialize_as!(u8_:    42u8                => "42");
-     serialize_as!(u16_:   4200u16             => "4200");
-     serialize_as!(u32_:   42000000u32         => "42000000");
+@@ -242,3 +243,4 @@
      serialize_as!(u64_:   42000000000000u64   => "42000000000000");
 -    serialize_as!(usize_: 42000000000000usize => "42000000000000");
 +    #[cfg(not(target_pointer_width = "32"))]serialize_as!(usize_: 42000000000000usize => "42000000000000");
 +    #[cfg(target_pointer_width = "32")]serialize_as!(usize_: 42000000usize => "42000000");
  
-     serde_if_integer128! {
-         serialize_as!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-Index: quick-xml/src/se/content.rs
-===================================================================
 --- quick-xml.orig/src/se/content.rs
 +++ quick-xml/src/se/content.rs
-@@ -595,13 +595,15 @@ pub(super) mod tests {
-         serialize_as!(i16_:   -4200i16             => "-4200");
-         serialize_as!(i32_:   -42000000i32         => "-42000000");
-         serialize_as!(i64_:   -42000000000000i64   => "-42000000000000");
--        serialize_as!(isize_: -42000000000000isize => "-42000000000000");
-+        #[cfg(not(target_pointer_width = "32"))]serialize_as!(isize_: -42000000000000isize => "-42000000000000");
-+        #[cfg(target_pointer_width = "32")]serialize_as!(isize_: -42000000isize => "-42000000");
+@@ -597,3 +597,4 @@
+         serialize_as!(i64_:   -42000000000000i64   => "-42000000000000", Text);
+-        serialize_as!(isize_: -42000000000000isize => "-42000000000000", Text);
++        #[cfg(not(target_pointer_width = "32"))]serialize_as!(isize_: -42000000000000isize => "-42000000000000", Text);
++        #[cfg(target_pointer_width = "32")]serialize_as!(isize_: -42000000isize => "-42000000", Text);
  
-         serialize_as!(u8_:    42u8                => "42");
-         serialize_as!(u16_:   4200u16             => "4200");
-         serialize_as!(u32_:   42000000u32         => "42000000");
-         serialize_as!(u64_:   42000000000000u64   => "42000000000000");
--        serialize_as!(usize_: 42000000000000usize => "42000000000000");
-+        #[cfg(not(target_pointer_width = "32"))]serialize_as!(usize_: 42000000000000usize => "42000000000000");
-+        #[cfg(target_pointer_width = "32")]serialize_as!(usize_: 42000000usize => "42000000");
+@@ -603,3 +604,4 @@
+         serialize_as!(u64_:   42000000000000u64   => "42000000000000", Text);
+-        serialize_as!(usize_: 42000000000000usize => "42000000000000", Text);
++        #[cfg(not(target_pointer_width = "32"))]serialize_as!(usize_: 42000000000000usize => "42000000000000", Text);
++        #[cfg(target_pointer_width = "32")]serialize_as!(usize_: 42000000usize => "42000000", Text);
  
-         serde_if_integer128! {
-             serialize_as!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-@@ -725,13 +727,15 @@ pub(super) mod tests {
-             text!(i16_:   -4200i16             => "-4200");
-             text!(i32_:   -42000000i32         => "-42000000");
+@@ -727,3 +729,4 @@
              text!(i64_:   -42000000000000i64   => "-42000000000000");
 -            text!(isize_: -42000000000000isize => "-42000000000000");
 +            #[cfg(not(target_pointer_width = "32"))]text!(isize_: -42000000000000isize => "-42000000000000");
 +            #[cfg(target_pointer_width = "32")]text!(isize_: -42000000isize => "-42000000");
  
-             text!(u8_:    42u8                => "42");
-             text!(u16_:   4200u16             => "4200");
-             text!(u32_:   42000000u32         => "42000000");
+@@ -733,3 +736,4 @@
              text!(u64_:   42000000000000u64   => "42000000000000");
 -            text!(usize_: 42000000000000usize => "42000000000000");
 +            #[cfg(not(target_pointer_width = "32"))]text!(usize_: 42000000000000usize => "42000000000000");
 +            #[cfg(target_pointer_width = "32")]text!(usize_: 42000000usize => "42000000");
  
-             serde_if_integer128! {
-                 text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-@@ -852,13 +856,15 @@ pub(super) mod tests {
-             value!(i16_:   -4200i16             => "-4200");
-             value!(i32_:   -42000000i32         => "-42000000");
+@@ -854,3 +858,4 @@
              value!(i64_:   -42000000000000i64   => "-42000000000000");
 -            value!(isize_: -42000000000000isize => "-42000000000000");
 +            #[cfg(not(target_pointer_width = "32"))]value!(isize_: -42000000000000isize => "-42000000000000");
 +            #[cfg(target_pointer_width = "32")]value!(isize_: -42000000isize => "-42000000");
  
-             value!(u8_:    42u8                => "42");
-             value!(u16_:   4200u16             => "4200");
-             value!(u32_:   42000000u32         => "42000000");
+@@ -860,3 +865,4 @@
              value!(u64_:   42000000000000u64   => "42000000000000");
 -            value!(usize_: 42000000000000usize => "42000000000000");
 +            #[cfg(not(target_pointer_width = "32"))]value!(usize_: 42000000000000usize => "42000000000000");
 +            #[cfg(target_pointer_width = "32")]value!(usize_: 42000000usize => "42000000");
  
-             serde_if_integer128! {
-                 value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-@@ -1034,13 +1040,15 @@ pub(super) mod tests {
-         serialize_as!(i16_:   -4200i16             => "-4200");
-         serialize_as!(i32_:   -42000000i32         => "-42000000");
-         serialize_as!(i64_:   -42000000000000i64   => "-42000000000000");
--        serialize_as!(isize_: -42000000000000isize => "-42000000000000");
-+        #[cfg(not(target_pointer_width = "32"))]serialize_as!(isize_: -42000000000000isize => "-42000000000000");
-+        #[cfg(target_pointer_width = "32")]serialize_as!(isize_: -42000000isize => "-42000000");
+@@ -1036,3 +1042,4 @@
+         serialize_as!(i64_:   -42000000000000i64   => "-42000000000000", Text);
+-        serialize_as!(isize_: -42000000000000isize => "-42000000000000", Text);
++        #[cfg(not(target_pointer_width = "32"))]serialize_as!(isize_: -42000000000000isize => "-42000000000000", Text);
++        #[cfg(target_pointer_width = "32")]serialize_as!(isize_: -42000000isize => "-42000000", Text);
  
-         serialize_as!(u8_:    42u8                => "42");
-         serialize_as!(u16_:   4200u16             => "4200");
-         serialize_as!(u32_:   42000000u32         => "42000000");
-         serialize_as!(u64_:   42000000000000u64   => "42000000000000");
--        serialize_as!(usize_: 42000000000000usize => "42000000000000");
-+        #[cfg(not(target_pointer_width = "32"))]serialize_as!(usize_: 42000000000000usize => "42000000000000");
-+        #[cfg(target_pointer_width = "32")]serialize_as!(usize_: 42000000usize => "42000000");
+@@ -1042,3 +1049,4 @@
+         serialize_as!(u64_:   42000000000000u64   => "42000000000000", Text);
+-        serialize_as!(usize_: 42000000000000usize => "42000000000000", Text);
++        #[cfg(not(target_pointer_width = "32"))]serialize_as!(usize_: 42000000000000usize => "42000000000000", Text);
++        #[cfg(target_pointer_width = "32")]serialize_as!(usize_: 42000000usize => "42000000", Text);
  
-         serde_if_integer128! {
-             serialize_as!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-@@ -1178,13 +1186,15 @@ pub(super) mod tests {
-             text!(i16_:   -4200i16             => "-4200");
-             text!(i32_:   -42000000i32         => "-42000000");
+@@ -1180,3 +1188,4 @@
              text!(i64_:   -42000000000000i64   => "-42000000000000");
 -            text!(isize_: -42000000000000isize => "-42000000000000");
 +            #[cfg(not(target_pointer_width = "32"))]text!(isize_: -42000000000000isize => "-42000000000000");
 +            #[cfg(target_pointer_width = "32")]text!(isize_: -42000000isize => "-42000000");
  
-             text!(u8_:    42u8                => "42");
-             text!(u16_:   4200u16             => "4200");
-             text!(u32_:   42000000u32         => "42000000");
+@@ -1186,3 +1195,4 @@
              text!(u64_:   42000000000000u64   => "42000000000000");
 -            text!(usize_: 42000000000000usize => "42000000000000");
 +            #[cfg(not(target_pointer_width = "32"))]text!(usize_: 42000000000000usize => "42000000000000");
 +            #[cfg(target_pointer_width = "32")]text!(usize_: 42000000usize => "42000000");
  
-             serde_if_integer128! {
-                 text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-@@ -1317,13 +1327,15 @@ pub(super) mod tests {
-             value!(i16_:   -4200i16             => "-4200");
-             value!(i32_:   -42000000i32         => "-42000000");
+@@ -1319,3 +1329,4 @@
              value!(i64_:   -42000000000000i64   => "-42000000000000");
 -            value!(isize_: -42000000000000isize => "-42000000000000");
 +            #[cfg(not(target_pointer_width = "32"))]value!(isize_: -42000000000000isize => "-42000000000000");
 +            #[cfg(target_pointer_width = "32")]value!(isize_: -42000000isize => "-42000000");
  
-             value!(u8_:    42u8                => "42");
-             value!(u16_:   4200u16             => "4200");
-             value!(u32_:   42000000u32         => "42000000");
+@@ -1325,3 +1336,4 @@
              value!(u64_:   42000000000000u64   => "42000000000000");
 -            value!(usize_: 42000000000000usize => "42000000000000");
 +            #[cfg(not(target_pointer_width = "32"))]value!(usize_: 42000000000000usize => "42000000000000");
 +            #[cfg(target_pointer_width = "32")]value!(usize_: 42000000usize => "42000000");
  
-             serde_if_integer128! {
-                 value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-Index: quick-xml/src/se/element.rs
-===================================================================
 --- quick-xml.orig/src/se/element.rs
 +++ quick-xml/src/se/element.rs
-@@ -664,13 +664,15 @@ mod tests {
-         serialize_as!(i16_:   -4200i16             => "<root>-4200</root>");
-         serialize_as!(i32_:   -42000000i32         => "<root>-42000000</root>");
+@@ -666,3 +666,4 @@
          serialize_as!(i64_:   -42000000000000i64   => "<root>-42000000000000</root>");
 -        serialize_as!(isize_: -42000000000000isize => "<root>-42000000000000</root>");
 +        #[cfg(not(target_pointer_width = "32"))]serialize_as!(isize_: -42000000000000isize => "<root>-42000000000000</root>");
 +        #[cfg(target_pointer_width = "32")]serialize_as!(isize_: -42000000isize => "<root>-42000000</root>");
  
-         serialize_as!(u8_:    42u8                => "<root>42</root>");
-         serialize_as!(u16_:   4200u16             => "<root>4200</root>");
-         serialize_as!(u32_:   42000000u32         => "<root>42000000</root>");
+@@ -672,3 +673,4 @@
          serialize_as!(u64_:   42000000000000u64   => "<root>42000000000000</root>");
 -        serialize_as!(usize_: 42000000000000usize => "<root>42000000000000</root>");
 +        #[cfg(not(target_pointer_width = "32"))]serialize_as!(usize_: 42000000000000usize => "<root>42000000000000</root>");
 +        #[cfg(target_pointer_width = "32")]serialize_as!(usize_: 42000000usize => "<root>42000000</root>");
  
-         serde_if_integer128! {
-             serialize_as!(i128_: -420000000000000000000000000000i128 => "<root>-420000000000000000000000000000</root>");
-@@ -766,13 +768,15 @@ mod tests {
-                 text!(i16_:   -4200i16             => "-4200");
-                 text!(i32_:   -42000000i32         => "-42000000");
+@@ -768,3 +770,4 @@
                  text!(i64_:   -42000000000000i64   => "-42000000000000");
 -                text!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]text!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(target_pointer_width = "32")]text!(isize_: -42000000isize => "-42000000");
  
-                 text!(u8_:    42u8                => "42");
-                 text!(u16_:   4200u16             => "4200");
-                 text!(u32_:   42000000u32         => "42000000");
+@@ -774,3 +777,4 @@
                  text!(u64_:   42000000000000u64   => "42000000000000");
 -                text!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]text!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(target_pointer_width = "32")]text!(usize_: 42000000usize => "42000000");
  
-                 serde_if_integer128! {
-                     text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-@@ -893,13 +897,15 @@ mod tests {
-                 text!(i16_:   -4200i16             => "-4200");
-                 text!(i32_:   -42000000i32         => "-42000000");
+@@ -895,3 +899,4 @@
                  text!(i64_:   -42000000000000i64   => "-42000000000000");
 -                text!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]text!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(target_pointer_width = "32")]text!(isize_: -42000000isize => "-42000000");
  
-                 text!(u8_:    42u8                => "42");
-                 text!(u16_:   4200u16             => "4200");
-                 text!(u32_:   42000000u32         => "42000000");
+@@ -901,3 +906,4 @@
                  text!(u64_:   42000000000000u64   => "42000000000000");
 -                text!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]text!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(target_pointer_width = "32")]text!(usize_: 42000000usize => "42000000");
  
-                 serde_if_integer128! {
-                     text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-@@ -1024,13 +1030,15 @@ mod tests {
-                 value!(i16_:   -4200i16             => "-4200");
-                 value!(i32_:   -42000000i32         => "-42000000");
+@@ -1026,3 +1032,4 @@
                  value!(i64_:   -42000000000000i64   => "-42000000000000");
 -                value!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]value!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(target_pointer_width = "32")]value!(isize_: -42000000isize => "-42000000");
  
-                 value!(u8_:    42u8                => "42");
-                 value!(u16_:   4200u16             => "4200");
-                 value!(u32_:   42000000u32         => "42000000");
+@@ -1032,3 +1039,4 @@
                  value!(u64_:   42000000000000u64   => "42000000000000");
 -                value!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]value!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(target_pointer_width = "32")]value!(usize_: 42000000usize => "42000000");
  
-                 serde_if_integer128! {
-                     value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-@@ -1130,13 +1138,15 @@ mod tests {
-                 value!(i16_:   -4200i16             => "-4200");
-                 value!(i32_:   -42000000i32         => "-42000000");
+@@ -1132,3 +1140,4 @@
                  value!(i64_:   -42000000000000i64   => "-42000000000000");
 -                value!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]value!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(target_pointer_width = "32")]value!(isize_: -42000000isize => "-42000000");
  
-                 value!(u8_:    42u8                => "42");
-                 value!(u16_:   4200u16             => "4200");
-                 value!(u32_:   42000000u32         => "42000000");
+@@ -1138,3 +1147,4 @@
                  value!(u64_:   42000000000000u64   => "42000000000000");
 -                value!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]value!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(target_pointer_width = "32")]value!(usize_: 42000000usize => "42000000");
  
-                 serde_if_integer128! {
-                     value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-@@ -1367,13 +1377,15 @@ mod tests {
-         serialize_as!(i16_:   -4200i16             => "<root>-4200</root>");
-         serialize_as!(i32_:   -42000000i32         => "<root>-42000000</root>");
+@@ -1369,3 +1379,4 @@
          serialize_as!(i64_:   -42000000000000i64   => "<root>-42000000000000</root>");
 -        serialize_as!(isize_: -42000000000000isize => "<root>-42000000000000</root>");
 +        #[cfg(not(target_pointer_width = "32"))]serialize_as!(isize_: -42000000000000isize => "<root>-42000000000000</root>");
 +        #[cfg(target_pointer_width = "32")]serialize_as!(isize_: -42000000isize => "<root>-42000000</root>");
  
-         serialize_as!(u8_:    42u8                => "<root>42</root>");
-         serialize_as!(u16_:   4200u16             => "<root>4200</root>");
-         serialize_as!(u32_:   42000000u32         => "<root>42000000</root>");
+@@ -1375,3 +1386,4 @@
          serialize_as!(u64_:   42000000000000u64   => "<root>42000000000000</root>");
 -        serialize_as!(usize_: 42000000000000usize => "<root>42000000000000</root>");
 +        #[cfg(not(target_pointer_width = "32"))]serialize_as!(usize_: 42000000000000usize => "<root>42000000000000</root>");
 +        #[cfg(target_pointer_width = "32")]serialize_as!(usize_: 42000000usize => "<root>42000000</root>");
  
-         serde_if_integer128! {
-             serialize_as!(i128_: -420000000000000000000000000000i128 => "<root>-420000000000000000000000000000</root>");
-@@ -1472,13 +1484,15 @@ mod tests {
-                 text!(i16_:   -4200i16             => "-4200");
-                 text!(i32_:   -42000000i32         => "-42000000");
+@@ -1474,3 +1486,4 @@
                  text!(i64_:   -42000000000000i64   => "-42000000000000");
 -                text!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]text!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(target_pointer_width = "32")]text!(isize_: -42000000isize => "-42000000");
  
-                 text!(u8_:    42u8                => "42");
-                 text!(u16_:   4200u16             => "4200");
-                 text!(u32_:   42000000u32         => "42000000");
+@@ -1480,3 +1493,4 @@
                  text!(u64_:   42000000000000u64   => "42000000000000");
 -                text!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]text!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(target_pointer_width = "32")]text!(usize_: 42000000usize => "42000000");
  
-                 serde_if_integer128! {
-                     text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-@@ -1611,13 +1625,15 @@ mod tests {
-                 text!(i16_:   -4200i16             => "-4200");
-                 text!(i32_:   -42000000i32         => "-42000000");
+@@ -1613,3 +1627,4 @@
                  text!(i64_:   -42000000000000i64   => "-42000000000000");
 -                text!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]text!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(target_pointer_width = "32")]text!(isize_: -42000000isize => "-42000000");
  
-                 text!(u8_:    42u8                => "42");
-                 text!(u16_:   4200u16             => "4200");
-                 text!(u32_:   42000000u32         => "42000000");
+@@ -1619,3 +1634,4 @@
                  text!(u64_:   42000000000000u64   => "42000000000000");
 -                text!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]text!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(target_pointer_width = "32")]text!(usize_: 42000000usize => "42000000");
  
-                 serde_if_integer128! {
-                     text!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-@@ -1742,13 +1758,15 @@ mod tests {
-                 value!(i16_:   -4200i16             => "-4200");
-                 value!(i32_:   -42000000i32         => "-42000000");
+@@ -1744,3 +1760,4 @@
                  value!(i64_:   -42000000000000i64   => "-42000000000000");
 -                value!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]value!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(target_pointer_width = "32")]value!(isize_: -42000000isize => "-42000000");
  
-                 value!(u8_:    42u8                => "42");
-                 value!(u16_:   4200u16             => "4200");
-                 value!(u32_:   42000000u32         => "42000000");
+@@ -1750,3 +1767,4 @@
                  value!(u64_:   42000000000000u64   => "42000000000000");
 -                value!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]value!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(target_pointer_width = "32")]value!(usize_: 42000000usize => "42000000");
  
-                 serde_if_integer128! {
-                     value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-@@ -1859,13 +1877,15 @@ mod tests {
-                 value!(i16_:   -4200i16             => "-4200");
-                 value!(i32_:   -42000000i32         => "-42000000");
+@@ -1861,3 +1879,4 @@
                  value!(i64_:   -42000000000000i64   => "-42000000000000");
 -                value!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]value!(isize_: -42000000000000isize => "-42000000000000");
 +                #[cfg(target_pointer_width = "32")]value!(isize_: -42000000isize => "-42000000");
  
-                 value!(u8_:    42u8                => "42");
-                 value!(u16_:   4200u16             => "4200");
-                 value!(u32_:   42000000u32         => "42000000");
+@@ -1867,3 +1886,4 @@
                  value!(u64_:   42000000000000u64   => "42000000000000");
 -                value!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(not(target_pointer_width = "32"))]value!(usize_: 42000000000000usize => "42000000000000");
 +                #[cfg(target_pointer_width = "32")]value!(usize_: 42000000usize => "42000000");
  
-                 serde_if_integer128! {
-                     value!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-Index: quick-xml/src/se/simple_type.rs
-===================================================================
 --- quick-xml.orig/src/se/simple_type.rs
 +++ quick-xml/src/se/simple_type.rs
-@@ -974,13 +974,15 @@ mod tests {
-         serialize_as!(i16_:   -4200i16             => "-4200");
-         serialize_as!(i32_:   -42000000i32         => "-42000000");
+@@ -976,3 +976,4 @@
          serialize_as!(i64_:   -42000000000000i64   => "-42000000000000");
 -        serialize_as!(isize_: -42000000000000isize => "-42000000000000");
 +        #[cfg(not(target_pointer_width = "32"))]serialize_as!(isize_: -42000000000000isize => "-42000000000000");
 +        #[cfg(target_pointer_width = "32")]serialize_as!(isize_: -42000000isize => "-42000000");
  
-         serialize_as!(u8_:    42u8                => "42");
-         serialize_as!(u16_:   4200u16             => "4200");
-         serialize_as!(u32_:   42000000u32         => "42000000");
+@@ -982,3 +983,4 @@
          serialize_as!(u64_:   42000000000000u64   => "42000000000000");
 -        serialize_as!(usize_: 42000000000000usize => "42000000000000");
 +        #[cfg(not(target_pointer_width = "32"))]serialize_as!(usize_: 42000000000000usize => "42000000000000");
 +        #[cfg(target_pointer_width = "32")]serialize_as!(usize_: 42000000usize => "42000000");
  
-         serde_if_integer128! {
-             serialize_as!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
-@@ -1092,13 +1094,15 @@ mod tests {
-         serialize_as!(i16_:   -4200i16             => "-4200");
-         serialize_as!(i32_:   -42000000i32         => "-42000000");
+@@ -1094,3 +1096,4 @@
          serialize_as!(i64_:   -42000000000000i64   => "-42000000000000");
 -        serialize_as!(isize_: -42000000000000isize => "-42000000000000");
 +        #[cfg(not(target_pointer_width = "32"))]serialize_as!(isize_: -42000000isize => "-42000000");
 +        #[cfg(target_pointer_width = "32")]serialize_as!(isize_: -42000000isize => "-42000000");
  
-         serialize_as!(u8_:    42u8                => "42");
-         serialize_as!(u16_:   4200u16             => "4200");
-         serialize_as!(u32_:   42000000u32         => "42000000");
+@@ -1100,3 +1103,4 @@
          serialize_as!(u64_:   42000000000000u64   => "42000000000000");
 -        serialize_as!(usize_: 42000000000000usize => "42000000000000");
 +        #[cfg(not(target_pointer_width = "32"))]serialize_as!(usize_: 42000000000000usize => "42000000000000");
 +        #[cfg(target_pointer_width = "32")]serialize_as!(usize_: 42000000usize => "42000000");
  
-         serde_if_integer128! {
-             serialize_as!(i128_: -420000000000000000000000000000i128 => "-420000000000000000000000000000");
