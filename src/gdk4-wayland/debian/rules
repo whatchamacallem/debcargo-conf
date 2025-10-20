@@ -4,18 +4,11 @@
 
 # regenerating the source code and apply patch(es)
 execute_before_dh_auto_build:
-	cp /usr/share/gir-1.0/GLib-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/freetype2-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GObject-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Gio-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/PangoCairo-1.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GdkWayland-4.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/HarfBuzz-0.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Gdk-4.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Pango-1.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GdkPixbuf-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GModule-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/cairo-1.0.gir $(CURDIR)
+	deb-gir-tool find \
+		--target-directory=$(CURDIR) \
+		--verbose \
+		--with-dependencies \
+		GdkWayland-4.0
 	# We need to fix some gir files; lines taken from https://github.com/gtk-rs/gir-files/blob/master/fix.sh
 	# this needs to be re-done for every new upstream release :(
 	# freetype
