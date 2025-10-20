@@ -5,14 +5,12 @@
 # Regenerating the source code
 # xmlstarlet fixes taken from upstream https://github.com/gtk-rs/gir-files/blob/master/fix.sh
 execute_before_dh_auto_build:
+	deb-gir-tool find \
+		--target-directory=$(CURDIR) \
+		--verbose \
+		--with-dependencies \
+		Rsvg-2.0
 	cp $(CURDIR)/debian/missing-sources/Gir.toml $(CURDIR)
-	cp /usr/share/gir-1.0/GLib-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Gio-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/cairo-1.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GModule-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GObject-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GdkPixbuf-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Rsvg-2.0.gir $(CURDIR)
 	xmlstarlet ed -L \
 	-u '//_:record[@name="PixbufModule"]/_:field[@name="module"]/_:type/@name' -v "gpointer" \
 	-u '//_:record[@name="PixbufModule"]/_:field[@name="module"]/_:type/@c:type' -v "gpointer" \
