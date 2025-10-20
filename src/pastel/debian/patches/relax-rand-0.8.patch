@@ -1,0 +1,133 @@
+Description: Fix compatibility with rand 0.8
+ The rand crate 0.9 API is not available in Debian. This patch adapts
+ the code to work with rand 0.8:
+ - Replace rand::rng() with rand::thread_rng()
+ - Replace .random::<T>() with .gen::<T>()
+ - Replace .random_range() with .gen_range()
+Author: Nadzeya Hutsko <nadzya.info@gmail.com>
+Forwarded: not-needed
+Last-Update: 2025-10-20
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -68,7 +68,7 @@
+ version = "0.1"
+ 
+ [dependencies.rand]
+-version = "0.9"
++version = "0.8"
+ 
+ [dependencies.regex]
+ version = "1.11"
+--- a/src/distinct.rs
++++ b/src/distinct.rs
+@@ -1,4 +1,4 @@
+-use rand::{prelude::*, rng};
++use rand::prelude::*;
+ 
+ use crate::delta_e;
+ use crate::random::{self, RandomizationStrategy};
+@@ -72,7 +72,7 @@
+ 
+ impl SimulatedAnnealing<ThreadRng> {
+     pub fn new(initial_colors: &[Color], parameters: SimulationParameters) -> Self {
+-        Self::with_rng(initial_colors, parameters, rng())
++        Self::with_rng(initial_colors, parameters, thread_rng())
+     }
+ }
+ 
+@@ -96,10 +96,10 @@
+     }
+ 
+     fn modify_channel(&mut self, c: &mut u8) {
+-        if self.rng.random::<bool>() {
+-            *c = c.saturating_add(self.rng.random::<u8>() % 10);
++        if self.rng.gen::<bool>() {
++            *c = c.saturating_add(self.rng.gen::<u8>() % 10);
+         } else {
+-            *c = c.saturating_sub(self.rng.random::<u8>() % 10);
++            *c = c.saturating_sub(self.rng.gen::<u8>() % 10);
+         }
+     }
+ 
+@@ -137,7 +137,7 @@
+         for iter in 0..self.parameters.num_iterations {
+             let random_index = if self.parameters.opt_target == OptimizationTarget::Mean {
+                 self.rng
+-                    .random_range(self.parameters.num_fixed_colors..self.colors.len())
++                    .gen_range(self.parameters.num_fixed_colors..self.colors.len())
+             } else {
+                 // first check if any of the colors cannot change, if that's the case just return
+                 // the other color. Note that the closest_pair cannot contain only fixed colors.
+@@ -146,7 +146,7 @@
+                     result.closest_pair.1
+                 } else if result.closest_pair.1 < self.parameters.num_fixed_colors {
+                     result.closest_pair.0
+-                } else if self.rng.random() {
++                } else if self.rng.gen() {
+                     result.closest_pair.0
+                 } else {
+                     result.closest_pair.1
+@@ -182,7 +182,7 @@
+                 self.lab_values = new_lab_values;
+             } else {
+                 let bolzmann = Scalar::exp(-(score - new_score) / self.temperature);
+-                if self.rng.random::<Scalar>() <= bolzmann {
++                if self.rng.gen::<Scalar>() <= bolzmann {
+                     result = new_result;
+                     self.colors[random_index] = new_colors;
+                     self.lab_values = new_lab_values;
+--- a/src/random.rs
++++ b/src/random.rs
+@@ -1,10 +1,10 @@
+ use crate::Color;
+ 
+-use rand::{prelude::*, rng};
++use rand::prelude::*;
+ 
+ pub trait RandomizationStrategy {
+     fn generate(&mut self) -> Color {
+-        self.generate_with(&mut rng())
++        self.generate_with(&mut thread_rng())
+     }
+ 
+     fn generate_with(&mut self, r: &mut dyn RngCore) -> Color;
+@@ -20,9 +20,9 @@
+ 
+     impl RandomizationStrategy for Vivid {
+         fn generate_with(&mut self, rng: &mut dyn RngCore) -> Color {
+-            let hue = rng.random::<f64>() * 360.0;
+-            let saturation = 0.2 + 0.6 * rng.random::<f64>();
+-            let lightness = 0.3 + 0.4 * rng.random::<f64>();
++            let hue = rng.gen::<f64>() * 360.0;
++            let saturation = 0.2 + 0.6 * rng.gen::<f64>();
++            let lightness = 0.3 + 0.4 * rng.gen::<f64>();
+ 
+             Color::from_hsl(hue, saturation, lightness)
+         }
+@@ -32,7 +32,7 @@
+ 
+     impl RandomizationStrategy for UniformRGB {
+         fn generate_with(&mut self, rng: &mut dyn RngCore) -> Color {
+-            Color::from_rgb(rng.random::<u8>(), rng.random::<u8>(), rng.random::<u8>())
++            Color::from_rgb(rng.gen::<u8>(), rng.gen::<u8>(), rng.gen::<u8>())
+         }
+     }
+ 
+@@ -40,7 +40,7 @@
+ 
+     impl RandomizationStrategy for UniformGray {
+         fn generate_with(&mut self, rng: &mut dyn RngCore) -> Color {
+-            Color::graytone(rng.random::<f64>())
++            Color::graytone(rng.gen::<f64>())
+         }
+     }
+ 
+@@ -48,7 +48,7 @@
+ 
+     impl RandomizationStrategy for UniformHueLCh {
+         fn generate_with(&mut self, rng: &mut dyn RngCore) -> Color {
+-            Color::from_lch(70.0, 35.0, 360.0 * rng.random::<f64>(), 1.0)
++            Color::from_lch(70.0, 35.0, 360.0 * rng.gen::<f64>(), 1.0)
+         }
+     }
+ }
