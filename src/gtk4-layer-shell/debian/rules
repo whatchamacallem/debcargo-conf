@@ -5,21 +5,11 @@
 # Regenerating the source code
 # xmlstarlet fixes taken from upstream https://github.com/gtk-rs/gir-files/blob/master/fix.sh
 execute_before_dh_auto_build:
-	cp /usr/share/gir-1.0/Gtk4LayerShell-1.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Gtk-4.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Gdk-4.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Gsk-4.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GdkPixbuf-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GModule-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GLib-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Gio-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GObject-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Pango-1.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/HarfBuzz-0.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/freetype2-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/cairo-1.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/PangoCairo-1.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Graphene-1.0.gir $(CURDIR)
+	deb-gir-tool find \
+		--target-directory=$(CURDIR) \
+		--verbose \
+		--with-dependencies \
+		Gtk4LayerShell-1.0
 	xmlstarlet ed -L \
 	-u '//_:parameter[@name="response_id"]/_:type[@name="gint"]/@c:type' -v "GtkResponseType" \
 	-u '//_:parameter[@name="response_id"]/_:type[@name="gint"]/@name' -v "ResponseType" \
