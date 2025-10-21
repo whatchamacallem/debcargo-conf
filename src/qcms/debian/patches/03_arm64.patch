@@ -1,0 +1,67 @@
+Description: Adjust cfg gaurds in gtest code to better match those in the code it's testing.
+Forwarded: not-needed
+Author: Peter Michael Green <plugwash@debian.org>
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- rust-qcms-0.3.0.orig/src/gtest.rs
++++ rust-qcms-0.3.0/src/gtest.rs
+@@ -12,7 +12,7 @@ mod gtest {
+     use std::arch::is_aarch64_feature_detected;
+     use std::ptr::null_mut;
+ 
+-    #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
++    #[cfg(all(any(target_arch = "arm", target_arch = "aarch64"), feature = "neon"))]
+     use crate::transform_neon::{
+         qcms_transform_data_bgra_out_lut_neon, qcms_transform_data_rgb_out_lut_neon,
+         qcms_transform_data_rgba_out_lut_neon,
+@@ -662,14 +662,14 @@ mod gtest {
+                 }
+             }
+ 
+-            #[cfg(target_arch = "arm")]
++            #[cfg(all(target_arch = "arm", feature = "neon"))]
+             {
+                 if is_arm_feature_detected!("neon") {
+                     assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_rgb_out_lut_neon)))
+                 }
+             }
+ 
+-            #[cfg(target_arch = "aarch64")]
++            #[cfg(all(target_arch = "aarch64", feature = "neon"))]
+             {
+                 if is_aarch64_feature_detected!("neon") {
+                     assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_rgb_out_lut_neon)))
+@@ -691,14 +691,14 @@ mod gtest {
+                 }
+             }
+ 
+-            #[cfg(target_arch = "arm")]
++            #[cfg(all(target_arch = "arm", feature = "neon"))]
+             {
+                 if is_arm_feature_detected!("neon") {
+                     assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_rgba_out_lut_neon)))
+                 }
+             }
+ 
+-            #[cfg(target_arch = "aarch64")]
++            #[cfg(all(target_arch = "aarch64", feature = "neon"))]
+             {
+                 if is_aarch64_feature_detected!("neon") {
+                     assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_rgba_out_lut_neon)))
+@@ -720,14 +720,14 @@ mod gtest {
+                 }
+             }
+ 
+-            #[cfg(target_arch = "arm")]
++            #[cfg(all(target_arch = "arm", feature = "neon"))]
+             {
+                 if is_arm_feature_detected!("neon") {
+                     assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_bgra_out_lut_neon)))
+                 }
+             }
+ 
+-            #[cfg(target_arch = "aarch64")]
++            #[cfg(all(target_arch = "aarch64", feature = "neon"))]
+             {
+                 if is_aarch64_feature_detected!("neon") {
+                     assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_bgra_out_lut_neon)))
