@@ -1,0 +1,233 @@
+Index: hickory-resolver/src/async_resolver.rs
+===================================================================
+--- hickory-resolver.orig/src/async_resolver.rs
++++ hickory-resolver/src/async_resolver.rs
+@@ -1010,6 +1010,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_lookup_google() {
+         use super::testing::lookup_test;
+         let io_loop = Runtime::new().expect("failed to create tokio runtime");
+@@ -1018,6 +1019,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_lookup_cloudflare() {
+         use super::testing::lookup_test;
+         let io_loop = Runtime::new().expect("failed to create tokio runtime");
+@@ -1030,6 +1032,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_lookup_quad9() {
+         use super::testing::lookup_test;
+         let io_loop = Runtime::new().expect("failed to create tokio runtime");
+@@ -1055,6 +1058,7 @@ mod tests {
+ 
+     #[test]
+     #[cfg(feature = "dnssec")]
++    #[ignore]
+     fn test_sec_lookup() {
+         use super::testing::sec_lookup_test;
+         let io_loop = Runtime::new().expect("failed to create tokio runtime io_loop");
+@@ -1064,6 +1068,7 @@ mod tests {
+ 
+     #[test]
+     #[cfg(feature = "dnssec")]
++    #[ignore]
+     fn test_sec_lookup_fails() {
+         use super::testing::sec_lookup_fails_test;
+         let io_loop = Runtime::new().expect("failed to create tokio runtime io_loop");
+@@ -1095,6 +1100,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_fqdn() {
+         use super::testing::fqdn_test;
+         let io_loop = Runtime::new().expect("failed to create tokio runtime io_loop");
+@@ -1103,6 +1109,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_ndots() {
+         use super::testing::ndots_test;
+         let io_loop = Runtime::new().expect("failed to create tokio runtime io_loop");
+@@ -1111,6 +1118,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_large_ndots() {
+         use super::testing::large_ndots_test;
+         let io_loop = Runtime::new().expect("failed to create tokio runtime io_loop");
+@@ -1119,6 +1127,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_domain_search() {
+         use super::testing::domain_search_test;
+         let io_loop = Runtime::new().expect("failed to create tokio runtime io_loop");
+@@ -1127,6 +1136,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_search_list() {
+         use super::testing::search_list_test;
+         let io_loop = Runtime::new().expect("failed to create tokio runtime io_loop");
+@@ -1135,6 +1145,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_idna() {
+         use super::testing::idna_test;
+         let io_loop = Runtime::new().expect("failed to create tokio runtime io_loop");
+Index: hickory-resolver/src/h2.rs
+===================================================================
+--- hickory-resolver.orig/src/h2.rs
++++ hickory-resolver/src/h2.rs
+@@ -108,11 +108,13 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_google_https() {
+         https_test(ResolverConfig::google_https())
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_cloudflare_https() {
+         https_test(ResolverConfig::cloudflare_https())
+     }
+Index: hickory-resolver/src/h3.rs
+===================================================================
+--- hickory-resolver.orig/src/h3.rs
++++ hickory-resolver/src/h3.rs
+@@ -108,6 +108,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_google_h3() {
+         h3_test(ResolverConfig::google_h3())
+     }
+Index: hickory-resolver/src/name_server/name_server.rs
+===================================================================
+--- hickory-resolver.orig/src/name_server/name_server.rs
++++ hickory-resolver/src/name_server/name_server.rs
+@@ -240,6 +240,7 @@ mod tests {
+     use crate::name_server::TokioConnectionProvider;
+ 
+     #[test]
++    #[ignore]
+     fn test_name_server() {
+         //env_logger::try_init().ok();
+ 
+Index: hickory-resolver/src/name_server/name_server_pool.rs
+===================================================================
+--- hickory-resolver.orig/src/name_server/name_server_pool.rs
++++ hickory-resolver/src/name_server/name_server_pool.rs
+@@ -482,6 +482,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_multi_use_conns() {
+         let io_loop = Runtime::new().unwrap();
+         let conn_provider = TokioConnectionProvider::default();
+Index: hickory-resolver/src/quic.rs
+===================================================================
+--- hickory-resolver.orig/src/quic.rs
++++ hickory-resolver/src/quic.rs
+@@ -114,6 +114,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_adguard_quic() {
+         // AdGuard requires SNI.
+         let mut config = (**super::CLIENT_CONFIG.as_ref().unwrap()).clone();
+Index: hickory-resolver/src/resolver.rs
+===================================================================
+--- hickory-resolver.orig/src/resolver.rs
++++ hickory-resolver/src/resolver.rs
+@@ -170,6 +170,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_lookup() {
+         let resolver = Resolver::new(ResolverConfig::default(), ResolverOpts::default()).unwrap();
+ 
+Index: hickory-resolver/src/tls/mod.rs
+===================================================================
+--- hickory-resolver.orig/src/tls/mod.rs
++++ hickory-resolver/src/tls/mod.rs
+@@ -54,18 +54,21 @@ mod tests {
+ 
+     #[test]
+     #[cfg(not(windows))] // flakes on AppVeyor...
++    #[ignore]
+     fn test_google_tls() {
+         tls_test(ResolverConfig::google_tls())
+     }
+ 
+     #[test]
+     #[cfg(not(windows))] // flakes on AppVeyor...
++    #[ignore]
+     fn test_cloudflare_tls() {
+         tls_test(ResolverConfig::cloudflare_tls())
+     }
+ 
+     #[test]
+     #[cfg(not(windows))] // flakes on AppVeyor...
++    #[ignore]
+     fn test_quad9_tls() {
+         tls_test(ResolverConfig::quad9_tls())
+     }
+Index: hickory-resolver/Cargo.toml
+===================================================================
+--- hickory-resolver.orig/Cargo.toml
++++ hickory-resolver/Cargo.toml
+@@ -55,32 +55,11 @@ name = "hickory_resolver"
+ path = "src/lib.rs"
+ 
+ [[example]]
+-name = "custom_provider"
+-path = "examples/custom_provider.rs"
+-required-features = ["tokio-runtime"]
+-
+-[[example]]
+ name = "flush_cache"
+ path = "examples/flush_cache.rs"
+ required-features = [
+     "tokio-runtime",
+     "system-config",
+-]
+-
+-[[example]]
+-name = "global_resolver"
+-path = "examples/global_resolver.rs"
+-required-features = [
+-    "tokio-runtime",
+-    "system-config",
+-]
+-
+-[[example]]
+-name = "multithreaded_runtime"
+-path = "examples/multithreaded_runtime.rs"
+-required-features = [
+-    "tokio-runtime",
+-    "system-config",
+ ]
+ 
+ [dependencies.backtrace]
