@@ -5,40 +5,16 @@
 
 # regenerating the source code
 execute_before_dh_auto_build:
-	cp /usr/share/gir-1.0/GLib-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/freetype2-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Gdk-4.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GdkPixbuf-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GdkX11-4.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Gio-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/cairo-1.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GModule-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/GObject-2.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/HarfBuzz-0.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Pango-1.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/PangoCairo-1.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Gsk-4.0.gir $(CURDIR)
-	cp /usr/share/gir-1.0/Graphene-1.0.gir $(CURDIR)
+	deb-gir-tool find \
+		--target-directory=$(CURDIR) \
+		--verbose \
+		--with-dependencies \
+		Gsk-4.0
 	# the xmlstarlet fixes are taken from upstream here: https://github.com/gtk-rs/gir-files/blob/master/fix.sh
 	xmlstarlet ed -L \
 	-u '//_:record[@name="PixbufModule"]/_:field[@name="module"]/_:type/@name' -v "gpointer" \
 	-u '//_:record[@name="PixbufModule"]/_:field[@name="module"]/_:type/@c:type' -v "gpointer" \
 	GdkPixbuf-2.0.gir
-	xmlstarlet ed -L \
-	-u '//_:class[@name="X11Display"]/_:method[@name="get_xcursor"]//_:type[@name="xlib.Cursor"]/@c:type' -v "gulong" \
-	-u '//_:class[@name="X11Display"]/_:method[@name="get_xdisplay"]//_:type[@name="xlib.Display"]/@c:type' -v "gpointer" \
-	-u '//_:class[@name="X11Display"]/_:method[@name="get_xrootwindow"]//_:type[@name="xlib.Window"]/@c:type' -v "gulong" \
-	-u '//_:class[@name="X11Display"]/_:method[@name="get_xscreen"]//_:type[@name="xlib.Screen"]/@c:type' -v "gpointer" \
-	-u '//_:class[@name="X11Monitor"]/_:method[@name="get_output"]//_:type[@name="xlib.XID"]/@c:type' -v "gulong" \
-	-u '//_:class[@name="X11Screen"]/_:method[@name="get_monitor_output"]//_:type[@name="xlib.XID"]/@c:type' -v "gulong" \
-	-u '//_:class[@name="X11Screen"]/_:method[@name="get_xscreen"]//_:type[@name="xlib.Screen"]/@c:type' -v "gpointer" \
-	-u '//_:class[@name="X11Surface"]/_:method[@name="get_xid"]//_:type[@name="xlib.Window"]/@c:type' -v "gulong" \
-	-u '//_:class[@name="X11Surface"]/_:function[@name="lookup_for_display"]//_:type[@name="xlib.Window"]/@c:type' -v "gulong" \
-	-u '//_:class[@name="get_xid"]/_:method[@name="lookup_for_display"]//_:type[@name="xlib.Window"]/@c:type' -v "gulong" \
-	-u '//_:function[@name="x11_get_xatom_by_name_for_display"]//_:type[@name="xlib.Atom"]/@c:type' -v "gulong" \
-	-u '//_:function[@name="x11_get_xatom_name_for_display"]//_:type[@name="xlib.Atom"]/@c:type' -v "gulong" \
-	-u '//_:function[@name="x11_lookup_xdisplay"]//_:type[@name="xlib.Display"]/@c:type' -v "gpointer" \
-	GdkX11-4.0.gir
 	xmlstarlet ed -L \
 	-u '//*[@glib:error-domain="g-option-context-error-quark"]/@glib:error-domain' -v g-option-error-quark \
 	-u '//_:record[@name="KeyFile"]/_:method[@name="set_boolean_list"]//_:parameter[@name="list"]/_:array/@c:type' -v "gboolean*" \
