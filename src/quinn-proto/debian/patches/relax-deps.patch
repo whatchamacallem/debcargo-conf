@@ -5,7 +5,7 @@
  
  [dependencies.rustls-platform-verifier]
 -version = "0.4"
-+version = "0.5"
++version = "0.6"
  optional = true
  
  [dependencies.slab]
@@ -14,7 +14,7 @@
  
  [dev-dependencies.rcgen]
 -version = "0.13"
-+version = ">= 0.11"
++version = "0.14"
  
  [dev-dependencies.tracing-subscriber]
  version = "0.3.0"
@@ -32,3 +32,53 @@
  
  [features]
  aws-lc-rs = [
+--- a/src/tests/mod.rs
++++ b/src/tests/mod.rs
+@@ -467,7 +467,7 @@
+     // because it's convenient.
+     store.add(CERTIFIED_KEY.cert.der().clone()).unwrap();
+ 
+-    let key = PrivatePkcs8KeyDer::from(CERTIFIED_KEY.key_pair.serialize_der());
++    let key = PrivatePkcs8KeyDer::from(CERTIFIED_KEY.signing_key.serialize_der());
+     let cert = CERTIFIED_KEY.cert.der().clone();
+ 
+     let provider = Arc::new(default_provider());
+@@ -2144,7 +2144,7 @@
+ 
+     (
+         cert.cert.into(),
+-        PrivateKeyDer::Pkcs8(cert.key_pair.serialize_der().into()),
++        PrivateKeyDer::Pkcs8(cert.signing_key.serialize_der().into()),
+     )
+ }
+ 
+--- a/src/tests/util.rs
++++ b/src/tests/util.rs
+@@ -596,7 +596,7 @@
+     let (cert, key) = identity.unwrap_or_else(|| {
+         (
+             CERTIFIED_KEY.cert.der().clone(),
+-            PrivateKeyDer::Pkcs8(CERTIFIED_KEY.key_pair.serialize_der().into()),
++            PrivateKeyDer::Pkcs8(CERTIFIED_KEY.signing_key.serialize_der().into()),
+         )
+     });
+ 
+@@ -714,6 +714,6 @@
+ lazy_static! {
+     pub static ref SERVER_PORTS: Mutex<RangeFrom<u16>> = Mutex::new(4433..);
+     pub static ref CLIENT_PORTS: Mutex<RangeFrom<u16>> = Mutex::new(44433..);
+-    pub(crate) static ref CERTIFIED_KEY: rcgen::CertifiedKey =
++    pub(crate) static ref CERTIFIED_KEY: rcgen::CertifiedKey<rcgen::KeyPair> =
+         rcgen::generate_simple_self_signed(vec!["localhost".into()]).unwrap();
+ }
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -1061,7 +1061,7 @@
+     #[cfg(feature = "platform-verifier")]
+     pub fn with_platform_verifier() -> Self {
+         Self::new(Arc::new(crypto::rustls::QuicClientConfig::new(Arc::new(
+-            rustls_platform_verifier::Verifier::new(),
++            rustls_platform_verifier::Verifier::new().expect("Failed to load TLS certificates"),
+         ))))
+     }
+ 
