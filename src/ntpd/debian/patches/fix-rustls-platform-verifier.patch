@@ -1,0 +1,14 @@
+Index: ntpd/src/daemon/keyexchange.rs
+===================================================================
+--- ntpd.orig/src/daemon/keyexchange.rs
++++ ntpd/src/daemon/keyexchange.rs
+@@ -32,8 +32,7 @@ async fn build_client_config(
+     let builder = tls_utils::client_config_builder_with_protocol_versions(&[&TLS13]);
+     let provider = builder.crypto_provider().clone();
+     let verifier =
+-        tls_utils::PlatformVerifier::new_with_extra_roots(extra_certificates.iter().cloned())?
+-            .with_provider(provider);
++        tls_utils::PlatformVerifier::new_with_extra_roots(extra_certificates.iter().cloned(), provider)?;
+     Ok(builder
+         .dangerous()
+         .with_custom_certificate_verifier(Arc::new(verifier))
