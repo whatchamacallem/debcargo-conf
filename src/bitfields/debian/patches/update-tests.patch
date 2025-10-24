@@ -1,6 +1,7 @@
+From 25267bb743e7bf434b3d72f83a67955b4aa9dfaa Mon Sep 17 00:00:00 2001
 From: NoisyCoil <noisycoil@tutanota.com>
 Date: Sun, 28 Sep 2025 22:59:38 -0400
-Subject: Adapt tests' stderr to Debian's rust toolchain
+Subject: [PATCH] Adapt tests' stderr to Debian's rust toolchain
 
 Tests in this package expect the stderr of compile failures to be produced by
 version 1.86 of the rust toolchain (as per
@@ -12,9 +13,51 @@ is not compatible with how Debian manages rustc.
 
 Forwarded: not-needed
 ---
+ Cargo.toml                                                | 2 +-
+ .../compile_error_cases/bitfield_bit_ops_disabled.stderr  | 7 ++++---
+ tests/compile_error_cases/bitfield_disable_debug.stderr   | 8 +++++---
+ tests/compile_error_cases/bitfield_disable_default.stderr | 4 ++--
+ .../compile_error_cases/bitfield_disable_from_bits.stderr | 4 ++--
+ .../compile_error_cases/bitfield_disable_into_bits.stderr | 4 ++--
+ tests/compile_error_cases/bitfield_disable_new.stderr     | 4 ++--
+ .../bitfield_field_access_padding_value.stderr            | 2 +-
+ .../bitfield_field_access_read_only_can_not_write.stderr  | 2 +-
+ ...ld_field_access_read_only_can_not_write_builder.stderr | 2 +-
+ .../bitfield_field_access_write_only.stderr               | 2 +-
+ .../bitfield_field_access_write_only_builder.stderr       | 2 +-
+ .../bitfield_field_defined_bits_0.stderr                  | 2 +-
+ ...ield_field_nested_bitfield_without_defined_bits.stderr | 5 ++---
+ .../bitfield_padding_field_with_access.stderr             | 2 +-
+ .../compile_error_cases/bitfield_unsupported_type.stderr  | 8 ++------
+ 16 files changed, 29 insertions(+), 31 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 616735a..5a94405 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -11,7 +11,7 @@
+ 
+ [package]
+ edition = "2021"
+-rust-version = "1.83.0"
++rust-version = "1.90.0"
+ name = "bitfields"
+ version = "1.0.0"
+ authors = ["Gregory Gaines <gainesagregory@gmail.com>"]
+diff --git a/tests/compile_error_cases/bitfield_bit_ops_disabled.stderr b/tests/compile_error_cases/bitfield_bit_ops_disabled.stderr
+index 54c1815..27bfb18 100644
 --- a/tests/compile_error_cases/bitfield_bit_ops_disabled.stderr
 +++ b/tests/compile_error_cases/bitfield_bit_ops_disabled.stderr
-@@ -9,5 +9,6 @@
+@@ -1,7 +1,7 @@
+ error[E0599]: no method named `get_bit` found for struct `Bitfield` in the current scope
+   --> tests/compile_error_cases/bitfield_bit_ops_disabled.rs:14:14
+    |
+-3  | #[bitfield(u32)]
++ 3 | #[bitfield(u32)]
+    | ---------------- method `get_bit` not found for this struct
+ ...
+ 14 |     bitfield.get_bit(0);
+@@ -9,5 +9,6 @@ error[E0599]: no method named `get_bit` found for struct `Bitfield` in the curre
     |
  help: there is a method `set_bits` with a similar name
     |
@@ -23,14 +66,191 @@ Forwarded: not-needed
 +14 -     bitfield.get_bit(0);
 +14 +     bitfield.set_bits(0);
 +   |
+diff --git a/tests/compile_error_cases/bitfield_disable_debug.stderr b/tests/compile_error_cases/bitfield_disable_debug.stderr
+index dd3ea44..81b971c 100644
+--- a/tests/compile_error_cases/bitfield_disable_debug.stderr
++++ b/tests/compile_error_cases/bitfield_disable_debug.stderr
+@@ -2,13 +2,15 @@ error[E0277]: `Bitfield` doesn't implement `Debug`
+   --> tests/compile_error_cases/bitfield_disable_debug.rs:13:22
+    |
+ 13 |     println!("{:?}", bitfield);
+-   |                      ^^^^^^^^ `Bitfield` cannot be formatted using `{:?}`
++   |               ----   ^^^^^^^^ `Bitfield` cannot be formatted using `{:?}` because it doesn't implement `Debug`
++   |               |
++   |               required by this formatting parameter
+    |
+    = help: the trait `Debug` is not implemented for `Bitfield`
+    = note: add `#[derive(Debug)]` to `Bitfield` or manually `impl Debug for Bitfield`
+    = note: this error originates in the macro `$crate::format_args_nl` which comes from the expansion of the macro `println` (in Nightly builds, run with -Z macro-backtrace for more info)
+ help: consider annotating `Bitfield` with `#[derive(Debug)]`
+    |
+-3  + #[derive(Debug)]
+-4  | #[bitfield(u64, debug = false)]
++ 3 + #[derive(Debug)]
++ 4 | #[bitfield(u64, debug = false)]
+    |
+diff --git a/tests/compile_error_cases/bitfield_disable_default.stderr b/tests/compile_error_cases/bitfield_disable_default.stderr
+index eefd96c..d808a32 100644
+--- a/tests/compile_error_cases/bitfield_disable_default.stderr
++++ b/tests/compile_error_cases/bitfield_disable_default.stderr
+@@ -1,7 +1,7 @@
+ error[E0599]: no function or associated item named `default` found for struct `Bitfield` in the current scope
+   --> tests/compile_error_cases/bitfield_disable_default.rs:12:30
+    |
+-3  | #[bitfield(u64, default = false)]
++ 3 | #[bitfield(u64, default = false)]
+    | --------------------------------- function or associated item `default` not found for this struct
+ ...
+ 12 |     let bitfield = Bitfield::default();
+@@ -14,7 +14,7 @@ note: if you're trying to build a new `Bitfield` consider using one of the follo
+       Bitfield::from_bits_with_defaults
+   --> tests/compile_error_cases/bitfield_disable_default.rs:3:1
+    |
+-3  | #[bitfield(u64, default = false)]
++ 3 | #[bitfield(u64, default = false)]
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: items from traits can only be used if the trait is implemented and in scope
+    = note: the following trait defines an item `default`, perhaps you need to implement it:
+diff --git a/tests/compile_error_cases/bitfield_disable_from_bits.stderr b/tests/compile_error_cases/bitfield_disable_from_bits.stderr
+index dc2ef16..3c895ab 100644
+--- a/tests/compile_error_cases/bitfield_disable_from_bits.stderr
++++ b/tests/compile_error_cases/bitfield_disable_from_bits.stderr
+@@ -1,7 +1,7 @@
+ error[E0599]: no function or associated item named `from_bits` found for struct `Bitfield` in the current scope
+   --> tests/compile_error_cases/bitfield_disable_from_bits.rs:12:30
+    |
+-3  | #[bitfield(u64, from_bits = false)]
++ 3 | #[bitfield(u64, from_bits = false)]
+    | ----------------------------------- function or associated item `from_bits` not found for this struct
+ ...
+ 12 |     let bitfield = Bitfield::from_bits(0);
+@@ -12,6 +12,6 @@ note: if you're trying to build a new `Bitfield` consider using one of the follo
+       Bitfield::new_without_defaults
+   --> tests/compile_error_cases/bitfield_disable_from_bits.rs:3:1
+    |
+-3  | #[bitfield(u64, from_bits = false)]
++ 3 | #[bitfield(u64, from_bits = false)]
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: this error originates in the attribute macro `bitfield` (in Nightly builds, run with -Z macro-backtrace for more info)
+diff --git a/tests/compile_error_cases/bitfield_disable_into_bits.stderr b/tests/compile_error_cases/bitfield_disable_into_bits.stderr
+index a45c318..eb90cf7 100644
+--- a/tests/compile_error_cases/bitfield_disable_into_bits.stderr
++++ b/tests/compile_error_cases/bitfield_disable_into_bits.stderr
+@@ -1,7 +1,7 @@
+ error[E0599]: no method named `into_bits` found for struct `Bitfield` in the current scope
+   --> tests/compile_error_cases/bitfield_disable_into_bits.rs:14:29
+    |
+-3  | #[bitfield(u64, into_bits = false)]
++ 3 | #[bitfield(u64, into_bits = false)]
+    | ----------------------------------- method `into_bits` not found for this struct
+ ...
+ 14 |     let val: u64 = bitfield.into_bits();
+@@ -10,6 +10,6 @@ error[E0599]: no method named `into_bits` found for struct `Bitfield` in the cur
+ help: there is a method `set_bits` with a similar name, but with different arguments
+   --> tests/compile_error_cases/bitfield_disable_into_bits.rs:3:1
+    |
+-3  | #[bitfield(u64, into_bits = false)]
++ 3 | #[bitfield(u64, into_bits = false)]
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: this error originates in the attribute macro `bitfield` (in Nightly builds, run with -Z macro-backtrace for more info)
+diff --git a/tests/compile_error_cases/bitfield_disable_new.stderr b/tests/compile_error_cases/bitfield_disable_new.stderr
+index 2d54f24..d6b4bba 100644
+--- a/tests/compile_error_cases/bitfield_disable_new.stderr
++++ b/tests/compile_error_cases/bitfield_disable_new.stderr
+@@ -1,7 +1,7 @@
+ error[E0599]: no function or associated item named `new` found for struct `Bitfield` in the current scope
+   --> tests/compile_error_cases/bitfield_disable_new.rs:12:30
+    |
+-3  | #[bitfield(u64, new = false)]
++ 3 | #[bitfield(u64, new = false)]
+    | ----------------------------- function or associated item `new` not found for this struct
+ ...
+ 12 |     let bitfield = Bitfield::new(0);
+@@ -12,6 +12,6 @@ note: if you're trying to build a new `Bitfield` consider using one of the follo
+       Bitfield::from_bits_with_defaults
+   --> tests/compile_error_cases/bitfield_disable_new.rs:3:1
+    |
+-3  | #[bitfield(u64, new = false)]
++ 3 | #[bitfield(u64, new = false)]
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: this error originates in the attribute macro `bitfield` (in Nightly builds, run with -Z macro-backtrace for more info)
+diff --git a/tests/compile_error_cases/bitfield_field_access_padding_value.stderr b/tests/compile_error_cases/bitfield_field_access_padding_value.stderr
+index 92c2231..a965bf7 100644
+--- a/tests/compile_error_cases/bitfield_field_access_padding_value.stderr
++++ b/tests/compile_error_cases/bitfield_field_access_padding_value.stderr
+@@ -1,7 +1,7 @@
+ error[E0599]: no method named `_padding` found for struct `Bitfield` in the current scope
+   --> tests/compile_error_cases/bitfield_field_access_padding_value.rs:15:25
+    |
+-3  | #[bitfield(u64)]
++ 3 | #[bitfield(u64)]
+    | ---------------- method `_padding` not found for this struct
+ ...
+ 15 |     assert_eq!(bitfield._padding(), 0x1);
+diff --git a/tests/compile_error_cases/bitfield_field_access_read_only_can_not_write.stderr b/tests/compile_error_cases/bitfield_field_access_read_only_can_not_write.stderr
+index 2ee63a6..8a96d4e 100644
+--- a/tests/compile_error_cases/bitfield_field_access_read_only_can_not_write.stderr
++++ b/tests/compile_error_cases/bitfield_field_access_read_only_can_not_write.stderr
+@@ -1,7 +1,7 @@
+ error[E0599]: no method named `set_a` found for struct `Bitfield` in the current scope
+   --> tests/compile_error_cases/bitfield_field_access_read_only_can_not_write.rs:11:14
+    |
+-3  | #[bitfield(u32)]
++ 3 | #[bitfield(u32)]
+    | ---------------- method `set_a` not found for this struct
+ ...
+ 11 |     bitfield.set_a(0x34);
+diff --git a/tests/compile_error_cases/bitfield_field_access_read_only_can_not_write_builder.stderr b/tests/compile_error_cases/bitfield_field_access_read_only_can_not_write_builder.stderr
+index 44a081a..ef45224 100644
+--- a/tests/compile_error_cases/bitfield_field_access_read_only_can_not_write_builder.stderr
++++ b/tests/compile_error_cases/bitfield_field_access_read_only_can_not_write_builder.stderr
+@@ -1,7 +1,7 @@
+ error[E0599]: no method named `set_a` found for struct `BitfieldBuilder` in the current scope
+   --> tests/compile_error_cases/bitfield_field_access_read_only_can_not_write_builder.rs:11:14
+    |
+-3  | #[bitfield(u32)]
++ 3 | #[bitfield(u32)]
+    | ---------------- method `set_a` not found for this struct
+ ...
+ 11 |     bitfield.set_a(0x34);
+diff --git a/tests/compile_error_cases/bitfield_field_access_write_only.stderr b/tests/compile_error_cases/bitfield_field_access_write_only.stderr
+index ecb5818..9a55081 100644
+--- a/tests/compile_error_cases/bitfield_field_access_write_only.stderr
++++ b/tests/compile_error_cases/bitfield_field_access_write_only.stderr
+@@ -1,7 +1,7 @@
+ error[E0599]: no method named `a` found for struct `Bitfield` in the current scope
+   --> tests/compile_error_cases/bitfield_field_access_write_only.rs:11:14
+    |
+-3  | #[bitfield(u32)]
++ 3 | #[bitfield(u32)]
+    | ---------------- method `a` not found for this struct
+ ...
+ 11 |     bitfield.a(); // Error, field is write-only
+diff --git a/tests/compile_error_cases/bitfield_field_access_write_only_builder.stderr b/tests/compile_error_cases/bitfield_field_access_write_only_builder.stderr
+index 0c163f7..eb8bd64 100644
+--- a/tests/compile_error_cases/bitfield_field_access_write_only_builder.stderr
++++ b/tests/compile_error_cases/bitfield_field_access_write_only_builder.stderr
+@@ -1,7 +1,7 @@
+ error[E0599]: no method named `a` found for struct `BitfieldBuilder` in the current scope
+   --> tests/compile_error_cases/bitfield_field_access_write_only_builder.rs:11:14
+    |
+-3  | #[bitfield(u32)]
++ 3 | #[bitfield(u32)]
+    | ---------------- method `a` not found for this struct
+ ...
+ 11 |     bitfield.a(); // Error, field is write-only
+diff --git a/tests/compile_error_cases/bitfield_field_defined_bits_0.stderr b/tests/compile_error_cases/bitfield_field_defined_bits_0.stderr
+index cbf6976..5a22d5b 100644
 --- a/tests/compile_error_cases/bitfield_field_defined_bits_0.stderr
 +++ b/tests/compile_error_cases/bitfield_field_defined_bits_0.stderr
-@@ -2,4 +2,4 @@
+@@ -2,4 +2,4 @@ error: The field bits must be greater than 0.
   --> tests/compile_error_cases/bitfield_field_defined_bits_0.rs:5:7
    |
  5 |     #[bits(0)]
 -  |       ^^^^^^^
 +  |       ^^^^
+diff --git a/tests/compile_error_cases/bitfield_field_nested_bitfield_without_defined_bits.stderr b/tests/compile_error_cases/bitfield_field_nested_bitfield_without_defined_bits.stderr
+index 9274023..110ba49 100644
 --- a/tests/compile_error_cases/bitfield_field_nested_bitfield_without_defined_bits.stderr
 +++ b/tests/compile_error_cases/bitfield_field_nested_bitfield_without_defined_bits.stderr
 @@ -1,6 +1,5 @@
@@ -42,14 +262,18 @@ Forwarded: not-needed
 -  | |________________________________^
 +7 |     #[bits(default = NestedBitfield::new())]
 +  |     ^
+diff --git a/tests/compile_error_cases/bitfield_padding_field_with_access.stderr b/tests/compile_error_cases/bitfield_padding_field_with_access.stderr
+index 9c27627..42f21ef 100644
 --- a/tests/compile_error_cases/bitfield_padding_field_with_access.stderr
 +++ b/tests/compile_error_cases/bitfield_padding_field_with_access.stderr
-@@ -2,4 +2,4 @@
+@@ -2,4 +2,4 @@ error: Padding fields can't have a specified access.
   --> tests/compile_error_cases/bitfield_padding_field_with_access.rs:5:7
    |
  5 |     #[bits(access = ro)]
 -  |       ^^^^^^^^^^^^^^^^^
 +  |       ^^^^
+diff --git a/tests/compile_error_cases/bitfield_unsupported_type.stderr b/tests/compile_error_cases/bitfield_unsupported_type.stderr
+index 5050e9a..3e9e000 100644
 --- a/tests/compile_error_cases/bitfield_unsupported_type.stderr
 +++ b/tests/compile_error_cases/bitfield_unsupported_type.stderr
 @@ -1,9 +1,5 @@
@@ -64,18 +288,6 @@ Forwarded: not-needed
 -  | |_^
 +4 | pub struct Bitfield {
 +  | ^^^
-Index: bitfields/tests/compile_error_cases/bitfield_disable_debug.stderr
-===================================================================
---- bitfields.orig/tests/compile_error_cases/bitfield_disable_debug.stderr
-+++ bitfields/tests/compile_error_cases/bitfield_disable_debug.stderr
-@@ -2,7 +2,9 @@ error[E0277]: `Bitfield` doesn't impleme
-   --> tests/compile_error_cases/bitfield_disable_debug.rs:13:22
-    |
- 13 |     println!("{:?}", bitfield);
--   |                      ^^^^^^^^ `Bitfield` cannot be formatted using `{:?}`
-+   |               ----   ^^^^^^^^ `Bitfield` cannot be formatted using `{:?}` because it doesn't implement `Debug`
-+   |               |
-+   |               required by this formatting parameter
-    |
-    = help: the trait `Debug` is not implemented for `Bitfield`
-    = note: add `#[derive(Debug)]` to `Bitfield` or manually `impl Debug for Bitfield`
+-- 
+2.51.0
+
