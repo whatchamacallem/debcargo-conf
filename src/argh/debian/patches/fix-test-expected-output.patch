@@ -1,0 +1,60 @@
+From 512bc5baa6255706d431d033a39af531bd97705f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Fabian=20Gr=C3=BCnbichler?= <git@fabian.gruenbichler.email>
+Date: Sat, 25 Oct 2025 09:51:40 +0200
+Subject: [PATCH] fix expected test output for rustc 1.90
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Fabian Grünbichler <git@fabian.gruenbichler.email>
+---
+ Cargo.toml                                          | 1 +
+ tests/ui/duplicate-name/duplicate-long-name.stderr  | 4 ++--
+ tests/ui/duplicate-name/duplicate-short-name.stderr | 4 ++--
+ 3 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index f638fc5..b72b602 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -35,6 +35,7 @@ keywords = [
+ categories = ["command-line-interface"]
+ license = "BSD-3-Clause"
+ repository = "https://github.com/google/argh"
++rust-version = "1.90.0"
+ 
+ [lib]
+ name = "argh"
+diff --git a/tests/ui/duplicate-name/duplicate-long-name.stderr b/tests/ui/duplicate-name/duplicate-long-name.stderr
+index 697f36b..baec112 100644
+--- a/tests/ui/duplicate-name/duplicate-long-name.stderr
++++ b/tests/ui/duplicate-name/duplicate-long-name.stderr
+@@ -9,8 +9,8 @@ error: The long name of "--foo" was already used here.
+ error: Later usage here.
+   --> tests/ui/duplicate-name/duplicate-long-name.rs:8:5
+    |
+-8  | /     /// foo2
+-9  | |     #[argh(option, long = "foo")]
++ 8 | /     /// foo2
++ 9 | |     #[argh(option, long = "foo")]
+ 10 | |     foo2: u32,
+    | |_____________^
+ 
+diff --git a/tests/ui/duplicate-name/duplicate-short-name.stderr b/tests/ui/duplicate-name/duplicate-short-name.stderr
+index 9262a7d..8c5944c 100644
+--- a/tests/ui/duplicate-name/duplicate-short-name.stderr
++++ b/tests/ui/duplicate-name/duplicate-short-name.stderr
+@@ -9,8 +9,8 @@ error: The short name of "-f" was already used here.
+ error: Later usage here.
+   --> tests/ui/duplicate-name/duplicate-short-name.rs:8:5
+    |
+-8  | /     /// foo2
+-9  | |     #[argh(option, short = 'f')]
++ 8 | /     /// foo2
++ 9 | |     #[argh(option, short = 'f')]
+ 10 | |     foo2: u32,
+    | |_____________^
+ 
+-- 
+2.51.0
+
