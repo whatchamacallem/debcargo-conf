@@ -1,0 +1,39 @@
+This patch is based on the upstream commit described below, adapted for use
+in the Debian package by Peter Michael Green.
+
+commit cde7c196f59d36757a3cc0c587f0833b44777087
+Author: tison <wander4096@gmail.com>
+Date:   Thu Aug 14 18:29:53 2025 +0800
+
+    chore: upgrade and tidy dependencies (#588)
+    
+    cc @Xuanwo
+    
+    ---------
+    
+    Signed-off-by: tison <wander4096@gmail.com>
+
+Index: reqsign/src/aws/credential.rs
+===================================================================
+--- reqsign.orig/src/aws/credential.rs
++++ reqsign/src/aws/credential.rs
+@@ -1033,7 +1033,7 @@ mod tests {
+             "wJalrXUtnFEMI/K7MDENG/bPxRfiCYzEXAMPLEKEY"
+         );
+         assert_eq!(
+-            &resp.result.credentials.session_token,
++            resp.result.credentials.session_token.trim(),
+             "AQoDYXdzEPT//////////wEXAMPLEtc764bNrC9SAPBSM22wDOk4x4HIZ8j4FZTwdQW
+        LWsKWHGBuFqwAeMicRXmxfpSPfIeoIYRqTflfKD8YUuwthAx7mSEI/qkPpKPi/kMcGd
+        QrmGdeehM4IC1NtBmUpp2wUE8phUZampKsburEDy0KPkyQDYwT7WZ0wq5VSXDvp75YU
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -69,7 +69,7 @@
+ version = "2"
+ 
+ [dependencies.quick-xml]
+-version = "0.37"
++version = ">= 0.36.1, < 1.0"
+ features = ["serialize"]
+ optional = true
+ 
