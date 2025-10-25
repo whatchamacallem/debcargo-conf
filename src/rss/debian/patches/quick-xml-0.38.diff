@@ -1,0 +1,39 @@
+Index: rss/Cargo.toml
+===================================================================
+--- rss.orig/Cargo.toml
++++ rss/Cargo.toml
+@@ -72,7 +72,7 @@ version = "0.1"
+ optional = true
+ 
+ [dependencies.quick-xml]
+-version = "0.37.1"
++version = "0.38"
+ features = ["encoding"]
+ 
+ [dependencies.serde]
+Index: rss/src/extension/util.rs
+===================================================================
+--- rss.orig/src/extension/util.rs
++++ rss/src/extension/util.rs
+@@ -87,7 +87,7 @@ pub(crate) fn parse_extension_element<R:
+                 text.push_str(decode(&element, reader)?.as_ref());
+             }
+             Event::Text(element) => {
+-                text.push_str(element.unescape()?.as_ref());
++                text.push_str(element.decode()?.as_ref());
+             }
+             Event::End(element) => {
+                 extension.name = decode(element.name().as_ref(), reader)?.into();
+Index: rss/src/util.rs
+===================================================================
+--- rss.orig/src/util.rs
++++ rss/src/util.rs
+@@ -46,7 +46,7 @@ pub fn element_text<R: BufRead>(reader:
+                 skip(element.name(), reader)?;
+             }
+             Event::Text(element) => {
+-                let decoded = element.unescape()?;
++                let decoded = element.decode()?;
+                 content.push_str(decoded.as_ref());
+             }
+             Event::CData(element) => {
