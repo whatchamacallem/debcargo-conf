@@ -1,5 +1,7 @@
---- a/src/lib.rs
-+++ b/src/lib.rs
+Index: grcov/src/lib.rs
+===================================================================
+--- grcov.orig/src/lib.rs
++++ grcov/src/lib.rs
 @@ -437,6 +437,7 @@ mod tests {
      }
  
@@ -16,8 +18,10 @@
      fn test_ignore_relative_path() {
          let mut f = File::open("./test/relative_path/relative_path.info")
              .expect("Failed to open lcov file");
---- a/src/parser.rs
-+++ b/src/parser.rs
+Index: grcov/src/parser.rs
+===================================================================
+--- grcov.orig/src/parser.rs
++++ grcov/src/parser.rs
 @@ -1018,6 +1018,7 @@ mod tests {
      }
  
@@ -58,7 +62,15 @@
      fn test_lcov_parser_invalid_DA_record() {
          let mut f = File::open("./test/invalid_DA_record.info").expect("Failed to open lcov file");
          let mut buf = Vec::new();
-@@ -1464,6 +1469,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
+@@ -1396,6 +1401,7 @@ mod tests {
+ 
+     #[allow(non_snake_case)]
+     #[test]
++    #[ignore]
+     fn test_lcov_parser_ignoring_invalid_DA_record() {
+         let mut f = File::open("./test/invalid_DA_record.info").expect("Failed to open lcov file");
+         let mut buf = Vec::new();
+@@ -1464,6 +1470,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
      }
  
      #[test]
@@ -66,7 +78,7 @@
      fn test_parser() {
          let results = parse_gcov(Path::new("./test/prova.gcov")).unwrap();
  
-@@ -1679,6 +1685,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
+@@ -1679,6 +1686,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
      }
  
      #[test]
@@ -74,7 +86,7 @@
      fn test_parser_gcov_with_negative_counts() {
          let results = parse_gcov(Path::new("./test/negative_counts.gcov")).unwrap();
          assert_eq!(results.len(), 118);
-@@ -1688,6 +1695,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
+@@ -1688,6 +1696,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
      }
  
      #[test]
@@ -82,7 +94,7 @@
      fn test_parser_gcov_with_64bit_counts() {
          let results = parse_gcov(Path::new("./test/64bit_count.gcov")).unwrap();
          assert_eq!(results.len(), 46);
-@@ -1930,6 +1938,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
+@@ -1930,6 +1939,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
      }
  
      #[test]
@@ -90,7 +102,7 @@
      fn test_parser_gcov_with_branches() {
          let results = parse_gcov(Path::new("./test/intermediate_with_branches.gcov")).unwrap();
          assert_eq!(results.len(), 1);
-@@ -1968,6 +1977,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
+@@ -1968,6 +1978,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
      }
  
      #[test]
@@ -98,7 +110,7 @@
      fn test_parser_gcov_rust_generics_with_two_parameters() {
          let results = parse_gcov(Path::new(
              "./test/rust/generics_with_two_parameters_intermediate.gcov",
-@@ -2010,6 +2020,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
+@@ -2010,6 +2021,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
      }
  
      #[test]
@@ -106,7 +118,7 @@
      fn test_parser_gcov_gz() {
          let results = parse_gcov_gz(Path::new(
              "./test/mozillavpn_serverconnection.gcno.gcov.json.gz",
-@@ -2191,6 +2202,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
+@@ -2191,6 +2203,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
      }
  
      #[test]
@@ -114,7 +126,7 @@
      fn test_parser_jacoco_xml_basic() {
          let mut lines: BTreeMap<u32, u64> = BTreeMap::new();
          lines.insert(1, 0);
-@@ -2230,6 +2242,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
+@@ -2230,6 +2243,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
      }
  
      #[test]
@@ -122,24 +134,26 @@
      fn test_parser_jacoco_xml_inner_classes() {
          let mut lines: BTreeMap<u32, u64> = BTreeMap::new();
          for i in &[5, 10, 14, 15, 18, 22, 23, 25, 27, 31, 34, 37, 44, 49] {
-@@ -2278,6 +2291,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
+@@ -2277,6 +2291,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
+     }
  
      #[test]
-     fn test_parser_jacoco_kotlin() {
 +    #[ignore]
+     fn test_parser_jacoco_kotlin() {
          let mut lines: BTreeMap<u32, u64> = BTreeMap::new();
          for i in &[
-             (5, 0),
-@@ -2287,6 +2301,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
-             (30, 0),
-             (32, 0),
-             (41, 0),
+@@ -2351,6 +2366,7 @@ TN:http_3a_2f_2fweb_2dplatform_2etest_3a
+     }
+ 
+     #[test]
 +    #[ignore]
-             (49, 0),
-             (57, 0),
-             (65, 0),
---- a/src/reader.rs
-+++ b/src/reader.rs
+     fn parse_go() {
+         let mut aggregator_lines: BTreeMap<u32, u64> = BTreeMap::new();
+         let mut decoder_lines: BTreeMap<u32, u64> = BTreeMap::new();
+Index: grcov/src/reader.rs
+===================================================================
+--- grcov.orig/src/reader.rs
++++ grcov/src/reader.rs
 @@ -1243,6 +1243,7 @@ mod tests {
      }
  
@@ -244,8 +258,10 @@
      fn test_reader_finalize_file_branch() {
          let mut gcno = Gcno::new();
          from_path(&mut gcno, FileType::Gcno, "test/llvm/file_branch.gcno");
---- a/src/producer.rs
-+++ b/src/producer.rs
+Index: grcov/src/producer.rs
+===================================================================
+--- grcov.orig/src/producer.rs
++++ grcov/src/producer.rs
 @@ -701,6 +701,7 @@ mod tests {
      }
  
@@ -454,8 +470,10 @@
      fn test_info_files() {
          let mut file = File::open("./test/1494603973-2977-7.info").ok();
          assert!(
---- a/src/path_rewriting.rs
-+++ b/src/path_rewriting.rs
+Index: grcov/src/path_rewriting.rs
+===================================================================
+--- grcov.orig/src/path_rewriting.rs
++++ grcov/src/path_rewriting.rs
 @@ -650,6 +650,7 @@ mod tests {
  
      #[cfg(unix)]
@@ -520,7 +538,15 @@
      fn test_rewrite_paths_rewrite_path_for_java_and_rust() {
          let mut result_map: CovResultMap = FxHashMap::default();
          result_map.insert("java/main.java".to_string(), empty_result!());
-@@ -1190,6 +1198,7 @@ mod tests {
+@@ -1163,6 +1171,7 @@ mod tests {
+ 
+     #[cfg(unix)]
+     #[test]
++    #[ignore]
+     fn test_rewrite_paths_rewrite_path_for_java_kotlin_and_rust() {
+         let mut result_map: CovResultMap = FxHashMap::default();
+         result_map.insert("kt/main.kt".to_string(), empty_result!());
+@@ -1190,6 +1199,7 @@ mod tests {
  
      #[cfg(windows)]
      #[test]
@@ -528,7 +554,7 @@
      fn test_rewrite_paths_rewrite_path_for_java_and_rust() {
          let mut result_map: CovResultMap = FxHashMap::default();
          result_map.insert("java\\main.java".to_string(), empty_result!());
-@@ -1216,6 +1225,7 @@ mod tests {
+@@ -1216,6 +1226,7 @@ mod tests {
  
      #[cfg(unix)]
      #[test]
@@ -536,7 +562,7 @@
      fn test_rewrite_paths_rewrite_path_using_absolute_source_directory_and_partial_path() {
          let mut result_map: CovResultMap = FxHashMap::default();
          result_map.insert("java/main.java".to_string(), empty_result!());
-@@ -1243,6 +1253,7 @@ mod tests {
+@@ -1243,6 +1254,7 @@ mod tests {
  
      #[cfg(windows)]
      #[test]
@@ -544,7 +570,7 @@
      fn test_rewrite_paths_rewrite_path_using_absolute_source_directory_and_partial_path() {
          let mut result_map: CovResultMap = FxHashMap::default();
          result_map.insert("java\\main.java".to_string(), empty_result!());
-@@ -1270,6 +1281,7 @@ mod tests {
+@@ -1270,6 +1282,7 @@ mod tests {
  
      #[cfg(unix)]
      #[test]
@@ -552,7 +578,7 @@
      fn test_rewrite_paths_rewrite_path_and_remove_prefix() {
          let mut result_map: CovResultMap = FxHashMap::default();
          result_map.insert(
-@@ -1301,6 +1313,7 @@ mod tests {
+@@ -1301,6 +1314,7 @@ mod tests {
  
      #[cfg(windows)]
      #[test]
@@ -560,7 +586,7 @@
      fn test_rewrite_paths_rewrite_path_and_remove_prefix() {
          let mut result_map: CovResultMap = FxHashMap::default();
          result_map.insert(
-@@ -1383,6 +1396,7 @@ mod tests {
+@@ -1383,6 +1397,7 @@ mod tests {
  
      #[cfg(unix)]
      #[test]
@@ -568,7 +594,7 @@
      fn test_rewrite_paths_rewrite_path_using_mapping_and_ignore_non_existing() {
          let mut result_map: CovResultMap = FxHashMap::default();
          result_map.insert("rewritten/main.cpp".to_string(), empty_result!());
-@@ -1413,6 +1427,7 @@ mod tests {
+@@ -1413,6 +1428,7 @@ mod tests {
  
      #[cfg(windows)]
      #[test]
@@ -576,7 +602,7 @@
      fn test_rewrite_paths_rewrite_path_using_mapping_and_ignore_non_existing() {
          let mut result_map: CovResultMap = FxHashMap::default();
          result_map.insert("rewritten\\main.cpp".to_string(), empty_result!());
-@@ -1443,6 +1458,7 @@ mod tests {
+@@ -1443,6 +1459,7 @@ mod tests {
  
      #[cfg(unix)]
      #[test]
@@ -584,7 +610,7 @@
      fn test_rewrite_paths_rewrite_path_using_mapping_and_remove_prefix() {
          let mut result_map: CovResultMap = FxHashMap::default();
          result_map.insert(
-@@ -1473,6 +1489,7 @@ mod tests {
+@@ -1473,6 +1490,7 @@ mod tests {
  
      #[cfg(windows)]
      #[test]
@@ -592,7 +618,7 @@
      fn test_rewrite_paths_rewrite_path_using_mapping_and_remove_prefix() {
          // Mapping with uppercase disk and prefix with uppercase disk.
          let mut result_map: CovResultMap = FxHashMap::default();
-@@ -1593,6 +1610,7 @@ mod tests {
+@@ -1593,6 +1611,7 @@ mod tests {
  
      #[cfg(unix)]
      #[test]
@@ -600,7 +626,7 @@
      fn test_rewrite_paths_rewrite_path_using_mapping_and_source_directory_and_remove_prefix() {
          let mut result_map: CovResultMap = FxHashMap::default();
          result_map.insert(
-@@ -1623,6 +1641,7 @@ mod tests {
+@@ -1623,6 +1642,7 @@ mod tests {
  
      #[cfg(windows)]
      #[test]
@@ -608,7 +634,7 @@
      fn test_rewrite_paths_rewrite_path_using_mapping_and_source_directory_and_remove_prefix() {
          let mut result_map: CovResultMap = FxHashMap::default();
          result_map.insert(
-@@ -1740,6 +1759,7 @@ mod tests {
+@@ -1740,6 +1760,7 @@ mod tests {
  
      #[cfg(unix)]
      #[test]
@@ -616,7 +642,7 @@
      fn test_rewrite_paths_filter_lines_and_branches() {
          let mut result_map: CovResultMap = FxHashMap::default();
          result_map.insert("test/java/skip.java".to_string(), skipping_result!());
-@@ -1784,6 +1804,7 @@ mod tests {
+@@ -1784,6 +1805,7 @@ mod tests {
  
      #[cfg(windows)]
      #[test]
@@ -624,8 +650,10 @@
      fn test_rewrite_paths_filter_lines_and_branches() {
          let mut result_map: CovResultMap = FxHashMap::default();
          result_map.insert("test\\java\\skip.java".to_string(), skipping_result!());
---- a/src/output.rs
-+++ b/src/output.rs
+Index: grcov/src/output.rs
+===================================================================
+--- grcov.orig/src/output.rs
++++ grcov/src/output.rs
 @@ -780,6 +780,7 @@ mod tests {
      }
  
@@ -634,3 +662,39 @@
      fn test_covdir() {
          let tmp_dir = tempfile::tempdir().expect("Failed to create temporary directory");
          let file_name = "test_covdir.json";
+Index: grcov/src/llvm_tools.rs
+===================================================================
+--- grcov.orig/src/llvm_tools.rs
++++ grcov/src/llvm_tools.rs
+@@ -293,6 +293,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_wrong_binary_file() {
+         let tmp_dir = setup_env_and_run_program("basic");
+         let tmp_path = tmp_dir.path();
+@@ -308,6 +309,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_profraws_to_lcov() {
+         let tmp_dir = setup_env_and_run_program("basic");
+         let tmp_path = tmp_dir.path();
+@@ -328,6 +330,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_profdatas_to_lcov() {
+         let tmp_dir = setup_env_and_run_program("basic");
+         let tmp_path = tmp_dir.path();
+@@ -361,6 +364,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore]
+     fn test_llvm_aggregate_profraws() {
+         let tmp_dir = copy_fixture("hello_name");
+         let tmp_path = tmp_dir.path();
