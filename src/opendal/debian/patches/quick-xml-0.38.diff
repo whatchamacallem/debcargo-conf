@@ -1,0 +1,129 @@
+This patch is based on a portion of the upstream commit described below,
+adapted for use in the Debian package by Peter Michael Green.
+
+commit 9943495dbc599ccec0133ac9f9ad019223c3a035
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Tue Jul 15 20:36:35 2025 +0900
+
+    chore(deps): bump the http-serialization-utils group in /core with 6 updates (#6414)
+    
+    * chore(deps): bump the http-serialization-utils group
+    
+    Bumps the http-serialization-utils group in /core with 6 updates:
+    
+    | Package | From | To |
+    | --- | --- | --- |
+    | [backon](https://github.com/Xuanwo/backon) | `1.5.0` | `1.5.1` |
+    | [quick-xml](https://github.com/tafia/quick-xml) | `0.37.5` | `0.38.0` |
+    | [reqwest](https://github.com/seanmonstar/reqwest) | `0.12.15` | `0.12.22` |
+    | [uuid](https://github.com/uuid-rs/uuid) | `1.16.0` | `1.17.0` |
+    | [reqsign](https://github.com/Xuanwo/reqsign) | `0.16.3` | `0.16.5` |
+    | [prometheus](https://github.com/tikv/rust-prometheus) | `0.13.4` | `0.14.0` |
+    
+    
+    Updates `backon` from 1.5.0 to 1.5.1
+    - [Release notes](https://github.com/Xuanwo/backon/releases)
+    - [Commits](https://github.com/Xuanwo/backon/compare/v1.5.0...v1.5.1)
+    
+    Updates `quick-xml` from 0.37.5 to 0.38.0
+    - [Release notes](https://github.com/tafia/quick-xml/releases)
+    - [Changelog](https://github.com/tafia/quick-xml/blob/master/Changelog.md)
+    - [Commits](https://github.com/tafia/quick-xml/compare/v0.37.5...v0.38.0)
+    
+    Updates `reqwest` from 0.12.15 to 0.12.22
+    - [Release notes](https://github.com/seanmonstar/reqwest/releases)
+    - [Changelog](https://github.com/seanmonstar/reqwest/blob/master/CHANGELOG.md)
+    - [Commits](https://github.com/seanmonstar/reqwest/compare/v0.12.15...v0.12.22)
+    
+    Updates `uuid` from 1.16.0 to 1.17.0
+    - [Release notes](https://github.com/uuid-rs/uuid/releases)
+    - [Commits](https://github.com/uuid-rs/uuid/compare/v1.16.0...v1.17.0)
+    
+    Updates `reqsign` from 0.16.3 to 0.16.5
+    - [Release notes](https://github.com/Xuanwo/reqsign/releases)
+    - [Commits](https://github.com/Xuanwo/reqsign/compare/v0.16.3...v0.16.5)
+    
+    Updates `prometheus` from 0.13.4 to 0.14.0
+    - [Changelog](https://github.com/tikv/rust-prometheus/blob/master/CHANGELOG.md)
+    - [Commits](https://github.com/tikv/rust-prometheus/compare/v0.13.4...v0.14.0)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: backon
+      dependency-version: 1.5.1
+      dependency-type: direct:production
+      update-type: version-update:semver-patch
+      dependency-group: http-serialization-utils
+    - dependency-name: quick-xml
+      dependency-version: 0.38.0
+      dependency-type: direct:production
+      update-type: version-update:semver-minor
+      dependency-group: http-serialization-utils
+    - dependency-name: reqwest
+      dependency-version: 0.12.22
+      dependency-type: direct:production
+      update-type: version-update:semver-patch
+      dependency-group: http-serialization-utils
+    - dependency-name: uuid
+      dependency-version: 1.17.0
+      dependency-type: direct:production
+      update-type: version-update:semver-minor
+      dependency-group: http-serialization-utils
+    - dependency-name: reqsign
+      dependency-version: 0.16.5
+      dependency-type: direct:production
+      update-type: version-update:semver-patch
+      dependency-group: http-serialization-utils
+    - dependency-name: prometheus
+      dependency-version: 0.14.0
+      dependency-type: direct:production
+      update-type: version-update:semver-minor
+      dependency-group: http-serialization-utils
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+    
+    * trim
+    
+    * trim all
+    
+    ---------
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+    Co-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+    Co-authored-by: Asuka Minato <i@asukaminato.eu.org>
+
+Index: opendal/src/services/oss/error.rs
+===================================================================
+--- opendal.orig/src/services/oss/error.rs
++++ opendal/src/services/oss/error.rs
+@@ -98,9 +98,12 @@ mod tests {
+         let out: OssError = de::from_reader(bs.reader()).expect("must success");
+         println!("{out:?}");
+ 
+-        assert_eq!(out.code, "AccessDenied");
+-        assert_eq!(out.message, "Query-string authentication requires the Signature, Expires and OSSAccessKeyId parameters");
+-        assert_eq!(out.request_id, "1D842BC54255****");
+-        assert_eq!(out.host_id, "oss-cn-hangzhou.aliyuncs.com");
++        assert_eq!(out.code.trim(), "AccessDenied");
++        assert_eq!(
++            out.message.trim(),
++            "Query-string authentication requires the Signature, Expires and OSSAccessKeyId parameters"
++        );
++        assert_eq!(out.request_id.trim(), "1D842BC54255****");
++        assert_eq!(out.host_id.trim(), "oss-cn-hangzhou.aliyuncs.com");
+     }
+ }
+Index: opendal/Cargo.toml
+===================================================================
+--- opendal.orig/Cargo.toml
++++ opendal/Cargo.toml
+@@ -288,7 +288,7 @@ version = ">= 0.12.6, < 0.14"
+ optional = true
+ 
+ [dependencies.quick-xml]
+-version = "0.37"
++version = "0.38"
+ features = [
+     "serialize",
+     "overlapped-lists",
