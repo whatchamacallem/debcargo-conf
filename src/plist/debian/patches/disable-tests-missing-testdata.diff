@@ -1,0 +1,202 @@
+Index: plist/src/serde_tests.rs
+===================================================================
+--- plist.orig/src/serde_tests.rs
++++ plist/src/serde_tests.rs
+@@ -606,7 +606,7 @@ fn deserialise_old_enum_unit_variant_enc
+     assert_eq!(obj, Foo::Baz);
+ }
+ 
+-#[test]
++/*#[test]
+ fn deserialize_dictionary_xml() {
+     let reader = File::open("./tests/data/xml.plist").unwrap();
+     let dict: Dictionary = crate::from_reader(reader).unwrap();
+@@ -621,15 +621,15 @@ fn deserialize_dictionary_xml() {
+             .unwrap(),
+         0xDEADBEEF
+     );
+-}
++}*/
+ 
+-#[test]
++/*#[test]
+ fn deserialize_dictionary_binary() {
+     let reader = File::open("./tests/data/binary.plist").unwrap();
+     let dict: Dictionary = crate::from_reader(reader).unwrap();
+ 
+     check_common_plist(&dict);
+-}
++}*/
+ 
+ // Shared checks used by the tests deserialize_dictionary_xml() and
+ // deserialize_dictionary_binary(), which load files with different formats
+@@ -719,7 +719,7 @@ fn check_common_plist(dict: &Dictionary)
+     // of that.
+ }
+ 
+-#[test]
++/*#[test]
+ fn deserialize_dictionary_binary_nskeyedarchiver() {
+     let reader = File::open("./tests/data/binary_NSKeyedArchiver.plist").unwrap();
+     let dict: Dictionary = crate::from_reader(reader).unwrap();
+@@ -795,7 +795,7 @@ fn deserialize_dictionary_binary_nskeyed
+ 
+     let version = dict.get("$version").unwrap().as_unsigned_integer().unwrap();
+     assert_eq!(version, 100000);
+-}
++}*/
+ 
+ fn try_parse_xml(bom: bool, whitespace: bool, decl: bool, comment: bool, doctype: bool) -> bool {
+     #[derive(Deserialize)]
+Index: plist/tests/fuzzer.rs
+===================================================================
+--- plist.orig/tests/fuzzer.rs
++++ plist/tests/fuzzer.rs
+@@ -27,11 +27,11 @@ fn binary_circular_reference() {
+     test_fuzzer_data_err(data);
+ }
+ 
+-#[test]
++/*#[test]
+ fn binary_zero_offset_size() {
+     let data = include_bytes!("data/binary_zero_offset_size.plist");
+     test_fuzzer_data_err(data);
+-}
++}*/
+ 
+ #[test]
+ fn binary_nan_date() {
+@@ -39,11 +39,11 @@ fn binary_nan_date() {
+     test_fuzzer_data_err(data);
+ }
+ 
+-#[test]
++/*#[test]
+ fn binary_circular_array() {
+     let data = include_bytes!("data/binary_circular_array.plist");
+     test_fuzzer_data_err(data);
+-}
++}*/
+ 
+ // Issue 20 - not found by fuzzing but this is a convenient place to put the test.
+ #[test]
+Index: plist/src/stream/ascii_reader.rs
+===================================================================
+--- plist.orig/src/stream/ascii_reader.rs
++++ plist/src/stream/ascii_reader.rs
+@@ -375,7 +375,7 @@ mod tests {
+         assert_eq!(events, &[]);
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn streaming_sample() {
+         let reader = File::open("./tests/data/ascii-sample.plist").unwrap();
+         let streaming_parser = AsciiReader::new(reader);
+@@ -406,7 +406,7 @@ mod tests {
+         ];
+ 
+         assert_eq!(events, comparison);
+-    }
++    }*/
+ 
+     #[test]
+     fn utf8_strings() {
+@@ -519,7 +519,7 @@ mod tests {
+         assert_eq!(events, comparison);
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn netnewswire_pbxproj() {
+         let reader = File::open("./tests/data/netnewswire.pbxproj").unwrap();
+         let streaming_parser = AsciiReader::new(reader);
+@@ -528,7 +528,7 @@ mod tests {
+         let events: Vec<Event> = streaming_parser.map(|e| e.unwrap()).collect();
+ 
+         assert!(!events.is_empty());
+-    }
++    }*/
+ 
+     // TODO: This should return `Err` after the first string
+     #[test]
+Index: plist/src/stream/binary_reader.rs
+===================================================================
+--- plist.orig/src/stream/binary_reader.rs
++++ plist/src/stream/binary_reader.rs
+@@ -425,7 +425,7 @@ mod tests {
+ 
+     use super::*;
+ 
+-    #[test]
++    /*#[test]
+     fn streaming_parser() {
+         use crate::stream::Event::*;
+ 
+@@ -512,5 +512,5 @@ mod tests {
+         assert_eq!(events[1], Event::String("data".into()));
+         assert_eq!(events[2], Event::StartDictionary(Some(2199)));
+         assert_eq!(events[3], Event::String("1838".into()));
+-    }
++    }*/
+ }
+Index: plist/src/stream/binary_writer.rs
+===================================================================
+--- plist.orig/src/stream/binary_writer.rs
++++ plist/src/stream/binary_writer.rs
+@@ -720,7 +720,7 @@ mod tests {
+         assert_eq!(value_to_encode, value_decoded_from_encode);
+     }
+ 
+-    #[test]
++    /*#[test]
+     fn bplist_roundtrip() {
+         test_roundtrip("./tests/data/binary.plist")
+     }
+@@ -733,5 +733,5 @@ mod tests {
+     #[test]
+     fn nskeyedarchiver_roundtrip() {
+         test_roundtrip("./tests/data/binary_NSKeyedArchiver.plist")
+-    }
++    }*/
+ }
+Index: plist/src/stream/mod.rs
+===================================================================
+--- plist.orig/src/stream/mod.rs
++++ plist/src/stream/mod.rs
+@@ -412,7 +412,7 @@ mod tests {
+         EndCollection,
+     ];
+ 
+-    #[test]
++    /*#[test]
+     fn autodetect_binary() {
+         let reader = File::open("./tests/data/binary.plist").unwrap();
+         let mut streaming_parser = Reader::new(reader);
+@@ -441,5 +441,5 @@ mod tests {
+ 
+         assert!(matches!(streaming_parser.0, ReaderInner::Ascii(_)));
+         assert_eq!(events.unwrap(), ANIMALS_PLIST_EVENTS);
+-    }
++    }*/
+ }
+Index: plist/src/stream/xml_reader.rs
+===================================================================
+--- plist.orig/src/stream/xml_reader.rs
++++ plist/src/stream/xml_reader.rs
+@@ -271,7 +271,7 @@ mod tests {
+     use super::*;
+     use crate::stream::Event::*;
+ 
+-    #[test]
++    /*#[test]
+     fn streaming_parser() {
+         let reader = File::open("./tests/data/xml.plist").unwrap();
+         let streaming_parser = XmlReader::new(BufReader::new(reader));
+@@ -335,5 +335,5 @@ mod tests {
+             event.as_ref().unwrap_err().to_string(),
+             "UnexpectedXmlCharactersExpectedElement (offset 174)".to_string()
+         );
+-    }
++    }*/
+ }
