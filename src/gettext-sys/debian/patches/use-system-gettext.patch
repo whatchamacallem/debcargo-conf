@@ -1,13 +1,12 @@
-Index: gettext-sys/build.rs
-===================================================================
---- gettext-sys.orig/build.rs
-+++ gettext-sys/build.rs
-@@ -85,7 +85,7 @@ fn check_dependencies(required_programs:
- fn main() {
+--- a/build.rs
++++ b/build.rs
+@@ -100,7 +100,7 @@
+ fn try_gettext_system() -> bool {
      let target = env::var("TARGET").unwrap();
  
 -    if cfg!(feature = "gettext-system") || env("GETTEXT_SYSTEM").is_some() {
-+    if cfg!(feature = "gettext-system") || env("GETTEXT_SYSTEM").is_some() || true {
-         if target.contains("linux") && (target.contains("-gnu") || target.contains("-musl")) {
-             // intl is part of glibc and musl
-             return;
++    if cfg!(feature = "gettext-system") || env("GETTEXT_SYSTEM").is_some() || true{
+         if (target.contains("linux") || target.contains("hurd"))
+             && (target.contains("-gnu") || target.contains("-musl"))
+         {
+

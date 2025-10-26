@@ -1,7 +1,15 @@
-Index: gettext-sys/build.rs
-===================================================================
---- gettext-sys.orig/build.rs	2022-05-25 03:10:07.094569435 -0500
-+++ gettext-sys/build.rs	2022-05-25 03:10:07.094569435 -0500
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -48,5 +48,5 @@
+ [build-dependencies.cc]
+ version = "1.0"
+ 
+-[build-dependencies.temp-dir]
+-version = "0.1.11"
++[build-dependencies.tempfile]
++version = "3.2.0"
+--- a/build.rs
++++ b/build.rs
 @@ -1,5 +1,5 @@
  extern crate cc;
 -extern crate temp_dir;
@@ -12,33 +20,19 @@ Index: gettext-sys/build.rs
 @@ -7,7 +7,7 @@
  use std::io::ErrorKind;
  use std::path::{Path, PathBuf};
- use std::process::Command;
+ use std::process::{Command, Stdio};
 -use temp_dir::TempDir;
 +use tempfile::tempdir;
  
  fn env(name: &str) -> Option<String> {
      let prefix = env::var("TARGET").unwrap().to_uppercase().replace("-", "_");
-@@ -161,7 +161,7 @@
+@@ -191,7 +191,7 @@
  
-     let host = env::var("HOST").unwrap();
+     let target = env::var("TARGET").unwrap();
      let src = env::current_dir().unwrap();
 -    let build_dir = TempDir::new().unwrap();
 +    let build_dir = tempdir().unwrap();
      let build_dir = build_dir.path();
+     let compiler = cc::Build::new().get_compiler();
  
-     let cfg = cc::Build::new();
-Index: gettext-sys/Cargo.toml
-===================================================================
---- gettext-sys.orig/Cargo.toml	2022-05-25 03:12:18.000000000 -0500
-+++ gettext-sys/Cargo.toml	2022-05-25 03:12:40.785501115 -0500
-@@ -29,8 +29,8 @@
- [build-dependencies.cc]
- version = "1.0"
- 
--[build-dependencies.temp-dir]
--version = "0.1.11"
-+[build-dependencies.tempfile]
-+version = "3.2.0"
- 
- [features]
- gettext-system = []
+
