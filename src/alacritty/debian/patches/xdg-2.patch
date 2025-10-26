@@ -1,0 +1,29 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -156,2 +156,2 @@ default-features = false
+ [target."cfg(not(windows))".dependencies.xdg]
+-version = "3.0.0"
++version = "2.5.0"
+--- a/src/config/mod.rs
++++ b/src/config/mod.rs
+@@ -377,4 +377,9 @@ pub fn installed_config(suffix: &str) ->
+     xdg::BaseDirectories::with_prefix("alacritty")
+-        .find_config_file(&file_name)
+-        .or_else(|| xdg::BaseDirectories::new().find_config_file(&file_name))
++        .ok()
++        .and_then(|xdg| xdg.find_config_file(&file_name))
++        .or_else(|| {
++            xdg::BaseDirectories::new()
++                .ok()
++                .and_then(|fallback| fallback.find_config_file(&file_name))
++        })
+         .or_else(|| {
+--- a/src/ipc.rs
++++ b/src/ipc.rs
+@@ -154,5 +154,4 @@ fn socket_dir() -> PathBuf {
+     xdg::BaseDirectories::with_prefix("alacritty")
+-        .get_runtime_directory()
+-        .map(ToOwned::to_owned)
+         .ok()
++        .and_then(|xdg| xdg.get_runtime_directory().map(ToOwned::to_owned).ok())
+         .and_then(|path| fs::create_dir_all(&path).map(|_| path).ok())
