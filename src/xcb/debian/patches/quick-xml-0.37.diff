@@ -1,0 +1,23 @@
+Index: xcb/Cargo.toml
+===================================================================
+--- xcb.orig/Cargo.toml
++++ xcb/Cargo.toml
+@@ -214,4 +214,4 @@ features = [
+ ]
+ 
+ [build-dependencies.quick-xml]
+-version = ">= 0.34, < 0.37"
++version = "0.37"
+Index: xcb/build/parse.rs
+===================================================================
+--- xcb.orig/build/parse.rs
++++ xcb/build/parse.rs
+@@ -43,7 +43,7 @@ impl From<quick_xml::Error> for Error {
+     fn from(err: quick_xml::Error) -> Self {
+         match err {
+             quick_xml::Error::Io(e) => Error::IO(e),
+-            quick_xml::Error::NonDecodable(Some(e)) => Error::Utf8(e),
++            quick_xml::Error::Encoding(quick_xml::encoding::EncodingError::Utf8(e)) => Error::Utf8(e),
+             e => Error::Xml(e),
+         }
+     }

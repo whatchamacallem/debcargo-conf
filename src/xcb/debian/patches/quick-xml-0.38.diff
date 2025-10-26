@@ -1,0 +1,48 @@
+Index: xcb/Cargo.toml
+===================================================================
+--- xcb.orig/Cargo.toml
++++ xcb/Cargo.toml
+@@ -214,4 +214,4 @@ features = [
+ ]
+ 
+ [build-dependencies.quick-xml]
+-version = "0.37"
++version = "0.38"
+Index: xcb/build/parse.rs
+===================================================================
+--- xcb.orig/build/parse.rs
++++ xcb/build/parse.rs
+@@ -49,6 +49,15 @@ impl From<quick_xml::Error> for Error {
+     }
+ }
+ 
++impl From<quick_xml::encoding::EncodingError> for Error {
++    fn from(err: quick_xml::encoding::EncodingError) -> Self {
++        match err {
++            quick_xml::encoding::EncodingError::Utf8(e) => Error::Utf8(e),
++            e => Error::Xml(quick_xml::Error::Encoding(e)),
++        }
++    }
++}
++
+ pub type Result<T> = result::Result<T, Error>;
+ 
+ #[allow(clippy::large_enum_variant)]
+@@ -317,7 +326,7 @@ impl Parser<BufReader<File>> {
+ impl<B: BufRead> Parser<B> {
+     fn expect_text(&mut self) -> Result<String> {
+         match self.xml.read_event_into(&mut self.buf)? {
+-            XmlEv::Text(e) => Ok(str::from_utf8(e.unescape()?.as_bytes())?.into()),
++            XmlEv::Text(e) => Ok(str::from_utf8(e.decode()?.as_bytes())?.into()),
+             XmlEv::CData(e) => Ok(str::from_utf8(&e)?.into()),
+             ev => Err(Error::Parse(format!("expected text, found {:?}", ev))),
+         }
+@@ -325,7 +334,7 @@ impl<B: BufRead> Parser<B> {
+ 
+     fn expect_text_trim(&mut self, close_tag: &[u8]) -> Result<String> {
+         let txt = match self.xml.read_event_into(&mut self.buf)? {
+-            XmlEv::Text(e) => Vec::from(e.unescape()?.as_bytes()),
++            XmlEv::Text(e) => Vec::from(e.decode()?.as_bytes()),
+             XmlEv::CData(e) => Vec::from(e.into_inner()),
+             XmlEv::End(e) => {
+                 if e.name().0 == close_tag {
