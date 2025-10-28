@@ -1,0 +1,100 @@
+Index: actix-web/Cargo.toml
+===================================================================
+--- actix-web.orig/Cargo.toml
++++ actix-web/Cargo.toml
+@@ -152,11 +152,12 @@ path = "src/lib.rs"
+ [[example]]
+ name = "basic"
+ path = "examples/basic.rs"
+-required-features = ["compress-gzip"]
++required-features = ["compress-gzip", "macros"]
+ 
+ [[example]]
+ name = "from_fn"
+ path = "examples/from_fn.rs"
++required-features = ["macros"]
+ 
+ [[example]]
+ name = "macroless"
+@@ -165,28 +166,32 @@ path = "examples/macroless.rs"
+ [[example]]
+ name = "middleware_from_fn"
+ path = "examples/middleware_from_fn.rs"
++required-features = ["macros"]
+ 
+ [[example]]
+ name = "on-connect"
+ path = "examples/on-connect.rs"
+-required-features = []
++required-features = ["http2", "macros"]
+ 
+ [[example]]
+ name = "uds"
+ path = "examples/uds.rs"
+-required-features = ["compress-gzip"]
++required-features = ["compress-gzip", "macros"]
+ 
+ [[example]]
+ name = "worker-cpu-pin"
+ path = "examples/worker-cpu-pin.rs"
++required-features = ["macros"]
+ 
+ [[test]]
+ name = "test-macro-import-conflict"
+ path = "tests/test-macro-import-conflict.rs"
++required-features = ["macros"]
+ 
+ [[test]]
+ name = "test_error_propagation"
+ path = "tests/test_error_propagation.rs"
++required-features = ["macros"]
+ 
+ [[test]]
+ name = "test_weird_poll"
+Index: actix-web/src/middleware/condition.rs
+===================================================================
+--- actix-web.orig/src/middleware/condition.rs
++++ actix-web/src/middleware/condition.rs
+@@ -157,6 +157,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[cfg(any(feature = "compress-brotli", feature = "compress-gzip", feature = "compress-zstd"))]
+     fn compat_with_builtin_middleware() {
+         let _ = Condition::new(true, middleware::Compat::new(Identity));
+         let _ = Condition::new(true, middleware::Logger::default());
+Index: actix-web/src/response/customize_responder.rs
+===================================================================
+--- actix-web.orig/src/response/customize_responder.rs
++++ actix-web/src/response/customize_responder.rs
+@@ -197,13 +197,17 @@ mod tests {
+     use bytes::Bytes;
+ 
+     use super::*;
++
++    #[cfg(feature = "cookies")]
++    use crate::cookie::Cookie;
++
+     use crate::{
+-        cookie::Cookie,
+         http::header::{HeaderValue, CONTENT_TYPE},
+         test::TestRequest,
+     };
+ 
+     #[actix_rt::test]
++    #[cfg(feature = "cookies")]
+     async fn customize_responder() {
+         let req = TestRequest::default().to_http_request();
+         let res = "test"
+Index: actix-web/src/response/response.rs
+===================================================================
+--- actix-web.orig/src/response/response.rs
++++ actix-web/src/response/response.rs
+@@ -395,6 +395,7 @@ impl<'a> Iterator for CookieIter<'a> {
+ }
+ 
+ #[cfg(test)]
++#[cfg(feature = "cookies")]
+ mod tests {
+     use static_assertions::assert_impl_all;
+ 
