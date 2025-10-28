@@ -1,0 +1,54 @@
+Index: actix-http/Cargo.toml
+===================================================================
+--- actix-http.orig/Cargo.toml
++++ actix-http/Cargo.toml
+@@ -180,3 +180,0 @@
+-[[test]]
+-name = "test_client"
+-path = "tests/test_client.rs"
+@@ -190,3 +190,0 @@
+-[[test]]
+-name = "test_openssl"
+-path = "tests/test_openssl.rs"
+@@ -200,3 +200,0 @@
+-[[test]]
+-name = "test_rustls"
+-path = "tests/test_rustls.rs"
+@@ -210,3 +210,0 @@
+-[[test]]
+-name = "test_server"
+-path = "tests/test_server.rs"
+@@ -346,9 +326,10 @@ default-features = false
+ version = "0.13"
+ optional = true
+ 
+-[dev-dependencies.actix-http-test]
+-version = "3"
+-features = ["openssl"]
++[dev-dependencies.actix-rt]
++version = "2.2"
++default-features = false
++features = ["macros"]
+ 
+ [dev-dependencies.actix-server]
+ version = "2"
+Index: actix-http/src/responses/head.rs
+===================================================================
+--- actix-http.orig/src/responses/head.rs
++++ actix-http/src/responses/head.rs
+@@ -215,7 +215,7 @@ mod tests {
+         Error, Request, Response, ServiceConfig,
+     };
+ 
+-    #[actix_rt::test]
++    /*#[actix_rt::test]
+     async fn camel_case_headers() {
+         let mut srv = actix_http_test::test_server(|| {
+             H1Service::with_config(ServiceConfig::default(), |req: Request| async move {
+@@ -265,5 +265,5 @@ mod tests {
+         assert!(memmem::find(&data, b"content-length").is_some());
+ 
+         srv.stop().await;
+-    }
++    }*/
+ }

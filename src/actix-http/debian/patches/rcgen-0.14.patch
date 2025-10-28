@@ -1,0 +1,33 @@
+--- rust-actix-http-3.11.2.orig/Cargo.toml
++++ rust-actix-http-3.11.2/Cargo.toml
+@@ -361,7 +361,7 @@ version = "2.4"
+ version = "1.21"
+ 
+ [dev-dependencies.rcgen]
+-version = "0.13"
++version = "0.14"
+ 
+ [dev-dependencies.regex]
+ version = "1.3"
+--- rust-actix-http-3.11.2.orig/examples/tls_rustls.rs
++++ rust-actix-http-3.11.2/examples/tls_rustls.rs
+@@ -43,7 +43,7 @@ async fn main() -> io::Result<()> {
+ }
+ 
+ fn rustls_config() -> rustls::ServerConfig {
+-    let rcgen::CertifiedKey { cert, key_pair } =
++    let rcgen::CertifiedKey { cert, signing_key: key_pair } =
+         rcgen::generate_simple_self_signed(["localhost".to_owned()]).unwrap();
+     let cert_file = cert.pem();
+     let key_file = key_pair.serialize_pem();
+--- rust-actix-http-3.11.2.orig/examples/ws.rs
++++ rust-actix-http-3.11.2/examples/ws.rs
+@@ -86,7 +86,7 @@ fn tls_config() -> rustls::ServerConfig
+ 
+     use rustls_pemfile::{certs, pkcs8_private_keys};
+ 
+-    let rcgen::CertifiedKey { cert, key_pair } =
++    let rcgen::CertifiedKey { cert, signing_key: key_pair } =
+         rcgen::generate_simple_self_signed(["localhost".to_owned()]).unwrap();
+     let cert_file = cert.pem();
+     let key_file = key_pair.serialize_pem();
