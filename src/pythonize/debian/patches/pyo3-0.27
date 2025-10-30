@@ -1,0 +1,101 @@
+Index: pythonize/src/error.rs
+===================================================================
+--- pythonize.orig/src/error.rs
++++ pythonize/src/error.rs
+@@ -1,5 +1,5 @@
+ use pyo3::PyErr;
+-use pyo3::{exceptions::*, DowncastError, DowncastIntoError};
++use pyo3::{exceptions::*, CastError, CastIntoError};
+ use serde::{de, ser};
+ use std::convert::Infallible;
+ use std::error;
+@@ -153,18 +153,18 @@ impl From<PyErr> for PythonizeError {
+     }
+ }
+ 
+-/// Handle errors that occur when attempting to use `PyAny::cast_as`
+-impl<'a, 'py> From<DowncastError<'a, 'py>> for PythonizeError {
+-    fn from(other: DowncastError<'a, 'py>) -> Self {
++/// Handle errors that occur when attempting to use `PyAny::cast`
++impl<'a, 'py> From<CastError<'a, 'py>> for PythonizeError {
++    fn from(other: CastError<'a, 'py>) -> Self {
+         Self {
+             inner: Box::new(ErrorImpl::UnexpectedType(other.to_string())),
+         }
+     }
+ }
+ 
+-/// Handle errors that occur when attempting to use `PyAny::cast_as`
+-impl<'py> From<DowncastIntoError<'py>> for PythonizeError {
+-    fn from(other: DowncastIntoError<'py>) -> Self {
++/// Handle errors that occur when attempting to use `PyAny::cast`
++impl<'py> From<CastIntoError<'py>> for PythonizeError {
++    fn from(other: CastIntoError<'py>) -> Self {
+         Self {
+             inner: Box::new(ErrorImpl::UnexpectedType(other.to_string())),
+         }
+Index: pythonize/tests/test_with_serde_path_to_err.rs
+===================================================================
+--- pythonize.orig/tests/test_with_serde_path_to_err.rs
++++ pythonize/tests/test_with_serde_path_to_err.rs
+@@ -100,7 +100,10 @@ fn test_de_invalid() {
+         let err = serde_path_to_error::deserialize::<_, Root<String>>(de).unwrap_err();
+ 
+         assert_eq!(err.path().to_string(), "root_map.nested_1.nested_key");
+-        assert_eq!(err.to_string(), "root_map.nested_1.nested_key: unexpected type: 'int' object cannot be converted to 'PyString'");
++        assert_eq!(
++            err.to_string(),
++            "root_map.nested_1.nested_key: unexpected type: 'int' object cannot be cast as 'str'"
++        );
+     })
+ }
+ 
+@@ -143,7 +146,7 @@ fn test_ser_valid() {
+             .get_item("root_map")
+             .unwrap()
+             .unwrap()
+-            .downcast_into::<PyDict>()
++            .cast_into::<PyDict>()
+             .unwrap();
+         assert_eq!(root_map.len(), 2);
+ 
+@@ -151,7 +154,7 @@ fn test_ser_valid() {
+             .get_item("nested_0")
+             .unwrap()
+             .unwrap()
+-            .downcast_into::<PyDict>()
++            .cast_into::<PyDict>()
+             .unwrap();
+         assert_eq!(nested_0.len(), 1);
+         let nested_key_0: String = nested_0
+@@ -166,7 +169,7 @@ fn test_ser_valid() {
+             .get_item("nested_1")
+             .unwrap()
+             .unwrap()
+-            .downcast_into::<PyDict>()
++            .cast_into::<PyDict>()
+             .unwrap();
+         assert_eq!(nested_1.len(), 1);
+         let nested_key_1: String = nested_1
+Index: pythonize/Cargo.toml
+===================================================================
+--- pythonize.orig/Cargo.toml
++++ pythonize/Cargo.toml
+@@ -41,7 +41,7 @@ name = "test_with_serde_path_to_err"
+ path = "tests/test_with_serde_path_to_err.rs"
+ 
+ [dependencies.pyo3]
+-version = "0.26"
++version = "0.27"
+ default-features = false
+ 
+ [dependencies.serde]
+@@ -53,7 +53,7 @@ default-features = false
+ version = "1.0.2"
+ 
+ [dev-dependencies.pyo3]
+-version = "0.26"
++version = "0.27"
+ features = [
+     "auto-initialize",
+     "macros",
