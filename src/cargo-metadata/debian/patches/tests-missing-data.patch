@@ -1,14 +1,48 @@
-Description: Fix or disable tests missing data/fixtures
-Forwarded: not-needed
-Author: Blair Noctis <ncts@debian.org>
-Last-Update: 2025-03-25
+diff --git a/tests/selftest.rs b/tests/selftest.rs
+index e1658bd..bde4f1f 100644
+--- a/tests/selftest.rs
++++ b/tests/selftest.rs
+@@ -127,8 +127,11 @@ fn cargo_path() {
+ #[test]
+ fn metadata_deps() {
+     std::env::set_var("CARGO_PROFILE", "3");
++    let dir = tempfile::tempdir().unwrap();
++    let path = dir.path().join("Cargo.toml");
++    std::fs::copy("Cargo.toml", &path).unwrap();
+     let metadata = MetadataCommand::new()
+-        .manifest_path("Cargo.toml")
++        .manifest_path(path)
+         .exec()
+         .unwrap();
+     let this_id = metadata
+@@ -171,8 +174,11 @@ fn metadata_deps() {
+ 
+ #[test]
+ fn workspace_default_packages() {
++    let dir = tempfile::tempdir().unwrap();
++    let path = dir.path().join("Cargo.toml");
++    std::fs::copy("Cargo.toml", &path).unwrap();
+     let metadata = MetadataCommand::new()
+-        .manifest_path("Cargo.toml")
++        .manifest_path(path)
+         .exec()
+         .unwrap();
+     let workspace_packages = metadata.workspace_packages();
+diff --git a/tests/test_samples.rs b/tests/test_samples.rs
+index 95a8ab8..18ac173 100644
 --- a/tests/test_samples.rs
 +++ b/tests/test_samples.rs
-@@ -172,2 +172,3 @@
+@@ -179,6 +179,7 @@ struct TestObject {
+ }
+ 
  #[test]
 +#[cfg(any())]
  fn all_the_fields() {
-@@ -550,4 +551,9 @@
+     // All the fields currently generated as of 1.60. This tries to exercise as
+     // much as possible.
+@@ -569,8 +570,13 @@ fn alt_registry() {
+ 
+ #[test]
  fn current_dir() {
 +    const manifest: &str = "[package]\nname = 'namedep'\n[lib]\nname = 'different_name'";
 +    let dir = tempfile::tempdir().unwrap();
@@ -19,11 +53,19 @@ Last-Update: 2025-03-25
 -        .current_dir("tests/all/namedep")
 +        .current_dir(dir.path())
          .exec()
-@@ -580,2 +586,3 @@
+         .unwrap();
+     let namedep = meta
+@@ -603,6 +609,7 @@ Evil proc macro was here!
+ }
+ 
  #[test]
 +#[cfg(any())]
  fn advanced_feature_configuration() {
-@@ -655,5 +662,15 @@
+     fn build_features<F: FnOnce(&mut MetadataCommand) -> &mut MetadataCommand>(
+         func: F,
+@@ -682,15 +689,25 @@ fn depkind_to_string() {
+ 
+ #[test]
  fn basic_workspace_root_package_exists() {
 +    const root_manifest: &str = "[package]\nname = 'ex_bin'\n[dependencies]\nex_lib = { path = './ex_lib' }\n[workspace]";
 +    const ex_lib_manifest: &str = "[package]\nname = 'ex_lib'";
@@ -40,28 +82,12 @@ Last-Update: 2025-03-25
 -        .manifest_path("tests/basic_workspace/Cargo.toml")
 +        .manifest_path(dir.path().join("Cargo.toml"))
          .exec()
-@@ -663,3 +680,3 @@
+         .unwrap();
+     assert_eq!(meta.root_package().unwrap().name.as_str(), "ex_bin");
+     // Now with no_deps, it should still work exactly the same
      let meta = MetadataCommand::new()
 -        .manifest_path("tests/basic_workspace/Cargo.toml")
 +        .manifest_path(dir.path().join("Cargo.toml"))
          .no_deps()
---- a/tests/selftest.rs
-+++ b/tests/selftest.rs
-@@ -126,4 +126,7 @@
-     std::env::set_var("CARGO_PROFILE", "3");
-+    let dir = tempfile::tempdir().unwrap();
-+    let path = dir.path().join("Cargo.toml");
-+    std::fs::copy("Cargo.toml", &path).unwrap();
-     let metadata = MetadataCommand::new()
--        .manifest_path("Cargo.toml")
-+        .manifest_path(path)
          .exec()
-@@ -170,4 +173,7 @@
- fn workspace_default_packages() {
-+    let dir = tempfile::tempdir().unwrap();
-+    let path = dir.path().join("Cargo.toml");
-+    std::fs::copy("Cargo.toml", &path).unwrap();
-     let metadata = MetadataCommand::new()
--        .manifest_path("Cargo.toml")
-+        .manifest_path(path)
-         .exec()
+         .unwrap();

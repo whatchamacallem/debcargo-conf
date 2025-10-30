@@ -1,12 +1,17 @@
-Forwarded: not-needed
+diff --git a/Cargo.toml b/Cargo.toml
+index c18c272..72d8a7c 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -72,11 +72,11 @@
- version = "1.3.2"
+@@ -59,7 +59,7 @@ optional = true
+ default-features = false
  
- [dependencies.clap_complete]
--version = "4.5.44"
-+version = "4.5"
+ [dependencies.cargo_metadata]
+-version = "0.21"
++version = "0.23"
+ 
+ [dependencies.clap]
+ version = "4.5"
+@@ -76,10 +76,10 @@ version = "4.5.44"
  features = ["unstable-dynamic"]
  
  [dependencies.cli-log]
@@ -14,31 +19,68 @@ Forwarded: not-needed
 +version = "2"
  
  [dependencies.crokey]
- version = "1.1"
-@@ -88,7 +88,7 @@
+-version = "1.3"
++version = "1"
+ 
+ [dependencies.ctrlc]
+ version = "3.4"
+@@ -88,7 +88,7 @@ version = "3.4"
  version = "2.0.0"
  
  [dependencies.gix]
--version = "0.67"
+-version = "0.72"
 +version = "0.69"
  features = [
      "index",
      "excludes",
-@@ -107,7 +107,7 @@
- version = "3.4.1"
+@@ -100,7 +100,7 @@ default-features = false
+ version = "0.3"
  
- [dependencies.notify]
--version = "7.0"
-+version = "8"
+ [dependencies.iq]
+-version = "0.4"
++version = "0.2"
+ features = ["template"]
  
- [dependencies.rodio]
- version = "0.20"
-@@ -126,7 +126,7 @@
+ [dependencies.lazy-regex]
+@@ -132,7 +132,7 @@ features = ["derive"]
  version = "1.0"
  
  [dependencies.termimad]
--version = "0.31.1"
+-version = "0.34"
 +version = "0.33"
  
  [dependencies.toml]
  version = "0.8"
+diff --git a/src/conf/keybindings.rs b/src/conf/keybindings.rs
+index 5d868d1..137ea2c 100644
+--- a/src/conf/keybindings.rs
++++ b/src/conf/keybindings.rs
+@@ -172,7 +172,7 @@ fn test_deserialize_keybindings() {
+     alt-p = "job:previous"
+     ctrl-p = "play-sound"
+     ctrl-shift-p = "play-sound(volume=100)"
+-    cmd-e = "quit"
++    ctrl-e = "quit"
+     "#;
+     let conf = toml::from_str::<Config>(toml).unwrap();
+     assert_eq!(
+@@ -189,5 +189,5 @@ fn test_deserialize_keybindings() {
+         conf.keybindings.get(key!(alt - p)),
+         Some(&Action::Job(JobRef::Previous)),
+     );
+-    assert_eq!(conf.keybindings.get(key!(cmd - e)), Some(&Action::Quit),);
++    assert_eq!(conf.keybindings.get(key!(ctrl - e)), Some(&Action::Quit),);
+ }
+diff --git a/src/ignorer/git_ignorer.rs b/src/ignorer/git_ignorer.rs
+index 667515f..2c9b7a5 100644
+--- a/src/ignorer/git_ignorer.rs
++++ b/src/ignorer/git_ignorer.rs
+@@ -54,7 +54,7 @@ impl GitIgnorer {
+         for path in paths {
+             // cache.at_path panics if not provided a path relative
+             // to the work directory, so we compute the relative path
+-            let Some(work_dir) = self.repo.workdir() else {
++            let Some(work_dir) = self.repo.work_dir() else {
+                 return Ok(false);
+             };
+             let Ok(relative_path) = path.strip_prefix(work_dir) else {
