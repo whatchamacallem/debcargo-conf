@@ -1,0 +1,26 @@
+Index: pyo3/src/conversions/chrono_tz.rs
+===================================================================
+--- pyo3.orig/src/conversions/chrono_tz.rs
++++ pyo3/src/conversions/chrono_tz.rs
+@@ -73,7 +73,7 @@ impl FromPyObject<'_> for Tz {
+     }
+ }
+ 
+-#[cfg(all(test, not(windows)))] // Troubles loading timezones on Windows
++#[cfg(all(test, not(windows), feature="chrono"))] // Troubles loading timezones on Windows
+ mod tests {
+     use super::*;
+     use crate::prelude::PyAnyMethods;
+Index: pyo3/src/conversions/ordered_float.rs
+===================================================================
+--- pyo3.orig/src/conversions/ordered_float.rs
++++ pyo3/src/conversions/ordered_float.rs
+@@ -96,7 +96,7 @@ float_conversions!(NotNan, f32, |val| No
+ float_conversions!(NotNan, f64, |val| NotNan::new(val)
+     .map_err(|e| PyValueError::new_err(e.to_string())));
+ 
+-#[cfg(test)]
++#[cfg(all(test, feature="macros"))]
+ mod test_ordered_float {
+     use super::*;
+     use crate::ffi::c_str;
