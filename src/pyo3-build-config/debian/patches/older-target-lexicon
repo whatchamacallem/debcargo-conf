@@ -1,8 +1,8 @@
-Index: b/Cargo.toml
+Index: pyo3-build-config/Cargo.toml
 ===================================================================
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -59,7 +59,7 @@
+--- pyo3-build-config.orig/Cargo.toml
++++ pyo3-build-config/Cargo.toml
+@@ -59,7 +59,7 @@ name = "pyo3_build_config"
  path = "src/lib.rs"
  
  [dependencies.target-lexicon]
@@ -12,11 +12,11 @@ Index: b/Cargo.toml
  [build-dependencies.target-lexicon]
 -version = "0.13"
 +version = "0.12"
-Index: b/src/impl_.rs
+Index: pyo3-build-config/src/impl_.rs
 ===================================================================
---- a/src/impl_.rs
-+++ b/src/impl_.rs
-@@ -973,8 +973,8 @@
+--- pyo3-build-config.orig/src/impl_.rs
++++ pyo3-build-config/src/impl_.rs
+@@ -975,8 +975,8 @@ impl CrossCompileConfig {
              && host.architecture == Architecture::X86_64;
  
          // Not cross-compiling to compile for x86-64 Python from macOS arm64 and vice versa
@@ -27,11 +27,11 @@ Index: b/src/impl_.rs
  
          !compatible
      }
-Index: b/src/lib.rs
+Index: pyo3-build-config/src/lib.rs
 ===================================================================
---- a/src/lib.rs
-+++ b/src/lib.rs
-@@ -63,7 +63,7 @@
+--- pyo3-build-config.orig/src/lib.rs
++++ pyo3-build-config/src/lib.rs
+@@ -64,7 +64,7 @@ pub fn add_extension_module_link_args()
  }
  
  fn _add_extension_module_link_args(triple: &Triple, mut writer: impl std::io::Write) {
@@ -40,7 +40,7 @@ Index: b/src/lib.rs
          writeln!(writer, "cargo:rustc-cdylib-link-arg=-undefined").unwrap();
          writeln!(writer, "cargo:rustc-cdylib-link-arg=dynamic_lookup").unwrap();
      } else if triple == &Triple::from_str("wasm32-unknown-emscripten").unwrap() {
-@@ -98,7 +98,7 @@
+@@ -99,7 +99,7 @@ fn _add_python_framework_link_args(
      link_libpython: bool,
      mut writer: impl std::io::Write,
  ) {
