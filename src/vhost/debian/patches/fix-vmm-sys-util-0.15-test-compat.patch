@@ -1,0 +1,65 @@
+From e869735f3fa7429da680735882cb6e4d0b0cb8de Mon Sep 17 00:00:00 2001
+From: Wenyu Huang <huangwenyuu@outlook.com>
+Date: Wed, 9 Jul 2025 16:20:44 +0000
+Subject: [PATCH] chore: update the vmm-sys-util version
+
+Update to v0.15.0 which supports sock_ctrl_msg on POSIX and adds
+a cross platform event notification that uses EventFd when available
+or pipe().
+
+Because sock_ctrl_msg modifies the recv_with_fds, we need to modify the test
+in vhost/src/vhost-user/connection.rs at the same time
+
+Signed-off-by: Wenyu Huang <huangwenyuu@outlook.com>
+---
+ Cargo.toml                         |  2 +-
+ src/vhost_user/connection.rs | 27 ++++++++++++++++++++-------
+ 2 files changed, 21 insertions(+), 8 deletions(-)
+
+Index: vhost/src/vhost_user/connection.rs
+===================================================================
+--- vhost.orig/src/vhost_user/connection.rs
++++ vhost/src/vhost_user/connection.rs
+@@ -757,9 +757,13 @@ mod tests {
+             .unwrap();
+         assert_eq!(len, 4);
+ 
+-        let (bytes, buf4) = backend.recv_data(2).unwrap();
+-        assert_eq!(bytes, 2);
+-        assert_eq!(&buf1[..2], &buf4[..]);
++        if cfg!(any(target_os = "linux", target_os = "android")) {
++            let _err = backend.recv_data(2).unwrap_err();
++        } else {
++            let (bytes, buf4) = backend.recv_data(2).unwrap();
++            assert_eq!(bytes, 2);
++            assert_eq!(&buf1[..2], &buf4[..]);
++        }
+         let (bytes, buf2, files) = backend.recv_into_buf(0x2).unwrap();
+         assert_eq!(bytes, 2);
+         assert_eq!(&buf1[2..], &buf2[..]);
+@@ -814,12 +818,21 @@ mod tests {
+             .unwrap();
+         assert_eq!(len, 4);
+ 
+-        let (bytes, _) = backend.recv_data(5).unwrap();
+-        assert_eq!(bytes, 5);
++        if cfg!(any(target_os = "linux", target_os = "android")) {
++            let _err = backend.recv_data(5).unwrap_err();
++        } else {
++            let (bytes, _) = backend.recv_data(5).unwrap();
++            assert_eq!(bytes, 4);
++        }
+ 
+         let (bytes, _, files) = backend.recv_into_buf(0x4).unwrap();
+-        assert_eq!(bytes, 3);
+-        assert!(files.is_none());
++        if cfg!(any(target_os = "linux", target_os = "android")) {
++            assert_eq!(bytes, 3);
++            assert!(files.is_none());
++        } else {
++            assert_eq!(bytes, 4);
++            assert!(files.is_some());
++        }
+ 
+         // If the target fd array is too small, extra file descriptors will get lost.
+         let len = frontend
