@@ -1,144 +1,8 @@
-Index: image/src/codecs/bmp/decoder.rs
-===================================================================
---- image.orig/src/codecs/bmp/decoder.rs
-+++ image/src/codecs/bmp/decoder.rs
-@@ -1399,6 +1399,7 @@ mod test {
-     }
- 
-     #[test]
-+    #[ignore = "skipping ..."]
-     fn read_rect() {
-         let f =
-             BufReader::new(std::fs::File::open("tests/images/bmp/images/Core_8_Bit.bmp").unwrap());
-@@ -1437,6 +1438,7 @@ mod test {
-     }
- 
-     #[test]
-+    #[ignore = "skipping ..."]
-     fn test_no_header() {
-         let tests = [
-             "Info_R8_G8_B8.bmp",
-Index: image/src/codecs/png.rs
-===================================================================
---- image.orig/src/codecs/png.rs
-+++ image/src/codecs/png.rs
-@@ -712,6 +712,7 @@ mod tests {
-     use std::io::{BufReader, Cursor, Read};
- 
-     #[test]
-+    #[ignore = "skipping ..."]
-     fn ensure_no_decoder_off_by_one() {
-         let dec = PngDecoder::new(BufReader::new(
-             std::fs::File::open("tests/images/png/bugfixes/debug_triangle_corners_widescreen.png")
-@@ -737,6 +738,7 @@ mod tests {
-     }
- 
-     #[test]
-+    #[ignore = "skipping ..."]
-     fn underlying_error() {
-         use std::error::Error;
- 
-Index: image/src/dynimage.rs
-===================================================================
---- image.orig/src/dynimage.rs
-+++ image/src/dynimage.rs
-@@ -1374,6 +1374,7 @@ mod test {
- 
-     #[cfg(feature = "jpeg")]
-     #[test]
-+    #[ignore = "skipping ..."]
-     fn image_dimensions() {
-         let im_path = "./tests/images/jpg/progressive/cat.jpg";
-         let dims = super::image_dimensions(im_path).unwrap();
-@@ -1382,6 +1383,7 @@ mod test {
- 
-     #[cfg(feature = "png")]
-     #[test]
-+    #[ignore = "skipping ..."]
-     fn open_16bpc_png() {
-         let im_path = "./tests/images/png/16bpc/basn6a16.png";
-         let image = super::open(im_path).unwrap();
-Index: image/src/imageops/sample.rs
-===================================================================
---- image.orig/src/imageops/sample.rs
-+++ image/src/imageops/sample.rs
-@@ -1065,6 +1065,7 @@ mod tests {
-     use test;
- 
-     #[bench]
-+    #[ignore = "skipping ..."]
-     #[cfg(all(feature = "benchmarks", feature = "png"))]
-     fn bench_resize(b: &mut test::Bencher) {
-         use std::path::Path;
-@@ -1077,6 +1078,7 @@ mod tests {
- 
-     #[test]
-     #[cfg(feature = "png")]
-+    #[ignore = "skipping ..."]
-     fn test_resize_same_size() {
-         use std::path::Path;
-         let img = crate::open(Path::new("./examples/fractal.png")).unwrap();
-@@ -1086,6 +1088,7 @@ mod tests {
- 
-     #[test]
-     #[cfg(feature = "png")]
-+    #[ignore = "skipping ..."]
-     fn test_sample_bilinear() {
-         use std::path::Path;
-         let img = crate::open(Path::new("./examples/fractal.png")).unwrap();
-@@ -1105,6 +1108,7 @@ mod tests {
-     }
-     #[test]
-     #[cfg(feature = "png")]
-+    #[ignore = "skipping ..."]
-     fn test_sample_nearest() {
-         use std::path::Path;
-         let img = crate::open(Path::new("./examples/fractal.png")).unwrap();
-@@ -1194,6 +1198,7 @@ mod tests {
-     }
- 
-     #[bench]
-+    #[ignore = "skipping ..."]
-     #[cfg(all(feature = "benchmarks", feature = "tiff"))]
-     fn bench_resize_same_size(b: &mut test::Bencher) {
-         let path = concat!(
-@@ -1214,6 +1219,7 @@ mod tests {
-     }
- 
-     #[bench]
-+    #[ignore = "skipping ..."]
-     #[cfg(all(feature = "benchmarks", feature = "tiff"))]
-     fn bench_thumbnail(b: &mut test::Bencher) {
-         let path = concat!(
-@@ -1228,6 +1234,7 @@ mod tests {
-     }
- 
-     #[bench]
-+    #[ignore = "skipping ..."]
-     #[cfg(all(feature = "benchmarks", feature = "tiff"))]
-     fn bench_thumbnail_upsize(b: &mut test::Bencher) {
-         let path = concat!(
-@@ -1242,6 +1249,7 @@ mod tests {
-     }
- 
-     #[bench]
-+    #[ignore = "skipping ..."]
-     #[cfg(all(feature = "benchmarks", feature = "tiff"))]
-     fn bench_thumbnail_upsize_irregular(b: &mut test::Bencher) {
-         let path = concat!(
-@@ -1256,6 +1264,7 @@ mod tests {
-     }
- 
-     #[test]
-+    #[ignore = "skipping ..."]
-     #[cfg(feature = "png")]
-     fn resize_transparent_image() {
-         use super::FilterType::{CatmullRom, Gaussian, Lanczos3, Nearest, Triangle};
-Index: image/benches/decode.rs
-===================================================================
---- image.orig/benches/decode.rs
-+++ image/benches/decode.rs
-@@ -90,7 +90,7 @@ fn bench_load(c: &mut Criterion, def: &B
+diff --git a/benches/decode.rs b/benches/decode.rs
+index 99e9ce0..d609856 100644
+--- a/benches/decode.rs
++++ b/benches/decode.rs
+@@ -92,7 +92,7 @@ fn bench_load(c: &mut Criterion, def: &BenchDef) {
      let mut group = c.benchmark_group(&group_name);
      let paths = IMAGE_DIR.iter().chain(def.dir);
  
@@ -147,7 +11,7 @@ Index: image/benches/decode.rs
          let path: path::PathBuf = paths.clone().chain(iter::once(file_name)).collect();
          let buf = fs::read(path).unwrap();
          group.bench_function(file_name.to_owned(), |b| {
-@@ -98,7 +98,7 @@ fn bench_load(c: &mut Criterion, def: &B
+@@ -100,7 +100,7 @@ fn bench_load(c: &mut Criterion, def: &BenchDef) {
                  image::load_from_memory_with_format(&buf, def.format).unwrap();
              });
          });
@@ -156,11 +20,43 @@ Index: image/benches/decode.rs
  }
  
  const IMAGE_DIR: [&str; 3] = [".", "tests", "images"];
-Index: image/src/codecs/openexr.rs
-===================================================================
---- image.orig/src/codecs/openexr.rs
-+++ image/src/codecs/openexr.rs
-@@ -409,6 +409,7 @@ mod test {
+diff --git a/src/codecs/bmp/decoder.rs b/src/codecs/bmp/decoder.rs
+index 5771665..e3493af 100644
+--- a/src/codecs/bmp/decoder.rs
++++ b/src/codecs/bmp/decoder.rs
+@@ -1419,6 +1419,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[ignore = "skipping ..."]
+     fn read_rect() {
+         let f =
+             BufReader::new(std::fs::File::open("tests/images/bmp/images/Core_8_Bit.bmp").unwrap());
+@@ -1457,6 +1458,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[ignore = "skipping ..."]
+     fn test_no_header() {
+         let tests = [
+             "Info_R8_G8_B8.bmp",
+diff --git a/src/codecs/jpeg/decoder.rs b/src/codecs/jpeg/decoder.rs
+index ddff9a9..0d564e0 100644
+--- a/src/codecs/jpeg/decoder.rs
++++ b/src/codecs/jpeg/decoder.rs
+@@ -202,6 +202,7 @@ mod tests {
+     use std::{fs, io::Cursor};
+ 
+     #[test]
++    #[ignore = "skipping ..."]
+     fn test_exif_orientation() {
+         let data = fs::read("tests/images/jpg/portrait_2.jpg").unwrap();
+         let mut decoder = JpegDecoder::new(Cursor::new(data)).unwrap();
+diff --git a/src/codecs/openexr.rs b/src/codecs/openexr.rs
+index 096d323..f4bf7ed 100644
+--- a/src/codecs/openexr.rs
++++ b/src/codecs/openexr.rs
+@@ -412,6 +412,7 @@ mod test {
      }
  
      #[test]
@@ -184,23 +80,31 @@ Index: image/src/codecs/openexr.rs
      fn compare_cropped() {
          // like in photoshop, exr images may have layers placed anywhere in a canvas.
          // we don't want to load the pixels from the layer, but we want to load the pixels from the canvas.
-Index: image/src/codecs/jpeg/decoder.rs
-===================================================================
---- image.orig/src/codecs/jpeg/decoder.rs
-+++ image/src/codecs/jpeg/decoder.rs
-@@ -195,6 +195,7 @@ mod tests {
-     use std::{fs, io::Cursor};
+diff --git a/src/codecs/png.rs b/src/codecs/png.rs
+index c704b30..c1de4ce 100644
+--- a/src/codecs/png.rs
++++ b/src/codecs/png.rs
+@@ -742,6 +742,7 @@ mod tests {
+     use std::io::{BufReader, Cursor, Read};
  
      #[test]
 +    #[ignore = "skipping ..."]
-     fn test_exif_orientation() {
-         let data = fs::read("tests/images/jpg/portrait_2.jpg").unwrap();
-         let mut decoder = JpegDecoder::new(Cursor::new(data)).unwrap();
-Index: image/src/codecs/qoi.rs
-===================================================================
---- image.orig/src/codecs/qoi.rs
-+++ image/src/codecs/qoi.rs
-@@ -108,6 +108,7 @@ mod tests {
+     fn ensure_no_decoder_off_by_one() {
+         let dec = PngDecoder::new(BufReader::new(
+             std::fs::File::open("tests/images/png/bugfixes/debug_triangle_corners_widescreen.png")
+@@ -767,6 +768,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore = "skipping ..."]
+     fn underlying_error() {
+         use std::error::Error;
+ 
+diff --git a/src/codecs/qoi.rs b/src/codecs/qoi.rs
+index ab76cb7..4c2ee9a 100644
+--- a/src/codecs/qoi.rs
++++ b/src/codecs/qoi.rs
+@@ -110,6 +110,7 @@ mod tests {
      use std::fs::File;
  
      #[test]
@@ -208,11 +112,11 @@ Index: image/src/codecs/qoi.rs
      fn decode_test_image() {
          let decoder = QoiDecoder::new(File::open("tests/images/qoi/basic-test.qoi").unwrap())
              .expect("Unable to read QOI file");
-Index: image/src/codecs/tga/encoder.rs
-===================================================================
---- image.orig/src/codecs/tga/encoder.rs
-+++ image/src/codecs/tga/encoder.rs
-@@ -437,6 +437,7 @@ mod tests {
+diff --git a/src/codecs/tga/encoder.rs b/src/codecs/tga/encoder.rs
+index cc4b24c..ad4c783 100644
+--- a/src/codecs/tga/encoder.rs
++++ b/src/codecs/tga/encoder.rs
+@@ -441,6 +441,7 @@ mod tests {
          }
  
          #[test]
@@ -220,11 +124,11 @@ Index: image/src/codecs/tga/encoder.rs
          fn round_trip_bw() {
              // This example demonstrates the run-length counter being saturated
              // It should never overflow and can be 128 max
-Index: image/src/imageops/mod.rs
-===================================================================
---- image.orig/src/imageops/mod.rs
-+++ image/src/imageops/mod.rs
-@@ -545,6 +545,7 @@ mod tests {
+diff --git a/src/imageops/mod.rs b/src/imageops/mod.rs
+index b2626c8..115bf6a 100644
+--- a/src/imageops/mod.rs
++++ b/src/imageops/mod.rs
+@@ -546,6 +546,7 @@ mod tests {
  
      #[test]
      #[cfg(feature = "tiff")]
@@ -232,3 +136,124 @@ Index: image/src/imageops/mod.rs
      fn fast_blur_approximates_gaussian_blur_well() {
          let path = concat!(
              env!("CARGO_MANIFEST_DIR"),
+diff --git a/src/imageops/sample.rs b/src/imageops/sample.rs
+index 4d62cc6..d9b0adc 100644
+--- a/src/imageops/sample.rs
++++ b/src/imageops/sample.rs
+@@ -1616,6 +1616,7 @@ mod tests {
+     use test;
+ 
+     #[bench]
++    #[ignore = "skipping ..."]
+     #[cfg(all(feature = "benchmarks", feature = "png"))]
+     fn bench_resize(b: &mut test::Bencher) {
+         use std::path::Path;
+@@ -1628,6 +1629,7 @@ mod tests {
+ 
+     #[test]
+     #[cfg(feature = "png")]
++    #[ignore = "skipping ..."]
+     fn test_resize_same_size() {
+         use std::path::Path;
+         let img = crate::open(Path::new("./examples/fractal.png")).unwrap();
+@@ -1637,6 +1639,7 @@ mod tests {
+ 
+     #[test]
+     #[cfg(feature = "png")]
++    #[ignore = "skipping ..."]
+     fn test_sample_bilinear() {
+         use std::path::Path;
+         let img = crate::open(Path::new("./examples/fractal.png")).unwrap();
+@@ -1656,6 +1659,7 @@ mod tests {
+     }
+     #[test]
+     #[cfg(feature = "png")]
++    #[ignore = "skipping ..."]
+     fn test_sample_nearest() {
+         use std::path::Path;
+         let img = crate::open(Path::new("./examples/fractal.png")).unwrap();
+@@ -1745,6 +1749,7 @@ mod tests {
+     }
+ 
+     #[bench]
++    #[ignore = "skipping ..."]
+     #[cfg(all(feature = "benchmarks", feature = "tiff"))]
+     fn bench_resize_same_size(b: &mut test::Bencher) {
+         let path = concat!(
+@@ -1765,6 +1770,7 @@ mod tests {
+     }
+ 
+     #[bench]
++    #[ignore = "skipping ..."]
+     #[cfg(all(feature = "benchmarks", feature = "tiff"))]
+     fn bench_thumbnail(b: &mut test::Bencher) {
+         let path = concat!(
+@@ -1779,6 +1785,7 @@ mod tests {
+     }
+ 
+     #[bench]
++    #[ignore = "skipping ..."]
+     #[cfg(all(feature = "benchmarks", feature = "tiff"))]
+     fn bench_thumbnail_upsize(b: &mut test::Bencher) {
+         let path = concat!(
+@@ -1793,6 +1800,7 @@ mod tests {
+     }
+ 
+     #[bench]
++    #[ignore = "skipping ..."]
+     #[cfg(all(feature = "benchmarks", feature = "tiff"))]
+     fn bench_thumbnail_upsize_irregular(b: &mut test::Bencher) {
+         let path = concat!(
+@@ -1807,6 +1815,7 @@ mod tests {
+     }
+ 
+     #[test]
++    #[ignore = "skipping ..."]
+     #[cfg(feature = "png")]
+     fn resize_transparent_image() {
+         use super::FilterType::{CatmullRom, Gaussian, Lanczos3, Nearest, Triangle};
+diff --git a/src/images/dynimage.rs b/src/images/dynimage.rs
+index da27e70..80d297d 100644
+--- a/src/images/dynimage.rs
++++ b/src/images/dynimage.rs
+@@ -1723,6 +1723,7 @@ mod test {
+ 
+     #[cfg(feature = "jpeg")]
+     #[test]
++    #[ignore = "skipping ..."]
+     fn image_dimensions() {
+         let im_path = "./tests/images/jpg/progressive/cat.jpg";
+         let dims = super::image_dimensions(im_path).unwrap();
+@@ -1731,6 +1732,7 @@ mod test {
+ 
+     #[cfg(feature = "png")]
+     #[test]
++    #[ignore = "skipping ..."]
+     fn open_16bpc_png() {
+         let im_path = "./tests/images/png/16bpc/basn6a16.png";
+         let image = super::open(im_path).unwrap();
+@@ -2204,6 +2206,7 @@ mod test {
+     /// based directly on the public imageops interface) at a later point.
+     #[cfg(feature = "png")]
+     #[test]
++    #[ignore = "skipping ..."]
+     fn color_space_independent_imageops() {
+         let im_path = "./tests/images/png/16bpc/basn6a16.png";
+ 
+diff --git a/src/metadata.rs b/src/metadata.rs
+index f0e55e5..1881df0 100644
+--- a/src/metadata.rs
++++ b/src/metadata.rs
+@@ -158,6 +158,7 @@ enum ExifEndian {
+     Little,
+ }
+ 
++/*
+ #[cfg(all(test, feature = "jpeg"))]
+ mod tests {
+     use crate::{codecs::jpeg::JpegDecoder, ImageDecoder as _};
+@@ -190,3 +191,4 @@ mod tests {
+         assert_eq!(orientation, Orientation::NoTransforms);
+     }
+ }
++*/
