@@ -1,6 +1,8 @@
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -66,7 +66,7 @@
+Index: quinn-proto/Cargo.toml
+===================================================================
+--- quinn-proto.orig/Cargo.toml
++++ quinn-proto/Cargo.toml
+@@ -61,7 +61,7 @@ optional = true
  default-features = false
  
  [dependencies.rustls-platform-verifier]
@@ -9,7 +11,7 @@
  optional = true
  
  [dependencies.slab]
-@@ -97,12 +97,11 @@
+@@ -92,12 +92,11 @@ version = "0.4"
  version = "1"
  
  [dev-dependencies.rcgen]
@@ -23,7 +25,7 @@
      "fmt",
      "ansi",
      "time",
-@@ -111,7 +110,7 @@
+@@ -106,7 +105,7 @@ features = [
  default-features = false
  
  [dev-dependencies.wasm-bindgen-test]
@@ -31,10 +33,12 @@
 +version = "0.3.37"
  
  [features]
- aws-lc-rs = [
---- a/src/tests/mod.rs
-+++ b/src/tests/mod.rs
-@@ -467,7 +467,7 @@
+ default = [
+Index: quinn-proto/src/tests/mod.rs
+===================================================================
+--- quinn-proto.orig/src/tests/mod.rs
++++ quinn-proto/src/tests/mod.rs
+@@ -467,7 +467,7 @@ fn reject_missing_client_cert() {
      // because it's convenient.
      store.add(CERTIFIED_KEY.cert.der().clone()).unwrap();
  
@@ -43,7 +47,7 @@
      let cert = CERTIFIED_KEY.cert.der().clone();
  
      let provider = Arc::new(default_provider());
-@@ -2144,7 +2144,7 @@
+@@ -2144,7 +2144,7 @@ fn big_cert_and_key() -> (CertificateDer
  
      (
          cert.cert.into(),
@@ -52,9 +56,11 @@
      )
  }
  
---- a/src/tests/util.rs
-+++ b/src/tests/util.rs
-@@ -596,7 +596,7 @@
+Index: quinn-proto/src/tests/util.rs
+===================================================================
+--- quinn-proto.orig/src/tests/util.rs
++++ quinn-proto/src/tests/util.rs
+@@ -596,7 +596,7 @@ fn server_crypto_inner(
      let (cert, key) = identity.unwrap_or_else(|| {
          (
              CERTIFIED_KEY.cert.der().clone(),
@@ -63,7 +69,7 @@
          )
      });
  
-@@ -714,6 +714,6 @@
+@@ -714,6 +714,6 @@ fn set_congestion_experienced(
  lazy_static! {
      pub static ref SERVER_PORTS: Mutex<RangeFrom<u16>> = Mutex::new(4433..);
      pub static ref CLIENT_PORTS: Mutex<RangeFrom<u16>> = Mutex::new(44433..);
@@ -71,14 +77,16 @@
 +    pub(crate) static ref CERTIFIED_KEY: rcgen::CertifiedKey<rcgen::KeyPair> =
          rcgen::generate_simple_self_signed(vec!["localhost".into()]).unwrap();
  }
---- a/src/config.rs
-+++ b/src/config.rs
-@@ -1061,7 +1061,7 @@
+Index: quinn-proto/src/config.rs
+===================================================================
+--- quinn-proto.orig/src/config.rs
++++ quinn-proto/src/config.rs
+@@ -1061,7 +1061,7 @@ impl ClientConfig {
      #[cfg(feature = "platform-verifier")]
      pub fn with_platform_verifier() -> Self {
          Self::new(Arc::new(crypto::rustls::QuicClientConfig::new(Arc::new(
 -            rustls_platform_verifier::Verifier::new(),
-+            rustls_platform_verifier::Verifier::new().expect("Failed to load TLS certificates"),
++            rustls_platform_verifier::Verifier::new(Arc::new(rustls::crypto::ring::default_provider())).expect("Failed to load TLS certificates"),
          ))))
      }
  
