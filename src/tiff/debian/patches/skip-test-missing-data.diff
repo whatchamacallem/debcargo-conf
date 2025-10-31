@@ -8,19 +8,43 @@
  fn test_big_tiff() {
      let filenames = ["BigTIFF.tif", "BigTIFFMotorola.tif", "BigTIFFLong.tif"];
      for filename in filenames.iter() {
-
+--- a/tests/decode_fp16_images.rs
++++ b/tests/decode_fp16_images.rs
+@@ -8,6 +8,7 @@ use std::path::PathBuf;
+ 
+ const TEST_IMAGE_DIR: &str = "./tests/images/";
+ 
++/*
+ /// Test a basic all white image
+ #[test]
+ fn test_white_ieee_fp16() {
+@@ -193,3 +194,4 @@ fn test_predictor_ieee_fp16() {
+         }
+     }
+ }
++*/
+--- a/tests/decode_geotiff_images.rs
++++ b/tests/decode_geotiff_images.rs
+@@ -10,6 +10,7 @@ use std::path::PathBuf;
+ const TEST_IMAGE_DIR: &str = "./tests/images";
+ 
+ #[test]
++#[ignore = "skipping, missing test data"]
+ fn test_geo_tiff() {
+     let filenames = ["geo-5b.tif"];
+     for filename in filenames.iter() {
 --- a/tests/decode_images.rs
 +++ b/tests/decode_images.rs
-@@ -52,7 +52,7 @@ fn test_image_color_type_unsupported(fil
-         _ => false,
-     });
+@@ -53,7 +53,7 @@ fn test_image_color_type_unsupported(file: &str, expected_type: ColorType) {
+         ))
+     ));
  }
 -
 +/*
  #[test]
  fn test_cmyk_u8() {
      test_image_sum_u8("cmyk-3c-8b.tiff", ColorType::CMYK(8), 8522658);
-@@ -176,7 +176,7 @@ fn test_string_tags() {
+@@ -177,7 +177,7 @@ fn test_string_tags() {
          };
      }
  }
@@ -29,7 +53,7 @@
  #[test]
  fn test_decode_data() {
      let mut image_data = Vec::new();
-@@ -200,6 +200,7 @@ fn test_decode_data() {
+@@ -201,6 +201,7 @@ fn test_decode_data() {
  }
  
  #[test]
@@ -37,8 +61,14 @@
  fn issue_69() {
      test_image_sum_u16("issue_69_lzw.tiff", ColorType::Gray(16), 1015486);
      test_image_sum_u16("issue_69_packbits.tiff", ColorType::Gray(16), 1015486);
-@@ -217,11 +218,13 @@ fn issue_69() {
+@@ -218,21 +219,25 @@ fn issue_69() {
  //}
+ 
+ #[test]
++#[ignore = "skipping, missing testdata"]
+ fn test_tiled_gray_i1() {
+     test_image_sum_u8("tiled-gray-i1.tif", ColorType::Gray(1), 30531);
+ }
  
  #[test]
 +#[ignore = "skipping, missing testdata"]
@@ -51,7 +81,13 @@
  fn test_tiled_rect_rgb_u8() {
      test_image_sum_u8("tiled-rect-rgb-u8.tif", ColorType::RGB(8), 62081032);
  }
-@@ -232,16 +235,19 @@ fn test_tiled_jpeg_rgb_u8() {
+ 
+ #[test]
++#[ignore = "skipping, missing test data"]
+ fn test_inner_access() {
+     let path = PathBuf::from(TEST_IMAGE_DIR).join("tiled-rect-rgb-u8.tif");
+     let img_file = File::open(path).expect("Cannot find test image!");
+@@ -286,16 +291,19 @@ fn test_tiled_jpeg_rgb_u8() {
  } */
  
  #[test]
@@ -71,7 +107,21 @@
  fn test_tiled_incremental() {
      let file = "tiled-rgb-u8.tif";
      let expected_type = ColorType::RGB(8);
-@@ -464,16 +470,19 @@ fn timeout() {
+@@ -340,11 +348,13 @@ fn test_tiled_incremental() {
+ }
+ 
+ #[test]
++#[ignore = "skipping, missing test data"]
+ fn test_planar_rgb_u8() {
+     test_image_sum_u8("planar-rgb-u8.tif", ColorType::RGB(8), 15417630);
+ }
+ 
+ #[test]
++#[ignore = "skipping, missing test data"]
+ fn test_read_planar_bands() {
+     // gdal_translate tiled-rgb-u8.tif planar-rgb-u8.tif -co INTERLEAVE=BAND -co COMPRESS=LZW -co PROFILE=BASELINE
+     let file = "planar-rgb-u8.tif";
+@@ -554,22 +564,26 @@ fn timeout() {
  }
  
  #[test]
@@ -91,19 +141,80 @@
  fn test_predictor_3_gray_f32() {
      test_image_sum_f32("predictor-3-gray-f32.tif", ColorType::Gray(32), 20008.275);
  }
-
+ 
+ #[test]
+ #[cfg(feature = "zstd")]
++#[ignore = "skipping, missing testdata"]
+ fn test_zstd_compression() {
+     // gdal_translate -co COMPRESS=ZSTD -co ZSTD_LEVEL=20 int16.tif int16_zstd.tif
+     test_image_sum_i16("int16_zstd.tif", ColorType::Gray(16), 354396);
+@@ -629,6 +643,7 @@ fn byte_order_u64(bytes: &mut [u8]) {
+ }
+ 
+ #[test]
++#[ignore = "skipping, missing test data"]
+ fn bytes_cmyk_3c_8b() {
+     test_image_bytes(
+         "cmyk-3c-8b.tiff",
+@@ -638,6 +653,7 @@ fn bytes_cmyk_3c_8b() {
+ }
+ 
+ #[test]
++#[ignore = "skipping, missing test data"]
+ fn bytes_gray_16b() {
+     test_image_bytes(
+         "minisblack-1c-16b.tiff",
+@@ -647,6 +663,7 @@ fn bytes_gray_16b() {
+ }
+ 
+ #[test]
++#[ignore = "skipping, missing test data"]
+ fn bytes_gray_32b() {
+     test_image_bytes(
+         "gradient-1c-32b.tiff",
+@@ -656,6 +673,7 @@ fn bytes_gray_32b() {
+ }
+ 
+ #[test]
++#[ignore = "skipping, missing test data"]
+ fn bytes_gray_u64() {
+     test_image_bytes(
+         "gradient-1c-64b.tiff",
+@@ -665,6 +683,7 @@ fn bytes_gray_u64() {
+ }
+ 
+ #[test]
++#[ignore = "skipping, missing test data"]
+ fn bytes_gray_f32() {
+     test_image_bytes(
+         "gradient-1c-32b-float.tiff",
+@@ -675,12 +694,14 @@ fn bytes_gray_f32() {
+ 
+ #[test]
+ #[cfg(feature = "fax")]
++#[ignore = "skipping, missing test data"]
+ fn test_fax4() {
+     test_image_sum_u8("fax4.tiff", ColorType::Gray(1), 7802706);
+ }
+ 
+ #[test]
+ #[cfg(feature = "fax")]
++#[ignore = "skipping, missing test data"]
+ fn test_fax4_white_is_min() {
+     test_image_sum_u8("imagemagick_group4.tiff", ColorType::Gray(1), 3742820);
+ }
 --- a/tests/encode_images.rs
 +++ b/tests/encode_images.rs
-@@ -186,7 +186,7 @@ macro_rules! test_roundtrip {
+@@ -268,7 +268,7 @@ macro_rules! test_roundtrip {
          }
      };
  }
 -
 +/*
  test_roundtrip!(test_u8_roundtrip, U8, u8);
+ test_roundtrip!(test_i8_roundtrip, I8, i8);
  test_roundtrip!(test_u16_roundtrip, U16, u16);
- test_roundtrip!(test_u32_roundtrip, U32, u32);
-@@ -268,7 +268,7 @@ fn test_gray_f64_roundtrip() {
+@@ -367,7 +367,7 @@ fn test_gray_f64_roundtrip() {
  fn test_ycbcr_u8_roundtrip() {
      test_u8_roundtrip::<colortype::YCbCr8>("tiled-jpeg-ycbcr.tif", ColorType::YCbCr(8));
  }
@@ -112,10 +223,9 @@
  trait AssertDecode {
      fn assert_tag_u32(&mut self, tag: u16) -> u32;
      fn assert_tag_u32_vec(&mut self, tag: u16) -> Vec<u32>;
-
 --- a/tests/fuzz_tests.rs
 +++ b/tests/fuzz_tests.rs
-@@ -17,7 +17,7 @@ fn decode_tiff(file: File) -> TiffResult
+@@ -17,7 +17,7 @@ fn decode_tiff(file: File) -> TiffResult<()> {
      decoder.read_image()?;
      Ok(())
  }
@@ -129,4 +239,18 @@
      });
  }
 +*/
-
+--- a/tests/predict.rs
++++ b/tests/predict.rs
+@@ -10,6 +10,7 @@ use std::path::PathBuf;
+ 
+ const TEST_IMAGE_DIR: &str = "./tests/images/";
+ 
++/*
+ macro_rules! test_predict {
+     ($name:ident, $buffer:ident, $buffer_ty:ty) => {
+         fn $name<C: colortype::ColorType<Inner = $buffer_ty>>(
+@@ -229,3 +230,4 @@ fn test_rgb_u64_predict_roundtrip() {
+ fn test_ycbcr_u8_predict_roundtrip() {
+     test_u8_predict_roundtrip::<colortype::YCbCr8>("tiled-jpeg-ycbcr.tif", ColorType::YCbCr(8));
+ }
++*/
