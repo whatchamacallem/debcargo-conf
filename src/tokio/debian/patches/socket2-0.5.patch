@@ -46,7 +46,7 @@ Index: tokio/src/net/udp.rs
 ===================================================================
 --- tokio.orig/src/net/udp.rs
 +++ tokio/src/net/udp.rs
-@@ -2028,7 +2028,7 @@ impl UdpSocket {
+@@ -2027,7 +2027,7 @@ impl UdpSocket {
          ))))
      )]
      pub fn tos(&self) -> io::Result<u32> {
@@ -55,7 +55,7 @@ Index: tokio/src/net/udp.rs
      }
  
      /// Sets the value for the `IP_TOS` option on this socket.
-@@ -2057,7 +2057,7 @@ impl UdpSocket {
+@@ -2056,7 +2056,7 @@ impl UdpSocket {
          ))))
      )]
      pub fn set_tos(&self, tos: u32) -> io::Result<()> {
@@ -68,7 +68,7 @@ Index: tokio/Cargo.toml
 ===================================================================
 --- tokio.orig/Cargo.toml
 +++ tokio/Cargo.toml
-@@ -796,7 +796,7 @@ version = "0.4.9"
+@@ -816,7 +816,7 @@ optional = true
  version = "0.9"
  
  [target.'cfg(not(target_family = "wasm"))'.dependencies.socket2]
@@ -77,7 +77,7 @@ Index: tokio/Cargo.toml
  features = ["all"]
  optional = true
  
-@@ -804,7 +804,7 @@ optional = true
+@@ -824,7 +824,7 @@ optional = true
  version = "1"
  
  [target.'cfg(not(target_family = "wasm"))'.dev-dependencies.socket2]
@@ -86,3 +86,25 @@ Index: tokio/Cargo.toml
  
  [target.'cfg(not(target_family = "wasm"))'.dev-dependencies.tempfile]
  version = "3.1.0"
+Index: tokio/src/net/tcp/stream.rs
+===================================================================
+--- tokio.orig/src/net/tcp/stream.rs
++++ tokio/src/net/tcp/stream.rs
+@@ -1202,7 +1202,7 @@ impl TcpStream {
+         )))
+     )]
+     pub fn quickack(&self) -> io::Result<bool> {
+-        socket2::SockRef::from(self).tcp_quickack()
++        socket2::SockRef::from(self).quickack()
+     }
+ 
+     /// Enable or disable `TCP_QUICKACK`.
+@@ -1242,7 +1242,7 @@ impl TcpStream {
+         )))
+     )]
+     pub fn set_quickack(&self, quickack: bool) -> io::Result<()> {
+-        socket2::SockRef::from(self).set_tcp_quickack(quickack)
++        socket2::SockRef::from(self).set_quickack(quickack)
+     }
+ 
+     cfg_not_wasi! {

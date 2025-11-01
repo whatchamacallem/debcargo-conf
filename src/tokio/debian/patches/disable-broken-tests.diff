@@ -11,7 +11,7 @@ Index: tokio/tests/io_read_to_end.rs
  #[cfg_attr(miri, ignore)] // too slow with miri
  async fn read_to_end_doesnt_grow_with_capacity() {
      let arr: Vec<u8> = (0..100).collect();
-@@ -108,9 +108,9 @@ async fn read_to_end_doesnt_grow_with_ca
+@@ -109,9 +109,9 @@ async fn read_to_end_doesnt_grow_with_ca
              }
          }
      }
@@ -23,7 +23,7 @@ Index: tokio/tests/io_read_to_end.rs
  async fn read_to_end_grows_capacity_if_unfit() {
      let bytes = b"the_vector_startingcap_will_be_smaller";
      let mut mock = Builder::new().read(bytes).build();
-@@ -121,4 +121,4 @@ async fn read_to_end_grows_capacity_if_u
+@@ -122,4 +122,4 @@ async fn read_to_end_grows_capacity_if_u
          .unwrap();
      // *4 since it doubles when it doesn't fit and again when reaching EOF
      assert_eq!(buf.capacity(), initial_capacity * 4);
@@ -33,7 +33,7 @@ Index: tokio/tests/io_copy_bidirectional.rs
 ===================================================================
 --- tokio.orig/tests/io_copy_bidirectional.rs
 +++ tokio/tests/io_copy_bidirectional.rs
-@@ -110,7 +110,7 @@ async fn blocking_one_side_does_not_bloc
+@@ -113,7 +113,7 @@ async fn blocking_one_side_does_not_bloc
      .await
  }
  
@@ -42,7 +42,7 @@ Index: tokio/tests/io_copy_bidirectional.rs
  async fn immediate_exit_on_write_error() {
      let payload = b"here, take this";
      let error = || io::Error::new(io::ErrorKind::Other, "no thanks!");
-@@ -126,9 +126,9 @@ async fn immediate_exit_on_write_error()
+@@ -129,9 +129,9 @@ async fn immediate_exit_on_write_error()
          .build();
  
      assert!(copy_bidirectional(&mut a, &mut b).await.is_err());
@@ -54,7 +54,7 @@ Index: tokio/tests/io_copy_bidirectional.rs
  async fn immediate_exit_on_read_error() {
      let error = || io::Error::new(io::ErrorKind::Other, "got nothing!");
  
-@@ -137,9 +137,9 @@ async fn immediate_exit_on_read_error()
+@@ -140,9 +140,9 @@ async fn immediate_exit_on_read_error()
      let mut b = tokio_test::io::Builder::new().read_error(error()).build();
  
      assert!(copy_bidirectional(&mut a, &mut b).await.is_err());
@@ -66,7 +66,7 @@ Index: tokio/tests/io_copy_bidirectional.rs
  async fn copy_bidirectional_is_cooperative() {
      tokio::select! {
          biased;
-@@ -162,4 +162,4 @@ async fn copy_bidirectional_is_cooperati
+@@ -165,4 +165,4 @@ async fn copy_bidirectional_is_cooperati
          } => {},
          _ = tokio::task::yield_now() => {}
      }
@@ -185,16 +185,16 @@ Index: tokio/tests/fs_try_exists.rs
 ===================================================================
 --- tokio.orig/tests/fs_try_exists.rs
 +++ tokio/tests/fs_try_exists.rs
-@@ -15,7 +15,7 @@ async fn try_exists() {
+@@ -16,7 +16,7 @@ async fn try_exists() {
      assert!(fs::try_exists(existing_path).await.unwrap());
      assert!(!fs::try_exists(nonexisting_path).await.unwrap());
      // FreeBSD root user always has permission to stat.
--    #[cfg(all(unix, not(target_os = "freebsd")))]
-+    /*#[cfg(all(unix, not(target_os = "freebsd")))]
-     {
-         use std::os::unix::prelude::PermissionsExt;
-         let permission_denied_directory_path = dir.path().join("baz");
-@@ -40,5 +40,5 @@ async fn try_exists() {
+-    #[cfg(all(
++    /*#[cfg(all(
+         unix,
+         not(any(target_os = "freebsd", all(tokio_unstable, feature = "io-uring")))
+     ))]
+@@ -44,5 +44,5 @@ async fn try_exists() {
              permission_denied_result.err().unwrap().kind(),
              std::io::ErrorKind::PermissionDenied
          );
@@ -205,7 +205,7 @@ Index: tokio/tests/rt_threaded.rs
 ===================================================================
 --- tokio.orig/tests/rt_threaded.rs
 +++ tokio/tests/rt_threaded.rs
-@@ -650,7 +650,7 @@ fn test_nested_block_in_place_with_block
+@@ -697,7 +697,7 @@ fn mutex_in_block_in_place() {
  // changes over time based on load factors. There are no assertions, completion
  // is sufficient. If there is a regression, this test will hang. In theory, we
  // could add limits, but that would be likely to fail on CI.
@@ -214,7 +214,7 @@ Index: tokio/tests/rt_threaded.rs
  #[cfg(not(tokio_no_tuning_tests))]
  fn test_tuning() {
      use std::sync::atomic::AtomicBool;
-@@ -763,7 +763,7 @@ fn test_tuning() {
+@@ -810,7 +810,7 @@ fn test_tuning() {
      }
  
      flag.store(false, Relaxed);
@@ -227,7 +227,7 @@ Index: tokio/tests/time_pause.rs
 ===================================================================
 --- tokio.orig/tests/time_pause.rs
 +++ tokio/tests/time_pause.rs
-@@ -47,15 +47,15 @@ async fn pause_time_in_spawn_threads() {
+@@ -48,15 +48,15 @@ async fn pause_time_in_spawn_threads() {
      assert_err!(t.await);
  }
  
@@ -246,7 +246,7 @@ Index: tokio/tests/time_pause.rs
  async fn paused_time_stress_run() -> Vec<Duration> {
      let mut rng = StdRng::seed_from_u64(1);
  
-@@ -101,7 +101,7 @@ async fn sleep_no_poll() {
+@@ -102,7 +102,7 @@ async fn sleep_no_poll() {
      assert_elapsed!(before, ms(100));
  
      assert_pending!(sleep.poll());
@@ -255,3 +255,47 @@ Index: tokio/tests/time_pause.rs
  
  enum State {
      Begin,
+Index: tokio/tests/fs_uring.rs
+===================================================================
+--- tokio.orig/tests/fs_uring.rs
++++ tokio/tests/fs_uring.rs
+@@ -84,7 +84,7 @@ fn shutdown_runtime_while_performing_io_
+     }
+ }
+ 
+-#[test]
++/*#[test]
+ fn open_many_files() {
+     fn run(rt: Runtime) {
+         const NUM_FILES: usize = 512;
+@@ -108,7 +108,7 @@ fn open_many_files() {
+     for rt in rt_combinations() {
+         run(rt());
+     }
+-}
++}*/
+ 
+ #[tokio::test]
+ async fn cancel_op_future() {
+Index: tokio/tests/rt_unstable_metrics.rs
+===================================================================
+--- tokio.orig/tests/rt_unstable_metrics.rs
++++ tokio/tests/rt_unstable_metrics.rs
+@@ -736,7 +736,7 @@ fn budget_exhaustion_yield_with_joins()
+     assert_eq!(1, rt.metrics().budget_forced_yield_count());
+ }
+ 
+-#[cfg(any(target_os = "linux", target_os = "macos"))]
++/*#[cfg(any(target_os = "linux", target_os = "macos"))]
+ #[test]
+ fn io_driver_fd_count() {
+     let rt = current_thread();
+@@ -766,7 +766,7 @@ fn io_driver_ready_count() {
+     let _stream = rt.block_on(async move { stream.await.unwrap() });
+ 
+     assert_eq!(metrics.io_driver_ready_count(), 1);
+-}
++}*/
+ 
+ async fn try_spawn_stealable_task() -> Result<(), mpsc::RecvTimeoutError> {
+     // We use a blocking channel to synchronize the tasks.

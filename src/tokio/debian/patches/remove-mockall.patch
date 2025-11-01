@@ -2,15 +2,21 @@ Index: tokio/Cargo.toml
 ===================================================================
 --- tokio.orig/Cargo.toml
 +++ tokio/Cargo.toml
-@@ -671,3 +671,0 @@
+@@ -788,9 +788,6 @@ features = ["async-await"]
+ [dev-dependencies.futures-concurrency]
+ version = "7.6.3"
+ 
 -[dev-dependencies.mockall]
 -version = "0.13.0"
 -
+ [dev-dependencies.tokio-stream]
+ version = "0.1"
+ 
 Index: tokio/src/fs/file.rs
 ===================================================================
 --- tokio.orig/src/fs/file.rs
 +++ tokio/src/fs/file.rs
-@@ -16,17 +16,17 @@ use std::pin::Pin;
+@@ -17,17 +17,17 @@ use std::pin::Pin;
  use std::sync::Arc;
  use std::task::{ready, Context, Poll};
  
@@ -33,7 +39,7 @@ Index: tokio/src/fs/file.rs
  use std::fs::File as StdFile;
  
  /// A reference to an open file on the filesystem.
-@@ -974,5 +974,5 @@ impl Inner {
+@@ -987,5 +987,5 @@ impl Inner {
      }
  }
  
@@ -45,7 +51,7 @@ Index: tokio/src/fs/mod.rs
 ===================================================================
 --- tokio.orig/src/fs/mod.rs
 +++ tokio/src/fs/mod.rs
-@@ -277,8 +277,8 @@ pub use self::copy::copy;
+@@ -280,8 +280,8 @@ pub use self::copy::copy;
  mod try_exists;
  pub use self::try_exists::try_exists;
  
@@ -56,7 +62,7 @@ Index: tokio/src/fs/mod.rs
  
  feature! {
      #![unix]
-@@ -297,10 +297,10 @@ cfg_windows! {
+@@ -300,10 +300,10 @@ cfg_windows! {
  
  use std::io;
  
@@ -74,9 +80,9 @@ Index: tokio/src/fs/open_options.rs
 ===================================================================
 --- tokio.orig/src/fs/open_options.rs
 +++ tokio/src/fs/open_options.rs
-@@ -3,11 +3,11 @@ use crate::fs::{asyncify, File};
- use std::io;
- use std::path::Path;
+@@ -9,11 +9,11 @@ cfg_io_uring! {
+     use crate::runtime::driver::op::Op;
+ }
  
 -#[cfg(test)]
 +/*#[cfg(test)]
@@ -109,3 +115,18 @@ Index: tokio/src/fs/read_dir.rs
  use crate::blocking::JoinHandle;
  
  const CHUNK_SIZE: usize = 32;
+Index: tokio/src/fs/open_options/uring_open_options.rs
+===================================================================
+--- tokio.orig/src/fs/open_options/uring_open_options.rs
++++ tokio/src/fs/open_options/uring_open_options.rs
+@@ -1,8 +1,8 @@
+ use std::{io, os::unix::fs::OpenOptionsExt};
+ 
+-#[cfg(test)]
++/*#[cfg(test)]
+ use super::mock_open_options::MockOpenOptions as StdOpenOptions;
+-#[cfg(not(test))]
++#[cfg(not(test))]*/
+ use std::fs::OpenOptions as StdOpenOptions;
+ 
+ #[derive(Debug, Clone)]
