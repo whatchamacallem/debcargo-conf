@@ -52,7 +52,7 @@ index 4578013..c407676 100644
      Conf {source: ConfError} = "Bad configuration: {source}",
 -    ImageError {details: String} = "Image error: {details}",
 +    ImageError {source: ImageError } = "{source}",
-     InternalError {details: String} = "Internal error: {details}", // should not happen
+     Internal {details: String} = "Internal error: {details}", // should not happen
      Io {source: io::Error} = "IO Error : {source}",
      LaunchError {program: String, source: io::Error} = "Unable to launch {program}: {source}",
 diff --git a/src/image/double_line.rs b/src/image/double_line.rs
@@ -238,7 +238,7 @@ index 0ebeff4..0000000
 -    pub fn from_rgba8(width: u32, height: u32, data: Vec<u8>) -> Result<Self, ProgramError> {
 -        let expected_len = (width as usize) * (height as usize) * 4;
 -        if data.len() != expected_len {
--            return Err(ProgramError::InternalError {
+-            return Err(ProgramError::Internal {
 -                details: format!(
 -                    "Invalid RGBA data length: expected {}, got {}",
 -                    expected_len,
