@@ -1,0 +1,52 @@
+diff --git a/tests/flock/Cargo.toml b/tests/flock/Cargo.toml
+new file mode 100644
+index 0000000..c050e6e
+--- /dev/null
++++ b/tests/flock/Cargo.toml
+@@ -0,0 +1,8 @@
++[package]
++name = "flock"
++version = "0.1.0"
++edition = "2021"
++publish = false
++
++[dependencies]
++tame-index = { path = "../.." }
+diff --git a/tests/flock/src/main.rs b/tests/flock/src/main.rs
+new file mode 100644
+index 0000000..3c45801
+--- /dev/null
++++ b/tests/flock/src/main.rs
+@@ -0,0 +1,32 @@
++#![allow(missing_docs)]
++
++use tame_index::utils::flock;
++
++fn main() {
++    let mut args = std::env::args().skip(1);
++    let kind = args.next().unwrap();
++    let path = args.next().unwrap();
++
++    let lo = flock::LockOptions::new(tame_index::Path::new(&path));
++
++    let lo = match kind.as_str() {
++        "shared" => lo.shared(),
++        "exclusive" => lo.exclusive(false),
++        _ => panic!("unknown lock kind '{kind}'"),
++    };
++
++    let _fl = lo.try_lock().expect("failed to acquire lock");
++    {
++        use std::io::Write;
++        let mut stdout = std::io::stdout();
++        stdout.write(&('🔒' as u32).to_le_bytes()).unwrap();
++        stdout.flush().unwrap();
++    }
++
++    // If the test that spawned this process fails it won't reap this process, so
++    // don't loop forever
++    std::thread::sleep(std::time::Duration::from_secs(30));
++
++    // Unnecessary, we shouldn't ever get here unless the test that called us failed
++    std::process::exit(1);
++}
