@@ -1,0 +1,73 @@
+From 02aefb6b386a16b784de48e91977148b1bce97ce Mon Sep 17 00:00:00 2001
+From: Bilal Elmoussaoui <belmouss@redhat.com>
+Date: Fri, 19 Sep 2025 19:48:20 +0200
+Subject: [PATCH] Update pipewire dependency
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -148,3 +148,3 @@
+ [dependencies.pipewire]
+-version = "0.8"
++version = "0.9"
+ optional = true
+@@ -213,10 +213,10 @@
+ package = "gstreamer"
+ 
+ [dev-dependencies.pipewire]
+-version = "0.8.0"
++version = "0.9.0"
+ 
+ [dev-dependencies.reis]
+-version = "0.4"
++version = "0.5"
+ features = ["tokio"]
+ 
+ [dev-dependencies.serde_json]
+
+diff --git a/examples/screen_cast_pw.rs b/examples/screen_cast_pw.rs
+index 162fc7129..ffeafb6d4 100644
+--- a/examples/screen_cast_pw.rs
++++ b/examples/screen_cast_pw.rs
+@@ -40,15 +40,15 @@ async fn open_portal() -> ashpd::Result<(ScreencastStream, OwnedFd)> {
+ async fn start_streaming(node_id: u32, fd: OwnedFd) -> Result<(), pw::Error> {
+     pw::init();
+ 
+-    let mainloop = pw::main_loop::MainLoop::new(None)?;
+-    let context = pw::context::Context::new(&mainloop)?;
++    let mainloop = pw::main_loop::MainLoopBox::new(None)?;
++    let context = pw::context::ContextBox::new(mainloop.loop_(), None)?;
+     let core = context.connect_fd(fd, None)?;
+ 
+     let data = UserData {
+         format: Default::default(),
+     };
+ 
+-    let stream = pw::stream::Stream::new(
++    let stream = pw::stream::StreamBox::new(
+         &core,
+         "video-test",
+         properties! {
+diff --git a/src/desktop/camera.rs b/src/desktop/camera.rs
+index 70785bc2a..a85244004 100644
+--- a/src/desktop/camera.rs
++++ b/src/desktop/camera.rs
+@@ -33,8 +33,6 @@
+ 
+ use std::{collections::HashMap, os::fd::OwnedFd};
+ 
+-#[cfg(feature = "pipewire")]
+-use pipewire::{context::Context, main_loop::MainLoop};
+ use zbus::zvariant::{self, SerializeDict, Type, Value};
+ 
+ use super::{HandleToken, Request};
+@@ -145,8 +143,8 @@ fn pipewire_streams_inner<F: Fn(Stream) + Clone + 'static, G: FnOnce() + Clone +
+     callback: F,
+     done_callback: G,
+ ) -> Result<(), pipewire::Error> {
+-    let mainloop = MainLoop::new(None)?;
+-    let context = Context::new(&mainloop)?;
++    let mainloop = pipewire::main_loop::MainLoopRc::new(None)?;
++    let context = pipewire::context::ContextRc::new(&mainloop, None)?;
+     let core = context.connect_fd(fd, None)?;
+     let registry = core.get_registry()?;
+ 
