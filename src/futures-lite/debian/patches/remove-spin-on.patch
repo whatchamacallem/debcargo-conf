@@ -1,1002 +1,561 @@
-Index: futures-lite/Cargo.toml
-===================================================================
+only in patch2:
 --- futures-lite.orig/Cargo.toml
 +++ futures-lite/Cargo.toml
-@@ -59,9 +59,6 @@ optional = true
- [dependencies.pin-project-lite]
- version = "0.2"
+@@ -61,5 +61,2 @@
  
 -[dev-dependencies.spin_on]
 -version = "0.1.0"
 -
  [dev-dependencies.waker-fn]
- version = "1.0.0"
- 
-Index: futures-lite/src/future.rs
-===================================================================
+only in patch2:
 --- futures-lite.orig/src/future.rs
 +++ futures-lite/src/future.rs
-@@ -2,7 +2,7 @@
- //!
- //! # Examples
+@@ -4,3 +4,3 @@
  //!
 -//! ```
 +//! ``` ignore
  //! use futures_lite::future;
- //!
- //! # spin_on::spin_on(async {
-@@ -108,7 +108,7 @@ pub fn block_on<T>(future: impl Future<O
- ///
- /// # Examples
+@@ -110,3 +110,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::future;
- ///
- /// # spin_on::spin_on(async {
-@@ -156,7 +156,7 @@ where
- ///
- /// # Examples
+@@ -158,3 +158,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::future;
- /// use std::task::{Context, Poll};
- ///
-@@ -209,7 +209,7 @@ where
- ///
- /// # Examples
+@@ -211,3 +211,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::future;
- ///
- /// # spin_on::spin_on(async {
-@@ -243,7 +243,7 @@ impl Future for YieldNow {
- ///
- /// # Examples
+@@ -245,3 +245,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::future;
- ///
- /// # spin_on::spin_on(async {
-@@ -326,7 +326,7 @@ where
- ///
- /// # Examples
+@@ -328,3 +328,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::future;
- ///
- /// # spin_on::spin_on(async {
-@@ -335,7 +335,7 @@ where
- ///
- /// assert_eq!(future::try_zip(a, b).await, Err(2));
+@@ -337,3 +337,3 @@
  /// # })
 -/// ```
 +/// ``` ignore
  pub fn try_zip<T1, T2, E, F1, F2>(future1: F1, future2: F2) -> TryZip<F1, T1, F2, T2>
- where
-     F1: Future<Output = Result<T1, E>>,
-@@ -402,7 +402,7 @@ where
- ///
- /// # Examples
+@@ -404,3 +404,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::future::{self, pending, ready};
- ///
- /// # spin_on::spin_on(async {
-@@ -412,7 +412,7 @@ where
- /// // The first future wins.
- /// assert_eq!(future::or(ready(1), ready(2)).await, 1);
+@@ -414,3 +414,3 @@
  /// # })
 -/// ```
 +/// ``` ignore
  pub fn or<T, F1, F2>(future1: F1, future2: F2) -> Or<F1, F2>
- where
-     F1: Future<Output = T>,
-@@ -463,7 +463,7 @@ where
- ///
- /// # Examples
+@@ -465,3 +465,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::future::{self, pending, ready};
- ///
- /// # spin_on::spin_on(async {
-@@ -497,7 +497,7 @@ where
- ///
- /// # Examples
+@@ -499,3 +499,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::future::{self, pending, ready};
- ///
- /// // A fixed seed is used, so the result is deterministic.
-@@ -593,7 +593,7 @@ impl<F: Future + UnwindSafe> Future for
- ///
- /// # Examples
+@@ -595,3 +595,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::future::{self, FutureExt};
- ///
- /// // These two lines are equivalent:
-@@ -634,7 +634,7 @@ pub trait FutureExt: Future {
-     ///
-     /// # Examples
+@@ -636,3 +636,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::future::{pending, ready, FutureExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -666,7 +666,7 @@ pub trait FutureExt: Future {
-     ///
-     /// # Examples
+@@ -668,3 +668,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::future::{pending, ready, FutureExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -694,7 +694,7 @@ pub trait FutureExt: Future {
-     ///
-     /// # Examples
+@@ -696,3 +696,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::future::FutureExt;
-     ///
-     /// # spin_on::spin_on(async {
-@@ -717,7 +717,7 @@ pub trait FutureExt: Future {
-     ///
-     /// # Examples
+@@ -719,3 +719,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::future::{self, FutureExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -741,7 +741,7 @@ pub trait FutureExt: Future {
-     ///
-     /// # Examples
+@@ -743,3 +743,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::future::{self, FutureExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -752,7 +752,7 @@ pub trait FutureExt: Future {
-     /// // the same collection when they are boxed:
-     /// let futures = vec![a.boxed_local(), b.boxed_local()];
+@@ -754,3 +754,3 @@
      /// # })
 -    /// ```
 +    /// ``` ignore
      #[cfg(feature = "alloc")]
-     fn boxed_local<'a>(self) -> Pin<Box<dyn Future<Output = Self::Output> + 'a>>
-     where
-Index: futures-lite/src/io.rs
-===================================================================
+only in patch2:
 --- futures-lite.orig/src/io.rs
 +++ futures-lite/src/io.rs
-@@ -2,7 +2,7 @@
- //!
- //! # Examples
+@@ -4,3 +4,3 @@
  //!
 -//! ```
 +//! ``` ignore
  //! use futures_lite::io::{self, AsyncReadExt};
- //!
- //! # spin_on::spin_on(async {
-@@ -47,7 +47,7 @@ const DEFAULT_BUF_SIZE: usize = 8 * 1024
- ///
- /// # Examples
+@@ -49,3 +49,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::io::{self, BufReader, BufWriter};
- ///
- /// # spin_on::spin_on(async {
-@@ -116,7 +116,7 @@ where
- ///
- /// # Examples
+@@ -118,3 +118,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::io::{AssertAsync, AsyncReadExt};
- ///
- /// let reader: &[u8] = b"hello";
-@@ -647,7 +647,7 @@ pin_project! {
-     ///
-     /// # Examples
+@@ -649,3 +649,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncBufReadExt, BufReader};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -958,7 +958,7 @@ pin_project! {
-     ///
-     /// # Examples
+@@ -960,3 +960,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncWriteExt, BufWriter};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1060,7 +1060,7 @@ impl<W: AsyncWrite> BufWriter<W> {
-     ///
-     /// # Examples
+@@ -1062,3 +1062,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncWriteExt, BufWriter};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1185,7 +1185,7 @@ impl<W: AsyncWrite + AsyncSeek> AsyncSee
- ///
- /// # Examples
+@@ -1187,3 +1187,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt, Cursor, SeekFrom};
- ///
- /// # spin_on::spin_on(async {
-@@ -1279,7 +1279,7 @@ impl<T> Cursor<T> {
-     ///
-     /// # Examples
+@@ -1281,3 +1281,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncSeekExt, Cursor, SeekFrom};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1425,7 +1425,7 @@ impl AsyncWrite for Cursor<Vec<u8>> {
- ///
- /// # Examples
+@@ -1427,3 +1427,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::io::{self, AsyncReadExt};
- ///
- /// # spin_on::spin_on(async {
-@@ -1472,7 +1472,7 @@ impl AsyncBufRead for Empty {
- ///
- /// # Examples
+@@ -1474,3 +1474,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::io::{self, AsyncReadExt};
- ///
- /// # spin_on::spin_on(async {
-@@ -1507,7 +1507,7 @@ impl AsyncRead for Repeat {
- ///
- /// # Examples
+@@ -1509,3 +1509,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::io::{self, AsyncWriteExt};
- ///
- /// # spin_on::spin_on(async {
-@@ -1550,7 +1550,7 @@ pub trait AsyncBufReadExt: AsyncBufRead
-     ///
-     /// # Examples
+@@ -1552,3 +1552,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncBufReadExt, BufReader};
-     /// use std::pin::Pin;
-     ///
-@@ -1582,7 +1582,7 @@ pub trait AsyncBufReadExt: AsyncBufRead
-     ///
-     /// # Examples
+@@ -1584,3 +1584,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncBufReadExt, BufReader};
-     /// use std::pin::Pin;
-     ///
-@@ -1611,7 +1611,7 @@ pub trait AsyncBufReadExt: AsyncBufRead
-     ///
-     /// # Examples
+@@ -1613,3 +1613,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncBufReadExt, BufReader};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1644,7 +1644,7 @@ pub trait AsyncBufReadExt: AsyncBufRead
-     ///
-     /// # Examples
+@@ -1646,3 +1646,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncBufReadExt, BufReader};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1676,7 +1676,7 @@ pub trait AsyncBufReadExt: AsyncBufRead
-     ///
-     /// # Examples
+@@ -1678,3 +1678,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncBufReadExt, BufReader};
-     /// use futures_lite::stream::StreamExt;
-     ///
-@@ -1710,7 +1710,7 @@ pub trait AsyncBufReadExt: AsyncBufRead
-     ///
-     /// # Examples
+@@ -1712,3 +1712,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncBufReadExt, Cursor};
-     /// use futures_lite::stream::StreamExt;
-     ///
-@@ -1975,7 +1975,7 @@ pub trait AsyncReadExt: AsyncRead {
-     ///
-     /// # Examples
+@@ -1977,3 +1977,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncReadExt, BufReader};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -2014,7 +2014,7 @@ pub trait AsyncReadExt: AsyncRead {
-     ///
-     /// # Examples
+@@ -2016,3 +2016,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncReadExt, Cursor};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -2044,7 +2044,7 @@ pub trait AsyncReadExt: AsyncRead {
-     ///
-     /// # Examples
+@@ -2046,3 +2046,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncReadExt, Cursor};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -2074,7 +2074,7 @@ pub trait AsyncReadExt: AsyncRead {
-     ///
-     /// # Examples
+@@ -2076,3 +2076,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncReadExt, Cursor};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -2099,7 +2099,7 @@ pub trait AsyncReadExt: AsyncRead {
-     ///
-     /// # Examples
+@@ -2101,3 +2101,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncReadExt, Cursor};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -2122,7 +2122,7 @@ pub trait AsyncReadExt: AsyncRead {
-     ///
-     /// The returned type implements [`Stream`] where `Item` is `io::Result<u8>`.
+@@ -2124,3 +2124,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncReadExt, Cursor};
-     /// use futures_lite::stream::StreamExt;
-     ///
-@@ -2149,7 +2149,7 @@ pub trait AsyncReadExt: AsyncRead {
-     ///
-     /// # Examples
+@@ -2151,3 +2151,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncReadExt, Cursor};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -2727,7 +2727,7 @@ pub trait AsyncSeekExt: AsyncSeek {
-     ///
-     /// # Examples
+@@ -2729,3 +2729,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncSeekExt, Cursor, SeekFrom};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -2782,7 +2782,7 @@ pub trait AsyncWriteExt: AsyncWrite {
-     ///
-     /// # Examples
+@@ -2784,3 +2784,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncWriteExt, BufWriter};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -2819,7 +2819,7 @@ pub trait AsyncWriteExt: AsyncWrite {
-     ///
-     /// # Examples
+@@ -2821,3 +2821,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncWriteExt, BufWriter};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -2840,7 +2840,7 @@ pub trait AsyncWriteExt: AsyncWrite {
-     ///
-     /// # Examples
+@@ -2842,3 +2842,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncWriteExt, BufWriter};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -2862,7 +2862,7 @@ pub trait AsyncWriteExt: AsyncWrite {
-     ///
-     /// # Examples
+@@ -2864,3 +2864,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::io::{AsyncWriteExt, BufWriter};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -3029,7 +3029,7 @@ pub type BoxedWriter = Pin<Box<dyn Async
- ///
- /// # Examples
+@@ -3031,3 +3031,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::io::{self, Cursor};
- ///
- /// # spin_on::spin_on(async {
-Index: futures-lite/src/lib.rs
-===================================================================
+only in patch2:
 --- futures-lite.orig/src/lib.rs
 +++ futures-lite/src/lib.rs
-@@ -104,7 +104,7 @@ macro_rules! ready {
- 
- /// Pins a variable of type `T` on the stack and rebinds it as `Pin<&mut T>`.
+@@ -106,3 +106,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::{future, pin};
- /// use std::fmt::Debug;
- /// use std::future::Future;
-Index: futures-lite/src/stream.rs
-===================================================================
+only in patch2:
 --- futures-lite.orig/src/stream.rs
 +++ futures-lite/src/stream.rs
-@@ -2,7 +2,7 @@
- //!
- //! # Examples
+@@ -4,3 +4,3 @@
  //!
 -//! ```
 +//! ``` ignore
  //! use futures_lite::stream::{self, StreamExt};
- //!
- //! # spin_on::spin_on(async {
-@@ -139,7 +139,7 @@ impl<S: Stream + Unpin> Iterator for Blo
- ///
- /// # Examples
+@@ -141,3 +141,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::stream::{self, StreamExt};
- ///
- /// # spin_on::spin_on(async {
-@@ -178,7 +178,7 @@ impl<T> Stream for Empty<T> {
- ///
- /// # Examples
+@@ -180,3 +180,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::stream::{self, StreamExt};
- ///
- /// # spin_on::spin_on(async {
-@@ -220,7 +220,7 @@ impl<I: Iterator> Stream for Iter<I> {
- ///
- /// # Examples
+@@ -222,3 +222,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::stream::{self, StreamExt};
- ///
- /// # spin_on::spin_on(async {
-@@ -263,7 +263,7 @@ impl<T> Stream for Once<T> {
- ///
- /// # Examples
+@@ -265,3 +265,3 @@
  ///
 -/// ```no_run
 +/// ``` ignore
  /// use futures_lite::stream::{self, StreamExt};
- ///
- /// # spin_on::spin_on(async {
-@@ -303,7 +303,7 @@ impl<T> Stream for Pending<T> {
- ///
- /// # Examples
+@@ -305,3 +305,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::stream::{self, StreamExt};
- /// use std::task::{Context, Poll};
- ///
-@@ -352,7 +352,7 @@ where
- ///
- /// # Examples
+@@ -354,3 +354,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::stream::{self, StreamExt};
- ///
- /// # spin_on::spin_on(async {
-@@ -391,7 +391,7 @@ impl<T: Clone> Stream for Repeat<T> {
- ///
- /// # Examples
+@@ -393,3 +393,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::stream::{self, StreamExt};
- ///
- /// # spin_on::spin_on(async {
-@@ -437,7 +437,7 @@ where
- ///
- /// # Examples
+@@ -439,3 +439,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::stream::{self, StreamExt};
- ///
- /// # spin_on::spin_on(async {
-@@ -526,7 +526,7 @@ where
- ///
- /// # Examples
+@@ -528,3 +528,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::stream::{self, StreamExt};
- ///
- /// # spin_on::spin_on(async {
-@@ -621,7 +621,7 @@ where
- ///
- /// # Example
+@@ -623,3 +623,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::{stream, prelude::*};
- ///
- /// # spin_on::spin_on(async {
-@@ -680,7 +680,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -682,3 +682,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -708,7 +708,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -710,3 +710,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -731,7 +731,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -733,3 +733,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -756,7 +756,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -758,3 +758,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -781,7 +781,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -783,3 +783,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -811,7 +811,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -813,3 +813,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -838,7 +838,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -840,3 +840,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::pin;
-     /// use futures_lite::stream::{self, StreamExt};
-     ///
-@@ -870,7 +870,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -872,3 +872,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -897,7 +897,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -899,3 +899,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -922,7 +922,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -924,3 +924,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -944,7 +944,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -946,3 +946,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -971,7 +971,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -973,3 +973,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -993,7 +993,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -995,3 +995,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1024,7 +1024,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1026,3 +1026,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1053,7 +1053,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1055,3 +1055,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1083,7 +1083,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1085,3 +1085,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1107,7 +1107,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1109,3 +1109,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1131,7 +1131,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1133,3 +1133,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1154,7 +1154,7 @@ pub trait StreamExt: Stream {
- 
-     /// Collects all items in the fallible stream into a collection.
+@@ -1156,3 +1156,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1183,7 +1183,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1185,3 +1185,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1214,7 +1214,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1216,3 +1216,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1244,7 +1244,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1246,3 +1246,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1281,7 +1281,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1283,3 +1283,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1312,7 +1312,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1314,3 +1314,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1337,7 +1337,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1339,3 +1339,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1363,7 +1363,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1365,3 +1365,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1387,7 +1387,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1389,3 +1389,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1415,7 +1415,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1417,3 +1417,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1437,7 +1437,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1439,3 +1439,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1462,7 +1462,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1464,3 +1464,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1487,7 +1487,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1489,3 +1489,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1509,7 +1509,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1511,3 +1511,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1538,7 +1538,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1540,3 +1540,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1569,7 +1569,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1571,3 +1571,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1598,7 +1598,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1600,3 +1600,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1618,7 +1618,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1620,3 +1620,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1654,7 +1654,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1656,3 +1656,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1684,7 +1684,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1686,3 +1686,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1711,7 +1711,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1713,3 +1713,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     /// use futures_lite::stream::{once, pending};
-     ///
-@@ -1738,7 +1738,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1740,3 +1740,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     /// use futures_lite::stream::{once, pending};
-     ///
-@@ -1818,7 +1818,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1820,3 +1820,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -1842,7 +1842,7 @@ pub trait StreamExt: Stream {
-     ///
-     /// # Examples
+@@ -1844,3 +1844,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::stream::{self, StreamExt};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -2372,7 +2372,7 @@ where
- ///
- /// # Examples
+@@ -2374,3 +2374,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::stream::{self, once, pending, StreamExt};
- ///
- /// # spin_on::spin_on(async {
-@@ -2424,7 +2424,7 @@ where
- ///
- /// # Examples
+@@ -2426,3 +2426,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::stream::{self, once, pending, StreamExt};
- ///
- /// # spin_on::spin_on(async {
-@@ -2452,7 +2452,7 @@ where
- ///
- /// # Examples
+@@ -2454,3 +2454,3 @@
  ///
 -/// ```
 +/// ``` ignore
  /// use futures_lite::stream::{self, once, pending, StreamExt};
- ///
- /// // A fixed seed is used for reproducibility.
-@@ -3241,7 +3241,7 @@ impl<'a, S: Unpin + ?Sized> Drain<'a, S>
-     ///
-     /// ## Examples
+@@ -3243,3 +3243,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::{prelude::*, stream};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -3260,7 +3260,7 @@ impl<'a, S: Unpin + ?Sized> Drain<'a, S>
-     ///
-     /// ## Examples
+@@ -3262,3 +3262,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::{prelude::*, stream};
-     ///
-     /// # spin_on::spin_on(async {
-@@ -3279,7 +3279,7 @@ impl<'a, S: Unpin + ?Sized> Drain<'a, S>
-     ///
-     /// ## Examples
+@@ -3281,3 +3281,3 @@
      ///
 -    /// ```
 +    /// ``` ignore
      /// use futures_lite::{prelude::*, stream};
-     ///
-     /// # spin_on::spin_on(async {
