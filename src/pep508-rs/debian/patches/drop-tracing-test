@@ -1,0 +1,90 @@
+Index: pep508-rs/Cargo.toml
+===================================================================
+--- pep508-rs.orig/Cargo.toml
++++ pep508-rs/Cargo.toml
+@@ -102,9 +102,6 @@ version = "1.43.0"
+ [dev-dependencies.serde_json]
+ version = "1.0.116"
+ 
+-[dev-dependencies.tracing-test]
+-version = "0.2.5"
+-
+ [features]
+ default = []
+ non-pep508-extensions = []
+Index: pep508-rs/src/marker/tree.rs
+===================================================================
+--- pep508-rs.orig/src/marker/tree.rs
++++ pep508-rs/src/marker/tree.rs
+@@ -1935,71 +1935,6 @@ mod test {
+     }
+ 
+     #[test]
+-    #[cfg(feature = "tracing")]
+-    #[tracing_test::traced_test]
+-    fn warnings1() {
+-        let env37 = env37();
+-        let compare_keys = MarkerTree::from_str("platform_version == sys_platform").unwrap();
+-        compare_keys.evaluate(&env37, &[]);
+-        logs_contain(
+-            "Comparing two markers with each other doesn't make any sense, will evaluate to false",
+-        );
+-    }
+-
+-    #[test]
+-    #[cfg(feature = "tracing")]
+-    #[tracing_test::traced_test]
+-    fn warnings2() {
+-        let env37 = env37();
+-        let non_pep440 = MarkerTree::from_str("python_version >= '3.9.'").unwrap();
+-        non_pep440.evaluate(&env37, &[]);
+-        logs_contain(
+-            "Expected PEP 440 version to compare with python_version, found `3.9.`, \
+-             will evaluate to false: after parsing `3.9`, found `.`, which is \
+-             not part of a valid version",
+-        );
+-    }
+-
+-    #[test]
+-    #[cfg(feature = "tracing")]
+-    #[tracing_test::traced_test]
+-    fn warnings3() {
+-        let env37 = env37();
+-        let string_string = MarkerTree::from_str("'b' >= 'a'").unwrap();
+-        string_string.evaluate(&env37, &[]);
+-        logs_contain(
+-            "Comparing two quoted strings with each other doesn't make sense: 'b' >= 'a', will evaluate to false"
+-        );
+-    }
+-
+-    #[test]
+-    #[cfg(feature = "tracing")]
+-    #[tracing_test::traced_test]
+-    fn warnings4() {
+-        let env37 = env37();
+-        let string_string = MarkerTree::from_str(r"os.name == 'posix' and platform.machine == 'x86_64' and platform.python_implementation == 'CPython' and 'Ubuntu' in platform.version and sys.platform == 'linux'").unwrap();
+-        string_string.evaluate(&env37, &[]);
+-        logs_assert(|lines: &[&str]| {
+-            let lines: Vec<_> = lines
+-                .iter()
+-                .map(|s| s.split_once("  ").unwrap().1)
+-                .collect();
+-            let expected = [
+-                "WARN warnings4: pep508_rs: os.name is deprecated in favor of os_name",
+-                "WARN warnings4: pep508_rs: platform.machine is deprecated in favor of platform_machine",
+-                "WARN warnings4: pep508_rs: platform.python_implementation is deprecated in favor of",
+-                "WARN warnings4: pep508_rs: sys.platform  is deprecated in favor of sys_platform",
+-                "WARN warnings4: pep508_rs: Comparing linux and posix lexicographically"
+-            ];
+-            if lines == expected {
+-                Ok(())
+-            } else {
+-                Err(format!("{lines:?}"))
+-            }
+-        });
+-    }
+-
+-    #[test]
+     fn test_not_in() {
+         MarkerTree::from_str("'posix' not in os_name").unwrap();
+     }
