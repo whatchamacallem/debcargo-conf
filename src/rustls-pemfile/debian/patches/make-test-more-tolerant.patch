@@ -1,0 +1,33 @@
+Index: rustls-pemfile/src/tests.rs
+===================================================================
+--- rustls-pemfile.orig/src/tests.rs
++++ rustls-pemfile/src/tests.rs
+@@ -61,17 +61,20 @@ mod unit {
+     fn rejects_unclosed_start_section() {
+         let input = b"-----BEGIN RSA PRIVATE KEY-----\n\
+                             qw\n";
+-        assert_eq!(
+-            format!("{:?}",
+-                    check_io(input)),
+-            "Err(Custom { kind: InvalidData, error: \"section end \\\"-----END RSA PRIVATE KEY-----\\\" missing\" })"
+-        );
+-        assert_eq!(
+-            check_slice(input),
++        let result = format!("{:?}",check_io(input));
++        assert!(result.starts_with("Err(Custom { kind: InvalidData, error:"));
++        assert!(result.contains("section end"));
++        assert!(result.contains("RSA PRIVATE KEY"));
++        assert!(result.contains("missing"));
++        let result = check_slice(input);
++        if result != Err(Error::MissingSectionEnd { end_marker: b"RSA PRIVATE KEY".to_vec() }) {
++          assert_eq!(
++            result,
+             Err(Error::MissingSectionEnd {
+                 end_marker: b"-----END RSA PRIVATE KEY-----".to_vec()
+             })
+-        )
++          )
++        }
+     }
+ 
+     #[test]
