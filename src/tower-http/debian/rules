@@ -6,6 +6,7 @@ execute_after_dh_auto_configure:
 	cp -r debian/missing-sources/test-files ./
 	brotli test-files/precompressed.txt
 	brotli test-files/precompressed_br.txt
+	touch test-files/empty.txt
 	python3 -c "import inflate64; enc = inflate64.Deflater(); data = enc.deflate(open('test-files/precompressed.txt', 'rb').read()); data += enc.flush(); open('test-files/precompressed.txt.zz', 'wb').write(data)"
 	zstd test-files/precompressed.txt
 	gzip --keep test-files/extensionless_precompressed

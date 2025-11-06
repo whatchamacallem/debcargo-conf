@@ -1,0 +1,26 @@
+Index: tower-http/src/services/fs/serve_dir/tests.rs
+===================================================================
+--- tower-http.orig/src/services/fs/serve_dir/tests.rs
++++ tower-http/src/services/fs/serve_dir/tests.rs
+@@ -92,7 +92,7 @@ async fn precompresed_head_request() {
+ 
+     assert_eq!(res.headers()[H_CT], H_CT_TXT);
+     assert_eq!(res.headers()["content-encoding"], "gzip");
+-    assert_eq!(res.headers()["content-length"], "30");
++    assert_eq!(res.headers()["content-length"], std::fs::metadata(SERVE_DIR_TF.to_string()+"/"+SERVE_DIR_TF_FILE+".gz").unwrap().len().to_string());
+ 
+     assert!(res.into_body().frame().await.is_none());
+ }
+Index: tower-http/src/services/fs/serve_file.rs
+===================================================================
+--- tower-http.orig/src/services/fs/serve_file.rs
++++ tower-http/src/services/fs/serve_file.rs
+@@ -224,7 +224,7 @@ mod tests {
+ 
+         assert_eq!(res.headers()[H_CT], H_CT_TXT);
+         assert_eq!(res.headers()["content-encoding"], "gzip");
+-        assert_eq!(res.headers()["content-length"], "30");
++        assert_eq!(res.headers()["content-length"], std::fs::metadata(SERVE_FILE_PRECOMP.to_string()+".gz").unwrap().len().to_string());
+ 
+         assert!(res.into_body().frame().await.is_none());
+     }
