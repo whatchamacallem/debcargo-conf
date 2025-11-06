@@ -1,0 +1,18 @@
+Index: rust-crc32fast-1.5.0/src/specialized/aarch64.rs
+===================================================================
+--- rust-crc32fast-1.5.0.orig/src/specialized/aarch64.rs
++++ rust-crc32fast-1.5.0/src/specialized/aarch64.rs
+@@ -85,7 +85,12 @@ mod test {
+     quickcheck::quickcheck! {
+         fn check_against_baseline(init: u32, chunks: Vec<(Vec<u8>, usize)>) -> bool {
+             let mut baseline = super::super::super::baseline::State::new(init);
+-            let mut aarch64 = super::State::new(init).expect("not supported");
++            let Some(mut aarch64) = super::State::new(init) else {
++                // can't test aarch64 specific code, either because we
++                // are buliding without std, or because our CPU doesn't have
++                // the required support.
++                return true;
++            };
+             for (chunk, mut offset) in chunks {
+                 // simulate random alignments by offsetting the slice by up to 15 bytes
+                 offset &= 0xF;

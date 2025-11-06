@@ -1,7 +1,7 @@
-diff --git a/benches/bench.rs b/benches/bench.rs
-index 6189500..3000291 100644
---- a/benches/bench.rs
-+++ b/benches/bench.rs
+Index: rust-crc32fast-1.5.0/benches/bench.rs
+===================================================================
+--- rust-crc32fast-1.5.0.orig/benches/bench.rs
++++ rust-crc32fast-1.5.0/benches/bench.rs
 @@ -66,6 +66,7 @@ bencher::benchmark_group!(
      bench_kilobyte_baseline,
      bench_megabyte_baseline
@@ -18,11 +18,11 @@ index 6189500..3000291 100644
  bencher::benchmark_main!(bench_baseline, bench_specialized, bench_combine);
 +#[cfg(not(feature = "std"))]
 +benchmark_main!(bench_baseline);
-diff --git a/src/baseline.rs b/src/baseline.rs
-index 38376c7..bb96578 100644
---- a/src/baseline.rs
-+++ b/src/baseline.rs
-@@ -70,6 +70,9 @@ pub(crate) fn update_slow(prev: u32, buf: &[u8]) -> u32 {
+Index: rust-crc32fast-1.5.0/src/baseline.rs
+===================================================================
+--- rust-crc32fast-1.5.0.orig/src/baseline.rs
++++ rust-crc32fast-1.5.0/src/baseline.rs
+@@ -70,6 +70,9 @@ pub(crate) fn update_slow(prev: u32, buf
  
  #[cfg(test)]
  mod test {
@@ -32,10 +32,10 @@ index 38376c7..bb96578 100644
      #[test]
      fn slow() {
          assert_eq!(super::update_slow(0, b""), 0);
-diff --git a/src/lib.rs b/src/lib.rs
-index 1a4f591..88c7b87 100644
---- a/src/lib.rs
-+++ b/src/lib.rs
+Index: rust-crc32fast-1.5.0/src/lib.rs
+===================================================================
+--- rust-crc32fast-1.5.0.orig/src/lib.rs
++++ rust-crc32fast-1.5.0/src/lib.rs
 @@ -39,6 +39,9 @@
  use core::fmt;
  use core::hash;
@@ -56,15 +56,29 @@ index 1a4f591..88c7b87 100644
      quickcheck::quickcheck! {
          fn combine(bytes_1: Vec<u8>, bytes_2: Vec<u8>) -> bool {
              let mut hash_a = Hasher::new();
-diff --git a/src/specialized/pclmulqdq.rs b/src/specialized/pclmulqdq.rs
-index 18a25ae..a6888a5 100644
---- a/src/specialized/pclmulqdq.rs
-+++ b/src/specialized/pclmulqdq.rs
-@@ -186,6 +186,7 @@ unsafe fn get(a: &mut &[u8]) -> arch::__m128i {
+Index: rust-crc32fast-1.5.0/src/specialized/pclmulqdq.rs
+===================================================================
+--- rust-crc32fast-1.5.0.orig/src/specialized/pclmulqdq.rs
++++ rust-crc32fast-1.5.0/src/specialized/pclmulqdq.rs
+@@ -186,6 +186,7 @@ unsafe fn get(a: &mut &[u8]) -> arch::__
  
  #[cfg(test)]
  mod test {
 +    #[cfg(feature = "std")]
+     quickcheck::quickcheck! {
+         fn check_against_baseline(init: u32, chunks: Vec<(Vec<u8>, usize)>) -> bool {
+             let mut baseline = super::super::super::baseline::State::new(init);
+Index: rust-crc32fast-1.5.0/src/specialized/aarch64.rs
+===================================================================
+--- rust-crc32fast-1.5.0.orig/src/specialized/aarch64.rs
++++ rust-crc32fast-1.5.0/src/specialized/aarch64.rs
+@@ -79,6 +79,9 @@ pub unsafe fn calculate(crc: u32, data:
+ 
+ #[cfg(test)]
+ mod test {
++    #[cfg(not(feature = "std"))]
++    use alloc::vec::Vec;
++
      quickcheck::quickcheck! {
          fn check_against_baseline(init: u32, chunks: Vec<(Vec<u8>, usize)>) -> bool {
              let mut baseline = super::super::super::baseline::State::new(init);
