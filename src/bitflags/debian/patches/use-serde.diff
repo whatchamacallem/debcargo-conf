@@ -1,0 +1,99 @@
+This patch is based on a revert of upstream commit
+fdc1d4a37183bc5cf3985413d30a7eb9f8cb3fa7, adapted for use in the Debian package
+by Peter Michael Green.
+
+Index: bitflags/Cargo.toml
+===================================================================
+--- bitflags.orig/Cargo.toml
++++ bitflags/Cargo.toml
+@@ -46,7 +46,6 @@ features = ["example_generated"]
+ 
+ [features]
+ example_generated = []
+-serde = ["serde_core"]
+ std = []
+ 
+ [lib]
+@@ -79,8 +78,8 @@ optional = true
+ version = "1.12"
+ optional = true
+ 
+-[dependencies.serde_core]
+-version = "1.0.228"
++[dependencies.serde]
++version = "=1.0.219"
+ optional = true
+ default-features = false
+ 
+@@ -98,10 +97,9 @@ version = "1.0"
+ [dev-dependencies.serde_json]
+ version = "1.0"
+ 
+-[dev-dependencies.serde_lib]
+-version = "1.0.103"
++[dev-dependencies.serde]
++version = "=1.0.219"
+ features = ["derive"]
+-package = "serde"
+ 
+ [dev-dependencies.serde_test]
+ version = "1.0.19"
+Index: bitflags/examples/serde.rs
+===================================================================
+--- bitflags.orig/examples/serde.rs
++++ bitflags/examples/serde.rs
+@@ -4,14 +4,11 @@
+ 
+ #[cfg(feature = "serde")]
+ fn main() {
+-    use serde_lib::*;
++    use serde::*;
+ 
+     bitflags::bitflags! {
+         #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+         #[serde(transparent)]
+-        // NOTE: We alias the `serde` crate as `serde_lib` in this repository,
+-        // but you don't need to do this
+-        #[serde(crate = "serde_lib")]
+         pub struct Flags: u32 {
+             const A = 1;
+             const B = 2;
+Index: bitflags/src/external.rs
+===================================================================
+--- bitflags.orig/src/external.rs
++++ bitflags/src/external.rs
+@@ -67,7 +67,7 @@ __impl_external_bitflags_my_library! {
+ 
+ pub(crate) mod __private {
+     #[cfg(feature = "serde")]
+-    pub use serde_core as serde;
++    pub use serde;
+ 
+     #[cfg(feature = "arbitrary")]
+     pub use arbitrary;
+Index: bitflags/src/external/serde.rs
+===================================================================
+--- bitflags.orig/src/external/serde.rs
++++ bitflags/src/external/serde.rs
+@@ -5,7 +5,7 @@ use crate::{
+     Flags,
+ };
+ use core::{fmt, str};
+-use serde_core::{
++use serde::{
+     de::{Error, Visitor},
+     Deserialize, Deserializer, Serialize, Serializer,
+ };
+@@ -69,10 +69,9 @@ where
+ #[cfg(test)]
+ mod tests {
+     use serde_test::{assert_tokens, Configure, Token::*};
+-
+     bitflags! {
+-        #[derive(serde_lib::Serialize, serde_lib::Deserialize, Debug, PartialEq, Eq)]
+-        #[serde(crate = "serde_lib", transparent)]
++        #[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq, Eq)]
++        #[serde(transparent)]
+         struct SerdeFlags: u32 {
+             const A = 1;
+             const B = 2;
