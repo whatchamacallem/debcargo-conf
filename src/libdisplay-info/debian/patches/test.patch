@@ -1,0 +1,52 @@
+diff --git a/examples/decode.rs b/examples/decode.rs
+index 8dc0422..981d770 100644
+--- a/examples/decode.rs
++++ b/examples/decode.rs
+@@ -898,6 +898,7 @@ fn print_cta(cta: CTA<'_>) {
+                     )
+                 );
+             }
++            #[cfg(feature = "v0_2")]
+             cta::DataBlockTag::VesaDisplayDevice => {
+                 let vesa_dddb = data_block.vesa_dddb().unwrap();
+                 print_cta_vesa_dddb(vesa_dddb);
+@@ -943,6 +944,7 @@ fn print_cta(cta: CTA<'_>) {
+                 let hdr_dynamic_metadata = data_block.hdr_dynamic_metadata().unwrap();
+                 print_cta_hdr_dynamic_metadata(hdr_dynamic_metadata);
+             }
++            #[cfg(feature = "v0_2")]
+             cta::DataBlockTag::VesaDisplayTransferCharacteristic => {
+                 let transfer_characteristics = data_block.vesa_transfer_characteristics().unwrap();
+                 print_cta_vesa_transfer_characteristics(transfer_characteristics);
+@@ -952,6 +954,7 @@ fn print_cta(cta: CTA<'_>) {
+                     print_cta_sad(sad);
+                 }
+             }
++            #[cfg(feature = "v0_2")]
+             cta::DataBlockTag::Ycbcr420CapMap => {
+                 let ycbcr420_cap_map = data_block.ycbcr420_cap_map().unwrap();
+                 print_ycbcr420_cap_map(&cta, ycbcr420_cap_map);
+@@ -1309,6 +1312,7 @@ fn print_cta_sad(sad: cta::Sad) {
+     }
+ }
+ 
++#[cfg(feature = "v0_2")]
+ fn print_cta_vesa_dddb(dddb: cta::VesaDddb) {
+     print!("    Interface Type: {:?}", dddb.interface_type);
+     if let Some(num_channels) = dddb.num_channels {
+@@ -1440,6 +1444,7 @@ fn print_cta_vesa_dddb(dddb: cta::VesaDddb) {
+     );
+ }
+ 
++#[cfg(feature = "v0_2")]
+ fn print_cta_vesa_transfer_characteristics(tf: cta::VesaTransferCharacteristics) {
+     print!("    {:?}", tf.usage);
+ 
+@@ -1450,6 +1455,7 @@ fn print_cta_vesa_transfer_characteristics(tf: cta::VesaTransferCharacteristics)
+     println!();
+ }
+ 
++#[cfg(feature = "v0_2")]
+ fn print_ycbcr420_cap_map(cta: &cta::CTA<'_>, map: cta::Ycbcr420CapMapRef) {
+     for data_block in cta.data_blocks() {
+         if data_block.tag() != cta::DataBlockTag::Video {
