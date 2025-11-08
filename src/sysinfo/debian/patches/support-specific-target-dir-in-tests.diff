@@ -2,15 +2,15 @@ Index: sysinfo/tests/process.rs
 ===================================================================
 --- sysinfo.orig/tests/process.rs
 +++ sysinfo/tests/process.rs
-@@ -1,6 +1,7 @@
- // Take a look at the license at the top of the repository in the LICENSE file.
+@@ -4,6 +4,7 @@
  
- use sysinfo::{Pid, ProcessRefreshKind, System, UpdateKind};
+ use bstr::ByteSlice;
+ use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System, UpdateKind};
 +use std::path::Path;
  
- #[test]
- fn test_cwd() {
-@@ -97,9 +98,11 @@ fn test_environ() {
+ macro_rules! start_proc {
+     ($time:literal, $name:literal) => {
+@@ -101,9 +102,11 @@ fn test_environ() {
      if !sysinfo::IS_SUPPORTED_SYSTEM || cfg!(feature = "apple-sandbox") {
          return;
      }
@@ -24,7 +24,7 @@ Index: sysinfo/tests/process.rs
          .env("FOO", "BAR")
          .env("OTHER", "VALUE")
          .spawn()
-@@ -130,7 +133,7 @@ fn test_environ() {
+@@ -138,7 +141,7 @@ fn test_environ() {
      for _ in 0..SIZE {
          big_env.push('a');
      }
@@ -33,13 +33,46 @@ Index: sysinfo/tests/process.rs
          .env("FOO", &big_env)
          .spawn()
          .unwrap();
-@@ -808,9 +811,11 @@ fn test_parent_change() {
+@@ -916,9 +919,11 @@ fn test_parent_change() {
          return;
      }
  
 -    let file_name = "target/test_binary2";
 +    let target_dir = Path::new(option_env!("CARGO_TARGET_DIR").unwrap_or("target"));
 +    let file_name = target_dir.join("test_binary2");
++    let file_name = file_name.to_str().unwrap();
+     build_test_binary(file_name);
+-    let mut p = std::process::Command::new(format!("./{file_name}"))
++    let mut p = std::process::Command::new(file_name)
+         .arg("1")
+         .spawn()
+         .unwrap();
+@@ -965,13 +970,15 @@ fn test_multiple_single_process_refresh(
+         return;
+     }
+ 
+-    let file_name = "target/test_binary3";
++    let target_dir = Path::new(option_env!("CARGO_TARGET_DIR").unwrap_or("target"));
++    let file_name = target_dir.join("test_binary3");
++    let file_name = file_name.to_str().unwrap();
+     build_test_binary(file_name);
+-    let mut p_a = std::process::Command::new(format!("./{file_name}"))
++    let mut p_a = std::process::Command::new(file_name)
+         .arg("1")
+         .spawn()
+         .unwrap();
+-    let mut p_b = std::process::Command::new(format!("./{file_name}"))
++    let mut p_b = std::process::Command::new(file_name)
+         .arg("1")
+         .spawn()
+         .unwrap();
+@@ -1068,9 +1075,11 @@ fn test_exists() {
+         return;
+     }
+ 
+-    let file_name = "target/test_binary4";
++    let target_dir = Path::new(option_env!("CARGO_TARGET_DIR").unwrap_or("target"));
++    let file_name = target_dir.join("test_binary4");
 +    let file_name = file_name.to_str().unwrap();
      build_test_binary(file_name);
 -    let mut p = std::process::Command::new(format!("./{file_name}"))

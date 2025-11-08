@@ -1,7 +1,7 @@
 Index: sysinfo/src/lib.rs
 ===================================================================
---- sysinfo.orig/src/lib.rs
-+++ sysinfo/src/lib.rs
+--- sysinfo.orig/src/common/system.rs
++++ sysinfo/src/common/system.rs
 @@ -247,6 +247,7 @@ mod test {
          }
      }
@@ -30,14 +30,10 @@ Index: sysinfo/tests/process.rs
  #[test]
  fn test_process_times() {
      use std::time::{SystemTime, UNIX_EPOCH};
-@@ -379,6 +380,7 @@ fn test_refresh_processes() {
-     any(target_os = "linux", target_os = "android"),
-     not(feature = "unknown-ci")
+@@ -381,2 +382,3 @@
  ))]
 +#[ignore = "observed to fail on debci and ubuntu ci"]
  fn test_refresh_tasks() {
-     if !sysinfo::IS_SUPPORTED_SYSTEM || cfg!(feature = "apple-sandbox") {
-         return;
 @@ -778,6 +780,7 @@ fn test_refresh_pids() {
  }
  
@@ -50,23 +46,15 @@ Index: sysinfo/benches/basic.rs
 ===================================================================
 --- sysinfo.orig/benches/basic.rs
 +++ sysinfo/benches/basic.rs
-@@ -45,6 +45,7 @@ fn bench_first_refresh_processes(b: &mut
-     });
- }
- 
-+#[ignore = "observed to fail on debci"]
+@@ -45,2 +45,3 @@
  #[bench]
++#[ignore = "observed to fail on debci"]
  fn bench_refresh_process(b: &mut test::Bencher) {
-     let mut s = sysinfo::System::new();
 Index: sysinfo/tests/components.rs
 ===================================================================
 --- sysinfo.orig/tests/components.rs
 +++ sysinfo/tests/components.rs
-@@ -1,6 +1,7 @@
- // Take a look at the license at the top of the repository in the LICENSE file.
- 
+@@ -3,2 +3,3 @@
  #[test]
 +#[ignore = "observed to fail on debci"]
  fn test_components() {
-     use std::env::var;
- 

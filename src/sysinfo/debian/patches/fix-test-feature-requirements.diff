@@ -1,0 +1,124 @@
+Index: sysinfo/benches/basic.rs
+===================================================================
+--- sysinfo.orig/benches/basic.rs
++++ sysinfo/benches/basic.rs
+@@ -63,6 +63,7 @@ fn bench_refresh_process(b: &mut test::B
+ }
+ 
+ #[bench]
++#[cfg(feature = "disk")]
+ fn bench_refresh_disk(b: &mut test::Bencher) {
+     let mut disks = sysinfo::Disks::new_with_refreshed_list();
+ 
+@@ -76,6 +77,7 @@ fn bench_refresh_disk(b: &mut test::Benc
+ }
+ 
+ #[bench]
++#[cfg(feature = "disk")]
+ fn bench_refresh_disks(b: &mut test::Bencher) {
+     let mut disks = sysinfo::Disks::new_with_refreshed_list();
+ 
+@@ -126,6 +128,7 @@ fn bench_refresh_components(b: &mut test
+ }
+ 
+ #[bench]
++#[cfg(feature = "user")]
+ fn bench_refresh_users_list(b: &mut test::Bencher) {
+     let mut users = sysinfo::Users::new_with_refreshed_list();
+ 
+Index: sysinfo/src/lib.rs
+===================================================================
+--- sysinfo.orig/src/lib.rs
++++ sysinfo/src/lib.rs
+@@ -368,43 +368,79 @@ mod test {
+         trait HasSendAndSync: Send + Sync {}
+ 
+         // Structs
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for CGroupLimits {}
++        #[cfg(feature = "component")]
+         impl HasSendAndSync for Component {}
++        #[cfg(feature = "component")]
+         impl HasSendAndSync for Components {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for Cpu {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for CpuRefreshKind {}
++        #[cfg(feature = "disk")]
+         impl HasSendAndSync for Disk {}
++        #[cfg(feature = "disk")]
+         impl HasSendAndSync for Disks {}
++        #[cfg(feature = "disk")]
+         impl HasSendAndSync for DiskRefreshKind {}
++        #[cfg(any(feature = "system", feature = "disk"))]
+         impl HasSendAndSync for DiskUsage {}
++        #[cfg(feature = "user")]
+         impl HasSendAndSync for Gid {}
++        #[cfg(feature = "user")]
+         impl HasSendAndSync for Group {}
++        #[cfg(feature = "user")]
+         impl HasSendAndSync for Groups {}
++        #[cfg(feature = "network")]
+         impl HasSendAndSync for IpNetwork {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for LoadAvg {}
++        #[cfg(feature = "network")]
+         impl HasSendAndSync for MacAddr {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for MemoryRefreshKind {}
++        #[cfg(feature = "network")]
+         impl HasSendAndSync for NetworkData {}
++        #[cfg(feature = "network")]
+         impl HasSendAndSync for Networks {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for Pid {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for Process {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for ProcessRefreshKind {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for Product {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for RefreshKind {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for System {}
++        #[cfg(feature = "user")]
+         impl HasSendAndSync for Uid {}
++        #[cfg(feature = "user")]
+         impl HasSendAndSync for User {}
++        #[cfg(feature = "user")]
+         impl HasSendAndSync for Users {}
+ 
+         // Enums
++        #[cfg(feature = "disk")]
+         impl HasSendAndSync for DiskKind {}
++        #[cfg(feature = "network")]
+         impl HasSendAndSync for IpNetworkFromStrError {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for KillError {}
++        #[cfg(feature = "network")]
+         impl HasSendAndSync for MacAddrFromStrError {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for ProcessStatus {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for ProcessesToUpdate<'_> {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for Signal {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for ThreadKind {}
++        #[cfg(feature = "system")]
+         impl HasSendAndSync for UpdateKind {}
+     }
+ }
+Index: sysinfo/src/serde.rs
+===================================================================
+--- sysinfo.orig/src/serde.rs
++++ sysinfo/src/serde.rs
+@@ -504,6 +504,7 @@ impl Serialize for crate::Uid {
+ #[cfg(test)]
+ mod tests {
+     #[test]
++    #[cfg(feature = "system")]
+     fn test_serde_process_name() {
+         if !crate::IS_SUPPORTED_SYSTEM {
+             return;

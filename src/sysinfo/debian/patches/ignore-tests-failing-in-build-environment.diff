@@ -1,16 +1,20 @@
-Index: sysinfo/src/lib.rs
+Index: sysinfo/src/common/system.rs
 ===================================================================
---- sysinfo.orig/src/lib.rs
-+++ sysinfo/src/lib.rs
-@@ -306,2 +306,3 @@ mod test {
+--- sysinfo.orig/src/common/system.rs
++++ sysinfo/src/common/system.rs
+@@ -2998,6 +2998,7 @@ mod test {
+     }
+ 
      #[test]
 +    #[ignore = "not supported in debian build environments"]
      fn check_system_info() {
+         // We don't want to test on unsupported systems.
+         if IS_SUPPORTED_SYSTEM {
 Index: sysinfo/tests/process.rs
 ===================================================================
 --- sysinfo.orig/tests/process.rs
 +++ sysinfo/tests/process.rs
-@@ -157,6 +157,7 @@ fn test_process_refresh() {
+@@ -196,6 +196,7 @@ fn test_process_refresh() {
  }
  
  #[test]
@@ -18,19 +22,42 @@ Index: sysinfo/tests/process.rs
  fn test_process_disk_usage() {
      use std::fs;
      use std::fs::File;
-Index: sysinfo/tests/disk_list.rs
+Index: sysinfo/tests/disk.rs
 ===================================================================
---- sysinfo.orig/tests/disk_list.rs
-+++ sysinfo/tests/disk_list.rs
-@@ -3,2 +3,3 @@
+--- sysinfo.orig/tests/disk.rs
++++ sysinfo/tests/disk.rs
+@@ -12,6 +12,7 @@ fn should_skip() -> bool {
+ 
  #[test]
+ #[cfg(all(feature = "system", feature = "disk"))]
 +#[ignore = "not supported in debian build environments"]
  fn test_disks() {
+     if should_skip() {
+         return;
+@@ -25,6 +26,7 @@ fn test_disks() {
+ 
+ #[test]
+ #[cfg(all(feature = "system", feature = "disk"))]
++#[ignore = "not supported in debian build environments"]
+ fn test_disk_refresh_kind() {
+     use itertools::Itertools;
+ 
+@@ -130,6 +132,7 @@ fn test_disk_refresh_kind() {
+ 
+ #[test]
+ #[cfg(all(feature = "system", feature = "disk"))]
++#[ignore = "not supported in debian build environments"]
+ fn test_disks_usage() {
+     use std::fs::{File, remove_file};
+     use std::io::Write;
 Index: sysinfo/benches/basic.rs
 ===================================================================
 --- sysinfo.orig/benches/basic.rs
 +++ sysinfo/benches/basic.rs
-@@ -68,4 +68,6 @@
+@@ -66,10 +66,12 @@ fn bench_refresh_disk(b: &mut test::Benc
+     let mut disks = sysinfo::Disks::new_with_refreshed_list();
+ 
+     let disks = disks.list_mut();
 -    let disk = &mut disks[0];
 -    b.iter(move || {
 -        disk.refresh();
@@ -41,3 +68,6 @@ Index: sysinfo/benches/basic.rs
 +            disk.refresh();
 +        });
 +    }
+ }
+ 
+ #[bench]
