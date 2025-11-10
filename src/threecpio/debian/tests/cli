@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+TESTDIR=${AUTOPKGTEST_TMP:-/tmp}
+mkdir -p "$TESTDIR"
+
+rm -rf "$TESTDIR/threecpio"
+cargo new --bin "$TESTDIR/threecpio"
+cp -r tests "$TESTDIR/threecpio"
+cp src/temp_dir.rs "$TESTDIR/threecpio/src"
+echo "pub mod temp_dir;" > "$TESTDIR/threecpio/src/lib.rs"
+
+cd "$TESTDIR/threecpio"
+RUSTFLAGS="-A dead_code" THREECPIO_BIN=/usr/bin/3cpio cargo test
