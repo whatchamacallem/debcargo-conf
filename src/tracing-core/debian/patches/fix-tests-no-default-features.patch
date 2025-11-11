@@ -1,0 +1,21 @@
+Index: tracing-core/src/field.rs
+===================================================================
+--- tracing-core.orig/src/field.rs
++++ tracing-core/src/field.rs
+@@ -1300,6 +1300,7 @@ mod test {
+     }
+ 
+     #[test]
++    #[cfg(feature = "std")]
+     fn record_bytes() {
+         let fields = TEST_META_1.fields();
+         let first = &b"abc"[..];
+Index: tracing-core/tests/missed_register_callsite.rs
+===================================================================
+--- tracing-core.orig/tests/missed_register_callsite.rs
++++ tracing-core/tests/missed_register_callsite.rs
+@@ -1,3 +1,4 @@
++#![cfg(feature = "std")]
+ use std::{
+     ptr,
+     sync::atomic::{AtomicPtr, Ordering},
