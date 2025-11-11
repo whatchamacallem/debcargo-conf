@@ -2,11 +2,19 @@ Index: tracing-subscriber/tests/reload.rs
 ===================================================================
 --- tracing-subscriber.orig/tests/reload.rs
 +++ tracing-subscriber/tests/reload.rs
-@@ -89,6 +89,7 @@ fn reload_handle() {
+@@ -38,6 +38,7 @@ impl Subscriber for NopSubscriber {
+ #[test]
+ fn run_all_reload_test() {
+     reload_handle();
++    #[cfg(not(target_arch = "arm"))]
+     reload_filter();
+ }
+ 
+@@ -97,6 +98,7 @@ fn reload_handle() {
      })
  }
  
 +#[cfg(not(target_arch = "arm"))]
- #[test]
  fn reload_filter() {
      struct NopLayer;
+     impl<S: Subscriber> tracing_subscriber::Layer<S> for NopLayer {

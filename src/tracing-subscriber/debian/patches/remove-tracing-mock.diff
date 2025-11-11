@@ -302,8 +302,8 @@ Index: tracing-subscriber/tests/env_filter/main.rs
  mod per_layer;
  
  use tracing::{self, subscriber::with_default, Level};
--use tracing_mock::{expect, layer, span, subscriber};
-+//use tracing_mock::{expect, layer, span, subscriber};
+-use tracing_mock::{expect, layer, subscriber};
++//use tracing_mock::{expect, layer, subscriber};
  use tracing_subscriber::{
      filter::{EnvFilter, LevelFilter},
      prelude::*,
@@ -315,7 +315,7 @@ Index: tracing-subscriber/tests/env_filter/main.rs
  fn level_filter_event() {
      let filter: EnvFilter = "info".parse().expect("filter should parse");
      let (subscriber, finished) = subscriber::mock()
-@@ -126,9 +126,9 @@ fn level_filter_event_with_target_and_sp
+@@ -125,9 +125,9 @@ fn level_filter_event_with_target_and_sp
      });
  
      handle.assert_finished();
@@ -327,7 +327,7 @@ Index: tracing-subscriber/tests/env_filter/main.rs
  fn not_order_dependent() {
      // this test reproduces tokio-rs/tracing#623
  
-@@ -180,9 +180,9 @@ fn add_directive_enables_event() {
+@@ -179,9 +179,9 @@ fn add_directive_enables_event() {
      });
  
      finished.assert_finished();
@@ -339,7 +339,7 @@ Index: tracing-subscriber/tests/env_filter/main.rs
  fn span_name_filter_is_dynamic() {
      let filter: EnvFilter = "info,[cool_span]=debug"
          .parse()
-@@ -226,7 +226,7 @@ fn span_name_filter_is_dynamic() {
+@@ -225,7 +225,7 @@ fn span_name_filter_is_dynamic() {
      });
  
      finished.assert_finished();
@@ -348,7 +348,24 @@ Index: tracing-subscriber/tests/env_filter/main.rs
  
  #[test]
  fn method_name_resolution() {
-@@ -242,7 +242,7 @@ fn method_name_resolution() {
+@@ -241,7 +241,7 @@ fn parse_invalid_string() {
+     assert!(EnvFilter::builder().parse(",!").is_err());
+ }
+ 
+-#[test]
++/*#[test]
+ fn parse_empty_string_no_default_directive() {
+     let filter = EnvFilter::builder().parse("").expect("filter should parse");
+     let (subscriber, finished) = subscriber::mock().only().run_with_handle();
+@@ -441,14 +441,14 @@ fn more_specific_dynamic_filter_less_ver
+     });
+ 
+     finished.assert_finished();
+-}
++} */
+ 
+ // contains the same tests as the first half of this file
+ // but using EnvFilter as a `Filter`, not as a `Layer`
  mod per_layer_filter {
      use super::*;
  
@@ -357,7 +374,7 @@ Index: tracing-subscriber/tests/env_filter/main.rs
      fn level_filter_event() {
          let filter: EnvFilter = "info".parse().expect("filter should parse");
          let (layer, handle) = layer::mock()
-@@ -541,5 +541,5 @@ mod per_layer_filter {
+@@ -747,5 +747,5 @@ mod per_layer_filter {
  
          handle1.assert_finished();
          handle2.assert_finished();
@@ -372,8 +389,8 @@ Index: tracing-subscriber/tests/env_filter/per_layer.rs
  //! `Layer` filter).
  #![cfg(feature = "registry")]
  use super::*;
--use tracing_mock::{layer, span};
-+//use tracing_mock::{layer, span};
+-use tracing_mock::{expect, layer};
++//use tracing_mock::{expect, layer};
  
 -#[test]
 +/*#[test]
@@ -424,15 +441,15 @@ Index: tracing-subscriber/tests/layer_filters/filter_scopes.rs
 +++ tracing-subscriber/tests/layer_filters/filter_scopes.rs
 @@ -1,7 +1,7 @@
  use super::*;
--use tracing_mock::{event, expect, layer::MockLayer};
-+//use tracing_mock::{event, expect, layer::MockLayer};
+-use tracing_mock::{expect, layer::MockLayer};
++//use tracing_mock::{expect, layer::MockLayer};
  
 -#[test]
 +/*#[test]
  fn filters_span_scopes() {
      let (debug_layer, debug_handle) = layer::named("debug")
          .enter(expect::span().at_level(Level::DEBUG))
-@@ -129,4 +129,4 @@ fn filters_interleaved_span_scopes() {
+@@ -150,4 +150,4 @@ fn filters_interleaved_span_scopes() {
      a_handle.assert_finished();
      b_handle.assert_finished();
      all_handle.assert_finished();
@@ -446,8 +463,8 @@ Index: tracing-subscriber/tests/layer_filters/main.rs
  mod vec;
  
  use tracing::{level_filters::LevelFilter, Level};
--use tracing_mock::{event, expect, layer, subscriber};
-+//use tracing_mock::{event, expect,  layer, subscriber};
+-use tracing_mock::{expect, layer, subscriber};
++//use tracing_mock::{expect, layer, subscriber};
  use tracing_subscriber::{filter, prelude::*, Layer};
  
 -#[test]
@@ -488,14 +505,7 @@ Index: tracing-subscriber/tests/layer_filters/targets.rs
 ===================================================================
 --- tracing-subscriber.orig/tests/layer_filters/targets.rs
 +++ tracing-subscriber/tests/layer_filters/targets.rs
-@@ -1,5 +1,5 @@
- use super::*;
--use tracing_mock::event;
-+//use tracing_mock::event;
- use tracing_subscriber::{
-     filter::{filter_fn, Targets},
-     prelude::*,
-@@ -33,7 +33,7 @@ fn log_events() {
+@@ -32,7 +32,7 @@ fn log_events() {
      inner::logs();
  }
  
@@ -504,7 +514,7 @@ Index: tracing-subscriber/tests/layer_filters/targets.rs
  fn inner_layer_short_circuits() {
      // This test ensures that when a global filter short-circuits `Interest`
      // evaluation, we aren't left with a "dirty" per-layer filter state.
-@@ -57,4 +57,4 @@ fn inner_layer_short_circuits() {
+@@ -56,4 +56,4 @@ fn inner_layer_short_circuits() {
      tracing::info!(target: "magic_target", "hello world");
  
      handle.assert_finished();
@@ -516,15 +526,15 @@ Index: tracing-subscriber/tests/layer_filters/trees.rs
 +++ tracing-subscriber/tests/layer_filters/trees.rs
 @@ -1,7 +1,7 @@
  use super::*;
--use tracing_mock::{event, expect, layer::MockLayer};
-+//use tracing_mock::{event, expect, layer::MockLayer};
+-use tracing_mock::{expect, layer::MockLayer};
++//use tracing_mock::{expect, layer::MockLayer};
  
 -#[test]
 +/*#[test]
  fn basic_trees() {
      let (with_target, with_target_handle) = layer::named("info_with_target")
          .event(
-@@ -155,4 +155,4 @@ fn filter_span_scopes() {
+@@ -169,4 +169,4 @@ fn filter_span_scopes() {
      info_handle.assert_finished();
      a_handle.assert_finished();
      b_handle.assert_finished();
@@ -614,3 +624,26 @@ Index: tracing-subscriber/tests/option_filter_interest_caching.rs
      handle_filter_fn.assert_finished();
 -}
 +} */
+Index: tracing-subscriber/tests/reload_max_log_level.rs
+===================================================================
+--- tracing-subscriber.orig/tests/reload_max_log_level.rs
++++ tracing-subscriber/tests/reload_max_log_level.rs
+@@ -1,10 +1,10 @@
+ #![cfg(all(feature = "env-filter", feature = "tracing-log"))]
+ 
+ use tracing::{self, Level};
+-use tracing_mock::{expect, subscriber};
++//use tracing_mock::{expect, subscriber};
+ use tracing_subscriber::{filter::LevelFilter, prelude::*, reload};
+ 
+-#[test]
++/*#[test]
+ fn reload_max_log_level() {
+     let (subscriber, finished) = subscriber::mock()
+         .event(expect::event().at_level(Level::INFO))
+@@ -34,4 +34,4 @@ fn reload_max_log_level() {
+     log::info!("i'm still enabled, too");
+ 
+     finished.assert_finished();
+-}
++}*/
