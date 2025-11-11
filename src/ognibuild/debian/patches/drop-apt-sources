@@ -1,0 +1,220 @@
+Index: ognibuild/Cargo.toml
+===================================================================
+--- ognibuild.orig/Cargo.toml
++++ ognibuild/Cargo.toml
+@@ -37,7 +37,6 @@ debian = [
+     "dep:debian-changelog",
+     "dep:debversion",
+     "dep:debian-control",
+-    "dep:apt-sources",
+     "dep:flate2",
+     "dep:lzma-rs",
+     "dep:lz4_flex",
+@@ -137,10 +136,6 @@ path = "benches/apt_file_search.rs"
+ harness = false
+ required-features = ["debian"]
+ 
+-[dependencies.apt-sources]
+-version = "0.1.1"
+-optional = true
+-
+ [dependencies.axum]
+ version = "0.7"
+ features = [
+Index: ognibuild/src/debian/file_search.rs
+===================================================================
+--- ognibuild.orig/src/debian/file_search.rs
++++ ognibuild/src/debian/file_search.rs
+@@ -4,10 +4,6 @@
+ //! packages, including using apt-file and other package contents databases.
+ 
+ use crate::session::{Error as SessionError, Session};
+-use apt_sources::{
+-    error::{LoadError, RepositoryError},
+-    Repository, RepositoryType,
+-};
+ use debian_control::apt::Release;
+ use flate2::read::GzDecoder;
+ use lzma_rs::lzma_decompress;
+@@ -36,15 +32,144 @@ impl From<std::io::Error> for Error {
+     }
+ }
+ 
+-impl From<RepositoryError> for Error {
+-    fn from(e: RepositoryError) -> Error {
+-        Error::AptFileAccessError(format!("Repository error: {}", e))
++/// Type of repository entry (deb or deb-src)
++#[derive(Debug, Clone, PartialEq, Eq, Hash)]
++pub enum RepositoryType {
++    /// Binary package repository (deb)
++    Binary,
++    /// Source package repository (deb-src)
++    Source,
++}
++
++/// Represents a single APT repository entry
++#[derive(Debug, Clone)]
++pub struct Repository {
++    /// Types of this repository (Binary, Source, or both)
++    pub types: Vec<RepositoryType>,
++    /// URIs for this repository
++    pub uris: Vec<Url>,
++    /// Suite/distribution names (e.g., "stable", "bookworm")
++    pub suites: Vec<String>,
++    /// Optional components (e.g., "main", "contrib", "non-free")
++    pub components: Option<Vec<String>>,
++}
++
++/// Collection of APT repositories
++#[derive(Debug, Clone, Default)]
++pub struct Repositories {
++    repos: Vec<Repository>,
++}
++
++impl Repositories {
++    /// Create a new empty Repositories collection
++    pub fn new() -> Self {
++        Self { repos: Vec::new() }
++    }
++
++    /// Load repositories from system default location (/etc/apt/sources.list*)
++    pub fn default() -> Self {
++        let mut repos = Self::new();
++        let _ = repos.load_from_directory(Path::new("/etc/apt"));
++        repos
++    }
++
++    /// Load repositories from a directory containing sources.list and sources.list.d/
++    pub fn load_from_directory(&mut self, apt_dir: &Path) -> Result<Vec<String>, Vec<String>> {
++        let mut errors = Vec::new();
++
++        // Load from sources.list
++        let sources_list = apt_dir.join("sources.list");
++        if sources_list.exists() {
++            if let Err(e) = self.load_from_file(&sources_list) {
++                errors.push(format!("Error loading {:?}: {}", sources_list, e));
++            }
++        }
++
++        // Load from sources.list.d/*.list
++        let sources_list_d = apt_dir.join("sources.list.d");
++        if sources_list_d.is_dir() {
++            if let Ok(entries) = std::fs::read_dir(&sources_list_d) {
++                for entry in entries.flatten() {
++                    let path = entry.path();
++                    if path.extension().and_then(|s| s.to_str()) == Some("list") {
++                        if let Err(e) = self.load_from_file(&path) {
++                            errors.push(format!("Error loading {:?}: {}", path, e));
++                        }
++                    }
++                }
++            }
++        }
++
++        if errors.is_empty() {
++            Ok(vec![])
++        } else {
++            Err(errors)
++        }
+     }
+-}
+ 
+-impl From<LoadError> for Error {
+-    fn from(e: LoadError) -> Error {
+-        Error::AptFileAccessError(format!("Load error: {}", e))
++    /// Load repositories from a single file
++    fn load_from_file(&mut self, path: &Path) -> Result<(), std::io::Error> {
++        let file = File::open(path)?;
++        let reader = BufReader::new(file);
++
++        for line in reader.lines() {
++            let line = line?;
++            if let Some(repo) = Self::parse_sources_line(&line) {
++                self.repos.push(repo);
++            }
++        }
++
++        Ok(())
++    }
++
++    /// Parse a single sources.list line
++    fn parse_sources_line(line: &str) -> Option<Repository> {
++        let line = line.trim();
++
++        // Skip comments and empty lines
++        if line.is_empty() || line.starts_with('#') {
++            return None;
++        }
++
++        let parts: Vec<&str> = line.split_whitespace().collect();
++        if parts.len() < 3 {
++            return None;
++        }
++
++        // Parse repository type
++        let repo_type = match parts[0] {
++            "deb" => RepositoryType::Binary,
++            "deb-src" => RepositoryType::Source,
++            _ => return None,
++        };
++
++        // Parse URI
++        let uri = match parts[1].parse::<Url>() {
++            Ok(uri) => uri,
++            Err(_) => return None,
++        };
++
++        // Parse suite
++        let suite = parts[2].to_string();
++
++        // Parse components (if any)
++        let components = if parts.len() > 3 {
++            Some(parts[3..].iter().map(|s| s.to_string()).collect())
++        } else {
++            None
++        };
++
++        Some(Repository {
++            types: vec![repo_type],
++            uris: vec![uri],
++            suites: vec![suite],
++            components,
++        })
++    }
++
++    /// Iterate over all repositories
++    pub fn iter(&self) -> impl Iterator<Item = &Repository> {
++        self.repos.iter()
+     }
+ }
+ 
+@@ -229,7 +354,7 @@ pub fn contents_urls_from_repository<'a>
+ /// # Returns
+ /// Iterator of URLs for contents files
+ pub fn contents_urls_from_sources<'a>(
+-    repositories: &'a apt_sources::Repositories,
++    repositories: &'a Repositories,
+     arch: &'a str,
+     load_url: impl Fn(&'_ url::Url) -> Result<Box<dyn Read>, Error> + 'a + Copy,
+ ) -> impl Iterator<Item = url::Url> + 'a {
+@@ -752,7 +877,7 @@ impl RemoteContentsFileSearcher {
+     /// # Returns
+     /// Ok(()) if successful, Error otherwise
+     pub fn load_local(&mut self) -> Result<(), Error> {
+-        let repositories = apt_sources::Repositories::default();
++        let repositories = Repositories::default();
+         let arch = crate::debian::build::get_build_architecture();
+         let cache_dirs = vec![Path::new("/var/lib/apt/lists")];
+         let load_url = |url: &url::Url| load_url_with_cache(url, cache_dirs.as_slice());
+@@ -768,9 +893,8 @@ impl RemoteContentsFileSearcher {
+     /// # Returns
+     /// Ok(()) if successful, Error otherwise
+     pub fn load_from_session(&mut self, session: &dyn Session) -> Result<(), Error> {
+-        let (repositories, _errors) = apt_sources::Repositories::load_from_directory(
+-            &session.external_path(Path::new("/etc/apt")),
+-        );
++        let mut repositories = Repositories::new();
++        let _ = repositories.load_from_directory(&session.external_path(Path::new("/etc/apt")));
+         let arch = crate::debian::build::get_build_architecture();
+         let cache_dirs = [session.external_path(Path::new("/var/lib/apt/lists"))];
+         let load_url = |url: &url::Url| {
