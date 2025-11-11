@@ -1,65 +1,131 @@
+Index: tracing-attributes/tests/async_fn.rs
+===================================================================
 --- tracing-attributes.orig/tests/async_fn.rs
 +++ tracing-attributes/tests/async_fn.rs
-@@ -1 +1 @@
--use tracing_mock::*;
-+//use tracing_mock::*;
-@@ -8 +8 @@
+@@ -3,15 +3,15 @@ use std::{future::Future, pin::Pin, sync
+ 
+ use tracing::subscriber::with_default;
+ use tracing_attributes::instrument;
+-use tracing_mock::{expect, subscriber};
++//use tracing_mock::{expect, subscriber};
+ //use tracing_test::{block_on_future, PollN};
+ 
 -#[instrument]
 +/*#[instrument]
-@@ -13 +13 @@
+ async fn test_async_fn(polls: usize) -> Result<(), ()> {
+     let future = PollN::new_ok(polls);
+     tracing::trace!(awaiting = true);
+     future.await
 -}
 +}*/
-@@ -84 +84 @@
+ 
+ // Reproduces a compile error when returning an `impl Trait` from an
+ // instrumented async fn (see https://github.com/tokio-rs/tracing/issues/1615)
+@@ -89,7 +89,7 @@ fn repro_1831_2() -> impl Future<Output
+     async { Ok(()) }
+ }
+ 
 -#[test]
 +/*#[test]
-@@ -102 +102 @@
+ fn async_fn_only_enters_for_polls() {
+     let (subscriber, handle) = subscriber::mock()
+         .new_span(expect::span().named("test_async_fn"))
+@@ -107,9 +107,9 @@ fn async_fn_only_enters_for_polls() {
+         block_on_future(async { test_async_fn(2).await }).unwrap();
+     });
+     handle.assert_finished();
 -}
 +}*/
-@@ -104 +104 @@
+ 
 -#[test]
 +/*#[test]
-@@ -140 +140 @@
+ fn async_fn_nested() {
+     #[instrument]
+     async fn test_async_fns_nested() {
+@@ -145,9 +145,9 @@ fn async_fn_nested() {
+     });
+ 
+     handle.assert_finished();
 -}
 +}*/
-@@ -142 +142 @@
+ 
 -#[test]
 +/*#[test]
-@@ -231 +231 @@
+ fn async_fn_with_async_trait() {
+     use async_trait::async_trait;
+ 
+@@ -236,9 +236,9 @@ fn async_fn_with_async_trait() {
+     });
+ 
+     handle.assert_finished();
 -}
 +}*/
-@@ -233 +233 @@
+ 
 -#[test]
 +/*#[test]
-@@ -282 +282 @@
+ fn async_fn_with_async_trait_and_fields_expressions() {
+     use async_trait::async_trait;
+ 
+@@ -287,9 +287,9 @@ fn async_fn_with_async_trait_and_fields_
+     });
+ 
+     handle.assert_finished();
 -}
 +}*/
-@@ -284 +284 @@
+ 
 -#[test]
 +/*#[test]
-@@ -377 +377 @@
+ fn async_fn_with_async_trait_and_fields_expressions_with_generic_parameter() {
+     use async_trait::async_trait;
+ 
+@@ -382,9 +382,9 @@ fn async_fn_with_async_trait_and_fields_
+     });
+ 
+     handle.assert_finished();
 -}
 +}*/
-@@ -379 +379 @@
+ 
 -#[test]
 +/*#[test]
-@@ -421 +421 @@
+ fn out_of_scope_fields() {
+     // Reproduces tokio-rs/tracing#1296
+ 
+@@ -426,9 +426,9 @@ fn out_of_scope_fields() {
+     });
+ 
+     handle.assert_finished();
 -}
 +}*/
-@@ -423 +423 @@
+ 
 -#[test]
 +/*#[test]
-@@ -455 +455 @@
+ fn manual_impl_future() {
+     #[allow(clippy::manual_async_fn)]
+     #[instrument]
+@@ -460,9 +460,9 @@ fn manual_impl_future() {
+     });
+ 
+     handle.assert_finished();
 -}
 +}*/
-@@ -457 +457 @@
+ 
 -#[test]
 +/*#[test]
-@@ -488 +488 @@
+ fn manual_box_pin() {
+     #[instrument]
+     fn manual_box_pin() -> Pin<Box<dyn Future<Output = ()>>> {
+@@ -493,4 +493,4 @@ fn manual_box_pin() {
+     });
+ 
+     handle.assert_finished();
 -}
 +}*/
+Index: tracing-attributes/tests/destructuring.rs
+===================================================================
 --- tracing-attributes.orig/tests/destructuring.rs
 +++ tracing-attributes/tests/destructuring.rs
-@@ -2,5 +2,5 @@
+@@ -1,8 +1,8 @@
+ use tracing::subscriber::with_default;
  use tracing_attributes::instrument;
 -use tracing_mock::*;
 +//use tracing_mock::*;
@@ -67,7 +133,11 @@
 -#[test]
 +/*#[test]
  fn destructure_tuples() {
-@@ -31,5 +31,5 @@
+     #[instrument]
+     fn my_fn((arg1, arg2): (usize, usize)) {}
+@@ -29,9 +29,9 @@ fn destructure_tuples() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
@@ -75,7 +145,11 @@
 -#[test]
 +/*#[test]
  fn destructure_nested_tuples() {
-@@ -62,5 +62,5 @@
+     #[instrument]
+     fn my_fn(((arg1, arg2), (arg3, arg4)): ((usize, usize), (usize, usize))) {}
+@@ -60,9 +60,9 @@ fn destructure_nested_tuples() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
@@ -83,7 +157,11 @@
 -#[test]
 +/*#[test]
  fn destructure_refs() {
-@@ -87,5 +87,5 @@
+     #[instrument]
+     fn my_fn(&arg1: &usize) {}
+@@ -85,9 +85,9 @@ fn destructure_refs() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
@@ -91,7 +169,11 @@
 -#[test]
 +/*#[test]
  fn destructure_tuple_structs() {
-@@ -118,5 +118,5 @@
+     struct Foo(usize, usize);
+ 
+@@ -116,9 +116,9 @@ fn destructure_tuple_structs() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
@@ -99,7 +181,11 @@
 -#[test]
 +/*#[test]
  fn destructure_structs() {
-@@ -159,5 +159,5 @@
+     struct Foo {
+         bar: usize,
+@@ -157,9 +157,9 @@ fn destructure_structs() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
@@ -107,23 +193,39 @@
 -#[test]
 +/*#[test]
  fn destructure_everything() {
-@@ -212,2 +212,2 @@
+     struct Foo {
+         bar: Bar,
+@@ -210,4 +210,4 @@ fn destructure_everything() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
+Index: tracing-attributes/tests/err.rs
+===================================================================
 --- tracing-attributes.orig/tests/err.rs
 +++ tracing-attributes/tests/err.rs
-@@ -3,3 +3,3 @@
+@@ -1,7 +1,7 @@
+ use tracing::subscriber::with_default;
+ use tracing::Level;
  use tracing_attributes::instrument;
 -use tracing_mock::*;
 +//use tracing_mock::*;
- use tracing_subscriber::filter::EnvFilter;
-@@ -21,3 +21,3 @@
+ //use tracing_subscriber::filter::EnvFilter;
+ use tracing_subscriber::layer::SubscriberExt;
+ //use tracing_test::{block_on_future, PollN};
+@@ -21,7 +21,7 @@ fn err_suspicious_else() -> Result<u8, T
+     u8::try_from(1234)
+ }
  
 -#[test]
 +/*#[test]
  fn test() {
-@@ -34,5 +34,5 @@
+     let span = expect::span().named("err");
+     let (subscriber, handle) = subscriber::mock()
+@@ -55,17 +55,17 @@ fn test_early_return() {
+         .run_with_handle();
+     with_default(subscriber, || err_early_return().ok());
      handle.assert_finished();
 -}
 +}*/
@@ -131,7 +233,9 @@
 -#[instrument(err)]
 +/*#[instrument(err)]
  async fn err_async(polls: usize) -> Result<u8, TryFromIntError> {
-@@ -42,5 +42,5 @@
+     let future = PollN::new_ok(polls);
+     tracing::trace!(awaiting = true);
+     future.await.ok();
      u8::try_from(1234)
 -}
 +}*/
@@ -139,17 +243,29 @@
 -#[test]
 +/*#[test]
  fn test_async() {
-@@ -68,3 +68,3 @@
+     let span = expect::span().named("err_async");
+     let (subscriber, handle) = subscriber::mock()
+@@ -89,7 +89,7 @@ fn test_async() {
+         block_on_future(async { err_async(2).await }).ok();
+     });
      handle.assert_finished();
 -}
 +}*/
  
-@@ -76,3 +76,3 @@
+ #[instrument(err)]
+ fn err_mut(out: &mut u8) -> Result<(), TryFromIntError> {
+@@ -97,7 +97,7 @@ fn err_mut(out: &mut u8) -> Result<(), T
+     Ok(())
+ }
  
 -#[test]
 +/*#[test]
  fn test_mut() {
-@@ -89,5 +89,5 @@
+     let span = expect::span().named("err_mut");
+     let (subscriber, handle) = subscriber::mock()
+@@ -110,18 +110,18 @@ fn test_mut() {
+         .run_with_handle();
+     with_default(subscriber, || err_mut(&mut 0).ok());
      handle.assert_finished();
 -}
 +}*/
@@ -157,7 +273,10 @@
 -#[instrument(err)]
 +/*#[instrument(err)]
  async fn err_mut_async(polls: usize, out: &mut u8) -> Result<(), TryFromIntError> {
-@@ -98,5 +98,5 @@
+     let future = PollN::new_ok(polls);
+     tracing::trace!(awaiting = true);
+     future.await.ok();
+     *out = u8::try_from(1234)?;
      Ok(())
 -}
 +}*/
@@ -165,7 +284,11 @@
 -#[test]
 +/*#[test]
  fn test_mut_async() {
-@@ -124,5 +124,5 @@
+     let span = expect::span().named("err_mut_async");
+     let (subscriber, handle) = subscriber::mock()
+@@ -145,9 +145,9 @@ fn test_mut_async() {
+         block_on_future(async { err_mut_async(2, &mut 0).await }).ok();
+     });
      handle.assert_finished();
 -}
 +}*/
@@ -173,17 +296,28 @@
 -#[test]
 +/*#[test]
  fn impl_trait_return_type() {
-@@ -155,3 +155,3 @@
+     // Reproduces https://github.com/tokio-rs/tracing/issues/1227
+ 
+@@ -176,14 +176,14 @@ fn impl_trait_return_type() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
  
-@@ -162,3 +162,3 @@
+ #[instrument(err(Debug))]
+ fn err_dbg() -> Result<u8, TryFromIntError> {
+     u8::try_from(1234)
+ }
  
 -#[test]
 +/*#[test]
  fn test_err_dbg() {
-@@ -184,5 +184,5 @@
+     let span = expect::span().named("err_dbg");
+     let (subscriber, handle) = subscriber::mock()
+@@ -205,9 +205,9 @@ fn test_err_dbg() {
+         .run_with_handle();
+     with_default(subscriber, || err_dbg().ok());
      handle.assert_finished();
 -}
 +}*/
@@ -191,7 +325,11 @@
 -#[test]
 +/*#[test]
  fn test_err_display_default() {
-@@ -205,5 +205,5 @@
+     let span = expect::span().named("err");
+     let (subscriber, handle) = subscriber::mock()
+@@ -226,9 +226,9 @@ fn test_err_display_default() {
+         .run_with_handle();
+     with_default(subscriber, || err().ok());
      handle.assert_finished();
 -}
 +}*/
@@ -199,68 +337,115 @@
 -#[test]
 +/*#[test]
  fn test_err_custom_target() {
-@@ -236,3 +236,3 @@
+     let filter: EnvFilter = "my_target=error".parse().expect("filter should parse");
+     let span = expect::span().named("error_span").with_target("my_target");
+@@ -257,14 +257,14 @@ fn test_err_custom_target() {
+         }
+     });
      handle.assert_finished();
 -}
 +}*/
  
-@@ -243,3 +243,3 @@
+ #[instrument(err(level = "info"))]
+ fn err_info() -> Result<u8, TryFromIntError> {
+     u8::try_from(1234)
+ }
  
 -#[test]
 +/*#[test]
  fn test_err_info() {
-@@ -256,3 +256,3 @@
+     let span = expect::span().named("err_info");
+     let (subscriber, handle) = subscriber::mock()
+@@ -277,14 +277,14 @@ fn test_err_info() {
+         .run_with_handle();
+     with_default(subscriber, || err_info().ok());
      handle.assert_finished();
 -}
 +}*/
  
-@@ -263,3 +263,3 @@
+ #[instrument(err(Debug, level = "info"))]
+ fn err_dbg_info() -> Result<u8, TryFromIntError> {
+     u8::try_from(1234)
+ }
  
 -#[test]
 +/*#[test]
  fn test_err_dbg_info() {
-@@ -285,3 +285,3 @@
+     let span = expect::span().named("err_dbg_info");
+     let (subscriber, handle) = subscriber::mock()
+@@ -306,14 +306,14 @@ fn test_err_dbg_info() {
+         .run_with_handle();
+     with_default(subscriber, || err_dbg_info().ok());
      handle.assert_finished();
 -}
 +}*/
  
-@@ -292,3 +292,3 @@
+ #[instrument(level = "warn", err(level = "info"))]
+ fn err_warn_info() -> Result<u8, TryFromIntError> {
+     u8::try_from(1234)
+ }
  
 -#[test]
 +/*#[test]
  fn test_err_warn_info() {
-@@ -305,2 +305,2 @@
+     let span = expect::span().named("err_warn_info").at_level(Level::WARN);
+     let (subscriber, handle) = subscriber::mock()
+@@ -326,4 +326,4 @@ fn test_err_warn_info() {
+         .run_with_handle();
+     with_default(subscriber, || err_warn_info().ok());
      handle.assert_finished();
 -}
 +}*/
+Index: tracing-attributes/tests/fields.rs
+===================================================================
 --- tracing-attributes.orig/tests/fields.rs
 +++ tracing-attributes/tests/fields.rs
-@@ -2,3 +2,2 @@
+@@ -1,6 +1,5 @@
+ use tracing::subscriber::with_default;
  use tracing_attributes::instrument;
 -use tracing_mock::{expect, span::NewSpan, subscriber};
  
-@@ -48,3 +48,3 @@
+ #[instrument(fields(foo = "bar", dsa = true, num = 1))]
+ fn fn_no_param() {}
+@@ -47,7 +46,7 @@ impl HasField {
+     fn self_expr_field(&self) {}
+ }
  
 -#[test]
 +/*#[test]
  fn fields() {
-@@ -159,2 +159,2 @@
+     let span = expect::span().with_fields(
+         expect::field("foo")
+@@ -169,4 +168,4 @@ fn run_test<F: FnOnce() -> T, T>(span: N
+ 
+     with_default(subscriber, fun);
      handle.assert_finished();
 -}
 +}*/
+Index: tracing-attributes/tests/follows_from.rs
+===================================================================
 --- tracing-attributes.orig/tests/follows_from.rs
 +++ tracing-attributes/tests/follows_from.rs
-@@ -2,3 +2,3 @@
+@@ -1,6 +1,6 @@
+ use tracing::{subscriber::with_default, Id, Level, Span};
  use tracing_attributes::instrument;
--use tracing_mock::*;
-+//use tracing_mock::*;
+-use tracing_mock::{expect, subscriber};
++//use tracing_mock::{expect, subscriber};
+ //use tracing_test::block_on_future;
  
-@@ -13,3 +13,3 @@
+ #[instrument(follows_from = causes, skip(causes))]
+@@ -12,7 +12,7 @@ async fn with_follows_from_async(causes:
+ #[instrument(follows_from = [&Span::current()])]
+ fn follows_from_current() {}
  
 -#[test]
 +/*#[test]
  fn follows_from_sync_test() {
-@@ -42,5 +42,5 @@
+     let cause_a = expect::span().named("cause_a");
+     let cause_b = expect::span().named("cause_b");
+@@ -41,9 +41,9 @@ fn follows_from_sync_test() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
@@ -268,7 +453,11 @@
 -#[test]
 +/*#[test]
  fn follows_from_async_test() {
-@@ -77,5 +77,5 @@
+     let cause_a = expect::span().named("cause_a");
+     let cause_b = expect::span().named("cause_b");
+@@ -76,9 +76,9 @@ fn follows_from_async_test() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
@@ -276,29 +465,64 @@
 -#[test]
 +/*#[test]
  fn follows_from_current_test() {
-@@ -100,2 +100,2 @@
+     let cause = expect::span().named("cause");
+     let consequence = expect::span().named("follows_from_current");
+@@ -99,4 +99,4 @@ fn follows_from_current_test() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
+Index: tracing-attributes/tests/instrument.rs
+===================================================================
 --- tracing-attributes.orig/tests/instrument.rs
 +++ tracing-attributes/tests/instrument.rs
-@@ -3,3 +3,3 @@
+@@ -1,7 +1,7 @@
+ use tracing::subscriber::with_default;
+ use tracing::Level;
  use tracing_attributes::instrument;
 -use tracing_mock::*;
 +//use tracing_mock::*;
  
-@@ -14,3 +14,3 @@
+ // Reproduces a compile error when an instrumented function body contains inner
+ // attributes (https://github.com/tokio-rs/tracing/issues/2294).
+@@ -13,7 +13,7 @@ fn repro_2294() {
+     let i = 42;
+ }
  
 -#[test]
 +/*#[test]
  fn override_everything() {
-@@ -251,2 +251,2 @@
+     #[instrument(target = "my_target", level = "debug")]
+     fn my_fn() {}
+@@ -252,9 +252,9 @@ fn impl_trait_return_type() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
+ 
+-#[test]
++/*#[test]
+ fn name_ident() {
+     const MY_NAME: &str = "my_name";
+     #[instrument(name = MY_NAME)]
+@@ -324,7 +324,7 @@ fn target_name_ident() {
+     });
+ 
+     handle.assert_finished();
+-}
++}*/
+ 
+ #[test]
+ fn user_tracing_module() {
+Index: tracing-attributes/tests/levels.rs
+===================================================================
 --- tracing-attributes.orig/tests/levels.rs
 +++ tracing-attributes/tests/levels.rs
-@@ -3,5 +3,5 @@
+@@ -1,9 +1,9 @@
+ use tracing::subscriber::with_default;
+ use tracing::Level;
  use tracing_attributes::instrument;
 -use tracing_mock::*;
 +//use tracing_mock::*;
@@ -306,7 +530,11 @@
 -#[test]
 +/*#[test]
  fn named_levels() {
-@@ -49,5 +49,5 @@
+     #[instrument(level = "trace")]
+     fn trace() {}
+@@ -47,9 +47,9 @@ fn named_levels() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
@@ -314,7 +542,11 @@
 -#[test]
 +/*#[test]
  fn numeric_levels() {
-@@ -95,5 +95,5 @@
+     #[instrument(level = 1)]
+     fn trace() {}
+@@ -93,9 +93,9 @@ fn numeric_levels() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
@@ -322,23 +554,38 @@
 -#[test]
 +/*#[test]
  fn enum_levels() {
-@@ -141,2 +141,2 @@
+     #[instrument(level = Level::TRACE)]
+     fn trace() {}
+@@ -139,4 +139,4 @@ fn enum_levels() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
+Index: tracing-attributes/tests/names.rs
+===================================================================
 --- tracing-attributes.orig/tests/names.rs
 +++ tracing-attributes/tests/names.rs
-@@ -2,3 +2,3 @@
+@@ -1,6 +1,6 @@
+ use tracing::subscriber::with_default;
  use tracing_attributes::instrument;
 -use tracing_mock::*;
 +//use tracing_mock::*;
  
-@@ -16,3 +16,3 @@
+ #[instrument]
+ fn default_name() {}
+@@ -14,7 +14,7 @@ fn custom_name() {}
+ #[instrument("my_other_name")]
+ fn custom_name_no_equals() {}
  
 -#[test]
 +/*#[test]
  fn default_name_test() {
-@@ -30,5 +30,5 @@
+     let (subscriber, handle) = subscriber::mock()
+         .new_span(expect::span().named("default_name"))
+@@ -28,9 +28,9 @@ fn default_name_test() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
@@ -346,7 +593,11 @@
 -#[test]
 +/*#[test]
  fn custom_name_test() {
-@@ -46,5 +46,5 @@
+     let (subscriber, handle) = subscriber::mock()
+         .new_span(expect::span().named("my_name"))
+@@ -44,9 +44,9 @@ fn custom_name_test() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
@@ -354,145 +605,247 @@
 -#[test]
 +/*#[test]
  fn custom_name_no_equals_test() {
-@@ -62,2 +62,2 @@
+     let (subscriber, handle) = subscriber::mock()
+         .new_span(expect::span().named("my_other_name"))
+@@ -60,4 +60,4 @@ fn custom_name_no_equals_test() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
+Index: tracing-attributes/tests/parents.rs
+===================================================================
 --- tracing-attributes.orig/tests/parents.rs
 +++ tracing-attributes/tests/parents.rs
-@@ -2,3 +2,3 @@
+@@ -1,6 +1,6 @@
+ use tracing::{subscriber::with_default, Id, Level};
  use tracing_attributes::instrument;
 -use tracing_mock::*;
 +//use tracing_mock::*;
  
-@@ -14,3 +14,3 @@
+ #[instrument]
+ fn with_default_parent() {}
+@@ -12,7 +12,7 @@ where
+ {
+ }
  
 -#[test]
 +/*#[test]
  fn default_parent_test() {
-@@ -101,2 +101,2 @@
+     let contextual_parent = expect::span().named("contextual_parent");
+     let child = expect::span().named("with_default_parent");
+@@ -86,4 +86,4 @@ fn explicit_parent_test() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
+Index: tracing-attributes/tests/ret.rs
+===================================================================
 --- tracing-attributes.orig/tests/ret.rs
 +++ tracing-attributes/tests/ret.rs
-@@ -2,3 +2,3 @@
- use std::num::TryFromIntError;
--use tracing_mock::*;
-+//use tracing_mock::*;
+@@ -3,7 +3,7 @@ use std::num::TryFromIntError;
  
-@@ -19,3 +19,3 @@
+ use tracing::{subscriber::with_default, Level};
+ use tracing_attributes::instrument;
+-use tracing_mock::{expect, subscriber};
++//use tracing_mock::{expect, subscriber};
+ use tracing_subscriber::layer::SubscriberExt;
+ //use tracing_subscriber::EnvFilter;
+ //use tracing_test::block_on_future;
+@@ -18,7 +18,7 @@ fn ret_with_target() -> i32 {
+     42
+ }
  
 -#[test]
 +/*#[test]
  fn test() {
-@@ -64,3 +64,3 @@
+     let span = expect::span().named("ret");
+     let (subscriber, handle) = subscriber::mock()
+@@ -63,14 +63,14 @@ fn test_custom_target() {
+ 
+     with_default(subscriber, ret_with_target);
      handle.assert_finished();
 -}
 +}*/
  
-@@ -71,3 +71,3 @@
+ #[instrument(level = "warn", ret)]
+ fn ret_warn() -> i32 {
+     42
+ }
  
 -#[test]
 +/*#[test]
  fn test_warn() {
-@@ -89,3 +89,3 @@
+     let span = expect::span().named("ret_warn");
+     let (subscriber, handle) = subscriber::mock()
+@@ -88,7 +88,7 @@ fn test_warn() {
+ 
+     with_default(subscriber, ret_warn);
      handle.assert_finished();
 -}
 +}*/
  
-@@ -98,3 +98,3 @@
+ #[instrument(ret)]
+ fn ret_mut(a: &mut i32) -> i32 {
+@@ -97,7 +97,7 @@ fn ret_mut(a: &mut i32) -> i32 {
+     *a
+ }
  
 -#[test]
 +/*#[test]
  fn test_mut() {
-@@ -121,3 +121,3 @@
+     let span = expect::span().named("ret_mut");
+     let (subscriber, handle) = subscriber::mock()
+@@ -120,14 +120,14 @@ fn test_mut() {
+ 
+     with_default(subscriber, || ret_mut(&mut 1));
      handle.assert_finished();
 -}
 +}*/
  
-@@ -128,3 +128,3 @@
+ #[instrument(ret)]
+ async fn ret_async() -> i32 {
+     42
+ }
  
 -#[test]
 +/*#[test]
  fn test_async() {
-@@ -148,3 +148,3 @@
+     let span = expect::span().named("ret_async");
+     let (subscriber, handle) = subscriber::mock()
+@@ -147,14 +147,14 @@ fn test_async() {
+ 
+     with_default(subscriber, || block_on_future(async { ret_async().await }));
      handle.assert_finished();
 -}
 +}*/
  
-@@ -155,3 +155,3 @@
+ #[instrument(ret)]
+ fn ret_impl_type() -> impl Copy {
+     42
+ }
  
 -#[test]
 +/*#[test]
  fn test_impl_type() {
-@@ -173,3 +173,3 @@
+     let span = expect::span().named("ret_impl_type");
+     let (subscriber, handle) = subscriber::mock()
+@@ -172,14 +172,14 @@ fn test_impl_type() {
+ 
+     with_default(subscriber, ret_impl_type);
      handle.assert_finished();
 -}
 +}*/
  
-@@ -180,3 +180,3 @@
+ #[instrument(ret(Display))]
+ fn ret_display() -> i32 {
+     42
+ }
  
 -#[test]
 +/*#[test]
  fn test_dbg() {
-@@ -198,3 +198,3 @@
+     let span = expect::span().named("ret_display");
+     let (subscriber, handle) = subscriber::mock()
+@@ -197,14 +197,14 @@ fn test_dbg() {
+ 
+     with_default(subscriber, ret_display);
      handle.assert_finished();
 -}
 +}*/
  
-@@ -205,3 +205,3 @@
+ #[instrument(err, ret)]
+ fn ret_and_err() -> Result<u8, TryFromIntError> {
+     u8::try_from(1234)
+ }
  
 -#[test]
 +/*#[test]
  fn test_ret_and_err() {
-@@ -227,3 +227,3 @@
+     let span = expect::span().named("ret_and_err");
+     let (subscriber, handle) = subscriber::mock()
+@@ -226,14 +226,14 @@ fn test_ret_and_err() {
+ 
+     with_default(subscriber, || ret_and_err().ok());
      handle.assert_finished();
 -}
 +}*/
  
-@@ -234,3 +234,3 @@
+ #[instrument(err, ret)]
+ fn ret_and_ok() -> Result<u8, TryFromIntError> {
+     u8::try_from(123)
+ }
  
 -#[test]
 +/*#[test]
  fn test_ret_and_ok() {
-@@ -256,3 +256,3 @@
+     let span = expect::span().named("ret_and_ok");
+     let (subscriber, handle) = subscriber::mock()
+@@ -255,14 +255,14 @@ fn test_ret_and_ok() {
+ 
+     with_default(subscriber, || ret_and_ok().ok());
      handle.assert_finished();
 -}
 +}*/
  
-@@ -263,3 +263,3 @@
+ #[instrument(level = "warn", ret(level = "info"))]
+ fn ret_warn_info() -> i32 {
+     42
+ }
  
 -#[test]
 +/*#[test]
  fn test_warn_info() {
-@@ -281,3 +281,3 @@
+     let span = expect::span().named("ret_warn_info").at_level(Level::WARN);
+     let (subscriber, handle) = subscriber::mock()
+@@ -280,14 +280,14 @@ fn test_warn_info() {
+ 
+     with_default(subscriber, ret_warn_info);
      handle.assert_finished();
 -}
 +}*/
  
-@@ -288,3 +288,3 @@
+ #[instrument(ret(level = "warn", Debug))]
+ fn ret_dbg_warn() -> i32 {
+     42
+ }
  
 -#[test]
 +/*#[test]
  fn test_dbg_warn() {
-@@ -306,2 +306,2 @@
+     let span = expect::span().named("ret_dbg_warn").at_level(Level::INFO);
+     let (subscriber, handle) = subscriber::mock()
+@@ -305,4 +305,4 @@ fn test_dbg_warn() {
+ 
+     with_default(subscriber, ret_dbg_warn);
      handle.assert_finished();
 -}
 +}*/
+Index: tracing-attributes/tests/targets.rs
+===================================================================
 --- tracing-attributes.orig/tests/targets.rs
 +++ tracing-attributes/tests/targets.rs
-@@ -2,3 +2,3 @@
+@@ -1,6 +1,6 @@
+ use tracing::subscriber::with_default;
  use tracing_attributes::instrument;
 -use tracing_mock::*;
 +//use tracing_mock::*;
  
-@@ -22,3 +22,3 @@
+ #[instrument]
+ fn default_target() {}
+@@ -20,7 +20,7 @@ mod my_mod {
+     pub fn custom_target() {}
+ }
  
 -#[test]
 +/*#[test]
  fn default_targets() {
-@@ -96,2 +96,2 @@
+     let (subscriber, handle) = subscriber::mock()
+         .new_span(
+@@ -106,4 +106,4 @@ fn custom_targets() {
+     });
+ 
      handle.assert_finished();
 -}
 +}*/
