@@ -1,0 +1,161 @@
+.TH CARGO-SUBUNIT 1 "2025-11-12" "cargo-subunit 0.1.1" "User Commands"
+.SH NAME
+cargo-subunit \- Run Rust tests and output results in subunit format
+.SH SYNOPSIS
+.B cargo subunit
+[\fB\-\-list\fR]
+[\fB\-\-load\-list\fR \fIFILE\fR]
+[\fICARGO_ARGS\fR...]
+[\fB\-\-\fR \fITEST_ARGS\fR...]
+.SH DESCRIPTION
+.B cargo-subunit
+is a Cargo extension that runs Rust tests and outputs results in
+.I subunit v2
+format. This enables integration with subunit tools and test runners like
+.BR testrepository (1).
+.PP
+The tool uses cargo test's unstable JSON output format to capture test events,
+which are then converted to subunit v2 format. This allows test results to be
+consumed by various subunit-compatible tools for analysis, reporting, and
+test management.
+.SH OPTIONS
+.TP
+.B \-\-list
+List all available tests without running them. Each test is output as a subunit
+"exists" event with its fully-qualified name (e.g., \fImodule::submodule::test_name\fR).
+.TP
+.BI \-\-load\-list " FILE"
+Load test names from
+.I FILE
+(one test name per line) and run only those tests. Empty lines are ignored.
+.TP
+.B \-\-help
+Display help information and exit.
+.TP
+.B \-\-version
+Display version information and exit.
+.SH ARGUMENTS
+.TP
+.I CARGO_ARGS
+Arguments to pass to
+.BR cargo\ test ,
+such as package selection flags (\fB\-\-package\fR, \fB\-\-workspace\fR),
+feature flags (\fB\-\-features\fR, \fB\-\-no\-default\-features\fR),
+or compilation options (\fB\-\-release\fR).
+.TP
+.I TEST_ARGS
+Arguments to pass to the test binary, which must be preceded by \fB\-\-\fR.
+Common test arguments include \fB\-\-nocapture\fR (display stdout/stderr),
+\fB\-\-test\-threads\fR (number of parallel test threads),
+and test name filters.
+.SH OUTPUT FORMAT
+.B cargo-subunit
+writes subunit v2 binary format to stdout. The output can be redirected to
+a file or piped to subunit analysis tools.
+.PP
+For
+.B \-\-list
+mode, each test generates an "exists" event with the test ID.
+.PP
+For running tests, the following events are generated:
+.IP \(bu 3
+An "inprogress" event when the test starts
+.IP \(bu 3
+A "success", "fail", or "skip" event when complete
+.IP \(bu 3
+For failures, stdout/stderr are attached as file content
+.SH EXAMPLES
+.TP
+List all available tests:
+.B cargo subunit \-\-list
+.TP
+Run all tests with subunit output:
+.B cargo subunit > results.subunit
+.TP
+Run specific tests matching a pattern:
+.B cargo subunit test_name
+.br
+.B cargo subunit module::
+.TP
+Run tests from a file:
+.B echo "module::test_one" > tests.txt
+.br
+.B echo "module::test_two" >> tests.txt
+.br
+.B cargo subunit \-\-load\-list tests.txt
+.TP
+Pass additional cargo test arguments:
+.B cargo subunit \-\- \-\-nocapture
+.br
+.B cargo subunit \-\- \-\-test\-threads=1
+.TP
+Run tests in release mode:
+.B cargo subunit \-\-release
+.SH INTEGRATION WITH TESTREPOSITORY
+.B cargo-subunit
+integrates with
+.BR testrepository (1)
+for tracking test history and running tests efficiently.
+.PP
+Create a
+.I .testr.conf
+file in your project root:
+.PP
+.nf
+.RS
+[DEFAULT]
+test_command=cargo subunit $LISTOPT $IDOPTION
+test_id_option=\-\-load\-list $IDFILE
+test_list_option=\-\-list
+.RE
+.fi
+.PP
+Then use testrepository commands:
+.TP
+.B testr run
+Run all tests and record results
+.TP
+.B testr run \-\-failing
+Run only failed tests from the last run
+.TP
+.B testr last
+List test runs
+.TP
+.B testr last \-\-subunit | subunit\-stats
+Show results from the last run
+.SH EXIT STATUS
+.B cargo-subunit
+exits with the same status code as the underlying
+.B cargo test
+command. Typically:
+.TP
+.B 0
+All tests passed successfully
+.TP
+.B 101
+One or more tests failed
+.TP
+.B other
+Compilation or other error occurred
+.SH REQUIREMENTS
+.IP \(bu 3
+Rust 2021 edition or later
+.IP \(bu 3
+The subunit crate for protocol serialization
+.SH SEE ALSO
+.BR cargo (1),
+.BR cargo\-test (1),
+.BR testrepository (1),
+.BR subunit\-stats (1)
+.PP
+Subunit protocol specification:
+.UR https://github.com/testing-cabal/subunit
+.UE
+.PP
+Project repository:
+.UR https://github.com/jelmer/cargo-subunit
+.UE
+.SH AUTHOR
+Written by Jelmer Vernooĳ <jelmer@jelmer.uk>
+.SH LICENSE
+Apache-2.0
