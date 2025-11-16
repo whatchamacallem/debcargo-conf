@@ -1,0 +1,140 @@
+From 3cd3e2a71beb01591afe732ab4ae914ed62a4ecf Mon Sep 17 00:00:00 2001
+From: Ed Page <eopage@gmail.com>
+Date: Fri, 31 Jan 2025 10:08:32 -0600
+Subject: [PATCH] Resolve Winnow deprecations
+
+---
+ gix-actor/src/signature/decode.rs             | 42 +++++++++----------
+ gix-config/src/parse/nom/mod.rs               | 40 +++++++++---------
+ gix-config/src/parse/nom/tests.rs             | 17 ++++++--
+ gix-object/src/commit/decode.rs               | 20 ++++-----
+ gix-object/src/commit/message/body.rs         | 10 ++---
+ gix-object/src/commit/message/decode.rs       |  8 ++--
+ gix-object/src/parse.rs                       | 10 ++---
+ gix-object/src/tag/decode.rs                  |  8 ++--
+ gix-object/src/tag/ref_iter.rs                |  3 +-
+ gix-object/src/tree/ref_iter.rs               |  9 ++--
+ gix-protocol/src/remote_progress.rs           |  8 ++--
+ src/parse.rs                          |  4 +-
+ src/store/file/log/line.rs            |  8 ++--
+ .../src/store/file/loose/reference/decode.rs  |  2 +-
+ src/store/packed/decode.rs            |  6 +--
+ src/store/packed/iter.rs              |  6 +--
+ 16 files changed, 100 insertions(+), 101 deletions(-)
+
+--- a/src/parse.rs
++++ b/src/parse.rs
+@@ -6,7 +6,7 @@
+ }
+ 
+ /// Copy from https://github.com/GitoxideLabs/gitoxide/blob/64872690e60efdd9267d517f4d9971eecd3b875c/gix-object/src/parse.rs#L60-L67
+-pub fn hex_hash<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> PResult<&'a BStr, E> {
++pub fn hex_hash<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> ModalResult<&'a BStr, E> {
+     // NOTE: It's important to be able to read all hashes, do not parameterize it. Hashes can be rejected at a later stage
+     // if needed.
+     take_while(
+@@ -17,6 +17,6 @@
+     .parse_next(i)
+ }
+ 
+-pub fn newline<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> PResult<&'a [u8], E> {
++pub fn newline<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> ModalResult<&'a [u8], E> {
+     alt((b"\r\n", b"\n")).parse_next(i)
+ }
+--- a/src/store/file/log/line.rs
++++ b/src/store/file/log/line.rs
+@@ -76,10 +76,10 @@
+     use crate::{file::log::LineRef, parse::hex_hash};
+     use gix_object::bstr::{BStr, ByteSlice};
+     use winnow::{
+-        combinator::{alt, eof, fail, opt, preceded, rest, terminated},
++        combinator::{alt, eof, fail, opt, preceded, terminated},
+         error::{AddContext, ParserError, StrContext},
+         prelude::*,
+-        token::take_while,
++        token::{rest, take_while},
+     };
+ 
+     ///
+@@ -121,7 +121,7 @@
+         }
+     }
+ 
+-    fn message<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> PResult<&'a BStr, E> {
++    fn message<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> ModalResult<&'a BStr, E> {
+         if i.is_empty() {
+             rest.map(ByteSlice::as_bstr).parse_next(i)
+         } else {
+@@ -133,7 +133,7 @@
+ 
+     fn one<'a, E: ParserError<&'a [u8]> + AddContext<&'a [u8], StrContext>>(
+         bytes: &mut &'a [u8],
+-    ) -> PResult<LineRef<'a>, E> {
++    ) -> ModalResult<LineRef<'a>, E> {
+         let mut tokens = bytes.splitn(2, |b| *b == b'\t');
+         if let (Some(mut first), Some(mut second)) = (tokens.next(), tokens.next()) {
+             let (old, new, signature) = (
+--- a/src/store/file/loose/reference/decode.rs
++++ b/src/store/file/loose/reference/decode.rs
+@@ -66,7 +66,7 @@
+     }
+ }
+ 
+-fn parse(i: &mut &[u8]) -> PResult<MaybeUnsafeState> {
++fn parse(i: &mut &[u8]) -> ModalResult<MaybeUnsafeState> {
+     if let Some(_ref_prefix) = opt(terminated("ref: ", take_while(0.., b' '))).parse_next(i)? {
+         terminated(take_while(0.., |b| b != b'\r' && b != b'\n'), opt(newline))
+             .map(|path| MaybeUnsafeState::UnvalidatedPath(path.into()))
+--- a/src/store/packed/decode.rs
++++ b/src/store/packed/decode.rs
+@@ -34,7 +34,7 @@
+     }
+ }
+ 
+-fn until_newline<'a, E>(input: &mut &'a [u8]) -> PResult<&'a BStr, E>
++fn until_newline<'a, E>(input: &mut &'a [u8]) -> ModalResult<&'a BStr, E>
+ where
+     E: ParserError<&'a [u8]>,
+ {
+@@ -43,7 +43,7 @@
+         .parse_next(input)
+ }
+ 
+-pub fn header<'a, E>(input: &mut &'a [u8]) -> PResult<Header, E>
++pub fn header<'a, E>(input: &mut &'a [u8]) -> ModalResult<Header, E>
+ where
+     E: ParserError<&'a [u8]>,
+ {
+@@ -67,7 +67,7 @@
+ 
+ pub fn reference<'a, E: ParserError<&'a [u8]> + FromExternalError<&'a [u8], crate::name::Error>>(
+     input: &mut &'a [u8],
+-) -> PResult<packed::Reference<'a>, E> {
++) -> ModalResult<packed::Reference<'a>, E> {
+     (
+         terminated(hex_hash, b" "),
+         until_newline.try_map(TryInto::try_into),
+--- a/src/store/packed/iter.rs
++++ b/src/store/packed/iter.rs
+@@ -1,9 +1,5 @@
+ use gix_object::bstr::{BString, ByteSlice};
+-use winnow::{
+-    combinator::{preceded, rest},
+-    prelude::*,
+-    stream::Stream as _,
+-};
++use winnow::{combinator::preceded, prelude::*, token::rest};
+ 
+ use crate::store_impl::{packed, packed::decode};
+ 
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -91,7 +91,7 @@
+ version = "2.0.0"
+ 
+ [dependencies.winnow]
+-version = "0.6"
++version = "0.7"
+ features = ["simd"]
+ 
+ [dev-dependencies.gix-date]
