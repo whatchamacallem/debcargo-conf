@@ -1,0 +1,260 @@
+From 3cd3e2a71beb01591afe732ab4ae914ed62a4ecf Mon Sep 17 00:00:00 2001
+From: Ed Page <eopage@gmail.com>
+Date: Fri, 31 Jan 2025 10:08:32 -0600
+Subject: [PATCH] Resolve Winnow deprecations
+
+---
+ gix-actor/src/signature/decode.rs             | 42 +++++++++----------
+ gix-config/src/parse/nom/mod.rs               | 40 +++++++++---------
+ gix-config/src/parse/nom/tests.rs             | 17 ++++++--
+ src/commit/decode.rs               | 20 ++++-----
+ src/commit/message/body.rs         | 10 ++---
+ src/commit/message/decode.rs       |  8 ++--
+ src/parse.rs                       | 10 ++---
+ src/tag/decode.rs                  |  8 ++--
+ src/tag/ref_iter.rs                |  3 +-
+ src/tree/ref_iter.rs               |  9 ++--
+ gix-protocol/src/remote_progress.rs           |  8 ++--
+ gix-ref/src/parse.rs                          |  4 +-
+ gix-ref/src/store/file/log/line.rs            |  8 ++--
+ .../src/store/file/loose/reference/decode.rs  |  2 +-
+ gix-ref/src/store/packed/decode.rs            |  6 +--
+ gix-ref/src/store/packed/iter.rs              |  6 +--
+ 16 files changed, 100 insertions(+), 101 deletions(-)
+
+--- a/src/commit/decode.rs
++++ b/src/commit/decode.rs
+@@ -2,28 +2,25 @@
+ 
+ use smallvec::SmallVec;
+ use winnow::{
+-    combinator::{alt, eof, opt, preceded, repeat, rest, terminated},
++    combinator::{alt, eof, opt, preceded, repeat, terminated},
+     error::{AddContext, ParserError, StrContext},
+     prelude::*,
+-    stream::Stream as _,
+-    token::take_till,
++    token::{rest, take_till},
+ };
+ 
+ use crate::{parse, parse::NL, BStr, ByteSlice, CommitRef};
+ 
+ pub fn message<'a, E: ParserError<&'a [u8]> + AddContext<&'a [u8], StrContext>>(
+     i: &mut &'a [u8],
+-) -> PResult<&'a BStr, E> {
++) -> ModalResult<&'a BStr, E> {
+     if i.is_empty() {
+         // newline + [message]
+         let start = i.checkpoint();
+-        return Err(
+-            winnow::error::ErrMode::from_error_kind(i, winnow::error::ErrorKind::Eof).add_context(
+-                i,
+-                &start,
+-                StrContext::Expected("newline + <message>".into()),
+-            ),
+-        );
++        return Err(winnow::error::ErrMode::from_input(i).add_context(
++            i,
++            &start,
++            StrContext::Expected("newline + <message>".into()),
++        ));
+     }
+     preceded(NL, rest.map(ByteSlice::as_bstr))
+         .context(StrContext::Expected(
+@@ -34,7 +31,7 @@
+ 
+ pub fn commit<'a, E: ParserError<&'a [u8]> + AddContext<&'a [u8], StrContext>>(
+     i: &mut &'a [u8],
+-) -> PResult<CommitRef<'a>, E> {
++) -> ModalResult<CommitRef<'a>, E> {
+     (
+         (|i: &mut _| parse::header_field(i, b"tree", parse::hex_hash))
+             .context(StrContext::Expected("tree <40 lowercase hex char>".into())),
+--- a/src/commit/message/body.rs
++++ b/src/commit/message/body.rs
+@@ -1,10 +1,10 @@
+ use std::ops::Deref;
+ 
+ use winnow::{
+-    combinator::{eof, rest, separated_pair, terminated},
+-    error::{ErrorKind, ParserError},
++    combinator::{eof, separated_pair, terminated},
++    error::ParserError,
+     prelude::*,
+-    token::take_until,
++    token::{rest, take_until},
+ };
+ 
+ use crate::{
+@@ -31,12 +31,12 @@
+     pub value: &'a BStr,
+ }
+ 
+-fn parse_single_line_trailer<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> PResult<(&'a BStr, &'a BStr), E> {
++fn parse_single_line_trailer<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> ModalResult<(&'a BStr, &'a BStr), E> {
+     *i = i.trim_end();
+     let (token, value) = separated_pair(take_until(1.., b":".as_ref()), b": ", rest).parse_next(i)?;
+ 
+     if token.trim_end().len() != token.len() || value.trim_start().len() != value.len() {
+-        Err(winnow::error::ErrMode::from_error_kind(i, ErrorKind::Fail).cut())
++        Err(winnow::error::ErrMode::from_input(i).cut())
+     } else {
+         Ok((token.as_bstr(), value.as_bstr()))
+     }
+--- a/src/commit/message/decode.rs
++++ b/src/commit/message/decode.rs
+@@ -1,18 +1,18 @@
+ use winnow::{
+-    combinator::{alt, eof, preceded, rest, terminated},
++    combinator::{alt, eof, preceded, terminated},
+     error::ParserError,
+     prelude::*,
+     stream::{Offset, Stream},
+-    token::take_till,
++    token::{rest, take_till},
+ };
+ 
+ use crate::bstr::{BStr, ByteSlice};
+ 
+-pub(crate) fn newline<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> PResult<&'a [u8], E> {
++pub(crate) fn newline<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> ModalResult<&'a [u8], E> {
+     alt((b"\n", b"\r\n")).parse_next(i)
+ }
+ 
+-fn subject_and_body<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> PResult<(&'a BStr, Option<&'a BStr>), E> {
++fn subject_and_body<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> ModalResult<(&'a BStr, Option<&'a BStr>), E> {
+     let start_i = *i;
+     let start = i.checkpoint();
+     while !i.is_empty() {
+--- a/src/parse.rs
++++ b/src/parse.rs
+@@ -14,7 +14,7 @@
+ 
+ pub(crate) fn any_header_field_multi_line<'a, E: ParserError<&'a [u8]> + AddContext<&'a [u8], StrContext>>(
+     i: &mut &'a [u8],
+-) -> PResult<(&'a [u8], BString), E> {
++) -> ModalResult<(&'a [u8], BString), E> {
+     (
+         terminated(take_till(1.., SPACE_OR_NL), SPACE),
+         (
+@@ -41,15 +41,15 @@
+ pub(crate) fn header_field<'a, T, E: ParserError<&'a [u8]>>(
+     i: &mut &'a [u8],
+     name: &'static [u8],
+-    parse_value: impl Parser<&'a [u8], T, E>,
+-) -> PResult<T, E> {
++    parse_value: impl ModalParser<&'a [u8], T, E>,
++) -> ModalResult<T, E> {
+     terminated(preceded(terminated(name, SPACE), parse_value), NL).parse_next(i)
+ }
+ 
+ pub(crate) fn any_header_field<'a, T, E: ParserError<&'a [u8]>>(
+     i: &mut &'a [u8],
+-    parse_value: impl Parser<&'a [u8], T, E>,
+-) -> PResult<(&'a [u8], T), E> {
++    parse_value: impl ModalParser<&'a [u8], T, E>,
++) -> ModalResult<(&'a [u8], T), E> {
+     terminated((terminated(take_till(1.., SPACE_OR_NL), SPACE), parse_value), NL).parse_next(i)
+ }
+ 
+@@ -57,7 +57,7 @@
+     matches!(b, b'0'..=b'9' | b'a'..=b'f')
+ }
+ 
+-pub fn hex_hash<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> PResult<&'a BStr, E> {
++pub fn hex_hash<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> ModalResult<&'a BStr, E> {
+     take_while(
+         gix_hash::Kind::shortest().len_in_hex()..=gix_hash::Kind::longest().len_in_hex(),
+         is_hex_digit_lc,
+@@ -68,6 +68,6 @@
+ 
+ pub(crate) fn signature<'a, E: ParserError<&'a [u8]> + AddContext<&'a [u8], StrContext>>(
+     i: &mut &'a [u8],
+-) -> PResult<gix_actor::SignatureRef<'a>, E> {
++) -> ModalResult<gix_actor::SignatureRef<'a>, E> {
+     gix_actor::signature::decode(i)
+ }
+--- a/src/tag/decode.rs
++++ b/src/tag/decode.rs
+@@ -1,16 +1,16 @@
+ use winnow::{
+-    combinator::{alt, delimited, eof, opt, preceded, rest, terminated},
++    combinator::{alt, delimited, eof, opt, preceded, terminated},
+     error::{AddContext, ParserError, StrContext},
+     prelude::*,
+     stream::AsChar,
+-    token::{take_until, take_while},
++    token::{rest, take_until, take_while},
+ };
+ 
+ use crate::{parse, parse::NL, BStr, ByteSlice, TagRef};
+ 
+ pub fn git_tag<'a, E: ParserError<&'a [u8]> + AddContext<&'a [u8], StrContext>>(
+     i: &mut &'a [u8],
+-) -> PResult<TagRef<'a>, E> {
++) -> ModalResult<TagRef<'a>, E> {
+     (
+         (|i: &mut _| parse::header_field(i, b"object", parse::hex_hash))
+             .context(StrContext::Expected("object <40 lowercase hex char>".into())),
+@@ -36,7 +36,7 @@
+         .parse_next(i)
+ }
+ 
+-pub fn message<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> PResult<(&'a BStr, Option<&'a BStr>), E> {
++pub fn message<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> ModalResult<(&'a BStr, Option<&'a BStr>), E> {
+     const PGP_SIGNATURE_BEGIN: &[u8] = b"\n-----BEGIN PGP SIGNATURE-----";
+     const PGP_SIGNATURE_END: &[u8] = b"-----END PGP SIGNATURE-----";
+ 
+--- a/src/tag/ref_iter.rs
++++ b/src/tag/ref_iter.rs
+@@ -86,8 +86,7 @@
+                 let kind = (|i: &mut _| parse::header_field(i, b"type", take_while(1.., AsChar::is_alpha)))
+                     .context(StrContext::Expected("type <object kind>".into()))
+                     .parse_next(input)?;
+-                let kind = Kind::from_bytes(kind)
+-                    .map_err(|_| winnow::error::ErrMode::from_error_kind(input, winnow::error::ErrorKind::Verify))?;
++                let kind = Kind::from_bytes(kind).map_err(|_| winnow::error::ErrMode::from_input(input))?;
+                 *state = Name;
+                 Token::TargetKind(kind)
+             }
+--- a/src/tree/ref_iter.rs
++++ b/src/tree/ref_iter.rs
+@@ -145,7 +145,7 @@
+                 self.data = &[];
+                 #[allow(clippy::unit_arg)]
+                 Some(Err(crate::decode::Error::with_err(
+-                    winnow::error::ErrMode::from_error_kind(&failing, winnow::error::ErrorKind::Verify),
++                    winnow::error::ErrMode::from_input(&failing),
+                     failing,
+                 )))
+             }
+@@ -222,16 +222,13 @@
+         ))
+     }
+ 
+-    pub fn tree<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> PResult<TreeRef<'a>, E> {
++    pub fn tree<'a, E: ParserError<&'a [u8]>>(i: &mut &'a [u8]) -> ModalResult<TreeRef<'a>, E> {
+         let mut out = Vec::new();
+         let mut i = &**i;
+         while !i.is_empty() {
+             let Some((rest, entry)) = fast_entry(i) else {
+                 #[allow(clippy::unit_arg)]
+-                return Err(winnow::error::ErrMode::from_error_kind(
+-                    &i,
+-                    winnow::error::ErrorKind::Verify,
+-                ));
++                return Err(winnow::error::ErrMode::from_input(&i));
+             };
+             i = rest;
+             out.push(entry);
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -96,7 +96,7 @@
+ version = "2.0.0"
+ 
+ [dependencies.winnow]
+-version = "0.6.18"
++version = "0.7"
+ features = ["simd"]
+ 
+ [dev-dependencies.criterion]
