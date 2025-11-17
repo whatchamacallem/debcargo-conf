@@ -1,34 +1,17 @@
---- a/src/sha1.rs
-+++ b/src/sha1.rs
-@@ -1,6 +1,6 @@
- #[cfg(feature = "v5")]
- pub(crate) fn hash(ns: &[u8], src: &[u8]) -> [u8; 16] {
--    use sha1_smol::Sha1;
-+    use sha1::{Digest,Sha1};
- 
-     let mut hasher = Sha1::new();
- 
-@@ -8,7 +8,7 @@
-     hasher.update(src);
- 
-     let mut bytes = [0; 16];
--    bytes.copy_from_slice(&hasher.digest().bytes()[..16]);
-+    bytes.copy_from_slice(&hasher.finalize()[..16]);
- 
-     bytes
- }
+diff --git a/Cargo.toml b/Cargo.toml
+index e4b6e8f..93aec92 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -120,7 +120,7 @@
+@@ -124,7 +124,7 @@ rng-rand = [
      "uuid-rng-internal-lib",
      "uuid-rng-internal-lib/rand",
  ]
 -sha1 = ["dep:sha1_smol"]
 +sha1 = ["dep:sha1"]
- std = []
- v1 = ["atomic"]
- v3 = ["md5"]
-@@ -168,8 +168,8 @@
+ std = [
+     "wasm-bindgen?/std",
+     "js-sys?/std",
+@@ -175,8 +175,8 @@ version = "1.0.56"
  optional = true
  default-features = false
  
@@ -39,3 +22,24 @@
  optional = true
  default-features = false
  
+diff --git a/src/sha1.rs b/src/sha1.rs
+index 14ca302..e1c794f 100644
+--- a/src/sha1.rs
++++ b/src/sha1.rs
+@@ -1,6 +1,6 @@
+ #[cfg(feature = "v5")]
+ pub(crate) fn hash(ns: &[u8], src: &[u8]) -> [u8; 16] {
+-    use sha1_smol::Sha1;
++    use sha1::{Digest,Sha1};
+ 
+     let mut hasher = Sha1::new();
+ 
+@@ -8,7 +8,7 @@ pub(crate) fn hash(ns: &[u8], src: &[u8]) -> [u8; 16] {
+     hasher.update(src);
+ 
+     let mut bytes = [0; 16];
+-    bytes.copy_from_slice(&hasher.digest().bytes()[..16]);
++    bytes.copy_from_slice(&hasher.finalize()[..16]);
+ 
+     bytes
+ }

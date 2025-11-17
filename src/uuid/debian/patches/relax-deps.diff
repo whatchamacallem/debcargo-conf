@@ -1,7 +1,9 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 1ada37a..1c4b767 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -182,11 +182,11 @@
- version = "1.0.52"
+@@ -220,11 +220,11 @@ optional = true
+ default-features = false
  
  [target.'cfg(not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "none"))))'.dependencies.getrandom]
 -version = "0.3"
@@ -14,9 +16,11 @@
  optional = true
  
  [lints.rust.unexpected_cfgs]
+diff --git a/src/rng.rs b/src/rng.rs
+index 894ceac..353db71 100644
 --- a/src/rng.rs
 +++ b/src/rng.rs
-@@ -54,7 +54,7 @@
+@@ -54,7 +54,7 @@ mod imp {
          fn u128() -> u128 {
              let mut bytes = [0u8; 16];
  
@@ -25,7 +29,7 @@
                  // NB: getrandom::Error has no source; this is adequate display
                  panic!("could not retrieve random bytes for uuid: {}", err)
              });
-@@ -65,7 +65,7 @@
+@@ -65,7 +65,7 @@ mod imp {
          fn u64() -> u64 {
              let mut bytes = [0u8; 8];
  
@@ -34,7 +38,7 @@
                  // NB: getrandom::Error has no source; this is adequate display
                  panic!("could not retrieve random bytes for uuid: {}", err)
              });
-@@ -76,7 +76,7 @@
+@@ -76,7 +76,7 @@ mod imp {
          fn u16() -> u16 {
              let mut bytes = [0u8; 2];
  
