@@ -1,0 +1,71 @@
+Description: Relax dev deps and remove those which are not packaged.
+Author: Antonin Delpeuch <antonin@delpeuch.eu>
+Forwarded: not-needed
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -95,19 +95,11 @@ version = "0.7.3"
+ optional = true
+ default-features = false
+ 
+-[dev-dependencies.enterpolation]
+-version = "0.2.0"
+-
+ [dev-dependencies.image]
+-version = "0.23.14"
++version = "0.25"
+ features = ["png"]
+ default-features = false
+ 
+-[dev-dependencies.rand_mt]
+-version = "4"
+-features = ["rand-traits"]
+-default-features = false
+-
+ [dev-dependencies.ron]
+ version = "0.12"
+ 
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1426,6 +1426,3 @@ macro_rules! doctest {
+     };
+ }
+ 
+-// Makes doctest run tests on README.md.
+-#[cfg(doctest)]
+-doctest!(include_str!("../README.md"), readme);
+--- a/src/hsl.rs
++++ b/src/hsl.rs
+@@ -655,6 +655,7 @@ mod test {
+         max: Hsl::new(360.0, 1.0, 1.0)
+     }
+ 
++    /*
+     /// Sanity check to make sure the test doesn't start accepting known
+     /// non-uniform distributions.
+     #[cfg(feature = "random")]
+@@ -688,4 +689,5 @@ mod test {
+         assert_uniform_distribution!(green);
+         assert_uniform_distribution!(blue);
+     }
++    */
+ }
+--- a/src/macros/random.rs
++++ b/src/macros/random.rs
+@@ -32,6 +32,7 @@ macro_rules! test_uniform_distribution {
+         min: $min:expr,
+         max: $max:expr$(,)?
+     ) => {
++        /*
+         #[cfg(feature = "random")]
+         #[test]
+         fn uniform_distribution_rng_gen() {
+@@ -131,6 +132,7 @@ macro_rules! test_uniform_distribution {
+ 
+             $(assert_uniform_distribution!($component);)+
+         }
++        */
+     };
+ }
+ 
