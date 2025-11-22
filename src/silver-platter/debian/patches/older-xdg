@@ -11,3 +11,16 @@ Index: silver-platter/Cargo.toml
  optional = true
  
  [dev-dependencies.serial_test]
+Index: silver-platter/src/debian/uploader.rs
+===================================================================
+--- silver-platter.orig/src/debian/uploader.rs
++++ silver-platter/src/debian/uploader.rs
+@@ -64,7 +64,7 @@ impl LastAttemptDatabase {
+ #[cfg(feature = "last-attempt-db")]
+ impl Default for LastAttemptDatabase {
+     fn default() -> Self {
+-        let xdg_dirs = xdg::BaseDirectories::with_prefix("silver-platter");
++        let xdg_dirs = xdg::BaseDirectories::with_prefix("silver-platter").unwrap();
+         let last_attempt_path = xdg_dirs.place_data_file("last-upload-attempt.tdb").unwrap();
+         Self::open(last_attempt_path.as_path())
+     }
