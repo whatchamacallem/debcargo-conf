@@ -1,0 +1,238 @@
+From e741c019921129bc9546fc6edfd1d197b92f5337 Mon Sep 17 00:00:00 2001
+From: Jonas Bushart <jonas@bushart.org>
+Date: Sun, 4 May 2025 00:47:29 +0200
+Subject: [PATCH 2/3] Fix code for ron v0.10
+Origin: https://github.com/jonasbb/serde_with/commit/be794b7f89683f1adc9e508f199f0822267f2d47
+
+---
+ serde_with/src/lib.rs                 | 6 ++----
+ serde_with/src/rust.rs                | 6 ++----
+ serde_with/tests/serde_as/enum_map.rs | 2 +-
+ 3 files changed, 5 insertions(+), 9 deletions(-)
+
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1543,15 +1543,14 @@ pub struct TimestampNanoSecondsWithFrac<
+ ///     vec: vec![0x41, 0x61, 0x21],
+ /// };
+ /// let expected = r#"(
+-///     array: "MDEyMzQ1Njc4OUFCQ0RF",
+-///     boxed: "Li4u",
+-///     cow: "Rm9vQmFy",
+-///     cow_array: "KioqKioqKioqKioqKioq",
+-///     vec: "QWEh",
++///     array: b"0123456789ABCDE",
++///     boxed: b"...",
++///     cow: b"FooBar",
++///     cow_array: b"***************",
++///     vec: b"Aa!",
+ /// )"#;
+ ///
+-/// # let pretty_config = ron::ser::PrettyConfig::new()
+-/// #     .new_line("\n".into());
++/// # let pretty_config = ron::ser::PrettyConfig::new().new_line("\n");
+ /// assert_eq!(expected, ron::ser::to_string_pretty(&value, pretty_config).unwrap());
+ /// assert_eq!(value, ron::from_str(expected).unwrap());
+ /// # }
+@@ -1582,12 +1581,11 @@ pub struct TimestampNanoSecondsWithFrac<
+ ///     buf: &[20u8, 21u8, 22u8],
+ /// };
+ /// let expected = r#"(
+-///     array_buf: "CgoKCgoKCgoKCgoKCgoK",
+-///     buf: "FBUW",
++///     array_buf: b"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
++///     buf: b"\x14\x15\x16",
+ /// )"#;
+ ///
+-/// # let pretty_config = ron::ser::PrettyConfig::new()
+-/// #     .new_line("\n".into());
++/// # let pretty_config = ron::ser::PrettyConfig::new().new_line("\n");
+ /// assert_eq!(expected, ron::ser::to_string_pretty(&value, pretty_config).unwrap());
+ /// // RON doesn't support borrowed deserialization of byte arrays
+ /// # }
+--- a/src/rust.rs
++++ b/src/rust.rs
+@@ -115,8 +115,7 @@ pub mod double_option {
+ /// }
+ ///
+ /// // Transparently add/remove Some() wrapper
+-/// # let pretty_config = ron::ser::PrettyConfig::new()
+-/// #     .new_line("\n".into());
++/// # let pretty_config = ron::ser::PrettyConfig::new().new_line("\n");
+ /// let s = r#"(
+ ///     mandatory: 1,
+ ///     optional: 2,
+@@ -130,8 +129,7 @@ pub mod double_option {
+ ///
+ /// // Missing values are deserialized as `None`
+ /// // while `None` values are skipped during serialization.
+-/// # let pretty_config = ron::ser::PrettyConfig::new()
+-/// #     .new_line("\n".into());
++/// # let pretty_config = ron::ser::PrettyConfig::new().new_line("\n");
+ /// let s = r#"(
+ ///     mandatory: 1,
+ /// )"#;
+--- a/tests/serde_as/enum_map.rs
++++ b/tests/serde_as/enum_map.rs
+@@ -105,7 +105,7 @@ fn ron_serialize() {
+         ],
+     };
+ 
+-    let pretty_config = ron::ser::PrettyConfig::new().new_line("\n".into());
++    let pretty_config = ron::ser::PrettyConfig::new().new_line("\n");
+     let ron = ron::ser::to_string_pretty(&values, pretty_config).unwrap();
+     expect_test::expect![[r#"
+             (
+@@ -127,78 +127,78 @@ fn ron_serialize() {
+     // TODO deserializing a Strings as an Identifier seems unsupported
+     let deser_values: ron::Value = ron::de::from_str(&ron).unwrap();
+     expect_test::expect![[r#"
++        Map(
+             Map(
+-                Map(
+-                    {
+-                        String(
+-                            "vec",
+-                        ): Map(
+-                            Map(
+-                                {
+-                                    String(
+-                                        "Int",
+-                                    ): Number(
+-                                        Integer(
+-                                            456,
+-                                        ),
+-                                    ),
+-                                    String(
+-                                        "String",
+-                                    ): String(
+-                                        "XXX",
+-                                    ),
+-                                    String(
+-                                        "Struct",
+-                                    ): Map(
+-                                        Map(
+-                                            {
+-                                                String(
+-                                                    "a",
+-                                                ): Number(
+-                                                    Integer(
+-                                                        666,
+-                                                    ),
+-                                                ),
+-                                                String(
+-                                                    "b",
+-                                                ): String(
+-                                                    "BBB",
+-                                                ),
+-                                                String(
+-                                                    "c",
+-                                                ): Bool(
+-                                                    true,
+-                                                ),
+-                                            },
+-                                        ),
++                {
++                    String(
++                        "vec",
++                    ): Map(
++                        Map(
++                            {
++                                String(
++                                    "Int",
++                                ): Number(
++                                    U16(
++                                        456,
+                                     ),
+-                                    String(
+-                                        "Tuple",
+-                                    ): Seq(
+-                                        [
+-                                            Number(
+-                                                Integer(
+-                                                    1,
++                                ),
++                                String(
++                                    "String",
++                                ): String(
++                                    "XXX",
++                                ),
++                                String(
++                                    "Struct",
++                                ): Map(
++                                    Map(
++                                        {
++                                            String(
++                                                "a",
++                                            ): Number(
++                                                U16(
++                                                    666,
+                                                 ),
+                                             ),
+                                             String(
+-                                                "Middle",
++                                                "b",
++                                            ): String(
++                                                "BBB",
+                                             ),
+-                                            Bool(
+-                                                false,
++                                            String(
++                                                "c",
++                                            ): Bool(
++                                                true,
+                                             ),
+-                                        ],
++                                        },
+                                     ),
+-                                    String(
+-                                        "Unit",
+-                                    ): Unit,
+-                                },
+-                            ),
++                                ),
++                                String(
++                                    "Tuple",
++                                ): Seq(
++                                    [
++                                        Number(
++                                            U8(
++                                                1,
++                                            ),
++                                        ),
++                                        String(
++                                            "Middle",
++                                        ),
++                                        Bool(
++                                            false,
++                                        ),
++                                    ],
++                                ),
++                                String(
++                                    "Unit",
++                                ): Unit,
++                            },
+                         ),
+-                    },
+-                ),
+-            )
+-        "#]]
++                    ),
++                },
++            ),
++        )
++    "#]]
+     .assert_debug_eq(&deser_values);
+ }
+ 
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -289,7 +289,7 @@ default-features = false
+ version = "1.3.0"
+ 
+ [dev-dependencies.ron]
+-version = ">=0.7.1, <0.9"
++version = "0.12"
+ 
+ [dev-dependencies.rustversion]
+ version = "1.0.0"
