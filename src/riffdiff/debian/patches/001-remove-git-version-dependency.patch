@@ -1,0 +1,39 @@
+Index: riffdiff/Cargo.toml
+===================================================================
+--- riffdiff.orig/Cargo.toml
++++ riffdiff/Cargo.toml
+@@ -46,9 +46,6 @@ version = "0.6.2"
+ version = "4.5.26"
+ features = ["derive"]
+ 
+-[dependencies.git-version]
+-version = "0.3.4"
+-
+ [dependencies.itertools]
+ version = "0.10.1"
+ 
+Index: riffdiff/src/main.rs
+===================================================================
+--- riffdiff.orig/src/main.rs
++++ riffdiff/src/main.rs
+@@ -9,7 +9,6 @@ use backtrace::Backtrace;
+ use clap::CommandFactory;
+ use clap::Parser;
+ use clap::ValueEnum;
+-use git_version::git_version;
+ use line_collector::LineCollector;
+ use logging::init_logger;
+ use refiner::Formatter;
+@@ -58,11 +57,7 @@ Please copy the above crash report and r
+ 
+ const PAGER_FORKBOMB_STOP: &str = "_RIFF_IGNORE_PAGER";
+ 
+-// The empty cargo_prefix makes us use the Cargo.toml version number if we
+-// cannot get it from git.
+-//
+-// Ref: https://github.com/walles/riff/issues/26#issuecomment-1120294897
+-const GIT_VERSION: &str = git_version!(cargo_prefix = "");
++const GIT_VERSION: &str = env!("CARGO_PKG_VERSION");
+ 
+ #[derive(Parser)]
+ #[command(
