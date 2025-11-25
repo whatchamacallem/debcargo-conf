@@ -1,0 +1,56 @@
+This patch is based on the commit described below, taken from
+https://github.com/qarmin/czkawkpull/1501
+(which was squash-merged into master)
+
+It was adapted for use in the Debian package by Peter Michael Green.
+
+commit f8fe617ba1e9e6a46219cf65e13ddbfcf089ab18
+Author: Rafał Mikrut <mikrutrafal@protonmail.com>
+Date:   Sat Apr 12 08:32:36 2025 +0200
+
+    SRT
+
+Index: czkawka-core/src/similar_videos.rs
+===================================================================
+--- czkawka-core.orig/src/similar_videos.rs
++++ czkawka-core/src/similar_videos.rs
+@@ -10,7 +10,7 @@ use humansize::{format_size, BINARY};
+ use log::debug;
+ use rayon::prelude::*;
+ use serde::{Deserialize, Serialize};
+-use vid_dup_finder_lib::{ffmpeg_builder, VideoHash};
++use vid_dup_finder_lib::{VideoHash, VideoHashBuilder};
+ 
+ use crate::common::{check_if_stop_received, delete_files_custom, prepare_thread_handler_common, send_info_and_wait_for_ending_all_threads, VIDEO_FILES_EXTENSIONS};
+ use crate::common_cache::{extract_loaded_cache, get_similar_videos_cache_file, load_cache_from_file_generalized_by_path, save_cache_to_file_generalized};
+@@ -219,7 +219,7 @@ impl SimilarVideos {
+                 }
+                 let mut file_entry = file_entry.1.clone();
+ 
+-                let vhash = match ffmpeg_builder::VideoHashBuilder::default().hash(file_entry.path.clone()) {
++                let vhash = match VideoHashBuilder::default().hash(file_entry.path.clone()) {
+                     Ok(t) => t,
+                     Err(e) => {
+                         return {
+Index: czkawka-core/Cargo.toml
+===================================================================
+--- czkawka-core.orig/Cargo.toml
++++ czkawka-core/Cargo.toml
+@@ -58,7 +58,7 @@ version = "0.5"
+ version = "2.0"
+ 
+ [dependencies.ffmpeg_cmdline_utils]
+-version = "0.3"
++version = "0.4"
+ 
+ [dependencies.fun_time]
+ version = "0.3"
+@@ -183,7 +183,7 @@ version = "3.13"
+ version = "5.1"
+ 
+ [dependencies.vid_dup_finder_lib]
+-version = "0.2"
++version = "0.3"
+ 
+ [dependencies.xxhash-rust]
+ version = "0.8"
