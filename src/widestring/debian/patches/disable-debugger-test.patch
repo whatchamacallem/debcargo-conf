@@ -2,46 +2,21 @@ Description: Disable debugger tests
  which depend on unpackaged debugger_test crate, and uses the "cdb" aka
  Microsoft Console Debugger, which is, obviously, Windows only.
 Forwarded: not-needed
-Last-Update: 2024-12-20
+Last-Update: 2025-11-25
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -45,5 +45,5 @@
--[[test]]
--name = "debugger_visualizer"
--path = "tests/debugger_visualizer.rs"
--test = false
--required-features = ["debugger_visualizer"]
-+#[[test]]
-+#name = "debugger_visualizer"
-+#path = "tests/debugger_visualizer.rs"
-+#test = false
-+#required-features = ["debugger_visualizer"]
-@@ -51,2 +51,2 @@
--[dev-dependencies.debugger_test]
--version = "0.1"
-+#[dev-dependencies.debugger_test]
-+#version = "0.1"
-@@ -54,2 +54,2 @@
--[dev-dependencies.debugger_test_parser]
--version = "0.1"
-+#[dev-dependencies.debugger_test_parser]
-+#version = "0.1"
-@@ -63 +63 @@
+@@ -53 +53 @@
 -debugger_visualizer = ["alloc"]
 +#debugger_visualizer = ["alloc"]
---- a/src/lib.rs
-+++ b/src/lib.rs
-@@ -228,5 +228,5 @@
--#![cfg_attr(
--    feature = "debugger_visualizer",
--    feature(debugger_visualizer),
--    debugger_visualizer(natvis_file = "../debug_metadata/widestring.natvis")
--)]
-+//#![cfg_attr(
-+//    feature = "debugger_visualizer",
-+//    feature(debugger_visualizer),
-+//    debugger_visualizer(natvis_file = "../debug_metadata/widestring.natvis")
-+//)]
+@@ -61 +61 @@
+-[[test]]
++[[disabled.test]]
+@@ -67 +67 @@
+-[dev-dependencies.debugger_test]
++[disabled.dev-dependencies.debugger_test]
+@@ -70 +70 @@
+-[dev-dependencies.debugger_test_parser]
++[disabled.dev-dependencies.debugger_test_parser]
 --- a/tests/debugger_visualizer.rs
 +++ b/tests/debugger_visualizer.rs
 @@ -0,0 +1 @@
