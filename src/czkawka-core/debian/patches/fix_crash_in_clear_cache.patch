@@ -1,0 +1,53 @@
+Description: fix crash on "Remove outdated results from cache"
+Bug: https://github.com/qarmin/czkawka/issues/1503
+Origin: https://github.com/qarmin/czkawka/issues/1503#issuecomment-2828773033
+
+diff --git a/src/common_cache.rs b/src/common_cache.rs
+index 77b80c4..939b5a3 100644
+--- a/src/common_cache.rs
++++ b/src/common_cache.rs
+@@ -1,12 +1,12 @@
+-use std::collections::BTreeMap;
+-use std::io::{BufReader, BufWriter};
+-
++use bincode::Options;
+ use fun_time::fun_time;
+ use image::imageops::FilterType;
+ use image_hasher::HashAlg;
+ use log::{debug, error};
+ use rayon::iter::{IntoParallelIterator, ParallelIterator};
+ use serde::{Deserialize, Serialize};
++use std::collections::BTreeMap;
++use std::io::{BufReader, BufWriter};
+ 
+ use crate::common;
+ use crate::common_messages::Messages;
+@@ -17,6 +17,8 @@ use crate::similar_images::{convert_algorithm_to_string, convert_filters_to_stri
+ const CACHE_VERSION: &str = "70";
+ const CACHE_IMAGE_VERSION: &str = "80";
+ 
++const MEMORY_LIMIT: u64 = 4 * 1024 * 1024 * 1024;
++
+ pub fn get_broken_files_cache_file() -> String {
+     format!("cache_broken_files_{CACHE_VERSION}.bin")
+ }
+@@ -58,7 +60,8 @@ where
+ 
+         {
+             let writer = BufWriter::new(file_handler.expect("Cannot fail, because for saving, this always exists"));
+-            if let Err(e) = bincode::serialize_into(writer, &hashmap_to_save) {
++            let options = bincode::DefaultOptions::new().with_limit(MEMORY_LIMIT);
++            if let Err(e) = options.serialize_into(writer, &hashmap_to_save) {
+                 text_messages.warnings.push(format!("Cannot write data to cache file {cache_file:?}, reason {e}"));
+                 debug!("Failed to save cache to file {cache_file:?}");
+                 return text_messages;
+@@ -203,7 +206,8 @@ where
+             // let options = bincode::DefaultOptions::new().with_limit(4 * 1024 * 1024 * 1024);
+             // vec_loaded_entries = match options.deserialize_from(reader) {
+ 
+-            vec_loaded_entries = match bincode::deserialize_from(reader) {
++            let options = bincode::DefaultOptions::new().with_limit(MEMORY_LIMIT);
++            vec_loaded_entries = match options.deserialize_from(reader) {
+                 Ok(t) => t,
+                 Err(e) => {
+                     text_messages.warnings.push(format!("Failed to load data from cache file {cache_file:?}, reason {e}"));

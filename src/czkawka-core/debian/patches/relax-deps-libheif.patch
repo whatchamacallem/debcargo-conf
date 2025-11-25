@@ -1,11 +1,9 @@
 Decription: adapt code to build with libheif-rs 0.20
  czkawka normally depends on libheif-rs 0.18
-Index: czkawka-core/Cargo.toml
-===================================================================
---- czkawka-core.orig/Cargo.toml
-+++ czkawka-core/Cargo.toml
-@@ -149,11 +149,11 @@ version = "0.12.0"
- features = ["image"]
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -120,11 +120,11 @@
+ default-features = false
  
  [dependencies.libheif-rs]
 -version = "=0.18.0"
@@ -18,25 +16,23 @@ Index: czkawka-core/Cargo.toml
  optional = true
  
  [dependencies.libraw-rs]
-Index: czkawka-core/src/common/image.rs
-===================================================================
---- czkawka-core.orig/src/common/image.rs
-+++ czkawka-core/src/common/image.rs
-@@ -30,8 +30,8 @@ use crate::common;
- use crate::common::consts::{HEIC_EXTENSIONS, IMAGE_RS_EXTENSIONS, IMAGE_RS_SIMILAR_IMAGES_EXTENSIONS, JXL_IMAGE_EXTENSIONS, RAW_IMAGE_EXTENSIONS};
- use crate::common::create_crash_message;
- use crate::helpers::debug_timer::Timer;
+--- a/src/common_image.rs
++++ b/src/common_image.rs
+@@ -30,8 +30,8 @@
+ 
+ use crate::common;
+ use crate::common::{create_crash_message, HEIC_EXTENSIONS, IMAGE_RS_EXTENSIONS, IMAGE_RS_SIMILAR_IMAGES_EXTENSIONS, JXL_IMAGE_EXTENSIONS, RAW_IMAGE_EXTENSIONS};
 -// #[cfg(feature = "heif")]
 -// use libheif_rs::LibHeif;
 +#[cfg(feature = "heif")]
 +use libheif_rs::LibHeif;
  
- pub(crate) fn get_jxl_image(path: &str) -> anyhow::Result<DynamicImage> {
-     let file = File::open(path)?;
-@@ -91,11 +91,11 @@ pub fn get_dynamic_image_from_path(path:
+ // TODO this code is ugly - this should exists in image-rs or be taken from official example of jxl-oxide
+ // Its presence offends everything good in this world
+@@ -99,11 +99,11 @@
  
  #[cfg(feature = "heif")]
- pub(crate) fn get_dynamic_image_from_heic(path: &str) -> anyhow::Result<DynamicImage> {
+ pub fn get_dynamic_image_from_heic(path: &str) -> anyhow::Result<DynamicImage> {
 -    // let libheif = LibHeif::new();
 +    let libheif = LibHeif::new();
      let im = HeifContext::read_from_file(path)?;
