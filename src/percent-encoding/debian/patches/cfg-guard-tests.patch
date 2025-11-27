@@ -1,0 +1,102 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -369,6 +369,7 @@ mod tests {
+ 
+     use super::*;
+ 
++    #[cfg(feature = "alloc")]
+     #[test]
+     fn percent_encode_byte() {
+         for i in 0..=0xFF {
+@@ -377,12 +378,14 @@ mod tests {
+         }
+     }
+ 
++    #[cfg(feature = "alloc")]
+     #[test]
+     fn percent_encode_accepts_ascii_set_ref() {
+         let encoded = percent_encode(b"foo bar?", &AsciiSet::EMPTY);
+         assert_eq!(encoded.collect::<String>(), "foo bar?");
+     }
+ 
++    #[cfg(feature = "alloc")]
+     #[test]
+     fn percent_encode_collect() {
+         let encoded = percent_encode(b"foo bar?", NON_ALPHANUMERIC);
+@@ -392,18 +395,21 @@ mod tests {
+         assert_eq!(encoded.collect::<String>(), String::from("%00%01%02%03"));
+     }
+ 
++    #[cfg(feature = "alloc")]
+     #[test]
+     fn percent_encode_display() {
+         let encoded = percent_encode(b"foo bar?", NON_ALPHANUMERIC);
+         assert_eq!(alloc::format!("{}", encoded), "foo%20bar%3F");
+     }
+ 
++    #[cfg(feature = "alloc")]
+     #[test]
+     fn percent_encode_cow() {
+         let encoded = percent_encode(b"foo bar?", NON_ALPHANUMERIC);
+         assert_eq!(Cow::from(encoded), "foo%20bar%3F");
+     }
+ 
++    #[cfg(feature = "alloc")]
+     #[test]
+     fn utf8_percent_encode_accepts_ascii_set_ref() {
+         let encoded = super::utf8_percent_encode("foo bar?", &AsciiSet::EMPTY);
+@@ -418,6 +424,7 @@ mod tests {
+         );
+     }
+ 
++    #[cfg(feature = "alloc")]
+     #[test]
+     fn percent_decode() {
+         assert_eq!(
+@@ -428,6 +435,7 @@ mod tests {
+         );
+     }
+ 
++    #[cfg(feature = "alloc")]
+     #[test]
+     fn percent_decode_str() {
+         assert_eq!(
+@@ -438,12 +446,14 @@ mod tests {
+         );
+     }
+ 
++    #[cfg(feature = "alloc")]
+     #[test]
+     fn percent_decode_collect() {
+         let decoded = super::percent_decode(b"foo%20bar%3f");
+         assert_eq!(decoded.collect::<Vec<u8>>(), b"foo bar?");
+     }
+ 
++    #[cfg(feature = "alloc")]
+     #[test]
+     fn percent_decode_cow() {
+         let decoded = super::percent_decode(b"foo%20bar%3f");
+@@ -453,6 +463,7 @@ mod tests {
+         assert_eq!(Cow::from(decoded), Cow::Borrowed(b"foo bar?"));
+     }
+ 
++    #[cfg(feature = "alloc")]
+     #[test]
+     fn percent_decode_invalid_utf8() {
+         // Invalid UTF-8 sequence
+@@ -463,6 +474,7 @@ mod tests {
+         assert_eq!(decoded.error_len(), Some(1));
+     }
+ 
++    #[cfg(feature = "alloc")]
+     #[test]
+     fn percent_decode_utf8_lossy() {
+         assert_eq!(
+@@ -471,6 +483,7 @@ mod tests {
+         );
+     }
+ 
++    #[cfg(feature = "alloc")]
+     #[test]
+     fn percent_decode_utf8_lossy_invalid_utf8() {
+         assert_eq!(
