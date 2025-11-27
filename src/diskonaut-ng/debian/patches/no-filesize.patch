@@ -1,0 +1,48 @@
+From 3eb50dead4cdfd09d3616e1723d2c0349cebbfde Mon Sep 17 00:00:00 2001
+From: NoisyCoil <noisycoil@disroot.org>
+Date: Sat, 22 Nov 2025 15:48:21 +0100
+Subject: [PATCH] Patch out filesize
+Forward: not-needed
+
+filesize is unmaintained upstream and, on unix only, it can be
+replaced by a trivial operation on fs metadata.
+---
+ Cargo.toml                        | 1 -
+ src/state/files/file_or_folder.rs | 7 ++-----
+ 2 files changed, 2 insertions(+), 6 deletions(-)
+
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -43,9 +43,6 @@
+ [dependencies.crossterm]
+ version = "0.29"
+ 
+-[dependencies.filesize]
+-version = "0.2.0"
+-
+ [dependencies.jwalk]
+ version = "0.8"
+ 
+--- a/src/state/files/file_or_folder.rs
++++ b/src/state/files/file_or_folder.rs
+@@ -2,8 +2,7 @@
+ use ::std::ffi::OsString;
+ use ::std::fs::Metadata;
+ use ::std::path::PathBuf;
+-
+-use ::filesize::PathExt;
++use std::os::unix::fs::MetadataExt;
+ 
+ #[derive(Debug, Clone)]
+ pub enum FileOrFolder {
+@@ -74,9 +73,7 @@
+             let size = if show_apparent_size {
+                 entry_metadata.len() as u128
+             } else {
+-                relative_path
+-                    .size_on_disk_fast(&entry_metadata)
+-                    .unwrap_or(entry_metadata.len()) as u128
++                (entry_metadata.blocks() * 512) as u128
+             };
+             self.add_file(relative_path, size);
+         }
