@@ -1,24 +1,16 @@
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -93,8 +93,8 @@
- version = "0.9"
- optional = true
+@@ -168,4 +168,4 @@
  
 -[dependencies.term_size]
 -version = "0.3.2"
 +[dependencies.terminal_size]
 +version = ">= 0.3, < 1.0"
  
- [dependencies.toml]
- version = "0.5.8"
 --- a/src/main.rs
 +++ b/src/main.rs
-@@ -43,7 +43,7 @@
-         .or(config.columns)
-         .or_else(|| {
+@@ -53,3 +53,3 @@
              if cli.files {
 -                term_size::dimensions().map(|(w, _)| w)
 +                terminal_size::terminal_size().map(|(terminal_size::Width(w), _)| w as usize)
              } else {
-                 None
-             }

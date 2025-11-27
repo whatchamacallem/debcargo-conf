@@ -1,0 +1,15 @@
+Description: Inline the 1 styling used from clap-cargo
+Forwarded: not-needed
+Last-Update: 2025-11-25
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -94,2 +94,2 @@
+-[dependencies.clap-cargo]
+-version = "0.13.0"
++[dependencies.anstyle] # was clap-cargo
++version = "1" # was clap-cargo 0.13
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -62 +62 @@
+-            .styles(clap_cargo::style::CLAP_STYLING)
++            .styles({ use anstyle::{AnsiColor, Effects}; clap::builder::styling::Styles::styled().header(AnsiColor::BrightGreen.on_default().effects(Effects::BOLD)).usage(AnsiColor::BrightGreen.on_default().effects(Effects::BOLD)).literal(AnsiColor::BrightCyan.on_default().effects(Effects::BOLD)).placeholder(AnsiColor::Cyan.on_default()).error(AnsiColor::BrightRed.on_default().effects(Effects::BOLD)).valid(AnsiColor::BrightCyan.on_default().effects(Effects::BOLD)).invalid(AnsiColor::Yellow.on_default())}/*clap_cargo::style::CLAP_STYLING*/)
