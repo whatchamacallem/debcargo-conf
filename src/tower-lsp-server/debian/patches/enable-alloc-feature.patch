@@ -1,0 +1,51 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 1b10fc2..4b4cbab 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -74,6 +74,12 @@ version = "1"
+ [dependencies.dashmap]
+ version = "6"
+ 
++[dependencies.fluent-uri]
++version = "0.4"
++features = [
++    "alloc"
++]
++
+ [dependencies.futures]
+ version = "0.3"
+ features = [
+@@ -119,7 +125,7 @@ default-features = false
+ version = "0.1"
+ 
+ [dev-dependencies.async-tungstenite]
+-version = "0.30"
++version = "0.28"
+ features = ["tokio-runtime"]
+ 
+ [dev-dependencies.tokio]
+diff --git a/src/uri_ext.rs b/src/uri_ext.rs
+index a4e9ec7..5bfb122 100644
+--- a/src/uri_ext.rs
++++ b/src/uri_ext.rs
+@@ -93,7 +93,7 @@ const ASCII_SET: AsciiSet =
+ 
+ impl UriExt for lsp_types::Uri {
+     fn to_file_path(&self) -> Option<Cow<Path>> {
+-        let path_str = self.path().as_estr().decode().into_string_lossy();
++        let path_str = self.path().decode().to_string_lossy();
+         if path_str.is_empty() {
+             return None;
+         }
+@@ -104,9 +104,9 @@ impl UriExt for lsp_types::Uri {
+         };
+ 
+         if cfg!(windows) {
+-            let auth_host = self
++            let auth_host: &str = self
+                 .authority()
+-                .map(|auth| auth.host().as_str())
++                .map(|auth| auth.host().as_ref())
+                 .unwrap_or_default();
+ 
+             if auth_host.is_empty() {
